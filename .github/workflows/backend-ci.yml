@@ -7,6 +7,16 @@ on:
 
     paths:
       - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+  
+    pull_request:
+    branches:
+      - development
+    paths:
+      - "backend/**"
+
+
 
 jobs:
   backend:
