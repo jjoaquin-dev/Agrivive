@@ -6,7 +6,11 @@ export const sellerAddproduct = new Elysia().use(sessionAuth).post(
   "/addproduct",
   async ({ session, body, status }) => {
     try {
-      return body.imagUrl.type;
+      const product = await addProductService(session.userId, body);
+      return status(201, {
+        message: "Product created",
+        products: product,
+      });
     } catch (error) {
       return status(500, { message: error });
     }

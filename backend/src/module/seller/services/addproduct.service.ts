@@ -8,6 +8,7 @@ export async function addProductService(userId: string, body: productModel) {
     .insert(sellers_product)
     .values({
       ...body,
+      productPrice: body.productPrice.toString(),
       userId: userId,
     })
     .returning();

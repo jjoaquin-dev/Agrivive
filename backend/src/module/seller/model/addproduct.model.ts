@@ -5,7 +5,7 @@ export const addProductModel = t.Object({
     minLength: 1,
     error: "product name is required",
   }),
-  imagUrl: t.File({
+  imagUrl: t.String({
     type: "image/*",
     error: "dont supported that kind of file",
   }),
