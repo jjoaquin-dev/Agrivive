@@ -1,7 +1,7 @@
 import Elysia from "elysia";
 import { sessionAuth } from "../../auth/services/auth.session";
-import { addProfileService } from "../services/service";
-import { sellerProfileModel } from "../model/model";
+import { sellerProfileModel } from "../model/addprofile.model";
+import { addProfileService } from "../services/addprofile.service";
 
 export const sellerAddProfile = new Elysia()
   .use(sessionAuth)

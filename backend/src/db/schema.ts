@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm/_relations";
+import { decimal } from "drizzle-orm/cockroach-core";
 import { smallint } from "drizzle-orm/pg-core";
 import {
   pgTable,
@@ -126,6 +127,7 @@ export const sellers_product = pgTable("sellers_product", {
     .references(() => user.id, { onDelete: "cascade" }),
   productName: text("product_name").notNull(),
   imagUrl: text("image_url"),
+  productPrice: decimal("product_price"),
   productQty: smallint("product_qty"),
   productType: product_type_enum().notNull(),
   scalingType: scaling_type_enum().notNull(),

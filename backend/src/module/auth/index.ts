@@ -10,7 +10,7 @@ export const auth = betterAuth({
     provider: "pg", // or "mysql", "sqlite"
     schema,
   }),
-
+  plugins: [bearer()],
   user: {
     additionalFields: {
       role: {
