@@ -1,6 +1,6 @@
-import { db } from "../../db";
-import { sellers_profile } from "../../db/schema";
-import { sellerModel } from "./model";
+import { db } from "../../../db";
+import { sellers_profile } from "../../../db/schema";
+import { sellerModel } from "../model/addprofile.model";
 
 export async function addProfileService(userId: string, body: sellerModel) {
   const [postSellerProfile] = await db

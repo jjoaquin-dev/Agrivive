@@ -1,6 +1,6 @@
-import { phoneNumber } from "better-auth/plugins";
 import { relations } from "drizzle-orm/_relations";
-
+import { decimal } from "drizzle-orm/cockroach-core";
+import { smallint } from "drizzle-orm/pg-core";
 import {
   pgTable,
   text,
@@ -21,6 +21,7 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
   role: roleEnum().array().default(["buyer"]),
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -98,12 +99,51 @@ export const sellers_profile = pgTable("sellers_profile", {
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  isActive: boolean("is_active").default(true).notNull(),
+
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const product_type_enum = pgEnum("product_type", [
+  "Leafy Greens",
+  "Root and Tuber Vegetables",
+  "Bulb and Stem Vegetables",
+  "Flower Vegetables",
+  "Fruit Vegetables",
+  "Seeds and Legumes",
+]);
+export const scaling_type_enum = pgEnum("scaling_type", [
+  "sack",
+  "kilo",
+  "pile",
+]);
+export const sellers_product = pgTable("sellers_product", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  productName: text("product_name").notNull(),
+  imagUrl: text("image_url"),
+  productPrice: decimal("product_price"),
+  productQty: smallint("product_qty"),
+  productType: product_type_enum().notNull(),
+  scalingType: scaling_type_enum().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const sellersProductRelation = relations(sellers_product, ({ one }) => ({
+  user: one(user, {
+    fields: [sellers_product.userId],
+    references: [user.id],
+  }),
+}));
 
 export const buyersProfileRelation = relations(sellers_profile, ({ one }) => ({
   user: one(user, {
