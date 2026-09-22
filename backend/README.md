@@ -13,3 +13,7 @@ bun run dev
 ```
 
 Open http://localhost:3000/ with your browser to see the result.
+
+## Seller and trust rollout
+
+See [SELLER_TRUST_MANUAL_TESTING.md](SELLER_TRUST_MANUAL_TESTING.md) for migration order, verification setup, endpoint examples, and manual checks. Copy placeholder configuration from `.env.example` into a local, ignored `.env` file.

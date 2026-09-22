@@ -1,0 +1,1 @@
+ALTER TABLE "sellers_product" DROP COLUMN "inventory_received_at";

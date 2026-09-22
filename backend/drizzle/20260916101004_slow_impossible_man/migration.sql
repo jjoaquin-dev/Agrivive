@@ -1,1 +1,0 @@
-ALTER TABLE "sellers_product" ADD COLUMN "product_price" decimal;
