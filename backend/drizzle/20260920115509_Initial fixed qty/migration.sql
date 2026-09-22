@@ -1,0 +1,1 @@
+ALTER TABLE "sellers_product" RENAME COLUMN "total_amount" TO "product_qty";

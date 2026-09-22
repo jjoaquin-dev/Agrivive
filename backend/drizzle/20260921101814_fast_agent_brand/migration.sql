@@ -1,0 +1,1 @@
+ALTER TABLE "sellers_product" ADD COLUMN "low_stock_threshold" numeric(10,2);
