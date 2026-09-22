@@ -290,6 +290,7 @@ export const trust_notices = pgTable("trust_notices", {
   attempts: integer("attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
+  readAt: timestamp("read_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

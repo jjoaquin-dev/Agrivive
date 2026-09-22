@@ -2,9 +2,9 @@ import Elysia from "elysia";
 import { sessionAuth } from "../../auth/services/auth.session";
 import {
   orderIdParams,
-  orderListQuery,
   scanOrderBody,
 } from "../model/seller.scan-order";
+import { sellerOrderListQuery } from "../model/seller.order.list";
 import { OrderError } from "../../../utils/order-types";
 import { listSellerOrders } from "../services/seller.order.list";
 import { readSellerOrder } from "../services/seller.order.get";
@@ -21,6 +21,7 @@ export const sellerOrdersRoute = new Elysia()
           session.userId,
           query.limit ? Number(query.limit) : 20,
           query.cursor,
+          query.status,
         );
       } catch (error) {
         if (error instanceof OrderError) {
@@ -30,7 +31,7 @@ export const sellerOrdersRoute = new Elysia()
         return status(500, { message: "Failed to list orders" });
       }
     },
-    { role: ["seller"], query: orderListQuery },
+    { role: ["seller"], query: sellerOrderListQuery },
   )
   .get(
     "/orders/:id",

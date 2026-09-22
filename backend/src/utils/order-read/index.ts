@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
 import { db } from "../../db";
 import { ordered_items, orders } from "../../db/schema";
 import { issueOrderQr } from "../order-qr";
-import { OrderError, type OrderSide } from "../order-types";
+import { OrderError, type OrderSide, type OrderStatus } from "../order-types";
 
 type OrderRow = typeof orders.$inferSelect;
 type OrderItem = typeof ordered_items.$inferSelect;
@@ -60,6 +60,7 @@ export async function listOrders(
   limit = 20,
   cursor?: string,
   allowedOrderIds?: string[] | null,
+  status?: OrderStatus,
 ) {
   const owner = side === "buyer" ? orders.buyersId : orders.sellersId;
   let before;
@@ -68,6 +69,7 @@ export async function listOrders(
       .select({ id: orders.id, createdAt: orders.createdAt })
       .from(orders)
       .where(and(eq(orders.id, cursor), eq(owner, userId),
+        status ? eq(orders.status, status) : undefined,
         allowedOrderIds ? inArray(orders.id, allowedOrderIds) : undefined))
       .limit(1);
     if (!anchor) throw new OrderError(400, "Invalid order cursor");
@@ -81,6 +83,7 @@ export async function listOrders(
     .select()
     .from(orders)
     .where(and(eq(owner, userId), before,
+      status ? eq(orders.status, status) : undefined,
       allowedOrderIds ? inArray(orders.id, allowedOrderIds) : undefined))
     .orderBy(desc(orders.createdAt), desc(orders.id))
     .limit(limit + 1);

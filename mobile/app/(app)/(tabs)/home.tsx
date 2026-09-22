@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -18,11 +18,17 @@ import {
   TrendingUp,
   History,
   Store,
+  Bell,
+  ClipboardList,
+  MessageCircle,
 } from "lucide-react-native";
 import { useAuth } from "../../../src/context/AuthContext";
+import { useFocusEffect } from "expo-router";
 import { useInventory } from "../../../src/features/inventory/hooks/useInventory";
 import { fetchStockAdjustments } from "../../../src/features/inventory/api/stock-adjustments";
 import type { StockAdjustment } from "../../../src/features/inventory/types";
+import { fetchSellerNotifications } from "../../../src/features/notifications/api/seller-notifications";
+import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
 
 export default function HomeScreen() {
@@ -31,6 +37,8 @@ export default function HomeScreen() {
   const { summary, lowStockProducts, loading, refreshing, refresh } = useInventory();
   const [recentActivity, setRecentActivity] = useState<StockAdjustment[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [openMessageCount, setOpenMessageCount] = useState(0);
 
   const loadRecentActivity = async () => {
     setLoadingActivity(true);
@@ -47,6 +55,25 @@ export default function HomeScreen() {
   useEffect(() => {
     loadRecentActivity();
   }, []);
+
+  const loadUnreadNotifications = useCallback(async () => {
+    try {
+      const [notificationResponse, messageResponse] = await Promise.all([
+        fetchSellerNotifications({ limit: 1 }),
+        fetchSellerMessages({ status: "open", limit: 1 }),
+      ]);
+      setUnreadCount(notificationResponse.unreadCount);
+      setOpenMessageCount(messageResponse.openCount);
+    } catch (err) {
+      console.error("Failed to load notification count", err);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadUnreadNotifications();
+    }, [loadUnreadNotifications]),
+  );
 
   const handleRefresh = async () => {
     await Promise.all([refresh(), loadRecentActivity()]);
@@ -71,14 +98,46 @@ export default function HomeScreen() {
     >
       {/* 1. Header Greeting */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Maayong adlaw,</Text>
-        <Text style={styles.sellerName}>{sellerName}</Text>
-        {shopName ? (
-          <View style={styles.shopBadge}>
-            <Store size={14} color={colors.primary} style={{ marginRight: 4 }} />
-            <Text style={styles.shopText}>{shopName}</Text>
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerText}>
+            <Text style={styles.greeting}>Maayong adlaw,</Text>
+            <Text style={styles.sellerName}>{sellerName}</Text>
+            {shopName ? (
+              <View style={styles.shopBadge}>
+                <Store size={14} color={colors.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.shopText}>{shopName}</Text>
+              </View>
+            ) : null}
           </View>
-        ) : null}
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => router.push("/(app)/messages")}
+              accessibilityRole="button"
+              accessibilityLabel={openMessageCount > 0 ? `${openMessageCount} open buyer messages` : "Open buyer messages"}
+              style={styles.notificationButton}
+            >
+              <MessageCircle size={22} color={colors.primary} />
+              {openMessageCount > 0 ? (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>{openMessageCount > 9 ? "9+" : openMessageCount}</Text>
+                </View>
+              ) : null}
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/(app)/notifications")}
+              accessibilityRole="button"
+              accessibilityLabel={unreadCount > 0 ? `${unreadCount} unread notifications` : "Open notifications"}
+              style={styles.notificationButton}
+            >
+              <Bell size={22} color={colors.primary} />
+              {unreadCount > 0 ? (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+                </View>
+              ) : null}
+            </Pressable>
+          </View>
+        </View>
       </View>
 
       {/* 2. Overview Metrics Cards */}
@@ -204,6 +263,17 @@ export default function HomeScreen() {
           <Text style={styles.actionButtonTextSecondary}>Manage Inventory</Text>
         </Pressable>
       </View>
+
+      <Pressable
+        onPress={() => router.push("/(app)/(tabs)/orders")}
+        accessibilityRole="button"
+        accessibilityLabel="View buyer reservations"
+        style={styles.reservationsLink}
+      >
+        <ClipboardList size={18} color={colors.primary} />
+        <Text style={styles.reservationsLinkText}>View buyer reservations</Text>
+        <ArrowRight size={16} color={colors.primary} />
+      </Pressable>
 
       {/* 5. Low Stock Alerts Section */}
       <View style={styles.sectionHeaderRow}>
@@ -342,6 +412,48 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.base,
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+  headerText: {
+    flex: 1,
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  notificationButton: {
+    width: touchTargets.min,
+    height: touchTargets.min,
+    borderRadius: radii.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: colors.error,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  notificationBadgeText: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 10,
+    color: colors.white,
   },
   greeting: {
     fontFamily: fonts.body.regular,
@@ -500,6 +612,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.sm,
     marginBottom: spacing.base,
+  },
+  reservationsLink: {
+    minHeight: touchTargets.min,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.button,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.base,
+  },
+  reservationsLinkText: {
+    flex: 1,
+    fontFamily: fonts.body.semiBold,
+    fontSize: 14,
+    color: colors.primary,
+    marginLeft: spacing.sm,
   },
   actionButtonPrimary: {
     flex: 1,

@@ -52,6 +52,37 @@ export default function AppLayout() {
         }}
       />
       <Stack.Screen
+        name="orders/[id]"
+        options={{
+          title: "Order Details",
+        }}
+      />
+      <Stack.Screen
+        name="orders/scan"
+        options={{
+          title: "Scan Buyer QR",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          title: "Notifications",
+        }}
+      />
+      <Stack.Screen
+        name="messages"
+        options={{
+          title: "Messages",
+        }}
+      />
+      <Stack.Screen
+        name="trust"
+        options={{
+          title: "Trust history",
+        }}
+      />
+      <Stack.Screen
         name="profile/index"
         options={{
           title: "Seller Profile",

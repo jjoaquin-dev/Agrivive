@@ -1,1 +1,1 @@
-ALTER TABLE "sellers_product" DROP COLUMN "inventory_received_at";
+ALTER TABLE "sellers_product" DROP COLUMN IF EXISTS "inventory_received_at";

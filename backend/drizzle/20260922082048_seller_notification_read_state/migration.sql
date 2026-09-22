@@ -1,0 +1,1 @@
+ALTER TABLE "trust_notices" ADD COLUMN "read_at" timestamp with time zone;

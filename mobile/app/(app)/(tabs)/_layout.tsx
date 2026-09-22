@@ -1,6 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { Home, Package, ArrowLeftRight, User } from "lucide-react-native";
+import { Home, Package, ArrowLeftRight, User, ClipboardList } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
 
 export default function TabsLayout() {
@@ -52,6 +52,13 @@ export default function TabsLayout() {
         options={{
           title: "Activity",
           tabBarIcon: ({ color, size }) => <ArrowLeftRight color={color} size={size || 22} />,
+        }}
+      />
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "Reservations",
+          tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size || 22} />,
         }}
       />
       <Tabs.Screen

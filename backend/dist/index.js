@@ -99332,6 +99332,7 @@ var trust_notices = pgTable("trust_notices", {
   attempts: integer2("attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
+  readAt: timestamp("read_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
 var trust_corrections = pgTable("trust_corrections", {
@@ -117610,9 +117611,18 @@ var scanOrderBody = t.Object({
 var orderIdParams = t.Object({
   id: t.String({ format: "uuid" })
 });
-var orderListQuery = t.Object({
+
+// src/modules/seller/model/seller.order.list.ts
+var sellerOrderStatus = t.Union([
+  t.Literal("pending"),
+  t.Literal("completed"),
+  t.Literal("cancelled"),
+  t.Literal("expired")
+]);
+var sellerOrderListQuery = t.Object({
   limit: t.Optional(t.String({ pattern: "^(?:[1-9]|[1-4][0-9]|50)$" })),
-  cursor: t.Optional(t.String({ format: "uuid" }))
+  cursor: t.Optional(t.String({ format: "uuid" })),
+  status: t.Optional(sellerOrderStatus)
 });
 
 // src/utils/order-qr/index.ts
@@ -117678,16 +117688,16 @@ async function getOrder(orderId, userId, side) {
   const items = await db2.select().from(ordered_items).where(eq(ordered_items.ordersId, row.id));
   return orderView(row, items, side);
 }
-async function listOrders(userId, side, limit = 20, cursor, allowedOrderIds) {
+async function listOrders(userId, side, limit = 20, cursor, allowedOrderIds, status) {
   const owner = side === "buyer" ? orders.buyersId : orders.sellersId;
   let before;
   if (cursor) {
-    const [anchor] = await db2.select({ id: orders.id, createdAt: orders.createdAt }).from(orders).where(and(eq(orders.id, cursor), eq(owner, userId), allowedOrderIds ? inArray(orders.id, allowedOrderIds) : undefined)).limit(1);
+    const [anchor] = await db2.select({ id: orders.id, createdAt: orders.createdAt }).from(orders).where(and(eq(orders.id, cursor), eq(owner, userId), status ? eq(orders.status, status) : undefined, allowedOrderIds ? inArray(orders.id, allowedOrderIds) : undefined)).limit(1);
     if (!anchor)
       throw new OrderError(400, "Invalid order cursor");
     before = or(lt(orders.createdAt, anchor.createdAt), and(eq(orders.createdAt, anchor.createdAt), lt(orders.id, anchor.id)));
   }
-  const rows = await db2.select().from(orders).where(and(eq(owner, userId), before, allowedOrderIds ? inArray(orders.id, allowedOrderIds) : undefined)).orderBy(desc(orders.createdAt), desc(orders.id)).limit(limit + 1);
+  const rows = await db2.select().from(orders).where(and(eq(owner, userId), before, status ? eq(orders.status, status) : undefined, allowedOrderIds ? inArray(orders.id, allowedOrderIds) : undefined)).orderBy(desc(orders.createdAt), desc(orders.id)).limit(limit + 1);
   const page = rows.slice(0, limit);
   const items = page.length ? await db2.select().from(ordered_items).where(inArray(ordered_items.ordersId, page.map((row) => row.id))) : [];
   const byOrder = new Map;
@@ -117703,9 +117713,9 @@ async function listOrders(userId, side, limit = 20, cursor, allowedOrderIds) {
 }
 
 // src/modules/seller/services/seller.order.list.ts
-async function listSellerOrders(sellerId, limit = 20, cursor) {
+async function listSellerOrders(sellerId, limit = 20, cursor, status) {
   const allowed = await db2.transaction((tx) => sellerReadableOrderIds(tx, sellerId));
-  return listOrders(sellerId, "seller", limit, cursor, allowed);
+  return listOrders(sellerId, "seller", limit, cursor, allowed, status);
 }
 
 // src/modules/seller/services/seller.order.get.ts
@@ -117753,7 +117763,7 @@ var sellerOrdersRoute = new Elysia().use(sessionAuth).get("/orders", async ({ se
   if (!user.isActive)
     return status(403, { message: "Seller account is inactive" });
   try {
-    return await listSellerOrders(session.userId, query.limit ? Number(query.limit) : 20, query.cursor);
+    return await listSellerOrders(session.userId, query.limit ? Number(query.limit) : 20, query.cursor, query.status);
   } catch (error) {
     if (error instanceof OrderError) {
       return status(error.statusCode, { message: error.message });
@@ -117761,7 +117771,7 @@ var sellerOrdersRoute = new Elysia().use(sessionAuth).get("/orders", async ({ se
     console.error(error);
     return status(500, { message: "Failed to list orders" });
   }
-}, { role: ["seller"], query: orderListQuery }).get("/orders/:id", async ({ session, user, params, status }) => {
+}, { role: ["seller"], query: sellerOrderListQuery }).get("/orders/:id", async ({ session, user, params, status }) => {
   if (!user.isActive)
     return status(403, { message: "Seller account is inactive" });
   try {
@@ -118362,6 +118372,53 @@ var sellerCancelOrderRoute = new Elysia().use(sessionAuth).post("/orders/:id/can
 var sellerInquiryParams = t.Object({ id: t.String({ format: "uuid" }) });
 var sellerInquiryReplyBody = t.Object({ reply: t.String({ minLength: 1, maxLength: 1000 }) });
 
+// src/modules/seller/model/seller.inquiry.list.ts
+var sellerInquiryListQuery = t.Object({
+  status: t.Optional(t.Union([t.Literal("open"), t.Literal("all")])),
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 20 })),
+  cursor: t.Optional(t.String({ format: "uuid" }))
+});
+
+// src/modules/seller/services/seller.inquiry.list.ts
+async function listSellerInquiries(sellerId, query = {}) {
+  const limit = query.limit ?? 20;
+  const openOnly = query.status === "open";
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const openCondition = openOnly ? isNull2(order_inquiries.reply) : undefined;
+    let before;
+    if (query.cursor) {
+      const [anchor] = await tx.select({
+        id: order_inquiries.id,
+        createdAt: order_inquiries.createdAt
+      }).from(order_inquiries).where(and(eq(order_inquiries.id, query.cursor), eq(order_inquiries.sellerId, sellerId))).limit(1);
+      if (!anchor)
+        throw new OrderError(400, "Invalid inquiry cursor");
+      before = or(lt(order_inquiries.createdAt, anchor.createdAt), and(eq(order_inquiries.createdAt, anchor.createdAt), lt(order_inquiries.id, anchor.id)));
+    }
+    const rows = await tx.select({
+      id: order_inquiries.id,
+      orderId: order_inquiries.orderId,
+      buyerId: order_inquiries.buyerId,
+      question: order_inquiries.question,
+      reply: order_inquiries.reply,
+      repliedAt: order_inquiries.repliedAt,
+      createdAt: order_inquiries.createdAt,
+      orderStatus: orders.status,
+      totalAmount: orders.totalAmount
+    }).from(order_inquiries).innerJoin(orders, eq(order_inquiries.orderId, orders.id)).where(and(eq(order_inquiries.sellerId, sellerId), openCondition, before)).orderBy(desc(order_inquiries.createdAt), desc(order_inquiries.id)).limit(limit + 1);
+    const [openCount] = await tx.select({
+      count: sql3`count(*)::int`
+    }).from(order_inquiries).where(and(eq(order_inquiries.sellerId, sellerId), isNull2(order_inquiries.reply)));
+    const page = rows.slice(0, limit);
+    return {
+      items: page,
+      nextCursor: rows.length > limit && page.length > 0 ? page[page.length - 1].id : null,
+      openCount: Number(openCount?.count ?? 0)
+    };
+  });
+}
+
 // src/modules/seller/services/seller.order.inquiry.reply.ts
 function replySellerInquiry(sellerId, inquiryId, reply) {
   if (!reply.trim())
@@ -118381,7 +118438,16 @@ function replySellerInquiry(sellerId, inquiryId, reply) {
 }
 
 // src/modules/seller/index/seller.order.inquiry.ts
-var sellerInquiryRoute = new Elysia().use(sessionAuth).get("/orders/:id/inquiries", async ({ session, params, status }) => {
+var sellerInquiryRoute = new Elysia().use(sessionAuth).get("/inquiries", async ({ session, query, status }) => {
+  try {
+    return await listSellerInquiries(session.userId, query);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to list seller inquiries" });
+  }
+}, { role: ["seller"], query: sellerInquiryListQuery }).get("/orders/:id/inquiries", async ({ session, params, status }) => {
   try {
     return await listOrderInquiries(session.userId, params.id, "seller");
   } catch (error) {
@@ -118764,8 +118830,123 @@ var sellerStockAdjustmentListRoute = new Elysia().use(sessionAuth).get("/stock-a
   query: sellerStockAdjustmentListQuery
 });
 
+// src/modules/seller/model/seller.notifications.ts
+var sellerNotificationListQuery = t.Object({
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 20 })),
+  cursor: t.Optional(t.String({ format: "uuid" })),
+  unreadOnly: t.Optional(t.Boolean())
+});
+var sellerNotificationParams = t.Object({
+  id: t.String({ format: "uuid" })
+});
+
+// src/modules/seller/services/seller.notifications.list.ts
+async function listSellerNotifications(sellerId, query = {}) {
+  const limit = query.limit ?? 20;
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const unreadCondition = query.unreadOnly ? isNull2(trust_notices.readAt) : undefined;
+    let before;
+    if (query.cursor) {
+      const [anchor] = await tx.select({
+        id: trust_notices.id,
+        createdAt: trust_notices.createdAt
+      }).from(trust_notices).where(and(eq(trust_notices.id, query.cursor), eq(trust_notices.recipientId, sellerId))).limit(1);
+      if (!anchor)
+        throw new OrderError(400, "Invalid notification cursor");
+      before = or(lt(trust_notices.createdAt, anchor.createdAt), and(eq(trust_notices.createdAt, anchor.createdAt), lt(trust_notices.id, anchor.id)));
+    }
+    const rows = await tx.select({
+      id: trust_notices.id,
+      kind: trust_notices.kind,
+      orderId: trust_notices.orderId,
+      createdAt: trust_notices.createdAt,
+      readAt: trust_notices.readAt
+    }).from(trust_notices).where(and(eq(trust_notices.recipientId, sellerId), unreadCondition, before)).orderBy(desc(trust_notices.createdAt), desc(trust_notices.id)).limit(limit + 1);
+    const page = rows.slice(0, limit);
+    const [unread] = await tx.select({
+      count: sql3`count(*)::int`
+    }).from(trust_notices).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt)));
+    return {
+      items: page,
+      nextCursor: rows.length > limit && page.length > 0 ? page[page.length - 1].id : null,
+      unreadCount: Number(unread?.count ?? 0)
+    };
+  });
+}
+
+// src/modules/seller/services/seller.notification.read.ts
+async function readSellerNotification(sellerId, notificationId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [notification] = await tx.select({
+      id: trust_notices.id,
+      kind: trust_notices.kind,
+      orderId: trust_notices.orderId,
+      createdAt: trust_notices.createdAt,
+      readAt: trust_notices.readAt
+    }).from(trust_notices).where(and(eq(trust_notices.id, notificationId), eq(trust_notices.recipientId, sellerId))).for("update").limit(1);
+    if (!notification)
+      throw new OrderError(404, "Notification not found");
+    if (notification.readAt)
+      return notification;
+    const [updated] = await tx.update(trust_notices).set({ readAt: new Date }).where(eq(trust_notices.id, notificationId)).returning({
+      id: trust_notices.id,
+      kind: trust_notices.kind,
+      orderId: trust_notices.orderId,
+      createdAt: trust_notices.createdAt,
+      readAt: trust_notices.readAt
+    });
+    return updated ?? notification;
+  });
+}
+
+// src/modules/seller/services/seller.notifications.read-all.ts
+async function readAllSellerNotifications(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const updated = await tx.update(trust_notices).set({ readAt: new Date }).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt))).returning({ id: trust_notices.id });
+    return { updatedCount: updated.length };
+  });
+}
+
+// src/modules/seller/index/seller.notifications.ts
+function notificationFailure(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Notification operation failed" });
+}
+var sellerNotificationsRoute = new Elysia().use(sessionAuth).get("/notifications", async ({ session, query, status }) => {
+  try {
+    return await listSellerNotifications(session.userId, query);
+  } catch (error) {
+    return notificationFailure(error, status);
+  }
+}, {
+  role: ["seller"],
+  query: sellerNotificationListQuery
+}).post("/notifications/:id/read", async ({ session, params, status }) => {
+  try {
+    return await readSellerNotification(session.userId, params.id);
+  } catch (error) {
+    return notificationFailure(error, status);
+  }
+}, {
+  role: ["seller"],
+  params: sellerNotificationParams
+}).post("/notifications/read-all", async ({ session, status }) => {
+  try {
+    return await readAllSellerNotifications(session.userId);
+  } catch (error) {
+    return notificationFailure(error, status);
+  }
+}, {
+  role: ["seller"]
+});
+
 // src/modules/seller/index.ts
-var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute);
+var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute);
 
 // src/modules/buyer/model/buyer.order.create.ts
 var orderModel = t.Object({
@@ -118909,7 +119090,7 @@ var buyerOrderCreateRoute = new Elysia().use(sessionAuth).post("/orders", async 
 });
 
 // src/modules/buyer/model/buyer.order.list.ts
-var orderListQuery2 = t.Object({
+var orderListQuery = t.Object({
   limit: t.Optional(t.String({ pattern: "^(?:[1-9]|[1-4][0-9]|50)$" })),
   cursor: t.Optional(t.String({ format: "uuid" }))
 });
@@ -118932,7 +119113,7 @@ var buyerOrderListRoute = new Elysia().use(sessionAuth).get("/orders", async ({ 
     console.error(error);
     return status(500, { message: "Failed to list orders" });
   }
-}, { role: ["buyer"], query: orderListQuery2 });
+}, { role: ["buyer"], query: orderListQuery });
 
 // src/modules/buyer/model/buyer.order.get.ts
 var orderIdParams2 = t.Object({

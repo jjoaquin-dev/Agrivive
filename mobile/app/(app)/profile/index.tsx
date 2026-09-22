@@ -332,7 +332,26 @@ export default function ProfileOverviewScreen() {
         />
       </CardComponent>
 
-      {/* 5. Davao Pilot Support (conforming to DESIGN.md Section 7) */}
+      {/* 5. Trust History */}
+      <Text style={styles.sectionHeading}>Trust & communication</Text>
+      <CardComponent style={styles.card}>
+        <Pressable
+          onPress={() => router.push("/(app)/trust")}
+          accessibilityRole="button"
+          accessibilityLabel="Open trust history"
+          style={styles.trustLink}
+        >
+          <View style={styles.iconCircle}>
+            <ShieldCheck size={18} color={colors.primary} />
+          </View>
+          <View style={styles.trustLinkText}>
+            <Text style={styles.securityTitle}>Trust history</Text>
+            <Text style={styles.securityDesc}>Review verified events and request a correction when something looks wrong.</Text>
+          </View>
+        </Pressable>
+      </CardComponent>
+
+      {/* 6. Davao Pilot Support (conforming to DESIGN.md Section 7) */}
       <Text style={styles.sectionHeading}>Support & Pilot Info</Text>
       <CardComponent style={styles.card}>
         <View style={styles.supportRow}>
@@ -352,7 +371,7 @@ export default function ProfileOverviewScreen() {
         </View>
       </CardComponent>
 
-      {/* 6. Footer Actions */}
+      {/* 7. Footer Actions */}
       <View style={styles.actionButtons}>
         <ButtonComponent
           title="Sign Out"
@@ -557,6 +576,14 @@ const styles = StyleSheet.create({
   },
   securityButton: {
     minHeight: 44,
+  },
+  trustLink: {
+    minHeight: touchTargets.min,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  trustLinkText: {
+    flex: 1,
   },
   supportRow: {
     flexDirection: "row",

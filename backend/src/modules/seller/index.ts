@@ -20,6 +20,7 @@ import { sellerTrustRoute } from "./index/seller.trust";
 import { sellerSetupRoute } from "./index/seller.setup";
 import { sellerProductImageRoute } from "./index/seller.product.image";
 import { sellerStockAdjustmentListRoute } from "./index/seller.stock-adjustment.list";
+import { sellerNotificationsRoute } from "./index/seller.notifications";
 
 export const sellerRoute = new Elysia({ prefix: "/seller" })
 
@@ -44,4 +45,5 @@ export const sellerRoute = new Elysia({ prefix: "/seller" })
   .use(sellerInquiryRoute)
   .use(sellerReviewRoute)
   .use(sellerReportRoute)
-  .use(sellerTrustRoute);
+  .use(sellerTrustRoute)
+  .use(sellerNotificationsRoute);
