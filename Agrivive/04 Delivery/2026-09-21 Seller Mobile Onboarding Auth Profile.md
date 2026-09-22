@@ -152,7 +152,7 @@ This delivery implements the complete seller onboarding, registration, email OTP
    *Result:* Passed with 0 errors (1,236 modules bundled in 219 ms).
 
 5. **Origin Check Verification**:
-   - Tested HTTP POST requests with `Origin: exp://192.168.254.109:8081` and `Origin: http://192.168.254.109:3000`: both accepted without `INVALID_ORIGIN` error.
+   - Tested HTTP POST requests with `Origin: exp://<local-ip>:8081` and `Origin: http://<local-ip>:3000`: both accepted without `INVALID_ORIGIN` error.
    - Tested malicious origin (`Origin: https://evil.com` with session cookie): correctly rejected with `HTTP 403 Forbidden: {"message":"Invalid origin","code":"INVALID_ORIGIN"}`.
 
 6. **Manual Device & Email Testing**:
@@ -183,3 +183,9 @@ Created the Metro config file with a targeted `resolveRequest` override. Rather 
 ### Verification
 - Backend TypeScript check: **Passed (0 errors)** — 2026-09-21
 - Restart Expo with `--clear` flag to apply metro.config.js changes
+
+## 2026-09-22 vault privacy cleanup
+
+Replaced the private development LAN address with `<local-ip>`. No credentials,
+tokens, passwords, database URLs, signed URLs, or private keys are recorded in
+this vault note.
