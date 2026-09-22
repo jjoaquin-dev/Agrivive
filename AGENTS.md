@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-The application lives in `backend/`, a Bun, TypeScript, and Elysia API. `backend/src/index.ts` starts the server. Keep feature modules under `backend/src/modules/<module>/` (plural). Shared database code is in `backend/src/db/`, plugins are in `backend/src/plugins/`, and Drizzle migrations are in `backend/drizzle/`. `.github/workflows/backend-ci.yml` defines CI. `mobile/` currently contains design guidance and image assets, while `analytics/` and `web/` contain no tracked application code.
+The application lives in `backend/`, a Bun, TypeScript, and Elysia API. `backend/src/index.ts` starts the server. Keep feature modules under `backend/src/modules/<module>/` (plural). Shared database code is in `backend/src/db/`, plugins are in `backend/src/plugins/`, and Drizzle migrations are in `backend/drizzle/`. `.github/workflows/backend-ci.yml` defines CI. `mobile/` currently contains design guidance and image assets, while `analytics/` and `web/` contain no tracked application codez.
 
 Organize each module and shared utility as follows:
 
