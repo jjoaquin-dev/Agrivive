@@ -22,8 +22,13 @@ export function reactivateSellerProduct(sellerId: string, productId: string) {
     }
 
     const now = new Date();
+    const basePrice = product.basePrice ?? product.productPrice;
     const [updated] = await tx.update(sellers_product).set({
       isActive: true,
+      productPrice: basePrice,
+      basePrice,
+      priceScheduleStartedAt: now,
+      priceReductionPeriodsApplied: 0,
       originalQty: product.productQty,
       publishedAt: now,
       updatedAt: now,

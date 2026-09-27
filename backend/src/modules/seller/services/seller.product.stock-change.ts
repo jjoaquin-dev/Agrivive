@@ -57,10 +57,17 @@ export function changeSellerProductStock(
     }
 
     const now = new Date();
+    const cycleBasePrice = product.basePrice ?? product.productPrice;
     const [updated] = await tx.update(sellers_product).set({
       productQty: toDecimal(after),
       ...(originalQty !== product.originalQty ? { originalQty } : {}),
-      ...(newCycle || initializeLegacy ? { publishedAt: now } : {}),
+      ...(newCycle || initializeLegacy ? {
+        publishedAt: now,
+        basePrice: cycleBasePrice,
+        productPrice: cycleBasePrice,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0,
+      } : {}),
       updatedAt: now,
     }).where(eq(sellers_product.id, productId)).returning();
 

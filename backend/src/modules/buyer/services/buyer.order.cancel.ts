@@ -10,7 +10,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
     const now = new Date();
     const [cancelled] = await tx
       .update(orders)
-      .set({ status: "cancelled", cancelledBy: "buyer", updatedAt: now })
+      .set({ status: "cancelled", cancelledBy: "buyer", cancelledAt: now, updatedAt: now })
       .where(
         and(
           eq(orders.id, orderId),

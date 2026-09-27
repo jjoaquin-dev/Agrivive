@@ -21,6 +21,7 @@ import {
   Bell,
   ClipboardList,
   MessageCircle,
+  BarChart3,
 } from "lucide-react-native";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useFocusEffect } from "expo-router";
@@ -272,6 +273,28 @@ export default function HomeScreen() {
       >
         <ClipboardList size={18} color={colors.primary} />
         <Text style={styles.reservationsLinkText}>View buyer reservations</Text>
+        <ArrowRight size={16} color={colors.primary} />
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push("/(app)/analytics")}
+        accessibilityRole="button"
+        accessibilityLabel="View seller analytics"
+        style={styles.reservationsLink}
+      >
+        <BarChart3 size={18} color={colors.primary} />
+        <Text style={styles.reservationsLinkText}>View seller analytics</Text>
+        <ArrowRight size={16} color={colors.primary} />
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push("/(app)/advisories")}
+        accessibilityRole="button"
+        accessibilityLabel="View seller advisories"
+        style={styles.reservationsLink}
+      >
+        <AlertTriangle size={18} color={colors.primary} />
+        <Text style={styles.reservationsLinkText}>View advisories</Text>
         <ArrowRight size={16} color={colors.primary} />
       </Pressable>
 

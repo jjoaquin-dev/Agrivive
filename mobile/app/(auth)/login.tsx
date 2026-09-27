@@ -60,7 +60,31 @@ export default function LoginScreen() {
       });
 
       if (response.error) {
+        const errorCode = (response.error as { code?: string }).code;
         const msg = response.error.message?.toLowerCase() || "";
+        const isEmailNotVerified =
+          errorCode === "EMAIL_NOT_VERIFIED" || msg.includes("email not verified");
+
+        if (isEmailNotVerified) {
+          const cleanEmail = email.trim().toLowerCase();
+          let sent = false;
+          try {
+            const sendRes = await authClient.emailOtp.sendVerificationOtp({
+              email: cleanEmail,
+              type: "email-verification",
+            });
+            sent = !sendRes?.error;
+          } catch (otpError) {
+            console.warn("Could not send verification OTP after login", otpError);
+          }
+
+          router.replace({
+            pathname: "/(auth)/verify-email",
+            params: { email: cleanEmail, sent: sent ? "true" : "false" },
+          });
+          return;
+        }
+
         if (msg.includes("password") || msg.includes("credential") || msg.includes("user")) {
           setErrors({ password: "The email or password you entered is incorrect." });
         } else if (msg.includes("email")) {

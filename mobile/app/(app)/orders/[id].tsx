@@ -1,6 +1,7 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   Alert,
   Modal,
   Pressable,
@@ -10,7 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { Camera, X } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { CardComponent } from "../../../src/components/CardComponent";
@@ -27,6 +28,7 @@ function money(value: string) {
 
 export default function SellerOrderDetailScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [order, setOrder] = useState<SellerOrder | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,7 @@ export default function SellerOrderDetailScreen() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const loadOrder = useCallback(async () => {
     if (!id) return;
@@ -41,6 +44,7 @@ export default function SellerOrderDetailScreen() {
     setError(null);
     try {
       setOrder(await fetchSellerOrder(id));
+      setLastUpdated(new Date());
     } catch (err: any) {
       setError(err?.message || "Could not load this order.");
     } finally {
@@ -49,6 +53,59 @@ export default function SellerOrderDetailScreen() {
   }, [id]);
 
   useFocusEffect(useCallback(() => { void loadOrder(); }, [loadOrder]));
+
+  useEffect(() => {
+    if (!isFocused || !id || !order || order.status !== "pending") return;
+    let active = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let delay = 10_000;
+    let controller: AbortController | undefined;
+
+    const schedule = () => {
+      if (active) timer = setTimeout(() => void refresh(), delay);
+    };
+
+    const refresh = async () => {
+      if (!active || AppState.currentState !== "active") {
+        schedule();
+        return;
+      }
+      controller = new AbortController();
+      try {
+        const latest = await fetchSellerOrder(id, controller.signal);
+        if (!active) return;
+        setOrder(latest);
+        setLastUpdated(new Date());
+        setError(null);
+        delay = 10_000;
+      } catch (err: any) {
+        if (!active || controller.signal.aborted) return;
+        if ([401, 403, 404].includes(err?.statusCode)) {
+          setError(err?.message || "Could not refresh this order.");
+          return;
+        }
+        setError(err?.message || "Could not refresh this order. Retrying soon.");
+        delay = Math.min(delay * 2, 60_000);
+      }
+      schedule();
+    };
+
+    const handleAppState = (nextState: string) => {
+      if (nextState !== "active") return;
+      if (timer) clearTimeout(timer);
+      delay = 10_000;
+      void refresh();
+    };
+
+    const subscription = AppState.addEventListener("change", handleAppState);
+    timer = setTimeout(() => void refresh(), delay);
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+      controller?.abort();
+      subscription.remove();
+    };
+  }, [id, isFocused, order?.status]);
 
   const handleCancel = async () => {
     if (!order || cancelReason.trim().length < 5) return;
@@ -72,9 +129,11 @@ export default function SellerOrderDetailScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.headerRow}>
-        <View><Text style={styles.title}>Order {order.id.slice(0, 8)}</Text><Text style={styles.date}>{new Date(order.createdAt).toLocaleString()}</Text></View>
+        <View><Text style={styles.title}>Order {order.id.slice(0, 8)}</Text><Text style={styles.date}>{new Date(order.createdAt).toLocaleString()}</Text>{lastUpdated ? <Text style={styles.updated}>Updated {lastUpdated.toLocaleTimeString()}</Text> : null}</View>
         <OrderStatusBadge status={order.status} />
       </View>
+
+      {error ? <Text style={styles.refreshError}>{error}</Text> : null}
 
       <CardComponent style={styles.card}>
         <Text style={styles.cardTitle}>Items</Text>
@@ -118,6 +177,8 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text },
   date: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  updated: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  refreshError: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.warning, marginBottom: spacing.base },
   card: { marginBottom: spacing.base },
   cardTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   totalRow: { flexDirection: "row", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.md, marginTop: spacing.sm },

@@ -8,6 +8,7 @@ import { validateLowStockThreshold } from "../../../utils/product-threshold";
 import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import type { SellerProductUpdate } from "../model/seller.product";
+import { validatePriceReductionConfig } from "../../../utils/price-reduction";
 
 export function updateSellerProduct(sellerId: string, productId: string, body: SellerProductUpdate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -22,6 +23,14 @@ export function updateSellerProduct(sellerId: string, productId: string, body: S
       eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId),
     )).for("update").limit(1);
     if (!current) throw new OrderError(404, "Product not found");
+    const pricingChanged = body.productPrice !== undefined ||
+      body.priceReductionPercent !== undefined || body.minimumPrice !== undefined;
+    const basePrice = body.productPrice ?? Number(current.productPrice ?? current.basePrice ?? 0);
+    const reductionPercent = body.priceReductionPercent ?? Number(current.priceReductionPercent ?? 0);
+    const minimumPrice = body.minimumPrice !== undefined
+      ? body.minimumPrice
+      : (current.minimumPrice === null ? null : Number(current.minimumPrice));
+    if (pricingChanged) validatePriceReductionConfig(basePrice, reductionPercent, minimumPrice);
     const name = body.productName?.trim();
     const initializingLegacy = current.isActive && !current.originalQty && Number(current.productQty) > 0;
     if (name !== undefined) {
@@ -40,11 +49,25 @@ export function updateSellerProduct(sellerId: string, productId: string, body: S
     const [updated] = await tx.update(sellers_product).set({
       ...(name !== undefined ? { productName: name } : {}),
       ...(body.imagUrl !== undefined ? { imagUrl: body.imagUrl } : {}),
-      ...(body.productPrice !== undefined ? { productPrice: body.productPrice.toString() } : {}),
+      ...(pricingChanged ? {
+        productPrice: basePrice.toString(),
+        basePrice: basePrice.toString(),
+        priceReductionPercent: reductionPercent.toString(),
+        minimumPrice: minimumPrice?.toString() ?? null,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0,
+      } : {}),
       ...(body.productType !== undefined ? { productType: body.productType } : {}),
       ...(body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold?.toString() ?? null } : {}),
+      ...(body.condition !== undefined ? { condition: body.condition } : {}),
       ...(body.isMarketable !== undefined ? { isMarketable: body.isMarketable } : {}),
-      ...(initializingLegacy ? { originalQty: current.productQty, publishedAt: now } : {}),
+      ...(initializingLegacy ? {
+        originalQty: current.productQty,
+        publishedAt: now,
+        basePrice: current.productPrice,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0,
+      } : {}),
       updatedAt: now,
     }).where(eq(sellers_product.id, productId)).returning();
     if (initializingLegacy && updated.originalQty) {

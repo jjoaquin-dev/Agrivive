@@ -6,6 +6,8 @@ export const sellerProfileModel = t.Object({
   latitude: t.Number({ minimum: -90, maximum: 90 }),
   longitude: t.Number({ minimum: -180, maximum: 180 }),
   phoneNumber: t.String({ minLength: 7, maxLength: 30, pattern: "\\S" }),
+  sellerType: t.Optional(t.UnionEnum(["supplier", "supplier_vendor", "retail_vendor"])),
+  pickupInstructions: t.Optional(t.Nullable(t.String({ maxLength: 500 }))),
 }, { additionalProperties: false });
 
 export type SellerProfileCreate = typeof sellerProfileModel.static;

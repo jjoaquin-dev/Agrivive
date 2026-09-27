@@ -8,7 +8,9 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Share,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   Package,
@@ -20,13 +22,17 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
+  Share2,
 } from "lucide-react-native";
 import { useProduct } from "../../../../src/features/inventory/hooks/useProduct";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../../src/theme";
+import { PriceCompare } from "../../../../src/features/inventory/components/PriceCompare";
+import { getSellerProductShare } from "../../../../src/features/inventory/api/product-share";
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [sharing, setSharing] = React.useState(false);
 
   const {
     product,
@@ -68,6 +74,7 @@ export default function ProductDetailsScreen() {
 
   const qty = parseFloat(product.productQty as string) || 0;
   const price = parseFloat(product.productPrice as string) || 0;
+  const reductionPercent = parseFloat(String(product.priceReductionPercent ?? "0")) || 0;
   const threshold =
     product.lowStockThreshold != null
       ? parseFloat(product.lowStockThreshold as string)
@@ -141,6 +148,39 @@ export default function ProductDetailsScreen() {
       Alert.alert("Product Restored", "Product is now active and visible to buyers.");
     } catch (err: any) {
       Alert.alert("Restore Failed", err?.message || "Could not restore product.");
+    }
+  };
+
+  const handleShare = async () => {
+    if (isArchived || !product.isMarketable || qty <= 0) {
+      Alert.alert(
+        "Sharing Unavailable",
+        "Only active, marketable products with available stock can be shared on the marketplace.",
+      );
+      return;
+    }
+    setSharing(true);
+    try {
+      const data = await getSellerProductShare(product.id);
+      const result = await Share.share({
+        message: data.caption,
+        url: data.shareUrl,
+        title: product.productName,
+      });
+      if (result.action === Share.dismissedAction) {
+        await Clipboard.setStringAsync(data.shareUrl);
+        Alert.alert("Link Copied", "Listing URL copied to clipboard.");
+      }
+    } catch (err: any) {
+      try {
+        const data = await getSellerProductShare(product.id);
+        await Clipboard.setStringAsync(data.shareUrl);
+        Alert.alert("Link Copied", "Listing URL copied to clipboard.");
+      } catch {
+        Alert.alert("Share Failed", err?.message || "Could not prepare share link.");
+      }
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -224,9 +264,7 @@ export default function ProductDetailsScreen() {
           <View style={styles.metricDivider} />
           <View style={styles.metricBlock}>
             <Text style={styles.metricLabel}>Selling Price</Text>
-            <Text style={styles.metricValue}>
-              ₱{price.toFixed(2)} <Text style={styles.metricUnit}>/ {unitLabel}</Text>
-            </Text>
+            <PriceCompare basePrice={product.basePrice} currentPrice={price} unitLabel={unitLabel} size="detail" />
           </View>
         </View>
 
@@ -236,6 +274,28 @@ export default function ProductDetailsScreen() {
             {threshold != null ? `${threshold.toFixed(2)} ${unitLabel}` : "Not configured"}
           </Text>
         </View>
+        {reductionPercent > 0 ? (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Automatic reduction:</Text>
+            <Text style={styles.metaValue}>
+              {reductionPercent}% every 12 hours
+            </Text>
+          </View>
+        ) : null}
+        {reductionPercent > 0 && product.minimumPrice != null ? (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Lowest price:</Text>
+            <Text style={styles.metaValue}>₱{Number(product.minimumPrice).toFixed(2)}</Text>
+          </View>
+        ) : null}
+        {reductionPercent > 0 && product.nextPriceReductionAt ? (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Next reduction:</Text>
+            <Text style={styles.metaValue}>
+              {new Date(product.nextPriceReductionAt).toLocaleString()}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {/* 3. Thumb-zone Stock Actions */}
@@ -272,15 +332,34 @@ export default function ProductDetailsScreen() {
           </Pressable>
         </View>
 
-        <Pressable
-          onPress={() => router.push(`/(app)/inventory/${product.id}/edit`)}
-          accessibilityRole="button"
-          accessibilityLabel="Edit product information"
-          style={styles.editFullButton}
-        >
-          <Pencil size={16} color={colors.primary} style={{ marginRight: 6 }} />
-          <Text style={styles.editFullButtonText}>Edit Product Details</Text>
-        </Pressable>
+        <View style={styles.shareAndEditRow}>
+          <Pressable
+            onPress={handleShare}
+            disabled={sharing}
+            accessibilityRole="button"
+            accessibilityLabel="Share Listing"
+            style={styles.shareButton}
+          >
+            {sharing ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <>
+                <Share2 size={16} color={colors.primary} style={{ marginRight: 6 }} />
+                <Text style={styles.shareButtonText}>Share Listing</Text>
+              </>
+            )}
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push(`/(app)/inventory/${product.id}/edit`)}
+            accessibilityRole="button"
+            accessibilityLabel="Edit product information"
+            style={styles.editFullButton}
+          >
+            <Pencil size={16} color={colors.primary} style={{ marginRight: 6 }} />
+            <Text style={styles.editFullButtonText}>Edit Details</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* 4. Amount Change History for this Product */}
@@ -582,7 +661,28 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body.semiBold,
     fontSize: 14,
   },
+  shareAndEditRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  shareButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(31, 77, 58, 0.2)",
+    height: touchTargets.min,
+    borderRadius: radii.button,
+  },
+  shareButtonText: {
+    color: colors.primary,
+    fontFamily: fonts.body.semiBold,
+    fontSize: 14,
+  },
   editFullButton: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

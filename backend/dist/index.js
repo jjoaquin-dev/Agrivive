@@ -99037,16 +99037,21 @@ __export(exports_schema, {
   checkouts: () => checkouts,
   listing_cycles: () => listing_cycles,
   order_inquiries: () => order_inquiries,
+  order_report_evidence: () => order_report_evidence,
   order_reports: () => order_reports,
   order_reviews: () => order_reviews,
   order_status: () => order_status,
   ordered_items: () => ordered_items,
   orders: () => orders,
+  product_condition_enum: () => product_condition_enum,
+  product_inquiries: () => product_inquiries,
+  product_reviews: () => product_reviews,
   product_stock_adjustments: () => product_stock_adjustments,
   product_type_enum: () => product_type_enum,
   roleEnum: () => roleEnum,
   scaling_type_enum: () => scaling_type_enum,
   seller_scan_grace: () => seller_scan_grace,
+  seller_type_enum: () => seller_type_enum,
   sellers_product: () => sellers_product,
   sellers_profile: () => sellers_profile,
   session: () => session,
@@ -99129,7 +99134,7 @@ function pgEnumObjectWithSchema2(enumName, values, schema) {
   return enumInstance;
 }
 // src/db/schema.ts
-var roleEnum = pgEnum2("role", ["seller", "buyer", "admin"]);
+var roleEnum = pgEnum2("role", ["seller", "buyer", "admin", "stakeholder"]);
 var user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -99184,6 +99189,11 @@ var twoFactor = pgTable("two_factor", {
   failedVerificationCount: integer2("failed_verification_count").default(0).notNull(),
   lockedUntil: timestamp("locked_until")
 }, (table) => [index("two_factor_user_id_idx").on(table.userId)]);
+var seller_type_enum = pgEnum2("seller_type", [
+  "supplier",
+  "supplier_vendor",
+  "retail_vendor"
+]);
 var sellers_profile = pgTable("sellers_profile", {
   id: uuid2("id").defaultRandom().primaryKey().notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -99192,6 +99202,8 @@ var sellers_profile = pgTable("sellers_profile", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
+  sellerType: seller_type_enum("seller_type").default("supplier").notNull(),
+  pickupInstructions: text("pickup_instructions"),
   isCurrent: boolean4("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
@@ -99204,6 +99216,11 @@ var product_type_enum = pgEnum2("product_type", [
   "Fruit Vegetables",
   "Seeds and Legumes"
 ]);
+var product_condition_enum = pgEnum2("product_condition", [
+  "good",
+  "fair",
+  "needs_inspection"
+]);
 var scaling_type_enum = pgEnum2("scaling_type", [
   "sack",
   "kilo",
@@ -99215,12 +99232,18 @@ var sellers_product = pgTable("sellers_product", {
   productName: text("product_name").notNull(),
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }),
+  priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
+  minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
+  priceReductionPeriodsApplied: integer2("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
     precision: 10,
     scale: 2
   }),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }),
+  condition: product_condition_enum().default("needs_inspection").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   isMarketable: boolean4("is_marketable").default(false).notNull(),
   isActive: boolean4("is_active").default(true).notNull(),
@@ -99228,14 +99251,17 @@ var sellers_product = pgTable("sellers_product", {
   scalingType: scaling_type_enum().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-});
+}, (table) => [index("sellers_product_marketplace_visibility_idx").on(table.isActive, table.isMarketable, table.publishedAt)]);
 var listing_cycles = pgTable("listing_cycles", {
   id: uuid2("id").defaultRandom().primaryKey(),
   productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
   vegetableKey: text("vegetable_key").notNull(),
   startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }).notNull()
-});
+}, (table) => [
+  index("listing_cycles_product_started_idx").on(table.productId, table.startedAt),
+  index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt)
+]);
 var product_stock_adjustments = pgTable("product_stock_adjustments", {
   id: uuid2("id").defaultRandom().primaryKey(),
   productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "restrict" }),
@@ -99273,6 +99299,9 @@ var orders = pgTable("orders", {
   cancellationReason: text("cancellation_reason"),
   totalAmount: decimal("total_amount").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  expiredAt: timestamp("expired_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 });
@@ -99311,6 +99340,28 @@ var order_reports = pgTable("order_reports", {
   details: text("details").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [uniqueIndex("order_reports_order_reporter_unique").on(table.orderId, table.reporterId)]);
+var order_report_evidence = pgTable("order_report_evidence", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  reportId: uuid2("report_id").notNull().references(() => order_reports.id, { onDelete: "cascade" }),
+  objectKey: text("object_key").notNull().unique(),
+  contentType: text("content_type").notNull(),
+  sizeBytes: integer2("size_bytes").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [index("order_report_evidence_report_created_idx").on(table.reportId, table.createdAt)]);
+var product_inquiries = pgTable("product_inquiries", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  reply: text("reply"),
+  repliedAt: timestamp("replied_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("product_inquiries_one_open_per_buyer_product_idx").on(table.productId, table.buyerId).where(sql3`${table.repliedAt} is null`),
+  index("product_inquiries_seller_created_idx").on(table.sellerId, table.createdAt),
+  index("product_inquiries_buyer_product_idx").on(table.buyerId, table.productId, table.createdAt)
+]);
 var trust_events = pgTable("trust_events", {
   id: uuid2("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
@@ -99322,7 +99373,10 @@ var trust_events = pgTable("trust_events", {
   policyVersion: text("policy_version").notNull().default("v1-warning-only"),
   invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
-});
+}, (table) => [
+  index("trust_events_monitor_subject_idx").on(table.subjectId, table.classification, table.invalidatedAt),
+  index("trust_events_monitor_global_idx").on(table.classification, table.invalidatedAt)
+]);
 var trust_notices = pgTable("trust_notices", {
   id: uuid2("id").defaultRandom().primaryKey(),
   noticeKey: text("notice_key").notNull().unique(),
@@ -99361,6 +99415,19 @@ var ordered_items = pgTable("ordered_items", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 });
+var product_reviews = pgTable("product_reviews", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  orderId: uuid2("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderedItemId: uuid2("ordered_item_id").notNull().unique().references(() => ordered_items.id, { onDelete: "cascade" }),
+  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "restrict" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  rating: smallint("rating").notNull(),
+  review: text("review"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
+]);
 // node_modules/better-auth/dist/package.mjs
 var version2 = "1.7.3";
 
@@ -101910,7 +101977,8 @@ var auth = betterAuth({
     "http://10.0.2.2:*",
     "http://192.168.*:*",
     "http://10.*:*",
-    ...(process.env.MOBILE_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean)
+    ...(process.env.MOBILE_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean),
+    ...(process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean)
   ],
   database: drizzleAdapter(db2, {
     provider: "pg",
@@ -101955,10 +102023,161 @@ var auth = betterAuth({
       }
     }
   },
+  emailVerification: {
+    autoSignInAfterVerification: true
+  },
   emailAndPassword: {
-    enabled: true
+    enabled: true,
+    requireEmailVerification: true
   }
 });
+
+// node_modules/@elysia/cors/dist/index.mjs
+var isBun2 = typeof new Headers()?.toJSON === "function";
+var processHeaders = (headers) => {
+  if (isBun2)
+    return Object.keys(headers.toJSON()).join(", ");
+  let keys = "";
+  let i = 0;
+  headers.forEach((_, key) => {
+    if (i)
+      keys = keys + ", " + key;
+    else
+      keys = key;
+    i++;
+  });
+  return keys;
+};
+var cors = (config) => {
+  let {
+    aot = true,
+    origin = true,
+    methods = true,
+    allowedHeaders = true,
+    exposeHeaders = true,
+    credentials = true,
+    maxAge = 5,
+    preflight = true
+  } = config ?? {};
+  if (Array.isArray(allowedHeaders))
+    allowedHeaders = allowedHeaders.join(", ");
+  if (Array.isArray(exposeHeaders))
+    exposeHeaders = exposeHeaders.join(", ");
+  const origins = typeof origin === "boolean" ? undefined : Array.isArray(origin) ? origin : [origin];
+  const app = new Elysia({
+    name: "@elysiajs/cors",
+    seed: config,
+    aot
+  });
+  const anyOrigin = origins?.some((o) => o === "*");
+  const originMap = {};
+  if (origins) {
+    for (const origin2 of origins)
+      if (typeof origin2 === "string")
+        originMap[origin2] = true;
+  }
+  const processOrigin = (origin2, request, from) => {
+    if (Array.isArray(origin2))
+      return origin2.some((o) => processOrigin(o, request, from));
+    switch (typeof origin2) {
+      case "string":
+        if (from in originMap)
+          return true;
+        const fromProtocol = from.indexOf("://");
+        if (fromProtocol !== -1)
+          from = from.slice(fromProtocol + 3);
+        return origin2 === from;
+      case "function":
+        return origin2(request) === true;
+      case "object":
+        if (origin2 instanceof RegExp)
+          return origin2.test(from);
+    }
+    return false;
+  };
+  const handleOrigin = (set, request) => {
+    if (origin === true) {
+      set.headers.vary = "*";
+      set.headers["access-control-allow-origin"] = request.headers.get("Origin") || "*";
+      return;
+    }
+    if (anyOrigin) {
+      set.headers.vary = "*";
+      set.headers["access-control-allow-origin"] = "*";
+      return;
+    }
+    if (!origins?.length)
+      return;
+    if (origins.length) {
+      const from = request.headers.get("Origin") ?? "";
+      for (let i = 0;i < origins.length; i++) {
+        const value = processOrigin(origins[i], request, from);
+        if (value === true) {
+          set.headers.vary = origin ? "Origin" : "*";
+          set.headers["access-control-allow-origin"] = from || "*";
+          return;
+        }
+      }
+    }
+    set.headers.vary = "Origin";
+  };
+  const handleMethod = (set, method) => {
+    if (!method)
+      return;
+    if (methods === true)
+      return set.headers["access-control-allow-methods"] = method ?? "*";
+    if (methods === false || !methods?.length)
+      return;
+    if (methods === "*")
+      return set.headers["access-control-allow-methods"] = "*";
+    if (!Array.isArray(methods))
+      return set.headers["access-control-allow-methods"] = methods;
+    set.headers["access-control-allow-methods"] = methods.join(", ");
+  };
+  const defaultHeaders = {};
+  if (typeof exposeHeaders === "string")
+    defaultHeaders["access-control-expose-headers"] = exposeHeaders;
+  if (typeof allowedHeaders === "string")
+    defaultHeaders["access-control-allow-headers"] = allowedHeaders;
+  if (credentials === true)
+    defaultHeaders["access-control-allow-credentials"] = "true";
+  app.headers(defaultHeaders);
+  function handleOption({ set, request, headers }) {
+    handleOrigin(set, request);
+    handleMethod(set, request.headers.get("access-control-request-method"));
+    if (allowedHeaders === true || exposeHeaders === true) {
+      if (allowedHeaders === true)
+        set.headers["access-control-allow-headers"] = headers["access-control-request-headers"];
+      if (exposeHeaders === true)
+        set.headers["access-control-expose-headers"] = Object.keys(headers).join(",");
+    }
+    if (maxAge)
+      set.headers["access-control-max-age"] = maxAge.toString();
+    return new Response(null, {
+      status: 204
+    });
+  }
+  if (preflight)
+    app.options("/", handleOption).options("/*", handleOption);
+  return app.onRequest(function processCors({ set, request }) {
+    handleOrigin(set, request);
+    if (preflight && request.method === "OPTIONS") {
+      return handleOption({
+        set,
+        request,
+        headers: isBun2 ? request.headers.toJSON() : Object.fromEntries(request.headers.entries())
+      });
+    }
+    handleMethod(set, request.method);
+    if (allowedHeaders === true || exposeHeaders === true) {
+      const headers = processHeaders(request.headers);
+      if (allowedHeaders === true)
+        set.headers["access-control-allow-headers"] = headers;
+      if (exposeHeaders === true)
+        set.headers["access-control-expose-headers"] = headers;
+    }
+  });
+};
 
 // node_modules/@elysia/openapi/dist/index.mjs
 var __defProp3 = Object.defineProperty;
@@ -107406,10 +107625,14 @@ var sessionAuth = new Elysia().macro({
       if (!authSession) {
         return status(401);
       }
-      const [current] = await db2.select({ role: user.role, isActive: user.isActive }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
+      const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
       if (!current?.isActive)
         return status(403);
-      const userRoles = current.role ?? [];
+      const userRoles = [...current.role ?? []];
+      const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
+      if (stakeholderEmails.has(current.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
+        userRoles.push("stakeholder");
+      }
       const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
       if (!hasAllowedRole) {
         return status(403);
@@ -107441,9 +107664,12 @@ var sellerProductUpdate = t.Object({
   productName: t.Optional(t.String({ minLength: 1, pattern: "\\S" })),
   imagUrl: t.Optional(t.String({ format: "uri" })),
   productPrice: t.Optional(t.Number({ minimum: 1, maximum: 99999999.99 })),
+  priceReductionPercent: t.Optional(t.Number({ minimum: 0, maximum: 99.99 })),
+  minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99999999.99 }))),
   productType: t.Optional(sellerProductType),
   isMarketable: t.Optional(t.Boolean()),
-  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 })))
+  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 }))),
+  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
 }, { minProperties: 1, additionalProperties: false });
 var sellerProductRestock = t.Object({ quantity: t.Number({ minimum: 0.01, maximum: 99999999 }) });
 
@@ -107463,6 +107689,8 @@ var sellerProductCreate = t.Object({
     maximum: 99999999.99,
     error: "price must be between 1 and 99999999.99"
   }),
+  priceReductionPercent: t.Optional(t.Number({ minimum: 0, maximum: 99.99 })),
+  minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99999999.99 }))),
   productQty: t.Numeric({
     minimum: 0.01,
     maximum: 99999999,
@@ -107471,7 +107699,8 @@ var sellerProductCreate = t.Object({
   productType: sellerProductType,
   scalingType: sellerProductScalingType,
   isMarketable: t.Boolean(),
-  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 })))
+  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 }))),
+  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
 });
 
 // src/utils/order-amount/index.ts
@@ -117394,6 +117623,20 @@ function normalizeVegetableName(name) {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+// src/utils/price-reduction/index.ts
+function validatePriceReductionConfig(basePrice, percent, minimumPrice) {
+  const reduction = percent ?? 0;
+  if (!Number.isFinite(reduction) || reduction < 0 || reduction > 99.99 || Math.round(reduction * 100) !== reduction * 100) {
+    throw new OrderError(400, "Price reduction must be between 0 and 99.99 percent with at most two decimals");
+  }
+  if (minimumPrice !== undefined && minimumPrice !== null && (!Number.isFinite(minimumPrice) || minimumPrice < 1 || minimumPrice > basePrice || Math.round(minimumPrice * 100) !== minimumPrice * 100)) {
+    throw new OrderError(400, "Minimum price must be at least 1 and no higher than the base price");
+  }
+  if (reduction > 0 && (minimumPrice === undefined || minimumPrice === null)) {
+    throw new OrderError(400, "A minimum price is required when price reduction is enabled");
+  }
+}
+
 // src/modules/seller/services/seller.product.create.ts
 async function createSellerProduct(userId, body) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -117404,6 +117647,7 @@ async function createSellerProduct(userId, body) {
   if (priceToCents(body.productPrice) === null) {
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
+  validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
   const productName = body.productName.trim();
   const normalizedName = productName.toLowerCase();
   const lockKey = `${normalizedName}:${body.scalingType}`;
@@ -117421,8 +117665,14 @@ async function createSellerProduct(userId, body) {
       ...body,
       productName,
       productPrice: body.productPrice.toString(),
+      basePrice: body.productPrice.toString(),
+      priceReductionPercent: (body.priceReductionPercent ?? 0).toString(),
+      minimumPrice: body.minimumPrice?.toString() ?? null,
+      priceScheduleStartedAt: now,
+      priceReductionPeriodsApplied: 0,
       productQty: body.productQty.toString(),
       lowStockThreshold: body.lowStockThreshold?.toString() ?? null,
+      condition: body.condition ?? "needs_inspection",
       originalQty: body.productQty.toString(),
       publishedAt: now,
       isMarketable: body.isMarketable,
@@ -117480,7 +117730,9 @@ var sellerProfileModel = t.Object({
   detailAddress: t.String({ minLength: 1, maxLength: 500, pattern: "\\S" }),
   latitude: t.Number({ minimum: -90, maximum: 90 }),
   longitude: t.Number({ minimum: -180, maximum: 180 }),
-  phoneNumber: t.String({ minLength: 7, maxLength: 30, pattern: "\\S" })
+  phoneNumber: t.String({ minLength: 7, maxLength: 30, pattern: "\\S" }),
+  sellerType: t.Optional(t.UnionEnum(["supplier", "supplier_vendor", "retail_vendor"])),
+  pickupInstructions: t.Optional(t.Nullable(t.String({ maxLength: 500 })))
 }, { additionalProperties: false });
 
 // src/modules/seller/services/seller.profile.create.ts
@@ -117503,6 +117755,8 @@ async function createSellerProfile(userId, body) {
       latitude: body.latitude,
       longitude: body.longitude,
       phoneNumber,
+      sellerType: body.sellerType ?? "supplier",
+      pickupInstructions: body.pickupInstructions?.trim() || null,
       userId
     }).returning();
     if (!postSellerProfile) {
@@ -117544,15 +117798,63 @@ var sellerProfileCreateRoute = new Elysia().use(sessionAuth).post("/profile", as
   }
 }, { body: sellerProfileModel, role: ["seller", "buyer"] });
 
-// src/modules/seller/services/seller.weighted.surplus.visibility.ts
+// src/utils/visibility-score/index.ts
 var clamp = (value) => Math.min(1, Math.max(0, value));
-var hour = 60 * 60 * 1000;
-var day = 24 * hour;
+var hourMs = 60 * 60 * 1000;
+function calculateVisibilityScore(input) {
+  if (!input.publishedAt || input.publishedAt > input.evaluatedAt || !Number.isFinite(input.quantity) || !Number.isFinite(input.originalQuantity) || input.originalQuantity <= 0)
+    return null;
+  const postingAge = clamp((input.evaluatedAt.getTime() - input.publishedAt.getTime()) / (12 * hourMs));
+  const remainingQuantity = clamp(input.quantity / input.originalQuantity);
+  const recurrence = clamp(input.priorCycles / 3);
+  const score = 0.4 * postingAge + 0.4 * remainingQuantity + 0.2 * recurrence;
+  return {
+    score,
+    tier: score >= 0.7 ? "priority" : score >= 0.4 ? "standard" : "basic",
+    inputs: { postingAge, remainingQuantity, recurrence, priorCycles: input.priorCycles }
+  };
+}
+function marketplaceVisibilityScoreSql(evaluatedAt, since) {
+  const currentCycleId = sql3`(
+    select current_cycle.id from ${listing_cycles} as current_cycle
+    where current_cycle.product_id = ${sellers_product.id}
+      and current_cycle.started_at <= ${evaluatedAt}
+    order by current_cycle.started_at desc limit 1
+  )`;
+  const vegetableKey = sql3`coalesce(
+    (select current_cycle.vegetable_key from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    lower(regexp_replace(btrim(${sellers_product.productName}), '[[:space:]]+', ' ', 'g'))
+  )`;
+  const priorCycles = sql3`(
+    select count(*)::int from ${listing_cycles} as prior_cycle
+    inner join ${sellers_product} as prior_product on prior_product.id = prior_cycle.product_id
+    where prior_product.user_id = ${sellers_product.userId}
+      and prior_cycle.vegetable_key = ${vegetableKey}
+      and prior_cycle.started_at >= ${since}
+      and prior_cycle.started_at < ${sellers_product.publishedAt}
+      and prior_cycle.started_at <= ${evaluatedAt}
+      and prior_cycle.id is distinct from ${currentCycleId}
+  )`;
+  return sql3`(case
+    when ${sellers_product.originalQty} is null
+      or ${sellers_product.originalQty} <= 0 or ${sellers_product.publishedAt} is null
+      or ${sellers_product.publishedAt} > ${evaluatedAt} then null
+    else
+      .40 * least(1, greatest(0, extract(epoch from (${evaluatedAt}::timestamptz - ${sellers_product.publishedAt})) / 43200.0))
+      + .40 * least(1, greatest(0, ${sellers_product.productQty} / nullif(${sellers_product.originalQty}, 0)))
+      + .20 * least(1, greatest(0, ${priorCycles} / 3.0))
+  end)::double precision`;
+}
+
+// src/modules/seller/services/seller.weighted.surplus.visibility.ts
 async function getSellerWeightedSurplusVisibility(sellerId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const evaluatedAt = new Date;
-    const since = new Date(evaluatedAt.getTime() - 30 * day);
+    const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
     const products = await tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
     const cycles = products.length ? await tx.select().from(listing_cycles).where(and(inArray(listing_cycles.productId, products.map((product) => product.id)), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt))) : [];
     return products.map((product) => {
@@ -117562,7 +117864,7 @@ async function getSellerWeightedSurplusVisibility(sellerId) {
       const base = {
         productId: product.id,
         evaluatedAt: evaluatedAt.toISOString(),
-        policyVersion: "visibility-v2"
+        policyVersion: "visibility-v4"
       };
       if (!eligible) {
         return { ...base, score: null, tier: null, reason: "Listing is not eligible" };
@@ -117573,16 +117875,20 @@ async function getSellerWeightedSurplusVisibility(sellerId) {
       const currentCycle = cycles.filter((cycle) => cycle.productId === product.id).sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
       const vegetableKey = currentCycle && Math.abs(currentCycle.startedAt.getTime() - product.publishedAt.getTime()) <= 60000 ? currentCycle.vegetableKey : normalizeVegetableName(product.productName);
       const priorCycles = cycles.filter((cycle) => cycle.vegetableKey === vegetableKey && cycle.startedAt < product.publishedAt && cycle.id !== currentCycle?.id).length;
-      const postingAge = clamp((evaluatedAt.getTime() - product.publishedAt.getTime()) / (12 * hour));
-      const remainingQuantity = clamp(quantity / original);
-      const inventoryAge = clamp((evaluatedAt.getTime() - product.publishedAt.getTime()) / (3 * day));
-      const recurrence = clamp(priorCycles / 3);
-      const score = 0.3 * postingAge + 0.3 * remainingQuantity + 0.25 * inventoryAge + 0.15 * recurrence;
+      const visibility = calculateVisibilityScore({
+        evaluatedAt,
+        publishedAt: product.publishedAt,
+        quantity,
+        originalQuantity: original,
+        priorCycles
+      });
+      if (!visibility)
+        return { ...base, score: null, tier: null, reason: "Missing score inputs" };
       return {
         ...base,
-        score: Number(score.toFixed(4)),
-        tier: score >= 0.7 ? "priority" : score >= 0.4 ? "standard" : "basic",
-        inputs: { postingAge, remainingQuantity, inventoryAge, recurrence, priorCycles, vegetableKey }
+        score: Number(visibility.score.toFixed(4)),
+        tier: visibility.tier,
+        inputs: { ...visibility.inputs, vegetableKey }
       };
     });
   });
@@ -117741,7 +118047,7 @@ async function scanSellerOrder(sellerId, body) {
     await requireActiveUser(tx, sellerId, "seller");
     await requireSellerScanAccess(tx, sellerId, orderId);
     const now = new Date;
-    const [completed] = await tx.update(orders).set({ status: "completed", updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.sellersId, sellerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id });
+    const [completed] = await tx.update(orders).set({ status: "completed", completedAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.sellersId, sellerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id });
     if (completed)
       return;
     const [current] = await tx.select({ sellerId: orders.sellersId, status: orders.status, expiresAt: orders.expiresAt }).from(orders).where(eq(orders.id, orderId)).limit(1);
@@ -117831,9 +118137,12 @@ function updateSellerProfile(sellerId, body) {
   const shopName = body.shopName?.trim();
   const detailAddress = body.detailAddress?.trim();
   const phoneNumber = body.phoneNumber?.trim();
+  const pickupInstructions = body.pickupInstructions?.trim();
   if (shopName === "" || detailAddress === "" || phoneNumber === "") {
     throw new OrderError(400, "Profile text fields cannot be blank");
   }
+  if (pickupInstructions === "")
+    throw new OrderError(400, "Pickup instructions cannot be blank");
   if (body.latitude !== undefined && (!Number.isFinite(body.latitude) || body.latitude < -90 || body.latitude > 90)) {
     throw new OrderError(400, "Latitude must be between -90 and 90");
   }
@@ -117849,6 +118158,8 @@ function updateSellerProfile(sellerId, body) {
       ...body.latitude !== undefined ? { latitude: body.latitude } : {},
       ...body.longitude !== undefined ? { longitude: body.longitude } : {},
       ...phoneNumber !== undefined ? { phoneNumber } : {},
+      ...body.sellerType !== undefined ? { sellerType: body.sellerType } : {},
+      ...pickupInstructions !== undefined ? { pickupInstructions: pickupInstructions || null } : {},
       updatedAt: new Date
     }).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true))).returning();
     if (!profile)
@@ -117951,13 +118262,64 @@ var sellerProfileAvatarRoute = new Elysia().use(sessionAuth).post("/profile/avat
   body: sellerProfileAvatarModel
 });
 
+// src/modules/seller/services/seller.product.price-reduction.ts
+var PRICE_PERIOD_MS = 12 * 60 * 60 * 1000;
+function cents(value) {
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
+  if (!match)
+    throw new Error("Invalid price amount");
+  return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+}
+function decimal4(centsValue) {
+  return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
+}
+function nextReductionAt(product) {
+  if (!product.priceScheduleStartedAt || Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice || !product.productPrice || cents(product.productPrice) <= cents(product.minimumPrice))
+    return null;
+  return new Date(product.priceScheduleStartedAt.getTime() + (product.priceReductionPeriodsApplied + 1) * PRICE_PERIOD_MS).toISOString();
+}
+async function applySellerProductPriceReduction(tx, productId, now = new Date) {
+  const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
+  if (!current)
+    return null;
+  const reductionPercent = Number(current.priceReductionPercent ?? "0");
+  if (!current.priceScheduleStartedAt || reductionPercent <= 0 || !current.minimumPrice || !current.productPrice || now < current.priceScheduleStartedAt) {
+    return { ...current, nextPriceReductionAt: nextReductionAt(current) };
+  }
+  const targetPeriods = Math.floor((now.getTime() - current.priceScheduleStartedAt.getTime()) / PRICE_PERIOD_MS);
+  if (targetPeriods <= current.priceReductionPeriodsApplied) {
+    return { ...current, nextPriceReductionAt: nextReductionAt(current) };
+  }
+  const basisPoints = BigInt(Math.round(reductionPercent * 100));
+  const floor = cents(current.minimumPrice);
+  let currentCents = cents(current.productPrice);
+  for (let period = current.priceReductionPeriodsApplied;period < targetPeriods; period += 1) {
+    currentCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
+    if (currentCents <= floor) {
+      currentCents = floor;
+      break;
+    }
+  }
+  const [updated] = await tx.update(sellers_product).set({
+    productPrice: decimal4(currentCents),
+    priceReductionPeriodsApplied: targetPeriods,
+    updatedAt: now
+  }).where(and(eq(sellers_product.id, productId))).returning();
+  return updated ? { ...updated, nextPriceReductionAt: nextReductionAt(updated) } : null;
+}
+
 // src/modules/seller/services/seller.product.list.ts
 async function listSellerProducts(sellerId) {
   const products = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    return tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
+    const products = await tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
+    const updatedProducts = [];
+    for (const product of products) {
+      updatedProducts.push(await applySellerProductPriceReduction(tx, product.id));
+    }
+    return updatedProducts;
   });
-  return Promise.all(products.map(async (product) => ({
+  return Promise.all(products.filter((product) => product !== null).map(async (product) => ({
     ...product,
     displayImageUrl: await getProductImageDisplayUrl(product.imagUrl, sellerId)
   })));
@@ -117978,6 +118340,12 @@ function updateSellerProduct(sellerId, productId, body) {
     const [current] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).for("update").limit(1);
     if (!current)
       throw new OrderError(404, "Product not found");
+    const pricingChanged = body.productPrice !== undefined || body.priceReductionPercent !== undefined || body.minimumPrice !== undefined;
+    const basePrice = body.productPrice ?? Number(current.productPrice ?? current.basePrice ?? 0);
+    const reductionPercent = body.priceReductionPercent ?? Number(current.priceReductionPercent ?? 0);
+    const minimumPrice = body.minimumPrice !== undefined ? body.minimumPrice : current.minimumPrice === null ? null : Number(current.minimumPrice);
+    if (pricingChanged)
+      validatePriceReductionConfig(basePrice, reductionPercent, minimumPrice);
     const name = body.productName?.trim();
     const initializingLegacy = current.isActive && !current.originalQty && Number(current.productQty) > 0;
     if (name !== undefined) {
@@ -117994,11 +118362,25 @@ function updateSellerProduct(sellerId, productId, body) {
     const [updated] = await tx.update(sellers_product).set({
       ...name !== undefined ? { productName: name } : {},
       ...body.imagUrl !== undefined ? { imagUrl: body.imagUrl } : {},
-      ...body.productPrice !== undefined ? { productPrice: body.productPrice.toString() } : {},
+      ...pricingChanged ? {
+        productPrice: basePrice.toString(),
+        basePrice: basePrice.toString(),
+        priceReductionPercent: reductionPercent.toString(),
+        minimumPrice: minimumPrice?.toString() ?? null,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0
+      } : {},
       ...body.productType !== undefined ? { productType: body.productType } : {},
       ...body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold?.toString() ?? null } : {},
+      ...body.condition !== undefined ? { condition: body.condition } : {},
       ...body.isMarketable !== undefined ? { isMarketable: body.isMarketable } : {},
-      ...initializingLegacy ? { originalQty: current.productQty, publishedAt: now } : {},
+      ...initializingLegacy ? {
+        originalQty: current.productQty,
+        publishedAt: now,
+        basePrice: current.productPrice,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0
+      } : {},
       updatedAt: now
     }).where(eq(sellers_product.id, productId)).returning();
     if (initializingLegacy && updated.originalQty) {
@@ -118056,10 +118438,17 @@ function changeSellerProductStock(sellerId, productId, delta, reason) {
       originalQty = toDecimal(originalAfter);
     }
     const now = new Date;
+    const cycleBasePrice = product.basePrice ?? product.productPrice;
     const [updated] = await tx.update(sellers_product).set({
       productQty: toDecimal(after),
       ...originalQty !== product.originalQty ? { originalQty } : {},
-      ...newCycle || initializeLegacy ? { publishedAt: now } : {},
+      ...newCycle || initializeLegacy ? {
+        publishedAt: now,
+        basePrice: cycleBasePrice,
+        productPrice: cycleBasePrice,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0
+      } : {},
       updatedAt: now
     }).where(eq(sellers_product.id, productId)).returning();
     if ((newCycle || initializeLegacy) && originalQty) {
@@ -118150,7 +118539,8 @@ var sellerProductGetParams = sellerProductId;
 async function getSellerProduct(sellerId, productId) {
   const product = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const [product] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
+    const [owned] = await tx.select({ id: sellers_product.id }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
+    const product = owned ? await applySellerProductPriceReduction(tx, owned.id) : null;
     if (!product)
       throw new OrderError(404, "Product not found");
     return product;
@@ -118198,8 +118588,13 @@ function reactivateSellerProduct(sellerId, productId) {
       throw new OrderError(409, "Product needs stock, a valid price, and marketability before reactivation");
     }
     const now = new Date;
+    const basePrice = product.basePrice ?? product.productPrice;
     const [updated] = await tx.update(sellers_product).set({
       isActive: true,
+      productPrice: basePrice,
+      basePrice,
+      priceScheduleStartedAt: now,
+      priceReductionPeriodsApplied: 0,
       originalQty: product.productQty,
       publishedAt: now,
       updatedAt: now
@@ -118320,6 +118715,7 @@ async function cancelSellerOrder(sellerId, orderId, reason) {
       status: "cancelled",
       cancelledBy: "seller",
       cancellationReason: reason.trim(),
+      cancelledAt: now,
       updatedAt: now
     }).where(and(eq(orders.id, orderId), eq(orders.sellersId, sellerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id, buyerId: orders.buyersId });
     if (!cancelled) {
@@ -118559,6 +118955,88 @@ function createSellerOrderReport(sellerId, orderId, body) {
   return createOrderReport(sellerId, orderId, "seller", body.reason, body.details);
 }
 
+// src/modules/seller/model/seller.order.report.evidence.ts
+var sellerReportEvidenceParams = t.Object({
+  id: t.String({ format: "uuid" }),
+  reportId: t.String({ format: "uuid" })
+});
+var sellerReportEvidenceUpload = t.Object({
+  file: t.File({ type: ["image/jpeg", "image/png", "image/webp", "application/pdf"], maxSize: 5 * 1024 * 1024 })
+});
+
+// src/utils/s3/private-upload.ts
+async function uploadPrivateObject(params) {
+  const bucket = process.env.AWS_S3_BUCKET_NAME?.trim();
+  if (!bucket)
+    throw new Error("AWS_S3_BUCKET_NAME is required");
+  await getS3Client().send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: params.key,
+    Body: params.buffer,
+    ContentType: params.contentType,
+    CacheControl: "private, no-store"
+  }));
+  return params.key;
+}
+
+// src/utils/trust/report-evidence.upload.ts
+var allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
+async function uploadOrderReportEvidence(userId, orderId, reportId, file) {
+  if (!file || !allowedTypes.has(file.type) || file.size > 5 * 1024 * 1024) {
+    throw new OrderError(400, "Use a JPG, PNG, WebP, or PDF file under 5 MB");
+  }
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const validHeader = file.type === "image/jpeg" ? buffer[0] === 255 && buffer[1] === 216 && buffer[2] === 255 : file.type === "image/png" ? buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) : file.type === "image/webp" ? buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP" : buffer.toString("ascii", 0, 4) === "%PDF";
+  if (!validHeader)
+    throw new OrderError(400, "The file content does not match its file type");
+  const extension = file.type === "application/pdf" ? "pdf" : file.type.split("/")[1];
+  const key = `private-reports/${orderId}/${reportId}/${crypto.randomUUID()}.${extension}`;
+  return db2.transaction(async (tx) => {
+    const [report] = await tx.select({ id: order_reports.id }).from(order_reports).where(and(eq(order_reports.id, reportId), eq(order_reports.orderId, orderId), eq(order_reports.reporterId, userId))).for("update").limit(1);
+    if (!report)
+      throw new OrderError(404, "Report not found");
+    const [total] = await tx.select({ value: count() }).from(order_report_evidence).where(eq(order_report_evidence.reportId, reportId));
+    if (Number(total?.value ?? 0) >= 5)
+      throw new OrderError(409, "A report can have up to five evidence files");
+    await uploadPrivateObject({ buffer, key, contentType: file.type });
+    const [evidence] = await tx.insert(order_report_evidence).values({
+      reportId,
+      objectKey: key,
+      contentType: file.type,
+      sizeBytes: file.size
+    }).returning({
+      id: order_report_evidence.id,
+      contentType: order_report_evidence.contentType,
+      sizeBytes: order_report_evidence.sizeBytes,
+      createdAt: order_report_evidence.createdAt
+    });
+    return evidence;
+  });
+}
+
+// src/utils/s3/private-download.ts
+async function createPrivateDownloadUrl(key) {
+  const bucket = process.env.AWS_S3_BUCKET_NAME?.trim();
+  if (!bucket)
+    throw new Error("AWS_S3_BUCKET_NAME is required");
+  return getSignedUrl(getS3Client(), new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn: 300 });
+}
+
+// src/utils/trust/report-evidence.list.ts
+async function listOrderReportEvidence(userId, orderId, reportId) {
+  const [report] = await db2.select({ id: order_reports.id }).from(order_reports).where(and(eq(order_reports.id, reportId), eq(order_reports.orderId, orderId), eq(order_reports.reporterId, userId))).limit(1);
+  if (!report)
+    throw new OrderError(404, "Report not found");
+  const files = await db2.select().from(order_report_evidence).where(eq(order_report_evidence.reportId, reportId)).orderBy(asc(order_report_evidence.createdAt));
+  return Promise.all(files.map(async (file) => ({
+    id: file.id,
+    contentType: file.contentType,
+    sizeBytes: file.sizeBytes,
+    createdAt: file.createdAt,
+    downloadUrl: await createPrivateDownloadUrl(file.objectKey)
+  })));
+}
+
 // src/modules/seller/index/seller.order.report.ts
 var sellerReportRoute = new Elysia().use(sessionAuth).post("/orders/:id/report", async ({ session, params, body, status }) => {
   try {
@@ -118569,11 +119047,57 @@ var sellerReportRoute = new Elysia().use(sessionAuth).post("/orders/:id/report",
     console.error(error);
     return status(500, { message: "Failed to report order" });
   }
-}, { role: ["seller"], params: sellerReportParams, body: sellerReportBody });
+}, { role: ["seller"], params: sellerReportParams, body: sellerReportBody }).post("/orders/:id/report/:reportId/evidence", async ({ session, params, body, status }) => {
+  try {
+    return status(201, await uploadOrderReportEvidence(session.userId, params.id, params.reportId, body.file));
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to upload report evidence" });
+  }
+}, { role: ["seller"], params: sellerReportEvidenceParams, body: sellerReportEvidenceUpload }).get("/orders/:id/report/:reportId/evidence", async ({ session, params, status }) => {
+  try {
+    return await listOrderReportEvidence(session.userId, params.id, params.reportId);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to read report evidence" });
+  }
+}, { role: ["seller"], params: sellerReportEvidenceParams });
 
 // src/modules/seller/model/seller.trust.ts
 var sellerTrustEventParams = t.Object({ id: t.String({ format: "uuid" }) });
 var sellerCorrectionBody = t.Object({ reason: t.String({ minLength: 5, maxLength: 2000 }) });
+
+// src/utils/trust/score.ts
+var monitorWeights = {
+  inquiry_non_response: 1,
+  seller_cancellation: 2
+};
+async function readTrustMonitoringScore(subjectId) {
+  const rows = await db2.select({
+    kind: trust_events.kind,
+    classification: trust_events.classification,
+    count: sql3`count(*)::int`
+  }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull2(trust_events.invalidatedAt))).groupBy(trust_events.kind, trust_events.classification);
+  const verified = rows.filter((row) => row.classification === "verified");
+  const allegations = rows.filter((row) => row.classification === "allegation");
+  const components = verified.map((row) => ({
+    kind: row.kind,
+    count: Number(row.count),
+    weight: monitorWeights[row.kind] ?? 0,
+    points: Number(row.count) * (monitorWeights[row.kind] ?? 0)
+  }));
+  return {
+    policyVersion: "monitoring-v1",
+    weightedPoints: components.reduce((total, item) => total + item.points, 0),
+    verifiedEvents: components.reduce((total, item) => total + item.count, 0),
+    allegationFlags: allegations.reduce((total, item) => total + Number(item.count), 0),
+    components
+  };
+}
 
 // src/modules/seller/services/seller.trust.events.ts
 async function listSellerTrustEvents(sellerId) {
@@ -118593,7 +119117,8 @@ async function listSellerTrustEvents(sellerId) {
       sentAt: trust_notices.sentAt
     }).from(trust_notices).where(eq(trust_notices.recipientId, sellerId)).orderBy(desc(trust_notices.createdAt)).limit(100)
   ]);
-  return { events, notices };
+  const monitoring = await readTrustMonitoringScore(sellerId);
+  return { events, notices, monitoring };
 }
 
 // src/modules/seller/services/seller.trust.correct.ts
@@ -118945,8 +119470,603 @@ var sellerNotificationsRoute = new Elysia().use(sessionAuth).get("/notifications
   role: ["seller"]
 });
 
+// src/modules/seller/model/seller.analytics.ts
+var sellerAnalyticsQuery = t.Object({
+  from: t.Optional(t.String({ format: "date" })),
+  to: t.Optional(t.String({ format: "date" })),
+  productId: t.Optional(t.String({ format: "uuid" })),
+  unit: t.Optional(t.Union([t.Literal("sack"), t.Literal("kilo"), t.Literal("pile")]))
+});
+
+// src/modules/seller/services/seller.analytics.metrics.ts
+var DAY_MS = 24 * 60 * 60 * 1000;
+function dateOnly(date) {
+  return date.toISOString().slice(0, 10);
+}
+function startOfUtcDay(value) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime()) || dateOnly(date) !== value) {
+    throw new OrderError(400, "Analytics dates must use YYYY-MM-DD format");
+  }
+  return date;
+}
+function resolvePeriod(query) {
+  if (query.from && !query.to || !query.from && query.to) {
+    throw new OrderError(400, "Analytics requires both from and to dates");
+  }
+  const todayStart = startOfUtcDay(dateOnly(new Date));
+  const end = query.to ? new Date(startOfUtcDay(query.to).getTime() + DAY_MS) : todayStart;
+  const start = query.from ? startOfUtcDay(query.from) : new Date(end.getTime() - 30 * DAY_MS);
+  if (start >= end) {
+    throw new OrderError(400, "Analytics from date must be before the to date");
+  }
+  const duration = end.getTime() - start.getTime();
+  const previousStart = new Date(start.getTime() - duration);
+  return {
+    current: { start, end, from: dateOnly(start), to: dateOnly(new Date(end.getTime() - DAY_MS)) },
+    previous: {
+      start: previousStart,
+      end: start,
+      from: dateOnly(previousStart),
+      to: dateOnly(new Date(start.getTime() - DAY_MS))
+    }
+  };
+}
+function scaledDecimal(value) {
+  if (value === null || value === undefined)
+    return 0n;
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(String(value));
+  if (!match)
+    return 0n;
+  const cents = BigInt(match[2]) * 100n + BigInt((match[3] ?? "").padEnd(2, "0") || "0");
+  return match[1] ? -cents : cents;
+}
+function formatScaled(value) {
+  const sign = value < 0n ? "-" : "";
+  const absolute = value < 0n ? -value : value;
+  return `${sign}${absolute / 100n}.${(absolute % 100n).toString().padStart(2, "0")}`;
+}
+function percentage(numerator, denominator) {
+  if (denominator === 0n)
+    return null;
+  return Number(numerator * 10000n / denominator) / 100;
+}
+function inPeriod(value, period) {
+  return value !== null && value >= period.start && value < period.end;
+}
+async function getSellerAnalyticsMetrics(sellerId, query) {
+  const periods = resolvePeriod(query);
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const productConditions = [eq(sellers_product.userId, sellerId)];
+    if (query.productId)
+      productConditions.push(eq(sellers_product.id, query.productId));
+    if (query.unit)
+      productConditions.push(eq(sellers_product.scalingType, query.unit));
+    const products = await tx.select({ id: sellers_product.id, productQty: sellers_product.productQty, scalingType: sellers_product.scalingType }).from(sellers_product).where(and(...productConditions));
+    const productIds = products.map((product) => product.id);
+    const empty = productIds.length === 0;
+    const cycles = empty ? [] : await tx.select({ productId: listing_cycles.productId, vegetableKey: listing_cycles.vegetableKey, originalQty: listing_cycles.originalQty, startedAt: listing_cycles.startedAt }).from(listing_cycles).where(and(inArray(listing_cycles.productId, productIds), gte(listing_cycles.startedAt, periods.previous.start), lt(listing_cycles.startedAt, periods.current.end)));
+    const items = empty ? [] : await tx.select({ orderId: ordered_items.ordersId, productId: ordered_items.productId, quantity: ordered_items.quantity, subtotal: ordered_items.subtotal }).from(ordered_items).where(inArray(ordered_items.productId, productIds));
+    const sellerOrders = await tx.select({
+      id: orders.id,
+      status: orders.status,
+      createdAt: orders.createdAt,
+      completedAt: orders.completedAt,
+      cancelledAt: orders.cancelledAt,
+      expiredAt: orders.expiredAt
+    }).from(orders).where(eq(orders.sellersId, sellerId));
+    const orderById = new Map(sellerOrders.map((order) => [order.id, order]));
+    const selected = new Set(productIds);
+    const currentPosted = cycles.filter((cycle) => inPeriod(cycle.startedAt, periods.current));
+    const postedQuantity = currentPosted.reduce((total, cycle) => total + scaledDecimal(cycle.originalQty), 0n);
+    const availableQuantity = products.reduce((total, product) => total + scaledDecimal(product.productQty), 0n);
+    let reservedQuantity = 0n;
+    let activeReservedQuantity = 0n;
+    let completedQuantity = 0n;
+    let previousCompletedQuantity = 0n;
+    let cancelledQuantity = 0n;
+    let expiredQuantity = 0n;
+    let completedSalesTotal = 0n;
+    for (const item of items) {
+      if (!selected.has(item.productId))
+        continue;
+      const order = orderById.get(item.orderId);
+      if (!order)
+        continue;
+      const quantity = scaledDecimal(item.quantity);
+      if (inPeriod(order.createdAt, periods.current))
+        reservedQuantity += quantity;
+      if (order.status === "pending")
+        activeReservedQuantity += quantity;
+      if (order.status === "completed" && inPeriod(order.completedAt, periods.current)) {
+        completedQuantity += quantity;
+        completedSalesTotal += scaledDecimal(item.subtotal);
+      }
+      if (order.status === "completed" && inPeriod(order.completedAt, periods.previous)) {
+        previousCompletedQuantity += quantity;
+      }
+      if (order.status === "cancelled" && inPeriod(order.cancelledAt, periods.current))
+        cancelledQuantity += quantity;
+      if (order.status === "expired" && inPeriod(order.expiredAt, periods.current))
+        expiredQuantity += quantity;
+    }
+    const previousVegetableKeys = new Set(cycles.filter((cycle) => cycle.startedAt < periods.current.start).map((cycle) => cycle.vegetableKey));
+    const recurringListings = new Set(currentPosted.filter((cycle) => previousVegetableKeys.has(cycle.vegetableKey)).map((cycle) => cycle.vegetableKey)).size;
+    const completedQuantityChange = percentage(previousCompletedQuantity === 0n ? 0n : completedQuantity - previousCompletedQuantity, previousCompletedQuantity);
+    const sellThroughRate = percentage(completedQuantity, postedQuantity);
+    const completedChange = previousCompletedQuantity === 0n ? null : completedQuantityChange;
+    const remainingQuantity = availableQuantity + activeReservedQuantity;
+    return {
+      period: {
+        from: periods.current.from,
+        to: periods.current.to,
+        previousFrom: periods.previous.from,
+        previousTo: periods.previous.to
+      },
+      filter: {
+        ...query.productId ? { productId: query.productId } : {},
+        ...query.unit ? { unit: query.unit } : {}
+      },
+      metrics: {
+        postedQuantity: formatScaled(postedQuantity),
+        availableQuantity: formatScaled(availableQuantity),
+        reservedQuantity: formatScaled(reservedQuantity),
+        completedQuantity: formatScaled(completedQuantity),
+        cancelledQuantity: formatScaled(cancelledQuantity),
+        expiredQuantity: formatScaled(expiredQuantity),
+        remainingQuantity: formatScaled(remainingQuantity),
+        completedSalesTotal: formatScaled(completedSalesTotal),
+        sellThroughRate,
+        completedQuantityChange: completedChange,
+        recurringListings
+      },
+      notComputable: {
+        sellThroughRate: postedQuantity === 0n,
+        completedQuantityChange: previousCompletedQuantity === 0n
+      }
+    };
+  });
+}
+
+// src/modules/seller/services/seller.analytics.summary.ts
+function resolveGroqTimeoutMs() {
+  const configured = Number(process.env.GROQ_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured >= 2000 && configured <= 30000 ? configured : 1e4;
+}
+async function generateSellerAnalyticsSummary(analytics) {
+  const apiKey = process.env.GROQ_API_KEY?.trim();
+  if (!apiKey) {
+    console.warn("Groq analytics summary unavailable: GROQ_API_KEY is missing");
+    return { summary: null, status: "unavailable" };
+  }
+  const model = process.env.GROQ_MODEL?.trim() || "openai/gpt-oss-20b";
+  const supportsLowReasoning = [
+    "openai/gpt-oss-20b",
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b"
+  ].includes(model);
+  const controller = new AbortController;
+  const timeout = setTimeout(() => controller.abort(), resolveGroqTimeoutMs());
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        max_tokens: 320,
+        ...supportsLowReasoning ? { reasoning_effort: "low" } : {},
+        messages: [
+          {
+            role: "system",
+            content: "Write a concise English seller analytics summary from the supplied JSON. Use only the supplied numbers. Mention no-sales periods when applicable. Do not invent advice, prices, quantities, statuses, or causes. Return two or three short sentences without a heading."
+          },
+          { role: "user", content: JSON.stringify(analytics) }
+        ]
+      })
+    });
+    if (!response.ok) {
+      const detail = (await response.text()).slice(0, 400);
+      console.warn(`Groq analytics summary failed with HTTP ${response.status}`, detail);
+      return { summary: null, status: "unavailable" };
+    }
+    const payload = await response.json();
+    const content = payload.choices?.[0]?.message?.content;
+    if (typeof content !== "string" || !content.trim()) {
+      console.warn("Groq analytics summary returned no text");
+      return { summary: null, status: "unavailable" };
+    }
+    return { summary: content.trim(), status: "generated" };
+  } catch (error) {
+    console.warn("Groq analytics summary unavailable", error instanceof Error ? error.message : "request failed");
+    return { summary: null, status: "unavailable" };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// src/modules/seller/services/seller.analytics.ts
+async function getSellerAnalytics(sellerId, query) {
+  const metrics = await getSellerAnalyticsMetrics(sellerId, query);
+  const generated = await generateSellerAnalyticsSummary(metrics);
+  return { ...metrics, summary: generated.summary, summaryStatus: generated.status };
+}
+
+// src/modules/seller/index/seller.analytics.ts
+var sellerAnalyticsRoute = new Elysia().use(sessionAuth).get("/analytics/summary", async ({ session, user, query, status }) => {
+  if (!user.isActive)
+    return status(403, { message: "Seller account is inactive" });
+  try {
+    return await getSellerAnalytics(session.userId, query);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to load seller analytics" });
+  }
+}, { role: ["seller"], query: sellerAnalyticsQuery });
+
+// src/utils/advisory-http/index.ts
+import { request as httpsRequest } from "https";
+var configuredProxy = process.env.ADVISORY_HTTP_PROXY?.trim();
+function requestDirect(url, signal) {
+  const target = new URL(url);
+  return new Promise((resolve, reject) => {
+    const request = httpsRequest({
+      hostname: target.hostname,
+      port: target.port || 443,
+      path: `${target.pathname}${target.search}`,
+      method: "GET",
+      headers: { accept: "application/json" }
+    }, (response) => {
+      const chunks = [];
+      response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      response.on("end", () => {
+        const headers = new Headers;
+        for (const [name, value] of Object.entries(response.headers)) {
+          if (typeof value === "string")
+            headers.set(name, value);
+          else if (Array.isArray(value))
+            headers.set(name, value.join(", "));
+        }
+        resolve(new Response(Buffer.concat(chunks), {
+          status: response.statusCode ?? 502,
+          headers
+        }));
+      });
+    });
+    const abort = () => request.destroy(new Error("advisory request aborted"));
+    const cleanup = () => signal.removeEventListener("abort", abort);
+    if (signal.aborted) {
+      abort();
+    } else {
+      signal.addEventListener("abort", abort, { once: true });
+    }
+    request.on("error", (error) => {
+      cleanup();
+      reject(error);
+    });
+    request.on("close", cleanup);
+    request.end();
+  });
+}
+function fetchAdvisorySource(url, signal) {
+  if (!configuredProxy && new URL(url).protocol === "https:") {
+    return requestDirect(url, signal);
+  }
+  const init = {
+    signal,
+    headers: { accept: "application/json" },
+    ...configuredProxy ? { proxy: configuredProxy } : {}
+  };
+  return fetch(url, init);
+}
+
+// src/modules/seller/services/seller.holidays.ts
+var CACHE_TTL_MS = 60 * 60 * 1000;
+var cache5 = new Map;
+async function fetchPhilippineHolidays(year) {
+  const cached = cache5.get(year);
+  if (cached && cached.expiresAt > Date.now())
+    return cached.value;
+  const controller = new AbortController;
+  const timeout = setTimeout(() => controller.abort(), 4000);
+  let value = null;
+  try {
+    const response = await fetchAdvisorySource(`https://date.nager.at/api/v3/PublicHolidays/${year}/PH`, controller.signal);
+    if (!response.ok)
+      throw new Error(`Nager.Date returned ${response.status}`);
+    const payload = await response.json();
+    if (!Array.isArray(payload))
+      throw new Error("Nager.Date response was incomplete");
+    const today = new Date().toISOString().slice(0, 10);
+    const cutoff = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const upcoming = payload.filter((holiday) => typeof holiday.date === "string" && typeof holiday.name === "string" && typeof holiday.localName === "string" && holiday.date >= today && holiday.date <= cutoff).map((holiday) => ({ date: holiday.date, name: holiday.name, localName: holiday.localName }));
+    value = { available: true, upcoming };
+  } catch (error) {
+    console.warn("Philippine holiday source unavailable", error instanceof Error ? error.message : "request failed");
+    value = null;
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (value) {
+    cache5.set(year, { expiresAt: Date.now() + CACHE_TTL_MS, value });
+  } else {
+    cache5.delete(year);
+  }
+  return value;
+}
+
+// src/modules/seller/services/seller.weather.ts
+var CACHE_TTL_MS2 = 10 * 60 * 1000;
+var cache6 = new Map;
+function finiteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+async function fetchSellerWeather(latitude, longitude) {
+  const key = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+  const cached = cache6.get(key);
+  if (cached && cached.expiresAt > Date.now())
+    return cached.value;
+  const controller = new AbortController;
+  const timeout = setTimeout(() => controller.abort(), 4000);
+  let value = null;
+  try {
+    const query = new URLSearchParams({
+      latitude: String(latitude),
+      longitude: String(longitude),
+      current: "temperature_2m,weather_code",
+      daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+      forecast_days: "3",
+      timezone: "auto"
+    });
+    const response = await fetchAdvisorySource(`https://api.open-meteo.com/v1/forecast?${query.toString()}`, controller.signal);
+    if (!response.ok)
+      throw new Error(`Open-Meteo returned ${response.status}`);
+    const payload = await response.json();
+    const daily = payload.daily;
+    const arrays = [
+      daily?.time,
+      daily?.weather_code,
+      daily?.temperature_2m_max,
+      daily?.temperature_2m_min,
+      daily?.precipitation_probability_max
+    ];
+    const requiredDays = 3;
+    if (!payload.current || !arrays.every((items) => Array.isArray(items) && items.length >= requiredDays) || !finiteNumber(payload.current.temperature_2m) || !finiteNumber(payload.current.weather_code)) {
+      throw new Error("Open-Meteo response was incomplete");
+    }
+    const [dates, codes, maximums, minimums, probabilities] = arrays;
+    if (![...codes.slice(0, requiredDays), ...maximums.slice(0, requiredDays), ...minimums.slice(0, requiredDays), ...probabilities.slice(0, requiredDays)].every(finiteNumber)) {
+      throw new Error("Open-Meteo response contained invalid values");
+    }
+    value = {
+      available: true,
+      current: {
+        temperatureC: payload.current.temperature_2m,
+        precipitationProbability: probabilities[0],
+        weatherCode: payload.current.weather_code
+      },
+      forecast: dates.slice(0, 3).map((date, index) => ({
+        date,
+        temperatureMaxC: maximums[index],
+        temperatureMinC: minimums[index],
+        precipitationProbability: probabilities[index],
+        weatherCode: codes[index]
+      }))
+    };
+  } catch (error) {
+    console.warn("Seller weather source unavailable", error instanceof Error ? error.message : "request failed");
+    value = null;
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (value) {
+    cache6.set(key, { expiresAt: Date.now() + CACHE_TTL_MS2, value });
+  } else {
+    cache6.delete(key);
+  }
+  return value;
+}
+
+// src/modules/seller/services/seller.advisories.ts
+var rainyCodes = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99]);
+function createReminders(weather, holidays) {
+  const reminders = [];
+  if (weather) {
+    const rainExpected = weather.forecast.some((day) => day.precipitationProbability >= 60 || rainyCodes.has(day.weatherCode));
+    const hotExpected = weather.forecast.some((day) => day.temperatureMaxC >= 35);
+    if (rainExpected)
+      reminders.push({ kind: "weather", message: "Rain is expected. Plan covered handling and inspect stored produce." });
+    if (hotExpected)
+      reminders.push({ kind: "weather", message: "Hot weather is expected. Inspect stored produce and review handling plans." });
+  }
+  if (holidays?.upcoming.length) {
+    reminders.push({ kind: "holiday", message: "Review pickup availability and selling plans around the upcoming public holiday." });
+  }
+  return reminders;
+}
+async function getSellerAdvisories(sellerId) {
+  const context = await db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId, false);
+    await requireActiveUser(tx, sellerId, "seller");
+    const [current] = await tx.select({ latitude: sellers_profile.latitude, longitude: sellers_profile.longitude }).from(sellers_profile).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true))).limit(1);
+    return { profile: current ?? null };
+  });
+  const profile = context.profile;
+  const generatedAt = new Date().toISOString();
+  if (!profile || profile.latitude === null || profile.longitude === null) {
+    const holidayResult = await Promise.allSettled([
+      fetchPhilippineHolidays(new Date().getUTCFullYear())
+    ]);
+    const holidays = holidayResult[0].status === "fulfilled" ? holidayResult[0].value : null;
+    return {
+      generatedAt,
+      location: null,
+      weather: null,
+      holidays: holidays ?? { available: false, upcoming: [] },
+      reminders: [
+        { kind: "location", message: "Add a seller location to receive local weather advisories." },
+        ...holidays?.upcoming.length ? [{ kind: "holiday", message: "Review pickup availability and selling plans around the upcoming public holiday." }] : []
+      ],
+      sources: { weather: "unavailable", holidays: holidays ? "available" : "unavailable" }
+    };
+  }
+  const [weatherResult, holidayResult] = await Promise.allSettled([
+    fetchSellerWeather(profile.latitude, profile.longitude),
+    fetchPhilippineHolidays(new Date().getUTCFullYear())
+  ]);
+  const weather = weatherResult.status === "fulfilled" ? weatherResult.value : null;
+  const holidays = holidayResult.status === "fulfilled" ? holidayResult.value : null;
+  return {
+    generatedAt,
+    location: { latitude: profile.latitude, longitude: profile.longitude },
+    weather,
+    holidays: holidays ?? { available: false, upcoming: [] },
+    reminders: createReminders(weather, holidays),
+    sources: {
+      weather: weather ? "available" : "unavailable",
+      holidays: holidays ? "available" : "unavailable"
+    }
+  };
+}
+
+// src/modules/seller/index/seller.advisories.ts
+var sellerAdvisoriesRoute = new Elysia().use(sessionAuth).get("/advisories", async ({ session, user, status }) => {
+  if (!user.isActive)
+    return status(403, { message: "Seller account is inactive" });
+  try {
+    return await getSellerAdvisories(session.userId);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to load seller advisories" });
+  }
+}, { role: ["seller"] });
+
+// src/modules/seller/model/seller.product.inquiry.ts
+var sellerProductInquiryParams = t.Object({ id: t.String({ format: "uuid" }) });
+var sellerProductInquiryReply = t.Object({ reply: t.String({ minLength: 1, maxLength: 1000 }) });
+
+// src/modules/seller/services/seller.product.inquiry.list.ts
+async function listSellerProductInquiries(sellerId, query) {
+  const limit = query.limit ?? 20;
+  const openOnly = query.status === "open";
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    let before;
+    if (query.cursor) {
+      const [anchor] = await tx.select({ id: product_inquiries.id, createdAt: product_inquiries.createdAt }).from(product_inquiries).where(and(eq(product_inquiries.id, query.cursor), eq(product_inquiries.sellerId, sellerId))).limit(1);
+      if (!anchor)
+        throw new OrderError(400, "Invalid inquiry cursor");
+      before = or(lt(product_inquiries.createdAt, anchor.createdAt), and(eq(product_inquiries.createdAt, anchor.createdAt), lt(product_inquiries.id, anchor.id)));
+    }
+    const rows = await tx.select({
+      id: product_inquiries.id,
+      productId: product_inquiries.productId,
+      productName: sellers_product.productName,
+      buyerId: product_inquiries.buyerId,
+      question: product_inquiries.question,
+      reply: product_inquiries.reply,
+      repliedAt: product_inquiries.repliedAt,
+      createdAt: product_inquiries.createdAt
+    }).from(product_inquiries).innerJoin(sellers_product, eq(product_inquiries.productId, sellers_product.id)).where(and(eq(product_inquiries.sellerId, sellerId), openOnly ? isNull2(product_inquiries.repliedAt) : undefined, before)).orderBy(desc(product_inquiries.createdAt), desc(product_inquiries.id)).limit(limit + 1);
+    const page = rows.slice(0, limit);
+    const last = page[page.length - 1];
+    return { items: page, nextCursor: rows.length > limit ? last?.id ?? null : null };
+  });
+}
+
+// src/modules/seller/services/seller.product.inquiry.reply.ts
+async function replySellerProductInquiry(sellerId, inquiryId, reply) {
+  const text = reply.trim();
+  if (!text)
+    throw new OrderError(400, "Reply is required");
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [inquiry] = await tx.select().from(product_inquiries).where(and(eq(product_inquiries.id, inquiryId), eq(product_inquiries.sellerId, sellerId))).for("update").limit(1);
+    if (!inquiry)
+      throw new OrderError(404, "Product inquiry not found");
+    if (inquiry.repliedAt)
+      throw new OrderError(409, "Product inquiry already answered");
+    const [updated] = await tx.update(product_inquiries).set({ reply: text, repliedAt: new Date }).where(and(eq(product_inquiries.id, inquiryId), eq(product_inquiries.sellerId, sellerId), isNull2(product_inquiries.repliedAt))).returning();
+    if (!updated)
+      throw new OrderError(404, "Open product inquiry not found");
+    return updated;
+  });
+}
+
+// src/modules/seller/index/seller.product.inquiry.ts
+var sellerProductInquiryRoute = new Elysia().use(sessionAuth).get("/product-inquiries", async ({ session, query, status }) => {
+  try {
+    return await listSellerProductInquiries(session.userId, query);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to list product questions" });
+  }
+}, { role: ["seller"], query: sellerInquiryListQuery }).post("/product-inquiries/:id/reply", async ({ session, params, body, status }) => {
+  try {
+    return await replySellerProductInquiry(session.userId, params.id, body.reply);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to reply to product question" });
+  }
+}, { role: ["seller"], params: sellerProductInquiryParams, body: sellerProductInquiryReply });
+
+// src/modules/seller/model/seller.product.share.ts
+var sellerProductShareParams = t.Object({ id: t.String({ format: "uuid" }) });
+
+// src/modules/seller/services/seller.product.share.ts
+async function getSellerProductShare(sellerId, productId) {
+  const product = await db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [row] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"))).limit(1);
+    if (!row)
+      throw new OrderError(404, "Active product not found");
+    return row;
+  });
+  const baseUrl = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
+  const path = `/marketplace/${product.id}`;
+  let shareUrl = path;
+  if (baseUrl) {
+    try {
+      shareUrl = new URL(path, baseUrl).toString();
+    } catch {}
+  }
+  const imageUrl = product.imagUrl ? await getProductImageDisplayUrl(product.imagUrl, sellerId) : null;
+  const price = product.productPrice ? ` for PHP ${Number(product.productPrice).toFixed(2)}` : "";
+  return {
+    productId: product.id,
+    shareUrl,
+    caption: `${product.productName}${price} from Agrivive. See listing details and pickup information: ${shareUrl}`,
+    imageUrl
+  };
+}
+
+// src/modules/seller/index/seller.product.share.ts
+var sellerProductShareRoute = new Elysia().use(sessionAuth).get("/products/:id/share", async ({ session, params, status }) => {
+  try {
+    return await getSellerProductShare(session.userId, params.id);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to prepare product share" });
+  }
+}, { role: ["seller"], params: sellerProductShareParams });
+
 // src/modules/seller/index.ts
-var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute);
+var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
 
 // src/modules/buyer/model/buyer.order.create.ts
 var orderModel = t.Object({
@@ -119003,6 +120123,7 @@ async function reserveOrderItem(tx, buyerId, productId, quantity) {
   if (quantityToHundredths(quantity) === null) {
     throw new OrderError(400, "Quantity must be between 0.01 and 99999999 with at most two decimal places");
   }
+  await applySellerProductPriceReduction(tx, productId);
   const [product] = await tx.update(sellers_product).set({ productQty: sql3`${sellers_product.productQty} - ${quantity}` }).where(and(eq(sellers_product.id, productId), ne(sellers_product.userId, buyerId), isNotNull(sellers_product.productPrice), gt(sellers_product.productPrice, "0"), gte(sellers_product.productQty, quantity.toString()), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).returning();
   if (!product)
     throw await unavailableProductError(tx, productId, buyerId);
@@ -119138,7 +120259,7 @@ var buyerOrderGetRoute = new Elysia().use(sessionAuth).get("/orders/:id", async 
 async function cancelBuyerOrder(orderId, buyerId) {
   await db2.transaction(async (tx) => {
     const now = new Date;
-    const [cancelled] = await tx.update(orders).set({ status: "cancelled", cancelledBy: "buyer", updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id });
+    const [cancelled] = await tx.update(orders).set({ status: "cancelled", cancelledBy: "buyer", cancelledAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id });
     if (!cancelled) {
       const [current] = await tx.select({ status: orders.status, expiresAt: orders.expiresAt }).from(orders).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId))).limit(1);
       if (!current)
@@ -119225,6 +120346,17 @@ var buyerReviewBody = t.Object({
   rating: t.Integer({ minimum: 1, maximum: 5 }),
   review: t.Optional(t.String({ maxLength: 2000 }))
 });
+var buyerProductReviewParams = t.Object({
+  id: t.String({ format: "uuid" }),
+  itemId: t.String({ format: "uuid" })
+});
+var buyerProductReviewEligibilityParams = t.Object({
+  id: t.String({ format: "uuid" })
+});
+var buyerProductReviewBody = t.Object({
+  rating: t.Integer({ minimum: 1, maximum: 5 }),
+  review: t.Optional(t.String({ maxLength: 2000 }))
+});
 
 // src/modules/buyer/services/buyer.order.review.create.ts
 function createBuyerReview(buyerId, orderId, body) {
@@ -119247,6 +120379,78 @@ function createBuyerReview(buyerId, orderId, body) {
   });
 }
 
+// src/modules/buyer/services/buyer.order.product-review.create.ts
+function createBuyerProductReview(buyerId, orderId, itemId, body) {
+  return db2.transaction(async (tx) => {
+    const [purchase] = await tx.select({
+      orderId: orders.id,
+      buyerId: orders.buyersId,
+      sellerId: orders.sellersId,
+      status: orders.status,
+      orderedItemId: ordered_items.id,
+      productId: ordered_items.productId
+    }).from(ordered_items).innerJoin(orders, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.id, orderId), eq(ordered_items.id, itemId), eq(orders.buyersId, buyerId))).limit(1);
+    if (!purchase)
+      throw new OrderError(404, "Order item not found");
+    if (purchase.status !== "completed") {
+      throw new OrderError(409, "Only completed orders can be reviewed");
+    }
+    const [review] = await tx.insert(product_reviews).values({
+      orderId: purchase.orderId,
+      orderedItemId: purchase.orderedItemId,
+      productId: purchase.productId,
+      buyerId: purchase.buyerId,
+      sellerId: purchase.sellerId,
+      rating: body.rating,
+      review: body.review?.trim() || null
+    }).onConflictDoNothing({ target: product_reviews.orderedItemId }).returning();
+    if (!review)
+      throw new OrderError(409, "This product has already been reviewed for this order");
+    return review;
+  });
+}
+
+// src/modules/buyer/services/buyer.order.product-review.read.ts
+async function readBuyerProductReview(buyerId, orderId, itemId) {
+  const [purchase] = await db2.select({ id: ordered_items.id }).from(ordered_items).innerJoin(orders, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.id, orderId), eq(ordered_items.id, itemId), eq(orders.buyersId, buyerId))).limit(1);
+  if (!purchase)
+    throw new OrderError(404, "Order item not found");
+  const [review] = await db2.select().from(product_reviews).where(and(eq(product_reviews.orderedItemId, itemId), eq(product_reviews.buyerId, buyerId))).limit(1);
+  if (!review)
+    throw new OrderError(404, "Review not found");
+  return review;
+}
+
+// src/modules/buyer/services/buyer.product.review-eligibility.ts
+async function getBuyerProductReviewEligibility(buyerId, productId) {
+  const [product] = await db2.select({ id: sellers_product.id }).from(sellers_product).where(eq(sellers_product.id, productId)).limit(1);
+  if (!product)
+    throw new OrderError(404, "Marketplace product not found");
+  const purchases = await db2.select({
+    orderId: orders.id,
+    itemId: ordered_items.id,
+    productName: ordered_items.productName,
+    reviewId: product_reviews.id,
+    rating: product_reviews.rating,
+    review: product_reviews.review,
+    createdAt: product_reviews.createdAt
+  }).from(ordered_items).innerJoin(orders, eq(orders.id, ordered_items.ordersId)).leftJoin(product_reviews, eq(product_reviews.orderedItemId, ordered_items.id)).where(and(eq(ordered_items.productId, productId), eq(orders.buyersId, buyerId), eq(orders.status, "completed"))).orderBy(asc(orders.createdAt));
+  return {
+    productId,
+    purchases: purchases.map((purchase) => ({
+      orderId: purchase.orderId,
+      itemId: purchase.itemId,
+      productName: purchase.productName ?? "Product",
+      review: purchase.reviewId ? {
+        id: purchase.reviewId,
+        rating: purchase.rating,
+        review: purchase.review,
+        createdAt: purchase.createdAt.toISOString()
+      } : null
+    }))
+  };
+}
+
 // src/modules/buyer/services/buyer.seller.rating.ts
 async function readSellerRating(sellerId) {
   const [result] = await db2.select({
@@ -119256,10 +120460,72 @@ async function readSellerRating(sellerId) {
   return { sellerId, count: result?.count ?? 0, average: result?.average ?? null };
 }
 
+// src/modules/buyer/services/buyer.seller.reviews.ts
+async function readSellerReviews(sellerId) {
+  const [summary] = await db2.select({
+    count: sql3`count(*)::int`,
+    average: sql3`round(avg(${order_reviews.rating})::numeric, 1)::text`,
+    star5: sql3`count(case when ${order_reviews.rating} = 5 then 1 end)::int`,
+    star4: sql3`count(case when ${order_reviews.rating} = 4 then 1 end)::int`,
+    star3: sql3`count(case when ${order_reviews.rating} = 3 then 1 end)::int`,
+    star2: sql3`count(case when ${order_reviews.rating} = 2 then 1 end)::int`,
+    star1: sql3`count(case when ${order_reviews.rating} = 1 then 1 end)::int`
+  }).from(order_reviews).where(eq(order_reviews.sellerId, sellerId));
+  const rows = await db2.select({
+    id: order_reviews.id,
+    rating: order_reviews.rating,
+    review: order_reviews.review,
+    sellerResponse: order_reviews.sellerResponse,
+    createdAt: order_reviews.createdAt,
+    buyerName: user.name
+  }).from(order_reviews).leftJoin(user, eq(user.id, order_reviews.buyerId)).where(eq(order_reviews.sellerId, sellerId)).orderBy(desc(order_reviews.createdAt)).limit(10);
+  const reviews = rows.map((r) => {
+    let formattedName = "Verified buyer";
+    if (r.buyerName) {
+      const parts = r.buyerName.trim().split(/\s+/);
+      const firstName = parts[0];
+      const lastInitial = parts[1]?.[0] ? ` ${parts[1][0]}.` : "";
+      formattedName = `${firstName}${lastInitial}`;
+    }
+    return {
+      id: r.id,
+      rating: r.rating,
+      review: r.review,
+      sellerResponse: r.sellerResponse,
+      createdAt: r.createdAt.toISOString(),
+      buyerName: formattedName
+    };
+  });
+  return {
+    sellerId,
+    count: summary?.count ?? 0,
+    average: summary?.average ?? null,
+    breakdown: {
+      5: summary?.star5 ?? 0,
+      4: summary?.star4 ?? 0,
+      3: summary?.star3 ?? 0,
+      2: summary?.star2 ?? 0,
+      1: summary?.star1 ?? 0
+    },
+    reviews
+  };
+}
+
 // src/modules/buyer/index/buyer.order.review.ts
 var buyerReviewRoute = new Elysia().use(sessionAuth).get("/sellers/:id/rating", ({ params }) => readSellerRating(params.id), {
   params: t.Object({ id: t.String() })
-}).get("/orders/:id/review", async ({ session, params, status }) => {
+}).get("/sellers/:id/reviews", ({ params }) => readSellerReviews(params.id), {
+  params: t.Object({ id: t.String() })
+}).get("/products/:id/review-eligibility", async ({ session, params, status }) => {
+  try {
+    return await getBuyerProductReviewEligibility(session.userId, params.id);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to check product review eligibility" });
+  }
+}, { role: ["buyer"], params: buyerProductReviewEligibilityParams }).get("/orders/:id/review", async ({ session, params, status }) => {
   try {
     return await readOrderReview(session.userId, params.id, "buyer");
   } catch (error) {
@@ -119277,7 +120543,29 @@ var buyerReviewRoute = new Elysia().use(sessionAuth).get("/sellers/:id/rating", 
     console.error(error);
     return status(500, { message: "Failed to create review" });
   }
-}, { role: ["buyer"], params: buyerReviewParams, body: buyerReviewBody });
+}, { role: ["buyer"], params: buyerReviewParams, body: buyerReviewBody }).post("/orders/:id/items/:itemId/review", async ({ session, params, body, status }) => {
+  try {
+    return status(201, await createBuyerProductReview(session.userId, params.id, params.itemId, body));
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to create product review" });
+  }
+}, {
+  role: ["buyer"],
+  params: buyerProductReviewParams,
+  body: buyerProductReviewBody
+}).get("/orders/:id/items/:itemId/review", async ({ session, params, status }) => {
+  try {
+    return await readBuyerProductReview(session.userId, params.id, params.itemId);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to read product review" });
+  }
+}, { role: ["buyer"], params: buyerProductReviewParams });
 
 // src/modules/buyer/model/buyer.order.report.ts
 var buyerReportParams = t.Object({ id: t.String({ format: "uuid" }) });
@@ -119291,6 +120579,15 @@ function createBuyerOrderReport(buyerId, orderId, body) {
   return createOrderReport(buyerId, orderId, "buyer", body.reason, body.details);
 }
 
+// src/modules/buyer/model/buyer.order.report.evidence.ts
+var buyerReportEvidenceParams = t.Object({
+  id: t.String({ format: "uuid" }),
+  reportId: t.String({ format: "uuid" })
+});
+var buyerReportEvidenceUpload = t.Object({
+  file: t.File({ type: ["image/jpeg", "image/png", "image/webp", "application/pdf"], maxSize: 5 * 1024 * 1024 })
+});
+
 // src/modules/buyer/index/buyer.order.report.ts
 var buyerReportRoute = new Elysia().use(sessionAuth).post("/orders/:id/report", async ({ session, params, body, status }) => {
   try {
@@ -119301,7 +120598,25 @@ var buyerReportRoute = new Elysia().use(sessionAuth).post("/orders/:id/report", 
     console.error(error);
     return status(500, { message: "Failed to report order" });
   }
-}, { role: ["buyer"], params: buyerReportParams, body: buyerReportBody });
+}, { role: ["buyer"], params: buyerReportParams, body: buyerReportBody }).post("/orders/:id/report/:reportId/evidence", async ({ session, params, body, status }) => {
+  try {
+    return status(201, await uploadOrderReportEvidence(session.userId, params.id, params.reportId, body.file));
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to upload report evidence" });
+  }
+}, { role: ["buyer"], params: buyerReportEvidenceParams, body: buyerReportEvidenceUpload }).get("/orders/:id/report/:reportId/evidence", async ({ session, params, status }) => {
+  try {
+    return await listOrderReportEvidence(session.userId, params.id, params.reportId);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to read report evidence" });
+  }
+}, { role: ["buyer"], params: buyerReportEvidenceParams });
 
 // src/modules/buyer/services/buyer.notices.list.ts
 function listBuyerNotices(buyerId) {
@@ -119324,12 +120639,183 @@ var buyerNoticesRoute = new Elysia().use(sessionAuth).get("/notices", async ({ s
   }
 }, { role: ["buyer"] });
 
+// src/modules/buyer/model/buyer.checkout.create.ts
+var checkoutItemModel = t.Object({
+  productId: t.String({ format: "uuid" }),
+  quantity: t.Number({
+    minimum: 0.01,
+    maximum: 99999999
+  })
+});
+var checkoutModel = t.Object({
+  items: t.Array(checkoutItemModel, { minItems: 1, maxItems: 50 })
+});
+
+// src/modules/buyer/services/buyer.checkout.create.ts
+import { createHash as createHash6 } from "crypto";
+function normalizeItems(items) {
+  const normalized = [...items].sort((left, right) => left.productId.localeCompare(right.productId));
+  const seen = new Set;
+  for (const item of normalized) {
+    if (seen.has(item.productId)) {
+      throw new OrderError(400, "Each product can only appear once in the cart");
+    }
+    seen.add(item.productId);
+  }
+  return normalized;
+}
+function requestFingerprint2(items) {
+  return createHash6("sha256").update(JSON.stringify(items.map((item) => ({ productId: item.productId, quantity: item.quantity })))).digest("hex");
+}
+async function createCartCheckout(buyerId, body, rawKey) {
+  ensureOrderQrSecret();
+  const idempotencyKey = rawKey.trim();
+  if (!idempotencyKey || idempotencyKey.length > 128) {
+    throw new OrderError(400, "Invalid Idempotency-Key header");
+  }
+  const items = normalizeItems(body.items);
+  const fingerprint = requestFingerprint2(items);
+  const result = await db2.transaction(async (tx) => {
+    await tx.execute(sql3`
+      select pg_advisory_xact_lock(
+        hashtext(${buyerId}),
+        hashtext(${idempotencyKey})
+      )
+    `);
+    const [existing] = await tx.select({ id: checkouts.id, requestFingerprint: checkouts.requestFingerprint }).from(checkouts).where(and(eq(checkouts.buyersId, buyerId), eq(checkouts.idempotencyKey, idempotencyKey))).limit(1);
+    if (existing) {
+      if (existing.requestFingerprint !== fingerprint) {
+        throw new OrderError(409, "Idempotency key was used for another checkout");
+      }
+      const previousOrders = await tx.select({ id: orders.id }).from(orders).where(eq(orders.checkoutId, existing.id));
+      if (!previousOrders.length)
+        throw new Error("Checkout is missing its orders");
+      return { checkoutId: existing.id, orderIds: previousOrders.map((order) => order.id), replayed: true };
+    }
+    await requireActiveUser(tx, buyerId, "buyer");
+    const reservedItems = [];
+    for (const item of items) {
+      reservedItems.push(await reserveOrderItem(tx, buyerId, item.productId, item.quantity));
+    }
+    const [checkout] = await tx.insert(checkouts).values({ buyersId: buyerId, idempotencyKey, requestFingerprint: fingerprint }).returning({ id: checkouts.id });
+    const bySeller = new Map;
+    for (const item of reservedItems) {
+      const sellerItems = bySeller.get(item.sellerId) ?? [];
+      sellerItems.push(item);
+      bySeller.set(item.sellerId, sellerItems);
+    }
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const orderIds = [];
+    for (const [sellerId, sellerItems] of bySeller) {
+      orderIds.push(await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, expiresAt));
+    }
+    return { checkoutId: checkout.id, orderIds, replayed: false };
+  });
+  const ordersForBuyer = await Promise.all(result.orderIds.map((orderId) => getBuyerOrder(orderId, buyerId)));
+  return {
+    checkoutId: result.checkoutId,
+    orders: ordersForBuyer.map((order) => ({
+      id: order.id,
+      sellerId: order.sellerId,
+      totalAmount: order.totalAmount,
+      qrPayload: order.qrPayload
+    })),
+    replayed: result.replayed
+  };
+}
+
+// src/modules/buyer/index/buyer.checkout.create.ts
+var buyerCheckoutCreateRoute = new Elysia().use(sessionAuth).post("/checkouts", async ({ session, user, body, headers, status }) => {
+  if (!user.isActive)
+    return status(403, { message: "Buyer account is inactive" });
+  try {
+    const result = await createCartCheckout(session.userId, body, headers["idempotency-key"]);
+    return status(result.replayed ? 200 : 201, result);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to create checkout" });
+  }
+}, {
+  role: ["buyer"],
+  body: checkoutModel,
+  headers: t.Object({
+    "idempotency-key": t.String({ minLength: 1, maxLength: 128 })
+  })
+});
+
+// src/modules/buyer/model/buyer.product.inquiry.ts
+var buyerProductInquiryParams = t.Object({ id: t.String({ format: "uuid" }) });
+var buyerProductInquiryBody = t.Object({
+  question: t.String({ minLength: 1, maxLength: 1000 })
+});
+
+// src/modules/buyer/services/buyer.product.inquiry.create.ts
+async function createBuyerProductInquiry(buyerId, productId, question) {
+  const text = question.trim();
+  if (!text)
+    throw new OrderError(400, "Question is required");
+  return db2.transaction(async (tx) => {
+    await requireActiveUser(tx, buyerId, "buyer");
+    await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${productId}), 4)`);
+    const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`)).limit(1);
+    if (!product)
+      throw new OrderError(404, "Marketplace product not found");
+    if (product.sellerId === buyerId)
+      throw new OrderError(403, "You cannot message your own listing");
+    const [openInquiry] = await tx.select({ id: product_inquiries.id }).from(product_inquiries).where(and(eq(product_inquiries.productId, productId), eq(product_inquiries.buyerId, buyerId), isNull2(product_inquiries.repliedAt))).limit(1);
+    if (openInquiry)
+      throw new OrderError(409, "An inquiry is already awaiting a reply");
+    const [inquiry] = await tx.insert(product_inquiries).values({
+      productId,
+      buyerId,
+      sellerId: product.sellerId,
+      question: text
+    }).returning();
+    return inquiry;
+  });
+}
+
+// src/modules/buyer/services/buyer.product.inquiry.read.ts
+function listBuyerProductInquiries(buyerId, productId) {
+  return db2.select({
+    id: product_inquiries.id,
+    productId: product_inquiries.productId,
+    question: product_inquiries.question,
+    reply: product_inquiries.reply,
+    repliedAt: product_inquiries.repliedAt,
+    createdAt: product_inquiries.createdAt
+  }).from(product_inquiries).where(and(eq(product_inquiries.buyerId, buyerId), eq(product_inquiries.productId, productId))).orderBy(asc(product_inquiries.createdAt));
+}
+
+// src/modules/buyer/index/buyer.product.inquiry.ts
+var buyerProductInquiryRoute = new Elysia().use(sessionAuth).get("/products/:id/inquiries", async ({ session, params, status }) => {
+  try {
+    return await listBuyerProductInquiries(session.userId, params.id);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to list product questions" });
+  }
+}, { role: ["buyer"], params: buyerProductInquiryParams }).post("/products/:id/inquiries", async ({ session, params, body, status }) => {
+  try {
+    return status(201, await createBuyerProductInquiry(session.userId, params.id, body.question));
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to send product question" });
+  }
+}, { role: ["buyer"], params: buyerProductInquiryParams, body: buyerProductInquiryBody });
+
 // src/modules/buyer/index.ts
-var buyerRoute = new Elysia({ prefix: "/buyer" }).use(buyerOrderCreateRoute).use(buyerOrderListRoute).use(buyerOrderGetRoute).use(buyerOrderCancelRoute).use(buyerInquiryRoute).use(buyerReviewRoute).use(buyerReportRoute).use(buyerNoticesRoute);
+var buyerRoute = new Elysia({ prefix: "/buyer" }).use(buyerCheckoutCreateRoute).use(buyerOrderCreateRoute).use(buyerOrderListRoute).use(buyerOrderGetRoute).use(buyerOrderCancelRoute).use(buyerInquiryRoute).use(buyerProductInquiryRoute).use(buyerReviewRoute).use(buyerReportRoute).use(buyerNoticesRoute);
 
 // src/modules/admin/services/admin.performance.ts
 async function readAdminPerformance() {
-  const [users, listings, orderRows, trust] = await Promise.all([
+  const [users, listings, orderRows, trust, trustMonitoring] = await Promise.all([
     db2.select({
       sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
       buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
@@ -119342,9 +120828,11 @@ async function readAdminPerformance() {
     Promise.all([
       db2.select({ count: sql3`count(*)::int` }).from(trust_events).where(sql3`${trust_events.classification} = 'verified' and ${trust_events.invalidatedAt} is null`),
       db2.select({ count: sql3`count(*)::int` }).from(order_reports),
+      db2.select({ count: sql3`count(*)::int` }).from(order_report_evidence),
       db2.select({ count: sql3`count(*)::int` }).from(trust_notices).where(sql3`${trust_notices.sentAt} is null`),
       db2.select({ count: sql3`count(*)::int` }).from(trust_notices).where(sql3`${trust_notices.sentAt} is null and ${trust_notices.attempts} >= 5`)
-    ])
+    ]),
+    readTrustMonitoringScore()
   ]);
   return {
     users: users[0] ?? { sellers: 0, buyers: 0 },
@@ -119353,9 +120841,11 @@ async function readAdminPerformance() {
     trust: {
       verifiedEvents: trust[0][0]?.count ?? 0,
       reportFlags: trust[1][0]?.count ?? 0,
-      noticesPending: trust[2][0]?.count ?? 0,
-      noticesFailed: trust[3][0]?.count ?? 0
-    }
+      evidenceFiles: trust[2][0]?.count ?? 0,
+      noticesPending: trust[3][0]?.count ?? 0,
+      noticesFailed: trust[4][0]?.count ?? 0
+    },
+    trustMonitoring
   };
 }
 
@@ -119372,13 +120862,408 @@ var adminPerformanceRoute = new Elysia().use(sessionAuth).get("/performance", as
 // src/modules/admin/index.ts
 var adminRoute = new Elysia({ prefix: "/admin" }).use(adminPerformanceRoute);
 
+// src/modules/marketplace/model/marketplace.products.ts
+var marketplaceProductType = t.Union([
+  t.Literal("Leafy Greens"),
+  t.Literal("Root and Tuber Vegetables"),
+  t.Literal("Bulb and Stem Vegetables"),
+  t.Literal("Flower Vegetables"),
+  t.Literal("Fruit Vegetables"),
+  t.Literal("Seeds and Legumes")
+]);
+var marketplaceUnit = t.Union([
+  t.Literal("sack"),
+  t.Literal("kilo"),
+  t.Literal("pile")
+]);
+var marketplaceSellerType = t.Union([
+  t.Literal("supplier"),
+  t.Literal("supplier_vendor"),
+  t.Literal("retail_vendor")
+]);
+var marketplaceProductsQuery = t.Object({
+  sellerId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
+  search: t.Optional(t.String({ maxLength: 120 })),
+  productType: t.Optional(marketplaceProductType),
+  unit: t.Optional(marketplaceUnit),
+  sellerType: t.Optional(marketplaceSellerType),
+  minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
+  maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
+  minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
+  maxQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
+  latitude: t.Optional(t.Numeric({ minimum: -90, maximum: 90 })),
+  longitude: t.Optional(t.Numeric({ minimum: -180, maximum: 180 })),
+  radiusKm: t.Optional(t.Numeric({ minimum: 1, maximum: 100 })),
+  limit: t.Optional(t.Integer({ minimum: 1, maximum: 50 })),
+  cursor: t.Optional(t.String({ maxLength: 300 }))
+});
+var marketplaceProductParams = t.Object({
+  id: t.String({ format: "uuid" })
+});
+var marketplaceSellerParams = t.Object({
+  id: t.String({ minLength: 1, maxLength: 128 })
+});
+
+// src/modules/marketplace/services/marketplace.product.get.ts
+async function getMarketplaceProduct(productId) {
+  const rows = await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), isNotNull(sellers_product.productPrice), gt(sellers_product.productPrice, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+  if (!rows[0])
+    throw new OrderError(404, "Marketplace product not found");
+  const [detail] = await db2.select().from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(eq(sellers_product.id, productId)).limit(1);
+  if (!detail)
+    throw new OrderError(404, "Marketplace product not found");
+  const productRow = detail.sellers_product;
+  const profile = detail.sellers_profile;
+  const evaluatedAt = new Date;
+  const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const cycles = await db2.select({
+    id: listing_cycles.id,
+    productId: listing_cycles.productId,
+    vegetableKey: listing_cycles.vegetableKey,
+    startedAt: listing_cycles.startedAt
+  }).from(listing_cycles).innerJoin(sellers_product, eq(listing_cycles.productId, sellers_product.id)).where(and(eq(sellers_product.userId, profile.userId), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt)));
+  const currentCycle = cycles.filter((cycle) => cycle.productId === productId && productRow.publishedAt && cycle.startedAt <= evaluatedAt).sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
+  const vegetableKey = currentCycle?.vegetableKey ?? normalizeVegetableName(productRow.productName);
+  const priorCycles = cycles.filter((cycle) => cycle.vegetableKey === vegetableKey && cycle.startedAt < (productRow.publishedAt ?? evaluatedAt) && cycle.id !== currentCycle?.id).length;
+  const visibility = calculateVisibilityScore({
+    evaluatedAt,
+    publishedAt: productRow.publishedAt,
+    quantity: Number(productRow.productQty),
+    originalQuantity: Number(productRow.originalQty),
+    priorCycles
+  });
+  return {
+    id: productRow.id,
+    productName: productRow.productName,
+    imageUrl: await getProductImageDisplayUrl(productRow.imagUrl, profile.userId),
+    productPrice: productRow.productPrice,
+    basePrice: productRow.basePrice,
+    productQty: productRow.productQty,
+    scalingType: productRow.scalingType,
+    productType: productRow.productType,
+    condition: productRow.condition,
+    visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
+    visibilityTier: visibility?.tier ?? null,
+    visibilityEvaluatedAt: evaluatedAt.toISOString(),
+    availability: Number(productRow.productQty ?? 0) > 0 ? "available" : "sold_out",
+    seller: {
+      id: profile.userId,
+      name: detail.user.name,
+      shopName: profile.shopName,
+      sellerType: profile.sellerType,
+      detailAddress: profile.detailAddress,
+      pickupInstructions: profile.pickupInstructions,
+      latitude: profile.latitude,
+      longitude: profile.longitude,
+      distanceKm: null
+    }
+  };
+}
+
+// src/modules/marketplace/services/marketplace.seller.get.ts
+var sellerRole = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
+async function getMarketplaceSeller(sellerId) {
+  const [seller] = await db2.select({
+    id: sellers_profile.userId,
+    shopName: sellers_profile.shopName,
+    sellerType: sellers_profile.sellerType,
+    detailAddress: sellers_profile.detailAddress,
+    pickupInstructions: sellers_profile.pickupInstructions
+  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true), eq(user.isActive, true), eq(user.emailVerified, true), sellerRole, sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+  if (!seller)
+    throw new OrderError(404, "Seller storefront not found");
+  return seller;
+}
+
+// src/modules/marketplace/services/marketplace.products.list.ts
+var sellerRole2 = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
+var completeSellerProfile = and(eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude));
+function encodeCursor(value) {
+  return Buffer.from(JSON.stringify({
+    evaluatedAt: value.evaluatedAt.toISOString(),
+    score: value.score,
+    publishedAt: value.publishedAt.toISOString(),
+    id: value.id
+  })).toString("base64url");
+}
+function decodeCursor(cursor) {
+  try {
+    const value = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
+    const evaluatedAt = value.evaluatedAt ? new Date(value.evaluatedAt) : null;
+    const publishedAt = value.publishedAt ? new Date(value.publishedAt) : null;
+    if (!evaluatedAt || !publishedAt || Number.isNaN(evaluatedAt.getTime()) || Number.isNaN(publishedAt.getTime()) || evaluatedAt.getTime() > Date.now() + 60000 || evaluatedAt.getTime() < Date.now() - 60 * 60000 || !value.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.id) || value.score !== null && (typeof value.score !== "number" || value.score < 0 || value.score > 1))
+      throw new Error;
+    return { evaluatedAt, publishedAt, score: value.score ?? null, id: value.id };
+  } catch {
+    throw new OrderError(400, "Invalid marketplace cursor");
+  }
+}
+function distanceExpression(latitude, longitude) {
+  return sql3`6371 * acos(least(1, greatest(-1,
+    cos(radians(${latitude})) * cos(radians(${sellers_profile.latitude})) *
+    cos(radians(${sellers_profile.longitude}) - radians(${longitude})) +
+    sin(radians(${latitude})) * sin(radians(${sellers_profile.latitude}))
+  )))`;
+}
+function validateRanges(query) {
+  if (query.minPrice !== undefined && query.maxPrice !== undefined && query.minPrice > query.maxPrice) {
+    throw new OrderError(400, "Minimum price cannot exceed maximum price");
+  }
+  if (query.minQuantity !== undefined && query.maxQuantity !== undefined && query.minQuantity > query.maxQuantity) {
+    throw new OrderError(400, "Minimum quantity cannot exceed maximum quantity");
+  }
+  const hasLocation = query.latitude !== undefined || query.longitude !== undefined || query.radiusKm !== undefined;
+  if (hasLocation && (query.latitude === undefined || query.longitude === undefined || query.radiusKm === undefined)) {
+    throw new OrderError(400, "Latitude, longitude, and radiusKm are required together");
+  }
+}
+function scoreTier(score) {
+  if (score === null)
+    return null;
+  return score >= 0.7 ? "priority" : score >= 0.4 ? "standard" : "basic";
+}
+function cursorCondition(scoreSql, cursor) {
+  const dateOrder = or(sql3`${sellers_product.publishedAt} < ${cursor.publishedAt}`, and(eq(sellers_product.publishedAt, cursor.publishedAt), sql3`${sellers_product.id} < ${cursor.id}`));
+  if (cursor.score === null)
+    return sql3`(${scoreSql} is null and ${dateOrder})`;
+  return or(sql3`${scoreSql} < ${cursor.score}`, sql3`${scoreSql} is null`, and(sql3`${scoreSql} = ${cursor.score}`, dateOrder));
+}
+function serializeProduct(row, imageUrl, distanceKm, rating) {
+  const visibilityScore = row.visibilityScore === null ? null : Number(row.visibilityScore);
+  return {
+    id: row.id,
+    productName: row.productName,
+    imageUrl,
+    productPrice: row.productPrice,
+    basePrice: row.basePrice,
+    productQty: row.productQty,
+    scalingType: row.scalingType,
+    productType: row.productType,
+    condition: row.condition,
+    availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
+    visibilityScore: visibilityScore === null ? null : Number(visibilityScore.toFixed(4)),
+    visibilityTier: scoreTier(visibilityScore),
+    averageRating: rating.average,
+    reviewCount: rating.count,
+    seller: {
+      id: row.sellerId,
+      name: row.sellerName,
+      shopName: row.shopName,
+      sellerType: row.sellerType,
+      detailAddress: row.detailAddress,
+      pickupInstructions: row.pickupInstructions,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      distanceKm
+    }
+  };
+}
+async function listMarketplaceProducts(query) {
+  validateRanges(query);
+  const cursor = query.cursor ? decodeCursor(query.cursor) : null;
+  const evaluatedAt = cursor?.evaluatedAt ?? new Date;
+  const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const visibilityScore = marketplaceVisibilityScoreSql(evaluatedAt, since);
+  const conditions = [
+    eq(sellers_product.isActive, true),
+    eq(sellers_product.isMarketable, true),
+    gt(sellers_product.productQty, "0"),
+    gt(sellers_product.productPrice, "0"),
+    isNotNull(sellers_product.publishedAt),
+    eq(user.isActive, true),
+    eq(user.emailVerified, true),
+    sellerRole2,
+    completeSellerProfile
+  ];
+  const search = query.search?.trim();
+  if (query.sellerId)
+    conditions.push(eq(sellers_profile.userId, query.sellerId));
+  if (search)
+    conditions.push(ilike(sellers_product.productName, `%${search}%`));
+  if (query.productType)
+    conditions.push(eq(sellers_product.productType, query.productType));
+  if (query.unit)
+    conditions.push(eq(sellers_product.scalingType, query.unit));
+  if (query.sellerType)
+    conditions.push(eq(sellers_profile.sellerType, query.sellerType));
+  if (query.minPrice !== undefined)
+    conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
+  if (query.maxPrice !== undefined)
+    conditions.push(lte(sellers_product.productPrice, query.maxPrice.toString()));
+  if (query.minQuantity !== undefined)
+    conditions.push(gte(sellers_product.productQty, query.minQuantity.toString()));
+  if (query.maxQuantity !== undefined)
+    conditions.push(lte(sellers_product.productQty, query.maxQuantity.toString()));
+  const distanceKm = query.latitude !== undefined && query.longitude !== undefined ? distanceExpression(query.latitude, query.longitude) : null;
+  if (distanceKm && query.radiusKm !== undefined)
+    conditions.push(lte(distanceKm, query.radiusKm));
+  if (cursor)
+    conditions.push(cursorCondition(visibilityScore, cursor));
+  const limit = query.limit ?? 20;
+  const rows = await db2.select({
+    id: sellers_product.id,
+    productName: sellers_product.productName,
+    imagUrl: sellers_product.imagUrl,
+    productPrice: sellers_product.productPrice,
+    basePrice: sellers_product.basePrice,
+    productQty: sellers_product.productQty,
+    scalingType: sellers_product.scalingType,
+    productType: sellers_product.productType,
+    condition: sellers_product.condition,
+    publishedAt: sellers_product.publishedAt,
+    visibilityScore,
+    sellerId: sellers_profile.userId,
+    sellerName: user.name,
+    shopName: sellers_profile.shopName,
+    sellerType: sellers_profile.sellerType,
+    detailAddress: sellers_profile.detailAddress,
+    pickupInstructions: sellers_profile.pickupInstructions,
+    latitude: sellers_profile.latitude,
+    longitude: sellers_profile.longitude,
+    distanceKm: distanceKm ?? sql3`null`
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(...conditions)).orderBy(sql3`${visibilityScore} desc nulls last`, desc(sellers_product.publishedAt), desc(sellers_product.id)).limit(limit + 1);
+  const page = rows.slice(0, limit);
+  const ratingRows = page.length ? await db2.select({
+    productId: product_reviews.productId,
+    count: sql3`count(*)::int`,
+    average: sql3`round(avg(${product_reviews.rating})::numeric, 1)::text`
+  }).from(product_reviews).where(inArray(product_reviews.productId, page.map((row) => row.id))).groupBy(product_reviews.productId) : [];
+  const ratingsByProduct = new Map(ratingRows.map((rating) => [rating.productId, rating]));
+  const products = await Promise.all(page.map(async (row) => serializeProduct(row, await getProductImageDisplayUrl(row.imagUrl, row.sellerId), row.distanceKm === null ? null : Number(row.distanceKm), { average: ratingsByProduct.get(row.id)?.average ?? null, count: ratingsByProduct.get(row.id)?.count ?? 0 })));
+  const last = page[page.length - 1];
+  return {
+    products,
+    nextCursor: rows.length > page.length && last && last.publishedAt ? encodeCursor({ evaluatedAt, id: last.id, score: last.visibilityScore, publishedAt: last.publishedAt }) : null,
+    evaluatedAt: evaluatedAt.toISOString()
+  };
+}
+
+// src/modules/marketplace/services/marketplace.product.reviews.list.ts
+async function listMarketplaceProductReviews(productId) {
+  const [product] = await db2.select({ id: sellers_product.id }).from(sellers_product).where(eq(sellers_product.id, productId)).limit(1);
+  if (!product)
+    throw new OrderError(404, "Marketplace product not found");
+  const [summary] = await db2.select({
+    count: sql3`count(*)::int`,
+    average: sql3`round(avg(${product_reviews.rating})::numeric, 1)::text`,
+    star5: sql3`count(case when ${product_reviews.rating} = 5 then 1 end)::int`,
+    star4: sql3`count(case when ${product_reviews.rating} = 4 then 1 end)::int`,
+    star3: sql3`count(case when ${product_reviews.rating} = 3 then 1 end)::int`,
+    star2: sql3`count(case when ${product_reviews.rating} = 2 then 1 end)::int`,
+    star1: sql3`count(case when ${product_reviews.rating} = 1 then 1 end)::int`
+  }).from(product_reviews).where(eq(product_reviews.productId, productId));
+  const rows = await db2.select({
+    id: product_reviews.id,
+    rating: product_reviews.rating,
+    review: product_reviews.review,
+    createdAt: product_reviews.createdAt,
+    buyerName: user.name
+  }).from(product_reviews).leftJoin(user, eq(user.id, product_reviews.buyerId)).where(eq(product_reviews.productId, productId)).orderBy(desc(product_reviews.createdAt)).limit(10);
+  const reviews = rows.map((row) => {
+    const name = row.buyerName?.trim().split(/\s+/) ?? [];
+    const buyerName = name[0] ? `${name[0]}${name[1]?.[0] ? ` ${name[1][0]}.` : ""}` : "Verified buyer";
+    return {
+      id: row.id,
+      rating: row.rating,
+      review: row.review,
+      createdAt: row.createdAt.toISOString(),
+      buyerName
+    };
+  });
+  return {
+    productId,
+    count: summary?.count ?? 0,
+    average: summary?.average ?? null,
+    breakdown: {
+      5: summary?.star5 ?? 0,
+      4: summary?.star4 ?? 0,
+      3: summary?.star3 ?? 0,
+      2: summary?.star2 ?? 0,
+      1: summary?.star1 ?? 0
+    },
+    reviews
+  };
+}
+
+// src/modules/marketplace/index/marketplace.products.ts
+function marketplaceFailure(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Marketplace operation failed" });
+}
+var marketplaceProductsRoute = new Elysia().get("/products", async ({ query, status }) => {
+  try {
+    return await listMarketplaceProducts(query);
+  } catch (error) {
+    return marketplaceFailure(error, status);
+  }
+}, { query: marketplaceProductsQuery }).get("/products/:id", async ({ params, status }) => {
+  try {
+    return await getMarketplaceProduct(params.id);
+  } catch (error) {
+    return marketplaceFailure(error, status);
+  }
+}, { params: marketplaceProductParams }).get("/products/:id/reviews", async ({ params, status }) => {
+  try {
+    return await listMarketplaceProductReviews(params.id);
+  } catch (error) {
+    return marketplaceFailure(error, status);
+  }
+}, { params: marketplaceProductParams }).get("/sellers/:id", async ({ params, status }) => {
+  try {
+    return await getMarketplaceSeller(params.id);
+  } catch (error) {
+    return marketplaceFailure(error, status);
+  }
+}, { params: marketplaceSellerParams });
+
+// src/modules/marketplace/index.ts
+var marketplaceRoute = new Elysia({ prefix: "/marketplace" }).use(marketplaceProductsRoute);
+
+// src/modules/stakeholder/services/stakeholder.summary.ts
+async function readStakeholderSummary() {
+  const [users, listings, orderRows, reports] = await Promise.all([
+    db2.select({
+      sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
+      buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
+    }).from(user),
+    db2.select({
+      total: sql3`count(*)::int`,
+      active: sql3`count(*) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`
+    }).from(sellers_product),
+    db2.select({ status: orders.status, count: sql3`count(*)::int` }).from(orders).groupBy(orders.status),
+    db2.select({ total: sql3`count(*)::int` }).from(order_reports)
+  ]);
+  return {
+    generatedAt: new Date().toISOString(),
+    users: users[0] ?? { sellers: 0, buyers: 0 },
+    listings: listings[0] ?? { total: 0, active: 0 },
+    orders: Object.fromEntries(orderRows.map((row) => [row.status, Number(row.count)])),
+    reports: { total: Number(reports[0]?.total ?? 0) }
+  };
+}
+
+// src/modules/stakeholder/index/stakeholder.summary.ts
+var stakeholderSummaryRoute = new Elysia().use(sessionAuth).get("/summary", async ({ status }) => {
+  try {
+    return await readStakeholderSummary();
+  } catch (error) {
+    console.error(error);
+    return status(500, { message: "Failed to read stakeholder summary" });
+  }
+}, { role: ["stakeholder"] });
+
+// src/modules/stakeholder/index.ts
+var stakeholderRoute = new Elysia({ prefix: "/stakeholder" }).use(stakeholderSummaryRoute);
+
 // src/modules/buyer/services/buyer.order.expire.ts
 async function expirePendingOrders(limit = 100) {
   const due = await db2.select({ id: orders.id }).from(orders).where(and(eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).orderBy(orders.expiresAt).limit(limit);
   let expiredCount = 0;
   for (const row of due) {
     const expired = await db2.transaction(async (tx) => {
-      const [updated] = await tx.update(orders).set({ status: "expired", updatedAt: new Date }).where(and(eq(orders.id, row.id), eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).returning({ id: orders.id });
+      const [updated] = await tx.update(orders).set({ status: "expired", expiredAt: new Date, updatedAt: new Date }).where(and(eq(orders.id, row.id), eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).returning({ id: orders.id });
       if (!updated)
         return false;
       await restoreOrderStock(tx, updated.id);
@@ -119457,7 +121342,18 @@ Order: ${notice.orderId}`, `trust:${notice.noticeKey}`);
 }
 
 // src/index.ts
-var app = new Elysia().use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).get("/", () => "Hello Elysia").get("/a", () => "Hello Elysia").use(validationPlugin).listen(3000);
+var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
+var webCorsOrigin = configuredWebOrigins.length ? [...configuredWebOrigins, localWebOrigin] : localWebOrigin;
+var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).get("/", () => "Hello Elysia").get("/a", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+  try {
+    await db2.execute(sql3`select 1`);
+    return { status: "ready" };
+  } catch (error) {
+    console.error("Readiness check failed", error);
+    return status(503, { status: "not_ready" });
+  }
+}).use(validationPlugin).listen(3000);
 var expiryRunning = false;
 async function runOrderExpiry() {
   if (expiryRunning)

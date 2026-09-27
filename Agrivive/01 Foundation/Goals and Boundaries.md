@@ -33,6 +33,6 @@ Marketable surplus vegetables; verified seller profiles; structured listings and
 
 ## Claims to avoid
 
-The visibility score is a promotion priority, not a freshness score. Shelf-life estimates are inspection prompts, not safety determinations. Recommendations are associations in recorded transactions, not predictions of future purchases. Reports alone do not prove fraud.
+The visibility score is a promotion priority, not a freshness score. Recommendations are associations in recorded transactions, not predictions of future purchases. Reports alone do not prove fraud.
 
 **Source:** PDF pp. 4–5; mechanism limits elaborated on pp. 12–23.

@@ -5,6 +5,7 @@ import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { multiplyPrice, quantityToHundredths } from "../../../utils/order-amount";
 import { OrderError, type OrderTransaction } from "../../../utils/order-types";
 import type { ReservedOrderItem } from "../model/buyer.order.create";
+import { applySellerProductPriceReduction } from "../../seller/services/seller.product.price-reduction";
 
 async function unavailableProductError(
   tx: OrderTransaction,
@@ -35,6 +36,7 @@ export async function reserveOrderItem(
       "Quantity must be between 0.01 and 99999999 with at most two decimal places",
     );
   }
+  await applySellerProductPriceReduction(tx, productId);
   const [product] = await tx
     .update(sellers_product)
     .set({ productQty: sql`${sellers_product.productQty} - ${quantity}` })

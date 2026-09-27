@@ -21,6 +21,10 @@ export const auth = betterAuth({
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean),
+    ...(process.env.WEB_TRUSTED_ORIGINS ?? "")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
   ],
   database: drizzleAdapter(db, {
     provider: "pg", // or "mysql", "sqlite"
@@ -72,7 +76,11 @@ export const auth = betterAuth({
       },
     },
   },
+  emailVerification: {
+    autoSignInAfterVerification: true,
+  },
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
 });

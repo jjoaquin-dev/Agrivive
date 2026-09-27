@@ -50,6 +50,25 @@ export class ApiError extends Error {
   }
 }
 
+const API_TIMEOUT_MS = 10_000;
+
+function createRequestController(signal?: AbortSignal | null) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const cancel = () => controller.abort();
+
+  if (signal?.aborted) cancel();
+  else signal?.addEventListener("abort", cancel, { once: true });
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", cancel);
+    },
+  };
+}
+
 export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {},
@@ -77,22 +96,37 @@ export async function apiFetch<T = any>(
     ...((options.headers as Record<string, string>) || {}),
   };
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const request = createRequestController(options.signal);
 
-  const contentType = response.headers.get("content-type");
-  const isJson = contentType && contentType.includes("application/json");
-  const data = isJson ? await response.json() : await response.text();
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: request.signal,
+      headers,
+    });
 
-  if (!response.ok) {
-    const errorMessage =
-      (isJson && data?.message) ||
-      (typeof data === "string" && data) ||
-      `Request failed with status ${response.status}`;
-    throw new ApiError(response.status, errorMessage, data);
+    const contentType = response.headers.get("content-type");
+    const isJson = contentType && contentType.includes("application/json");
+    const data = isJson ? await response.json() : await response.text();
+
+    if (!response.ok) {
+      const errorMessage =
+        (isJson && data?.message) ||
+        (typeof data === "string" && data) ||
+        `Request failed with status ${response.status}`;
+      throw new ApiError(response.status, errorMessage, data);
+    }
+
+    return data as T;
+  } catch (error) {
+    if (request.signal.aborted && !options.signal?.aborted) {
+      throw new ApiError(
+        408,
+        "Could not connect to Agrivive. Check that the backend is running and your phone is on the same Wi-Fi.",
+      );
+    }
+    throw error;
+  } finally {
+    request.cleanup();
   }
-
-  return data as T;
 }

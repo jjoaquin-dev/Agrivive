@@ -7,13 +7,17 @@ import { buyerInquiryRoute } from "./index/buyer.order.inquiry";
 import { buyerReviewRoute } from "./index/buyer.order.review";
 import { buyerReportRoute } from "./index/buyer.order.report";
 import { buyerNoticesRoute } from "./index/buyer.notices.list";
+import { buyerCheckoutCreateRoute } from "./index/buyer.checkout.create";
+import { buyerProductInquiryRoute } from "./index/buyer.product.inquiry";
 
 export const buyerRoute = new Elysia({ prefix: "/buyer" })
+  .use(buyerCheckoutCreateRoute)
   .use(buyerOrderCreateRoute)
   .use(buyerOrderListRoute)
   .use(buyerOrderGetRoute)
   .use(buyerOrderCancelRoute)
   .use(buyerInquiryRoute)
+  .use(buyerProductInquiryRoute)
   .use(buyerReviewRoute)
   .use(buyerReportRoute)
   .use(buyerNoticesRoute);

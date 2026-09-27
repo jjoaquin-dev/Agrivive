@@ -26,6 +26,8 @@ export async function createSellerProfile(userId: string, body: SellerProfileCre
         latitude: body.latitude,
         longitude: body.longitude,
         phoneNumber,
+        sellerType: body.sellerType ?? "supplier",
+        pickupInstructions: body.pickupInstructions?.trim() || null,
         userId,
       })
       .returning();

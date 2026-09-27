@@ -17,3 +17,19 @@ export interface SellerMessagesResponse {
   nextCursor: string | null;
   openCount: number;
 }
+
+export interface SellerProductInquiryItem {
+  id: string;
+  productId: string;
+  productName: string;
+  buyerId: string;
+  question: string;
+  reply: string | null;
+  repliedAt: string | null;
+  createdAt: string;
+}
+
+export interface SellerProductInquiriesResponse {
+  items: SellerProductInquiryItem[];
+  nextCursor: string | null;
+}
