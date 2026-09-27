@@ -15,7 +15,7 @@ export async function expirePendingOrders(limit = 100) {
     const expired = await db.transaction(async (tx) => {
       const [updated] = await tx
         .update(orders)
-        .set({ status: "expired", updatedAt: new Date() })
+        .set({ status: "expired", expiredAt: new Date(), updatedAt: new Date() })
         .where(
           and(
             eq(orders.id, row.id),

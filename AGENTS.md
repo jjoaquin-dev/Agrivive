@@ -52,6 +52,8 @@ There is no working package test script yet: `bun run test` exits with an error.
 
 Follow the existing TypeScript style: two-space indentation, double-quoted strings, semicolons, and explicit imports. Keep route handlers thin; put body validation in Elysia models, header validation in routes, and database work in services. Use `camelCase` for variables and exported functions and descriptive feature-based filenames such as `buyer.order.create.ts`. Preserve the existing database schema naming where it differs from TypeScript naming. TypeScript runs with `strict: true`; no formatter or linter is configured.
 
+Keep source code files to 200 lines or fewer for readability. When a file exceeds that limit, split it into focused files that follow the project’s module conventions.
+
 ## Plain User-Facing Words
 
 Use short, familiar words that a five-year-old can understand in mobile labels, buttons, messages, and documentation. Prefer `Add More`, `Take Away`, `Change Amount`, and `Change History`. Avoid `Stock In`, `Stock Out`, `Stock Adjustment`, and `Correction` in user-facing text. Technical API, database, and internal code names may remain unchanged when compatibility requires them.
@@ -75,3 +77,42 @@ Recent commits use short, plain-English summaries (for example, `fixed addproduc
 ## Configuration & Secrets
 
 Put all secret keys, API tokens, passwords, database credentials, and other sensitive configuration values in a server-side `.env` file, such as `backend/.env`. Read them through environment variables; never hard-code them in source, tests, documentation, or examples. Do not put secrets in mobile or web `.env` files because client builds can expose them. Ensure every `.env` file is ignored by Git and never commit or share its contents. Use an `.env.example` with placeholder values when documenting required variables. Set `DATABASE_URL` locally for PostgreSQL-backed features and Drizzle. Commit generated migration files when changing `backend/src/db/schema.ts`.
+
+## Comprehensive UI/UX Standards, Laws & Psychological Theories
+
+All web and mobile interfaces in Agrivive must adhere to the following laws, standards, and theories. Whenever proposing or implementing UI/UX decisions, explicitly reference the relevant law and its originating author:
+
+### 1. Cognitive Psychology & Mental Models
+- **Jakob's Law** *(Jakob Nielsen)*: Users spend most of their time on other sites. Interfaces must use familiar patterns: standard top navigation, left-aligned form labels, intuitive cart flows, and standard modal/sheet dismissal. Never reinvent standard interactions.
+- **Hick-Hyman Law** *(William Edmund Hick & Ray Hyman)*: The time to make a decision increases logarithmically with the number and complexity of choices. Group filters, categorize order statuses into distinct tabs, and provide clear defaults.
+- **Miller's Law & Chunking** *(George A. Miller)*: Working memory holds approximately 7 ± 2 chunks of information. Break checkout, forms, and order details into discrete logical chunks with whitespace and dividers.
+- **Tesler's Law (Conservation of Complexity)** *(Larry Tesler)*: Every system has an inherent amount of complexity that cannot be removed, only shifted. The application must absorb complexity (e.g. calculating stall grouping, reservation expiration, multi-seller cart splits) so the buyer experiences seamless simplicity.
+- **Postel's Law (Robustness Principle)** *(Jon Postel)*: Be conservative in what you send, liberal in what you accept. Forgiving input parsing for quantities, phone numbers, and search terms, with consistent canonical output.
+- **Recognition Over Recall** *(Jakob Nielsen & Rolf Molich)*: Make actions, options, and status visible. Do not require users to remember what was in their cart, what a seller requires for pickup, or what a status means.
+- **Don't Make Me Think** *(Steve Krug)*: The primary purpose and next action of every screen must be self-evident at a glance without reading lengthy documentation.
+
+### 2. Visual Perception & Gestalt Psychology
+- **Gestalt Principles** *(Max Wertheimer, Kurt Koffka, Wolfgang Köhler)*:
+  - **Law of Proximity**: Related items must be physically close. Form labels sit directly above inputs; per-field errors sit directly below their affected field.
+  - **Law of Common Region**: Content within a bounded surface (card, panel, pass) is perceived as a group. Use cards to enclose stall information, pickup passes, and product listings.
+  - **Law of Similarity**: Elements with the same function must share visual attributes (e.g., all primary action buttons use Forest Green `#1F4D3A` with rounded corners).
+  - **Law of Uniform Connectedness**: Connected elements (steppers, timeline dots) are perceived as related stages in a single journey.
+  - **Figure-Ground Principle**: Foreground cards (`#FFFFFF`) must clearly lift off the Warm Cream background (`#F8F6F1`) using crisp 1px borders (`#E5E2DA`) and soft tinted shadows.
+  - **Law of Prägnanz (Simplicity)**: Users perceive ambiguous images as simple and complete. Layouts must remain clean, uncluttered, and scannable.
+- **Von Restorff Effect (Isolation Effect)** *(Hedwig von Restorff)*: The distinctive item is the one remembered. Reserve high-contrast primary green and terracotta accents exclusively for primary CTAs and crucial status highlights.
+- **Serial Position Effect** *(Hermann Ebbinghaus)*: Users best remember the first (Primacy) and last (Recency) items in a series. Place high-value navigation and critical actions at the start and end of toolbars and cards.
+- **Aesthetic-Usability Effect** *(Masaaki Kurosu & Kaori Kashimura)*: Users perceive attractive, well-proportioned interfaces as more usable and trustworthy. Precise typography, consistent 4px rhythm, and harmonious colors directly impact conversion and trust.
+
+### 3. Ergonomics, Motor Skills & Interaction
+- **Fitts's Law** *(Paul Fitts)*: The time to acquire a target is a function of the distance to and size of the target. All primary CTAs must be at least 48px high, icon-only buttons at least 44×44px, and destructive controls deliberately separated from confirmation buttons.
+- **Affordances and Signifiers** *(Don Norman, The Design of Everyday Things)*: An interface element must communicate how it is operated. Buttons must look tactile and pressable (`:active` translation); inputs must clearly indicate editability.
+- **Doherty Threshold** *(Walter J. Doherty & Ahrvid J. Thadhani)*: Productivity and engagement soar when system response occurs in under 400ms. Provide instant optimistic feedback, skeleton loaders, and tactile button states.
+- **Touch Target Principle & Mobile-First Ergonomics** *(Luke Wroblewski)*: Design for thumb reachability, zero horizontal scroll, and explicit responsive breakpoints (<640px, <768px, <1024px, >=1200px).
+
+### 4. Feedback, System Status & Emotional Ergonomics
+- **Visibility of System Status** *(Jakob Nielsen)*: Always keep users informed about what is happening through clear status badges, polling freshness timers, and interactive progress steppers.
+- **Peak-End Rule** *(Daniel Kahneman & Barbara Fredrickson)*: People judge an experience largely by how they felt at its peak and at its end. Reservation confirmation, Digital Pickup Pass presentation, and order completion must feel celebratory, polished, and reassuring.
+- **Goal-Gradient Effect** *(Clark L. Hull)*: Tendency to approach a goal increases with proximity to the goal. Multi-step workflows (reservation -> seller preparation -> pickup verification) must show visible progress indicators.
+- **Error Prevention & Inline Validation** *(Caroline Jarrett & Gerry Gaffney)*: Prevent errors through quantity constraints. When errors occur, show individual inline error text beneath each field—never lump errors into a single generic alert box.
+- **Ten Principles for Good Design** *(Dieter Rams)*: Good design is innovative, useful, aesthetic, understandable, unobtrusive, honest, long-lasting, thorough down to the last detail, environmentally conscious, and involves as little design as possible.
+

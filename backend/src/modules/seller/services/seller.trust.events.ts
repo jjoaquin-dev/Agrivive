@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db";
 import { trust_events, trust_notices } from "../../../db/schema";
+import { readTrustMonitoringScore } from "../../../utils/trust/score";
 
 export async function listSellerTrustEvents(sellerId: string) {
   const [events, notices] = await Promise.all([
@@ -17,5 +18,6 @@ export async function listSellerTrustEvents(sellerId: string) {
     }).from(trust_notices).where(eq(trust_notices.recipientId, sellerId))
       .orderBy(desc(trust_notices.createdAt)).limit(100),
   ]);
-  return { events, notices };
+  const monitoring = await readTrustMonitoringScore(sellerId);
+  return { events, notices, monitoring };
 }

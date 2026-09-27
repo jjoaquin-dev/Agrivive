@@ -77,6 +77,18 @@ export default function AppLayout() {
         }}
       />
       <Stack.Screen
+        name="analytics"
+        options={{
+          title: "Analytics",
+        }}
+      />
+      <Stack.Screen
+        name="advisories"
+        options={{
+          title: "Advisories",
+        }}
+      />
+      <Stack.Screen
         name="trust"
         options={{
           title: "Trust history",

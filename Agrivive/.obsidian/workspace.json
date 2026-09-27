@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "2b1ab5735ed4eb63",
+        "id": "a44317c0e5519e3c",
         "type": "tabs",
         "children": [
           {
-            "id": "f171e61f671e349d",
+            "id": "f45003364205ba49",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03 Intelligence/Seller Analytics.md",
+                "file": "02 Product/Product Journeys.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Seller Analytics"
+              "title": "Product Journeys"
             }
           }
         ]
@@ -188,34 +188,34 @@
       "bases:Create new base": false
     }
   },
-  "active": "f171e61f671e349d",
+  "active": "f45003364205ba49",
   "lastOpenFiles": [
-    "04 Delivery/2026-09-21 Seller Mobile Inventory.md",
-    "04 Delivery/2026-09-21 Private S3 Avatar Display.md",
-    "04 Delivery/2026-09-21 Avatar Multipart Upload Fix.md",
-    "04 Delivery/2026-09-21 S3 Standard Upload URLs.md",
-    "04 Delivery/2026-09-21 Mobile Field Validation Guidance.md",
-    "04 Delivery/2026-09-21 Seller Mobile Onboarding Auth Profile.md",
-    "04 Delivery/2026-09-21 Weighted Surplus Visibility API.md",
-    "04 Delivery/2026-09-21 Seller Profile CRUD.md",
-    "03 Intelligence/Weighted Surplus Visibility.md",
-    "03 Intelligence/Trust and Flagging.md",
-    "04 Delivery/2026-09-21 Seller Product Full CRUD.md",
-    "03 Intelligence/Seller Analytics.md",
-    "04 Delivery/2026-09-21 Seller Verification and Trust Backend.md",
-    "04 Delivery/Current Implementation.md",
-    "04 Delivery/Architecture and Integrations.md",
-    "04 Delivery/2026-09-20 Direct Order Backend.md",
+    "04 Delivery/2026-09-26 Agrivive Advertisement Preparation.md",
+    "04 Delivery/2026-09-26 Buyer Web Orders Suite Redesign and UX Laws.md",
+    "04 Delivery/2026-09-26 Typography Alignment and Icon Harmonization.md",
+    "04 Delivery/2026-09-26 Buyer Web Profile Polish and Per-Field Errors.md",
+    "04 Delivery/2026-09-26 Buyer Web Product Card Polish.md",
+    "04 Delivery/2026-09-26 Buyer Marketplace Header.md",
+    "04 Delivery/2026-09-26 Buyer Seller Storefront.md",
+    "04 Delivery/2026-09-26 Buyer Marketplace UI Cleanup.md",
+    "04 Delivery/2026-09-26 Buyer Product Reviews Frontend.md",
+    "04 Delivery/2026-09-26 Buyer Product Reviews Backend.md",
+    "04 Delivery/2026-09-26 Buyer Web Product Detail Redesign.md",
+    "04 Delivery/2026-09-26 Buyer Marketplace Storefront Redesign.md",
+    "04 Delivery/2026-09-26 Buyer Web Orders Redesign.md",
+    "04 Delivery/2026-09-26 Buyer Profile Refinement.md",
+    "04 Delivery/2026-09-26 Buyer Web Marketplace Redesign.md",
+    "04 Delivery/2026-09-26 Frontend Design Taste Skill.md",
+    "04 Delivery/2026-09-26 Buyer Web Profile.md",
+    "04 Delivery/2026-09-26 Buyer Web Auth Polish.md",
+    "04 Delivery/2026-09-26 Buyer Web Shadcn Redesign.md",
+    "04 Delivery/2026-09-22 Buyer Marketplace Backend.md",
     "02 Product/Feature Map.md",
-    "04 Delivery/2026-09-20 Seller Product Duplicate Guard.md",
     "04 Delivery/2026-09-20 ElysiaJS Skill.md",
-    "04 Delivery/2026-09-20 Module Layout Convention.md",
-    "01 Foundation/Project Brief.md",
-    "04 Delivery/2026-09-20 Secret Handling Guide.md",
-    "01 Foundation/People and Roles.md",
-    "01 Foundation/Goals and Boundaries.md",
-    "04 Delivery/Open Decisions.md",
-    "03 Intelligence/Market Basket Analysis.md",
+    "04 Delivery/2026-09-22 Buyer Web Authentication.md",
+    "04 Delivery/2026-09-22 Buyer Web Design and Skills.md",
+    "04 Delivery/2026-09-22 Seller Price Reduction.md",
+    "00 Home.md",
     "04 Delivery",
     "03 Intelligence",
     "02 Product",

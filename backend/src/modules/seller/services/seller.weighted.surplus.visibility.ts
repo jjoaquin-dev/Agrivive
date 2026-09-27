@@ -3,16 +3,13 @@ import { db } from "../../../db";
 import { listing_cycles, sellers_product } from "../../../db/schema";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
-
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
-const hour = 60 * 60 * 1000;
-const day = 24 * hour;
+import { calculateVisibilityScore } from "../../../utils/visibility-score";
 
 export async function getSellerWeightedSurplusVisibility(sellerId: string) {
   return db.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const evaluatedAt = new Date();
-    const since = new Date(evaluatedAt.getTime() - 30 * day);
+    const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
     const products = await tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
     const cycles = products.length ? await tx.select().from(listing_cycles).where(and(
       inArray(listing_cycles.productId, products.map((product) => product.id)),
@@ -27,7 +24,7 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
       const base = {
         productId: product.id,
         evaluatedAt: evaluatedAt.toISOString(),
-        policyVersion: "visibility-v2",
+        policyVersion: "visibility-v4",
       };
       if (!eligible) {
         return { ...base, score: null, tier: null, reason: "Listing is not eligible" };
@@ -49,18 +46,20 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
         cycle.startedAt < product.publishedAt! &&
         cycle.id !== currentCycle?.id,
       ).length;
-      const postingAge = clamp((evaluatedAt.getTime() - product.publishedAt.getTime()) / (12 * hour));
-      const remainingQuantity = clamp(quantity / original);
-      const inventoryAge = clamp((evaluatedAt.getTime() - product.publishedAt.getTime()) / (3 * day));
-      const recurrence = clamp(priorCycles / 3);
-      const score = .30 * postingAge + .30 * remainingQuantity +
-        .25 * inventoryAge + .15 * recurrence;
+      const visibility = calculateVisibilityScore({
+        evaluatedAt,
+        publishedAt: product.publishedAt,
+        quantity,
+        originalQuantity: original,
+        priorCycles,
+      });
+      if (!visibility) return { ...base, score: null, tier: null, reason: "Missing score inputs" };
 
       return {
         ...base,
-        score: Number(score.toFixed(4)),
-        tier: score >= .70 ? "priority" : score >= .40 ? "standard" : "basic",
-        inputs: { postingAge, remainingQuantity, inventoryAge, recurrence, priorCycles, vegetableKey },
+        score: Number(visibility.score.toFixed(4)),
+        tier: visibility.tier,
+        inputs: { ...visibility.inputs, vegetableKey },
       };
     });
   });

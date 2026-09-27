@@ -4,6 +4,8 @@ export interface ProductFormErrors {
   productName?: string;
   imagUrl?: string;
   productPrice?: string;
+  priceReductionPercent?: string;
+  minimumPrice?: string;
   productQty?: string;
   productType?: string;
   scalingType?: string;
@@ -38,6 +40,8 @@ export function validateCreateProduct(input: Partial<CreateProductInput>): {
   } else if (!hasTwoDecimalsOrLess(input.productPrice)) {
     errors.productPrice = "Price may have at most two decimal places.";
   }
+
+  validatePriceReduction(input, errors);
 
   if (input.productQty === undefined || input.productQty === null || isNaN(input.productQty)) {
     errors.productQty = "Please enter available quantity.";
@@ -82,10 +86,12 @@ export function validateUpdateProduct(input: Partial<UpdateProductInput>): {
   if (input.productPrice !== undefined) {
     if (isNaN(input.productPrice) || input.productPrice < 1 || input.productPrice > 99_999_999.99) {
       errors.productPrice = "Price must be between ₱1 and ₱99,999,999.99.";
-    } else if (!hasTwoDecimalsOrLess(input.productPrice)) {
+  } else if (!hasTwoDecimalsOrLess(input.productPrice)) {
       errors.productPrice = "Price may have at most two decimal places.";
     }
   }
+
+  validatePriceReduction(input, errors);
 
   if (input.lowStockThreshold !== undefined && input.lowStockThreshold !== null) {
     if (input.lowStockThreshold < 0 || input.lowStockThreshold > 99_999_999.99) {
@@ -99,4 +105,30 @@ export function validateUpdateProduct(input: Partial<UpdateProductInput>): {
     isValid: Object.keys(errors).length === 0,
     errors,
   };
+}
+
+function validatePriceReduction(
+  input: Partial<CreateProductInput | UpdateProductInput>,
+  errors: ProductFormErrors,
+) {
+  const percent = input.priceReductionPercent;
+  const minimum = input.minimumPrice;
+
+  if (percent !== undefined &&
+    (isNaN(percent) || percent < 0 || percent > 99.99 || !hasTwoDecimalsOrLess(percent))) {
+    errors.priceReductionPercent = "Reduction must be between 0% and 99.99% with at most two decimals.";
+  }
+
+  if (minimum !== undefined && minimum !== null) {
+    if (isNaN(minimum) || minimum < 1 || minimum > 99_999_999.99 || !hasTwoDecimalsOrLess(minimum)) {
+      errors.minimumPrice = "Lowest price must be at least ₱1 with at most two decimals.";
+    }
+    if (input.productPrice !== undefined && minimum > input.productPrice) {
+      errors.minimumPrice = "Lowest price cannot be higher than the selling price.";
+    }
+  }
+
+  if (percent !== undefined && percent > 0 && (minimum === undefined || minimum === null)) {
+    errors.minimumPrice = "Enter the lowest price when automatic reduction is enabled.";
+  }
 }

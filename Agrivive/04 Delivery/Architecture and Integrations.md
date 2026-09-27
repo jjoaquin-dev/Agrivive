@@ -31,7 +31,7 @@ This is the **proposal architecture**. See [[Current Implementation]] for what e
 
 - Backend values are authoritative for price, quantity, reservation state, and calculated metrics.
 - Automation and text-generation services must retrieve current facts before creating content.
-- Outdoor weather is not a substitute for measured or seller-recorded storage temperature. [[Contextual Advisories]]
+- Outdoor weather is advisory context only and does not change stored marketplace facts. [[Contextual Advisories]]
 - Stakeholder access exposes aggregate, non-personal information only. [[People and Roles]]
 - If weather or holiday APIs fail, stored marketplace functions should remain usable.
 

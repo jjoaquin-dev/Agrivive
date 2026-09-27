@@ -30,6 +30,11 @@ export interface Product {
   imagUrl?: string | null;
   displayImageUrl?: string | null;
   productPrice: string | number;
+  basePrice?: string | number | null;
+  priceReductionPercent?: string | number;
+  minimumPrice?: string | number | null;
+  priceScheduleStartedAt?: string | null;
+  nextPriceReductionAt?: string | null;
   productQty: string | number;
   originalQty?: string | number | null;
   lowStockThreshold?: string | number | null;
@@ -74,6 +79,8 @@ export interface CreateProductInput {
   productName: string;
   imagUrl: string;
   productPrice: number;
+  priceReductionPercent?: number;
+  minimumPrice?: number | null;
   productQty: number;
   productType: ProductCategory;
   scalingType: ProductScalingType;
@@ -85,6 +92,8 @@ export interface UpdateProductInput {
   productName?: string;
   imagUrl?: string;
   productPrice?: number;
+  priceReductionPercent?: number;
+  minimumPrice?: number | null;
   productType?: ProductCategory;
   isMarketable?: boolean;
   lowStockThreshold?: number | null;

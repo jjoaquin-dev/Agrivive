@@ -83,7 +83,12 @@ export default function Index() {
     }
   }
 
-  // Default to home tab if authenticated
+  // Never send an authenticated account without setup state to product screens.
+  if (session?.user) {
+    return <Redirect href="/(app)/profile/setup" />;
+  }
+
+  // Default to home tab only after setup has been confirmed.
   return <Redirect href="/(app)/(tabs)/home" />;
 }
 

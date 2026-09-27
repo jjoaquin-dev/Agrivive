@@ -51,6 +51,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [productPrice, setProductPrice] = useState(
     initialProduct?.productPrice ? String(initialProduct.productPrice) : "",
   );
+  const [priceReductionPercent, setPriceReductionPercent] = useState(
+    initialProduct?.priceReductionPercent != null
+      ? String(initialProduct.priceReductionPercent)
+      : "",
+  );
+  const [minimumPrice, setMinimumPrice] = useState(
+    initialProduct?.minimumPrice != null ? String(initialProduct.minimumPrice) : "",
+  );
   const [productQty, setProductQty] = useState(
     initialProduct?.productQty ? String(initialProduct.productQty) : "",
   );
@@ -79,15 +87,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = async () => {
     const numPrice = parseFloat(productPrice);
+    const numPriceReduction = priceReductionPercent.trim() !== ""
+      ? parseFloat(priceReductionPercent)
+      : 0;
+    const numMinimumPrice = minimumPrice.trim() !== ""
+      ? parseFloat(minimumPrice)
+      : undefined;
     const numQty = parseFloat(productQty);
     const numThreshold =
       lowStockThreshold.trim() !== "" ? parseFloat(lowStockThreshold) : undefined;
-
     if (mode === "create") {
       const payload: CreateProductInput = {
         productName: productName.trim(),
         imagUrl,
         productPrice: numPrice,
+        priceReductionPercent: numPriceReduction,
+        minimumPrice: numMinimumPrice,
         productQty: numQty,
         productType,
         scalingType,
@@ -113,10 +128,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         }
       }
     } else {
+      const initialPrice = initialProduct?.productPrice == null ? null : Number(initialProduct.productPrice);
+      const initialReduction = Number(initialProduct?.priceReductionPercent ?? 0);
+      const initialMinimum = initialProduct?.minimumPrice == null
+        ? null
+        : Number(initialProduct.minimumPrice);
+      const pricingChanged = numPrice !== initialPrice ||
+        numPriceReduction !== initialReduction ||
+        (numMinimumPrice ?? null) !== initialMinimum;
       const payload: UpdateProductInput = {
         productName: productName.trim(),
         imagUrl: imagUrl || undefined,
-        productPrice: numPrice,
+        ...(pricingChanged ? {
+          productPrice: numPrice,
+          priceReductionPercent: numPriceReduction,
+          minimumPrice: numMinimumPrice ?? null,
+        } : {}),
         productType,
         isMarketable,
         lowStockThreshold: numThreshold ?? null,
@@ -299,6 +326,37 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         }}
       />
 
+      <View style={styles.pricingSection}>
+        <Text style={styles.sectionLabel}>Automatic price reduction</Text>
+        <Text style={styles.sectionHint}>
+          Optional: lower the price after each 12-hour period. Enter 0 to keep one price.
+        </Text>
+        <InputComponent
+          label="Reduction every 12 hours (%)"
+          placeholder="0"
+          keyboardType="decimal-pad"
+          value={priceReductionPercent}
+          error={errors.priceReductionPercent}
+          leftIcon={<Coins size={18} color={colors.textMuted} />}
+          onChangeText={(text) => {
+            setPriceReductionPercent(text);
+            clearFieldError("priceReductionPercent");
+          }}
+        />
+        <InputComponent
+          label="Lowest selling price"
+          placeholder="e.g. 45.00"
+          keyboardType="decimal-pad"
+          value={minimumPrice}
+          error={errors.minimumPrice}
+          leftIcon={<Coins size={18} color={colors.textMuted} />}
+          onChangeText={(text) => {
+            setMinimumPrice(text);
+            clearFieldError("minimumPrice");
+          }}
+        />
+      </View>
+
       {/* 7. Low Stock Threshold */}
       <InputComponent
         label={`Alert me when amount reaches (${scalingType === "kilo" ? "kg" : scalingType})`}
@@ -373,6 +431,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     marginBottom: spacing.sm,
+  },
+  pricingSection: {
+    marginBottom: spacing.base,
   },
   categoryGrid: {
     flexDirection: "row",

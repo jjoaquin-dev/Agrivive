@@ -11,9 +11,11 @@ export function updateSellerProfile(sellerId: string, body: SellerProfileUpdate)
   const shopName = body.shopName?.trim();
   const detailAddress = body.detailAddress?.trim();
   const phoneNumber = body.phoneNumber?.trim();
+  const pickupInstructions = body.pickupInstructions?.trim();
   if (shopName === "" || detailAddress === "" || phoneNumber === "") {
     throw new OrderError(400, "Profile text fields cannot be blank");
   }
+  if (pickupInstructions === "") throw new OrderError(400, "Pickup instructions cannot be blank");
   if (body.latitude !== undefined && (!Number.isFinite(body.latitude) || body.latitude < -90 || body.latitude > 90)) {
     throw new OrderError(400, "Latitude must be between -90 and 90");
   }
@@ -29,6 +31,8 @@ export function updateSellerProfile(sellerId: string, body: SellerProfileUpdate)
       ...(body.latitude !== undefined ? { latitude: body.latitude } : {}),
       ...(body.longitude !== undefined ? { longitude: body.longitude } : {}),
       ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+      ...(body.sellerType !== undefined ? { sellerType: body.sellerType } : {}),
+      ...(pickupInstructions !== undefined ? { pickupInstructions: pickupInstructions || null } : {}),
       updatedAt: new Date(),
     }).where(and(
       eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true),

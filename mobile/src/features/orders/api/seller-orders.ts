@@ -23,8 +23,8 @@ export async function fetchSellerOrders(
   return apiFetch<SellerOrdersResponse>(`/seller/orders${qs ? `?${qs}` : ""}`);
 }
 
-export async function fetchSellerOrder(orderId: string): Promise<SellerOrder> {
-  return apiFetch<SellerOrder>(`/seller/orders/${orderId}`);
+export async function fetchSellerOrder(orderId: string, signal?: AbortSignal): Promise<SellerOrder> {
+  return apiFetch<SellerOrder>(`/seller/orders/${orderId}`, { signal });
 }
 
 export async function scanSellerOrder(qrPayload: string): Promise<SellerOrder> {

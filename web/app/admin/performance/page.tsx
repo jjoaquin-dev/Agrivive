@@ -1,0 +1,201 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Activity, AlertTriangle, FileText, Info, Lock, ShieldCheck, Users } from "lucide-react";
+import { BuyerSiteHeader } from "@/src/components/BuyerSiteHeader";
+import { PageContainer } from "@/src/components/PageContainer";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ApiError } from "@/src/lib/api";
+import { getAdminPerformance, type AdminPerformance } from "@/src/features/admin/api/performance";
+
+export default function AdminPerformancePage() {
+  const [data, setData] = useState<AdminPerformance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    getAdminPerformance(controller.signal)
+      .then((res) => {
+        setData(res);
+        setAccessDenied(false);
+      })
+      .catch((err) => {
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          setAccessDenied(true);
+        } else {
+          setError(err?.message || "Failed to load admin performance metrics.");
+        }
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
+  return (
+    <>
+      <BuyerSiteHeader />
+      <main className="min-h-[calc(100vh-73px)] bg-agrivive-background py-8 text-foreground lg:py-12">
+        <PageContainer>
+          <div className="mb-8">
+            <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
+              Platform Performance & Trust Monitoring
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Read-only aggregate metrics and system trust signals. Monitoring signals do not impose penalties.
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="h-32 animate-pulse rounded-2xl bg-card" />
+              ))}
+            </div>
+          ) : accessDenied ? (
+            <Card className="mx-auto max-w-md p-8 text-center">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+                <Lock className="size-6" />
+              </div>
+              <h2 className="mt-4 font-heading text-lg font-bold">Admin Access Required</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                You must be signed in with an administrator account to view performance metrics.
+              </p>
+              <Link
+                href="/login?next=/admin/performance"
+                className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90"
+              >
+                Sign in as Admin
+              </Link>
+            </Card>
+          ) : error || !data ? (
+            <Card className="p-8 text-center">
+              <AlertTriangle className="mx-auto size-8 text-destructive" />
+              <p className="mt-2 text-sm font-medium text-destructive">{error || "Could not load data."}</p>
+            </Card>
+          ) : (
+            <div className="space-y-8">
+              {/* Overview Metrics Grid */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Active Users</CardTitle>
+                    <Users className="size-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold font-heading">{data.users.sellers + data.users.buyers}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {data.users.sellers} sellers · {data.users.buyers} buyers
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Listings</CardTitle>
+                    <Activity className="size-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold font-heading">{data.listings.total}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {data.listings.active} active and marketable
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
+                    <FileText className="size-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold font-heading">
+                      {Object.values(data.orders).reduce((acc, c) => acc + c, 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {data.orders.completed ?? 0} completed · {data.orders.pending ?? 0} pending
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">Trust Signals</CardTitle>
+                    <ShieldCheck className="size-4 text-primary" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold font-heading">{data.trust.verifiedEvents}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {data.trust.reportFlags} report flags · {data.trust.evidenceFiles} evidence files
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Trust Monitoring Breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <ShieldCheck className="size-5 text-primary" />
+                    Weighted Trust Monitoring Breakdown
+                  </CardTitle>
+                  <CardDescription className="flex items-start gap-1.5 pt-1 text-xs">
+                    <Info className="size-4 shrink-0 text-muted-foreground mt-0.5" />
+                    <span>
+                      Weighted points count recorded verified events as monitoring signals, not a penalty or quality score.
+                      Allegation flags are counted separately and do not affect weighted points. Admin monitoring does not approve reports or change user accounts.
+                    </span>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-border bg-muted/20 p-3">
+                      <span className="text-xs text-muted-foreground">Total Weighted Points</span>
+                      <p className="text-xl font-bold font-heading text-primary">{data.trustMonitoring.weightedPoints}</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/20 p-3">
+                      <span className="text-xs text-muted-foreground">Verified Events</span>
+                      <p className="text-xl font-bold font-heading">{data.trustMonitoring.verifiedEvents}</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/20 p-3">
+                      <span className="text-xs text-muted-foreground">Allegation Flags</span>
+                      <p className="text-xl font-bold font-heading text-amber-600">{data.trustMonitoring.allegationFlags}</p>
+                    </div>
+                  </div>
+
+                  {data.trustMonitoring.components.length > 0 && (
+                    <div className="overflow-x-auto rounded-xl border border-border">
+                      <table className="w-full text-left text-xs">
+                        <thead className="border-b bg-muted/50 font-semibold text-muted-foreground">
+                          <tr>
+                            <th className="p-3">Monitoring Event Kind</th>
+                            <th className="p-3 text-right">Event Count</th>
+                            <th className="p-3 text-right">Signal Weight</th>
+                            <th className="p-3 text-right">Weighted Points</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {data.trustMonitoring.components.map((c) => (
+                            <tr key={c.kind}>
+                              <td className="p-3 font-medium capitalize">{c.kind.replaceAll("_", " ")}</td>
+                              <td className="p-3 text-right">{c.count}</td>
+                              <td className="p-3 text-right">{c.weight}x</td>
+                              <td className="p-3 text-right font-semibold text-primary">{c.points}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </PageContainer>
+      </main>
+    </>
+  );
+}

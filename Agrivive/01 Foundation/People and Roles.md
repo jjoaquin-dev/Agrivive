@@ -9,7 +9,7 @@ source_pages: [4, 6, 7]
 
 ## Seller
 
-Verified supplier, supplier-vendor, or retail vendor. Primarily uses the mobile app. Creates and updates marketable surplus listings, declares condition and inventory age, manages stock and price, receives inquiries and reservations, scans QR codes, confirms handover, and reviews analytics and advisories. A seller may also act as a buyer.
+Verified supplier, supplier-vendor, or retail vendor. Primarily uses the mobile app. Creates and updates marketable surplus listings, declares condition, manages stock and price, receives inquiries and reservations, scans QR codes, confirms handover, and reviews analytics and advisories. A seller may also act as a buyer.
 
 ## Buyer
 

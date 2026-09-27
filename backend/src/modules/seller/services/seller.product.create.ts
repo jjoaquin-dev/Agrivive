@@ -8,6 +8,7 @@ import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { validateLowStockThreshold } from "../../../utils/product-threshold";
 import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
+import { validatePriceReductionConfig } from "../../../utils/price-reduction";
 
 export async function createSellerProduct(userId: string, body: SellerProductCreate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -18,6 +19,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
   if (priceToCents(body.productPrice) === null) {
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
+  validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
   const productName = body.productName.trim();
   const normalizedName = productName.toLowerCase();
   const lockKey = `${normalizedName}:${body.scalingType}`;
@@ -49,8 +51,14 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
         ...body,
         productName,
         productPrice: body.productPrice.toString(),
+        basePrice: body.productPrice.toString(),
+        priceReductionPercent: (body.priceReductionPercent ?? 0).toString(),
+        minimumPrice: body.minimumPrice?.toString() ?? null,
+        priceScheduleStartedAt: now,
+        priceReductionPeriodsApplied: 0,
         productQty: body.productQty.toString(),
         lowStockThreshold: body.lowStockThreshold?.toString() ?? null,
+        condition: body.condition ?? "needs_inspection",
         originalQty: body.productQty.toString(),
         publishedAt: now,
         isMarketable: body.isMarketable,

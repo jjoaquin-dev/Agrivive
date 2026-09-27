@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Image, Pressable } from "react-native";
 import { ChevronRight, Package, AlertTriangle, AlertCircle } from "lucide-react-native";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
 import type { Product } from "../types";
+import { PriceCompare } from "./PriceCompare";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
   const qty = parseFloat(product.productQty as string) || 0;
   const price = parseFloat(product.productPrice as string) || 0;
+  const reductionPercent = parseFloat(String(product.priceReductionPercent ?? "0")) || 0;
   const threshold =
     product.lowStockThreshold != null
       ? parseFloat(product.lowStockThreshold as string)
@@ -60,10 +62,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) =>
             <Text style={styles.qtyValue}>{qty.toFixed(2)}</Text> {unitLabel}
           </Text>
           <Text style={styles.dotSeparator}>•</Text>
-          <Text style={styles.priceText}>
-            ₱{price.toFixed(2)} / {unitLabel}
-          </Text>
+          <PriceCompare basePrice={product.basePrice} currentPrice={price} unitLabel={unitLabel} />
         </View>
+
+        {reductionPercent > 0 && product.nextPriceReductionAt ? (
+          <Text style={styles.priceScheduleText}>
+            Price lowers {reductionPercent}% every 12 hours · next {new Date(product.nextPriceReductionAt).toLocaleString()}
+          </Text>
+        ) : null}
 
         {isArchived ? (
           <View style={[styles.badge, styles.badgeArchived]}>
@@ -152,6 +158,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.xs,
   },
+  priceScheduleText: {
+    color: colors.textMuted,
+    fontFamily: fonts.body.regular,
+    fontSize: 12,
+    marginTop: spacing.xs,
+  },
   qtyText: {
     fontFamily: fonts.body.medium,
     fontSize: 13,
@@ -163,11 +175,6 @@ const styles = StyleSheet.create({
   },
   dotSeparator: {
     marginHorizontal: spacing.xs,
-    color: colors.textMuted,
-  },
-  priceText: {
-    fontFamily: fonts.body.medium,
-    fontSize: 13,
     color: colors.textMuted,
   },
   badge: {

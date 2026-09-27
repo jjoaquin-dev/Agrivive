@@ -13,7 +13,7 @@ import {
   doublePrecision,
 } from "drizzle-orm/pg-core";
 
-export const roleEnum = pgEnum("role", ["seller", "buyer", "admin"]);
+export const roleEnum = pgEnum("role", ["seller", "buyer", "admin", "stakeholder"]);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -100,6 +100,12 @@ export const twoFactor = pgTable("two_factor", {
   lockedUntil: timestamp("locked_until"),
 }, (table) => [index("two_factor_user_id_idx").on(table.userId)]);
 
+export const seller_type_enum = pgEnum("seller_type", [
+  "supplier",
+  "supplier_vendor",
+  "retail_vendor",
+]);
+
 export const sellers_profile = pgTable("sellers_profile", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   userId: text("user_id")
@@ -110,6 +116,8 @@ export const sellers_profile = pgTable("sellers_profile", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
+  sellerType: seller_type_enum("seller_type").default("supplier").notNull(),
+  pickupInstructions: text("pickup_instructions"),
   isCurrent: boolean("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 
@@ -128,6 +136,11 @@ export const product_type_enum = pgEnum("product_type", [
   "Fruit Vegetables",
   "Seeds and Legumes",
 ]);
+export const product_condition_enum = pgEnum("product_condition", [
+  "good",
+  "fair",
+  "needs_inspection",
+]);
 export const scaling_type_enum = pgEnum("scaling_type", [
   "sack",
   "kilo",
@@ -142,12 +155,18 @@ export const sellers_product = pgTable("sellers_product", {
   productName: text("product_name").notNull(),
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
+  basePrice: decimal("base_price", { precision: 10, scale: 2 }),
+  priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
+  minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
+  priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
     precision: 10,
     scale: 2,
   }),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }),
+  condition: product_condition_enum().default("needs_inspection").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   isMarketable: boolean("is_marketable").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
@@ -158,7 +177,8 @@ export const sellers_product = pgTable("sellers_product", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+}, (table) => [index("sellers_product_marketplace_visibility_idx")
+  .on(table.isActive, table.isMarketable, table.publishedAt)]);
 
 export const listing_cycles = pgTable("listing_cycles", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -166,7 +186,10 @@ export const listing_cycles = pgTable("listing_cycles", {
   vegetableKey: text("vegetable_key").notNull(),
   startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }).notNull(),
-});
+}, (table) => [
+  index("listing_cycles_product_started_idx").on(table.productId, table.startedAt),
+  index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt),
+]);
 
 export const product_stock_adjustments = pgTable("product_stock_adjustments", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -221,6 +244,9 @@ export const orders = pgTable("orders", {
   cancellationReason: text("cancellation_reason"),
   totalAmount: decimal("total_amount").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  expiredAt: timestamp("expired_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -268,6 +294,32 @@ export const order_reports = pgTable("order_reports", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [uniqueIndex("order_reports_order_reporter_unique").on(table.orderId, table.reporterId)]);
 
+export const order_report_evidence = pgTable("order_report_evidence", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  reportId: uuid("report_id").notNull().references(() => order_reports.id, { onDelete: "cascade" }),
+  objectKey: text("object_key").notNull().unique(),
+  contentType: text("content_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [index("order_report_evidence_report_created_idx").on(table.reportId, table.createdAt)]);
+
+export const product_inquiries = pgTable("product_inquiries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  reply: text("reply"),
+  repliedAt: timestamp("replied_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("product_inquiries_one_open_per_buyer_product_idx")
+    .on(table.productId, table.buyerId)
+    .where(sql`${table.repliedAt} is null`),
+  index("product_inquiries_seller_created_idx").on(table.sellerId, table.createdAt),
+  index("product_inquiries_buyer_product_idx").on(table.buyerId, table.productId, table.createdAt),
+]);
+
 export const trust_events = pgTable("trust_events", {
   id: uuid("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
@@ -279,7 +331,10 @@ export const trust_events = pgTable("trust_events", {
   policyVersion: text("policy_version").notNull().default("v1-warning-only"),
   invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("trust_events_monitor_subject_idx").on(table.subjectId, table.classification, table.invalidatedAt),
+  index("trust_events_monitor_global_idx").on(table.classification, table.invalidatedAt),
+]);
 
 export const trust_notices = pgTable("trust_notices", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -329,3 +384,17 @@ export const ordered_items = pgTable("ordered_items", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const product_reviews = pgTable("product_reviews", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderedItemId: uuid("ordered_item_id").notNull().unique().references(() => ordered_items.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "restrict" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  rating: smallint("rating").notNull(),
+  review: text("review"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("product_reviews_product_created_idx").on(table.productId, table.createdAt),
+]);

@@ -18,7 +18,7 @@ export async function scanSellerOrder(sellerId: string, body: ScanOrderInput) {
     const now = new Date();
     const [completed] = await tx
       .update(orders)
-      .set({ status: "completed", updatedAt: now })
+      .set({ status: "completed", completedAt: now, updatedAt: now })
       .where(
         and(
           eq(orders.id, orderId),

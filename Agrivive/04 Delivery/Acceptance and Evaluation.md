@@ -16,10 +16,10 @@ source_pages: [5, 8, 9]
 | Search | Buyer can narrow active stock by relevant product, quantity, unit, price, seller type, and location. |
 | Reservation | Two buyers cannot reserve more than available; reserved quantity moves exactly once; cancellation or expiry restores it exactly once. |
 | Pickup | Active matching QR works within 24 hours; invalid, expired, cancelled, and reused codes cannot complete handover. |
-| Visibility | Only eligible listings receive a score; the four normalized inputs and tier match the configured formula. |
+| Visibility | Only eligible listings receive a score; the three normalized inputs and tier match the configured formula. |
 | Promotion | Workflow uses current listing facts, respects seller price consent and minimum, and stops when stock is gone. |
 | Insights | Sell-through counts completed pickups only; zero denominators are handled; recommendations use completed baskets only. |
-| Advisories | Missing storage temperature produces no numerical Q10 estimate; outside-service outages leave stored marketplace data available. |
+| Advisories | Weather and holiday context produce general planning reminders; outside-service outages leave stored marketplace data available. |
 | Trust/privacy | Unsupported reports do not automatically penalize users; stakeholder views omit personal and sensitive records. |
 
 ## Quality targets in the proposal

@@ -18,9 +18,12 @@ export const sellerProductUpdate = t.Object({
   productName: t.Optional(t.String({ minLength: 1, pattern: "\\S" })),
   imagUrl: t.Optional(t.String({ format: "uri" })),
   productPrice: t.Optional(t.Number({ minimum: 1, maximum: 99_999_999.99 })),
+  priceReductionPercent: t.Optional(t.Number({ minimum: 0, maximum: 99.99 })),
+  minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99_999_999.99 }))),
   productType: t.Optional(sellerProductType),
   isMarketable: t.Optional(t.Boolean()),
   lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99_999_999.99 }))),
+  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"])),
 }, { minProperties: 1, additionalProperties: false });
 export const sellerProductRestock = t.Object({ quantity: t.Number({ minimum: .01, maximum: 99_999_999 }) });
 export type SellerProductUpdate = typeof sellerProductUpdate.static;

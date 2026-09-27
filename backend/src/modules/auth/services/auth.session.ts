@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { user as users } from "../../../db/schema";
 
-export type Rtype = "admin" | "buyer" | "seller";
+export type Rtype = "admin" | "buyer" | "seller" | "stakeholder";
 
 export const sellerRoute = new Elysia({ name: "auth.session" });
 
@@ -22,10 +22,15 @@ export const sessionAuth = new Elysia()
           return status(401);
         }
 
-        const [current] = await db.select({ role: users.role, isActive: users.isActive })
+        const [current] = await db.select({ role: users.role, isActive: users.isActive, email: users.email })
           .from(users).where(eq(users.id, authSession.user.id)).limit(1);
         if (!current?.isActive) return status(403);
-        const userRoles = current.role ?? [];
+        const userRoles = [...(current.role ?? [])];
+        const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "")
+          .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
+        if (stakeholderEmails.has(current.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
+          userRoles.push("stakeholder");
+        }
 
         const hasAllowedRole = userRoles.some((role) =>
           allowedRoles.includes(role as Rtype),

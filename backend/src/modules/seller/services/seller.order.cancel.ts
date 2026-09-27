@@ -13,7 +13,7 @@ export async function cancelSellerOrder(sellerId: string, orderId: string, reaso
     await requireVerifiedSeller(tx, sellerId);
     const now = new Date();
     const [cancelled] = await tx.update(orders).set({
-      status: "cancelled", cancelledBy: "seller", cancellationReason: reason.trim(), updatedAt: now,
+      status: "cancelled", cancelledBy: "seller", cancellationReason: reason.trim(), cancelledAt: now, updatedAt: now,
     }).where(and(
       eq(orders.id, orderId), eq(orders.sellersId, sellerId),
       eq(orders.status, "pending"), gt(orders.expiresAt, now),

@@ -120,11 +120,24 @@ export default function VerifyEmailScreen() {
       // Sync updated account state
       const setup = await refreshSetup();
 
-      if (setup && !setup.profileComplete) {
-        router.replace("/(app)/profile/setup");
-      } else {
-        router.replace("/(app)/(tabs)/inventory");
+      if (!setup) {
+        setGeneralError(
+          "Your email was verified, but we could not load your account setup. Please try again.",
+        );
+        return;
       }
+
+      if (!setup.emailVerified || setup.nextStep === "verify-email") {
+        setGeneralError("Your email verification is still syncing. Please try again.");
+        return;
+      }
+
+      if (!setup.profileComplete || setup.nextStep === "profile") {
+        router.replace("/(app)/profile/setup");
+        return;
+      }
+
+      router.replace("/(app)/(tabs)/home");
     } catch (err: any) {
       console.error("Email verification error", err);
       setGeneralError(
