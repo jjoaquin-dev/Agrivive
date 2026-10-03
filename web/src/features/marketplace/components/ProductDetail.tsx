@@ -91,18 +91,18 @@ export function ProductDetail() {
     setCartMessage(`${product.productName} was added to your cart.`);
   }
 
-  if (loading) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><div className="h-[520px] animate-pulse rounded-2xl bg-card" /></PageContainer></main>;
-  if (error || !product) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><Card className="mx-auto max-w-xl items-center p-8 text-center"><h1 className="font-heading text-2xl font-bold">We could not find that listing.</h1><p className="text-muted-foreground">{error || "It may have been removed or is no longer visible."}</p><Link href="/marketplace" className={cn(buttonVariants(), "mt-2")}><ArrowLeft className="size-4" />Back to marketplace</Link></Card></PageContainer></main>;
+  if (loading) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><div className="h-[520px] animate-pulse rounded-[20px] bg-card" /></PageContainer></main>;
+  if (error || !product) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><Card className="mx-auto max-w-xl items-center rounded-[20px] border-border/80 bg-white p-8 text-center shadow-[0_14px_32px_rgba(31,77,58,0.08)]"><h1 className="font-heading text-2xl font-bold">We could not find that listing.</h1><p className="text-muted-foreground">{error || "It may have been removed or is no longer visible."}</p><Link href="/marketplace" className={cn(buttonVariants(), "mt-2")}><ArrowLeft className="size-4" />Back to marketplace</Link></Card></PageContainer></main>;
 
   const soldOut = product.availability === "sold_out" || Number(product.productQty) <= 0;
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-background py-8 text-foreground lg:py-12">
+    <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-12">
       <PageContainer>
-        <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline"><ArrowLeft aria-hidden="true" className="size-4" />Back to marketplace</Link>
+        <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-agrivive-primary hover:underline"><ArrowLeft aria-hidden="true" className="size-4" />Back to marketplace</Link>
         <div className="mt-5 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <Card className="overflow-hidden p-0"><div className="h-[360px] bg-agrivive-background sm:h-[500px]"><ProductImage src={product.imageUrl} alt={product.productName} category={product.productType} /></div></Card>
-          <Card className="gap-5 p-5 sm:p-7">
+          <Card className="overflow-hidden rounded-[20px] border-border/80 bg-white p-0 shadow-[0_14px_32px_rgba(31,77,58,0.08)]"><div className="h-[360px] bg-agrivive-background sm:h-[500px]"><ProductImage src={product.imageUrl} alt={product.productName} category={product.productType} /></div></Card>
+          <Card className="gap-5 rounded-[20px] border-border/80 bg-white p-5 shadow-[0_14px_32px_rgba(31,77,58,0.08)] sm:p-7">
             <CardHeader className="gap-3 p-0">
               <Badge variant="secondary" className="gap-2"><ShoppingBasket aria-hidden="true" className="size-4" />{product.productType}</Badge>
               <h1 className="font-heading text-3xl font-bold leading-tight">{product.productName}</h1>
@@ -117,7 +117,7 @@ export function ProductDetail() {
                 <div><dt className="text-muted-foreground">Seller type</dt><dd className="mt-1 font-semibold">{sellerTypeLabel(product.seller.sellerType)}</dd></div>
                 <div><dt className="text-muted-foreground">Condition</dt><dd className="mt-1 font-semibold capitalize">{product.condition?.replaceAll("_", " ") || "No condition note"}</dd></div>
               </dl>
-              <div className="border-t pt-5 text-sm">
+              <div className="border-t border-border/70 pt-5 text-sm">
                 <h2 className="font-semibold">Pickup details</h2>
                 <p className="mt-2 flex items-start gap-2 leading-6 text-muted-foreground"><MapPin aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />{product.seller.detailAddress}</p>
                 <p className="mt-2 leading-6 text-muted-foreground">{product.seller.pickupInstructions || "Ask the seller for the best pickup time after reserving."}</p>

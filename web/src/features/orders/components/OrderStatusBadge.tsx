@@ -1,16 +1,35 @@
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { CheckCircle2, CircleX, Clock3, TimerOff } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
-const labels: Record<BuyerOrder["status"], string> = {
-  pending: "Pending pickup",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  expired: "Expired",
-};
 
 export function OrderStatusBadge({ status }: { status: BuyerOrder["status"] }) {
-  const variants = { pending: "secondary", completed: "success", cancelled: "destructive", expired: "outline" } as const;
-  const Icon = status === "completed" ? CheckCircle2 : status === "pending" ? Clock3 : status === "expired" ? TimerOff : CircleX;
-  return <Badge variant={variants[status]} className="gap-1.5"><Icon aria-hidden="true" className="size-3.5" />{labels[status]}</Badge>;
+  if (status === "pending") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50/90 px-3 py-1 text-xs font-semibold text-amber-800">
+        <Clock3 className="size-3.5" aria-hidden="true" />
+        Pending
+      </span>
+    );
+  }
+  if (status === "completed") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50/90 px-3 py-1 text-xs font-semibold text-emerald-800">
+        <CheckCircle2 className="size-3.5" aria-hidden="true" />
+        Completed
+      </span>
+    );
+  }
+  if (status === "cancelled") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/80 bg-rose-50/90 px-3 py-1 text-xs font-semibold text-rose-700">
+        <CircleX className="size-3.5" aria-hidden="true" />
+        Cancelled
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+      <TimerOff className="size-3.5" aria-hidden="true" />
+      Expired
+    </span>
+  );
 }

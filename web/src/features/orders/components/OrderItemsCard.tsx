@@ -8,7 +8,7 @@ function money(value: string | number) {
 
 export function OrderItemsCard({ items }: { items: BuyerOrderItem[] }) {
   return (
-    <Card className="overflow-hidden border-border/80 bg-white">
+    <Card className="overflow-hidden rounded-[20px] border-border/80 bg-white shadow-[0_10px_24px_rgba(31,77,58,0.05)]">
       <CardHeader className="border-b border-border/60 pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
           <ShoppingBasket className="size-4 text-agrivive-primary" aria-hidden="true" />

@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
-import { Camera, X } from "lucide-react-native";
+import { AlertTriangle, Camera, X } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { CardComponent } from "../../../src/components/CardComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
@@ -20,12 +20,11 @@ import { cancelSellerOrder, fetchSellerOrder } from "../../../src/features/order
 import { OrderItemsList } from "../../../src/features/orders/components/OrderItemsList";
 import { OrderStatusBadge } from "../../../src/features/orders/components/OrderStatusBadge";
 import { SellerOrderCommunication } from "../../../src/features/orders/components/SellerOrderCommunication";
+import { SellerOrderReportModal } from "../../../src/features/orders/components/SellerOrderReportModal";
 import type { SellerOrder } from "../../../src/features/orders/types";
-
 function money(value: string) {
   return `₱${Number(value).toFixed(2)}`;
 }
-
 export default function SellerOrderDetailScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
@@ -36,6 +35,7 @@ export default function SellerOrderDetailScreen() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const loadOrder = useCallback(async () => {
@@ -151,6 +151,8 @@ export default function SellerOrderDetailScreen() {
 
       <SellerOrderCommunication orderId={order.id} />
 
+      <ButtonComponent title="Report Order" onPress={() => setReportOpen(true)} variant="secondary" icon={<AlertTriangle size={18} color={colors.primary} />} style={styles.reportButton} />
+
       {canAct ? (
         <>
           <ButtonComponent title="Scan Buyer QR" onPress={() => router.push({ pathname: "/(app)/orders/scan", params: { orderId: order.id } })} icon={<Camera size={18} color={colors.white} />} />
@@ -166,6 +168,7 @@ export default function SellerOrderDetailScreen() {
           <ButtonComponent title="Save Cancellation" onPress={handleCancel} loading={saving} disabled={cancelReason.trim().length < 5} variant="destructive" />
         </View></View>
       </Modal>
+      <SellerOrderReportModal orderId={order.id} visible={reportOpen} onClose={() => setReportOpen(false)} />
     </ScrollView>
   );
 }
@@ -189,6 +192,7 @@ const styles = StyleSheet.create({
   errorText: { fontFamily: fonts.body.medium, color: colors.error, textAlign: "center" },
   retry: { marginTop: spacing.md },
   cancelButton: { marginTop: spacing.sm },
+  reportButton: { marginBottom: spacing.base },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.35)" },
   modalCard: { backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, padding: spacing.base, paddingBottom: spacing.xl },
   modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },

@@ -99034,6 +99034,7 @@ var db2 = drizzle({ client: pool });
 var exports_schema = {};
 __export(exports_schema, {
   account: () => account,
+  buyer_saved_products: () => buyer_saved_products,
   checkouts: () => checkouts,
   listing_cycles: () => listing_cycles,
   order_inquiries: () => order_inquiries,
@@ -99252,6 +99253,15 @@ var sellers_product = pgTable("sellers_product", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 }, (table) => [index("sellers_product_marketplace_visibility_idx").on(table.isActive, table.isMarketable, table.publishedAt)]);
+var buyer_saved_products = pgTable("buyer_saved_products", {
+  id: uuid2("id").defaultRandom().primaryKey().notNull(),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("buyer_saved_products_buyer_product_unique").on(table.buyerId, table.productId),
+  index("buyer_saved_products_buyer_created_idx").on(table.buyerId, table.createdAt)
+]);
 var listing_cycles = pgTable("listing_cycles", {
   id: uuid2("id").defaultRandom().primaryKey(),
   productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
@@ -101812,18 +101822,26 @@ var import_dotenv = __toESM(require_main());
 import { createHash as createHash2 } from "crypto";
 async function sendEmail(to, subject, text, key) {
   import_dotenv.default.config({ override: true });
-  const mailtrapToken = process.env.MAILTRAP_API_TOKEN;
-  let mailtrapInboxId = process.env.MAILTRAP_INBOX_ID;
-  if (!mailtrapInboxId || mailtrapInboxId === "your_mailtrap_inbox_id") {
-    mailtrapInboxId = "4920653";
-  }
-  if (mailtrapToken && mailtrapInboxId) {
+  const provider = resolveEmailProvider();
+  const idempotencyKey = createHash2("sha256").update(key).digest("hex");
+  const allowDevEmailLog = process.env.ALLOW_DEV_EMAIL_LOG === "true";
+  if (provider === "mailtrap") {
+    const mailtrapToken = process.env.MAILTRAP_API_TOKEN?.trim();
+    const mailtrapInboxId = process.env.MAILTRAP_INBOX_ID?.trim();
+    if (!mailtrapToken || !mailtrapInboxId) {
+      if (allowDevEmailLog) {
+        console.log(`[Dev Sandbox] Simulated Mailtrap delivery to ${to}`);
+        return;
+      }
+      throw new Error("Mailtrap email provider requires MAILTRAP_API_TOKEN and MAILTRAP_INBOX_ID");
+    }
     const response = await fetch(`https://sandbox.api.mailtrap.io/api/send/${mailtrapInboxId}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${mailtrapToken}`,
         "Api-Token": mailtrapToken,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey
       },
       body: JSON.stringify({
         to: [{ email: to }],
@@ -101840,15 +101858,22 @@ async function sendEmail(to, subject, text, key) {
     console.log(`[Mailtrap Success] Email captured in Mailtrap inbox for ${to}`);
     return;
   }
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (apiKey && from) {
+  if (provider === "resend") {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    const from = process.env.RESEND_FROM_EMAIL?.trim();
+    if (!apiKey || !from) {
+      if (allowDevEmailLog) {
+        console.log(`[Dev Sandbox] Simulated Resend delivery to ${to}`);
+        return;
+      }
+      throw new Error("Resend email provider requires RESEND_API_KEY and RESEND_FROM_EMAIL");
+    }
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": createHash2("sha256").update(key).digest("hex")
+        "Idempotency-Key": idempotencyKey
       },
       body: JSON.stringify({ from, to: [to], subject, text })
     });
@@ -101860,18 +101885,29 @@ async function sendEmail(to, subject, text, key) {
     console.log(`[Resend Success] Verification email sent to ${to}`);
     return;
   }
-  console.log(`[Dev Sandbox] Simulated email delivery to ${to}`);
+  if (allowDevEmailLog) {
+    console.log(`[Dev Sandbox] Simulated email delivery to ${to}`);
+    return;
+  }
+  throw new Error("Email provider is not configured");
 }
 function sendAuthCode(email, otp, type) {
   if (type === "sign-in")
     throw new Error("Email OTP sign-in is disabled");
-  console.log(`
-==================================================`);
-  console.log(`[AUTH OTP] ${type.toUpperCase()} CODE FOR ${email}: ${otp}`);
-  console.log(`==================================================
-`);
+  if (process.env.ALLOW_DEV_EMAIL_LOG === "true") {
+    console.log(`[Dev OTP] ${type.toUpperCase()} code generated for ${email}`);
+  }
   const id = createHash2("sha256").update(`${email}:${type}:${otp}`).digest("hex");
   return sendEmail(email, "Agrivive verification code", `Your ${type} code is ${otp}.`, `otp:${id}`);
+}
+function resolveEmailProvider() {
+  const configured = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
+  if (configured && configured !== "mailtrap" && configured !== "resend") {
+    throw new Error("EMAIL_PROVIDER must be resend or mailtrap");
+  }
+  if (configured === "mailtrap" || configured === "resend")
+    return configured;
+  return "mailtrap";
 }
 
 // node_modules/@better-auth/expo/dist/version-DddGjO8z.js
@@ -120625,7 +120661,8 @@ function listBuyerNotices(buyerId) {
     orderId: trust_notices.orderId,
     kind: trust_notices.kind,
     createdAt: trust_notices.createdAt,
-    sentAt: trust_notices.sentAt
+    sentAt: trust_notices.sentAt,
+    readAt: trust_notices.readAt
   }).from(trust_notices).where(eq(trust_notices.recipientId, buyerId)).orderBy(desc(trust_notices.createdAt)).limit(100);
 }
 
@@ -120636,6 +120673,63 @@ var buyerNoticesRoute = new Elysia().use(sessionAuth).get("/notices", async ({ s
   } catch (error) {
     console.error(error);
     return status(500, { message: "Failed to list notices" });
+  }
+}, { role: ["buyer"] });
+
+// src/modules/buyer/model/buyer.notices.ts
+var buyerNoticeParams = t.Object({
+  id: t.String({ format: "uuid" })
+});
+
+// src/modules/buyer/services/buyer.notice.read.ts
+async function readBuyerNotice(buyerId, noticeId) {
+  return db2.transaction(async (tx) => {
+    const [notice] = await tx.select({
+      id: trust_notices.id,
+      orderId: trust_notices.orderId,
+      kind: trust_notices.kind,
+      createdAt: trust_notices.createdAt,
+      readAt: trust_notices.readAt
+    }).from(trust_notices).where(and(eq(trust_notices.id, noticeId), eq(trust_notices.recipientId, buyerId))).for("update").limit(1);
+    if (!notice)
+      throw new OrderError(404, "Notice not found");
+    if (notice.readAt)
+      return notice;
+    const [updated] = await tx.update(trust_notices).set({ readAt: new Date }).where(eq(trust_notices.id, noticeId)).returning({
+      id: trust_notices.id,
+      orderId: trust_notices.orderId,
+      kind: trust_notices.kind,
+      createdAt: trust_notices.createdAt,
+      readAt: trust_notices.readAt
+    });
+    return updated ?? notice;
+  });
+}
+
+// src/modules/buyer/services/buyer.notices.read-all.ts
+async function readAllBuyerNotices(buyerId) {
+  const updated = await db2.update(trust_notices).set({ readAt: new Date }).where(and(eq(trust_notices.recipientId, buyerId), isNull2(trust_notices.readAt))).returning({ id: trust_notices.id });
+  return { updatedCount: updated.length };
+}
+
+// src/modules/buyer/index/buyer.notices.read.ts
+function noticeFailure(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Notice operation failed" });
+}
+var buyerNoticeReadRoute = new Elysia().use(sessionAuth).post("/notices/:id/read", async ({ session, params, status }) => {
+  try {
+    return await readBuyerNotice(session.userId, params.id);
+  } catch (error) {
+    return noticeFailure(error, status);
+  }
+}, { role: ["buyer"], params: buyerNoticeParams }).post("/notices/read-all", async ({ session, status }) => {
+  try {
+    return await readAllBuyerNotices(session.userId);
+  } catch (error) {
+    return noticeFailure(error, status);
   }
 }, { role: ["buyer"] });
 
@@ -120810,8 +120904,138 @@ var buyerProductInquiryRoute = new Elysia().use(sessionAuth).get("/products/:id/
   }
 }, { role: ["buyer"], params: buyerProductInquiryParams, body: buyerProductInquiryBody });
 
+// src/modules/buyer/services/buyer.profile.read.ts
+async function getBuyerProfile(userId) {
+  const [account] = await db2.select({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image
+  }).from(user).where(eq(user.id, userId)).limit(1);
+  if (!account)
+    throw new OrderError(404, "Buyer profile not found");
+  return {
+    account: {
+      ...account,
+      image: await getAvatarDisplayUrl(account.image)
+    }
+  };
+}
+
+// src/modules/buyer/index/buyer.profile.read.ts
+var buyerProfileReadRoute = new Elysia().use(sessionAuth).get("/profile", async ({ session, status }) => {
+  try {
+    return await getBuyerProfile(session.userId);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error("[Buyer Profile Read Error]:", error);
+    return status(500, { message: "Failed to read buyer profile" });
+  }
+}, { role: ["buyer"] });
+
+// src/modules/buyer/model/buyer.profile.avatar.ts
+var buyerProfileAvatarModel = t.Object({
+  file: t.File({
+    type: ["image/jpeg", "image/png", "image/webp"],
+    maxSize: 5 * 1024 * 1024
+  })
+});
+
+// src/modules/buyer/services/buyer.profile.avatar.ts
+async function updateBuyerAvatar(userId, file) {
+  if (!file)
+    throw new OrderError(400, "No image file provided");
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const key = `avatars/${userId}/${Date.now()}.${ext}`;
+  try {
+    const imageUrl = await uploadToS3({
+      buffer,
+      key,
+      contentType: file.type || "image/jpeg"
+    });
+    await db2.update(user).set({ image: imageUrl }).where(eq(user.id, userId));
+    return {
+      success: true,
+      imageUrl: await getAvatarDisplayUrl(imageUrl) || imageUrl
+    };
+  } catch (error) {
+    console.error("[S3 Buyer Avatar Upload Error]:", error);
+    throw new Error(error?.message || "Failed to upload profile picture to AWS S3");
+  }
+}
+
+// src/modules/buyer/index/buyer.profile.avatar.ts
+var buyerProfileAvatarRoute = new Elysia().use(sessionAuth).post("/profile/avatar", async ({ session, body, status }) => {
+  try {
+    return await updateBuyerAvatar(session.userId, body.file);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error("[Buyer Profile Avatar Error]:", error);
+    return status(500, { message: error?.message || "Failed to upload avatar" });
+  }
+}, {
+  role: ["buyer"],
+  body: buyerProfileAvatarModel
+});
+
+// src/modules/buyer/services/buyer.wishlist.list.ts
+async function listBuyerWishlist(buyerId) {
+  const rows = await db2.select({ productId: buyer_saved_products.productId }).from(buyer_saved_products).where(eq(buyer_saved_products.buyerId, buyerId)).orderBy(desc(buyer_saved_products.createdAt));
+  return { productIds: rows.map((row) => row.productId) };
+}
+
+// src/modules/buyer/index/buyer.wishlist.list.ts
+var buyerWishlistListRoute = new Elysia().use(sessionAuth).get("/wishlist", async ({ session }) => listBuyerWishlist(session.userId), { role: ["buyer"] });
+
+// src/modules/buyer/model/buyer.wishlist.ts
+var buyerWishlistProductParams = t.Object({
+  productId: t.String({ format: "uuid" })
+});
+
+// src/modules/marketplace/services/marketplace.visibility.ts
+var sellerRole = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
+function marketplaceSellerVisibility() {
+  return and(eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, eq(user.isActive, true), eq(user.emailVerified, true), sellerRole);
+}
+
+// src/modules/buyer/services/buyer.wishlist.save.ts
+async function saveBuyerWishlistProduct(buyerId, productId) {
+  const [product] = await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), isNotNull(sellers_product.publishedAt), marketplaceSellerVisibility())).limit(1);
+  if (!product)
+    throw new OrderError(404, "Marketplace product not found");
+  await db2.insert(buyer_saved_products).values({ buyerId, productId }).onConflictDoNothing({ target: [buyer_saved_products.buyerId, buyer_saved_products.productId] });
+  return { productId, saved: true };
+}
+
+// src/modules/buyer/index/buyer.wishlist.save.ts
+var buyerWishlistSaveRoute = new Elysia().use(sessionAuth).post("/wishlist/:productId", async ({ session, params, status }) => {
+  try {
+    return await saveBuyerWishlistProduct(session.userId, params.productId);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to save product" });
+  }
+}, { role: ["buyer"], params: buyerWishlistProductParams });
+
+// src/modules/buyer/services/buyer.wishlist.remove.ts
+async function removeBuyerWishlistProduct(buyerId, productId) {
+  await db2.delete(buyer_saved_products).where(and(eq(buyer_saved_products.buyerId, buyerId), eq(buyer_saved_products.productId, productId)));
+  return { productId, saved: false };
+}
+
+// src/modules/buyer/index/buyer.wishlist.remove.ts
+var buyerWishlistRemoveRoute = new Elysia().use(sessionAuth).delete("/wishlist/:productId", async ({ session, params }) => removeBuyerWishlistProduct(session.userId, params.productId), {
+  role: ["buyer"],
+  params: buyerWishlistProductParams
+});
+
 // src/modules/buyer/index.ts
-var buyerRoute = new Elysia({ prefix: "/buyer" }).use(buyerCheckoutCreateRoute).use(buyerOrderCreateRoute).use(buyerOrderListRoute).use(buyerOrderGetRoute).use(buyerOrderCancelRoute).use(buyerInquiryRoute).use(buyerProductInquiryRoute).use(buyerReviewRoute).use(buyerReportRoute).use(buyerNoticesRoute);
+var buyerRoute = new Elysia({ prefix: "/buyer" }).use(buyerProfileReadRoute).use(buyerProfileAvatarRoute).use(buyerWishlistListRoute).use(buyerWishlistSaveRoute).use(buyerWishlistRemoveRoute).use(buyerCheckoutCreateRoute).use(buyerOrderCreateRoute).use(buyerOrderListRoute).use(buyerOrderGetRoute).use(buyerOrderCancelRoute).use(buyerInquiryRoute).use(buyerProductInquiryRoute).use(buyerReviewRoute).use(buyerReportRoute).use(buyerNoticesRoute).use(buyerNoticeReadRoute);
 
 // src/modules/admin/services/admin.performance.ts
 async function readAdminPerformance() {
@@ -120961,23 +121185,36 @@ async function getMarketplaceProduct(productId) {
 }
 
 // src/modules/marketplace/services/marketplace.seller.get.ts
-var sellerRole = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
+var sellerRole2 = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
 async function getMarketplaceSeller(sellerId) {
   const [seller] = await db2.select({
     id: sellers_profile.userId,
+    image: user.image,
     shopName: sellers_profile.shopName,
     sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
-    pickupInstructions: sellers_profile.pickupInstructions
-  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true), eq(user.isActive, true), eq(user.emailVerified, true), sellerRole, sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+    pickupInstructions: sellers_profile.pickupInstructions,
+    latitude: sellers_profile.latitude,
+    longitude: sellers_profile.longitude
+  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true), eq(user.isActive, true), eq(user.emailVerified, true), sellerRole2, sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
   if (!seller)
     throw new OrderError(404, "Seller storefront not found");
-  return seller;
+  return {
+    ...seller,
+    image: await getAvatarDisplayUrl(seller.image)
+  };
+}
+
+// src/modules/marketplace/services/marketplace.distance.ts
+function marketplaceDistanceExpression(latitude, longitude) {
+  return sql3`6371 * acos(least(1, greatest(-1,
+    cos(radians(${latitude})) * cos(radians(${sellers_profile.latitude})) *
+    cos(radians(${sellers_profile.longitude}) - radians(${longitude})) +
+    sin(radians(${latitude})) * sin(radians(${sellers_profile.latitude}))
+  )))`;
 }
 
 // src/modules/marketplace/services/marketplace.products.list.ts
-var sellerRole2 = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
-var completeSellerProfile = and(eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude));
 function encodeCursor(value) {
   return Buffer.from(JSON.stringify({
     evaluatedAt: value.evaluatedAt.toISOString(),
@@ -120997,13 +121234,6 @@ function decodeCursor(cursor) {
   } catch {
     throw new OrderError(400, "Invalid marketplace cursor");
   }
-}
-function distanceExpression(latitude, longitude) {
-  return sql3`6371 * acos(least(1, greatest(-1,
-    cos(radians(${latitude})) * cos(radians(${sellers_profile.latitude})) *
-    cos(radians(${sellers_profile.longitude}) - radians(${longitude})) +
-    sin(radians(${latitude})) * sin(radians(${sellers_profile.latitude}))
-  )))`;
 }
 function validateRanges(query) {
   if (query.minPrice !== undefined && query.maxPrice !== undefined && query.minPrice > query.maxPrice) {
@@ -121072,8 +121302,7 @@ async function listMarketplaceProducts(query) {
     isNotNull(sellers_product.publishedAt),
     eq(user.isActive, true),
     eq(user.emailVerified, true),
-    sellerRole2,
-    completeSellerProfile
+    marketplaceSellerVisibility()
   ];
   const search = query.search?.trim();
   if (query.sellerId)
@@ -121094,7 +121323,7 @@ async function listMarketplaceProducts(query) {
     conditions.push(gte(sellers_product.productQty, query.minQuantity.toString()));
   if (query.maxQuantity !== undefined)
     conditions.push(lte(sellers_product.productQty, query.maxQuantity.toString()));
-  const distanceKm = query.latitude !== undefined && query.longitude !== undefined ? distanceExpression(query.latitude, query.longitude) : null;
+  const distanceKm = query.latitude !== undefined && query.longitude !== undefined ? marketplaceDistanceExpression(query.latitude, query.longitude) : null;
   if (distanceKm && query.radiusKm !== undefined)
     conditions.push(lte(distanceKm, query.radiusKm));
   if (cursor)
@@ -121218,8 +121447,129 @@ var marketplaceProductsRoute = new Elysia().get("/products", async ({ query, sta
   }
 }, { params: marketplaceSellerParams });
 
+// src/modules/marketplace/model/marketplace.sellers.map.ts
+var marketplaceSellersMapQuery = t.Object({
+  search: t.Optional(t.String({ maxLength: 120 })),
+  productType: t.Optional(marketplaceProductType),
+  unit: t.Optional(marketplaceUnit),
+  sellerType: t.Optional(marketplaceSellerType),
+  minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
+  maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
+  minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
+  maxQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
+  latitude: t.Optional(t.Numeric({ minimum: -90, maximum: 90 })),
+  longitude: t.Optional(t.Numeric({ minimum: -180, maximum: 180 })),
+  radiusKm: t.Optional(t.Numeric({ minimum: 1, maximum: 100 }))
+});
+
+// src/modules/marketplace/services/marketplace.sellers.map.ts
+function validateQuery(query) {
+  if (query.minPrice !== undefined && query.maxPrice !== undefined && query.minPrice > query.maxPrice) {
+    throw new OrderError(400, "Minimum price cannot exceed maximum price");
+  }
+  if (query.minQuantity !== undefined && query.maxQuantity !== undefined && query.minQuantity > query.maxQuantity) {
+    throw new OrderError(400, "Minimum quantity cannot exceed maximum quantity");
+  }
+  const hasLocation = query.latitude !== undefined || query.longitude !== undefined || query.radiusKm !== undefined;
+  if (hasLocation && (query.latitude === undefined || query.longitude === undefined || query.radiusKm === undefined)) {
+    throw new OrderError(400, "Latitude, longitude, and radiusKm are required together");
+  }
+}
+function matchingProductConditions(query) {
+  const conditions = [
+    marketplaceSellerVisibility(),
+    eq(sellers_product.isActive, true),
+    eq(sellers_product.isMarketable, true),
+    gt(sellers_product.productQty, "0"),
+    gt(sellers_product.productPrice, "0"),
+    isNotNull(sellers_product.publishedAt)
+  ];
+  const search = query.search?.trim();
+  if (search)
+    conditions.push(ilike(sellers_product.productName, `%${search}%`));
+  if (query.productType)
+    conditions.push(eq(sellers_product.productType, query.productType));
+  if (query.unit)
+    conditions.push(eq(sellers_product.scalingType, query.unit));
+  if (query.sellerType)
+    conditions.push(eq(sellers_profile.sellerType, query.sellerType));
+  if (query.minPrice !== undefined)
+    conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
+  if (query.maxPrice !== undefined)
+    conditions.push(lte(sellers_product.productPrice, query.maxPrice.toString()));
+  if (query.minQuantity !== undefined)
+    conditions.push(gte(sellers_product.productQty, query.minQuantity.toString()));
+  if (query.maxQuantity !== undefined)
+    conditions.push(lte(sellers_product.productQty, query.maxQuantity.toString()));
+  return conditions;
+}
+async function listMarketplaceSellersMap(query) {
+  validateQuery(query);
+  const conditions = matchingProductConditions(query);
+  const distanceKm = query.latitude !== undefined && query.longitude !== undefined ? marketplaceDistanceExpression(query.latitude, query.longitude) : null;
+  const locationConditions = distanceKm && query.radiusKm !== undefined ? [lte(distanceKm, query.radiusKm)] : [];
+  const mappedConditions = [
+    ...conditions,
+    ...locationConditions,
+    isNotNull(sellers_profile.latitude),
+    isNotNull(sellers_profile.longitude)
+  ];
+  const rows = await db2.select({
+    id: user.id,
+    name: user.name,
+    image: user.image,
+    shopName: sellers_profile.shopName,
+    sellerType: sellers_profile.sellerType,
+    detailAddress: sellers_profile.detailAddress,
+    pickupInstructions: sellers_profile.pickupInstructions,
+    latitude: sellers_profile.latitude,
+    longitude: sellers_profile.longitude,
+    distanceKm: distanceKm ?? sql3`null`,
+    productCount: count(sellers_product.id).as("product_count")
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
+  const unmappedRows = await db2.select({
+    count: sql3`count(distinct ${sellers_profile.userId})::int`
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(...conditions, or(isNull2(sellers_profile.latitude), isNull2(sellers_profile.longitude))));
+  const sellers = await Promise.all(rows.flatMap((row) => {
+    if (row.latitude === null || row.longitude === null)
+      return [];
+    return [row];
+  }).map(async (row) => ({
+    id: row.id,
+    name: row.name,
+    image: await getAvatarDisplayUrl(row.image),
+    shopName: row.shopName,
+    sellerType: row.sellerType,
+    detailAddress: row.detailAddress,
+    pickupInstructions: row.pickupInstructions,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    distanceKm: row.distanceKm === null ? null : Number(row.distanceKm),
+    productCount: Number(row.productCount)
+  })));
+  return {
+    sellers,
+    unmappedSellerCount: Number(unmappedRows[0]?.count ?? 0)
+  };
+}
+
+// src/modules/marketplace/index/marketplace.sellers.map.ts
+function marketplaceFailure2(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Marketplace operation failed" });
+}
+var marketplaceSellerMapRoute = new Elysia().get("/sellers/map", async ({ query, status }) => {
+  try {
+    return await listMarketplaceSellersMap(query);
+  } catch (error) {
+    return marketplaceFailure2(error, status);
+  }
+}, { query: marketplaceSellersMapQuery });
+
 // src/modules/marketplace/index.ts
-var marketplaceRoute = new Elysia({ prefix: "/marketplace" }).use(marketplaceProductsRoute);
+var marketplaceRoute = new Elysia({ prefix: "/marketplace" }).use(marketplaceSellerMapRoute).use(marketplaceProductsRoute);
 
 // src/modules/stakeholder/services/stakeholder.summary.ts
 async function readStakeholderSummary() {
@@ -121257,24 +121607,6 @@ var stakeholderSummaryRoute = new Elysia().use(sessionAuth).get("/summary", asyn
 // src/modules/stakeholder/index.ts
 var stakeholderRoute = new Elysia({ prefix: "/stakeholder" }).use(stakeholderSummaryRoute);
 
-// src/modules/buyer/services/buyer.order.expire.ts
-async function expirePendingOrders(limit = 100) {
-  const due = await db2.select({ id: orders.id }).from(orders).where(and(eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).orderBy(orders.expiresAt).limit(limit);
-  let expiredCount = 0;
-  for (const row of due) {
-    const expired = await db2.transaction(async (tx) => {
-      const [updated] = await tx.update(orders).set({ status: "expired", expiredAt: new Date, updatedAt: new Date }).where(and(eq(orders.id, row.id), eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).returning({ id: orders.id });
-      if (!updated)
-        return false;
-      await restoreOrderStock(tx, updated.id);
-      return true;
-    });
-    if (expired)
-      expiredCount++;
-  }
-  return expiredCount;
-}
-
 // src/plugins/validation.plugin.ts
 var validationPlugin = new Elysia({
   name: "validation-plugin"
@@ -121283,63 +121615,6 @@ var validationPlugin = new Elysia({
     return error;
   }
 });
-
-// src/utils/trust/process-inquiries.ts
-async function processInquiryDeadlines(limit = 100) {
-  const now = new Date;
-  const dueCondition = or(and(eq(order_inquiries.deadlineStage, 0), lte(order_inquiries.createdAt, new Date(now.getTime() - 12 * 3600000))), and(eq(order_inquiries.deadlineStage, 1), lte(order_inquiries.createdAt, new Date(now.getTime() - 24 * 3600000))), and(eq(order_inquiries.deadlineStage, 2), lte(order_inquiries.createdAt, new Date(now.getTime() - 48 * 3600000))));
-  const due = await db2.select().from(order_inquiries).where(and(isNull2(order_inquiries.repliedAt), dueCondition)).limit(limit);
-  for (const row of due) {
-    await db2.transaction(async (tx) => {
-      const [current] = await tx.select().from(order_inquiries).where(and(eq(order_inquiries.id, row.id), isNull2(order_inquiries.repliedAt), dueCondition)).for("update").limit(1);
-      if (current) {
-        await recordInquiryDeadlines(tx, current, now);
-        const age = (now.getTime() - current.createdAt.getTime()) / 3600000;
-        await tx.update(order_inquiries).set({ deadlineStage: age >= 48 ? 3 : age >= 24 ? 2 : 1 }).where(eq(order_inquiries.id, current.id));
-      }
-    });
-  }
-  return due.length;
-}
-
-// src/utils/trust/send-notices.ts
-var messages = {
-  seller_cancellation_warning: { subject: "Agrivive order cancellation warning", text: "You cancelled a pending buyer order. This event was recorded in your trust history." },
-  seller_cancellation_buyer: { subject: "Agrivive order cancelled", text: "The seller cancelled your order. Reserved stock was restored." },
-  inquiry_12h_reminder: { subject: "Agrivive inquiry reminder", text: "A buyer inquiry has been waiting for your reply for 12 hours." },
-  inquiry_24h_warning: { subject: "Agrivive inquiry warning", text: "A buyer inquiry has been waiting for your reply for 24 hours." },
-  inquiry_24h_buyer_notice: { subject: "Agrivive inquiry update", text: "The seller has not replied to your inquiry after 24 hours." },
-  trust_event_corrected: { subject: "Agrivive trust record corrected", text: "A trust event was invalidated after its source data was rechecked." }
-};
-async function sendPendingTrustNotices(limit = 25) {
-  let sent = 0;
-  for (let i = 0;i < limit; i++) {
-    const available = and(isNull2(trust_notices.sentAt), lt(trust_notices.attempts, 5), or(isNull2(trust_notices.lockedUntil), lte(trust_notices.lockedUntil, new Date)));
-    const [candidate] = await db2.select({ id: trust_notices.id }).from(trust_notices).where(available).orderBy(asc(trust_notices.createdAt)).limit(1);
-    if (!candidate)
-      break;
-    const [notice] = await db2.update(trust_notices).set({
-      attempts: sql3`${trust_notices.attempts} + 1`,
-      lockedUntil: new Date(Date.now() + 5 * 60000)
-    }).where(and(eq(trust_notices.id, candidate.id), available)).returning();
-    if (!notice)
-      continue;
-    const [recipient] = await db2.select({ email: user.email }).from(user).where(eq(user.id, notice.recipientId)).limit(1);
-    const message = messages[notice.kind];
-    if (!recipient || !message)
-      continue;
-    try {
-      await sendEmail(recipient.email, message.subject, `${message.text}
-Order: ${notice.orderId}`, `trust:${notice.noticeKey}`);
-      await db2.update(trust_notices).set({ sentAt: new Date, lockedUntil: null }).where(eq(trust_notices.id, notice.id));
-      sent++;
-    } catch (error) {
-      console.error("Trust notice delivery failed", { noticeId: notice.id, error });
-      await db2.update(trust_notices).set({ lockedUntil: new Date(Date.now() + 5 * 60000) }).where(eq(trust_notices.id, notice.id));
-    }
-  }
-  return sent;
-}
 
 // src/index.ts
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
@@ -121354,35 +121629,4 @@ var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).u
     return status(503, { status: "not_ready" });
   }
 }).use(validationPlugin).listen(3000);
-var expiryRunning = false;
-async function runOrderExpiry() {
-  if (expiryRunning)
-    return;
-  expiryRunning = true;
-  try {
-    await expirePendingOrders();
-  } catch (error) {
-    console.error("Failed to expire pending orders", error);
-  } finally {
-    expiryRunning = false;
-  }
-}
-runOrderExpiry();
-setInterval(() => void runOrderExpiry(), 60000);
-var trustJobsRunning = false;
-async function runTrustJobs() {
-  if (trustJobsRunning)
-    return;
-  trustJobsRunning = true;
-  try {
-    await processInquiryDeadlines();
-    await sendPendingTrustNotices();
-  } catch (error) {
-    console.error("Failed to process trust jobs", error);
-  } finally {
-    trustJobsRunning = false;
-  }
-}
-runTrustJobs();
-setInterval(() => void runTrustJobs(), 60000);
 console.log(`\uD83E\uDD8A Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

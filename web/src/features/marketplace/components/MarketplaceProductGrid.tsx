@@ -14,6 +14,8 @@ interface MarketplaceProductGridProps {
   nextCursor: string | null;
   onRetry: () => void;
   onLoadMore: () => void;
+  selectedSellerId: string | null;
+  onSelectSeller: (sellerId: string) => void;
 }
 
 export function MarketplaceProductGrid({
@@ -24,6 +26,8 @@ export function MarketplaceProductGrid({
   nextCursor,
   onRetry,
   onLoadMore,
+  selectedSellerId,
+  onSelectSeller,
 }: MarketplaceProductGridProps) {
   if (error) {
     return (
@@ -38,9 +42,9 @@ export function MarketplaceProductGrid({
 
   if (loading) {
     return (
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {[1, 2, 3, 4, 5, 6].map((item) => (
-          <Skeleton key={item} className="h-96 rounded-2xl" />
+          <Skeleton key={item} className="h-80 rounded-[18px]" />
         ))}
       </div>
     );
@@ -48,7 +52,7 @@ export function MarketplaceProductGrid({
 
   if (products.length === 0) {
     return (
-      <Empty>
+      <Empty className="min-h-72 border-border/80 bg-white/70 py-12">
         <EmptyHeader>
           <EmptyMedia variant="icon"><Search /></EmptyMedia>
           <EmptyTitle>No listings match yet</EmptyTitle>
@@ -60,14 +64,25 @@ export function MarketplaceProductGrid({
 
   return (
     <>
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            selected={selectedSellerId === product.seller.id}
+            onSelectSeller={onSelectSeller}
+          />
         ))}
       </div>
       {nextCursor ? (
         <div className="flex justify-center pt-8">
-          <Button type="button" variant="outline" onClick={onLoadMore} disabled={loadingMore}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            className="min-h-11 rounded-xl px-6 font-semibold"
+          >
             {loadingMore ? "Loading listings…" : "Load more listings"}
           </Button>
         </div>

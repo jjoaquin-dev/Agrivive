@@ -52,7 +52,7 @@ export function OrderPickupStepper({ status, createdAt, expiresAt }: OrderPickup
   ];
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-xs sm:p-6" aria-label="Pickup progress">
+    <div className="rounded-[20px] border border-border/80 bg-white p-5 shadow-[0_10px_24px_rgba(31,77,58,0.05)] sm:p-6" aria-label="Pickup progress">
       <div className="relative flex items-center justify-between">
         {/* Connecting track line */}
         <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-border" aria-hidden="true" />

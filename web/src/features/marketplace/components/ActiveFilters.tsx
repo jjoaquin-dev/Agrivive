@@ -25,7 +25,7 @@ export function ActiveFilters({
   const chips: { id: string; label: string; onRemove: () => void }[] = [];
 
   if (search) chips.push({ id: "search", label: `"${search}"`, onRemove: onRemoveSearch });
-  if (hasLocation) chips.push({ id: "location", label: "Within 10 km", onRemove: onRemoveLocation });
+  if (hasLocation) chips.push({ id: "location", label: `Within ${filters.radiusKm || "10"} km`, onRemove: onRemoveLocation });
   if (filters.productType) {
     chips.push({
       id: "productType",
@@ -77,15 +77,15 @@ export function ActiveFilters({
   if (chips.length === 0) return null;
 
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Active filters">
-      <span className="text-xs font-medium text-muted-foreground">Active filters:</span>
+    <div className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-agrivive-sage/30 bg-agrivive-background/55 px-3 py-2.5" aria-label="Active filters">
+      <span className="mr-1 text-xs font-semibold text-agrivive-primary">Active filters</span>
       {chips.map((chip) => (
         <button
           key={chip.id}
           type="button"
           onClick={chip.onRemove}
           aria-label={`Remove filter ${chip.label}`}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-secondary px-3 text-xs font-medium text-secondary-foreground hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex min-h-10 items-center gap-2 rounded-full border border-agrivive-sage/40 bg-white px-3 text-xs font-medium text-secondary-foreground shadow-sm transition-[background-color,transform] hover:bg-secondary/80 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span>{chip.label}</span>
           <X aria-hidden="true" className="size-4" />

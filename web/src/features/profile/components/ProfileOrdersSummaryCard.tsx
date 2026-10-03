@@ -17,8 +17,8 @@ interface ProfileOrdersSummaryCardProps {
 
 export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: ProfileOrdersSummaryCardProps) {
   return (
-    <Card className="rounded-2xl p-6 shadow-xs">
-      <div className="flex items-center justify-between border-b pb-4">
+    <Card className="rounded-[20px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+      <div className="flex items-center justify-between border-b border-border/70 pb-4">
         <div className="flex items-center gap-2.5">
           <ClipboardList className="size-5 text-primary" />
           <h2 className="font-heading text-lg font-bold">Your Reservations</h2>
@@ -38,14 +38,14 @@ export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: Prof
         </div>
       ) : orders.length === 0 ? (
         <div className="py-8 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-agrivive-background text-agrivive-primary">
             <ShoppingBag className="size-6" />
           </div>
           <p className="mt-3 text-sm font-semibold text-foreground">No reservations yet</p>
           <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
             Reserve fresh produce from verified local Davao stalls and collect directly at pickup.
           </p>
-          <Link href="/marketplace" className={buttonVariants({ variant: "outline", size: "sm", className: "mt-4 rounded-xl" })}>
+          <Link href="/marketplace" className={buttonVariants({ variant: "outline", size: "sm", className: "mt-4 min-h-11 rounded-xl" })}>
             Browse Marketplace
           </Link>
         </div>
@@ -72,10 +72,10 @@ export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: Prof
                 </div>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-primary hover:underline sm:self-center"
+                  className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-xl px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-agrivive-background sm:self-center"
                 >
                   <QrCode className="size-3.5" />
-                  <span>Show QR</span>
+                  <span>Show QR Pass</span>
                 </Link>
               </div>
             );
@@ -87,7 +87,7 @@ export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: Prof
         href="/orders"
         className={buttonVariants({
           variant: "ghost",
-          className: "mt-3 w-full justify-between rounded-xl border border-border/60 text-xs font-semibold hover:bg-muted/50",
+          className: "mt-3 min-h-11 w-full justify-between rounded-xl border border-border/70 text-xs font-semibold hover:bg-agrivive-background",
         })}
       >
         <span>View all reservations</span>

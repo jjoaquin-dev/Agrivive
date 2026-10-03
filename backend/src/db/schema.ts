@@ -180,6 +180,20 @@ export const sellers_product = pgTable("sellers_product", {
 }, (table) => [index("sellers_product_marketplace_visibility_idx")
   .on(table.isActive, table.isMarketable, table.publishedAt)]);
 
+export const buyer_saved_products = pgTable("buyer_saved_products", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  buyerId: text("buyer_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  productId: uuid("product_id")
+    .notNull()
+    .references(() => sellers_product.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("buyer_saved_products_buyer_product_unique").on(table.buyerId, table.productId),
+  index("buyer_saved_products_buyer_created_idx").on(table.buyerId, table.createdAt),
+]);
+
 export const listing_cycles = pgTable("listing_cycles", {
   id: uuid("id").defaultRandom().primaryKey(),
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),

@@ -7,10 +7,21 @@ import { buyerInquiryRoute } from "./index/buyer.order.inquiry";
 import { buyerReviewRoute } from "./index/buyer.order.review";
 import { buyerReportRoute } from "./index/buyer.order.report";
 import { buyerNoticesRoute } from "./index/buyer.notices.list";
+import { buyerNoticeReadRoute } from "./index/buyer.notices.read";
 import { buyerCheckoutCreateRoute } from "./index/buyer.checkout.create";
 import { buyerProductInquiryRoute } from "./index/buyer.product.inquiry";
+import { buyerProfileReadRoute } from "./index/buyer.profile.read";
+import { buyerProfileAvatarRoute } from "./index/buyer.profile.avatar";
+import { buyerWishlistListRoute } from "./index/buyer.wishlist.list";
+import { buyerWishlistSaveRoute } from "./index/buyer.wishlist.save";
+import { buyerWishlistRemoveRoute } from "./index/buyer.wishlist.remove";
 
 export const buyerRoute = new Elysia({ prefix: "/buyer" })
+  .use(buyerProfileReadRoute)
+  .use(buyerProfileAvatarRoute)
+  .use(buyerWishlistListRoute)
+  .use(buyerWishlistSaveRoute)
+  .use(buyerWishlistRemoveRoute)
   .use(buyerCheckoutCreateRoute)
   .use(buyerOrderCreateRoute)
   .use(buyerOrderListRoute)
@@ -20,4 +31,5 @@ export const buyerRoute = new Elysia({ prefix: "/buyer" })
   .use(buyerProductInquiryRoute)
   .use(buyerReviewRoute)
   .use(buyerReportRoute)
-  .use(buyerNoticesRoute);
+  .use(buyerNoticesRoute)
+  .use(buyerNoticeReadRoute);

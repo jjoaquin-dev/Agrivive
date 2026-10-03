@@ -15,12 +15,14 @@ import { getMarketplaceSeller, listMarketplaceProducts } from "../api/marketplac
 import { sellerTypeLabel } from "../marketplace-labels";
 import type { MarketplaceProduct, MarketplaceSellerProfile } from "../types";
 import { ProductCard } from "./ProductCard";
+import { SellerProfileAvatar } from "./SellerProfileAvatar";
+import { getDirectionsUrl } from "@/src/lib/maps";
 
 function StorefrontLoading() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 lg:py-8" aria-label="Loading seller page" aria-busy="true">
       <PageContainer>
-        <Skeleton className="h-40 rounded-xl" />
+        <Skeleton className="h-40 rounded-[20px]" />
         <Skeleton className="mt-8 h-8 w-56" />
         <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((item) => <Skeleton key={item} className="h-[380px] rounded-2xl" />)}
@@ -102,8 +104,10 @@ export function SellerStorefront() {
 
   if (loading) return <StorefrontLoading />;
 
+  const directionsUrl = getDirectionsUrl(seller?.latitude ?? null, seller?.longitude ?? null);
+
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground lg:py-8">
+    <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
         <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline">
           <ArrowLeft aria-hidden="true" className="size-4" />Marketplace
@@ -119,21 +123,25 @@ export function SellerStorefront() {
           </Alert>
         ) : (
           <>
-            <header className="mt-5 grid gap-5 border-y border-border py-6 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] md:items-center md:gap-10 md:py-8">
-              <div className="border-l-4 border-primary pl-4 sm:pl-5">
-                <Badge variant="secondary" className="mb-2">{sellerTypeLabel(seller.sellerType)}</Badge>
-                <h1 className="font-heading text-3xl font-bold leading-tight sm:text-4xl">{seller.shopName}</h1>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                  Browse the fresh produce this seller has available for pickup.
-                </p>
+            <header className="mt-5 grid gap-5 rounded-[20px] border border-border/80 bg-white p-5 shadow-[0_14px_32px_rgba(31,77,58,0.08)] md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] md:items-center md:gap-10 md:p-8">
+              <div className="flex min-w-0 items-start gap-4 border-l-4 border-primary pl-4 sm:pl-5">
+                <SellerProfileAvatar imageUrl={seller.image} shopName={seller.shopName} />
+                <div className="min-w-0">
+                  <Badge variant="secondary" className="mb-2">{sellerTypeLabel(seller.sellerType)}</Badge>
+                  <h1 className="font-heading text-3xl font-bold leading-tight sm:text-4xl">{seller.shopName}</h1>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                    Browse the fresh produce this seller has available for pickup.
+                  </p>
+                </div>
               </div>
 
-              <dl className="grid gap-4 border-t border-border pt-4 text-sm md:border-l md:border-t-0 md:pl-6 md:pt-0">
+              <dl className="grid gap-4 border-t border-border/70 pt-4 text-sm md:border-l md:border-t-0 md:pl-6 md:pt-0">
                 <div>
                   <dt className="flex items-center gap-2 font-semibold text-foreground">
                     <MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />Pickup location
                   </dt>
                   <dd className="mt-1 pl-6 leading-6 text-muted-foreground">{seller.detailAddress}</dd>
+                  {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center pl-6 text-sm font-semibold text-agrivive-primary hover:underline">Get directions</a> : null}
                 </div>
                 <div>
                   <dt className="flex items-center gap-2 font-semibold text-foreground">
@@ -146,7 +154,7 @@ export function SellerStorefront() {
               </dl>
             </header>
 
-            <section aria-labelledby="seller-products-heading" className="pt-7">
+            <section aria-labelledby="seller-products-heading" className="pt-8">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
                 <div>
                   <h2 id="seller-products-heading" className="font-heading text-2xl font-bold">Available products</h2>
@@ -165,7 +173,7 @@ export function SellerStorefront() {
                 </Empty>
               ) : (
                 <>
-                  <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {products.map((product) => <ProductCard key={product.id} product={product} />)}
                   </div>
                   {nextCursor ? (

@@ -5,7 +5,7 @@
 @layer base {
   :root {
     color-scheme: light;
-    --background: 40 25% 96%;
+    --background: 40 28% 95.5%;
     --foreground: 150 6% 14%;
     --card: 0 0% 100%;
     --card-foreground: 150 6% 14%;
@@ -15,24 +15,25 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 92 18% 93%;
     --secondary-foreground: 153 42% 21%;
-    --muted: 40 20% 94%;
+    --muted: 40 24% 92.5%;
     --muted-foreground: 115 4% 45%;
     --accent: 92 18% 93%;
     --accent-foreground: 153 42% 21%;
     --destructive: 3 39% 53%;
-    --border: 40 17% 88%;
-    --input: 40 17% 82%;
+    --border: 40 17% 86%;
+    --input: 40 17% 80%;
     --ring: 105 16% 70%;
-    --radius: 0.75rem;
+    --radius: 0.875rem;
   }
 
   html {
-    background: #f8f6f1;
+    background: #f6f4ee;
   }
 
   body {
     @apply bg-background font-body text-base text-foreground antialiased;
     font-family: var(--font-body), Inter, system-ui, sans-serif;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -46,4 +47,53 @@
   :focus-visible {
     @apply outline-none ring-2 ring-agrivive-sage ring-offset-2 ring-offset-agrivive-background;
   }
+
+  ::selection {
+    @apply bg-agrivive-sage/50 text-agrivive-primary;
+  }
+}
+
+/* Agrivive Leaflet Map & Popup Design Overrides */
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #212523 !important;
+  border-radius: 18px !important;
+  padding: 4px !important;
+  border: 1px solid #e5e2da !important;
+  box-shadow: 0 16px 36px -6px rgba(31, 77, 58, 0.14), 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff !important;
+  border: 1px solid #e5e2da !important;
+  box-shadow: none !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  line-height: 1.4 !important;
+  font-family: var(--font-body), Inter, system-ui, sans-serif !important;
+}
+
+.leaflet-popup-content a {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.leaflet-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 9999px !important;
+  color: #6d7571 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.leaflet-popup-close-button:hover {
+  background: #edf2eb !important;
+  color: #1f4d3a !important;
 }

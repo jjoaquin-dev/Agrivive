@@ -21,10 +21,31 @@ export type MarketplaceSeller = {
   distanceKm: number | null;
 };
 
+export type MarketplaceSellerMapResult = {
+  id: string;
+  name: string;
+  image: string | null;
+  shopName: string;
+  sellerType: MarketplaceSellerType;
+  detailAddress: string;
+  pickupInstructions: string | null;
+  latitude: number;
+  longitude: number;
+  distanceKm: number | null;
+  productCount: number;
+};
+
+export type MarketplaceSellerMapResponse = {
+  sellers: MarketplaceSellerMapResult[];
+  unmappedSellerCount: number;
+};
+
 export type MarketplaceSellerProfile = Pick<
   MarketplaceSeller,
-  "id" | "shopName" | "sellerType" | "detailAddress" | "pickupInstructions"
->;
+  "id" | "shopName" | "sellerType" | "detailAddress" | "pickupInstructions" | "latitude" | "longitude"
+> & {
+  image: string | null;
+};
 
 export type MarketplaceProduct = {
   id: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { AlertTriangle, CheckCircle2, FileText, Paperclip, UploadCloud, X } from "lucide-react";
+import { AlertTriangle, Paperclip, UploadCloud, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   type OrderReportEvidence,
   type ReportReason,
 } from "../api/reports";
+import { OrderReportSuccess } from "./OrderReportSuccess";
 
 interface OrderReportModalProps {
   orderId: string;
@@ -86,46 +87,18 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-[24px] border border-border/80 bg-card p-6 shadow-[0_24px_60px_rgba(31,77,58,0.14)] max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           disabled={submitting}
-          className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground hover:bg-muted"
+          className="absolute right-4 top-4 flex min-h-11 min-w-11 size-11 items-center justify-center rounded-xl p-1 text-muted-foreground hover:bg-muted"
+          aria-label="Close modal"
         >
           <X className="size-5" />
         </button>
 
         {submittedEvidence !== null ? (
-          <div className="space-y-4 py-2">
-            <div className="flex items-center gap-2 text-emerald-600 font-heading font-bold text-lg">
-              <CheckCircle2 className="size-6" /> Report Filed Successfully
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Your report and evidence have been recorded for platform monitoring.
-            </p>
-            {submittedEvidence.length > 0 && (
-              <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-2">
-                <p className="text-xs font-semibold text-foreground">Attached evidence files (links valid for 5 min):</p>
-                {submittedEvidence.map((ev) => (
-                  <div key={ev.id} className="flex items-center justify-between text-xs">
-                    <span className="flex items-center gap-1.5 truncate max-w-[240px]">
-                      <FileText className="size-3.5 text-primary shrink-0" />
-                      {(ev.sizeBytes / 1024).toFixed(0)} KB
-                    </span>
-                    <a
-                      href={ev.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary font-semibold hover:underline"
-                    >
-                      Download
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-            <Button onClick={onClose} className="w-full">Done</Button>
-          </div>
+          <OrderReportSuccess evidence={submittedEvidence} onClose={onClose} />
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex items-center gap-2 text-foreground font-heading font-bold text-lg">
@@ -181,7 +154,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
                 <Paperclip className="size-3.5" /> Attach evidence (optional, max 5 files, 5 MB each)
               </label>
               <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-medium text-primary hover:bg-primary/5 cursor-pointer">
+                <label className="flex min-h-11 items-center gap-1.5 rounded-xl border border-dashed border-border px-3 py-2 text-xs font-medium text-primary hover:bg-primary/5 cursor-pointer">
                   <UploadCloud className="size-4" /> Choose files (JPG, PNG, WebP, PDF)
                   <input
                     type="file"
@@ -197,7 +170,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
               {files.length > 0 && (
                 <div className="space-y-1">
                   {files.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-lg bg-muted/50 px-2.5 py-1 text-xs">
+                    <div key={i} className="flex min-h-9 items-center justify-between rounded-lg bg-muted/50 px-2.5 py-1 text-xs">
                       <span className="truncate max-w-[260px] text-muted-foreground">{f.name}</span>
                       <button type="button" onClick={() => removeFile(i)} className="text-destructive hover:underline ml-2">
                         Remove
@@ -212,8 +185,8 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
             {uploadStatus ? <p className="text-xs text-primary font-medium">{uploadStatus}</p> : null}
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
-              <Button type="submit" disabled={submitting || details.trim().length < 5}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={submitting} className="min-h-12 rounded-xl">Cancel</Button>
+              <Button type="submit" disabled={submitting || details.trim().length < 5} className="min-h-12 rounded-xl font-semibold active:translate-y-px">
                 {submitting ? "Submitting…" : "Submit Report"}
               </Button>
             </div>

@@ -65,7 +65,7 @@ export function CartDrawer() {
 
   return (
     <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-      <SheetContent side="right" className="flex flex-col gap-0 bg-agrivive-background sm:max-w-lg">
+      <SheetContent side="right" className="flex flex-col gap-0 bg-agrivive-background sm:max-w-lg p-0">
         <SheetHeader className="border-b border-border/80 bg-white p-5 pr-14 text-left">
           <SheetTitle className="font-heading text-xl font-bold text-foreground">
             Your cart <span className="font-sans text-sm font-medium text-muted-foreground">({itemCount} items)</span>
@@ -76,39 +76,39 @@ export function CartDrawer() {
         </SheetHeader>
 
         {!isReady ? (
-          <div className="m-6 h-40 animate-pulse rounded-2xl bg-white" aria-label="Loading cart" />
+          <div className="m-6 h-40 animate-pulse rounded-[20px] bg-white" aria-label="Loading cart" />
         ) : items.length > 0 ? (
-          <div className="flex-1 space-y-5 overflow-y-auto p-4 sm:p-5">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
             {itemsBySeller.map(([shopName, sellerItems]) => (
-              <div key={shopName} className="overflow-hidden rounded-2xl border border-border/80 bg-white shadow-xs">
-                <div className="flex items-center gap-2 border-b border-border/60 bg-agrivive-background/50 px-4 py-2.5">
-                  <Store className="size-3.5 text-agrivive-primary" aria-hidden="true" />
+              <div key={shopName} className="overflow-hidden rounded-[20px] border border-border/80 bg-white shadow-[0_6px_20px_rgba(31,77,58,0.04)]">
+                <div className="flex items-center gap-2 border-b border-border/60 bg-agrivive-background/60 px-4 py-3">
+                  <Store className="size-4 text-agrivive-primary" aria-hidden="true" />
                   <span className="font-heading text-xs font-bold text-foreground">{shopName}</span>
                 </div>
                 <div className="divide-y divide-border/60">
                   {sellerItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3.5">
-                      <Link href={`/marketplace/${item.id}`} onClick={() => setDrawerOpen(false)} className="size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-agrivive-background">
+                    <div key={item.id} className="flex items-center gap-3.5 p-4">
+                      <Link href={`/marketplace/${item.id}`} onClick={() => setDrawerOpen(false)} className="size-16 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-agrivive-background">
                         <ProductImage src={item.imageUrl} alt={item.productName} category={item.productType} />
                       </Link>
                       <div className="min-w-0 flex-1">
-                        <Link href={`/marketplace/${item.id}`} onClick={() => setDrawerOpen(false)} className="line-clamp-1 text-sm font-semibold text-foreground hover:text-agrivive-primary">
+                        <Link href={`/marketplace/${item.id}`} onClick={() => setDrawerOpen(false)} className="line-clamp-1 text-sm font-semibold text-foreground transition-colors hover:text-agrivive-primary">
                           {item.productName}
                         </Link>
                         <p className="font-heading text-xs font-bold text-agrivive-primary">
                           {money(Number(item.productPrice))}<span className="font-normal text-muted-foreground"> / {item.scalingType}</span>
                         </p>
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <Button type="button" size="icon" variant="outline" className="size-8 min-h-8 rounded-lg" aria-label={`Reduce ${item.productName}`} onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}>
-                              <Minus className="size-3.5" />
+                        <div className="mt-2.5 flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <Button type="button" size="icon" variant="outline" className="min-h-11 min-w-11 size-11 rounded-xl transition-transform active:translate-y-px" aria-label={`Reduce ${item.productName}`} onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}>
+                              <Minus className="size-4" />
                             </Button>
                             <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
-                            <Button type="button" size="icon" variant="outline" className="size-8 min-h-8 rounded-lg" aria-label={`Increase ${item.productName}`} onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                              <Plus className="size-3.5" />
+                            <Button type="button" size="icon" variant="outline" className="min-h-11 min-w-11 size-11 rounded-xl transition-transform active:translate-y-px" aria-label={`Increase ${item.productName}`} onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                              <Plus className="size-4" />
                             </Button>
                           </div>
-                          <Button type="button" size="icon" variant="ghost" className="size-8 min-h-8 text-muted-foreground hover:text-destructive" aria-label={`Remove ${item.productName}`} onClick={() => removeItem(item.id)}>
+                          <Button type="button" size="icon" variant="ghost" className="min-h-11 min-w-11 size-11 rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove ${item.productName}`} onClick={() => removeItem(item.id)}>
                             <Trash2 className="size-4" />
                           </Button>
                         </div>
@@ -121,12 +121,12 @@ export function CartDrawer() {
           </div>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-            <span className="flex size-14 items-center justify-center rounded-2xl bg-white shadow-xs">
-              <ShoppingCart aria-hidden="true" className="size-7 text-agrivive-primary" />
+            <span className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-[0_8px_20px_rgba(31,77,58,0.06)]">
+              <ShoppingCart aria-hidden="true" className="size-8 text-agrivive-primary" />
             </span>
             <h3 className="mt-4 font-heading text-lg font-bold">Your cart is empty</h3>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">Reserve fresh surplus produce from Davao public markets.</p>
-            <Button render={<Link href="/marketplace" />} nativeButton={false} onClick={() => setDrawerOpen(false)} className="mt-5">
+            <Button render={<Link href="/marketplace" />} nativeButton={false} onClick={() => setDrawerOpen(false)} className="mt-5 min-h-12 rounded-xl px-6">
               Browse marketplace<ArrowRight data-icon="inline-end" />
             </Button>
           </div>
@@ -137,7 +137,7 @@ export function CartDrawer() {
             {checkoutError ? (
               <Alert variant="destructive" className="mb-3">
                 <AlertDescription>{checkoutError}</AlertDescription>
-                <Button type="button" variant="link" className="min-h-8 justify-start px-0 text-xs" onClick={() => setCheckoutError("")}>
+                <Button type="button" variant="link" className="min-h-11 justify-start px-0 text-xs" onClick={() => setCheckoutError("")}>
                   <RefreshCw className="size-3.5" />Review cart
                 </Button>
               </Alert>
@@ -146,7 +146,7 @@ export function CartDrawer() {
               <span className="text-sm font-medium text-muted-foreground">Total to pay at pickup</span>
               <span className="font-heading text-2xl font-bold text-agrivive-primary">{money(total)}</span>
             </div>
-            <Button type="button" onClick={() => void handleCheckout()} disabled={checkingOut || !isReady} className="h-12 w-full text-sm font-semibold">
+            <Button type="button" onClick={() => void handleCheckout()} disabled={checkingOut || !isReady} className="min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px">
               {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" />
             </Button>
             <p className="pt-2 text-center text-[11px] text-muted-foreground">

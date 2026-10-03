@@ -20,6 +20,7 @@ import { OrderPickupStepper } from "./OrderPickupStepper";
 import { OrderSellerCard } from "./OrderSellerCard";
 import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderReportModal } from "./OrderReportModal";
+import { OrderMessages } from "./OrderMessages";
 
 export function OrderDetail() {
   const router = useRouter();
@@ -80,7 +81,7 @@ export function OrderDetail() {
     } finally { setCancelling(false); }
   }
 
-  if (loading) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-2xl bg-white" /></PageContainer></main>;
+  if (loading) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[20px] bg-white" /></PageContainer></main>;
   if (error && !order) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Alert variant="destructive"><AlertDescription>{error}</AlertDescription><Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></Alert></PageContainer></main>;
   if (!order) return null;
 
@@ -89,12 +90,12 @@ export function OrderDetail() {
   const title = order.items.length > 1 ? `${order.items.length} produce items reserved` : first?.productName || "Produce reservation";
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-8 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
         <Link href="/orders" className={`${buttonVariants({ variant: "ghost", size: "sm" })} -ml-3 text-muted-foreground hover:text-foreground`}>
           <ArrowLeft aria-hidden="true" className="size-4" />Back to reservations
         </Link>
-        <header className="mt-3 flex flex-col justify-between gap-4 border-b border-border/80 pb-6 sm:flex-row sm:items-start">
+        <header className="mt-3 flex flex-col justify-between gap-4 rounded-[20px] border border-border/80 bg-white p-5 shadow-[0_12px_28px_rgba(31,77,58,0.06)] sm:flex-row sm:items-start sm:p-6">
           <div>
             <p className="font-mono text-xs font-semibold text-agrivive-terracotta">AGR-{order.id.slice(0, 6).toUpperCase()}</p>
             <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground">{title}</h1>
@@ -119,6 +120,7 @@ export function OrderDetail() {
 
             <OrderItemsCard items={order.items} />
             <OrderSellerCard order={order} product={product} />
+            <OrderMessages orderId={order.id} refreshKey={lastUpdated?.getTime() ?? 0} />
 
             {order.status === "completed" ? <OrderReviews order={order} /> : null}
 
@@ -129,7 +131,7 @@ export function OrderDetail() {
                     Cancel reservation
                   </Button>
                 ) : (
-                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
+                  <div className="rounded-[20px] border border-destructive/20 bg-destructive/5 p-5">
                     <div className="flex items-start gap-3">
                       <AlertCircle className="size-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
                       <div>
@@ -152,7 +154,7 @@ export function OrderDetail() {
               </div>
             ) : null}
 
-            <div className="border-t pt-4">
+            <div className="border-t border-border/70 pt-4">
               <Button
                 type="button"
                 variant="ghost"

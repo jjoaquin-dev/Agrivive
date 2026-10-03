@@ -15,8 +15,11 @@ export function ProductImage({ src, alt, category, className = "" }: ProductImag
 
   if (!src || failed) {
     return (
-      <div className={`flex h-full min-h-48 items-center justify-center bg-agrivive-background p-6 text-center ${className}`}>
-        <span className="flex max-w-[12rem] flex-col items-center gap-2 text-sm font-semibold text-agrivive-muted"><ImageOff aria-hidden="true" size={22} strokeWidth={1.7} />{category}</span>
+      <div className={`flex h-full min-h-0 items-center justify-center bg-agrivive-background p-3 text-center ${className}`}>
+        <span className="flex max-w-[10rem] flex-col items-center gap-1.5 text-xs font-semibold text-agrivive-muted">
+          <ImageOff aria-hidden="true" size={18} strokeWidth={1.7} />
+          {category}
+        </span>
       </div>
     );
   }

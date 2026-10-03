@@ -2,18 +2,21 @@
 
 import { Calendar, Clock, Mail, MapPin, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ProfileAvatarUploader } from "./ProfileAvatarUploader";
 
 interface ProfileHeaderProps {
   user: {
     name?: string | null;
     email: string;
     createdAt?: Date | string;
+    image?: string | null;
   };
   pendingCount: number;
   completedCount: number;
+  onAvatarUploaded: (imageUrl: string) => void;
 }
 
-export function ProfileHeader({ user, pendingCount, completedCount }: ProfileHeaderProps) {
+export function ProfileHeader({ user, pendingCount, completedCount, onAvatarUploaded }: ProfileHeaderProps) {
   const initials = (user.name || user.email || "B")
     .split(" ")
     .map((w) => w[0])
@@ -26,13 +29,16 @@ export function ProfileHeader({ user, pendingCount, completedCount }: ProfileHea
     : new Date().getFullYear();
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-primary/10 via-background to-agrivive-background p-5 shadow-xs sm:p-7">
+    <div className="overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-agrivive-background p-5 shadow-xs ring-1 ring-primary/10 sm:p-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* User Identity */}
-        <div className="flex items-center gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary font-heading text-lg font-bold text-white shadow-xs ring-2 ring-primary/20">
-            {initials}
-          </div>
+        <div className="flex min-w-0 items-start gap-4">
+          <ProfileAvatarUploader
+            imageUrl={user.image ?? null}
+            initials={initials}
+            name={user.name || "Buyer"}
+            onUploaded={onAvatarUploaded}
+          />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="font-heading text-xl font-bold text-foreground sm:text-2xl">

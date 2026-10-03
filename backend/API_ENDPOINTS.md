@@ -35,8 +35,13 @@ Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/aut
 | GET | `/marketplace/products/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/products/:id/reviews` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
+| GET | `/marketplace/sellers/map` | `backend/src/modules/marketplace/index/marketplace.sellers.map.ts` |
 
 `GET /marketplace/products` accepts search and filter fields plus `limit` and `cursor`. It returns a page ranked by visibility score, score tier, newest publication, then product ID. The cursor contains the evaluation time to keep score-based pages in the same order. Visibility currently uses the prototype weights and tiers from `GET /seller/weightedvisibility`; stakeholder validation of those settings is still pending.
+
+`GET /marketplace/sellers/:id` includes `image`, which is a signed seller profile image URL when a photo exists and `null` otherwise.
+
+`GET /marketplace/sellers/map` returns one record per matching seller, including `image` as a signed seller profile image URL when available. Sellers without a photo return `image: null` and the web map shows seller initials instead.
 
 ## Buyer
 
@@ -44,6 +49,11 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 
 | Method | Path | Route source |
 |---|---|---|
+| GET | `/buyer/profile` | `backend/src/modules/buyer/index/buyer.profile.read.ts` |
+| POST | `/buyer/profile/avatar` | `backend/src/modules/buyer/index/buyer.profile.avatar.ts` |
+| GET | `/buyer/wishlist` | `backend/src/modules/buyer/index/buyer.wishlist.list.ts` |
+| POST | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.save.ts` |
+| DELETE | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.remove.ts` |
 | POST | `/buyer/checkouts` | `backend/src/modules/buyer/index/buyer.checkout.create.ts` |
 | POST | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.create.ts` |
 | GET | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.list.ts` |
@@ -64,6 +74,8 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | POST | `/buyer/orders/:id/items/:itemId/review` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
 | GET | `/buyer/sellers/:id/rating` | Public; `backend/src/modules/buyer/index/buyer.order.review.ts` |
 | GET | `/buyer/sellers/:id/reviews` | Public; `backend/src/modules/buyer/index/buyer.order.review.ts` |
+
+Wishlist routes return only the signed-in buyer's saved product IDs. Saving is idempotent, removing an item is safe to repeat, and the product must currently be a visible marketplace listing. The unique buyer/product constraint prevents duplicate saves.
 
 ### Buyer request examples
 

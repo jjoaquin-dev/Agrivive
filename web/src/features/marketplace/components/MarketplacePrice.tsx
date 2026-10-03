@@ -17,13 +17,14 @@ export function MarketplacePrice({
 }: MarketplacePriceProps) {
   const previousPrice = basePrice == null ? null : Number(basePrice);
   const isReduced = previousPrice !== null && previousPrice > Number(currentPrice);
-  const priceSize = size === "detail" ? "text-3xl" : "text-xl";
-  const oldPriceSize = size === "detail" ? "text-base" : "text-sm";
+  const priceSize = size === "detail" ? "text-3xl" : "text-base font-bold sm:text-lg";
+  const oldPriceSize = size === "detail" ? "text-base" : "text-xs";
+  const unitSize = size === "detail" ? "text-sm" : "text-xs";
 
   return (
     <div
       role="group"
-      className="flex flex-wrap items-baseline gap-x-2"
+      className="flex flex-wrap items-baseline gap-x-1.5"
       aria-label={
         isReduced
           ? `Was ${money(previousPrice!)}, now ${money(currentPrice)} per ${unit}`
@@ -33,13 +34,13 @@ export function MarketplacePrice({
       {isReduced ? (
         <>
           <del className={`${oldPriceSize} text-muted-foreground`}>{money(previousPrice!)}</del>
-          <span aria-hidden="true" className="text-muted-foreground">→</span>
+          <span aria-hidden="true" className="text-muted-foreground text-xs">→</span>
         </>
       ) : null}
-      <span className={`font-heading ${priceSize} font-bold text-primary`}>
+      <span className={`font-heading ${priceSize} text-primary`}>
         {money(currentPrice)}
       </span>
-      <span className="text-sm text-muted-foreground">/{unit}</span>
+      <span className={`${unitSize} text-muted-foreground`}>/{unit}</span>
     </div>
   );
 }

@@ -87,8 +87,8 @@ export function ProfileSecurityCard({ twoFactorEnabled }: ProfileSecurityCardPro
   }
 
   return (
-    <Card className="rounded-2xl p-6 shadow-xs">
-      <div className="flex items-center justify-between border-b pb-4">
+    <Card className="rounded-[20px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+      <div className="flex items-center justify-between border-b border-border/70 pb-4">
         <div>
           <h2 className="font-heading text-lg font-bold">Password & Security</h2>
           <p className="text-sm text-muted-foreground">Manage your credentials and login safety.</p>
@@ -163,7 +163,7 @@ export function ProfileSecurityCard({ twoFactorEnabled }: ProfileSecurityCardPro
             <Button
               type="submit"
               disabled={loading || !currentPassword || !newPassword}
-              className="rounded-xl font-medium"
+              className="min-h-12 rounded-xl px-6 font-semibold active:translate-y-px"
             >
               {loading ? (
                 <>
