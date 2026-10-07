@@ -1,12 +1,16 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db";
-import { trust_notices } from "../../../db/schema";
+import { buyer_listing_notices, trust_notices } from "../../../db/schema";
 
 export async function readAllBuyerNotices(buyerId: string) {
-  const updated = await db.update(trust_notices).set({ readAt: new Date() })
-    .where(and(
-      eq(trust_notices.recipientId, buyerId),
-      isNull(trust_notices.readAt),
-    )).returning({ id: trust_notices.id });
-  return { updatedCount: updated.length };
+  return db.transaction(async (tx) => {
+    const now = new Date();
+    const orders = await tx.update(trust_notices).set({ readAt: now })
+      .where(and(eq(trust_notices.recipientId, buyerId), isNull(trust_notices.readAt)))
+      .returning({ id: trust_notices.id });
+    const listings = await tx.update(buyer_listing_notices).set({ readAt: now })
+      .where(and(eq(buyer_listing_notices.buyerId, buyerId), isNull(buyer_listing_notices.readAt)))
+      .returning({ id: buyer_listing_notices.id });
+    return { updatedCount: orders.length + listings.length };
+  });
 }

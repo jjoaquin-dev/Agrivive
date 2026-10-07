@@ -16,6 +16,7 @@ import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../src/theme";
 import { useSellerTrust } from "../../src/features/trust/hooks/useSellerTrust";
 import type { SellerTrustEvent, SellerTrustNotice } from "../../src/features/trust/types";
+import { TrustMonitoringSummary } from "../../src/features/trust/components/TrustMonitoringSummary";
 
 function trustLabel(kind: string) {
   return kind.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -70,6 +71,8 @@ export default function SellerTrustScreen() {
         </View>
 
         {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text><ButtonComponent title="Try Again" onPress={refresh} variant="secondary" style={styles.retryButton} /></View> : null}
+
+        <TrustMonitoringSummary monitoring={trust.monitoring} />
 
         <Text style={styles.sectionTitle}>Verified events</Text>
         {trust.events.length === 0 ? (

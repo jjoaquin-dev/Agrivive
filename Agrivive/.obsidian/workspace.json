@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "a44317c0e5519e3c",
+        "id": "b675d6be9d3ec0ac",
         "type": "tabs",
         "children": [
           {
-            "id": "f45003364205ba49",
+            "id": "22c3c61ec89b2992",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "02 Product/Product Journeys.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Product Journeys"
+              "title": "New tab"
             }
           }
         ]
@@ -188,8 +184,17 @@
       "bases:Create new base": false
     }
   },
-  "active": "f45003364205ba49",
+  "active": "22c3c61ec89b2992",
   "lastOpenFiles": [
+    "04 Delivery/2026-10-03 One-shot Integration Completion.md",
+    "04 Delivery/2026-09-21 Avatar Multipart Upload Fix.md",
+    "04 Delivery/2026-09-20 ElysiaJS Skill.md",
+    "04 Delivery/2026-09-20 Direct Order Backend.md",
+    "04 Delivery/Open Decisions.md",
+    "02 Product/Reservation and QR Pickup.md",
+    "02 Product/Product Journeys.md",
+    "01 Foundation/Project Brief.md",
+    "00 Home.md",
     "04 Delivery/2026-09-26 Agrivive Advertisement Preparation.md",
     "04 Delivery/2026-09-26 Buyer Web Orders Suite Redesign and UX Laws.md",
     "04 Delivery/2026-09-26 Typography Alignment and Icon Harmonization.md",
@@ -207,15 +212,6 @@
     "04 Delivery/2026-09-26 Buyer Web Marketplace Redesign.md",
     "04 Delivery/2026-09-26 Frontend Design Taste Skill.md",
     "04 Delivery/2026-09-26 Buyer Web Profile.md",
-    "04 Delivery/2026-09-26 Buyer Web Auth Polish.md",
-    "04 Delivery/2026-09-26 Buyer Web Shadcn Redesign.md",
-    "04 Delivery/2026-09-22 Buyer Marketplace Backend.md",
-    "02 Product/Feature Map.md",
-    "04 Delivery/2026-09-20 ElysiaJS Skill.md",
-    "04 Delivery/2026-09-22 Buyer Web Authentication.md",
-    "04 Delivery/2026-09-22 Buyer Web Design and Skills.md",
-    "04 Delivery/2026-09-22 Seller Price Reduction.md",
-    "00 Home.md",
     "04 Delivery",
     "03 Intelligence",
     "02 Product",

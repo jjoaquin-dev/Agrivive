@@ -32,6 +32,7 @@ function MarketplaceBrowserContent() {
     searchInput,
     setSearchInput,
     loading,
+    staleProducts,
     loadingMore,
     error,
     sellerMap,
@@ -101,6 +102,7 @@ function MarketplaceBrowserContent() {
             <MarketplaceProductGrid
               products={products}
               loading={loading}
+              stale={staleProducts}
               loadingMore={loadingMore}
               error={error}
               nextCursor={nextCursor}

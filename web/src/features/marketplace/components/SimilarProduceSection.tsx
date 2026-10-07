@@ -35,9 +35,11 @@ export function SimilarProduceSection({ currentProductId, productType }: Similar
         <Sparkles className="size-5 text-primary" />
         <h2 className="font-heading text-xl font-bold">Similar produce</h2>
       </div>
-      <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid max-w-[1120px] gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <div key={product.id} className="w-full max-w-[360px]">
+            <ProductCard product={product} tallImage />
+          </div>
         ))}
       </div>
     </section>

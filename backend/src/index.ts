@@ -7,6 +7,7 @@ import { buyerRoute } from "./modules/buyer";
 import { adminRoute } from "./modules/admin";
 import { marketplaceRoute } from "./modules/marketplace";
 import { stakeholderRoute } from "./modules/stakeholder";
+import { integrationsRoute } from "./modules/integrations";
 import { validationPlugin } from "./plugins/validation.plugin";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -36,6 +37,7 @@ const app = new Elysia()
   .use(adminRoute)
   .use(marketplaceRoute)
   .use(stakeholderRoute)
+  .use(integrationsRoute)
   .get("/", () => "Hello Elysia")
   .get("/a", () => "Hello Elysia")
   .get("/health", () => ({ status: "ok" }))

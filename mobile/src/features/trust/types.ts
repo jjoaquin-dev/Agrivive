@@ -17,4 +17,12 @@ export interface SellerTrustNotice {
 export interface SellerTrustResponse {
   events: SellerTrustEvent[];
   notices: SellerTrustNotice[];
+  monitoring?: {
+    policyVersion: string;
+    weightedPoints: number;
+    verifiedEventPoints: number;
+    ratingSignals: number;
+    writtenFeedbackCount: number;
+    allegationFlags: number;
+  };
 }

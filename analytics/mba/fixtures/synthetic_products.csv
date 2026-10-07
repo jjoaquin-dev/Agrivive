@@ -1,0 +1,18 @@
+product_id,product_name,category
+AG-001,Pechay,Leafy Greens
+AG-002,Kangkong,Leafy Greens
+AG-003,Lettuce,Leafy Greens
+AG-004,Tomato,Fruit Vegetables
+AG-005,Eggplant,Fruit Vegetables
+AG-006,Okra,Fruit Vegetables
+AG-007,Potato,Root and Tuber Vegetables
+AG-008,Carrot,Root and Tuber Vegetables
+AG-009,Radish,Root and Tuber Vegetables
+AG-010,Onion,Bulb and Stem Vegetables
+AG-011,Garlic,Bulb and Stem Vegetables
+AG-012,Spring Onion,Bulb and Stem Vegetables
+AG-013,Cauliflower,Flower Vegetables
+AG-014,Broccoli,Flower Vegetables
+AG-015,String Beans,Seeds and Legumes
+AG-016,Mung Beans,Seeds and Legumes
+AG-017,Fresh Tomatoes,Fruit Vegetables

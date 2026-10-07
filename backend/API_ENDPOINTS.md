@@ -33,6 +33,7 @@ Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/aut
 |---|---|---|
 | GET | `/marketplace/products` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/products/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
+| GET | `/marketplace/products/:id/recommendations` | `backend/src/modules/marketplace/index/marketplace.product.recommendations.ts` |
 | GET | `/marketplace/products/:id/reviews` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/map` | `backend/src/modules/marketplace/index/marketplace.sellers.map.ts` |
@@ -42,6 +43,8 @@ Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/aut
 `GET /marketplace/sellers/:id` includes `image`, which is a signed seller profile image URL when a photo exists and `null` otherwise.
 
 `GET /marketplace/sellers/map` returns one record per matching seller, including `image` as a signed seller profile image URL when available. Sellers without a photo return `image: null` and the web map shows seller initials instead.
+
+`GET /marketplace/products/:id/recommendations` returns up to three currently available marketplace listings associated with the requested product by the MBA report. Synthetic results are marked with `source: "synthetic"` and `status: "demo"`; live results remain empty while the report is collecting. The route does not require buyer authentication and does not run the Python MBA process during a request.
 
 ## Buyer
 
@@ -54,6 +57,7 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | GET | `/buyer/wishlist` | `backend/src/modules/buyer/index/buyer.wishlist.list.ts` |
 | POST | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.save.ts` |
 | DELETE | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.remove.ts` |
+| GET, POST, DELETE | `/buyer/follows/:sellerId` | `backend/src/modules/buyer/index/buyer.seller.follow.ts` |
 | POST | `/buyer/checkouts` | `backend/src/modules/buyer/index/buyer.checkout.create.ts` |
 | POST | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.create.ts` |
 | GET | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.list.ts` |
@@ -65,6 +69,8 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | POST | `/buyer/orders/:id/report/:reportId/evidence` | `backend/src/modules/buyer/index/buyer.order.report.ts` |
 | GET | `/buyer/orders/:id/report/:reportId/evidence` | `backend/src/modules/buyer/index/buyer.order.report.ts` |
 | GET | `/buyer/notices` | `backend/src/modules/buyer/index/buyer.notices.list.ts` |
+| POST | `/buyer/notices/:id/read` | `backend/src/modules/buyer/index/buyer.notices.read.ts` |
+| POST | `/buyer/notices/read-all` | `backend/src/modules/buyer/index/buyer.notices.read.ts` |
 | GET | `/buyer/products/:id/inquiries` | `backend/src/modules/buyer/index/buyer.product.inquiry.ts` |
 | POST | `/buyer/products/:id/inquiries` | `backend/src/modules/buyer/index/buyer.product.inquiry.ts` |
 | GET | `/buyer/products/:id/review-eligibility` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
@@ -75,7 +81,13 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | GET | `/buyer/sellers/:id/rating` | Public; `backend/src/modules/buyer/index/buyer.order.review.ts` |
 | GET | `/buyer/sellers/:id/reviews` | Public; `backend/src/modules/buyer/index/buyer.order.review.ts` |
 
+Buyer order responses include `imageUrl` as a signed product image URL when the ordered listing has a valid image, `productType` for the fallback label, and `null` when the image is unavailable. This supports the marketplace order preview and order-detail image surfaces without changing order ownership or status behavior.
+
 Wishlist routes return only the signed-in buyer's saved product IDs. Saving is idempotent, removing an item is safe to repeat, and the product must currently be a visible marketplace listing. The unique buyer/product constraint prevents duplicate saves.
+
+Follow routes require an active buyer session (cookie or bearer token). They accept a seller user ID in the path, no request body, and return `{ "sellerId": "<id>", "following": true|false }`. A buyer cannot follow their own shop (403); a nonpublic storefront returns 404. Save and remove are idempotent. The separate worker sends an in-app notice only when a followed seller publishes a product that is public and buyable for the first time. No historical products, restocks of previously public products, emails, or push messages are sent.
+
+`GET /buyer/notices` includes the existing order notices and `seller_new_listing` notices. New IDs are prefixed `listing:`; each has `productId`, `sellerId`, `productName`, `shopName`, and `productAvailable`, with `orderId: null`. `POST /buyer/notices/:id/read` returns the recipient's notice with `readAt`; unknown or another buyer's notice returns 404. `POST /buyer/notices/read-all` returns `{ "updatedCount": 1 }` with the actual count. Both read actions have no body. Past notices remain after unfollowing. A no-longer-available listing links to the seller storefront instead of a stale buy action.
 
 ### Buyer request examples
 
@@ -133,10 +145,30 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | GET | `/seller/notifications` | `backend/src/modules/seller/index/seller.notifications.ts` |
 | POST | `/seller/notifications/:id/read` | `backend/src/modules/seller/index/seller.notifications.ts` |
 | POST | `/seller/notifications/read-all` | `backend/src/modules/seller/index/seller.notifications.ts` |
+| GET | `/seller/promotions` | `backend/src/modules/seller/index/seller.promotions.ts` |
+| POST | `/seller/promotions/:id/read` | `backend/src/modules/seller/index/seller.promotions.ts` |
+| POST | `/seller/promotions/read-all` | `backend/src/modules/seller/index/seller.promotions.ts` |
+| GET | `/seller/promotions/:id/share` | `backend/src/modules/seller/index/seller.promotions.ts` |
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
 
 `GET /seller/products/:id/share` returns a prepared caption, marketplace link, and image URL. Set `WEB_APP_URL` to the buyer web app origin for absolute share links.
+
+Promotion drafts are seller-scoped and separate from the paginated order/trust notification feed. `GET /seller/promotions?limit=20&cursor=<uuid>` returns ready drafts, a next cursor, and the seller's unread draft count. `POST /seller/promotions/:id/read` and `POST /seller/promotions/read-all` require no body. `GET /seller/promotions/:id/share` returns fresh price, quantity, shop, and marketplace URL facts for the native share sheet. If a listing is no longer active, marketable, buyable, publicly visible, and Priority Boost eligible, the share endpoint returns HTTP 409 with `status: "unavailable"`. No post is published automatically.
+
+## Promotion integration (n8n)
+
+These routes use the server-side `N8N_PROMOTION_SERVICE_TOKEN` as `Authorization: Bearer <token>` instead of a buyer or seller session. Keep this token in backend configuration and an n8n credential; never put it in the workflow export.
+
+| Method | Path | Route source |
+|---|---|---|
+| GET | `/integrations/promotions/jobs/:id/context` | `backend/src/modules/integrations/index/integrations.promotion.context.ts` |
+| POST | `/integrations/promotions/jobs/:id/draft` | `backend/src/modules/integrations/index/integrations.promotion.draft.ts` |
+| POST | `/integrations/promotions/jobs/:id/failure` | `backend/src/modules/integrations/index/integrations.promotion.failure.ts` |
+
+The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|followup" }`. n8n retrieves the latest public listing context from the protected `context` route, generates wording only, and calls `draft` with `{"headline":"...","caption":"..."}`. Draft callbacks are idempotent. `failure` accepts `{"code":"model_failed|invalid_draft|callback_failed"}` and returns the job to bounded retry or a recorded terminal failure. A ready callback is accepted only after the backend independently confirms current Priority eligibility.
+
+The backend checks initial eligibility hourly using `visibility-v4 >= 0.70`. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
 
 ## Admin monitoring
 
@@ -144,7 +176,7 @@ Seller routes require a signed-in seller; most listing and order routes also req
 |---|---|---|---|
 | GET | `/admin/performance` | Admin; read-only metrics only | `backend/src/modules/admin/index/admin.performance.ts` |
 
-This endpoint reports aggregate usage, listings, orders, verified trust event counts, report flags, evidence-file totals, notice delivery status, and weighted trust monitoring values. Weighted points count recorded verified events; they are monitoring signals, not a quality score or penalty. Allegation flags are counted separately and do not affect weighted points. Admin monitoring does not approve reports or change user accounts.
+This endpoint reports aggregate usage, listings, orders, verified trust event counts, report flags, evidence-file totals, notice delivery status, and weighted trust monitoring values. `monitoring-v2` counts verified non-response at 1 point, verified cancellation at 2 points, and one 1–2-star rating signal per completed order at 1 point. Written feedback is context, not machine-scored sentiment. Allegation flags contribute zero points. These are monitoring signals, not a quality score or penalty. Admin monitoring does not approve reports or change user accounts.
 
 Evidence files are stored with private access in the configured S3 bucket. Keep the bucket policy private; download links are signed and expire after five minutes.
 

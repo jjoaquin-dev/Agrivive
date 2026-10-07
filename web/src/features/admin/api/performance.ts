@@ -14,6 +14,9 @@ export interface AdminPerformance {
   trustMonitoring: {
     policyVersion: string;
     weightedPoints: number;
+    verifiedEventPoints: number;
+    ratingSignals: number;
+    writtenFeedbackCount: number;
     verifiedEvents: number;
     allegationFlags: number;
     components: Array<{

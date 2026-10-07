@@ -68,10 +68,20 @@ export type MarketplaceProductResponse = {
   nextCursor: string | null;
 };
 
+export type MarketplaceProductRecommendationResponse = {
+  source: "none" | "synthetic" | "real";
+  status: "disabled" | "demo" | "collecting" | "ready" | "unavailable";
+  generatedAt: string | null;
+  basketCount: number;
+  recommendations: MarketplaceProduct[];
+};
+
 export type BuyerOrderItem = {
   id: string;
   productId: string;
   productName: string;
+  productType: MarketplaceProductType | null;
+  imageUrl: string | null;
   scalingType: MarketplaceUnit;
   quantity: string | number;
   unitPrice: string | number;

@@ -9,6 +9,7 @@ import { ProductCard } from "./ProductCard";
 interface MarketplaceProductGridProps {
   products: MarketplaceProduct[];
   loading: boolean;
+  stale: boolean;
   loadingMore: boolean;
   error: string;
   nextCursor: string | null;
@@ -21,6 +22,7 @@ interface MarketplaceProductGridProps {
 export function MarketplaceProductGrid({
   products,
   loading,
+  stale,
   loadingMore,
   error,
   nextCursor,
@@ -29,18 +31,7 @@ export function MarketplaceProductGrid({
   selectedSellerId,
   onSelectSeller,
 }: MarketplaceProductGridProps) {
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-5">
-        <RefreshCw className="size-4" />
-        <AlertTitle>Listings could not load</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-        <Button type="button" variant="outline" onClick={onRetry}>Try again</Button>
-      </Alert>
-    );
-  }
-
-  if (loading) {
+  if (loading && !products.length) {
     return (
       <div className="grid gap-4 sm:grid-cols-2">
         {[1, 2, 3, 4, 5, 6].map((item) => (
@@ -48,6 +39,13 @@ export function MarketplaceProductGrid({
         ))}
       </div>
     );
+  }
+
+  if (error && !products.length) {
+    return <Alert variant="destructive" className="mb-5"><RefreshCw className="size-4" />
+      <AlertTitle>Listings could not load</AlertTitle><AlertDescription>{error}</AlertDescription>
+      <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={onRetry}>Try again</Button>
+    </Alert>;
   }
 
   if (products.length === 0) {
@@ -64,7 +62,13 @@ export function MarketplaceProductGrid({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2">
+      {error ? <Alert variant="destructive" className="mb-4"><RefreshCw className="size-4" />
+        <AlertTitle>Listings could not refresh</AlertTitle>
+        <AlertDescription>{stale ? "Showing previous listings. Prices and stock may have changed." : error}</AlertDescription>
+        <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={onRetry}>Try again</Button>
+      </Alert> : null}
+      {loading && stale ? <p className="mb-3 text-sm text-muted-foreground" role="status">Updating listings. Previous results are shown below.</p> : null}
+      <div className={`grid gap-4 sm:grid-cols-2 ${stale ? "pointer-events-none opacity-70" : ""}`} inert={stale}>
         {products.map((product) => (
           <ProductCard
             key={product.id}
@@ -74,7 +78,7 @@ export function MarketplaceProductGrid({
           />
         ))}
       </div>
-      {nextCursor ? (
+      {nextCursor && !stale ? (
         <div className="flex justify-center pt-8">
           <Button
             type="button"

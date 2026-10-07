@@ -1,0 +1,58 @@
+name: Deploy Web
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vps-web
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Check HTTPS API address
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+        run: |
+          case "$NEXT_PUBLIC_API_URL" in
+            https://*) ;;
+            *) echo "Set production variable PUBLIC_API_URL to the HTTPS API address." >&2; exit 1 ;;
+          esac
+
+      - name: Install and build web
+        working-directory: web
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+        run: |
+          bun install --frozen-lockfile
+          bun run typecheck
+          bun run build
+
+      - name: Deploy web release
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: bash deploy/vps-release.sh web

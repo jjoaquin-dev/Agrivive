@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, ArrowLeft, AlertTriangle } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, isAbortError } from "@/src/lib/api";
+import { authClient } from "@/src/lib/auth-client";
 import { usePolling } from "@/src/lib/usePolling";
 import type { BuyerOrder, MarketplaceProduct } from "@/src/features/marketplace/types";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
 import { PageContainer } from "@/src/components/PageContainer";
-import { cancelBuyerOrder, getBuyerOrder } from "../api/orders";
+import { getBuyerOrder } from "../api/orders";
 import { OrderQr } from "./OrderQr";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 import { OrderReviews } from "./OrderReviews";
@@ -21,41 +22,74 @@ import { OrderSellerCard } from "./OrderSellerCard";
 import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderReportModal } from "./OrderReportModal";
 import { OrderMessages } from "./OrderMessages";
-
+import { OrderCancellation } from "./OrderCancellation";
 export function OrderDetail() {
   const router = useRouter();
   const id = useParams<{ id: string }>()?.id ?? "";
+  const { data: session, isPending: sessionPending } = authClient.useSession();
+  const accountId = session?.user?.id ?? null;
   const [order, setOrder] = useState<BuyerOrder | null>(null);
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(false);
-  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [error, setError] = useState("");
   const [showReportModal, setShowReportModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const lastOrder = useRef<BuyerOrder | null>(null);
+  const loadRun = useRef(0);
+  const loadedAccount = useRef<string | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const run = ++loadRun.current;
+    setLoading(!lastOrder.current);
     setError("");
-    setProducts([]);
+    if (!lastOrder.current) setProducts([]);
     try {
       const loaded = await getBuyerOrder(id);
+      if (run !== loadRun.current) return;
+      lastOrder.current = loaded;
       setOrder(loaded);
       setLastUpdated(new Date());
       const listingDetails = await Promise.all(loaded.items.map(async (item) => {
         try { return await getMarketplaceProduct(item.productId); } catch { return null; }
       }));
+      if (run !== loadRun.current) return;
       setProducts(listingDetails.filter((item): item is MarketplaceProduct => item !== null));
     } catch (reason) {
-      if (reason instanceof ApiError && reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
+      if (run !== loadRun.current) return;
+      if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
+        lastOrder.current = null;
+        setOrder(null);
+        setProducts([]);
+        if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
+        else setError("You no longer have access to this reservation.");
+      }
       else setError(reason instanceof ApiError ? reason.message : "We could not load this reservation.");
-    } finally { setLoading(false); }
+    } finally { if (run === loadRun.current) setLoading(false); }
   }, [id, router]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    if (sessionPending) return;
+    if (!accountId) {
+      loadRun.current++;
+      loadedAccount.current = null;
+      lastOrder.current = null;
+      setOrder(null);
+      setProducts([]);
+      router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
+      return;
+    }
+    loadedAccount.current = accountId;
+    lastOrder.current = null;
+    setOrder(null);
+    setProducts([]);
+    setLastUpdated(null);
+    void load();
+    return () => { loadRun.current++; };
+  }, [accountId, sessionPending, load, router, id]);
 
   const refreshPendingOrder = useCallback(async (signal: AbortSignal) => {
     const latest = await getBuyerOrder(id, signal);
+    lastOrder.current = latest;
     setOrder(latest);
     setLastUpdated(new Date());
     setError("");
@@ -65,23 +99,22 @@ export function OrderDetail() {
     enabled: Boolean(order?.status === "pending" && !loading),
     intervalMs: 15_000,
     runImmediately: false,
-    onError: (reason) => { if (!isAbortError(reason)) setError(reason instanceof ApiError ? reason.message : "We could not refresh this reservation."); },
+    onError: (reason) => {
+      if (isAbortError(reason)) return;
+      if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
+        lastOrder.current = null;
+        setOrder(null);
+        setProducts([]);
+        if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
+        else setError("You no longer have access to this reservation.");
+        return;
+      }
+      setError(reason instanceof ApiError ? reason.message : "We could not refresh this reservation.");
+    },
     shouldStop: (reason) => reason instanceof ApiError && [401, 403, 404].includes(reason.status),
   });
 
-  async function handleCancel() {
-    if (!order || order.status !== "pending") return;
-    setCancelling(true);
-    setError("");
-    try {
-      setOrder(await cancelBuyerOrder(order.id));
-      setShowCancelConfirm(false);
-    } catch (reason) {
-      setError(reason instanceof ApiError ? reason.message : "We could not cancel this reservation. Try again.");
-    } finally { setCancelling(false); }
-  }
-
-  if (loading) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[20px] bg-white" /></PageContainer></main>;
+  if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[20px] bg-white" /></PageContainer></main>;
   if (error && !order) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Alert variant="destructive"><AlertDescription>{error}</AlertDescription><Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></Alert></PageContainer></main>;
   if (!order) return null;
 
@@ -108,7 +141,9 @@ export function OrderDetail() {
           <OrderStatusBadge status={order.status} />
         </header>
 
-        {error ? <Alert variant="destructive" className="mt-5"><AlertDescription>{error}</AlertDescription></Alert> : null}
+        {error ? <Alert variant="destructive" className="mt-5"><AlertDescription>{error} {order ? "Showing the last reservation details we loaded; status may have changed." : ""}</AlertDescription>
+          {order ? <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => void load()}>Try again</Button> : null}
+        </Alert> : null}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           <section className="flex flex-col gap-6">
@@ -124,35 +159,14 @@ export function OrderDetail() {
 
             {order.status === "completed" ? <OrderReviews order={order} /> : null}
 
-            {order.status === "pending" ? (
-              <div className="pt-2">
-                {!showCancelConfirm ? (
-                  <Button type="button" variant="outline" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setShowCancelConfirm(true)}>
-                    Cancel reservation
-                  </Button>
-                ) : (
-                  <div className="rounded-[20px] border border-destructive/20 bg-destructive/5 p-5">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="size-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
-                      <div>
-                        <h3 className="font-heading font-bold text-destructive">Cancel this reservation?</h3>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          If you cancel, your reserved produce will go back to the store so someone else can buy it. You cannot undo this.
-                        </p>
-                        <div className="mt-4 flex flex-wrap items-center gap-3">
-                          <Button type="button" variant="destructive" onClick={() => void handleCancel()} disabled={cancelling}>
-                            {cancelling ? "Cancelling…" : "Yes, cancel reservation"}
-                          </Button>
-                          <Button type="button" variant="outline" onClick={() => setShowCancelConfirm(false)} disabled={cancelling}>
-                            Keep reservation
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : null}
+            <OrderCancellation order={order} onCancelled={(updated) => { lastOrder.current = updated; setOrder(updated); }}
+              onAuthorizationFailure={(status) => {
+                lastOrder.current = null;
+                setOrder(null);
+                setProducts([]);
+                if (status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
+                else setError("You no longer have access to this reservation.");
+              }} />
 
             <div className="border-t border-border/70 pt-4">
               <Button

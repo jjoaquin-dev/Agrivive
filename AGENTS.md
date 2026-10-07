@@ -58,6 +58,8 @@ Keep source code files to 200 lines or fewer for readability. When a file exceed
 
 Use short, familiar words that a five-year-old can understand in mobile labels, buttons, messages, and documentation. Prefer `Add More`, `Take Away`, `Change Amount`, and `Change History`. Avoid `Stock In`, `Stock Out`, `Stock Adjustment`, and `Correction` in user-facing text. Technical API, database, and internal code names may remain unchanged when compatibility requires them.
 
+Use specific, professional headings and labels that name the content or action. Do not use filler headings such as "What does it do?" or vague recommendation copy. Include captions only when they add information the heading does not provide. Label synthetic content visibly as "Sample data"; never imply it reflects real purchases. Keep loading and error copy consistent with the section heading.
+
 ## Implementation and Plan mode Approval
 
 Before editing code, show the proposed code and the file path where it will go. Wait for the user's review and approval before making the edit.

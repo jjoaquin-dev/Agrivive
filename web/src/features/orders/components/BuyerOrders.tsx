@@ -1,17 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError } from "@/src/lib/api";
-import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { PageContainer } from "@/src/components/PageContainer";
-import { listBuyerOrders } from "../api/orders";
+import { useBuyerOrders } from "../hooks/useBuyerOrders";
 import { OrderCard } from "./OrderCard";
 import { OrderFilterTabs, type OrderTab } from "./OrderFilterTabs";
 
@@ -19,32 +17,10 @@ type SortOption = "newest" | "oldest" | "highest" | "lowest";
 
 export function BuyerOrders() {
   const checkoutId = useSearchParams()?.get("checkout");
-  const [orders, setOrders] = useState<BuyerOrder[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
+  const { orders, nextCursor, loading, loadingMore, error, load } = useBuyerOrders();
   const [activeTab, setActiveTab] = useState<OrderTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
-
-  async function load(cursor?: string) {
-    if (cursor) setLoadingMore(true); else setLoading(true);
-    setError("");
-    try {
-      const result = await listBuyerOrders(cursor);
-      setOrders((current) => (cursor ? [...current, ...result.orders] : result.orders));
-      setNextCursor(result.nextCursor);
-    } catch (reason) {
-      if (reason instanceof ApiError && reason.status === 401) window.location.assign("/login?next=/orders");
-      else setError(reason instanceof ApiError ? reason.message : "We could not load your reservations.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }
-
-  useEffect(() => { void load(); }, []);
 
   const counts = useMemo(() => ({
     all: orders.length,
@@ -105,9 +81,9 @@ export function BuyerOrders() {
         {error ? (
           <Alert variant="destructive" className="mb-6">
             <RefreshCw className="size-4" />
-            <AlertTitle>Orders could not load</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-            <Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button>
+            <AlertTitle>Orders could not refresh</AlertTitle>
+            <AlertDescription>{error}{orders.length ? " Previous reservations are shown below; their status may have changed." : ""}</AlertDescription>
+            <Button type="button" variant="outline" className="mt-2 min-h-11" onClick={() => void load()}>Try again</Button>
           </Alert>
         ) : null}
 
@@ -175,7 +151,7 @@ export function BuyerOrders() {
         ) : (
           <div className="flex flex-col gap-3">
             {filteredOrders.map((order) => <OrderCard key={order.id} order={order} />)}
-            {nextCursor && activeTab === "all" ? (
+            {nextCursor && !error && activeTab === "all" ? (
               <div className="flex justify-center pt-4">
                 <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="min-h-11 rounded-xl px-6 font-semibold">
                   {loadingMore ? "Loading orders…" : "Load more orders"}

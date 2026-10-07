@@ -5,6 +5,7 @@ import { priceToCents } from "../../../utils/order-amount";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
+import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 
 export function reactivateSellerProduct(sellerId: string, productId: string) {
   return db.transaction(async (tx) => {
@@ -39,6 +40,7 @@ export function reactivateSellerProduct(sellerId: string, productId: string) {
       startedAt: now,
       originalQty: product.productQty,
     });
+    await queueFirstPublicListing(tx, productId);
     return updated;
   });
 }

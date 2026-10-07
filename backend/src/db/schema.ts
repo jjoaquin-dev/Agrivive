@@ -194,6 +194,40 @@ export const buyer_saved_products = pgTable("buyer_saved_products", {
   index("buyer_saved_products_buyer_created_idx").on(table.buyerId, table.createdAt),
 ]);
 
+export const seller_follows = pgTable("seller_follows", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("seller_follows_buyer_seller_unique").on(table.buyerId, table.sellerId),
+  index("seller_follows_seller_created_idx").on(table.sellerId, table.createdAt),
+]);
+
+export const seller_listing_events = pgTable("seller_listing_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  shopName: text("shop_name").notNull(),
+  productName: text("product_name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true }),
+}, (table) => [
+  uniqueIndex("seller_listing_events_product_unique").on(table.productId),
+  index("seller_listing_events_pending_idx").on(table.processedAt, table.createdAt),
+]);
+
+export const buyer_listing_notices = pgTable("buyer_listing_notices", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  eventId: uuid("event_id").notNull().references(() => seller_listing_events.id, { onDelete: "cascade" }),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("buyer_listing_notices_buyer_event_unique").on(table.buyerId, table.eventId),
+  index("buyer_listing_notices_buyer_created_idx").on(table.buyerId, table.createdAt),
+]);
+
 export const listing_cycles = pgTable("listing_cycles", {
   id: uuid("id").defaultRandom().primaryKey(),
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
@@ -203,6 +237,44 @@ export const listing_cycles = pgTable("listing_cycles", {
 }, (table) => [
   index("listing_cycles_product_started_idx").on(table.productId, table.startedAt),
   index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt),
+]);
+
+export const seller_promotion_stage = pgEnum("seller_promotion_stage", [
+  "initial",
+  "followup",
+]);
+
+export const seller_promotion_status = pgEnum("seller_promotion_status", [
+  "waiting",
+  "queued",
+  "sent",
+  "ready",
+  "skipped",
+  "failed",
+]);
+
+export const seller_promotion_jobs = pgTable("seller_promotion_jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  stage: seller_promotion_stage().notNull(),
+  status: seller_promotion_status().default("waiting").notNull(),
+  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
+  retryCount: integer("retry_count").default(0).notNull(),
+  leaseUntil: timestamp("lease_until", { withTimezone: true }),
+  headline: text("headline"),
+  caption: text("caption"),
+  readyAt: timestamp("ready_at", { withTimezone: true }),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+  uniqueIndex("seller_promotion_jobs_cycle_stage_unique").on(table.listingCycleId, table.stage),
+  index("seller_promotion_jobs_due_idx").on(table.status, table.nextCheckAt),
+  index("seller_promotion_jobs_seller_created_idx").on(table.sellerId, table.createdAt),
+  index("seller_promotion_jobs_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
 ]);
 
 export const product_stock_adjustments = pgTable("product_stock_adjustments", {

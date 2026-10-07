@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { BuyerOrderItem } from "@/src/features/marketplace/types";
+import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
 
 export function OrderCardItems({ items }: { items: BuyerOrderItem[] }) {
   const [expanded, setExpanded] = useState(false);
@@ -14,10 +15,10 @@ export function OrderCardItems({ items }: { items: BuyerOrderItem[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
-        <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-agrivive-background">
-          <Package className="size-6 text-agrivive-primary/60" aria-hidden="true" />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
+        <div className="relative h-96 w-full overflow-hidden rounded-[16px] border border-border/70 bg-agrivive-background">
+          <ProductImage src={first.imageUrl} alt={first.productName} category={first.productType ?? "Produce"} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-foreground">
@@ -36,7 +37,7 @@ export function OrderCardItems({ items }: { items: BuyerOrderItem[] }) {
               {remaining.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 pl-2">
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-agrivive-background">
-                    <Package className="size-4 text-agrivive-primary/40" aria-hidden="true" />
+                    <ProductImage src={item.imageUrl} alt={item.productName} category={item.productType ?? "Produce"} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-semibold text-foreground">

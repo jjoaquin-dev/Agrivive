@@ -15,6 +15,7 @@ import { buyerProfileAvatarRoute } from "./index/buyer.profile.avatar";
 import { buyerWishlistListRoute } from "./index/buyer.wishlist.list";
 import { buyerWishlistSaveRoute } from "./index/buyer.wishlist.save";
 import { buyerWishlistRemoveRoute } from "./index/buyer.wishlist.remove";
+import { buyerSellerFollowRoute } from "./index/buyer.seller.follow";
 
 export const buyerRoute = new Elysia({ prefix: "/buyer" })
   .use(buyerProfileReadRoute)
@@ -22,6 +23,7 @@ export const buyerRoute = new Elysia({ prefix: "/buyer" })
   .use(buyerWishlistListRoute)
   .use(buyerWishlistSaveRoute)
   .use(buyerWishlistRemoveRoute)
+  .use(buyerSellerFollowRoute)
   .use(buyerCheckoutCreateRoute)
   .use(buyerOrderCreateRoute)
   .use(buyerOrderListRoute)

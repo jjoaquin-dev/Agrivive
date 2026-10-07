@@ -23,6 +23,7 @@ import { MarketplacePrice } from "./MarketplacePrice";
 import { SellerReviewsSection } from "./SellerReviewsSection";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductQuestionsSection } from "./ProductQuestionsSection";
+import { MbaRecommendationsSection } from "./MbaRecommendationsSection";
 import { SimilarProduceSection } from "./SimilarProduceSection";
 
 export function ProductDetail() {
@@ -91,18 +92,20 @@ export function ProductDetail() {
     setCartMessage(`${product.productName} was added to your cart.`);
   }
 
-  if (loading) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><div className="h-[520px] animate-pulse rounded-[20px] bg-card" /></PageContainer></main>;
+  if (loading) return <main className="min-h-[calc(100dvh-72px)] bg-background px-4 py-6 sm:px-6 sm:py-8"><PageContainer className="max-w-[1600px]"><div className="h-[min(72dvh,620px)] min-h-[420px] animate-pulse rounded-[24px] bg-card sm:h-[560px] lg:h-[calc(100dvh-9rem)]" /></PageContainer></main>;
   if (error || !product) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><Card className="mx-auto max-w-xl items-center rounded-[20px] border-border/80 bg-white p-8 text-center shadow-[0_14px_32px_rgba(31,77,58,0.08)]"><h1 className="font-heading text-2xl font-bold">We could not find that listing.</h1><p className="text-muted-foreground">{error || "It may have been removed or is no longer visible."}</p><Link href="/marketplace" className={cn(buttonVariants(), "mt-2")}><ArrowLeft className="size-4" />Back to marketplace</Link></Card></PageContainer></main>;
 
   const soldOut = product.availability === "sold_out" || Number(product.productQty) <= 0;
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-12">
-      <PageContainer>
+    <main className="min-h-[calc(100dvh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
+      <PageContainer className="max-w-[1600px]">
         <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-agrivive-primary hover:underline"><ArrowLeft aria-hidden="true" className="size-4" />Back to marketplace</Link>
-        <div className="mt-5 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <Card className="overflow-hidden rounded-[20px] border-border/80 bg-white p-0 shadow-[0_14px_32px_rgba(31,77,58,0.08)]"><div className="h-[360px] bg-agrivive-background sm:h-[500px]"><ProductImage src={product.imageUrl} alt={product.productName} category={product.productType} /></div></Card>
-          <Card className="gap-5 rounded-[20px] border-border/80 bg-white p-5 shadow-[0_14px_32px_rgba(31,77,58,0.08)] sm:p-7">
+        <div className="mt-5 grid min-h-[calc(100dvh-9rem)] gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] lg:items-start">
+          <Card className="overflow-hidden rounded-[24px] border-border/80 bg-white p-0 shadow-[0_18px_45px_rgba(31,77,58,0.10)] lg:sticky lg:top-6 lg:h-[calc(100dvh-9rem)]">
+            <div className="h-[min(72dvh,620px)] min-h-[420px] bg-agrivive-background sm:h-[560px] lg:h-full"><ProductImage src={product.imageUrl} alt={product.productName} category={product.productType} /></div>
+          </Card>
+          <Card className="gap-5 self-start rounded-[24px] border-border/80 bg-white p-5 shadow-[0_18px_45px_rgba(31,77,58,0.08)] sm:p-7 lg:sticky lg:top-6">
             <CardHeader className="gap-3 p-0">
               <Badge variant="secondary" className="gap-2"><ShoppingBasket aria-hidden="true" className="size-4" />{product.productType}</Badge>
               <h1 className="font-heading text-3xl font-bold leading-tight">{product.productName}</h1>
@@ -137,6 +140,7 @@ export function ProductDetail() {
         <SellerReviewsSection sellerId={product.seller.id} shopName={product.seller.shopName} />
         <ProductReviewsSection productId={product.id} />
         <ProductQuestionsSection productId={product.id} />
+        <MbaRecommendationsSection productId={product.id} />
         <SimilarProduceSection currentProductId={product.id} productType={product.productType} />
       </PageContainer>
     </main>

@@ -87,10 +87,10 @@ export function VisibilityBreakdownCard({ item, productName }: VisibilityBreakdo
             </View>
 
             <View style={styles.factorItem}>
-              <Text style={styles.factorLabel}>Prior Cycles</Text>
+              <Text style={styles.factorLabel}>Prior cycles (30d)</Text>
               <Text style={styles.factorValue}>
                 {Number.isFinite(item.inputs.priorCycles)
-                  ? `${item.inputs.priorCycles} completed`
+                  ? `${item.inputs.priorCycles}`
                   : "Not available"}
               </Text>
             </View>

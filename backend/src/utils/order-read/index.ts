@@ -1,13 +1,31 @@
 import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
 import { db } from "../../db";
-import { ordered_items, orders } from "../../db/schema";
+import { ordered_items, orders, sellers_product } from "../../db/schema";
 import { issueOrderQr } from "../order-qr";
 import { OrderError, type OrderSide, type OrderStatus } from "../order-types";
+import { getProductImageDisplayUrl } from "../product-image";
 
 type OrderRow = typeof orders.$inferSelect;
 type OrderItem = typeof ordered_items.$inferSelect;
+type OrderItemRow = {
+  item: OrderItem;
+  imageUrl: string | null;
+  productType: string | null;
+  sellerId: string;
+};
 
-function orderView(row: OrderRow, items: OrderItem[], side: OrderSide) {
+async function orderView(row: OrderRow, items: OrderItemRow[], side: OrderSide) {
+  const displayItems = await Promise.all(items.map(async ({ item, imageUrl, productType, sellerId }) => ({
+    id: item.id,
+    productId: item.productId,
+    productName: item.productName,
+    productType,
+    imageUrl: await getProductImageDisplayUrl(imageUrl, sellerId),
+    scalingType: item.scalingType,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    subtotal: item.subtotal,
+  })));
   return {
     id: row.id,
     checkoutId: row.checkoutId,
@@ -20,15 +38,7 @@ function orderView(row: OrderRow, items: OrderItem[], side: OrderSide) {
     expiresAt: row.expiresAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    items: items.map((item) => ({
-      id: item.id,
-      productId: item.productId,
-      productName: item.productName,
-      scalingType: item.scalingType,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      subtotal: item.subtotal,
-    })),
+    items: displayItems,
     qrPayload:
       side === "buyer" &&
       row.status === "pending" &&
@@ -47,9 +57,13 @@ export async function getOrder(orderId: string, userId: string, side: OrderSide)
     .where(and(eq(orders.id, orderId), eq(owner, userId)))
     .limit(1);
   if (!row) throw new OrderError(404, "Order not found");
-  const items = await db
-    .select()
-    .from(ordered_items)
+  const items = await db.select({
+    item: ordered_items,
+    imageUrl: sellers_product.imagUrl,
+    productType: sellers_product.productType,
+    sellerId: sellers_product.userId,
+  }).from(ordered_items)
+    .innerJoin(sellers_product, eq(ordered_items.productId, sellers_product.id))
     .where(eq(ordered_items.ordersId, row.id));
   return orderView(row, items, side);
 }
@@ -89,20 +103,24 @@ export async function listOrders(
     .limit(limit + 1);
   const page = rows.slice(0, limit);
   const items = page.length
-    ? await db
-        .select()
-        .from(ordered_items)
+    ? await db.select({
+        item: ordered_items,
+        imageUrl: sellers_product.imagUrl,
+        productType: sellers_product.productType,
+        sellerId: sellers_product.userId,
+      }).from(ordered_items)
+        .innerJoin(sellers_product, eq(ordered_items.productId, sellers_product.id))
         .where(inArray(ordered_items.ordersId, page.map((row) => row.id)))
     : [];
-  const byOrder = new Map<string, OrderItem[]>();
+  const byOrder = new Map<string, OrderItemRow[]>();
   for (const item of items) {
-    const list = byOrder.get(item.ordersId) ?? [];
+    const list = byOrder.get(item.item.ordersId) ?? [];
     list.push(item);
-    byOrder.set(item.ordersId, list);
+    byOrder.set(item.item.ordersId, list);
   }
 
   return {
-    orders: page.map((row) => orderView(row, byOrder.get(row.id) ?? [], side)),
+    orders: await Promise.all(page.map((row) => orderView(row, byOrder.get(row.id) ?? [], side))),
     nextCursor: rows.length > limit ? page[page.length - 1].id : null,
   };
 }

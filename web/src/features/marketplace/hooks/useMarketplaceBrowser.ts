@@ -7,6 +7,7 @@ import { listMarketplaceProducts } from "../api/marketplace";
 import { listMarketplaceSellersMap } from "../api/seller-map";
 import type { MarketplaceProduct, MarketplaceSellerMapResponse } from "../types";
 import type { MarketplaceFilterValues } from "../components/MarketplaceFilters";
+import { useMarketplaceLocation } from "./useMarketplaceLocation";
 
 export function useMarketplaceBrowser() {
   const router = useRouter();
@@ -19,12 +20,12 @@ export function useMarketplaceBrowser() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+  const [resultKey, setResultKey] = useState<string | null>(null);
   const [sellerMap, setSellerMap] = useState<MarketplaceSellerMapResponse>({ sellers: [], unmappedSellerCount: 0 });
   const [sellerMapLoading, setSellerMapLoading] = useState(true);
   const [sellerMapError, setSellerMapError] = useState("");
   const [sellerMapRetryKey, setSellerMapRetryKey] = useState(0);
-  const [locationStatus, setLocationStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [locationError, setLocationError] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(searchKey);
@@ -33,13 +34,12 @@ export function useMarketplaceBrowser() {
     let active = true;
     setLoading(true);
     setError("");
-    setProducts([]);
-    setNextCursor(null);
     listMarketplaceProducts(params, controller.signal)
       .then((result) => {
         if (active) {
           setProducts(result.products);
           setNextCursor(result.nextCursor);
+          setResultKey(searchKey);
         }
       })
       .catch((reason: unknown) => {
@@ -54,7 +54,7 @@ export function useMarketplaceBrowser() {
       active = false;
       controller.abort();
     };
-  }, [searchKey]);
+  }, [searchKey, retryKey]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchKey);
@@ -101,6 +101,8 @@ export function useMarketplaceBrowser() {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
+  const { locationStatus, locationError, handleRemoveLocation, handleUseLocation } = useMarketplaceLocation(searchKey, navigateWithParams);
+
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const params = new URLSearchParams(searchKey);
@@ -124,48 +126,6 @@ export function useMarketplaceBrowser() {
     navigateWithParams(params);
   }
 
-  function handleRemoveLocation() {
-    const params = new URLSearchParams(searchKey);
-    params.delete("latitude");
-    params.delete("longitude");
-    params.delete("radiusKm");
-    setLocationError("");
-    setLocationStatus("idle");
-    navigateWithParams(params);
-  }
-
-  function handleUseLocation() {
-    if (!navigator.geolocation) {
-      setLocationStatus("error");
-      setLocationError("Location is not available in this browser.");
-      return;
-    }
-    setLocationStatus("loading");
-    setLocationError("");
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const params = new URLSearchParams(searchKey);
-        params.set("latitude", coords.latitude.toFixed(6));
-        params.set("longitude", coords.longitude.toFixed(6));
-        params.set("radiusKm", params.get("radiusKm") || "10");
-        params.delete("cursor");
-        setLocationStatus("idle");
-        navigateWithParams(params);
-      },
-      (reason) => {
-        setLocationStatus("error");
-        setLocationError(reason.code === 1
-          ? "Allow location access to find nearby stalls."
-          : reason.code === 2
-            ? "Your location is not available right now. Try again or browse without it."
-            : reason.code === 3
-              ? "Finding your location took too long. Try again or browse without it."
-              : "We could not find your location. Try again or browse without it.");
-      },
-      { enableHighAccuracy: false, maximumAge: 300_000, timeout: 8_000 },
-    );
-  }
-
   function clearFilters() {
     const params = new URLSearchParams();
     const search = searchParams.get("search");
@@ -174,7 +134,7 @@ export function useMarketplaceBrowser() {
   }
 
   async function handleLoadMore() {
-    if (!nextCursor || loadingMore) return;
+    if (!nextCursor || loadingMore || resultKey !== searchKey) return;
     setLoadingMore(true);
     try {
       const params = new URLSearchParams(searchKey);
@@ -201,6 +161,7 @@ export function useMarketplaceBrowser() {
     searchInput,
     setSearchInput,
     loading,
+    staleProducts: products.length > 0 && (loading || resultKey !== searchKey || Boolean(error)),
     loadingMore,
     error,
     sellerMap,
@@ -220,6 +181,6 @@ export function useMarketplaceBrowser() {
     clearFilters,
     handleLoadMore,
     retrySellerMap: () => setSellerMapRetryKey((current) => current + 1),
-    retry: () => navigateWithParams(new URLSearchParams(searchKey)),
+    retry: () => setRetryKey((current) => current + 1),
   };
 }

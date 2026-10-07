@@ -1,0 +1,62 @@
+name: Build Mobile Preview APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-preview-apk
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node for Expo SDK 57
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.x"
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install and check mobile app
+        run: |
+          bun install --frozen-lockfile
+          bun run typecheck
+
+      - name: Check EAS project link
+        run: |
+          node -e "const app = require('./app.json'); if (!app.expo.extra?.eas?.projectId) { console.error('Run the first EAS Android build interactively and commit the generated project ID.'); process.exit(1); }"
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Check preview API address
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas env:exec --environment preview \
+            "node -e 'const url = process.env.EXPO_PUBLIC_API_URL || \"\"; if (!url.startsWith(\"https://\")) { console.error(\"Set EXPO_PUBLIC_API_URL to the HTTPS API origin in EAS preview.\"); process.exit(1); }'"
+
+      - name: Build installable Android APK
+        timeout-minutes: 120
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile preview --non-interactive

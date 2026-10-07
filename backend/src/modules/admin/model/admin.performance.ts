@@ -6,6 +6,9 @@ export type AdminPerformance = {
   trustMonitoring: {
     policyVersion: string;
     weightedPoints: number;
+    verifiedEventPoints: number;
+    ratingSignals: number;
+    writtenFeedbackCount: number;
     verifiedEvents: number;
     allegationFlags: number;
     components: Array<{ kind: string; count: number; weight: number; points: number }>;

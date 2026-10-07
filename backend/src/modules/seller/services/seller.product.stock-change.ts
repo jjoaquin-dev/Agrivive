@@ -5,6 +5,7 @@ import { quantityToHundredths } from "../../../utils/order-amount";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
+import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 
 const maxHundredths = 9_999_999_999n;
 
@@ -87,6 +88,7 @@ export function changeSellerProductStock(
       afterQty: toDecimal(after),
       reason: cleanReason,
     });
+    await queueFirstPublicListing(tx, updated.id);
     return updated;
   });
 }
