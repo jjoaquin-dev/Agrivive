@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
+import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "../src/styles/tokens.css";
 import { CartProvider } from "@/src/features/cart/CartProvider";
 import { CartDrawer } from "@/src/features/cart/components/CartDrawer";
+import { WishlistProvider } from "@/src/features/wishlist/WishlistProvider";
 import { cn } from "@/lib/utils";
 
 const manrope = Manrope({
@@ -28,10 +32,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={cn(manrope.variable, inter.variable, "font-body")}>
       <body className="font-body antialiased">
-        <CartProvider>
-          {children}
-          <CartDrawer />
-        </CartProvider>
+        <WishlistProvider>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+          </CartProvider>
+        </WishlistProvider>
       </body>
     </html>
   );

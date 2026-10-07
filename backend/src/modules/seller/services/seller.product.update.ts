@@ -9,6 +9,7 @@ import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import type { SellerProductUpdate } from "../model/seller.product";
 import { validatePriceReductionConfig } from "../../../utils/price-reduction";
+import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 
 export function updateSellerProduct(sellerId: string, productId: string, body: SellerProductUpdate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -78,6 +79,7 @@ export function updateSellerProduct(sellerId: string, productId: string, body: S
         originalQty: updated.originalQty,
       });
     }
+    await queueFirstPublicListing(tx, updated.id);
     return updated;
   });
 }

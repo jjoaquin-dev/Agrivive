@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Activity, AlertTriangle, FileText, Info, Lock, ShieldCheck, Users } from "lucide-react";
+import { Activity, AlertTriangle, FileText, Lock, ShieldCheck, Users } from "lucide-react";
 import { BuyerSiteHeader } from "@/src/components/BuyerSiteHeader";
 import { PageContainer } from "@/src/components/PageContainer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError } from "@/src/lib/api";
 import { getAdminPerformance, type AdminPerformance } from "@/src/features/admin/api/performance";
+import { TrustMonitoringCard } from "@/src/features/admin/components/TrustMonitoringCard";
 
 export default function AdminPerformancePage() {
   const [data, setData] = useState<AdminPerformance | null>(null);
@@ -135,63 +136,7 @@ export default function AdminPerformancePage() {
                 </Card>
               </div>
 
-              {/* Trust Monitoring Breakdown */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <ShieldCheck className="size-5 text-primary" />
-                    Weighted Trust Monitoring Breakdown
-                  </CardTitle>
-                  <CardDescription className="flex items-start gap-1.5 pt-1 text-xs">
-                    <Info className="size-4 shrink-0 text-muted-foreground mt-0.5" />
-                    <span>
-                      Weighted points count recorded verified events as monitoring signals, not a penalty or quality score.
-                      Allegation flags are counted separately and do not affect weighted points. Admin monitoring does not approve reports or change user accounts.
-                    </span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-border bg-muted/20 p-3">
-                      <span className="text-xs text-muted-foreground">Total Weighted Points</span>
-                      <p className="text-xl font-bold font-heading text-primary">{data.trustMonitoring.weightedPoints}</p>
-                    </div>
-                    <div className="rounded-xl border border-border bg-muted/20 p-3">
-                      <span className="text-xs text-muted-foreground">Verified Events</span>
-                      <p className="text-xl font-bold font-heading">{data.trustMonitoring.verifiedEvents}</p>
-                    </div>
-                    <div className="rounded-xl border border-border bg-muted/20 p-3">
-                      <span className="text-xs text-muted-foreground">Allegation Flags</span>
-                      <p className="text-xl font-bold font-heading text-amber-600">{data.trustMonitoring.allegationFlags}</p>
-                    </div>
-                  </div>
-
-                  {data.trustMonitoring.components.length > 0 && (
-                    <div className="overflow-x-auto rounded-xl border border-border">
-                      <table className="w-full text-left text-xs">
-                        <thead className="border-b bg-muted/50 font-semibold text-muted-foreground">
-                          <tr>
-                            <th className="p-3">Monitoring Event Kind</th>
-                            <th className="p-3 text-right">Event Count</th>
-                            <th className="p-3 text-right">Signal Weight</th>
-                            <th className="p-3 text-right">Weighted Points</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                          {data.trustMonitoring.components.map((c) => (
-                            <tr key={c.kind}>
-                              <td className="p-3 font-medium capitalize">{c.kind.replaceAll("_", " ")}</td>
-                              <td className="p-3 text-right">{c.count}</td>
-                              <td className="p-3 text-right">{c.weight}x</td>
-                              <td className="p-3 text-right font-semibold text-primary">{c.points}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <TrustMonitoringCard monitoring={data.trustMonitoring} />
             </div>
           )}
         </PageContainer>

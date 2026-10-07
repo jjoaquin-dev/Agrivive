@@ -5,15 +5,8 @@ import { OrderError } from "../../../utils/order-types";
 import { marketplaceVisibilityScoreSql } from "../../../utils/visibility-score";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 import type { MarketplaceProductsQuery } from "../model/marketplace.products";
-
-const sellerRole = sql`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
-const completeSellerProfile = and(
-  eq(sellers_profile.isCurrent, true),
-  sql`length(btrim(${sellers_profile.shopName})) > 0`,
-  sql`length(btrim(${sellers_profile.detailAddress})) > 0`,
-  sql`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`,
-  isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude),
-);
+import { marketplaceDistanceExpression } from "./marketplace.distance";
+import { marketplaceSellerVisibility } from "./marketplace.visibility";
 
 type MarketplaceCursor = { evaluatedAt: Date; score: number | null; publishedAt: Date; id: string };
 
@@ -40,14 +33,6 @@ function decodeCursor(cursor: string): MarketplaceCursor {
   } catch {
     throw new OrderError(400, "Invalid marketplace cursor");
   }
-}
-
-function distanceExpression(latitude: number, longitude: number) {
-  return sql<number>`6371 * acos(least(1, greatest(-1,
-    cos(radians(${latitude})) * cos(radians(${sellers_profile.latitude})) *
-    cos(radians(${sellers_profile.longitude}) - radians(${longitude})) +
-    sin(radians(${latitude})) * sin(radians(${sellers_profile.latitude}))
-  )))`;
 }
 
 function validateRanges(query: MarketplaceProductsQuery) {
@@ -118,7 +103,7 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
     eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true),
     gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"),
     isNotNull(sellers_product.publishedAt), eq(user.isActive, true), eq(user.emailVerified, true),
-    sellerRole, completeSellerProfile,
+    marketplaceSellerVisibility(),
   ];
   const search = query.search?.trim();
   if (query.sellerId) conditions.push(eq(sellers_profile.userId, query.sellerId));
@@ -131,7 +116,7 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   if (query.minQuantity !== undefined) conditions.push(gte(sellers_product.productQty, query.minQuantity.toString()));
   if (query.maxQuantity !== undefined) conditions.push(lte(sellers_product.productQty, query.maxQuantity.toString()));
   const distanceKm = query.latitude !== undefined && query.longitude !== undefined
-    ? distanceExpression(query.latitude, query.longitude) : null;
+    ? marketplaceDistanceExpression(query.latitude, query.longitude) : null;
   if (distanceKm && query.radiusKm !== undefined) conditions.push(lte(distanceKm, query.radiusKm));
   if (cursor) conditions.push(cursorCondition(visibilityScore, cursor));
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { MessageSquare, Send, Clock, CheckCircle2 } from "lucide-react";
+import { MessageSquare, Send, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
   sendBuyerProductInquiry,
   type BuyerProductInquiry,
 } from "../api/inquiries";
+import { ProductInquiriesList } from "./ProductInquiriesList";
 
 export function ProductQuestionsSection({ productId }: { productId: string }) {
   const [inquiries, setInquiries] = useState<BuyerProductInquiry[]>([]);
@@ -90,14 +91,14 @@ export function ProductQuestionsSection({ productId }: { productId: string }) {
       </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="text-base">Ask a question</CardTitle>
-            <CardDescription>
+        <Card className="h-fit rounded-[20px] border-border/80 p-0 shadow-xs">
+          <CardHeader className="p-5 pb-3">
+            <CardTitle className="text-base font-bold">Ask a question</CardTitle>
+            <CardDescription className="text-xs">
               The seller will receive your question in their message inbox.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 pt-0">
             {requiresAuth ? (
               <div className="space-y-3 py-2 text-sm">
                 <p className="text-muted-foreground">
@@ -105,15 +106,15 @@ export function ProductQuestionsSection({ productId }: { productId: string }) {
                 </p>
                 <Link
                   href={`/login?next=${encodeURIComponent(`/marketplace/${productId}`)}`}
-                  className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-xs hover:bg-primary/90"
                 >
                   Sign in to ask
                 </Link>
               </div>
             ) : hasOpenInquiry ? (
-              <Alert>
+              <Alert className="rounded-xl">
                 <Clock className="size-4 text-primary" />
-                <AlertDescription>
+                <AlertDescription className="text-xs">
                   Your previous question is awaiting the seller's reply. You can ask another once they answer.
                 </AlertDescription>
               </Alert>
@@ -131,7 +132,7 @@ export function ProductQuestionsSection({ productId }: { productId: string }) {
                     maxLength={1000}
                     rows={4}
                     disabled={submitting}
-                    className="w-full resize-y rounded-xl border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+                    className="w-full resize-y rounded-xl border border-input bg-card px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                   />
                   <div className="mt-1 flex justify-between text-xs text-muted-foreground">
                     <span>Be specific and respectful</span>
@@ -140,79 +141,25 @@ export function ProductQuestionsSection({ productId }: { productId: string }) {
                 </div>
 
                 {error ? (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                  <Alert variant="destructive" className="rounded-xl">
+                    <AlertDescription className="text-xs">{error}</AlertDescription>
                   </Alert>
                 ) : null}
 
                 <Button
                   type="submit"
                   disabled={submitting || !question.trim()}
-                  className="h-11 w-full gap-2 sm:w-auto"
+                  className="min-h-12 h-12 w-full gap-2 rounded-xl text-sm font-semibold sm:w-auto px-6"
                 >
                   <Send className="size-4" aria-hidden="true" />
-                  {submitting ? "Sending…" : "Send Question"}
+                  {submitting ? "Sending…" : "Send question"}
                 </Button>
               </form>
             )}
           </CardContent>
         </Card>
 
-        <div>
-          <h3 className="font-heading text-base font-semibold">Your previous questions</h3>
-          {loading ? (
-            <div className="mt-3 space-y-3">
-              <div className="h-20 animate-pulse rounded-xl bg-card" />
-              <div className="h-20 animate-pulse rounded-xl bg-card" />
-            </div>
-          ) : inquiries.length === 0 ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-              You haven’t asked any questions about this listing yet.
-            </div>
-          ) : (
-            <div className="mt-3 space-y-3">
-              {inquiries.map((inquiry) => (
-                <Card key={inquiry.id} className="gap-2 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground">
-                      <span className="font-semibold text-primary">You:</span> {inquiry.question}
-                    </p>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {new Date(inquiry.createdAt).toLocaleDateString([], {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  {inquiry.reply ? (
-                    <div className="mt-2 rounded-xl bg-agrivive-surface p-3 border border-border/60">
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                        <CheckCircle2 className="size-3.5" />
-                        <span>Seller reply:</span>
-                      </div>
-                      <p className="mt-1 text-sm text-foreground">{inquiry.reply}</p>
-                      {inquiry.repliedAt ? (
-                        <p className="mt-1 text-[11px] text-muted-foreground">
-                          Answered on{" "}
-                          {new Date(inquiry.repliedAt).toLocaleDateString([], {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600">
-                      <Clock className="size-3.5" />
-                      <span>Awaiting seller response</span>
-                    </div>
-                  )}
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductInquiriesList loading={loading} inquiries={inquiries} />
       </div>
     </section>
   );

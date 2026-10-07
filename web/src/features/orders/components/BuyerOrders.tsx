@@ -1,47 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, CheckCircle2, RefreshCw, ShoppingBag, Store } from "lucide-react";
+import { ArrowRight, CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError } from "@/src/lib/api";
-import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { PageContainer } from "@/src/components/PageContainer";
-import { listBuyerOrders } from "../api/orders";
+import { useBuyerOrders } from "../hooks/useBuyerOrders";
 import { OrderCard } from "./OrderCard";
+import { OrderFilterTabs, type OrderTab } from "./OrderFilterTabs";
 
-type OrderTab = "all" | "pending" | "completed" | "archived";
+type SortOption = "newest" | "oldest" | "highest" | "lowest";
 
 export function BuyerOrders() {
   const checkoutId = useSearchParams()?.get("checkout");
-  const [orders, setOrders] = useState<BuyerOrder[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
+  const { orders, nextCursor, loading, loadingMore, error, load } = useBuyerOrders();
   const [activeTab, setActiveTab] = useState<OrderTab>("all");
-
-  async function load(cursor?: string) {
-    if (cursor) setLoadingMore(true); else setLoading(true);
-    setError("");
-    try {
-      const result = await listBuyerOrders(cursor);
-      setOrders((current) => cursor ? [...current, ...result.orders] : result.orders);
-      setNextCursor(result.nextCursor);
-    } catch (reason) {
-      if (reason instanceof ApiError && reason.status === 401) window.location.assign("/login?next=/orders");
-      else setError(reason instanceof ApiError ? reason.message : "We could not load your reservations.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }
-
-  useEffect(() => { void load(); }, []);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   const counts = useMemo(() => ({
     all: orders.length,
@@ -51,30 +30,43 @@ export function BuyerOrders() {
   }), [orders]);
 
   const filteredOrders = useMemo(() => {
-    if (activeTab === "pending") return orders.filter((o) => o.status === "pending");
-    if (activeTab === "completed") return orders.filter((o) => o.status === "completed");
-    if (activeTab === "archived") return orders.filter((o) => o.status === "cancelled" || o.status === "expired");
-    return orders;
-  }, [orders, activeTab]);
+    let result = orders;
+    if (activeTab === "pending") result = result.filter((o) => o.status === "pending");
+    else if (activeTab === "completed") result = result.filter((o) => o.status === "completed");
+    else if (activeTab === "archived") result = result.filter((o) => o.status === "cancelled" || o.status === "expired");
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((o) =>
+        o.id.toLowerCase().includes(q) ||
+        o.status.toLowerCase().includes(q) ||
+        o.items.some((item) => item.productName.toLowerCase().includes(q))
+      );
+    }
+
+    return [...result].sort((a, b) => {
+      if (sortBy === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (sortBy === "highest") return Number(b.totalAmount) - Number(a.totalAmount);
+      if (sortBy === "lowest") return Number(a.totalAmount) - Number(b.totalAmount);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [orders, activeTab, searchQuery, sortBy]);
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-8 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-border/80 pb-6">
+        {/* Header matching reference */}
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-agrivive-sage/40 bg-white px-3 py-1 text-xs font-semibold text-agrivive-primary">
-              <Store className="size-3.5" />
-              <span>Davao City Market Pickups</span>
-            </div>
-            <h1 className="mt-2.5 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              Your reservations
+            <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              All Orders
             </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Track active pickup passes and view your purchase history with local stalls.
+            <p className="mt-1 text-sm text-muted-foreground">
+              Check all orders and reservations at a single place. It&apos;s easy to manage.
             </p>
           </div>
-          <Link href="/marketplace" className={buttonVariants({ variant: "outline" })}>
-            Find more produce<ArrowRight aria-hidden="true" className="size-4" />
+          <Link href="/marketplace" className={buttonVariants({ className: "min-h-11 rounded-xl px-5 font-semibold" })}>
+            Browse marketplace<ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         </header>
 
@@ -82,86 +74,92 @@ export function BuyerOrders() {
           <Alert className="mb-6 border-emerald-200 bg-emerald-50 text-emerald-950">
             <CheckCircle2 className="size-4 text-emerald-700" />
             <AlertTitle>Cart reserved successfully!</AlertTitle>
-            <AlertDescription>Each market stall has its own pickup pass and code ready below.</AlertDescription>
+            <AlertDescription>Your pickup pass and QR code are ready below.</AlertDescription>
           </Alert>
         ) : null}
 
         {error ? (
           <Alert variant="destructive" className="mb-6">
             <RefreshCw className="size-4" />
-            <AlertTitle>Reservations could not load</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-            <Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button>
+            <AlertTitle>Orders could not refresh</AlertTitle>
+            <AlertDescription>{error}{orders.length ? " Previous reservations are shown below; their status may have changed." : ""}</AlertDescription>
+            <Button type="button" variant="outline" className="mt-2 min-h-11" onClick={() => void load()}>Try again</Button>
           </Alert>
         ) : null}
 
-        {/* Status Filter Tabs */}
-        {!loading && orders.length > 0 ? (
-          <nav aria-label="Filter orders by status" className="mb-6 flex gap-2 overflow-x-auto pb-1">
-            {[
-              { id: "all", label: "All reservations", count: counts.all, alert: false },
-              { id: "pending", label: "Active pickups", count: counts.pending, alert: counts.pending > 0 },
-              { id: "completed", label: "Completed", count: counts.completed, alert: false },
-              { id: "archived", label: "Past / Cancelled", count: counts.archived, alert: false },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id as OrderTab)}
-                className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-all ${
-                  activeTab === tab.id
-                    ? "bg-agrivive-primary text-white shadow-xs"
-                    : "border border-border bg-white text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                  activeTab === tab.id
-                    ? "bg-white/20 text-white"
-                    : tab.alert
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-muted text-muted-foreground"
-                }`}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </nav>
-        ) : null}
+        {/* Tab Navigation with Underline Indicator */}
+        <OrderFilterTabs activeTab={activeTab} onTabChange={setActiveTab} counts={counts} />
 
-        {loading ? (
-          <div className="flex flex-col gap-4">
-            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-36 rounded-2xl bg-white" />)}
+        {/* Search & Sort Toolbar */}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by ID, produce name, status…"
+              className="h-11 w-full rounded-xl border border-input bg-white pl-10 pr-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-sage"
+            />
           </div>
-        ) : null}
+          <div className="flex items-center gap-2">
+            <label htmlFor="order-sort-select" className="text-xs font-semibold text-muted-foreground">
+              Sort By:
+            </label>
+            <select
+              id="order-sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="h-11 rounded-xl border border-input bg-white px-3 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-sage"
+            >
+              <option value="newest">New Order</option>
+              <option value="oldest">Oldest Order</option>
+              <option value="highest">Highest Amount</option>
+              <option value="lowest">Lowest Amount</option>
+            </select>
+          </div>
+        </div>
 
-        {!loading && !error && filteredOrders.length === 0 ? (
-          <Empty className="rounded-2xl border border-border bg-white p-8">
+        {/* Table Column Headers (Desktop) */}
+        <div className="mb-2 hidden grid-cols-[1.5fr_0.8fr_1fr_1.2fr_1fr] items-center px-5 py-2.5 text-xs font-semibold text-muted-foreground md:grid">
+          <div className="flex items-center gap-2">
+            <span className="size-4 rounded border border-border/80 bg-muted/30" aria-hidden="true" />
+            <span>Product</span>
+          </div>
+          <div>Price</div>
+          <div>Payment</div>
+          <div>Status</div>
+          <div>Action</div>
+        </div>
+
+        {/* Order Cards List */}
+        {loading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-44 rounded-2xl bg-white" />)}
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <Empty className="rounded-[20px] border border-border/80 bg-white p-8 shadow-xs">
             <EmptyHeader>
               <EmptyMedia variant="icon"><ShoppingBag className="text-agrivive-primary" /></EmptyMedia>
-              <EmptyTitle>No reservations found</EmptyTitle>
+              <EmptyTitle>No orders match</EmptyTitle>
               <EmptyDescription>
-                {activeTab === "pending"
-                  ? "You have no pending pickups waiting at the market."
-                  : "When you reserve fresh surplus produce, your pickup passes will appear here."}
+                {searchQuery ? "Try a different search query or clear your search." : "No orders found in this category."}
               </EmptyDescription>
             </EmptyHeader>
             <Link href="/marketplace" className={buttonVariants()}>Browse marketplace</Link>
           </Empty>
-        ) : null}
-
-        {!loading && !error && filteredOrders.length > 0 ? (
-          <div className="flex flex-col gap-4">
+        ) : (
+          <div className="flex flex-col gap-3">
             {filteredOrders.map((order) => <OrderCard key={order.id} order={order} />)}
-            {nextCursor && activeTab === "all" ? (
+            {nextCursor && !error && activeTab === "all" ? (
               <div className="flex justify-center pt-4">
-                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)}>
-                  {loadingMore ? "Loading reservations…" : "Load more reservations"}
+                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="min-h-11 rounded-xl px-6 font-semibold">
+                  {loadingMore ? "Loading orders…" : "Load more orders"}
                 </Button>
               </div>
             ) : null}
           </div>
-        ) : null}
+        )}
       </PageContainer>
     </main>
   );

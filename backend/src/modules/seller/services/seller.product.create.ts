@@ -9,6 +9,7 @@ import { validateLowStockThreshold } from "../../../utils/product-threshold";
 import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { validatePriceReductionConfig } from "../../../utils/price-reduction";
+import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 
 export async function createSellerProduct(userId: string, body: SellerProductCreate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -73,6 +74,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
       startedAt: now,
       originalQty: body.productQty.toString(),
     });
+    await queueFirstPublicListing(tx, postProduct.id);
     return postProduct;
   });
 }

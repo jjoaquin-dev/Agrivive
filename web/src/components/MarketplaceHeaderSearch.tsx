@@ -20,8 +20,8 @@ export function MarketplaceHeaderSearch({ idPrefix, className = "" }: { idPrefix
         <option value="">All produce</option>
         {MARKETPLACE_PRODUCT_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
       </select>
-      <label htmlFor={`${idPrefix}-marketplace-search`} className="sr-only">Search produce or seller</label>
-      <input id={`${idPrefix}-marketplace-search`} name="search" type="search" placeholder="Search produce or seller" className="min-h-11 min-w-0 flex-1 border-y border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30" />
+      <label htmlFor={`${idPrefix}-marketplace-search`} className="sr-only">Search produce</label>
+      <input id={`${idPrefix}-marketplace-search`} name="search" type="search" placeholder="Search produce" className="min-h-11 min-w-0 flex-1 border-y border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30" />
       <Button type="submit" size="icon" aria-label="Search marketplace" className="min-h-11 min-w-11 rounded-l-none rounded-r-lg">
         <Search aria-hidden="true" />
       </Button>

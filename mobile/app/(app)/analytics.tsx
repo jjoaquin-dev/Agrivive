@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { AlertTriangle, BarChart3, ChartNoAxesCombined, RefreshCcw, Sparkles } from "lucide-react-native";
+import { AlertTriangle, BarChart3, ChartNoAxesCombined, Sparkles } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { useInventory } from "../../src/features/inventory/hooks/useInventory";
 import { useSellerAnalytics } from "../../src/features/analytics/hooks/useSellerAnalytics";
@@ -20,7 +20,7 @@ import {
 } from "../../src/features/analytics/api/seller-visibility";
 import { VisibilityBreakdownCard } from "../../src/features/analytics/components/VisibilityBreakdownCard";
 import type { AnalyticsUnit } from "../../src/features/analytics/types";
-import { colors, fonts, radii, spacing, touchTargets } from "../../src/theme";
+import { colors, fonts, radii, spacing } from "../../src/theme";
 
 const periods = [
   { days: 7, label: "7 days" },
@@ -64,7 +64,7 @@ export default function SellerAnalyticsScreen() {
     return visibilityList;
   }, [visibilityList, productId]);
 
-  if (loading && !refreshing) {
+  if (loading && !refreshing && !analytics) {
     return <SafeAreaView style={styles.safeArea} edges={["bottom"]}><View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /><Text style={styles.muted}>Loading analytics...</Text></View></SafeAreaView>;
   }
 
@@ -94,10 +94,11 @@ export default function SellerAnalyticsScreen() {
         <Text style={styles.sectionTitle}>Selling unit</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalChips}>{units.map((item) => <Pressable key={item.label} onPress={() => setUnit(item.value)} accessibilityRole="button" accessibilityState={{ selected: unit === item.value }} style={[styles.chip, unit === item.value && styles.chipSelected]}><Text style={[styles.chipText, unit === item.value && styles.chipTextSelected]}>{item.label}</Text></Pressable>)}</ScrollView>
 
-        {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text><ButtonComponent title="Try Again" onPress={refresh} variant="secondary" style={styles.retry} /></View> : null}
+        {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}{analytics ? " Previous analytics are shown below." : ""}</Text><ButtonComponent title="Try Again" onPress={refresh} variant="secondary" style={styles.retry} /></View> : null}
+        {loading && analytics ? <Text style={styles.periodText}>Updating analytics. Previous results are shown below.</Text> : null}
 
         {analytics ? <>
-          <Text style={styles.periodText}>{analytics.period.from} to {analytics.period.to}{selectedProduct ? ` · ${selectedProduct.productName}` : ""}</Text>
+          <Text style={styles.periodText}>{analytics.period.from} to {analytics.period.to}{!loading && !error && selectedProduct ? ` · ${selectedProduct.productName}` : ""}</Text>
           <View style={styles.grid}>
             <Metric title="Posted" value={metricLabel(analytics.metrics.postedQuantity, unit)} />
             <Metric title="Available" value={metricLabel(analytics.metrics.availableQuantity, unit)} />
@@ -111,7 +112,7 @@ export default function SellerAnalyticsScreen() {
 
           <View style={styles.card}><View style={styles.cardHeader}><ChartNoAxesCombined size={20} color={colors.primary} /><Text style={styles.cardTitle}>Performance</Text></View><Text style={styles.cardValue}>Sell-through: {percentLabel(analytics.metrics.sellThroughRate, analytics.notComputable.sellThroughRate)}</Text><Text style={styles.cardMeta}>Completed sales: ₱{analytics.metrics.completedSalesTotal}</Text><Text style={styles.cardMeta}>Completed quantity change: {percentLabel(analytics.metrics.completedQuantityChange, analytics.notComputable.completedQuantityChange)}</Text></View>
 
-          <View style={styles.card}><View style={styles.cardHeader}><Sparkles size={20} color={colors.primary} /><Text style={styles.cardTitle}>Descriptive summary</Text></View>{analytics.summary ? <Text style={styles.summary}>{analytics.summary}</Text> : <Text style={styles.muted}>The exact analytics are available, but the Groq summary is currently unavailable.</Text>}{analytics.summaryStatus === "unavailable" ? <Pressable onPress={refresh} accessibilityRole="button" style={styles.inlineRetry}><RefreshCcw size={16} color={colors.primary} /><Text style={styles.inlineRetryText}>Try again</Text></Pressable> : null}</View>
+          <View style={styles.card}><View style={styles.cardHeader}><Sparkles size={20} color={colors.primary} /><Text style={styles.cardTitle}>Descriptive summary</Text></View>{analytics.summary ? <Text style={styles.summary}>{analytics.summary}</Text> : <Text style={styles.muted}>No summary is available for this period.</Text>}</View>
 
           <Text style={styles.sectionTitle}>Marketplace Visibility Guide</Text>
           {filteredVisibility.length === 0 ? (
@@ -166,8 +167,6 @@ const styles = StyleSheet.create({
   cardValue: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text, lineHeight: 22 },
   cardMeta: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: spacing.xs },
   summary: { fontFamily: fonts.body.regular, fontSize: 16, lineHeight: 24, color: colors.text },
-  inlineRetry: { minHeight: touchTargets.min, flexDirection: "row", alignItems: "center", gap: spacing.xs, alignSelf: "flex-start" },
-  inlineRetryText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
   empty: { alignItems: "center", paddingVertical: spacing.xxxl },
   emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 18, color: colors.text, marginBottom: spacing.xs },
 });

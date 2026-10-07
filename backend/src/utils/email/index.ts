@@ -10,16 +10,21 @@ export async function sendEmail(
   // Dynamically reload .env so changes take effect without server restart
   dotenv.config({ override: true });
 
-  const mailtrapToken = process.env.MAILTRAP_API_TOKEN;
-  let mailtrapInboxId = process.env.MAILTRAP_INBOX_ID;
+  const provider = resolveEmailProvider();
+  const idempotencyKey = createHash("sha256").update(key).digest("hex");
+  const allowDevEmailLog = process.env.NODE_ENV !== "production" && process.env.ALLOW_DEV_EMAIL_LOG === "true";
 
-  // Fallback placeholder to verified inbox ID
-  if (!mailtrapInboxId || mailtrapInboxId === "your_mailtrap_inbox_id") {
-    mailtrapInboxId = "4920653";
-  }
+  if (provider === "mailtrap") {
+    const mailtrapToken = process.env.MAILTRAP_API_TOKEN?.trim();
+    const mailtrapInboxId = process.env.MAILTRAP_INBOX_ID?.trim();
+    if (!mailtrapToken || !mailtrapInboxId) {
+      if (allowDevEmailLog) {
+        console.log(`[Dev Sandbox] Simulated Mailtrap delivery to ${to}`);
+        return;
+      }
+      throw new Error("Mailtrap email provider requires MAILTRAP_API_TOKEN and MAILTRAP_INBOX_ID");
+    }
 
-  // 1. If Mailtrap sandbox credentials exist, deliver to Mailtrap web inbox
-  if (mailtrapToken && mailtrapInboxId) {
     const response = await fetch(
       `https://sandbox.api.mailtrap.io/api/send/${mailtrapInboxId}`,
       {
@@ -28,6 +33,7 @@ export async function sendEmail(
           Authorization: `Bearer ${mailtrapToken}`,
           "Api-Token": mailtrapToken,
           "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
         },
         body: JSON.stringify({
           to: [{ email: to }],
@@ -51,16 +57,23 @@ export async function sendEmail(
     return;
   }
 
-  // 2. Fallback to Resend if configured
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (apiKey && from) {
+  if (provider === "resend") {
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    const from = process.env.RESEND_FROM_EMAIL?.trim();
+    if (!apiKey || !from) {
+      if (allowDevEmailLog) {
+        console.log(`[Dev Sandbox] Simulated Resend delivery to ${to}`);
+        return;
+      }
+      throw new Error("Resend email provider requires RESEND_API_KEY and RESEND_FROM_EMAIL");
+    }
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": createHash("sha256").update(key).digest("hex"),
+        "Idempotency-Key": idempotencyKey,
       },
       body: JSON.stringify({ from, to: [to], subject, text }),
     });
@@ -78,15 +91,19 @@ export async function sendEmail(
     return;
   }
 
-  // 3. Fallback development log
-  console.log(`[Dev Sandbox] Simulated email delivery to ${to}`);
+  if (allowDevEmailLog) {
+    console.log(`[Dev Sandbox] Simulated email delivery to ${to}`);
+    return;
+  }
+
+  throw new Error("Email provider is not configured");
 }
 
 export function sendAuthCode(email: string, otp: string, type: string) {
   if (type === "sign-in") throw new Error("Email OTP sign-in is disabled");
-  console.log(`\n==================================================`);
-  console.log(`[AUTH OTP] ${type.toUpperCase()} CODE FOR ${email}: ${otp}`);
-  console.log(`==================================================\n`);
+  if (process.env.ALLOW_DEV_EMAIL_LOG === "true") {
+    console.log(`[Dev OTP] ${type.toUpperCase()} code generated for ${email}`);
+  }
   const id = createHash("sha256").update(`${email}:${type}:${otp}`).digest("hex");
   return sendEmail(
     email,
@@ -94,4 +111,13 @@ export function sendAuthCode(email: string, otp: string, type: string) {
     `Your ${type} code is ${otp}.`,
     `otp:${id}`,
   );
+}
+
+function resolveEmailProvider(): "mailtrap" | "resend" {
+  const configured = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
+  if (configured && configured !== "mailtrap" && configured !== "resend") {
+    throw new Error("EMAIL_PROVIDER must be resend or mailtrap");
+  }
+  if (configured === "mailtrap" || configured === "resend") return configured;
+  return process.env.NODE_ENV === "production" ? "resend" : "mailtrap";
 }

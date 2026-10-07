@@ -1,23 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/src/components/PageContainer";
 import { useMarketplaceBrowser } from "../hooks/useMarketplaceBrowser";
-import type { MarketplaceProductType } from "../types";
 import { ActiveFilters } from "./ActiveFilters";
 import { MarketplaceFilters } from "./MarketplaceFilters";
 import { MarketplaceHero } from "./MarketplaceHero";
 import { MarketplaceProductGrid } from "./MarketplaceProductGrid";
-
-const PRODUCT_TYPES: MarketplaceProductType[] = [
-  "Leafy Greens",
-  "Root and Tuber Vegetables",
-  "Bulb and Stem Vegetables",
-  "Flower Vegetables",
-  "Fruit Vegetables",
-  "Seeds and Legumes",
-];
+import { InteractiveSellerMap } from "./InteractiveSellerMap";
 
 function BrowserFallback() {
   return (
@@ -35,16 +26,23 @@ function BrowserFallback() {
 
 function MarketplaceBrowserContent() {
   const {
+    searchKey,
     products,
     nextCursor,
     searchInput,
     setSearchInput,
     loading,
+    staleProducts,
     loadingMore,
     error,
+    sellerMap,
+    sellerMapLoading,
+    sellerMapError,
     filters,
     searchQuery,
     hasLocation,
+    locationStatus,
+    locationError,
     filterProps,
     handleSearch,
     handleFilterChange,
@@ -52,59 +50,68 @@ function MarketplaceBrowserContent() {
     handleRemoveLocation,
     clearFilters,
     handleLoadMore,
+    retrySellerMap,
     retry,
+    handleUseLocation,
   } = useMarketplaceBrowser();
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const mapParams = new URLSearchParams(searchKey);
+  const handleSelectSeller = useCallback((sellerId: string) => {
+    setSelectedSellerId(sellerId);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`seller-card-${sellerId}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground lg:py-8">
+    <main className="min-h-[calc(100vh-68px)] bg-background py-6 text-foreground lg:py-10">
       <PageContainer>
         <MarketplaceHero searchInput={searchInput} onSearchInputChange={setSearchInput} onSearchSubmit={handleSearch} />
-        <nav aria-label="Browse by produce category" className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => handleFilterChange("productType", "")}
-            aria-pressed={!filters.productType}
-            className={`min-h-11 shrink-0 rounded-full px-4 text-xs font-semibold transition-colors ${!filters.productType ? "bg-agrivive-primary text-white shadow-xs" : "border border-border bg-white text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-          >All produce</button>
-          {PRODUCT_TYPES.map((type) => {
-            const isSelected = filters.productType === type;
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => handleFilterChange("productType", isSelected ? "" : type)}
-                aria-pressed={isSelected}
-                className={`min-h-11 shrink-0 rounded-full px-4 text-xs font-semibold transition-colors ${isSelected ? "bg-agrivive-primary text-white shadow-xs" : "border border-border bg-white text-muted-foreground hover:bg-muted hover:text-foreground"}`}
-              >{type}</button>
-            );
-          })}
-        </nav>
-
         <div className="mt-3">
-          <MarketplaceFilters {...filterProps} idPrefix="marketplace-filter" />
+          <MarketplaceFilters {...filterProps} idPrefix="marketplace-filter" hasLocation={hasLocation} locationStatus={locationStatus} locationError={locationError} onUseLocation={handleUseLocation} />
         </div>
-        <div className="py-4">
-          <p className="font-semibold text-foreground">{loading ? "Finding produce..." : `${products.length} listings shown`}</p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-border/80 pt-5">
+          <p className="text-sm font-semibold text-foreground">Listings and pickup map</p>
+          <p className="text-sm font-semibold text-agrivive-primary" aria-live="polite">{loading ? "Finding produce" : `${products.length} listings shown`}</p>
         </div>
-        <section aria-live="polite">
-          <ActiveFilters
-            filters={filters}
-            search={searchQuery}
-            hasLocation={hasLocation}
-            onRemoveFilter={(key) => handleFilterChange(key, "")}
-            onRemoveSearch={handleRemoveSearch}
-            onRemoveLocation={handleRemoveLocation}
-            onClearAll={clearFilters}
-          />
-          <MarketplaceProductGrid
-            products={products}
-            loading={loading}
-            loadingMore={loadingMore}
-            error={error}
-            nextCursor={nextCursor}
-            onRetry={retry}
-            onLoadMore={handleLoadMore}
-          />
+        <section aria-live="polite" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,1.05fr)] lg:items-start">
+          <div className="order-first lg:order-last lg:sticky lg:top-4">
+            <InteractiveSellerMap
+              sellers={sellerMap.sellers}
+              unmappedSellerCount={sellerMap.unmappedSellerCount}
+              latitude={mapParams.get("latitude") ? Number(mapParams.get("latitude")) : null}
+              longitude={mapParams.get("longitude") ? Number(mapParams.get("longitude")) : null}
+              radiusKm={mapParams.get("radiusKm") ? Number(mapParams.get("radiusKm")) : null}
+              selectedSellerId={selectedSellerId}
+              loading={sellerMapLoading}
+              error={sellerMapError}
+              onSelectSeller={handleSelectSeller}
+              onRetry={retrySellerMap}
+            />
+          </div>
+          <div className="min-w-0">
+            <ActiveFilters
+              filters={filters}
+              search={searchQuery}
+              hasLocation={hasLocation}
+              onRemoveFilter={(key) => handleFilterChange(key, "")}
+              onRemoveSearch={handleRemoveSearch}
+              onRemoveLocation={handleRemoveLocation}
+              onClearAll={clearFilters}
+            />
+            <MarketplaceProductGrid
+              products={products}
+              loading={loading}
+              stale={staleProducts}
+              loadingMore={loadingMore}
+              error={error}
+              nextCursor={nextCursor}
+              onRetry={retry}
+              onLoadMore={handleLoadMore}
+              selectedSellerId={selectedSellerId}
+              onSelectSeller={handleSelectSeller}
+            />
+          </div>
         </section>
       </PageContainer>
     </main>

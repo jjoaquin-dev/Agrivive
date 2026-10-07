@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { fetchSellerTrust, requestTrustCorrection } from "../api/seller-trust";
 import type { SellerTrustResponse } from "../types";
+import { ApiError } from "../../../api/client";
 
 export function useSellerTrust() {
   const [trust, setTrust] = useState<SellerTrustResponse>({ events: [], notices: [] });
@@ -16,6 +17,9 @@ export function useSellerTrust() {
     try {
       setTrust(await fetchSellerTrust());
     } catch (err: any) {
+      if (err instanceof ApiError && [401, 403].includes(err.statusCode)) {
+        setTrust({ events: [], notices: [] });
+      }
       setError(err?.message || "Could not load trust history.");
     } finally {
       setLoading(false);

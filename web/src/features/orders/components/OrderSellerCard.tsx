@@ -3,6 +3,7 @@ import { Info, MapPin, Store } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import type { BuyerOrder, MarketplaceProduct } from "@/src/features/marketplace/types";
+import { getDirectionsUrl } from "@/src/lib/maps";
 
 interface OrderSellerCardProps {
   order: BuyerOrder;
@@ -11,7 +12,7 @@ interface OrderSellerCardProps {
 
 export function OrderSellerCard({ order, product }: OrderSellerCardProps) {
   return (
-    <Card className="overflow-hidden border-border/80 bg-white">
+    <Card className="overflow-hidden rounded-[20px] border-border/80 bg-white shadow-[0_10px_24px_rgba(31,77,58,0.05)]">
       <CardHeader className="border-b border-border/60 pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
           <Store className="size-4 text-agrivive-primary" aria-hidden="true" />
@@ -44,6 +45,7 @@ export function OrderSellerCard({ order, product }: OrderSellerCardProps) {
                   <span>{product.seller.pickupInstructions}</span>
                 </p>
               ) : null}
+              {getDirectionsUrl(product.seller.latitude, product.seller.longitude) ? <a href={getDirectionsUrl(product.seller.latitude, product.seller.longitude) ?? undefined} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-agrivive-primary hover:underline">Get directions</a> : null}
             </div>
 
             <div className="flex flex-wrap gap-2 pt-1">

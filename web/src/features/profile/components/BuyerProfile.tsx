@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { PageContainer } from "@/src/components/PageContainer";
 import { authClient } from "@/src/lib/auth-client";
 import { listBuyerOrders } from "@/src/features/orders/api/orders";
+import { getBuyerProfile } from "../api/profile";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfilePersonalCard } from "./ProfilePersonalCard";
@@ -20,6 +21,7 @@ export function BuyerProfile() {
   const { data: session, isPending } = authClient.useSession();
   const [orders, setOrders] = useState<BuyerOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -27,10 +29,15 @@ export function BuyerProfile() {
       return;
     }
     if (session?.user) {
+      let cancelled = false;
       listBuyerOrders()
-        .then((res) => setOrders(res.orders))
-        .catch(() => setOrders([]))
+        .then((res) => { if (!cancelled) setOrders(res.orders); })
+        .catch(() => { if (!cancelled) setOrders([]); })
         .finally(() => setOrdersLoading(false));
+      getBuyerProfile()
+        .then((res) => { if (!cancelled) setProfileImage(res.account.image); })
+        .catch(() => { if (!cancelled) setProfileImage(session.user.image ?? null); });
+      return () => { cancelled = true; };
     }
   }, [isPending, session, router]);
 
@@ -52,9 +59,10 @@ export function BuyerProfile() {
       <PageContainer>
         {/* Ambient Profile Hero Banner */}
         <ProfileHeader
-          user={session.user}
+          user={{ ...session.user, image: profileImage }}
           pendingCount={pendingCount}
           completedCount={completedCount}
+          onAvatarUploaded={setProfileImage}
         />
 
         {/* Main Content Grid */}

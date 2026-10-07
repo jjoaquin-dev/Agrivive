@@ -70,16 +70,16 @@ function ReviewForm({
   }
 
   return (
-    <Card>
+    <Card className="rounded-[20px] border border-border/80 bg-white shadow-[0_8px_24px_rgba(31,77,58,0.04)]">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">{title}{itemName ? `: ${itemName}` : ""}</CardTitle>
+        <CardTitle className="text-base font-bold">{title}{itemName ? `: ${itemName}` : ""}</CardTitle>
       </CardHeader>
       <CardContent>
         {saved ? (
           <div role="status" className="flex items-start gap-3">
             <Star aria-hidden="true" className="mt-0.5 size-5 shrink-0 fill-amber-400 text-amber-400" />
             <div>
-              <p className="font-semibold">Your rating</p>
+              <p className="font-semibold text-foreground">Your rating</p>
               <div className="mt-1"><RatingStars rating={saved.rating} /></div>
               {saved.review ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{saved.review}</p> : <p className="mt-2 text-sm text-muted-foreground">No comment added.</p>}
             </div>
@@ -87,7 +87,7 @@ function ReviewForm({
         ) : (
           <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
             <RatingPicker value={rating} onChange={setRating} label="Your rating" />
-            <label className="block text-sm font-medium" htmlFor={`review-comment-${inputId}`}>
+            <label className="block text-sm font-semibold text-foreground/80" htmlFor={`review-comment-${inputId}`}>
               Comment <span className="font-normal text-muted-foreground">(optional)</span>
             </label>
             <textarea
@@ -97,10 +97,10 @@ function ReviewForm({
               maxLength={2000}
               rows={3}
               placeholder="Share a few words about your experience"
-              className="w-full resize-y rounded-xl border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+              className="w-full resize-y rounded-xl border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
             />
             {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
-            <Button type="submit" disabled={rating < 1 || saving}>
+            <Button type="submit" disabled={rating < 1 || saving} className="min-h-12 rounded-xl px-6 font-semibold active:translate-y-px">
               {saving ? "Saving…" : itemName ? "Post product review" : "Post seller review"}
             </Button>
           </form>
@@ -143,9 +143,9 @@ export function OrderReviews({ order }: { order: BuyerOrder }) {
     return () => controller.abort();
   }, [loadReviews]);
 
-  if (loading) return <div className="space-y-4" aria-label="Loading review forms"><Skeleton className="h-44" /><Skeleton className="h-44" /></div>;
+  if (loading) return <div className="space-y-4" aria-label="Loading review forms"><Skeleton className="h-44 rounded-[20px]" /><Skeleton className="h-44 rounded-[20px]" /></div>;
   if (error || !reviews) {
-    return <Alert variant="destructive"><AlertDescription>{error || "We could not check your review status."}</AlertDescription><Button type="button" variant="outline" className="mt-3" onClick={() => void loadReviews()}>Try again</Button></Alert>;
+    return <Alert variant="destructive"><AlertDescription>{error || "We could not check your review status."}</AlertDescription><Button type="button" variant="outline" className="mt-3 min-h-11 rounded-xl" onClick={() => void loadReviews()}>Try again</Button></Alert>;
   }
 
   return (
@@ -172,7 +172,7 @@ export function OrderReviews({ order }: { order: BuyerOrder }) {
           onDuplicate={() => void loadReviews()}
         />
       ))}
-      <p className="flex items-center gap-2 text-xs text-muted-foreground"><MessageSquare aria-hidden="true" className="size-4" />Only buyers with a completed pickup can leave a rating.</p>
+      <p className="flex items-center gap-2 text-xs text-muted-foreground"><MessageSquare aria-hidden="true" className="size-4 text-agrivive-primary" />Only buyers with a completed pickup can leave a rating.</p>
     </section>
   );
 }

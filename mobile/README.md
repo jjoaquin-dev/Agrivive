@@ -51,6 +51,26 @@ EXPO_PUBLIC_API_URL=http://192.168.1.XX:3000
 
 ---
 
+## EAS preview APK
+
+The `preview` EAS profile in `mobile/eas.json` creates an installable Android APK for testers. It does not publish to Google Play. The app uses package ID `com.agrivive.seller`.
+
+Before the first build, sign in to an Expo account and set `EXPO_PUBLIC_API_URL` in the EAS `preview` environment to the live HTTPS backend origin. This URL is public app configuration, not a secret. Do not use `localhost` or a development tunnel for a shared APK. Keep local `mobile/.env` files out of Git.
+
+From `mobile/`, run the first build interactively so EAS can link the project, create Android signing credentials, and add `extra.eas.projectId` to `app.json`:
+
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest env:set --name EXPO_PUBLIC_API_URL --value https://api.example.com --environment preview --visibility plaintext
+npx eas-cli@latest build --platform android --profile preview
+```
+
+Replace `https://api.example.com` with the real HTTPS API origin. Review the generated `app.json` change and commit its EAS project ID. Create an Expo personal access token and store it in GitHub as the `EXPO_TOKEN` repository secret; do not commit or paste the token. Once the setup commit is on `main`, **Build Mobile Preview APK** in GitHub Actions runs checks and waits for the EAS build result. EAS provides the APK installation link; each tester still installs the app on their own device.
+
+The existing mobile CI workflow only checks the code. The preview workflow is manual-triggered and separate from the backend and web VPS deployment workflows.
+
+---
+
 ## Running the Application
 
 From the `mobile/` directory:
