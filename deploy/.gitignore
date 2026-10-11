@@ -1,0 +1,5 @@
+*.production.env
+*.secret.env
+.env
+.env.*
+!*.env.example
