@@ -2,7 +2,7 @@ import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { db } from "../../../db";
 import { listing_cycles, sellers_product } from "../../../db/schema";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
-import { normalizeVegetableName } from "../../../utils/vegetable-identity";
+import { getVegetableCycleIdentity, normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { calculateVisibilityScore } from "../../../utils/visibility-score";
 
 export async function getSellerWeightedSurplusVisibility(sellerId: string) {
@@ -41,8 +41,11 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
         Math.abs(currentCycle.startedAt.getTime() - product.publishedAt.getTime()) <= 60_000
         ? currentCycle.vegetableKey
         : normalizeVegetableName(product.productName);
+      const vegetableCatalogId = currentCycle?.vegetableCatalogId ?? product.vegetableCatalogId;
+      const scalingType = currentCycle?.scalingType ?? product.scalingType;
+      const vegetableIdentity = getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType);
       const priorCycles = cycles.filter((cycle) =>
-        cycle.vegetableKey === vegetableKey &&
+        getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === vegetableIdentity &&
         cycle.startedAt < product.publishedAt! &&
         cycle.id !== currentCycle?.id,
       ).length;
@@ -59,7 +62,7 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
         ...base,
         score: Number(visibility.score.toFixed(4)),
         tier: visibility.tier,
-        inputs: { ...visibility.inputs, vegetableKey },
+        inputs: { ...visibility.inputs, vegetableKey, vegetableCatalogId, scalingType },
       };
     });
   });

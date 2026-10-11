@@ -25,7 +25,6 @@ status: active
 - [[Reservation and QR Pickup]]
 - [[Weighted Surplus Visibility]]
 - [[Marketing Boost]]
-- [[Market Basket Analysis]]
 - [[Seller Analytics]]
 - [[Contextual Advisories]]
 - [[Trust and Flagging]]

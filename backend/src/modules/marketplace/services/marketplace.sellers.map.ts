@@ -1,6 +1,6 @@
 import { and, asc, count, eq, gt, gte, ilike, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { sellers_product, sellers_profile, user } from "../../../db/schema";
+import { sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { marketplaceDistanceExpression } from "./marketplace.distance";
@@ -30,7 +30,15 @@ function matchingProductConditions(query: MarketplaceSellersMapQuery) {
     isNotNull(sellers_product.publishedAt),
   ];
   const search = query.search?.trim();
-  if (search) conditions.push(ilike(sellers_product.productName, `%${search}%`));
+  if (search) {
+    const pattern = `%${search}%`;
+    conditions.push(or(
+      ilike(sellers_product.productName, pattern),
+      ilike(vegetable_catalog.filipinoName, pattern),
+      ilike(vegetable_catalog.englishName, pattern),
+      ilike(vegetable_catalog.searchText, pattern),
+    )!);
+  }
   if (query.productType) conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit) conditions.push(eq(sellers_product.scalingType, query.unit));
   if (query.sellerType) conditions.push(eq(sellers_profile.sellerType, query.sellerType));
@@ -69,6 +77,7 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
   }).from(sellers_product)
     .innerJoin(user, eq(user.id, sellers_product.userId))
     .innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId))
+    .leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId))
     .where(and(...mappedConditions))
     .groupBy(
       user.id,
@@ -88,6 +97,7 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
   }).from(sellers_product)
     .innerJoin(user, eq(user.id, sellers_product.userId))
     .innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId))
+    .leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId))
     .where(and(
       ...conditions,
       or(isNull(sellers_profile.latitude), isNull(sellers_profile.longitude)),

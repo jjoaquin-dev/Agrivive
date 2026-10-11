@@ -17,7 +17,7 @@ This is a **code-evidence register, not a functional-test pass sheet**. The vaul
 | FR-04 | Communication | Buyer/seller inquiry routes, replies, notice inbox. | Code present; conversation and notice delivery pending. |
 | FR-05 | Promotion/visibility | Seller visibility API and shareable listing content; no automated campaign. | Partial; owner scope review pending. |
 | FR-06 | Reservation/pickup | Buyer order/checkout and stock transactions. | Code present; concurrent-reservation acceptance pending. |
-| FR-07 | Analytics/advice | Seller descriptive analytics; association-based *real* recommendation evidence deferred with FR-19. | Partial; real-data claim not passed. |
+| FR-07 | Analytics/advice | Seller descriptive analytics and local summary. | Code present; timing and data-accuracy acceptance pending. |
 | FR-08 | Feedback/trust | Reviews/reports endpoints. | Code present; manual review/report cases pending. |
 | FR-09 | Identity/access | Buyer/seller role handling. | Code present; seller-as-buyer cases pending. |
 | FR-10 | Listings/discovery | Product inventory state and filters. | Code present; manual acceptance pending. |
@@ -29,13 +29,12 @@ This is a **code-evidence register, not a functional-test pass sheet**. The vaul
 | FR-16 | Stakeholder view | Aggregate stakeholder API. | Code present; privacy review pending. |
 | FR-17 | Listings/discovery | Weighted visibility tiers and buyer ranking. | Code present; stakeholder weight validation pending. |
 | FR-18 | Automated promotion | n8n campaigns explicitly excluded from this batch. | Deferred; not passed. |
-| FR-19 | Real-data MBA | Synthetic demo exists; completed-order live dataset threshold not established. | Deferred; not passed. |
 | FR-20 | Reservation/pickup | Order status/QR handover and transactional updates. | Code present; end-to-end owner test pending. |
 | FR-21 | Analytics/advice | Descriptive seller metrics and local summary. | Code present; 20-sample timing and data accuracy pending. |
 | FR-22 | Analytics/advice | Weather/holiday advisory endpoints. | Code present; external-outage behavior pending. |
 | FR-23 | Feedback/trust | `monitoring-v2` verified-event/rating points; unverified reports zero; no account action or text sentiment. | Partial by deliberate policy; not passed. |
 
-The proposal's non-functional table is not reproduced in this workspace. [[Feature Map]] identifies speed, security/privacy, integrity, usability/resilience, and the mislabeled FR-26–FR-30 block. **None of the 30 non-functional requirements is marked passed here.** The owner must attach the exact NFR wording and identifiers before a defensible per-item pass/fail claim. In particular, the real-data-only recommendation item called FR-27 and trust/account-action language called FR-28 in prior planning remain deferred/partial respectively; their numbering needs reconciliation with the original table.
+The proposal's non-functional table is not reproduced in this workspace. [[Feature Map]] identifies speed, security/privacy, integrity, usability/resilience, and the mislabeled FR-26–FR-30 block. **None of the 30 non-functional requirements is marked passed here.** The owner must attach the exact NFR wording and identifiers before a defensible per-item pass/fail claim. Trust/account-action language called FR-28 in prior planning remains deferred/partial; its numbering needs reconciliation with the original table.
 
 | Quality evidence area | What was checked | Status |
 |---|---|---|

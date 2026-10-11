@@ -14,7 +14,7 @@ status: code-complete; owner acceptance pending
 - Trust monitoring is now `monitoring-v2`: verified non-response is 1 point, verified seller cancellation is 2, and a completed order with any 1–2-star rating is 1 rating signal, counted once per order. Written reviews remain context, and unverified reports are separate allegations worth zero points. Admin and seller displays explain these as monitoring signals, not account penalties. FR-23 and the proposal's FR-28 trust language are **partially covered by policy**, not passed; no suspension, report decision, or text scoring was added.
 - Seller analytics summaries now use existing metrics without an external AI call. Marketplace, seller page, orders, buyer notices, and seller analytics retain the last successful display through a transient refresh failure, show a previous-information message, and offer retry. Protected data is cleared on observed 401/403 responses. Stale stock cards cannot be used for buying until a successful refresh.
 
-This batch excludes n8n promotion (Objective 1 / FR-18), real-data MBA development (Objective 3 / FR-19 and related FR-07/FR-27 association claims), push/email campaigns, wishlist availability alerts, and production deployment.
+This batch excludes n8n promotion (Objective 1 / FR-18), deferred analytics work, push/email campaigns, wishlist availability alerts, and production deployment.
 
 ## Affected paths
 

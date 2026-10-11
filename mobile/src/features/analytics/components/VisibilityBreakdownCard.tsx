@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Award, Info, Sparkles, TrendingUp } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerVisibilityItem } from "../api/seller-visibility";
@@ -7,6 +7,7 @@ import type { SellerVisibilityItem } from "../api/seller-visibility";
 interface VisibilityBreakdownCardProps {
   item: SellerVisibilityItem;
   productName?: string;
+  onBoost: () => void;
 }
 
 function factorLabel(value: number | undefined) {
@@ -15,7 +16,7 @@ function factorLabel(value: number | undefined) {
     : "Not available";
 }
 
-export function VisibilityBreakdownCard({ item, productName }: VisibilityBreakdownCardProps) {
+export function VisibilityBreakdownCard({ item, productName, onBoost }: VisibilityBreakdownCardProps) {
   const tierColor =
     item.tier === "priority"
       ? colors.primary
@@ -108,6 +109,10 @@ export function VisibilityBreakdownCard({ item, productName }: VisibilityBreakdo
       <Text style={styles.disclaimerText}>
         Visibility is calculated systematically from posting age, available stock, and prior listing cycles. Placement rules are automated and read-only.
       </Text>
+      <Pressable onPress={onBoost} accessibilityRole="button" style={styles.boostButton}>
+        <Sparkles size={17} color={colors.white} />
+        <Text style={styles.boostButtonText}>Boost Visibility</Text>
+      </Pressable>
     </View>
   );
 }
@@ -236,5 +241,20 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: colors.textMuted,
     marginTop: spacing.xs,
+  },
+  boostButton: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: radii.button,
+    marginTop: spacing.md,
+  },
+  boostButtonText: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 14,
+    color: colors.white,
   },
 });

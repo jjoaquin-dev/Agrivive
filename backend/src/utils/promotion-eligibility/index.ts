@@ -1,7 +1,7 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "../../db";
 import { listing_cycles, sellers_product, sellers_profile, user } from "../../db/schema";
-import { normalizeVegetableName } from "../vegetable-identity";
+import { getVegetableCycleIdentity, normalizeVegetableName } from "../vegetable-identity";
 import { calculateVisibilityScore } from "../visibility-score";
 
 const hour = 60 * 60 * 1000;
@@ -18,6 +18,8 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
   const [row] = await db.select({
     cycleId: listing_cycles.id,
     cycleStartedAt: listing_cycles.startedAt,
+    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
+    cycleScalingType: listing_cycles.scalingType,
     cycleVegetableKey: listing_cycles.vegetableKey,
     sellerId: sellers_product.userId,
     productId: sellers_product.id,
@@ -84,6 +86,8 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
   const cycles = await db.select({
     id: listing_cycles.id,
     productId: listing_cycles.productId,
+    vegetableCatalogId: listing_cycles.vegetableCatalogId,
+    scalingType: listing_cycles.scalingType,
     vegetableKey: listing_cycles.vegetableKey,
     startedAt: listing_cycles.startedAt,
   }).from(listing_cycles)
@@ -99,7 +103,11 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
     Math.abs(recentCurrent.startedAt.getTime() - row.publishedAt.getTime()) <= 60_000
     ? recentCurrent.vegetableKey
     : normalizeVegetableName(row.productName);
-  const priorCycles = cycles.filter((cycle) => cycle.vegetableKey === vegetableKey &&
+  const vegetableCatalogId = recentCurrent?.vegetableCatalogId ?? row.cycleVegetableCatalogId;
+  const scalingType = recentCurrent?.scalingType ?? row.cycleScalingType;
+  const vegetableIdentity = getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType);
+  const priorCycles = cycles.filter((cycle) =>
+    getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === vegetableIdentity &&
     cycle.startedAt < row.publishedAt! && cycle.id !== recentCurrent?.id).length;
   const visibility = calculateVisibilityScore({
     evaluatedAt,

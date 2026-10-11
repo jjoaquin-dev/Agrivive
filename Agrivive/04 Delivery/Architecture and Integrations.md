@@ -20,7 +20,6 @@ This is the **proposal architecture**. See [[Current Implementation]] for what e
 | ElysiaJS | Listing, reservation, quantity, QR validation, trust rules, analytics calculations, and protected APIs |
 | Better Auth | Registration, authentication, sessions, role-based access; OTP is proposed but not in the current backend |
 | n8n | Scheduled marketing workflow, promotional content preparation, and configured alerts |
-| Python/Pandas | Offline/analytical Market Basket Analysis on completed transaction data |
 | LangGraph + Groq | Readable summaries from validated descriptive metrics; promotional copy generation |
 | OpenStreetMap + React Leaflet | Seller and pickup location display; external navigation link |
 | Open-Meteo | Outdoor weather context for advisories |

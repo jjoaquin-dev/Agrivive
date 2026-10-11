@@ -5,13 +5,13 @@ Updated: 2026-10-06
 
 ## What changed
 
-The buyer product-detail page now uses a wider, full-screen-oriented layout. The product image stage grows to the viewport on larger screens, the purchase panel stays visible while scrolling, and the mobile image area scales responsively without changing product, cart, wishlist, reservation, or recommendation behavior.
+The buyer product-detail page now uses a wider, full-screen-oriented layout. The product image stage grows to the viewport on larger screens, the purchase panel stays visible while scrolling, and the mobile image area scales responsively without changing product, cart, wishlist, reservation, or Similar produce behavior.
 
 Marketplace product cards now use a fixed `h-52` image stage while the outer card keeps a natural content height instead of receiving an oversized fixed height. Buyer order list previews and order-detail item previews now receive the real ordered product image from the API and use an `h-96` image stage, with a clean fallback when an image is unavailable.
 
-The product-detail page's Similar produce and MBA recommendation cards now use a taller `h-96` image stage and a 360px maximum card width. Their card height still follows the content. The shared product card media was separated from the card details so these two image sizes remain explicit and the source files stay under 200 lines.
+The product-detail page's Similar produce cards now use a taller `h-96` image stage and a 360px maximum card width. Their card height still follows the content. The shared product card media was separated from the card details so this image size remains explicit and the source files stay under 200 lines.
 
-The Similar produce and MBA recommendation rows are now capped at 1120px (three 360px cards plus two 20px gaps). This prevents wide desktop grid tracks from placing excessive space between the cards, while retaining the existing tablet and mobile column breakpoints and image height.
+The Similar produce row is now capped at 1120px (three 360px cards plus two 20px gaps). This prevents wide desktop grid tracks from placing excessive space between the cards, while retaining the existing tablet and mobile column breakpoints and image height.
 
 ## Why it changed
 
@@ -31,7 +31,6 @@ The tighter recommendation spacing follows the Gestalt Law of Proximity (Max Wer
 - `web/src/features/marketplace/components/ProductCard.tsx`
 - `web/src/features/marketplace/components/ProductCardMedia.tsx`
 - `web/src/features/marketplace/components/SimilarProduceSection.tsx`
-- `web/src/features/marketplace/components/MbaRecommendationsSection.tsx`
 - `web/src/features/marketplace/types.ts`
 - `web/src/features/orders/components/OrderCardItems.tsx`
 - `web/src/features/orders/components/OrderItemsCard.tsx`
@@ -50,14 +49,14 @@ The tighter recommendation spacing follows the Gestalt Law of Proximity (Max Wer
 - `git diff --check` reported no whitespace errors; Git only reported existing line-ending normalization warnings.
 - Mobile browser review at the local product-detail route confirmed the larger image stage, full-width mobile composition, visible back link, and purchase controls remain reachable.
 - The local listing used for review had no stored product image, so the missing-image fallback was inspected rather than a real product photo.
-- The production web build remains subject to the existing Windows `spawn EPERM` host-process limitation documented in the MBA delivery note.
+- The production web build remains subject to the existing Windows `spawn EPERM` host-process limitation.
 
 ## Remaining owner acceptance checks
 
 - Review the product-detail page at desktop, tablet, and mobile widths.
 - Confirm the image remains clear with real product photos and with the missing-image fallback.
 - Confirm sticky desktop behavior does not obscure purchase controls.
-- Confirm add to cart, buy now, wishlist, seller link, MBA recommendations, and Similar produce still work.
+- Confirm add to cart, buy now, wishlist, seller link, and Similar produce still work.
 
 ## Commit
 

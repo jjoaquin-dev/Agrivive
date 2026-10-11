@@ -2,10 +2,9 @@ import { t } from "elysia";
 import { sellerProductScalingType, sellerProductType } from "./seller.product";
 
 export const sellerProductCreate = t.Object({
-  productName: t.String({
-    minLength: 1,
-    pattern: "\\S",
-    error: "product name is required",
+  catalogId: t.String({
+    format: "uuid",
+    error: "Choose a vegetable from the catalog",
   }),
   imagUrl: t.String({
     format: "uri",
@@ -23,7 +22,6 @@ export const sellerProductCreate = t.Object({
     maximum: 99_999_999,
     error: "quantity must be between 0.01 and 99999999",
   }),
-  productType: sellerProductType,
   scalingType: sellerProductScalingType,
   isMarketable: t.Boolean(),
   lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99_999_999.99 }))),

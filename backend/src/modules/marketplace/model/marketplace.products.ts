@@ -2,11 +2,14 @@ import { t } from "elysia";
 
 export const marketplaceProductType = t.Union([
   t.Literal("Leafy Greens"),
-  t.Literal("Root and Tuber Vegetables"),
-  t.Literal("Bulb and Stem Vegetables"),
+  t.Literal("Root Vegetables"),
+  t.Literal("Bulb Vegetables"),
+  t.Literal("Stem Vegetables"),
   t.Literal("Flower Vegetables"),
   t.Literal("Fruit Vegetables"),
-  t.Literal("Seeds and Legumes"),
+  t.Literal("Pod Vegetables"),
+  t.Literal("Tuber Vegetables"),
+  t.Literal("Seed Vegetables"),
 ]);
 
 export const marketplaceUnit = t.Union([

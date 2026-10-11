@@ -75,6 +75,8 @@ export function changeSellerProductStock(
     if ((newCycle || initializeLegacy) && originalQty) {
       await tx.insert(listing_cycles).values({
         productId,
+        vegetableCatalogId: product.vegetableCatalogId,
+        scalingType: product.scalingType,
         vegetableKey: normalizeVegetableName(product.productName),
         startedAt: now,
         originalQty,

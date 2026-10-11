@@ -23,7 +23,7 @@ Seller-declared vegetables intended for human consumption that exceed expected o
 
 ## Core value loop
 
-Seller posts marketable surplus → buyer discovers a current listing → buyer reserves an available quantity → system issues a 24-hour QR code → seller validates pickup and handover → stock and descriptive records update → future visibility, recommendations, and insights improve.
+Seller posts marketable surplus → buyer discovers a current listing → buyer reserves an available quantity → system issues a 24-hour QR code → seller validates pickup and handover → stock and descriptive records update → future visibility and insights improve.
 
 [[Product Journeys]] · [[Reservation and QR Pickup]] · [[Seller Analytics]]
 

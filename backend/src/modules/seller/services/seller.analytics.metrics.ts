@@ -7,6 +7,7 @@ import {
   sellers_product,
 } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { getVegetableCycleIdentity } from "../../../utils/vegetable-identity";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import type {
   SellerAnalyticsMetrics,
@@ -108,7 +109,7 @@ export async function getSellerAnalyticsMetrics(
     const cycles = empty
       ? []
       : await tx
-          .select({ productId: listing_cycles.productId, vegetableKey: listing_cycles.vegetableKey, originalQty: listing_cycles.originalQty, startedAt: listing_cycles.startedAt })
+          .select({ productId: listing_cycles.productId, vegetableCatalogId: listing_cycles.vegetableCatalogId, scalingType: listing_cycles.scalingType, vegetableKey: listing_cycles.vegetableKey, originalQty: listing_cycles.originalQty, startedAt: listing_cycles.startedAt })
           .from(listing_cycles)
           .where(and(inArray(listing_cycles.productId, productIds), gte(listing_cycles.startedAt, periods.previous.start), lt(listing_cycles.startedAt, periods.current.end)));
     const items = empty
@@ -160,15 +161,23 @@ export async function getSellerAnalyticsMetrics(
       if (order.status === "expired" && inPeriod(order.expiredAt, periods.current)) expiredQuantity += quantity;
     }
 
-    const previousVegetableKeys = new Set(
-      cycles
-        .filter((cycle) => cycle.startedAt < periods.current.start)
-        .map((cycle) => cycle.vegetableKey),
-    );
     const recurringListings = new Set(
       currentPosted
-        .filter((cycle) => previousVegetableKeys.has(cycle.vegetableKey))
-        .map((cycle) => cycle.vegetableKey),
+        .filter((cycle) => {
+          const identity = getVegetableCycleIdentity(
+            cycle.vegetableCatalogId,
+            cycle.vegetableKey,
+            cycle.scalingType,
+          );
+          return cycles.some((priorCycle) =>
+            priorCycle.startedAt < cycle.startedAt &&
+            getVegetableCycleIdentity(
+              priorCycle.vegetableCatalogId,
+              priorCycle.vegetableKey,
+              priorCycle.scalingType,
+            ) === identity);
+        })
+        .map((cycle) => getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType)),
     ).size;
     const completedQuantityChange = percentage(
       previousCompletedQuantity === 0n ? 0n : completedQuantity - previousCompletedQuantity,

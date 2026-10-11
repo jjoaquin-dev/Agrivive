@@ -19,7 +19,7 @@ status: implemented; database rollout complete; owner API checks pending
 - Expanded aggregate admin monitoring with weighted event points, evidence counts, and delivery status. Admin has no report decision or account-action endpoint. Allegations are counted separately and do not affect weighted points.
 - Added public liveness and database readiness endpoints.
 - Added database indexes used by marketplace ranking, inquiry access, and trust monitoring.
-- Excluded Market Basket Analysis and n8n as requested.
+- Excluded deferred analytics and n8n as requested.
 
 ## Why
 

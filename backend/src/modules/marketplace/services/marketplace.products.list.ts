@@ -1,14 +1,19 @@
 import { and, desc, eq, gt, gte, ilike, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { product_reviews, sellers_product, sellers_profile, user } from "../../../db/schema";
+import { order_reviews, product_reviews, sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
+import { ahpTopsisPolicyVersion } from "../../../utils/ahp-topsis";
 import { OrderError } from "../../../utils/order-types";
 import { marketplaceVisibilityScoreSql } from "../../../utils/visibility-score";
+import { marketplacePriorCyclesSql } from "../../../utils/visibility-score";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 import type { MarketplaceProductsQuery } from "../model/marketplace.products";
 import { marketplaceDistanceExpression } from "./marketplace.distance";
 import { marketplaceSellerVisibility } from "./marketplace.visibility";
+import { rankMarketplaceProductsWithAHP } from "./marketplace.products.visibility";
 
 type MarketplaceCursor = { evaluatedAt: Date; score: number | null; publishedAt: Date; id: string };
+type MarketplaceVisibilityPolicy = "visibility-v4" | typeof ahpTopsisPolicyVersion;
+const ahpCandidateLimit = 500;
 
 function encodeCursor(value: MarketplaceCursor) {
   return Buffer.from(JSON.stringify({
@@ -48,9 +53,10 @@ function validateRanges(query: MarketplaceProductsQuery) {
   }
 }
 
-function scoreTier(score: number | null) {
+function scoreTier(score: number | null, policyVersion: MarketplaceVisibilityPolicy) {
   if (score === null) return null;
-  return score >= .70 ? "priority" : score >= .40 ? "standard" : "basic";
+  const priorityThreshold = policyVersion === ahpTopsisPolicyVersion ? .60 : .70;
+  return score >= priorityThreshold ? "priority" : score >= .40 ? "standard" : "basic";
 }
 
 function cursorCondition(scoreSql: ReturnType<typeof marketplaceVisibilityScoreSql>, cursor: MarketplaceCursor) {
@@ -67,8 +73,10 @@ function cursorCondition(scoreSql: ReturnType<typeof marketplaceVisibilityScoreS
 }
 
 function serializeProduct(row: any, imageUrl: string | null, distanceKm: number | null,
-  rating: { average: string | null; count: number }) {
-  const visibilityScore = row.visibilityScore === null ? null : Number(row.visibilityScore);
+  rating: { average: string | null; count: number }, policyVersion: MarketplaceVisibilityPolicy,
+  calculatedScore?: number | null) {
+  const rawScore = calculatedScore === undefined ? row.visibilityScore : calculatedScore;
+  const visibilityScore = rawScore === null ? null : Number(rawScore);
   return {
     id: row.id,
     productName: row.productName,
@@ -81,7 +89,8 @@ function serializeProduct(row: any, imageUrl: string | null, distanceKm: number 
     condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     visibilityScore: visibilityScore === null ? null : Number(visibilityScore.toFixed(4)),
-    visibilityTier: scoreTier(visibilityScore),
+    visibilityTier: scoreTier(visibilityScore, policyVersion),
+    visibilityPolicyVersion: policyVersion,
     averageRating: rating.average,
     reviewCount: rating.count,
     seller: {
@@ -98,6 +107,8 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   const cursor = query.cursor ? decodeCursor(query.cursor) : null;
   const evaluatedAt = cursor?.evaluatedAt ?? new Date();
   const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const useAHP = process.env.VISIBILITY_POLICY?.trim().toLowerCase() === ahpTopsisPolicyVersion;
+  const policyVersion: MarketplaceVisibilityPolicy = useAHP ? ahpTopsisPolicyVersion : "visibility-v4";
   const visibilityScore = marketplaceVisibilityScoreSql(evaluatedAt, since);
   const conditions = [
     eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true),
@@ -107,7 +118,15 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   ];
   const search = query.search?.trim();
   if (query.sellerId) conditions.push(eq(sellers_profile.userId, query.sellerId));
-  if (search) conditions.push(ilike(sellers_product.productName, `%${search}%`));
+  if (search) {
+    const pattern = `%${search}%`;
+    conditions.push(or(
+      ilike(sellers_product.productName, pattern),
+      ilike(vegetable_catalog.filipinoName, pattern),
+      ilike(vegetable_catalog.englishName, pattern),
+      ilike(vegetable_catalog.searchText, pattern),
+    )!);
+  }
   if (query.productType) conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit) conditions.push(eq(sellers_product.scalingType, query.unit));
   if (query.sellerType) conditions.push(eq(sellers_profile.sellerType, query.sellerType));
@@ -118,25 +137,38 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   const distanceKm = query.latitude !== undefined && query.longitude !== undefined
     ? marketplaceDistanceExpression(query.latitude, query.longitude) : null;
   if (distanceKm && query.radiusKm !== undefined) conditions.push(lte(distanceKm, query.radiusKm));
-  if (cursor) conditions.push(cursorCondition(visibilityScore, cursor));
+  if (cursor && !useAHP) conditions.push(cursorCondition(visibilityScore, cursor));
 
   const limit = query.limit ?? 20;
   const rows = await db.select({
     id: sellers_product.id, productName: sellers_product.productName, imagUrl: sellers_product.imagUrl,
     productPrice: sellers_product.productPrice, basePrice: sellers_product.basePrice,
-    productQty: sellers_product.productQty, scalingType: sellers_product.scalingType,
+    productQty: sellers_product.productQty, originalQty: sellers_product.originalQty, scalingType: sellers_product.scalingType,
     productType: sellers_product.productType, condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt, visibilityScore,
+    ahpPriorCycles: useAHP ? marketplacePriorCyclesSql(evaluatedAt, since) : sql<number>`0`,
+    sellerReliability: useAHP ? sql<number>`coalesce((
+      select avg(${order_reviews.rating})::double precision / 5.0
+      from ${order_reviews}
+      where ${order_reviews.sellerId} = ${sellers_product.userId}
+    ), 0.5)` : sql<number>`0.5`,
     sellerId: sellers_profile.userId, sellerName: user.name, shopName: sellers_profile.shopName,
     sellerType: sellers_profile.sellerType, detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions, latitude: sellers_profile.latitude,
     longitude: sellers_profile.longitude, distanceKm: distanceKm ?? sql<null>`null`,
   }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId))
     .innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId))
+    .leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId))
     .where(and(...conditions))
-    .orderBy(sql`${visibilityScore} desc nulls last`, desc(sellers_product.publishedAt), desc(sellers_product.id))
-    .limit(limit + 1);
-  const page = rows.slice(0, limit);
+    .orderBy(...(useAHP
+      ? [desc(sellers_product.publishedAt), desc(sellers_product.id)]
+      : [sql`${visibilityScore} desc nulls last`, desc(sellers_product.publishedAt), desc(sellers_product.id)]))
+    .limit(useAHP ? ahpCandidateLimit : limit + 1);
+
+  const ahpRanking = useAHP ? rankMarketplaceProductsWithAHP(rows, evaluatedAt, cursor) : null;
+  const orderedRows = ahpRanking?.orderedRows ?? rows;
+  const ahpScores = ahpRanking?.scores ?? new Map<string, number>();
+  const page = orderedRows.slice(0, limit);
   const ratingRows = page.length ? await db.select({
     productId: product_reviews.productId,
     count: sql<number>`count(*)::int`,
@@ -149,12 +181,14 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
     await getProductImageDisplayUrl(row.imagUrl, row.sellerId),
     row.distanceKm === null ? null : Number(row.distanceKm),
     { average: ratingsByProduct.get(row.id)?.average ?? null, count: ratingsByProduct.get(row.id)?.count ?? 0 },
+    policyVersion,
+    useAHP ? ahpScores.get(row.id) ?? null : undefined,
   )));
   const last = page[page.length - 1];
   return {
     products,
-    nextCursor: rows.length > page.length && last && last.publishedAt
-      ? encodeCursor({ evaluatedAt, id: last.id, score: last.visibilityScore, publishedAt: last.publishedAt })
+    nextCursor: orderedRows.length > page.length && last && last.publishedAt
+      ? encodeCursor({ evaluatedAt, id: last.id, score: useAHP ? ahpScores.get(last.id) ?? null : last.visibilityScore, publishedAt: last.publishedAt })
       : null,
     evaluatedAt: evaluatedAt.toISOString(),
   };

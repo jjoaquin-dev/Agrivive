@@ -26,6 +26,8 @@ import { sellerAdvisoriesRoute } from "./index/seller.advisories";
 import { sellerProductInquiryRoute } from "./index/seller.product.inquiry";
 import { sellerProductShareRoute } from "./index/seller.product.share";
 import { sellerPromotionsRoute } from "./index/seller.promotions";
+import { sellerSocialCampaignsRoute } from "./index/seller.social-campaigns";
+import { sellerVegetableCatalogRoute } from "./index/seller.vegetable-catalog";
 
 export const sellerRoute = new Elysia({ prefix: "/seller" })
 
@@ -34,6 +36,7 @@ export const sellerRoute = new Elysia({ prefix: "/seller" })
   .use(sellerProfileCreateRoute)
   .use(sellerProfileAvatarRoute)
   .use(sellerProductCreateRoute)
+  .use(sellerVegetableCatalogRoute)
   .use(sellerProductImageRoute)
   .use(sellerStockAdjustmentListRoute)
   .use(sellerWeightedVisiblityRoute)
@@ -55,5 +58,6 @@ export const sellerRoute = new Elysia({ prefix: "/seller" })
   .use(sellerTrustRoute)
   .use(sellerNotificationsRoute)
   .use(sellerPromotionsRoute)
+  .use(sellerSocialCampaignsRoute)
   .use(sellerAnalyticsRoute)
   .use(sellerAdvisoriesRoute);

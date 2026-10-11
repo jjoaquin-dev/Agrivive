@@ -1,6 +1,7 @@
 import type { CreateProductInput, UpdateProductInput } from "./types";
 
 export interface ProductFormErrors {
+  catalogId?: string;
   productName?: string;
   imagUrl?: string;
   productPrice?: string;
@@ -25,8 +26,8 @@ export function validateCreateProduct(input: Partial<CreateProductInput>): {
 } {
   const errors: ProductFormErrors = {};
 
-  if (!input.productName || !input.productName.trim()) {
-    errors.productName = "Please enter a product name.";
+  if (!input.catalogId || !input.catalogId.trim()) {
+    errors.catalogId = "Please choose a vegetable from the list.";
   }
 
   if (!input.imagUrl || !input.imagUrl.trim()) {
@@ -49,10 +50,6 @@ export function validateCreateProduct(input: Partial<CreateProductInput>): {
     errors.productQty = "Quantity must be between 0.01 and 99,999,999.";
   } else if (!hasTwoDecimalsOrLess(input.productQty)) {
     errors.productQty = "Quantity may have at most two decimal places.";
-  }
-
-  if (!input.productType) {
-    errors.productType = "Please select a vegetable category.";
   }
 
   if (!input.scalingType) {
@@ -79,8 +76,8 @@ export function validateUpdateProduct(input: Partial<UpdateProductInput>): {
 } {
   const errors: ProductFormErrors = {};
 
-  if (input.productName !== undefined && !input.productName.trim()) {
-    errors.productName = "Please enter a product name.";
+  if (input.catalogId !== undefined && !input.catalogId.trim()) {
+    errors.catalogId = "Please choose a vegetable from the list.";
   }
 
   if (input.productPrice !== undefined) {

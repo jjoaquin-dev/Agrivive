@@ -83,6 +83,10 @@ export default function AppLayout() {
         }}
       />
       <Stack.Screen
+        name="boost/[productId]"
+        options={{ title: "Boost Visibility" }}
+      />
+      <Stack.Screen
         name="advisories"
         options={{
           title: "Advisories",
