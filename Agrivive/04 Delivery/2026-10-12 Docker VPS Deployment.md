@@ -9,6 +9,7 @@ Added a Docker Compose deployment for the single-VPS production setup:
 - A Bun image for the backend API and scheduled worker.
 - A Next.js image for the web frontend.
 - Caddy as the HTTPS reverse proxy.
+- Host networking for the production services on the Podman-based VPS, with Caddy proxying to the local API and frontend ports.
 - Separate production environment templates for domains, frontend public API configuration, backend secrets, and the external production database.
 - Docker deployment instructions in `deploy/README.md`.
 
@@ -18,7 +19,7 @@ The existing systemd deployment remains documented and unchanged. Docker is an a
 
 The frontend and backend can run on the same VPS while remaining separate services. The public website uses the web domain, the mobile and web clients use the API domain, and the API and frontend containers communicate over the private Compose network. The PostgreSQL database stays external and is selected through the production `DATABASE_URL`, so development can continue using Supabase while production uses AWS PostgreSQL.
 
-Only ports 80 and 443 are published by the Compose stack. Caddy handles HTTPS certificates and forwards WebSocket traffic through its reverse proxy for the messaging feature.
+Only ports 80 and 443 should be public in the VPS firewall. API port 3000 and frontend port 3001 are bound for host-network service communication but must remain closed to external traffic. Caddy handles HTTPS certificates and forwards WebSocket traffic through its reverse proxy for the messaging feature.
 
 ## Affected paths
 
@@ -48,8 +49,9 @@ Real production environment files must be created only on the VPS and must not b
 - Web `bun run build`: passed.
 - Web `bun run typecheck`: passed after the production build generated `.next` type files.
 - Compose YAML parsing: passed; the expected `api`, `worker`, `web`, and `proxy` services were found.
+- Host-network deployment adjustment: applied; `api`, `worker`, `web`, and `proxy` use host networking, and Caddy targets `127.0.0.1`.
 - Docker CLI validation: not run because Docker is not installed on the current Windows development machine.
-- VPS deployment: pending the production VPS host, DNS records, and production environment values.
+- VPS validation after the host-network adjustment: pending rebuild and restart on the production VPS.
 
 ## Deployment references
 

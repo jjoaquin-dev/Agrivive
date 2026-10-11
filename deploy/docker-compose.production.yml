@@ -1,12 +1,11 @@
 services:
   api:
+    network_mode: host
     build:
       context: ../backend
       dockerfile: Dockerfile
     env_file:
       - ./backend.production.env
-    expose:
-      - "3000"
     restart: unless-stopped
     command: ["bun", "dist/index.js"]
     healthcheck:
@@ -21,6 +20,7 @@ services:
       start_period: 20s
 
   worker:
+    network_mode: host
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -33,6 +33,7 @@ services:
         condition: service_healthy
 
   web:
+    network_mode: host
     build:
       context: ../web
       dockerfile: Dockerfile
@@ -40,21 +41,17 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     env_file:
       - ./web.production.env
-    expose:
-      - "3001"
     restart: unless-stopped
     command: ["bun", "run", "start"]
 
   proxy:
+    network_mode: host
     image: caddy:2-alpine
     depends_on:
       api:
         condition: service_healthy
       web:
         condition: service_started
-    ports:
-      - "80:80"
-      - "443:443"
     env_file:
       - ./compose.production.env
     volumes:
