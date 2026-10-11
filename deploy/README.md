@@ -43,3 +43,46 @@ On the server, set production `DATABASE_URL`, `BETTER_AUTH_URL`, `WEB_TRUSTED_OR
 4. In a browser, check the HTTPS website and API `/health/ready`, then manually test sign-in and one buyer/seller flow. An Actions success alone does not prove end-to-end behavior.
 
 The mobile EAS build is a separate step. This deployment does not publish or update a mobile app.
+
+## Docker Compose deployment
+
+The repository also includes a single-VPS Docker Compose deployment for the frontend, backend API, scheduled worker, and HTTPS reverse proxy. The production database remains external and is supplied through an ignored environment file.
+
+Copy the example files without committing the real values:
+
+```text
+deploy/compose.production.env
+deploy/backend.production.env
+deploy/web.production.env
+```
+
+Set `WEB_DOMAIN`, `API_DOMAIN`, and `NEXT_PUBLIC_API_URL` in `compose.production.env`. Set the AWS PostgreSQL `DATABASE_URL` and backend secrets in `backend.production.env`. Set the same public API URL in `web.production.env`.
+
+From the repository root, build the production images:
+
+```bash
+docker compose \
+  --env-file deploy/compose.production.env \
+  -f deploy/docker-compose.production.yml \
+  build
+```
+
+Apply the approved database migrations through the API image:
+
+```bash
+docker compose \
+  --env-file deploy/compose.production.env \
+  -f deploy/docker-compose.production.yml \
+  run --rm api bunx drizzle-kit migrate
+```
+
+Start the API, worker, web app, and Caddy proxy:
+
+```bash
+docker compose \
+  --env-file deploy/compose.production.env \
+  -f deploy/docker-compose.production.yml \
+  up -d
+```
+
+Caddy obtains HTTPS certificates after both domains point to the VPS. The API and web containers are internal to the Compose network; only ports 80 and 443 are published.
