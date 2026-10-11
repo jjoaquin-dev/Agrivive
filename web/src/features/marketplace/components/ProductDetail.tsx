@@ -12,7 +12,7 @@ import { sellerTypeLabel } from "../marketplace-labels";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ApiError, isAbortError } from "@/src/lib/api";
+import { ApiError, isAbortError, isTrustAccessMessage } from "@/src/lib/api";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { createBuyerOrder } from "@/src/features/orders/api/orders";
 import { PageContainer } from "@/src/components/PageContainer";
@@ -24,6 +24,8 @@ import { SellerReviewsSection } from "./SellerReviewsSection";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductQuestionsSection } from "./ProductQuestionsSection";
 import { SimilarProduceSection } from "./SimilarProduceSection";
+import { MessageSellerButton } from "./MessageSellerButton";
+import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 
 export function ProductDetail() {
   const params = useParams<{ id: string }>();
@@ -115,7 +117,7 @@ export function ProductDetail() {
             </CardHeader>
             <CardContent className="gap-5 p-0">
               <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                <div><dt className="text-muted-foreground">Seller</dt><dd className="mt-1 font-semibold"><Link href={`/sellers/${product.seller.id}`} className="text-primary hover:underline">{product.seller.shopName}</Link></dd></div>
+                <div className="sm:col-span-2"><dt className="text-muted-foreground">Seller</dt><dd className="mt-1 flex flex-wrap items-center justify-between gap-3 font-semibold"><Link href={`/sellers/${product.seller.id}`} className="text-primary hover:underline">{product.seller.shopName}</Link><MessageSellerButton context="product" id={product.id} compact /></dd></div>
                 <div><dt className="text-muted-foreground">Seller type</dt><dd className="mt-1 font-semibold">{sellerTypeLabel(product.seller.sellerType)}</dd></div>
                 <div><dt className="text-muted-foreground">Condition</dt><dd className="mt-1 font-semibold capitalize">{product.condition?.replaceAll("_", " ") || "No condition note"}</dd></div>
               </dl>
@@ -124,7 +126,10 @@ export function ProductDetail() {
                 <p className="mt-2 flex items-start gap-2 leading-6 text-muted-foreground"><MapPin aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />{product.seller.detailAddress}</p>
                 <p className="mt-2 leading-6 text-muted-foreground">{product.seller.pickupInstructions || "Ask the seller for the best pickup time after reserving."}</p>
               </div>
-              {orderError ? <Alert variant="destructive"><AlertDescription>{orderError}</AlertDescription></Alert> : null}
+              {orderError ? isTrustAccessMessage(orderError)
+                ? <TrustAccessNotice message={orderError} />
+                : <Alert variant="destructive"><AlertDescription>{orderError}</AlertDescription></Alert>
+                : null}
               {cartMessage ? <Alert role="status"><AlertDescription>{cartMessage}</AlertDescription></Alert> : null}
               <Field><FieldLabel htmlFor="reservation-quantity">Quantity to reserve</FieldLabel><Input id="reservation-quantity" type="number" min="0.01" max={Number(product.productQty)} step="0.01" value={quantity} onChange={(event) => setQuantity(event.target.value)} disabled={soldOut || ordering} /></Field>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -138,7 +143,7 @@ export function ProductDetail() {
 
         <SellerReviewsSection sellerId={product.seller.id} shopName={product.seller.shopName} />
         <ProductReviewsSection productId={product.id} />
-        <ProductQuestionsSection productId={product.id} />
+        <ProductQuestionsSection productId={product.id} productName={product.productName} />
         <SimilarProduceSection currentProductId={product.id} productType={product.productType} />
       </PageContainer>
     </main>

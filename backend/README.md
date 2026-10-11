@@ -26,6 +26,8 @@ Before testing seller follows, apply `backend/drizzle/20261005213227_seller_foll
 
 For local email testing set `EMAIL_PROVIDER=mailtrap`. Production should set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL`. OTP values are never written to logs unless `ALLOW_DEV_EMAIL_LOG=true`.
 
+Web Google sign-in uses Better Auth's built-in Google provider. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the backend `.env`, keep `BETTER_AUTH_URL=http://localhost:3000` for local development, and add `http://localhost:3000/api/auth/callback/google` to the Google Cloud OAuth client's authorized redirect URIs. The web client sends users back to the current web page after Google sign-in. A new Google identity is registered as a buyer; an existing matching Google identity is signed in.
+
 ## Verification
 
 ```bash
@@ -57,7 +59,7 @@ POST /integrations/promotions/jobs/:id/failure     {"code":"invalid_draft"}
 
 The worker sends only `{ "jobId": "<uuid>", "stage": "initial|followup" }` to n8n. Callback retries are bounded; terminal failure status and a non-sensitive reason are stored for diagnosis. Do not apply `backend/drizzle/20261007082243_seller_priority_promotions` to production as part of this implementation. Apply it only to a disposable or specifically approved test database before manual endpoint acceptance.
 
-`GET /seller/analytics/summary` now returns a factual summary from the already-computed metrics without waiting on an external AI service. Trust monitoring uses policy `monitoring-v2`: verified non-response = 1 point, verified cancellation = 2 points, and each completed order with a 1–2-star rating = 1 rating signal, counted once per order. Written review text is context only; unverified report flags contribute zero points. Neither the score nor the admin page restricts an account.
+`GET /seller/analytics/summary` now returns a factual summary from the already-computed metrics without waiting on an external AI service. Trust monitoring uses policy `monitoring-v3`: verified non-response = 1 point, verified cancellation = 2 points, and each completed order with a 1–2-star rating = 1 rating signal, counted once per order. Written review text is context only; unverified report flags contribute zero points. The exact weights and configurable thresholds are prototype policy settings, and trust actions remain disabled until `TRUST_ACTIONS_ENABLED=true` is explicitly approved. When enabled, the system can create warning, temporary restriction, and blocked actions; temporary restrictions expire automatically and blocked-account restoration uses the email OTP recovery flow. Admin monitoring remains read-only.
 
 ## Seller Boost Visibility social posting
 

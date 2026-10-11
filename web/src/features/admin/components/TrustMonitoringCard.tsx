@@ -2,7 +2,7 @@ import { Info, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AdminPerformance } from "../api/performance";
 
-export function TrustMonitoringCard({ monitoring }: { monitoring: AdminPerformance["trustMonitoring"] }) {
+export function TrustMonitoringCard({ monitoring, actions }: { monitoring: AdminPerformance["trustMonitoring"]; actions: AdminPerformance["trustActions"] }) {
   const metrics = [
     { label: "Monitoring points", value: monitoring.weightedPoints },
     { label: "Verified event points", value: monitoring.verifiedEventPoints },
@@ -18,7 +18,7 @@ export function TrustMonitoringCard({ monitoring }: { monitoring: AdminPerforman
         </CardTitle>
         <CardDescription className="flex items-start gap-1.5 pt-1 text-xs">
           <Info className="mt-0.5 size-4 shrink-0" />
-          <span>Points combine recorded events and low ratings from completed orders. Written feedback is context; unverified reports add no points. These signals do not restrict accounts.</span>
+          <span>Verified events and low ratings create monitoring points. Written feedback is context; unverified reports add no points. This view is read only; the system creates actions automatically only when the prototype policy is enabled.</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -29,6 +29,31 @@ export function TrustMonitoringCard({ monitoring }: { monitoring: AdminPerforman
               <p className="font-heading text-xl font-bold tabular-nums text-primary">{metric.value}</p>
             </div>
           ))}
+        </div>
+        <div className="rounded-xl border border-border bg-agrivive-background/60 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-semibold text-foreground">Active trust actions</p>
+              <p className="text-xs text-muted-foreground">Policy {actions.policyVersion} · {actions.enabled ? "enabled" : "disabled"}</p>
+            </div>
+            <span className="text-xs font-semibold text-muted-foreground">Admin view only</span>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-4">
+            {[
+              ["Warnings", actions.active.warning],
+              ["Temporary restrictions", actions.active.temporaryRestriction],
+              ["Blocked accounts", actions.active.blocked],
+              ["Total active", actions.active.total],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-lg border border-border bg-white p-3">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <p className="mt-1 text-lg font-bold tabular-nums text-primary">{value}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-5 text-muted-foreground">
+            Thresholds: warning {actions.thresholds.warning} points · restriction {actions.thresholds.restriction} points · blocked {actions.thresholds.blocked} points. Admins cannot change, revoke, or restore these actions.
+          </p>
         </div>
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-left text-xs">

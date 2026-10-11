@@ -7,7 +7,8 @@ import { ArrowRight, Minus, Plus, RefreshCw, ShoppingCart, Store, Trash2 } from 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ApiError } from "@/src/lib/api";
+import { ApiError, isTrustAccessMessage } from "@/src/lib/api";
+import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 import { useCart } from "../CartProvider";
 import { createCartCheckout } from "../api/cart";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
@@ -134,7 +135,9 @@ export function CartDrawer() {
 
         {items.length > 0 ? (
           <SheetFooter className="border-t border-border/80 bg-white p-5">
-            {checkoutError ? (
+            {checkoutError && isTrustAccessMessage(checkoutError) ? (
+              <TrustAccessNotice message={checkoutError} />
+            ) : checkoutError ? (
               <Alert variant="destructive" className="mb-3">
                 <AlertDescription>{checkoutError}</AlertDescription>
                 <Button type="button" variant="link" className="min-h-11 justify-start px-0 text-xs" onClick={() => setCheckoutError("")}>

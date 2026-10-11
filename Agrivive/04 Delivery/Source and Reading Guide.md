@@ -39,6 +39,20 @@ Agrivive's controlled vegetable catalog uses the Alliance of Bioversity Internat
 
 The guide supports classification by edible plant part. Agrivive excludes fungi and mushrooms because the active capstone marketplace scope is vegetables. Filipino wet-market names and search aliases are an Agrivive data-design layer and should be reviewed with local sellers before being presented as a complete regional vocabulary. See [[2026-10-11 Vegetable Catalog and Naming]].
 
+## Trust and Flagging citation correction
+
+The capstone's Trust and Flagging discussion should use the following bibliography mapping in the final paper:
+
+| Citation | Claim supported | Reference |
+|---|---|---|
+| [54] | Reputation effects in peer-to-peer markets | [Jiao et al. meta-analysis](https://research-portal.uu.nl/en/publications/reputation-effects-in-peer-to-peer-online-markets-a-meta-analysis/) |
+| [55] | Fake or manipulated reviews | [He et al., INFORMS](https://pubsonline.informs.org/doi/abs/10.1287/mksc.2022.1353?journalCode=mksc) |
+| [56] | Purchase verification | [Kokkodis et al., Wiley](https://onlinelibrary.wiley.com/doi/abs/10.1111/poms.13731) |
+| [57] | Weighted trust evaluation | [Chu and Chen, Inderscience](https://www.inderscience.com/info/e_inarticle.php?artid=132356) |
+| [58] | Vegetable postharvest/time-sensitive handling | [Jiang et al., MDPI Agronomy](https://www.mdpi.com/2073-4395/9/11/724) |
+
+The exact Agrivive weights, thresholds, timers, and account-action mapping are prototype settings and should be described as such, not as values proven by [54]–[58]. See [[Trust and Flagging]] for the corrected paragraph and current implementation boundary.
+
 ## Reading path
 
 Start at [[00 Home]], then [[Project Brief]], [[Problem and Evidence]], and [[Goals and Boundaries]]. Use [[Feature Map]] for requirement IDs and [[Current Implementation]] when planning code. Check [[Open Decisions]] before treating an ambiguous proposal statement as settled.

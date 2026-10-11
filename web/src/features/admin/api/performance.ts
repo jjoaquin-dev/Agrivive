@@ -26,6 +26,12 @@ export interface AdminPerformance {
       points: number;
     }>;
   };
+  trustActions: {
+    enabled: boolean;
+    policyVersion: string;
+    thresholds: { warning: number; restriction: number; blocked: number };
+    active: { warning: number; temporaryRestriction: number; blocked: number; total: number };
+  };
 }
 
 export function getAdminPerformance(signal?: AbortSignal) {

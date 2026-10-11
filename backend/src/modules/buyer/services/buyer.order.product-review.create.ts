@@ -3,14 +3,15 @@ import { db } from "../../../db";
 import { ordered_items, orders, product_reviews } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import type { BuyerProductReviewBody } from "../model/buyer.order.review";
+import { evaluateTrustAction } from "../../../utils/trust/evaluate-action";
 
-export function createBuyerProductReview(
+export async function createBuyerProductReview(
   buyerId: string,
   orderId: string,
   itemId: string,
   body: BuyerProductReviewBody,
 ) {
-  return db.transaction(async (tx) => {
+  const review = await db.transaction(async (tx) => {
     const [purchase] = await tx
       .select({
         orderId: orders.id,
@@ -51,4 +52,6 @@ export function createBuyerProductReview(
     if (!review) throw new OrderError(409, "This product has already been reviewed for this order");
     return review;
   });
+  await evaluateTrustAction(review.sellerId, review.orderId);
+  return review;
 }

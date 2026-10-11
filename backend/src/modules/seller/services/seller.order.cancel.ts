@@ -4,6 +4,7 @@ import { orders } from "../../../db/schema";
 import { restoreOrderStock } from "../../../utils/order-stock";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { evaluateTrustAction } from "../../../utils/trust/evaluate-action";
 import { queueTrustNotice, recordTrustEvent } from "../../../utils/trust";
 import { getOrder } from "../../../utils/order-read";
 
@@ -34,5 +35,6 @@ export async function cancelSellerOrder(sellerId: string, orderId: string, reaso
     await queueTrustNotice(tx, { noticeKey: `seller-cancel-buyer:${orderId}`, recipientId: cancelled.buyerId,
       orderId, kind: "seller_cancellation_buyer" });
   });
+  await evaluateTrustAction(sellerId, orderId, `seller-cancel:${orderId}`);
   return getOrder(orderId, sellerId, "seller");
 }

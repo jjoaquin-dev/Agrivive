@@ -2,11 +2,13 @@ import { and, eq, gt } from "drizzle-orm";
 import { seller_scan_grace, sellers_profile, user } from "../../db/schema";
 import { OrderError, type OrderTransaction } from "../order-types";
 import { isSellerProfileComplete } from "../seller-profile-completion";
+import { requireNoActiveTrustRestriction } from "../trust/access";
 
 export async function requireVerifiedSeller(
   tx: OrderTransaction,
   sellerId: string,
   requireProfile = true,
+  allowTrustAccess = false,
 ) {
   const [account] = await tx.select({
     isActive: user.isActive,
@@ -14,6 +16,7 @@ export async function requireVerifiedSeller(
     emailVerified: user.emailVerified,
   }).from(user).where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive) throw new OrderError(403, "Account is inactive");
+  if (!allowTrustAccess) await requireNoActiveTrustRestriction(tx, sellerId);
   if (!account.emailVerified) {
     throw new OrderError(403, "Email OTP verification is required");
   }
@@ -31,6 +34,7 @@ export async function requireSellerScanAccess(tx: OrderTransaction, sellerId: st
   if (!account?.isActive || !account.roles?.includes("seller")) {
     throw new OrderError(403, "Seller account is inactive");
   }
+  await requireNoActiveTrustRestriction(tx, sellerId);
   try {
     await requireVerifiedSeller(tx, sellerId);
     return;
@@ -49,6 +53,7 @@ export async function sellerReadableOrderIds(tx: OrderTransaction, sellerId: str
   const [account] = await tx.select({ isActive: user.isActive, roles: user.role }).from(user)
     .where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive || !account.roles?.includes("seller")) throw new OrderError(403, "Seller account is inactive");
+  await requireNoActiveTrustRestriction(tx, sellerId);
   try {
     await requireVerifiedSeller(tx, sellerId);
     return null;

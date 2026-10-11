@@ -15,6 +15,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { AuthProvider } from "../src/context/AuthContext";
 import { colors, fonts } from "../src/theme";
+import { NotificationRegistration } from "../src/features/notifications/push/NotificationRegistration";
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -44,6 +45,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
+        <NotificationRegistration />
         <StatusBar style="dark" />
         <Stack
           screenOptions={{

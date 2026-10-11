@@ -5,7 +5,7 @@ import type { SellerTrustResponse } from "../types";
 import { ApiError } from "../../../api/client";
 
 export function useSellerTrust() {
-  const [trust, setTrust] = useState<SellerTrustResponse>({ events: [], notices: [] });
+  const [trust, setTrust] = useState<SellerTrustResponse>({ events: [], notices: [], actions: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +18,7 @@ export function useSellerTrust() {
       setTrust(await fetchSellerTrust());
     } catch (err: any) {
       if (err instanceof ApiError && [401, 403].includes(err.statusCode)) {
-        setTrust({ events: [], notices: [] });
+        setTrust({ events: [], notices: [], actions: [] });
       }
       setError(err?.message || "Could not load trust history.");
     } finally {

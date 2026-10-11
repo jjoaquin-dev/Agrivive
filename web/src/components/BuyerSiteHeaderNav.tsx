@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Bell, ClipboardList, Store } from "lucide-react";
+import { Bell, ClipboardList, MessageCircle, Store } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { PageContainer } from "./PageContainer";
 import { MarketplaceHeaderSearch, MARKETPLACE_PRODUCT_TYPES } from "./MarketplaceHeaderSearch";
@@ -46,6 +46,9 @@ export function BuyerSiteHeaderNav({ menuOpen, hasSession, onCloseMenu }: BuyerS
           <Link href="/orders" aria-current={isOrders ? "page" : undefined} className={navLink(isOrders, "gap-2")}>
             <ClipboardList aria-hidden="true" className="size-4" />Orders
           </Link>
+          {hasSession ? <Link href="/messages" aria-current={pathname === "/messages" ? "page" : undefined} className={navLink(pathname === "/messages", "gap-2")}>
+            <MessageCircle aria-hidden="true" className="size-4" />Messages
+          </Link> : null}
         </PageContainer>
       </nav>
 
@@ -66,6 +69,9 @@ export function BuyerSiteHeaderNav({ menuOpen, hasSession, onCloseMenu }: BuyerS
           <Link href="/orders" aria-current={isOrders ? "page" : undefined} onClick={onCloseMenu} className={cn(navLink(isOrders), "justify-start")}>
             <ClipboardList data-icon="inline-start" />Orders
           </Link>
+          {hasSession ? <Link href="/messages" aria-current={pathname === "/messages" ? "page" : undefined} onClick={onCloseMenu} className={cn(navLink(pathname === "/messages"), "justify-start")}>
+            <MessageCircle data-icon="inline-start" />Messages
+          </Link> : null}
           {hasSession ? <Link href="/notifications" onClick={onCloseMenu} className={cn(navLink(false), "justify-start")}>
             <Bell data-icon="inline-start" />Notifications
           </Link> : null}

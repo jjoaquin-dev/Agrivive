@@ -1,10 +1,12 @@
 import { asc, isNull, sql } from "drizzle-orm";
 import { db } from "../db";
 import { buyer_listing_notices, seller_follows, seller_listing_events, user } from "../db/schema";
+import { enqueueSellerListingNotifications } from "../modules/notifications/services/notifications.outbox.enqueue-listing";
 
 export async function sendSellerListingNotices(limit = 25) {
   let processedEvents = 0;
   let noticesCreated = 0;
+  let pushJobsCreated = 0;
   for (let i = 0; i < limit; i++) {
     const result = await db.transaction(async (tx) => {
       const [event] = await tx.select().from(seller_listing_events)
@@ -24,13 +26,15 @@ export async function sendSellerListingNotices(limit = 25) {
         on conflict (buyer_id, event_id) do nothing
         returning id
       `);
+      const pushJobsCreated = await enqueueSellerListingNotifications(tx, event);
       await tx.update(seller_listing_events).set({ processedAt: new Date() })
         .where(sql`${seller_listing_events.id} = ${event.id}`);
-      return inserted.rowCount ?? 0;
+      return { noticesCreated: inserted.rowCount ?? 0, pushJobsCreated };
     });
     if (result === null) break;
     processedEvents++;
-    noticesCreated += result;
+    noticesCreated += result.noticesCreated;
+    pushJobsCreated += result.pushJobsCreated;
   }
-  return { processedEvents, noticesCreated };
+  return { processedEvents, noticesCreated, pushJobsCreated };
 }

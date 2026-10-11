@@ -41,6 +41,10 @@ export default function AuthLayout() {
         name="two-factor"
         options={{ title: "Two-Factor Authentication" }}
       />
+      <Stack.Screen
+        name="account-recovery"
+        options={{ title: "Restore Account" }}
+      />
     </Stack>
   );
 }

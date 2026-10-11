@@ -5,7 +5,7 @@ import { requireVerifiedSeller } from "../../../utils/seller-access";
 
 export async function readAllSellerNotifications(sellerId: string) {
   return db.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
 
     const updated = await tx.update(trust_notices).set({ readAt: new Date() })
       .where(and(

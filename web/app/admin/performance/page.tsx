@@ -46,7 +46,7 @@ export default function AdminPerformancePage() {
               Platform Performance & Trust Monitoring
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Read-only aggregate metrics and system trust signals. Monitoring signals do not impose penalties.
+              Read-only aggregate metrics and system trust signals. Account actions are system-controlled; admins do not modify them here.
             </p>
           </div>
 
@@ -136,7 +136,7 @@ export default function AdminPerformancePage() {
                 </Card>
               </div>
 
-              <TrustMonitoringCard monitoring={data.trustMonitoring} />
+              <TrustMonitoringCard monitoring={data.trustMonitoring} actions={data.trustActions} />
             </div>
           )}
         </PageContainer>

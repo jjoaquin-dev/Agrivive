@@ -10,6 +10,9 @@ import { stakeholderRoute } from "./modules/stakeholder";
 import { integrationsRoute } from "./modules/integrations";
 import { integrationsSocialProductImageRoute } from "./modules/integrations/index/integrations.social-product-image";
 import { integrationsSocialPublishRoute } from "./modules/integrations/index/integrations.social-publish";
+import { conversationsRoute } from "./modules/conversations";
+import { notificationsRoute } from "./modules/notifications";
+import { trustRoute } from "./modules/trust";
 import { validationPlugin } from "./plugins/validation.plugin";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -39,6 +42,9 @@ const app = new Elysia()
   .use(adminRoute)
   .use(marketplaceRoute)
   .use(stakeholderRoute)
+  .use(conversationsRoute)
+  .use(notificationsRoute)
+  .use(trustRoute)
   .use(integrationsRoute)
   .use(integrationsSocialProductImageRoute)
   .use(integrationsSocialPublishRoute)

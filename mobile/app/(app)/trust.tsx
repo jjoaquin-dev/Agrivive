@@ -15,7 +15,7 @@ import { AlertCircle, CheckCircle2, ShieldCheck, X } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../src/theme";
 import { useSellerTrust } from "../../src/features/trust/hooks/useSellerTrust";
-import type { SellerTrustEvent, SellerTrustNotice } from "../../src/features/trust/types";
+import type { SellerTrustAction, SellerTrustEvent, SellerTrustNotice } from "../../src/features/trust/types";
 import { TrustMonitoringSummary } from "../../src/features/trust/components/TrustMonitoringSummary";
 
 function trustLabel(kind: string) {
@@ -32,6 +32,9 @@ export default function SellerTrustScreen() {
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const activeActions = (trust.actions ?? []).filter((action: SellerTrustAction) =>
+    !action.revokedAt && (!action.endsAt || new Date(action.endsAt) > new Date()),
+  );
 
   const submitCorrection = async () => {
     if (!selectedEvent) return;
@@ -73,6 +76,22 @@ export default function SellerTrustScreen() {
         {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text><ButtonComponent title="Try Again" onPress={refresh} variant="secondary" style={styles.retryButton} /></View> : null}
 
         <TrustMonitoringSummary monitoring={trust.monitoring} />
+
+        {activeActions.length > 0 ? (
+          <>
+            <Text style={styles.sectionTitle}>Current account actions</Text>
+            {activeActions.map((action) => (
+              <View key={action.id} style={styles.actionCard}>
+                <AlertCircle size={20} color={colors.warning} />
+                <View style={styles.actionBody}>
+                  <Text style={styles.cardTitle}>{trustLabel(action.actionType)}</Text>
+                  <Text style={styles.cardMeta}>{action.reason}</Text>
+                  {action.endsAt ? <Text style={styles.cardMeta}>Ends {dateLabel(action.endsAt)}</Text> : null}
+                </View>
+              </View>
+            ))}
+          </>
+        ) : null}
 
         <Text style={styles.sectionTitle}>Verified events</Text>
         {trust.events.length === 0 ? (
@@ -129,6 +148,8 @@ const styles = StyleSheet.create({
   muted: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted },
   sectionTitle: { fontFamily: fonts.heading.semiBold, fontSize: 18, color: colors.text, marginTop: spacing.md, marginBottom: spacing.sm },
   card: { flexDirection: "row", alignItems: "flex-start", backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.sm },
+  actionCard: { flexDirection: "row", alignItems: "flex-start", backgroundColor: "rgba(199, 149, 62, 0.1)", borderRadius: radii.card, borderWidth: 1, borderColor: colors.warning, padding: spacing.base, marginBottom: spacing.sm },
+  actionBody: { flex: 1, marginLeft: spacing.md },
   cardIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
   cardBody: { flex: 1 },
   cardTitle: { fontFamily: fonts.body.semiBold, fontSize: 16, lineHeight: 22, color: colors.text },

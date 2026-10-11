@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { user } from "../../db/schema";
 import { OrderError, type OrderSide, type OrderTransaction } from "../order-types";
+import { requireNoActiveTrustRestriction } from "../trust/access";
 
 export async function requireActiveUser(
   tx: OrderTransaction,
@@ -15,4 +16,5 @@ export async function requireActiveUser(
   if (!account?.isActive || !account.roles?.includes(role)) {
     throw new OrderError(403, `${role} account is not active`);
   }
+  await requireNoActiveTrustRestriction(tx, userId);
 }

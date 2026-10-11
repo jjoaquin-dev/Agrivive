@@ -12,7 +12,7 @@ export async function listSellerNotifications(
   const limit = query.limit ?? 20;
 
   return db.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
 
     const unreadCondition = query.unreadOnly ? isNull(trust_notices.readAt) : undefined;
     let before;

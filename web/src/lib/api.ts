@@ -14,6 +14,14 @@ export function isAbortError(error: unknown) {
   return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
 }
 
+export function isTrustAccessError(error: unknown) {
+  return error instanceof ApiError && error.status === 403 && isTrustAccessMessage(error.message);
+}
+
+export function isTrustAccessMessage(message: string) {
+  return /account (is )?inactive|temporarily restricted|account is blocked|blocked by the trust policy/i.test(message);
+}
+
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response: Response;
   try {

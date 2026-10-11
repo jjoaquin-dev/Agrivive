@@ -8,6 +8,7 @@ import {
   Bell,
   LogIn,
   LogOut,
+  MessageCircle,
   Menu,
   ShoppingCart,
   User,
@@ -136,6 +137,9 @@ export function BuyerSiteHeader() {
           </Link>
           <Link href="/notifications" role="menuitem" onClick={() => setProfileOpen(false)} className="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted">
             <Bell aria-hidden="true" className="size-4" />Notifications
+          </Link>
+          <Link href="/messages" role="menuitem" onClick={() => setProfileOpen(false)} className="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted">
+            <MessageCircle aria-hidden="true" className="size-4" />Messages
           </Link>
           <Button type="button" role="menuitem" variant="ghost" size="sm" onClick={() => void signOut()} className="w-full justify-start">
             <LogOut data-icon="inline-start" />Sign out

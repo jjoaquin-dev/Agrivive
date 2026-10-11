@@ -46,7 +46,7 @@ export function useBuyerOrders() {
         setOwner(null);
         setNextCursor(null);
         if (reason.status === 401) window.location.assign("/login?next=/orders");
-        else setError("You no longer have access to these reservations.");
+        else setError(reason instanceof ApiError ? reason.message : "You no longer have access to these reservations.");
       } else setError(reason instanceof ApiError ? reason.message : "We could not load your reservations.");
     } finally {
       if (requestedBy === currentUser.current && requestGeneration === generation.current) {
