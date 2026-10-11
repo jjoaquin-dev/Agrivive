@@ -85,4 +85,4 @@ docker compose \
   up -d
 ```
 
-Caddy obtains HTTPS certificates after both domains point to the VPS. The API and web containers are internal to the Compose network; only ports 80 and 443 are published.
+Caddy obtains HTTPS certificates after both domains point to the VPS. The production Compose services use host networking because this VPS runs Podman and the bridge network could not reach the external AWS PostgreSQL endpoint. Caddy proxies to `127.0.0.1:3000` and `127.0.0.1:3001`. Keep ports 3000 and 3001 closed in the VPS firewall; only ports 80 and 443 should be public.
