@@ -15,6 +15,23 @@ import {
 
 export const roleEnum = pgEnum("role", ["seller", "buyer", "admin", "stakeholder"]);
 
+export const notification_device_platform_enum = pgEnum("notification_device_platform", [
+  "android",
+  "ios",
+  "web",
+]);
+export const notification_outbox_status_enum = pgEnum("notification_outbox_status", [
+  "pending",
+  "processing",
+  "sent",
+  "failed",
+]);
+export const notification_type_enum = pgEnum("notification_type", [
+  "seller_message",
+  "buyer_message",
+  "seller_listing",
+]);
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -273,6 +290,52 @@ export const buyer_listing_notices = pgTable("buyer_listing_notices", {
   index("buyer_listing_notices_buyer_created_idx").on(table.buyerId, table.createdAt),
 ]);
 
+export const notification_devices = pgTable("notification_devices", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  platform: notification_device_platform_enum("platform").notNull(),
+  pushToken: text("push_token").notNull(),
+  deviceId: text("device_id"),
+  isEnabled: boolean("is_enabled").default(true).notNull(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+}, (table) => [
+  uniqueIndex("notification_devices_push_token_unique").on(table.pushToken),
+  index("notification_devices_user_enabled_idx").on(table.userId, table.isEnabled),
+]);
+
+export const notification_outbox = pgTable("notification_outbox", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  recipientUserId: text("recipient_user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  type: notification_type_enum("type").notNull(),
+  aggregationKey: text("aggregation_key").notNull(),
+  dedupeKey: text("dedupe_key").notNull(),
+  referenceId: text("reference_id"),
+  itemCount: integer("item_count").default(1).notNull(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+  status: notification_outbox_status_enum("status").default("pending").notNull(),
+  attemptCount: integer("attempt_count").default(0).notNull(),
+  availableAt: timestamp("available_at", { withTimezone: true }).defaultNow().notNull(),
+  lockedAt: timestamp("locked_at", { withTimezone: true }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  failedAt: timestamp("failed_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+}, (table) => [
+  uniqueIndex("notification_outbox_dedupe_unique").on(table.dedupeKey),
+  index("notification_outbox_pending_idx").on(table.status, table.availableAt, table.createdAt),
+  index("notification_outbox_recipient_idx").on(table.recipientUserId, table.createdAt),
+]);
+
 export const listing_cycles = pgTable("listing_cycles", {
   id: uuid("id").defaultRandom().primaryKey(),
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
@@ -506,6 +569,54 @@ export const product_inquiries = pgTable("product_inquiries", {
   index("product_inquiries_buyer_product_idx").on(table.buyerId, table.productId, table.createdAt),
 ]);
 
+export const conversation_context_enum = pgEnum("conversation_context", ["product", "order", "seller"]);
+export const conversation_status_enum = pgEnum("conversation_status", ["open", "closed"]);
+
+export const conversations = pgTable("conversations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  contextType: conversation_context_enum("context_type").notNull(),
+  contextKey: text("context_key").notNull().unique(),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => sellers_product.id, { onDelete: "set null" }),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  status: conversation_status_enum().default("open").notNull(),
+  lastMessageAt: timestamp("last_message_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+}, (table) => [
+  index("conversations_buyer_last_message_idx").on(table.buyerId, table.lastMessageAt),
+  index("conversations_seller_last_message_idx").on(table.sellerId, table.lastMessageAt),
+  index("conversations_product_idx").on(table.productId),
+  index("conversations_order_idx").on(table.orderId),
+]);
+
+export const conversation_participants = pgTable("conversation_participants", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  lastReadAt: timestamp("last_read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("conversation_participants_conversation_user_unique").on(table.conversationId, table.userId),
+  index("conversation_participants_user_idx").on(table.userId, table.lastReadAt),
+]);
+
+export const conversation_messages = pgTable("conversation_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  senderId: text("sender_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  clientMessageId: text("client_message_id").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("conversation_messages_client_id_unique").on(table.conversationId, table.clientMessageId),
+  index("conversation_messages_conversation_created_idx").on(table.conversationId, table.createdAt),
+]);
+
 export const trust_events = pgTable("trust_events", {
   id: uuid("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
@@ -543,6 +654,27 @@ export const trust_corrections = pgTable("trust_corrections", {
   outcome: text("outcome").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const trust_actions = pgTable("trust_actions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  actionKey: text("action_key").notNull().unique(),
+  subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  actionType: text("action_type").notNull(),
+  weightedPoints: integer("weighted_points").notNull(),
+  policyVersion: text("policy_version").notNull(),
+  reason: text("reason").notNull(),
+  sourceEventId: uuid("source_event_id").references(() => trust_events.id, { onDelete: "set null" }),
+  sourceOrderId: uuid("source_order_id").references(() => orders.id, { onDelete: "set null" }),
+  startsAt: timestamp("starts_at", { withTimezone: true }).defaultNow().notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  revokedBy: text("revoked_by").references(() => user.id, { onDelete: "set null" }),
+  revocationReason: text("revocation_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("trust_actions_subject_active_idx").on(table.subjectId, table.actionType, table.revokedAt, table.endsAt),
+  index("trust_actions_source_order_idx").on(table.sourceOrderId),
+]);
 
 export const ordered_items = pgTable("ordered_items", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),

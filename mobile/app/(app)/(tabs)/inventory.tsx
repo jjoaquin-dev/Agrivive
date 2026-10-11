@@ -243,7 +243,7 @@ export default function InventoryScreen() {
             onPress={() => router.push(`/(app)/inventory/${item.id}`)}
           />
         )}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={renderHeader()}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"

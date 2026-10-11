@@ -14,9 +14,21 @@ export interface SellerTrustNotice {
   sentAt: string | null;
 }
 
+export interface SellerTrustAction {
+  id: string;
+  actionType: string;
+  weightedPoints: number;
+  policyVersion: string;
+  reason: string;
+  startsAt: string;
+  endsAt: string | null;
+  revokedAt: string | null;
+}
+
 export interface SellerTrustResponse {
   events: SellerTrustEvent[];
   notices: SellerTrustNotice[];
+  actions?: SellerTrustAction[];
   monitoring?: {
     policyVersion: string;
     weightedPoints: number;

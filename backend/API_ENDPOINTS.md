@@ -12,7 +12,7 @@ Use this file to find a route before changing or calling it. Local API base URL:
 - App mount, health routes, Better Auth mount, and OpenAPI plugin: `backend/src/index.ts`
 - Better Auth base path and plugins: `backend/src/modules/auth/index.ts`
 
-Protected endpoints use the signed-in user's Better Auth session. Public routes need no login. Seller routes still check active seller verification/profile requirements inside their services. The admin API is read-only monitoring; do not add moderation or account action endpoints.
+Protected endpoints use the signed-in user's Better Auth session. Public routes need no login. Seller routes still check active seller verification/profile requirements inside their services. The admin API is read-only monitoring; account actions are system-controlled by verified events, scheduled expiry, and user email OTP recovery.
 
 ## Root and system
 
@@ -25,7 +25,16 @@ Protected endpoints use the signed-in user's Better Auth session. Public routes 
 
 ## Authentication
 
-Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/auth/index.ts`. The exact operations depend on the Better Auth plugins enabled there. The current setup includes email/password, email verification codes, bearer sessions, TOTP, and Expo support.
+Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/auth/index.ts`. The exact operations depend on the Better Auth plugins enabled there. The current setup includes email/password, Google OAuth, email verification codes, bearer sessions, TOTP, and Expo support. Google sign-in creates a buyer account for a new Google identity and signs in an existing linked identity. Configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the backend environment. The Google Cloud redirect URI is `http://localhost:3000/api/auth/callback/google` for local development and `<BETTER_AUTH_URL>/api/auth/callback/google` in production.
+
+## Trust recovery
+
+| Method | Path | Access | Route source |
+|---|---|---|---|
+| POST | `/trust/recovery/request` | Public; sends an OTP only for a blocked account and always returns a generic success response | `backend/src/modules/trust/index/trust.recovery.ts` |
+| POST | `/trust/recovery/verify` | Public; valid email OTP restores an account with an active trust action | `backend/src/modules/trust/index/trust.recovery.ts` |
+
+Recovery reuses Better Auth's hashed email OTP flow with `type: "forget-password"`. It does not grant access to an account that has no active trust action, and it records the restoration in `trust_actions`. Admin users cannot restore accounts. The web screen is `web/app/(auth)/account-recovery/page.tsx`.
 
 ## Marketplace (public)
 
@@ -94,7 +103,7 @@ Follow routes require an active buyer session (cookie or bearer token). They acc
 {"question":"Is this produce still available for pickup today?"}
 ```
 
-For report evidence, first `POST /buyer/orders/:id/report` with the existing report body. Use the returned report ID in the evidence paths. Upload `multipart/form-data` with a `file` field (JPG, PNG, WebP, or PDF, up to 5 MB). Only the report creator can request its short-lived download links.
+For report evidence, first `POST /buyer/orders/:id/report` with the existing report body. Use the returned report ID in the evidence paths. Upload `multipart/form-data` with a `file` field (JPG, PNG, WebP, or PDF, up to 5 MB). Only the report creator can request its short-lived download links. Reports are allegation flags until supported by verified events; they do not add weighted trust points by themselves.
 
 ## Seller
 
@@ -230,7 +239,9 @@ Set the server-only credentials listed in `backend/.env.example`: public HTTPS A
 |---|---|---|---|
 | GET | `/admin/performance` | Admin; read-only metrics only | `backend/src/modules/admin/index/admin.performance.ts` |
 
-This endpoint reports aggregate usage, listings, orders, verified trust event counts, report flags, evidence-file totals, notice delivery status, and weighted trust monitoring values. `monitoring-v2` counts verified non-response at 1 point, verified cancellation at 2 points, and one 1–2-star rating signal per completed order at 1 point. Written feedback is context, not machine-scored sentiment. Allegation flags contribute zero points. These are monitoring signals, not a quality score or penalty. Admin monitoring does not approve reports or change user accounts.
+This endpoint reports aggregate usage, listings, orders, verified trust event counts, report flags, evidence-file totals, notice delivery status, weighted trust monitoring values, and active trust-action counts. `monitoring-v3` counts verified non-response at 1 point, verified cancellation at 2 points, and one 1–2-star rating signal per completed order at 1 point. Written feedback is context, not machine-scored sentiment. Allegation flags contribute zero points. These weights and the configurable warning/restriction/block thresholds are prototype policy settings, not research-proven facts. Admin monitoring does not approve reports, restore accounts, revoke actions, or change user accounts.
+
+Trust actions are disabled by default with `TRUST_ACTIONS_ENABLED=false`. When explicitly enabled and manually validated, the scheduled system can create a warning, a temporary restriction, or a blocked state. Temporary restrictions expire through `runScheduledJobs`; blocked-account restoration requires the public OTP recovery flow above.
 
 Evidence files are stored with private access in the configured S3 bucket. Keep the bucket policy private; download links are signed and expire after five minutes.
 

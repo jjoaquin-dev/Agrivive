@@ -1,11 +1,7 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { trust_events } from "../../db/schema";
-
-const monitorWeights: Record<string, number> = {
-  inquiry_non_response: 1,
-  seller_cancellation: 2,
-};
+import { trustPolicyVersion, trustPolicyWeights } from "./policy";
 
 export async function readTrustMonitoringScore(subjectId?: string) {
   const [rows, ratingResult, feedbackResult] = await Promise.all([db.select({
@@ -43,19 +39,24 @@ export async function readTrustMonitoringScore(subjectId?: string) {
   const components = verified.map((row) => ({
     kind: row.kind,
     count: Number(row.count),
-    weight: monitorWeights[row.kind] ?? 0,
-    points: Number(row.count) * (monitorWeights[row.kind] ?? 0),
+    weight: trustPolicyWeights[row.kind as keyof typeof trustPolicyWeights] ?? 0,
+    points: Number(row.count) * (trustPolicyWeights[row.kind as keyof typeof trustPolicyWeights] ?? 0),
   }));
   const ratingSignals = Number(ratingResult.rows[0]?.count ?? 0);
   const verifiedEventPoints = components.reduce((total, item) => total + item.points, 0);
   return {
-    policyVersion: "monitoring-v2",
-    weightedPoints: verifiedEventPoints + ratingSignals,
+    policyVersion: trustPolicyVersion,
+    weightedPoints: verifiedEventPoints + ratingSignals * trustPolicyWeights.low_rating,
     verifiedEventPoints,
     ratingSignals,
     writtenFeedbackCount: Number(feedbackResult.rows[0]?.count ?? 0),
     verifiedEvents: components.reduce((total, item) => total + item.count, 0),
     allegationFlags: allegations.reduce((total, item) => total + Number(item.count), 0),
-    components: [...components, { kind: "low_rating", count: ratingSignals, weight: 1, points: ratingSignals }],
+    components: [...components, {
+      kind: "low_rating",
+      count: ratingSignals,
+      weight: trustPolicyWeights.low_rating,
+      points: ratingSignals * trustPolicyWeights.low_rating,
+    }],
   };
 }

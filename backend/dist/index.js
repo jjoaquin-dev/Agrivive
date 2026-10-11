@@ -1466,12 +1466,12 @@ var require_common = __commonJS(function(exports, module) {
         if (!debug.enabled) {
           return;
         }
-        const self = debug;
+        const self2 = debug;
         const curr = Number(new Date);
         const ms = curr - (prevTime || curr);
-        self.diff = ms;
-        self.prev = prevTime;
-        self.curr = curr;
+        self2.diff = ms;
+        self2.prev = prevTime;
+        self2.curr = curr;
         prevTime = curr;
         args[0] = createDebug.coerce(args[0]);
         if (typeof args[0] !== "string") {
@@ -1486,15 +1486,15 @@ var require_common = __commonJS(function(exports, module) {
           const formatter = createDebug.formatters[format];
           if (typeof formatter === "function") {
             const val = args[index];
-            match = formatter.call(self, val);
+            match = formatter.call(self2, val);
             args.splice(index, 1);
             index--;
           }
           return match;
         });
-        createDebug.formatArgs.call(self, args);
-        const logFn = self.log || createDebug.log;
-        logFn.apply(self, args);
+        createDebug.formatArgs.call(self2, args);
+        const logFn = self2.log || createDebug.log;
+        logFn.apply(self2, args);
       }
       debug.namespace = namespace;
       debug.useColors = createDebug.useColors();
@@ -10809,15 +10809,15 @@ var _installedErrorProtos, initializer2 = (inst, issues) => {
   if (_installedErrorProtos.has(proto))
     return;
   _installedErrorProtos.add(proto);
-  _lazyMethod(proto, "format", (self) => (mapper) => formatError(self, mapper));
-  _lazyMethod(proto, "flatten", (self) => (mapper) => flattenError(self, mapper));
-  _lazyMethod(proto, "addIssue", (self) => (issue) => {
-    self.issues.push(issue);
-    self.message = JSON.stringify(self.issues, jsonStringifyReplacer, 2);
+  _lazyMethod(proto, "format", (self2) => (mapper) => formatError(self2, mapper));
+  _lazyMethod(proto, "flatten", (self2) => (mapper) => flattenError(self2, mapper));
+  _lazyMethod(proto, "addIssue", (self2) => (issue) => {
+    self2.issues.push(issue);
+    self2.message = JSON.stringify(self2.issues, jsonStringifyReplacer, 2);
   });
-  _lazyMethod(proto, "addIssues", (self) => (issues) => {
-    self.issues.push(...issues);
-    self.message = JSON.stringify(self.issues, jsonStringifyReplacer, 2);
+  _lazyMethod(proto, "addIssues", (self2) => (issues) => {
+    self2.issues.push(...issues);
+    self2.message = JSON.stringify(self2.issues, jsonStringifyReplacer, 2);
   });
   Object.defineProperty(proto, "isEmpty", {
     configurable: true,
@@ -11573,7 +11573,7 @@ var init_schemas2 = __esm(() => {
     $ZodObjectJIT.init(inst, def);
     ZodType.init(inst, def);
     inst._zod.processJSONSchema = (ctx, json, params) => objectProcessor(inst, ctx, json, params);
-    installLazyProp(inst, "shape", (self) => self._zod.def.shape, false);
+    installLazyProp(inst, "shape", (self2) => self2._zod.def.shape, false);
   }, {
     keyof() {
       return _enum(Object.keys(this._zod.def.shape));
@@ -14309,10 +14309,1490 @@ var init_noop = __esm(() => {
   noopOpenTelemetryAPI = createNoopOpenTelemetryAPI();
 });
 
+// node_modules/@opentelemetry/api/build/src/version.js
+var require_version = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.VERSION = undefined;
+  exports.VERSION = "1.9.1";
+});
+
+// node_modules/@opentelemetry/api/build/src/internal/semver.js
+var require_semver = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.isCompatible = exports._makeCompatibilityCheck = undefined;
+  var version_1 = require_version();
+  var re = /^(\d+)\.(\d+)\.(\d+)(-(.+))?$/;
+  function _makeCompatibilityCheck(ownVersion) {
+    const acceptedVersions = new Set([ownVersion]);
+    const rejectedVersions = new Set;
+    const myVersionMatch = ownVersion.match(re);
+    if (!myVersionMatch) {
+      return () => false;
+    }
+    const ownVersionParsed = {
+      major: +myVersionMatch[1],
+      minor: +myVersionMatch[2],
+      patch: +myVersionMatch[3],
+      prerelease: myVersionMatch[4]
+    };
+    if (ownVersionParsed.prerelease != null) {
+      return function isExactmatch(globalVersion) {
+        return globalVersion === ownVersion;
+      };
+    }
+    function _reject(v) {
+      rejectedVersions.add(v);
+      return false;
+    }
+    function _accept(v) {
+      acceptedVersions.add(v);
+      return true;
+    }
+    return function isCompatible(globalVersion) {
+      if (acceptedVersions.has(globalVersion)) {
+        return true;
+      }
+      if (rejectedVersions.has(globalVersion)) {
+        return false;
+      }
+      const globalVersionMatch = globalVersion.match(re);
+      if (!globalVersionMatch) {
+        return _reject(globalVersion);
+      }
+      const globalVersionParsed = {
+        major: +globalVersionMatch[1],
+        minor: +globalVersionMatch[2],
+        patch: +globalVersionMatch[3],
+        prerelease: globalVersionMatch[4]
+      };
+      if (globalVersionParsed.prerelease != null) {
+        return _reject(globalVersion);
+      }
+      if (ownVersionParsed.major !== globalVersionParsed.major) {
+        return _reject(globalVersion);
+      }
+      if (ownVersionParsed.major === 0) {
+        if (ownVersionParsed.minor === globalVersionParsed.minor && ownVersionParsed.patch <= globalVersionParsed.patch) {
+          return _accept(globalVersion);
+        }
+        return _reject(globalVersion);
+      }
+      if (ownVersionParsed.minor <= globalVersionParsed.minor) {
+        return _accept(globalVersion);
+      }
+      return _reject(globalVersion);
+    };
+  }
+  exports._makeCompatibilityCheck = _makeCompatibilityCheck;
+  exports.isCompatible = _makeCompatibilityCheck(version_1.VERSION);
+});
+
+// node_modules/@opentelemetry/api/build/src/internal/global-utils.js
+var require_global_utils = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.unregisterGlobal = exports.getGlobal = exports.registerGlobal = undefined;
+  var version_1 = require_version();
+  var semver_1 = require_semver();
+  var major = version_1.VERSION.split(".")[0];
+  var GLOBAL_OPENTELEMETRY_API_KEY = Symbol.for(`opentelemetry.js.api.${major}`);
+  var _global = typeof globalThis === "object" ? globalThis : typeof self === "object" ? self : typeof window === "object" ? window : typeof global === "object" ? global : {};
+  function registerGlobal(type, instance, diag, allowOverride = false) {
+    var _a;
+    const api = _global[GLOBAL_OPENTELEMETRY_API_KEY] = (_a = _global[GLOBAL_OPENTELEMETRY_API_KEY]) !== null && _a !== undefined ? _a : {
+      version: version_1.VERSION
+    };
+    if (!allowOverride && api[type]) {
+      const err = new Error(`@opentelemetry/api: Attempted duplicate registration of API: ${type}`);
+      diag.error(err.stack || err.message);
+      return false;
+    }
+    if (api.version !== version_1.VERSION) {
+      const err = new Error(`@opentelemetry/api: Registration of version v${api.version} for ${type} does not match previously registered API v${version_1.VERSION}`);
+      diag.error(err.stack || err.message);
+      return false;
+    }
+    api[type] = instance;
+    diag.debug(`@opentelemetry/api: Registered a global for ${type} v${version_1.VERSION}.`);
+    return true;
+  }
+  exports.registerGlobal = registerGlobal;
+  function getGlobal(type) {
+    var _a, _b;
+    const globalVersion = (_a = _global[GLOBAL_OPENTELEMETRY_API_KEY]) === null || _a === undefined ? undefined : _a.version;
+    if (!globalVersion || !(0, semver_1.isCompatible)(globalVersion)) {
+      return;
+    }
+    return (_b = _global[GLOBAL_OPENTELEMETRY_API_KEY]) === null || _b === undefined ? undefined : _b[type];
+  }
+  exports.getGlobal = getGlobal;
+  function unregisterGlobal(type, diag) {
+    diag.debug(`@opentelemetry/api: Unregistering a global for ${type} v${version_1.VERSION}.`);
+    const api = _global[GLOBAL_OPENTELEMETRY_API_KEY];
+    if (api) {
+      delete api[type];
+    }
+  }
+  exports.unregisterGlobal = unregisterGlobal;
+});
+
+// node_modules/@opentelemetry/api/build/src/diag/ComponentLogger.js
+var require_ComponentLogger = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.DiagComponentLogger = undefined;
+  var global_utils_1 = require_global_utils();
+
+  class DiagComponentLogger {
+    constructor(props) {
+      this._namespace = props.namespace || "DiagComponentLogger";
+    }
+    debug(...args) {
+      return logProxy("debug", this._namespace, args);
+    }
+    error(...args) {
+      return logProxy("error", this._namespace, args);
+    }
+    info(...args) {
+      return logProxy("info", this._namespace, args);
+    }
+    warn(...args) {
+      return logProxy("warn", this._namespace, args);
+    }
+    verbose(...args) {
+      return logProxy("verbose", this._namespace, args);
+    }
+  }
+  exports.DiagComponentLogger = DiagComponentLogger;
+  function logProxy(funcName, namespace, args) {
+    const logger = (0, global_utils_1.getGlobal)("diag");
+    if (!logger) {
+      return;
+    }
+    return logger[funcName](namespace, ...args);
+  }
+});
+
+// node_modules/@opentelemetry/api/build/src/diag/types.js
+var require_types = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.DiagLogLevel = undefined;
+  var DiagLogLevel;
+  (function(DiagLogLevel) {
+    DiagLogLevel[DiagLogLevel["NONE"] = 0] = "NONE";
+    DiagLogLevel[DiagLogLevel["ERROR"] = 30] = "ERROR";
+    DiagLogLevel[DiagLogLevel["WARN"] = 50] = "WARN";
+    DiagLogLevel[DiagLogLevel["INFO"] = 60] = "INFO";
+    DiagLogLevel[DiagLogLevel["DEBUG"] = 70] = "DEBUG";
+    DiagLogLevel[DiagLogLevel["VERBOSE"] = 80] = "VERBOSE";
+    DiagLogLevel[DiagLogLevel["ALL"] = 9999] = "ALL";
+  })(DiagLogLevel = exports.DiagLogLevel || (exports.DiagLogLevel = {}));
+});
+
+// node_modules/@opentelemetry/api/build/src/diag/internal/logLevelLogger.js
+var require_logLevelLogger = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.createLogLevelDiagLogger = undefined;
+  var types_1 = require_types();
+  function createLogLevelDiagLogger(maxLevel, logger) {
+    if (maxLevel < types_1.DiagLogLevel.NONE) {
+      maxLevel = types_1.DiagLogLevel.NONE;
+    } else if (maxLevel > types_1.DiagLogLevel.ALL) {
+      maxLevel = types_1.DiagLogLevel.ALL;
+    }
+    logger = logger || {};
+    function _filterFunc(funcName, theLevel) {
+      const theFunc = logger[funcName];
+      if (typeof theFunc === "function" && maxLevel >= theLevel) {
+        return theFunc.bind(logger);
+      }
+      return function() {};
+    }
+    return {
+      error: _filterFunc("error", types_1.DiagLogLevel.ERROR),
+      warn: _filterFunc("warn", types_1.DiagLogLevel.WARN),
+      info: _filterFunc("info", types_1.DiagLogLevel.INFO),
+      debug: _filterFunc("debug", types_1.DiagLogLevel.DEBUG),
+      verbose: _filterFunc("verbose", types_1.DiagLogLevel.VERBOSE)
+    };
+  }
+  exports.createLogLevelDiagLogger = createLogLevelDiagLogger;
+});
+
+// node_modules/@opentelemetry/api/build/src/api/diag.js
+var require_diag = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.DiagAPI = undefined;
+  var ComponentLogger_1 = require_ComponentLogger();
+  var logLevelLogger_1 = require_logLevelLogger();
+  var types_1 = require_types();
+  var global_utils_1 = require_global_utils();
+  var API_NAME = "diag";
+
+  class DiagAPI {
+    static instance() {
+      if (!this._instance) {
+        this._instance = new DiagAPI;
+      }
+      return this._instance;
+    }
+    constructor() {
+      function _logProxy(funcName) {
+        return function(...args) {
+          const logger = (0, global_utils_1.getGlobal)("diag");
+          if (!logger)
+            return;
+          return logger[funcName](...args);
+        };
+      }
+      const self2 = this;
+      const setLogger = (logger, optionsOrLogLevel = { logLevel: types_1.DiagLogLevel.INFO }) => {
+        var _a, _b, _c;
+        if (logger === self2) {
+          const err = new Error("Cannot use diag as the logger for itself. Please use a DiagLogger implementation like ConsoleDiagLogger or a custom implementation");
+          self2.error((_a = err.stack) !== null && _a !== undefined ? _a : err.message);
+          return false;
+        }
+        if (typeof optionsOrLogLevel === "number") {
+          optionsOrLogLevel = {
+            logLevel: optionsOrLogLevel
+          };
+        }
+        const oldLogger = (0, global_utils_1.getGlobal)("diag");
+        const newLogger = (0, logLevelLogger_1.createLogLevelDiagLogger)((_b = optionsOrLogLevel.logLevel) !== null && _b !== undefined ? _b : types_1.DiagLogLevel.INFO, logger);
+        if (oldLogger && !optionsOrLogLevel.suppressOverrideMessage) {
+          const stack = (_c = new Error().stack) !== null && _c !== undefined ? _c : "<failed to generate stacktrace>";
+          oldLogger.warn(`Current logger will be overwritten from ${stack}`);
+          newLogger.warn(`Current logger will overwrite one already registered from ${stack}`);
+        }
+        return (0, global_utils_1.registerGlobal)("diag", newLogger, self2, true);
+      };
+      self2.setLogger = setLogger;
+      self2.disable = () => {
+        (0, global_utils_1.unregisterGlobal)(API_NAME, self2);
+      };
+      self2.createComponentLogger = (options) => {
+        return new ComponentLogger_1.DiagComponentLogger(options);
+      };
+      self2.verbose = _logProxy("verbose");
+      self2.debug = _logProxy("debug");
+      self2.info = _logProxy("info");
+      self2.warn = _logProxy("warn");
+      self2.error = _logProxy("error");
+    }
+  }
+  exports.DiagAPI = DiagAPI;
+});
+
+// node_modules/@opentelemetry/api/build/src/baggage/internal/baggage-impl.js
+var require_baggage_impl = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.BaggageImpl = undefined;
+
+  class BaggageImpl {
+    constructor(entries) {
+      this._entries = entries ? new Map(entries) : new Map;
+    }
+    getEntry(key) {
+      const entry = this._entries.get(key);
+      if (!entry) {
+        return;
+      }
+      return Object.assign({}, entry);
+    }
+    getAllEntries() {
+      return Array.from(this._entries.entries());
+    }
+    setEntry(key, entry) {
+      const newBaggage = new BaggageImpl(this._entries);
+      newBaggage._entries.set(key, entry);
+      return newBaggage;
+    }
+    removeEntry(key) {
+      const newBaggage = new BaggageImpl(this._entries);
+      newBaggage._entries.delete(key);
+      return newBaggage;
+    }
+    removeEntries(...keys) {
+      const newBaggage = new BaggageImpl(this._entries);
+      for (const key of keys) {
+        newBaggage._entries.delete(key);
+      }
+      return newBaggage;
+    }
+    clear() {
+      return new BaggageImpl;
+    }
+  }
+  exports.BaggageImpl = BaggageImpl;
+});
+
+// node_modules/@opentelemetry/api/build/src/baggage/internal/symbol.js
+var require_symbol = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.baggageEntryMetadataSymbol = undefined;
+  exports.baggageEntryMetadataSymbol = Symbol("BaggageEntryMetadata");
+});
+
+// node_modules/@opentelemetry/api/build/src/baggage/utils.js
+var require_utils2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.baggageEntryMetadataFromString = exports.createBaggage = undefined;
+  var diag_1 = require_diag();
+  var baggage_impl_1 = require_baggage_impl();
+  var symbol_1 = require_symbol();
+  var diag = diag_1.DiagAPI.instance();
+  function createBaggage(entries = {}) {
+    return new baggage_impl_1.BaggageImpl(new Map(Object.entries(entries)));
+  }
+  exports.createBaggage = createBaggage;
+  function baggageEntryMetadataFromString(str) {
+    if (typeof str !== "string") {
+      diag.error(`Cannot create baggage metadata from unknown type: ${typeof str}`);
+      str = "";
+    }
+    return {
+      __TYPE__: symbol_1.baggageEntryMetadataSymbol,
+      toString() {
+        return str;
+      }
+    };
+  }
+  exports.baggageEntryMetadataFromString = baggageEntryMetadataFromString;
+});
+
+// node_modules/@opentelemetry/api/build/src/context/context.js
+var require_context = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ROOT_CONTEXT = exports.createContextKey = undefined;
+  function createContextKey(description) {
+    return Symbol.for(description);
+  }
+  exports.createContextKey = createContextKey;
+
+  class BaseContext {
+    constructor(parentContext) {
+      const self2 = this;
+      self2._currentContext = parentContext ? new Map(parentContext) : new Map;
+      self2.getValue = (key) => self2._currentContext.get(key);
+      self2.setValue = (key, value) => {
+        const context = new BaseContext(self2._currentContext);
+        context._currentContext.set(key, value);
+        return context;
+      };
+      self2.deleteValue = (key) => {
+        const context = new BaseContext(self2._currentContext);
+        context._currentContext.delete(key);
+        return context;
+      };
+    }
+  }
+  exports.ROOT_CONTEXT = new BaseContext;
+});
+
+// node_modules/@opentelemetry/api/build/src/diag/consoleLogger.js
+var require_consoleLogger = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.DiagConsoleLogger = exports._originalConsoleMethods = undefined;
+  var consoleMap = [
+    { n: "error", c: "error" },
+    { n: "warn", c: "warn" },
+    { n: "info", c: "info" },
+    { n: "debug", c: "debug" },
+    { n: "verbose", c: "trace" }
+  ];
+  exports._originalConsoleMethods = {};
+  if (typeof console !== "undefined") {
+    const keys = [
+      "error",
+      "warn",
+      "info",
+      "debug",
+      "trace",
+      "log"
+    ];
+    for (const key of keys) {
+      if (typeof console[key] === "function") {
+        exports._originalConsoleMethods[key] = console[key];
+      }
+    }
+  }
+
+  class DiagConsoleLogger {
+    constructor() {
+      function _consoleFunc(funcName) {
+        return function(...args) {
+          let theFunc = exports._originalConsoleMethods[funcName];
+          if (typeof theFunc !== "function") {
+            theFunc = exports._originalConsoleMethods["log"];
+          }
+          if (typeof theFunc !== "function" && console) {
+            theFunc = console[funcName];
+            if (typeof theFunc !== "function") {
+              theFunc = console.log;
+            }
+          }
+          if (typeof theFunc === "function") {
+            return theFunc.apply(console, args);
+          }
+        };
+      }
+      for (let i = 0;i < consoleMap.length; i++) {
+        this[consoleMap[i].n] = _consoleFunc(consoleMap[i].c);
+      }
+    }
+  }
+  exports.DiagConsoleLogger = DiagConsoleLogger;
+});
+
+// node_modules/@opentelemetry/api/build/src/metrics/NoopMeter.js
+var require_NoopMeter = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.createNoopMeter = exports.NOOP_OBSERVABLE_UP_DOWN_COUNTER_METRIC = exports.NOOP_OBSERVABLE_GAUGE_METRIC = exports.NOOP_OBSERVABLE_COUNTER_METRIC = exports.NOOP_UP_DOWN_COUNTER_METRIC = exports.NOOP_HISTOGRAM_METRIC = exports.NOOP_GAUGE_METRIC = exports.NOOP_COUNTER_METRIC = exports.NOOP_METER = exports.NoopObservableUpDownCounterMetric = exports.NoopObservableGaugeMetric = exports.NoopObservableCounterMetric = exports.NoopObservableMetric = exports.NoopHistogramMetric = exports.NoopGaugeMetric = exports.NoopUpDownCounterMetric = exports.NoopCounterMetric = exports.NoopMetric = exports.NoopMeter = undefined;
+
+  class NoopMeter {
+    constructor() {}
+    createGauge(_name, _options) {
+      return exports.NOOP_GAUGE_METRIC;
+    }
+    createHistogram(_name, _options) {
+      return exports.NOOP_HISTOGRAM_METRIC;
+    }
+    createCounter(_name, _options) {
+      return exports.NOOP_COUNTER_METRIC;
+    }
+    createUpDownCounter(_name, _options) {
+      return exports.NOOP_UP_DOWN_COUNTER_METRIC;
+    }
+    createObservableGauge(_name, _options) {
+      return exports.NOOP_OBSERVABLE_GAUGE_METRIC;
+    }
+    createObservableCounter(_name, _options) {
+      return exports.NOOP_OBSERVABLE_COUNTER_METRIC;
+    }
+    createObservableUpDownCounter(_name, _options) {
+      return exports.NOOP_OBSERVABLE_UP_DOWN_COUNTER_METRIC;
+    }
+    addBatchObservableCallback(_callback, _observables) {}
+    removeBatchObservableCallback(_callback) {}
+  }
+  exports.NoopMeter = NoopMeter;
+
+  class NoopMetric {
+  }
+  exports.NoopMetric = NoopMetric;
+
+  class NoopCounterMetric extends NoopMetric {
+    add(_value, _attributes) {}
+  }
+  exports.NoopCounterMetric = NoopCounterMetric;
+
+  class NoopUpDownCounterMetric extends NoopMetric {
+    add(_value, _attributes) {}
+  }
+  exports.NoopUpDownCounterMetric = NoopUpDownCounterMetric;
+
+  class NoopGaugeMetric extends NoopMetric {
+    record(_value, _attributes) {}
+  }
+  exports.NoopGaugeMetric = NoopGaugeMetric;
+
+  class NoopHistogramMetric extends NoopMetric {
+    record(_value, _attributes) {}
+  }
+  exports.NoopHistogramMetric = NoopHistogramMetric;
+
+  class NoopObservableMetric {
+    addCallback(_callback) {}
+    removeCallback(_callback) {}
+  }
+  exports.NoopObservableMetric = NoopObservableMetric;
+
+  class NoopObservableCounterMetric extends NoopObservableMetric {
+  }
+  exports.NoopObservableCounterMetric = NoopObservableCounterMetric;
+
+  class NoopObservableGaugeMetric extends NoopObservableMetric {
+  }
+  exports.NoopObservableGaugeMetric = NoopObservableGaugeMetric;
+
+  class NoopObservableUpDownCounterMetric extends NoopObservableMetric {
+  }
+  exports.NoopObservableUpDownCounterMetric = NoopObservableUpDownCounterMetric;
+  exports.NOOP_METER = new NoopMeter;
+  exports.NOOP_COUNTER_METRIC = new NoopCounterMetric;
+  exports.NOOP_GAUGE_METRIC = new NoopGaugeMetric;
+  exports.NOOP_HISTOGRAM_METRIC = new NoopHistogramMetric;
+  exports.NOOP_UP_DOWN_COUNTER_METRIC = new NoopUpDownCounterMetric;
+  exports.NOOP_OBSERVABLE_COUNTER_METRIC = new NoopObservableCounterMetric;
+  exports.NOOP_OBSERVABLE_GAUGE_METRIC = new NoopObservableGaugeMetric;
+  exports.NOOP_OBSERVABLE_UP_DOWN_COUNTER_METRIC = new NoopObservableUpDownCounterMetric;
+  function createNoopMeter() {
+    return exports.NOOP_METER;
+  }
+  exports.createNoopMeter = createNoopMeter;
+});
+
+// node_modules/@opentelemetry/api/build/src/metrics/Metric.js
+var require_Metric = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ValueType = undefined;
+  var ValueType;
+  (function(ValueType) {
+    ValueType[ValueType["INT"] = 0] = "INT";
+    ValueType[ValueType["DOUBLE"] = 1] = "DOUBLE";
+  })(ValueType = exports.ValueType || (exports.ValueType = {}));
+});
+
+// node_modules/@opentelemetry/api/build/src/propagation/TextMapPropagator.js
+var require_TextMapPropagator = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.defaultTextMapSetter = exports.defaultTextMapGetter = undefined;
+  exports.defaultTextMapGetter = {
+    get(carrier, key) {
+      if (carrier == null) {
+        return;
+      }
+      return carrier[key];
+    },
+    keys(carrier) {
+      if (carrier == null) {
+        return [];
+      }
+      return Object.keys(carrier);
+    }
+  };
+  exports.defaultTextMapSetter = {
+    set(carrier, key, value) {
+      if (carrier == null) {
+        return;
+      }
+      carrier[key] = value;
+    }
+  };
+});
+
+// node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js
+var require_NoopContextManager = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NoopContextManager = undefined;
+  var context_1 = require_context();
+
+  class NoopContextManager {
+    active() {
+      return context_1.ROOT_CONTEXT;
+    }
+    with(_context, fn, thisArg, ...args) {
+      return fn.call(thisArg, ...args);
+    }
+    bind(_context, target) {
+      return target;
+    }
+    enable() {
+      return this;
+    }
+    disable() {
+      return this;
+    }
+  }
+  exports.NoopContextManager = NoopContextManager;
+});
+
+// node_modules/@opentelemetry/api/build/src/api/context.js
+var require_context2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ContextAPI = undefined;
+  var NoopContextManager_1 = require_NoopContextManager();
+  var global_utils_1 = require_global_utils();
+  var diag_1 = require_diag();
+  var API_NAME = "context";
+  var NOOP_CONTEXT_MANAGER = new NoopContextManager_1.NoopContextManager;
+
+  class ContextAPI {
+    constructor() {}
+    static getInstance() {
+      if (!this._instance) {
+        this._instance = new ContextAPI;
+      }
+      return this._instance;
+    }
+    setGlobalContextManager(contextManager) {
+      return (0, global_utils_1.registerGlobal)(API_NAME, contextManager, diag_1.DiagAPI.instance());
+    }
+    active() {
+      return this._getContextManager().active();
+    }
+    with(context, fn, thisArg, ...args) {
+      return this._getContextManager().with(context, fn, thisArg, ...args);
+    }
+    bind(context, target) {
+      return this._getContextManager().bind(context, target);
+    }
+    _getContextManager() {
+      return (0, global_utils_1.getGlobal)(API_NAME) || NOOP_CONTEXT_MANAGER;
+    }
+    disable() {
+      this._getContextManager().disable();
+      (0, global_utils_1.unregisterGlobal)(API_NAME, diag_1.DiagAPI.instance());
+    }
+  }
+  exports.ContextAPI = ContextAPI;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/trace_flags.js
+var require_trace_flags = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.TraceFlags = undefined;
+  var TraceFlags;
+  (function(TraceFlags) {
+    TraceFlags[TraceFlags["NONE"] = 0] = "NONE";
+    TraceFlags[TraceFlags["SAMPLED"] = 1] = "SAMPLED";
+  })(TraceFlags = exports.TraceFlags || (exports.TraceFlags = {}));
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/invalid-span-constants.js
+var require_invalid_span_constants = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.INVALID_SPAN_CONTEXT = exports.INVALID_TRACEID = exports.INVALID_SPANID = undefined;
+  var trace_flags_1 = require_trace_flags();
+  exports.INVALID_SPANID = "0000000000000000";
+  exports.INVALID_TRACEID = "00000000000000000000000000000000";
+  exports.INVALID_SPAN_CONTEXT = {
+    traceId: exports.INVALID_TRACEID,
+    spanId: exports.INVALID_SPANID,
+    traceFlags: trace_flags_1.TraceFlags.NONE
+  };
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/NonRecordingSpan.js
+var require_NonRecordingSpan = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NonRecordingSpan = undefined;
+  var invalid_span_constants_1 = require_invalid_span_constants();
+
+  class NonRecordingSpan {
+    constructor(spanContext = invalid_span_constants_1.INVALID_SPAN_CONTEXT) {
+      this._spanContext = spanContext;
+    }
+    spanContext() {
+      return this._spanContext;
+    }
+    setAttribute(_key, _value) {
+      return this;
+    }
+    setAttributes(_attributes) {
+      return this;
+    }
+    addEvent(_name, _attributes) {
+      return this;
+    }
+    addLink(_link) {
+      return this;
+    }
+    addLinks(_links) {
+      return this;
+    }
+    setStatus(_status) {
+      return this;
+    }
+    updateName(_name) {
+      return this;
+    }
+    end(_endTime) {}
+    isRecording() {
+      return false;
+    }
+    recordException(_exception, _time) {}
+  }
+  exports.NonRecordingSpan = NonRecordingSpan;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/context-utils.js
+var require_context_utils = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.getSpanContext = exports.setSpanContext = exports.deleteSpan = exports.setSpan = exports.getActiveSpan = exports.getSpan = undefined;
+  var context_1 = require_context();
+  var NonRecordingSpan_1 = require_NonRecordingSpan();
+  var context_2 = require_context2();
+  var SPAN_KEY = (0, context_1.createContextKey)("OpenTelemetry Context Key SPAN");
+  function getSpan(context) {
+    return context.getValue(SPAN_KEY) || undefined;
+  }
+  exports.getSpan = getSpan;
+  function getActiveSpan() {
+    return getSpan(context_2.ContextAPI.getInstance().active());
+  }
+  exports.getActiveSpan = getActiveSpan;
+  function setSpan(context, span) {
+    return context.setValue(SPAN_KEY, span);
+  }
+  exports.setSpan = setSpan;
+  function deleteSpan(context) {
+    return context.deleteValue(SPAN_KEY);
+  }
+  exports.deleteSpan = deleteSpan;
+  function setSpanContext(context, spanContext) {
+    return setSpan(context, new NonRecordingSpan_1.NonRecordingSpan(spanContext));
+  }
+  exports.setSpanContext = setSpanContext;
+  function getSpanContext(context) {
+    var _a;
+    return (_a = getSpan(context)) === null || _a === undefined ? undefined : _a.spanContext();
+  }
+  exports.getSpanContext = getSpanContext;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/spancontext-utils.js
+var require_spancontext_utils = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.wrapSpanContext = exports.isSpanContextValid = exports.isValidSpanId = exports.isValidTraceId = undefined;
+  var invalid_span_constants_1 = require_invalid_span_constants();
+  var NonRecordingSpan_1 = require_NonRecordingSpan();
+  var isHex = new Uint8Array([
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ]);
+  function isValidHex(id, length) {
+    if (typeof id !== "string" || id.length !== length)
+      return false;
+    let r = 0;
+    for (let i = 0;i < id.length; i += 4) {
+      r += (isHex[id.charCodeAt(i)] | 0) + (isHex[id.charCodeAt(i + 1)] | 0) + (isHex[id.charCodeAt(i + 2)] | 0) + (isHex[id.charCodeAt(i + 3)] | 0);
+    }
+    return r === length;
+  }
+  function isValidTraceId(traceId) {
+    return isValidHex(traceId, 32) && traceId !== invalid_span_constants_1.INVALID_TRACEID;
+  }
+  exports.isValidTraceId = isValidTraceId;
+  function isValidSpanId(spanId) {
+    return isValidHex(spanId, 16) && spanId !== invalid_span_constants_1.INVALID_SPANID;
+  }
+  exports.isValidSpanId = isValidSpanId;
+  function isSpanContextValid(spanContext) {
+    return isValidTraceId(spanContext.traceId) && isValidSpanId(spanContext.spanId);
+  }
+  exports.isSpanContextValid = isSpanContextValid;
+  function wrapSpanContext(spanContext) {
+    return new NonRecordingSpan_1.NonRecordingSpan(spanContext);
+  }
+  exports.wrapSpanContext = wrapSpanContext;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js
+var require_NoopTracer = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NoopTracer = undefined;
+  var context_1 = require_context2();
+  var context_utils_1 = require_context_utils();
+  var NonRecordingSpan_1 = require_NonRecordingSpan();
+  var spancontext_utils_1 = require_spancontext_utils();
+  var contextApi = context_1.ContextAPI.getInstance();
+
+  class NoopTracer {
+    startSpan(name, options, context = contextApi.active()) {
+      const root = Boolean(options === null || options === undefined ? undefined : options.root);
+      if (root) {
+        return new NonRecordingSpan_1.NonRecordingSpan;
+      }
+      const parentFromContext = context && (0, context_utils_1.getSpanContext)(context);
+      if (isSpanContext(parentFromContext) && (0, spancontext_utils_1.isSpanContextValid)(parentFromContext)) {
+        return new NonRecordingSpan_1.NonRecordingSpan(parentFromContext);
+      } else {
+        return new NonRecordingSpan_1.NonRecordingSpan;
+      }
+    }
+    startActiveSpan(name, arg2, arg3, arg4) {
+      let opts;
+      let ctx;
+      let fn;
+      if (arguments.length < 2) {
+        return;
+      } else if (arguments.length === 2) {
+        fn = arg2;
+      } else if (arguments.length === 3) {
+        opts = arg2;
+        fn = arg3;
+      } else {
+        opts = arg2;
+        ctx = arg3;
+        fn = arg4;
+      }
+      const parentContext = ctx !== null && ctx !== undefined ? ctx : contextApi.active();
+      const span = this.startSpan(name, opts, parentContext);
+      const contextWithSpanSet = (0, context_utils_1.setSpan)(parentContext, span);
+      return contextApi.with(contextWithSpanSet, fn, undefined, span);
+    }
+  }
+  exports.NoopTracer = NoopTracer;
+  function isSpanContext(spanContext) {
+    return spanContext !== null && typeof spanContext === "object" && "spanId" in spanContext && typeof spanContext["spanId"] === "string" && "traceId" in spanContext && typeof spanContext["traceId"] === "string" && "traceFlags" in spanContext && typeof spanContext["traceFlags"] === "number";
+  }
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js
+var require_ProxyTracer = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ProxyTracer = undefined;
+  var NoopTracer_1 = require_NoopTracer();
+  var NOOP_TRACER = new NoopTracer_1.NoopTracer;
+
+  class ProxyTracer {
+    constructor(provider, name, version, options) {
+      this._provider = provider;
+      this.name = name;
+      this.version = version;
+      this.options = options;
+    }
+    startSpan(name, options, context) {
+      return this._getTracer().startSpan(name, options, context);
+    }
+    startActiveSpan(_name, _options, _context, _fn) {
+      const tracer = this._getTracer();
+      return Reflect.apply(tracer.startActiveSpan, tracer, arguments);
+    }
+    _getTracer() {
+      if (this._delegate) {
+        return this._delegate;
+      }
+      const tracer = this._provider.getDelegateTracer(this.name, this.version, this.options);
+      if (!tracer) {
+        return NOOP_TRACER;
+      }
+      this._delegate = tracer;
+      return this._delegate;
+    }
+  }
+  exports.ProxyTracer = ProxyTracer;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/NoopTracerProvider.js
+var require_NoopTracerProvider = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NoopTracerProvider = undefined;
+  var NoopTracer_1 = require_NoopTracer();
+
+  class NoopTracerProvider {
+    getTracer(_name, _version, _options) {
+      return new NoopTracer_1.NoopTracer;
+    }
+  }
+  exports.NoopTracerProvider = NoopTracerProvider;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/ProxyTracerProvider.js
+var require_ProxyTracerProvider = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ProxyTracerProvider = undefined;
+  var ProxyTracer_1 = require_ProxyTracer();
+  var NoopTracerProvider_1 = require_NoopTracerProvider();
+  var NOOP_TRACER_PROVIDER = new NoopTracerProvider_1.NoopTracerProvider;
+
+  class ProxyTracerProvider {
+    getTracer(name, version, options) {
+      var _a;
+      return (_a = this.getDelegateTracer(name, version, options)) !== null && _a !== undefined ? _a : new ProxyTracer_1.ProxyTracer(this, name, version, options);
+    }
+    getDelegate() {
+      var _a;
+      return (_a = this._delegate) !== null && _a !== undefined ? _a : NOOP_TRACER_PROVIDER;
+    }
+    setDelegate(delegate) {
+      this._delegate = delegate;
+    }
+    getDelegateTracer(name, version, options) {
+      var _a;
+      return (_a = this._delegate) === null || _a === undefined ? undefined : _a.getTracer(name, version, options);
+    }
+  }
+  exports.ProxyTracerProvider = ProxyTracerProvider;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/SamplingResult.js
+var require_SamplingResult = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.SamplingDecision = undefined;
+  var SamplingDecision;
+  (function(SamplingDecision) {
+    SamplingDecision[SamplingDecision["NOT_RECORD"] = 0] = "NOT_RECORD";
+    SamplingDecision[SamplingDecision["RECORD"] = 1] = "RECORD";
+    SamplingDecision[SamplingDecision["RECORD_AND_SAMPLED"] = 2] = "RECORD_AND_SAMPLED";
+  })(SamplingDecision = exports.SamplingDecision || (exports.SamplingDecision = {}));
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/span_kind.js
+var require_span_kind = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.SpanKind = undefined;
+  var SpanKind;
+  (function(SpanKind) {
+    SpanKind[SpanKind["INTERNAL"] = 0] = "INTERNAL";
+    SpanKind[SpanKind["SERVER"] = 1] = "SERVER";
+    SpanKind[SpanKind["CLIENT"] = 2] = "CLIENT";
+    SpanKind[SpanKind["PRODUCER"] = 3] = "PRODUCER";
+    SpanKind[SpanKind["CONSUMER"] = 4] = "CONSUMER";
+  })(SpanKind = exports.SpanKind || (exports.SpanKind = {}));
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/status.js
+var require_status = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.SpanStatusCode = undefined;
+  var SpanStatusCode;
+  (function(SpanStatusCode) {
+    SpanStatusCode[SpanStatusCode["UNSET"] = 0] = "UNSET";
+    SpanStatusCode[SpanStatusCode["OK"] = 1] = "OK";
+    SpanStatusCode[SpanStatusCode["ERROR"] = 2] = "ERROR";
+  })(SpanStatusCode = exports.SpanStatusCode || (exports.SpanStatusCode = {}));
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/internal/tracestate-validators.js
+var require_tracestate_validators = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.validateValue = exports.validateKey = undefined;
+  var VALID_KEY_CHAR_RANGE = "[_0-9a-z-*/]";
+  var VALID_KEY = `[a-z]${VALID_KEY_CHAR_RANGE}{0,255}`;
+  var VALID_VENDOR_KEY = `[a-z0-9]${VALID_KEY_CHAR_RANGE}{0,240}@[a-z]${VALID_KEY_CHAR_RANGE}{0,13}`;
+  var VALID_KEY_REGEX = new RegExp(`^(?:${VALID_KEY}|${VALID_VENDOR_KEY})$`);
+  var VALID_VALUE_BASE_REGEX = /^[ -~]{0,255}[!-~]$/;
+  var INVALID_VALUE_COMMA_EQUAL_REGEX = /,|=/;
+  function validateKey(key) {
+    return VALID_KEY_REGEX.test(key);
+  }
+  exports.validateKey = validateKey;
+  function validateValue(value) {
+    return VALID_VALUE_BASE_REGEX.test(value) && !INVALID_VALUE_COMMA_EQUAL_REGEX.test(value);
+  }
+  exports.validateValue = validateValue;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/internal/tracestate-impl.js
+var require_tracestate_impl = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.TraceStateImpl = undefined;
+  var tracestate_validators_1 = require_tracestate_validators();
+  var MAX_TRACE_STATE_ITEMS = 32;
+  var MAX_TRACE_STATE_LEN = 512;
+  var LIST_MEMBERS_SEPARATOR = ",";
+  var LIST_MEMBER_KEY_VALUE_SPLITTER = "=";
+
+  class TraceStateImpl {
+    constructor(rawTraceState) {
+      this._internalState = new Map;
+      if (rawTraceState)
+        this._parse(rawTraceState);
+    }
+    set(key, value) {
+      const traceState = this._clone();
+      if (traceState._internalState.has(key)) {
+        traceState._internalState.delete(key);
+      }
+      traceState._internalState.set(key, value);
+      return traceState;
+    }
+    unset(key) {
+      const traceState = this._clone();
+      traceState._internalState.delete(key);
+      return traceState;
+    }
+    get(key) {
+      return this._internalState.get(key);
+    }
+    serialize() {
+      return Array.from(this._internalState.keys()).reduceRight((agg, key) => {
+        agg.push(key + LIST_MEMBER_KEY_VALUE_SPLITTER + this.get(key));
+        return agg;
+      }, []).join(LIST_MEMBERS_SEPARATOR);
+    }
+    _parse(rawTraceState) {
+      if (rawTraceState.length > MAX_TRACE_STATE_LEN)
+        return;
+      this._internalState = rawTraceState.split(LIST_MEMBERS_SEPARATOR).reduceRight((agg, part) => {
+        const listMember = part.trim();
+        const i = listMember.indexOf(LIST_MEMBER_KEY_VALUE_SPLITTER);
+        if (i !== -1) {
+          const key = listMember.slice(0, i);
+          const value = listMember.slice(i + 1, part.length);
+          if ((0, tracestate_validators_1.validateKey)(key) && (0, tracestate_validators_1.validateValue)(value)) {
+            agg.set(key, value);
+          }
+        }
+        return agg;
+      }, new Map);
+      if (this._internalState.size > MAX_TRACE_STATE_ITEMS) {
+        this._internalState = new Map(Array.from(this._internalState.entries()).reverse().slice(0, MAX_TRACE_STATE_ITEMS));
+      }
+    }
+    _keys() {
+      return Array.from(this._internalState.keys()).reverse();
+    }
+    _clone() {
+      const traceState = new TraceStateImpl;
+      traceState._internalState = new Map(this._internalState);
+      return traceState;
+    }
+  }
+  exports.TraceStateImpl = TraceStateImpl;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace/internal/utils.js
+var require_utils3 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.createTraceState = undefined;
+  var tracestate_impl_1 = require_tracestate_impl();
+  function createTraceState(rawTraceState) {
+    return new tracestate_impl_1.TraceStateImpl(rawTraceState);
+  }
+  exports.createTraceState = createTraceState;
+});
+
+// node_modules/@opentelemetry/api/build/src/context-api.js
+var require_context_api = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.context = undefined;
+  var context_1 = require_context2();
+  exports.context = context_1.ContextAPI.getInstance();
+});
+
+// node_modules/@opentelemetry/api/build/src/diag-api.js
+var require_diag_api = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.diag = undefined;
+  var diag_1 = require_diag();
+  exports.diag = diag_1.DiagAPI.instance();
+});
+
+// node_modules/@opentelemetry/api/build/src/metrics/NoopMeterProvider.js
+var require_NoopMeterProvider = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NOOP_METER_PROVIDER = exports.NoopMeterProvider = undefined;
+  var NoopMeter_1 = require_NoopMeter();
+
+  class NoopMeterProvider {
+    getMeter(_name, _version, _options) {
+      return NoopMeter_1.NOOP_METER;
+    }
+  }
+  exports.NoopMeterProvider = NoopMeterProvider;
+  exports.NOOP_METER_PROVIDER = new NoopMeterProvider;
+});
+
+// node_modules/@opentelemetry/api/build/src/api/metrics.js
+var require_metrics = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.MetricsAPI = undefined;
+  var NoopMeterProvider_1 = require_NoopMeterProvider();
+  var global_utils_1 = require_global_utils();
+  var diag_1 = require_diag();
+  var API_NAME = "metrics";
+
+  class MetricsAPI {
+    constructor() {}
+    static getInstance() {
+      if (!this._instance) {
+        this._instance = new MetricsAPI;
+      }
+      return this._instance;
+    }
+    setGlobalMeterProvider(provider) {
+      return (0, global_utils_1.registerGlobal)(API_NAME, provider, diag_1.DiagAPI.instance());
+    }
+    getMeterProvider() {
+      return (0, global_utils_1.getGlobal)(API_NAME) || NoopMeterProvider_1.NOOP_METER_PROVIDER;
+    }
+    getMeter(name, version, options) {
+      return this.getMeterProvider().getMeter(name, version, options);
+    }
+    disable() {
+      (0, global_utils_1.unregisterGlobal)(API_NAME, diag_1.DiagAPI.instance());
+    }
+  }
+  exports.MetricsAPI = MetricsAPI;
+});
+
+// node_modules/@opentelemetry/api/build/src/metrics-api.js
+var require_metrics_api = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.metrics = undefined;
+  var metrics_1 = require_metrics();
+  exports.metrics = metrics_1.MetricsAPI.getInstance();
+});
+
+// node_modules/@opentelemetry/api/build/src/propagation/NoopTextMapPropagator.js
+var require_NoopTextMapPropagator = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NoopTextMapPropagator = undefined;
+
+  class NoopTextMapPropagator {
+    inject(_context, _carrier) {}
+    extract(context, _carrier) {
+      return context;
+    }
+    fields() {
+      return [];
+    }
+  }
+  exports.NoopTextMapPropagator = NoopTextMapPropagator;
+});
+
+// node_modules/@opentelemetry/api/build/src/baggage/context-helpers.js
+var require_context_helpers = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.deleteBaggage = exports.setBaggage = exports.getActiveBaggage = exports.getBaggage = undefined;
+  var context_1 = require_context2();
+  var context_2 = require_context();
+  var BAGGAGE_KEY = (0, context_2.createContextKey)("OpenTelemetry Baggage Key");
+  function getBaggage(context) {
+    return context.getValue(BAGGAGE_KEY) || undefined;
+  }
+  exports.getBaggage = getBaggage;
+  function getActiveBaggage() {
+    return getBaggage(context_1.ContextAPI.getInstance().active());
+  }
+  exports.getActiveBaggage = getActiveBaggage;
+  function setBaggage(context, baggage) {
+    return context.setValue(BAGGAGE_KEY, baggage);
+  }
+  exports.setBaggage = setBaggage;
+  function deleteBaggage(context) {
+    return context.deleteValue(BAGGAGE_KEY);
+  }
+  exports.deleteBaggage = deleteBaggage;
+});
+
+// node_modules/@opentelemetry/api/build/src/api/propagation.js
+var require_propagation = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.PropagationAPI = undefined;
+  var global_utils_1 = require_global_utils();
+  var NoopTextMapPropagator_1 = require_NoopTextMapPropagator();
+  var TextMapPropagator_1 = require_TextMapPropagator();
+  var context_helpers_1 = require_context_helpers();
+  var utils_1 = require_utils2();
+  var diag_1 = require_diag();
+  var API_NAME = "propagation";
+  var NOOP_TEXT_MAP_PROPAGATOR = new NoopTextMapPropagator_1.NoopTextMapPropagator;
+
+  class PropagationAPI {
+    constructor() {
+      this.createBaggage = utils_1.createBaggage;
+      this.getBaggage = context_helpers_1.getBaggage;
+      this.getActiveBaggage = context_helpers_1.getActiveBaggage;
+      this.setBaggage = context_helpers_1.setBaggage;
+      this.deleteBaggage = context_helpers_1.deleteBaggage;
+    }
+    static getInstance() {
+      if (!this._instance) {
+        this._instance = new PropagationAPI;
+      }
+      return this._instance;
+    }
+    setGlobalPropagator(propagator) {
+      return (0, global_utils_1.registerGlobal)(API_NAME, propagator, diag_1.DiagAPI.instance());
+    }
+    inject(context, carrier, setter = TextMapPropagator_1.defaultTextMapSetter) {
+      return this._getGlobalPropagator().inject(context, carrier, setter);
+    }
+    extract(context, carrier, getter = TextMapPropagator_1.defaultTextMapGetter) {
+      return this._getGlobalPropagator().extract(context, carrier, getter);
+    }
+    fields() {
+      return this._getGlobalPropagator().fields();
+    }
+    disable() {
+      (0, global_utils_1.unregisterGlobal)(API_NAME, diag_1.DiagAPI.instance());
+    }
+    _getGlobalPropagator() {
+      return (0, global_utils_1.getGlobal)(API_NAME) || NOOP_TEXT_MAP_PROPAGATOR;
+    }
+  }
+  exports.PropagationAPI = PropagationAPI;
+});
+
+// node_modules/@opentelemetry/api/build/src/propagation-api.js
+var require_propagation_api = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.propagation = undefined;
+  var propagation_1 = require_propagation();
+  exports.propagation = propagation_1.PropagationAPI.getInstance();
+});
+
+// node_modules/@opentelemetry/api/build/src/api/trace.js
+var require_trace2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.TraceAPI = undefined;
+  var global_utils_1 = require_global_utils();
+  var ProxyTracerProvider_1 = require_ProxyTracerProvider();
+  var spancontext_utils_1 = require_spancontext_utils();
+  var context_utils_1 = require_context_utils();
+  var diag_1 = require_diag();
+  var API_NAME = "trace";
+
+  class TraceAPI {
+    constructor() {
+      this._proxyTracerProvider = new ProxyTracerProvider_1.ProxyTracerProvider;
+      this.wrapSpanContext = spancontext_utils_1.wrapSpanContext;
+      this.isSpanContextValid = spancontext_utils_1.isSpanContextValid;
+      this.deleteSpan = context_utils_1.deleteSpan;
+      this.getSpan = context_utils_1.getSpan;
+      this.getActiveSpan = context_utils_1.getActiveSpan;
+      this.getSpanContext = context_utils_1.getSpanContext;
+      this.setSpan = context_utils_1.setSpan;
+      this.setSpanContext = context_utils_1.setSpanContext;
+    }
+    static getInstance() {
+      if (!this._instance) {
+        this._instance = new TraceAPI;
+      }
+      return this._instance;
+    }
+    setGlobalTracerProvider(provider) {
+      const success = (0, global_utils_1.registerGlobal)(API_NAME, this._proxyTracerProvider, diag_1.DiagAPI.instance());
+      if (success) {
+        this._proxyTracerProvider.setDelegate(provider);
+      }
+      return success;
+    }
+    getTracerProvider() {
+      return (0, global_utils_1.getGlobal)(API_NAME) || this._proxyTracerProvider;
+    }
+    getTracer(name, version) {
+      return this.getTracerProvider().getTracer(name, version);
+    }
+    disable() {
+      (0, global_utils_1.unregisterGlobal)(API_NAME, diag_1.DiagAPI.instance());
+      this._proxyTracerProvider = new ProxyTracerProvider_1.ProxyTracerProvider;
+    }
+  }
+  exports.TraceAPI = TraceAPI;
+});
+
+// node_modules/@opentelemetry/api/build/src/trace-api.js
+var require_trace_api = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.trace = undefined;
+  var trace_1 = require_trace2();
+  exports.trace = trace_1.TraceAPI.getInstance();
+});
+
+// node_modules/@opentelemetry/api/build/src/index.js
+var require_src3 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.trace = exports.propagation = exports.metrics = exports.diag = exports.context = exports.INVALID_SPAN_CONTEXT = exports.INVALID_TRACEID = exports.INVALID_SPANID = exports.isValidSpanId = exports.isValidTraceId = exports.isSpanContextValid = exports.createTraceState = exports.TraceFlags = exports.SpanStatusCode = exports.SpanKind = exports.SamplingDecision = exports.ProxyTracerProvider = exports.ProxyTracer = exports.defaultTextMapSetter = exports.defaultTextMapGetter = exports.ValueType = exports.createNoopMeter = exports.DiagLogLevel = exports.DiagConsoleLogger = exports.ROOT_CONTEXT = exports.createContextKey = exports.baggageEntryMetadataFromString = undefined;
+  var utils_1 = require_utils2();
+  Object.defineProperty(exports, "baggageEntryMetadataFromString", { enumerable: true, get: function() {
+    return utils_1.baggageEntryMetadataFromString;
+  } });
+  var context_1 = require_context();
+  Object.defineProperty(exports, "createContextKey", { enumerable: true, get: function() {
+    return context_1.createContextKey;
+  } });
+  Object.defineProperty(exports, "ROOT_CONTEXT", { enumerable: true, get: function() {
+    return context_1.ROOT_CONTEXT;
+  } });
+  var consoleLogger_1 = require_consoleLogger();
+  Object.defineProperty(exports, "DiagConsoleLogger", { enumerable: true, get: function() {
+    return consoleLogger_1.DiagConsoleLogger;
+  } });
+  var types_1 = require_types();
+  Object.defineProperty(exports, "DiagLogLevel", { enumerable: true, get: function() {
+    return types_1.DiagLogLevel;
+  } });
+  var NoopMeter_1 = require_NoopMeter();
+  Object.defineProperty(exports, "createNoopMeter", { enumerable: true, get: function() {
+    return NoopMeter_1.createNoopMeter;
+  } });
+  var Metric_1 = require_Metric();
+  Object.defineProperty(exports, "ValueType", { enumerable: true, get: function() {
+    return Metric_1.ValueType;
+  } });
+  var TextMapPropagator_1 = require_TextMapPropagator();
+  Object.defineProperty(exports, "defaultTextMapGetter", { enumerable: true, get: function() {
+    return TextMapPropagator_1.defaultTextMapGetter;
+  } });
+  Object.defineProperty(exports, "defaultTextMapSetter", { enumerable: true, get: function() {
+    return TextMapPropagator_1.defaultTextMapSetter;
+  } });
+  var ProxyTracer_1 = require_ProxyTracer();
+  Object.defineProperty(exports, "ProxyTracer", { enumerable: true, get: function() {
+    return ProxyTracer_1.ProxyTracer;
+  } });
+  var ProxyTracerProvider_1 = require_ProxyTracerProvider();
+  Object.defineProperty(exports, "ProxyTracerProvider", { enumerable: true, get: function() {
+    return ProxyTracerProvider_1.ProxyTracerProvider;
+  } });
+  var SamplingResult_1 = require_SamplingResult();
+  Object.defineProperty(exports, "SamplingDecision", { enumerable: true, get: function() {
+    return SamplingResult_1.SamplingDecision;
+  } });
+  var span_kind_1 = require_span_kind();
+  Object.defineProperty(exports, "SpanKind", { enumerable: true, get: function() {
+    return span_kind_1.SpanKind;
+  } });
+  var status_1 = require_status();
+  Object.defineProperty(exports, "SpanStatusCode", { enumerable: true, get: function() {
+    return status_1.SpanStatusCode;
+  } });
+  var trace_flags_1 = require_trace_flags();
+  Object.defineProperty(exports, "TraceFlags", { enumerable: true, get: function() {
+    return trace_flags_1.TraceFlags;
+  } });
+  var utils_2 = require_utils3();
+  Object.defineProperty(exports, "createTraceState", { enumerable: true, get: function() {
+    return utils_2.createTraceState;
+  } });
+  var spancontext_utils_1 = require_spancontext_utils();
+  Object.defineProperty(exports, "isSpanContextValid", { enumerable: true, get: function() {
+    return spancontext_utils_1.isSpanContextValid;
+  } });
+  Object.defineProperty(exports, "isValidTraceId", { enumerable: true, get: function() {
+    return spancontext_utils_1.isValidTraceId;
+  } });
+  Object.defineProperty(exports, "isValidSpanId", { enumerable: true, get: function() {
+    return spancontext_utils_1.isValidSpanId;
+  } });
+  var invalid_span_constants_1 = require_invalid_span_constants();
+  Object.defineProperty(exports, "INVALID_SPANID", { enumerable: true, get: function() {
+    return invalid_span_constants_1.INVALID_SPANID;
+  } });
+  Object.defineProperty(exports, "INVALID_TRACEID", { enumerable: true, get: function() {
+    return invalid_span_constants_1.INVALID_TRACEID;
+  } });
+  Object.defineProperty(exports, "INVALID_SPAN_CONTEXT", { enumerable: true, get: function() {
+    return invalid_span_constants_1.INVALID_SPAN_CONTEXT;
+  } });
+  var context_api_1 = require_context_api();
+  Object.defineProperty(exports, "context", { enumerable: true, get: function() {
+    return context_api_1.context;
+  } });
+  var diag_api_1 = require_diag_api();
+  Object.defineProperty(exports, "diag", { enumerable: true, get: function() {
+    return diag_api_1.diag;
+  } });
+  var metrics_api_1 = require_metrics_api();
+  Object.defineProperty(exports, "metrics", { enumerable: true, get: function() {
+    return metrics_api_1.metrics;
+  } });
+  var propagation_api_1 = require_propagation_api();
+  Object.defineProperty(exports, "propagation", { enumerable: true, get: function() {
+    return propagation_api_1.propagation;
+  } });
+  var trace_api_1 = require_trace_api();
+  Object.defineProperty(exports, "trace", { enumerable: true, get: function() {
+    return trace_api_1.trace;
+  } });
+  exports.default = {
+    context: context_api_1.context,
+    diag: diag_api_1.diag,
+    metrics: metrics_api_1.metrics,
+    propagation: propagation_api_1.propagation,
+    trace: trace_api_1.trace
+  };
+});
+
 // node_modules/@better-auth/core/dist/instrumentation/api.mjs
 function getOpenTelemetryAPI() {
   if (!openTelemetryAPIPromise)
-    openTelemetryAPIPromise = import("@opentelemetry/api").then((mod) => {
+    openTelemetryAPIPromise = Promise.resolve().then(() => __toESM(require_src3(), 1)).then((mod) => {
       openTelemetryAPI = mod;
     }).catch(() => {
       return;
@@ -31882,7 +33362,7 @@ var require_defaults = __commonJS(function(exports, module) {
 });
 
 // node_modules/pg/lib/utils.js
-var require_utils2 = __commonJS(function(exports, module) {
+var require_utils4 = __commonJS(function(exports, module) {
   var defaults = require_defaults();
   var { isDate } = __require("util/types");
   function escapeElement(elementRepresentation) {
@@ -32031,7 +33511,7 @@ var require_utils2 = __commonJS(function(exports, module) {
 });
 
 // node_modules/pg/lib/crypto/utils.js
-var require_utils3 = __commonJS(function(exports, module) {
+var require_utils5 = __commonJS(function(exports, module) {
   var nodeCrypto = __require("crypto");
   module.exports = {
     postgresMd5PasswordHash,
@@ -32193,7 +33673,7 @@ var require_cert_signatures = __commonJS(function(exports, module) {
 
 // node_modules/pg/lib/crypto/sasl.js
 var require_sasl = __commonJS(function(exports, module) {
-  var crypto2 = require_utils3();
+  var crypto2 = require_utils5();
   var { signatureAlgorithmHashFromCertificate } = require_cert_signatures();
   function saslprep(password) {
     const nonAsciiSpace = /[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g;
@@ -32823,7 +34303,7 @@ var require_result = __commonJS(function(exports, module) {
 var require_query = __commonJS(function(exports, module) {
   var { EventEmitter } = __require("events");
   var Result = require_result();
-  var utils = require_utils2();
+  var utils = require_utils4();
 
   class Query extends EventEmitter {
     constructor(config, values, callback) {
@@ -33919,40 +35399,40 @@ var require_connection = __commonJS(function(exports, module) {
       this.sslNegotiation = config.sslNegotiation || "postgres";
       this._ending = false;
       this._emitMessage = false;
-      const self = this;
+      const self2 = this;
       this.on("newListener", function(eventName) {
         if (eventName === "message") {
-          self._emitMessage = true;
+          self2._emitMessage = true;
         }
       });
     }
     connect(port, host) {
-      const self = this;
+      const self2 = this;
       this._connecting = true;
       this.stream.setNoDelay(true);
       this.stream.connect(port, host);
       this.stream.once("connect", function() {
-        if (self._keepAlive) {
-          self.stream.setKeepAlive(true, self._keepAliveInitialDelayMillis);
+        if (self2._keepAlive) {
+          self2.stream.setKeepAlive(true, self2._keepAliveInitialDelayMillis);
         }
-        self.emit("connect");
+        self2.emit("connect");
       });
       const reportStreamError = function(error) {
-        if (self._ending && (error.code === "ECONNRESET" || error.code === "EPIPE")) {
+        if (self2._ending && (error.code === "ECONNRESET" || error.code === "EPIPE")) {
           return;
         }
-        self.emit("error", error);
+        self2.emit("error", error);
       };
       this.stream.on("error", reportStreamError);
       this.stream.on("close", function() {
-        self.emit("end");
+        self2.emit("end");
       });
       if (!this.ssl) {
         return this.attachListeners(this.stream);
       }
       if (this.sslNegotiation === "direct") {
         return this.stream.once("connect", function() {
-          self.upgradeToSSL(host, reportStreamError);
+          self2.upgradeToSSL(host, reportStreamError);
         });
       }
       this.stream.once("data", function(buffer) {
@@ -33961,27 +35441,27 @@ var require_connection = __commonJS(function(exports, module) {
           case "S":
             break;
           case "N":
-            self.stream.end();
-            return self.emit("error", new Error("The server does not support SSL connections"));
+            self2.stream.end();
+            return self2.emit("error", new Error("The server does not support SSL connections"));
           default:
-            self.stream.end();
-            return self.emit("error", new Error("There was an error establishing an SSL connection"));
+            self2.stream.end();
+            return self2.emit("error", new Error("There was an error establishing an SSL connection"));
         }
-        self.upgradeToSSL(host, reportStreamError);
+        self2.upgradeToSSL(host, reportStreamError);
       });
     }
     upgradeToSSL(host, reportStreamError) {
-      const self = this;
+      const self2 = this;
       const options = {
-        socket: self.stream
+        socket: self2.stream
       };
-      if (self.ssl !== true) {
-        Object.assign(options, self.ssl);
-        if ("key" in self.ssl) {
-          options.key = self.ssl.key;
+      if (self2.ssl !== true) {
+        Object.assign(options, self2.ssl);
+        if ("key" in self2.ssl) {
+          options.key = self2.ssl.key;
         }
       }
-      if (self.sslNegotiation === "direct") {
+      if (self2.sslNegotiation === "direct") {
         options.ALPNProtocols = ["postgresql"];
       }
       const net = __require("net");
@@ -33989,13 +35469,13 @@ var require_connection = __commonJS(function(exports, module) {
         options.servername = host;
       }
       try {
-        self.stream = stream.getSecureStream(options);
+        self2.stream = stream.getSecureStream(options);
       } catch (err) {
-        return self.emit("error", err);
+        return self2.emit("error", err);
       }
-      self.attachListeners(self.stream);
-      self.stream.on("error", reportStreamError);
-      self.emit("sslconnect");
+      self2.attachListeners(self2.stream);
+      self2.stream.on("error", reportStreamError);
+      self2.emit("sslconnect");
     }
     attachListeners(stream) {
       parse(stream, (msg) => {
@@ -34131,9 +35611,9 @@ var require_split2 = __commonJS(function(exports, module) {
     }
     cb();
   }
-  function push(self, val) {
+  function push(self2, val) {
     if (val !== undefined) {
-      self.push(val);
+      self2.push(val);
     }
   }
   function noop(incoming) {
@@ -34370,7 +35850,7 @@ var require_lib = __commonJS(function(exports, module) {
 // node_modules/pg/lib/client.js
 var require_client = __commonJS(function(exports, module) {
   var EventEmitter = __require("events").EventEmitter;
-  var utils = require_utils2();
+  var utils = require_utils4();
   var nodeUtils = __require("util");
   var sasl = require_sasl();
   var TypeOverrides = require_type_overrides();
@@ -34378,7 +35858,7 @@ var require_client = __commonJS(function(exports, module) {
   var Query = require_query();
   var defaults = require_defaults();
   var Connection = require_connection();
-  var crypto2 = require_utils3();
+  var crypto2 = require_utils5();
   var activeQueryDeprecationNotice = nodeUtils.deprecate(() => {}, "Client.activeQuery is deprecated and will be removed in pg@9.0");
   var queryQueueDeprecationNotice = nodeUtils.deprecate(() => {}, "Client.queryQueue is deprecated and will be removed in pg@9.0.");
   var pgPassDeprecationNotice = nodeUtils.deprecate(() => {}, "pgpass support is deprecated and will be removed in pg@9.0. " + "You can provide an async function as the password property to the Client/Pool constructor that returns a password instead. Within this function you can call the pgpass module in your own code.");
@@ -34477,7 +35957,7 @@ var require_client = __commonJS(function(exports, module) {
       this._queryQueue.length = 0;
     }
     _connect(callback) {
-      const self = this;
+      const self2 = this;
       const con = this.connection;
       this._connectionCallback = callback;
       if (this._connecting || this._connected) {
@@ -34503,16 +35983,16 @@ var require_client = __commonJS(function(exports, module) {
         con.connect(this.port, this.host);
       }
       con.on("connect", function() {
-        if (self.ssl) {
-          if (self.sslNegotiation !== "direct") {
+        if (self2.ssl) {
+          if (self2.sslNegotiation !== "direct") {
             con.requestSsl();
           }
         } else {
-          con.startup(self.getStartupConf());
+          con.startup(self2.getStartupConf());
         }
       });
       con.on("sslconnect", function() {
-        con.startup(self.getStartupConf());
+        con.startup(self2.getStartupConf());
       });
       this._attachListeners(con);
       con.once("end", () => {
@@ -35429,7 +36909,7 @@ var require_pg_pool = __commonJS(function(exports, module) {
 var require_query2 = __commonJS(function(exports, module) {
   var EventEmitter = __require("events").EventEmitter;
   var util = __require("util");
-  var utils = require_utils2();
+  var utils = require_utils4();
   var NativeQuery = module.exports = function(config, values, callback) {
     EventEmitter.call(this);
     config = utils.normalizeQueryConfig(config, values, callback);
@@ -35493,34 +36973,34 @@ var require_query2 = __commonJS(function(exports, module) {
   };
   NativeQuery.prototype.submit = function(client) {
     this.state = "running";
-    const self = this;
+    const self2 = this;
     this.native = client.native;
     client.native.arrayMode = this._arrayMode;
     let after = function(err, rows, results) {
       client.native.arrayMode = false;
       setImmediate(function() {
-        self.emit("_done");
+        self2.emit("_done");
       });
       if (err) {
-        return self.handleError(err);
+        return self2.handleError(err);
       }
-      if (self._emitRowEvents) {
+      if (self2._emitRowEvents) {
         if (results.length > 1) {
           rows.forEach((rowOfRows, i) => {
             rowOfRows.forEach((row) => {
-              self.emit("row", row, results[i]);
+              self2.emit("row", row, results[i]);
             });
           });
         } else {
           rows.forEach(function(row) {
-            self.emit("row", row, results);
+            self2.emit("row", row, results);
           });
         }
       }
-      self.state = "end";
-      self.emit("end", results);
-      if (self.callback) {
-        self.callback(null, results);
+      self2.state = "end";
+      self2.emit("end", results);
+      if (self2.callback) {
+        self2.callback(null, results);
       }
     };
     if (process.domain) {
@@ -35543,8 +37023,8 @@ var require_query2 = __commonJS(function(exports, module) {
       return client.native.prepare(this.name, this.text, values.length, function(err) {
         if (err)
           return after(err);
-        client.namedQueries[self.name] = self.text;
-        return self.native.execute(self.name, values, after);
+        client.namedQueries[self2.name] = self2.text;
+        return self2.native.execute(self2.name, values, after);
       });
     } else if (this.values) {
       if (!Array.isArray(this.values)) {
@@ -35623,36 +37103,36 @@ var require_client2 = __commonJS(function(exports, module) {
     this._queryQueue.length = 0;
   };
   Client.prototype._connect = function(cb) {
-    const self = this;
+    const self2 = this;
     if (this._connecting) {
       process.nextTick(() => cb(new Error("Client has already been connected. You cannot reuse a client.")));
       return;
     }
     this._connecting = true;
     this.connectionParameters.getLibpqConnectionString(function(err, conString) {
-      if (self.connectionParameters.nativeConnectionString)
-        conString = self.connectionParameters.nativeConnectionString;
+      if (self2.connectionParameters.nativeConnectionString)
+        conString = self2.connectionParameters.nativeConnectionString;
       if (err)
         return cb(err);
-      self.native.connect(conString, function(err) {
+      self2.native.connect(conString, function(err) {
         if (err) {
-          self.native.end();
+          self2.native.end();
           return cb(err);
         }
-        self._connected = true;
-        self.native.on("error", function(err) {
-          self._queryable = false;
-          self._errorAllQueries(err);
-          self.emit("error", err);
+        self2._connected = true;
+        self2.native.on("error", function(err) {
+          self2._queryable = false;
+          self2._errorAllQueries(err);
+          self2.emit("error", err);
         });
-        self.native.on("notification", function(msg) {
-          self.emit("notification", {
+        self2.native.on("notification", function(msg) {
+          self2.emit("notification", {
             channel: msg.relname,
             payload: msg.extra
           });
         });
-        self.emit("connect");
-        self._pulseQueryQueue(true);
+        self2.emit("connect");
+        self2._pulseQueryQueue(true);
         cb(null, this);
       });
     });
@@ -35743,7 +37223,7 @@ var require_client2 = __commonJS(function(exports, module) {
     return result;
   };
   Client.prototype.end = function(cb) {
-    const self = this;
+    const self2 = this;
     this._ending = true;
     if (this._connecting && !this._connected) {
       this.once("connect", () => {
@@ -35757,11 +37237,11 @@ var require_client2 = __commonJS(function(exports, module) {
       });
     }
     const doEnd = function() {
-      self.native.end(function() {
-        self._connected = false;
-        self._errorAllQueries(new Error("Connection terminated"));
+      self2.native.end(function() {
+        self2._connected = false;
+        self2._errorAllQueries(new Error("Connection terminated"));
         process.nextTick(() => {
-          self.emit("end");
+          self2.emit("end");
           if (cb)
             cb();
         });
@@ -35796,9 +37276,9 @@ var require_client2 = __commonJS(function(exports, module) {
     }
     this._activeQuery = query;
     query.submit(this);
-    const self = this;
+    const self2 = this;
     query.once("_done", function() {
-      self._pulseQueryQueue();
+      self2._pulseQueryQueue();
     });
   };
   Client.prototype._pulsePipelinedQueryQueue = function() {
@@ -35812,10 +37292,10 @@ var require_client2 = __commonJS(function(exports, module) {
       return;
     }
     this._pipelineInFlight = true;
-    const self = this;
+    const self2 = this;
     const queries = [];
     const nativeQueries = [];
-    const utils = require_utils2();
+    const utils = require_utils4();
     while (this._queryQueue.length > 0) {
       const query = this._queryQueue.shift();
       this.hasExecuted = true;
@@ -35831,25 +37311,25 @@ var require_client2 = __commonJS(function(exports, module) {
       queries.push(pipelineEntry);
     }
     this.native.pipeline(queries, function(err, results) {
-      self._pipelineInFlight = false;
+      self2._pipelineInFlight = false;
       if (err) {
         for (let i = 0;i < nativeQueries.length; i++) {
           const q = nativeQueries[i];
-          q.native = self.native;
+          q.native = self2.native;
           q.handleError(err);
         }
-        self._pulsePipelinedQueryQueue();
+        self2._pulsePipelinedQueryQueue();
         return;
       }
       for (let i = 0;i < nativeQueries.length; i++) {
         const q = nativeQueries[i];
         const r = results[i];
-        q.native = self.native;
+        q.native = self2.native;
         if (r.err) {
           q.handleError(r.err);
         } else {
           if (q.name) {
-            self.namedQueries[q.name] = q.text;
+            self2.namedQueries[q.name] = q.text;
           }
           q.state = "end";
           q.emit("end", r.result);
@@ -35861,7 +37341,7 @@ var require_client2 = __commonJS(function(exports, module) {
           q.emit("_done");
         });
       }
-      self._pulsePipelinedQueryQueue();
+      self2._pulsePipelinedQueryQueue();
     });
   };
   Client.prototype.cancel = function(query) {
@@ -35893,11 +37373,11 @@ var require_lib2 = __commonJS(function(exports, module) {
   var defaults = require_defaults();
   var Connection = require_connection();
   var Result = require_result();
-  var utils = require_utils2();
+  var utils = require_utils4();
   var Pool = require_pg_pool();
   var TypeOverrides = require_type_overrides();
   var { DatabaseError } = require_dist2();
-  var { escapeIdentifier, escapeLiteral } = require_utils2();
+  var { escapeIdentifier, escapeLiteral } = require_utils4();
   var poolFactory = (Client) => {
     return class BoundPool extends Pool {
       constructor(options) {
@@ -63134,8 +64614,8 @@ function FromConstructor6(schema, references) {
       return class {
         constructor() {
           for (const [key, val] of Object.entries(value)) {
-            const self = this;
-            self[key] = val;
+            const self2 = this;
+            self2[key] = val;
           }
         }
       };
@@ -98105,12 +99585,12 @@ var QueryBuilder = class {
     return { as };
   };
   with(...queries) {
-    const self = this;
+    const self2 = this;
     function select(fields) {
       return new PgSelectBuilder({
         fields: fields ?? undefined,
         session: undefined,
-        dialect: self.getDialect(),
+        dialect: self2.getDialect(),
         withList: queries
       });
     }
@@ -98118,7 +99598,7 @@ var QueryBuilder = class {
       return new PgSelectBuilder({
         fields: fields ?? undefined,
         session: undefined,
-        dialect: self.getDialect(),
+        dialect: self2.getDialect(),
         distinct: true
       });
     }
@@ -98126,7 +99606,7 @@ var QueryBuilder = class {
       return new PgSelectBuilder({
         fields: fields ?? undefined,
         session: undefined,
-        dialect: self.getDialect(),
+        dialect: self2.getDialect(),
         distinct: { on }
       });
     }
@@ -98647,44 +100127,44 @@ var PgAsyncDatabase = class {
   }
   $cache;
   with(...queries) {
-    const self = this;
+    const self2 = this;
     function select(fields) {
       return new PgSelectBuilder({
         fields: fields ?? undefined,
-        session: self.session,
-        dialect: self.dialect,
+        session: self2.session,
+        dialect: self2.dialect,
         withList: queries,
-        tagged: self.tagged
+        tagged: self2.tagged
       }, PgAsyncSelectBase);
     }
     function selectDistinct(fields) {
       return new PgSelectBuilder({
         fields: fields ?? undefined,
-        session: self.session,
-        dialect: self.dialect,
+        session: self2.session,
+        dialect: self2.dialect,
         withList: queries,
         distinct: true,
-        tagged: self.tagged
+        tagged: self2.tagged
       }, PgAsyncSelectBase);
     }
     function selectDistinctOn(on, fields) {
       return new PgSelectBuilder({
         fields: fields ?? undefined,
-        session: self.session,
-        dialect: self.dialect,
+        session: self2.session,
+        dialect: self2.dialect,
         withList: queries,
         distinct: { on },
-        tagged: self.tagged
+        tagged: self2.tagged
       }, PgAsyncSelectBase);
     }
     function update(table) {
-      return new PgUpdateBuilder(table, self.session, self.dialect, queries, PgAsyncUpdateBase);
+      return new PgUpdateBuilder(table, self2.session, self2.dialect, queries, PgAsyncUpdateBase);
     }
     function insert(table) {
-      return new PgInsertBuilder(table, self.session, self.dialect, queries, undefined, PgAsyncInsertBase);
+      return new PgInsertBuilder(table, self2.session, self2.dialect, queries, undefined, PgAsyncInsertBase);
     }
     function delete_(table) {
-      return new PgAsyncDeleteBase(table, self.session, self.dialect, queries);
+      return new PgAsyncDeleteBase(table, self2.session, self2.dialect, queries);
     }
     return {
       select,
@@ -99037,7 +100517,17 @@ __export(exports_schema, {
   buyer_listing_notices: () => buyer_listing_notices,
   buyer_saved_products: () => buyer_saved_products,
   checkouts: () => checkouts,
+  conversation_context_enum: () => conversation_context_enum,
+  conversation_messages: () => conversation_messages,
+  conversation_participants: () => conversation_participants,
+  conversation_status_enum: () => conversation_status_enum,
+  conversations: () => conversations,
   listing_cycles: () => listing_cycles,
+  notification_device_platform_enum: () => notification_device_platform_enum,
+  notification_devices: () => notification_devices,
+  notification_outbox: () => notification_outbox,
+  notification_outbox_status_enum: () => notification_outbox_status_enum,
+  notification_type_enum: () => notification_type_enum,
   order_inquiries: () => order_inquiries,
   order_report_evidence: () => order_report_evidence,
   order_reports: () => order_reports,
@@ -99067,6 +100557,7 @@ __export(exports_schema, {
   social_campaign_post_status: () => social_campaign_post_status,
   social_campaign_status: () => social_campaign_status,
   social_platform: () => social_platform,
+  trust_actions: () => trust_actions,
   trust_corrections: () => trust_corrections,
   trust_events: () => trust_events,
   trust_notices: () => trust_notices,
@@ -99150,6 +100641,22 @@ function pgEnumObjectWithSchema2(enumName, values, schema) {
 }
 // src/db/schema.ts
 var roleEnum = pgEnum2("role", ["seller", "buyer", "admin", "stakeholder"]);
+var notification_device_platform_enum = pgEnum2("notification_device_platform", [
+  "android",
+  "ios",
+  "web"
+]);
+var notification_outbox_status_enum = pgEnum2("notification_outbox_status", [
+  "pending",
+  "processing",
+  "sent",
+  "failed"
+]);
+var notification_type_enum = pgEnum2("notification_type", [
+  "seller_message",
+  "buyer_message",
+  "seller_listing"
+]);
 var user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -99347,6 +100854,44 @@ var buyer_listing_notices = pgTable("buyer_listing_notices", {
 }, (table) => [
   uniqueIndex("buyer_listing_notices_buyer_event_unique").on(table.buyerId, table.eventId),
   index("buyer_listing_notices_buyer_created_idx").on(table.buyerId, table.createdAt)
+]);
+var notification_devices = pgTable("notification_devices", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  platform: notification_device_platform_enum("platform").notNull(),
+  pushToken: text("push_token").notNull(),
+  deviceId: text("device_id"),
+  isEnabled: boolean4("is_enabled").default(true).notNull(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
+}, (table) => [
+  uniqueIndex("notification_devices_push_token_unique").on(table.pushToken),
+  index("notification_devices_user_enabled_idx").on(table.userId, table.isEnabled)
+]);
+var notification_outbox = pgTable("notification_outbox", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  recipientUserId: text("recipient_user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  type: notification_type_enum("type").notNull(),
+  aggregationKey: text("aggregation_key").notNull(),
+  dedupeKey: text("dedupe_key").notNull(),
+  referenceId: text("reference_id"),
+  itemCount: integer2("item_count").default(1).notNull(),
+  payload: jsonb("payload").$type().notNull().default(sql3`'{}'::jsonb`),
+  status: notification_outbox_status_enum("status").default("pending").notNull(),
+  attemptCount: integer2("attempt_count").default(0).notNull(),
+  availableAt: timestamp("available_at", { withTimezone: true }).defaultNow().notNull(),
+  lockedAt: timestamp("locked_at", { withTimezone: true }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  failedAt: timestamp("failed_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
+}, (table) => [
+  uniqueIndex("notification_outbox_dedupe_unique").on(table.dedupeKey),
+  index("notification_outbox_pending_idx").on(table.status, table.availableAt, table.createdAt),
+  index("notification_outbox_recipient_idx").on(table.recipientUserId, table.createdAt)
 ]);
 var listing_cycles = pgTable("listing_cycles", {
   id: uuid2("id").defaultRandom().primaryKey(),
@@ -99553,6 +101098,47 @@ var product_inquiries = pgTable("product_inquiries", {
   index("product_inquiries_seller_created_idx").on(table.sellerId, table.createdAt),
   index("product_inquiries_buyer_product_idx").on(table.buyerId, table.productId, table.createdAt)
 ]);
+var conversation_context_enum = pgEnum2("conversation_context", ["product", "order", "seller"]);
+var conversation_status_enum = pgEnum2("conversation_status", ["open", "closed"]);
+var conversations = pgTable("conversations", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  contextType: conversation_context_enum("context_type").notNull(),
+  contextKey: text("context_key").notNull().unique(),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  productId: uuid2("product_id").references(() => sellers_product.id, { onDelete: "set null" }),
+  orderId: uuid2("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  status: conversation_status_enum().default("open").notNull(),
+  lastMessageAt: timestamp("last_message_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
+}, (table) => [
+  index("conversations_buyer_last_message_idx").on(table.buyerId, table.lastMessageAt),
+  index("conversations_seller_last_message_idx").on(table.sellerId, table.lastMessageAt),
+  index("conversations_product_idx").on(table.productId),
+  index("conversations_order_idx").on(table.orderId)
+]);
+var conversation_participants = pgTable("conversation_participants", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  conversationId: uuid2("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  lastReadAt: timestamp("last_read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("conversation_participants_conversation_user_unique").on(table.conversationId, table.userId),
+  index("conversation_participants_user_idx").on(table.userId, table.lastReadAt)
+]);
+var conversation_messages = pgTable("conversation_messages", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  conversationId: uuid2("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  senderId: text("sender_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  clientMessageId: text("client_message_id").notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("conversation_messages_client_id_unique").on(table.conversationId, table.clientMessageId),
+  index("conversation_messages_conversation_created_idx").on(table.conversationId, table.createdAt)
+]);
 var trust_events = pgTable("trust_events", {
   id: uuid2("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
@@ -99588,6 +101174,26 @@ var trust_corrections = pgTable("trust_corrections", {
   outcome: text("outcome").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
+var trust_actions = pgTable("trust_actions", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  actionKey: text("action_key").notNull().unique(),
+  subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  actionType: text("action_type").notNull(),
+  weightedPoints: integer2("weighted_points").notNull(),
+  policyVersion: text("policy_version").notNull(),
+  reason: text("reason").notNull(),
+  sourceEventId: uuid2("source_event_id").references(() => trust_events.id, { onDelete: "set null" }),
+  sourceOrderId: uuid2("source_order_id").references(() => orders.id, { onDelete: "set null" }),
+  startsAt: timestamp("starts_at", { withTimezone: true }).defaultNow().notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  revokedBy: text("revoked_by").references(() => user.id, { onDelete: "set null" }),
+  revocationReason: text("revocation_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  index("trust_actions_subject_active_idx").on(table.subjectId, table.actionType, table.revokedAt, table.endsAt),
+  index("trust_actions_source_order_idx").on(table.sourceOrderId)
+]);
 var ordered_items = pgTable("ordered_items", {
   id: uuid2("id").defaultRandom().primaryKey().notNull(),
   ordersId: uuid2("orders_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
@@ -102186,6 +103792,7 @@ var expo = (options) => {
 // src/modules/auth/index.ts
 var auth = betterAuth({
   basePath: "/api/auth",
+  baseURL: process.env.BETTER_AUTH_URL || undefined,
   trustedOrigins: [
     "agrivive://",
     "exp://",
@@ -102201,6 +103808,12 @@ var auth = betterAuth({
     provider: "pg",
     schema: exports_schema
   }),
+  socialProviders: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET
+    }
+  } : {},
   plugins: [
     expo(),
     bearer(),
@@ -107962,8 +109575,15 @@ function isSellerProfileComplete(profile) {
   return !!profile?.isCurrent && !!profile.shopName.trim() && !!profile.detailAddress.trim() && (profile.phoneNumber?.trim().length ?? 0) >= 7 && profile.latitude !== null && Number.isFinite(profile.latitude) && profile.latitude >= -90 && profile.latitude <= 90 && profile.longitude !== null && Number.isFinite(profile.longitude) && profile.longitude >= -180 && profile.longitude <= 180;
 }
 
+// src/utils/trust/access.ts
+async function requireNoActiveTrustRestriction(tx, userId) {
+  const [restriction] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).limit(1);
+  if (restriction)
+    throw new OrderError(403, "Account is temporarily restricted");
+}
+
 // src/utils/seller-access/index.ts
-async function requireVerifiedSeller(tx, sellerId, requireProfile = true) {
+async function requireVerifiedSeller(tx, sellerId, requireProfile = true, allowTrustAccess = false) {
   const [account] = await tx.select({
     isActive: user.isActive,
     roles: user.role,
@@ -107971,6 +109591,8 @@ async function requireVerifiedSeller(tx, sellerId, requireProfile = true) {
   }).from(user).where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive)
     throw new OrderError(403, "Account is inactive");
+  if (!allowTrustAccess)
+    await requireNoActiveTrustRestriction(tx, sellerId);
   if (!account.emailVerified) {
     throw new OrderError(403, "Email OTP verification is required");
   }
@@ -107987,6 +109609,7 @@ async function requireSellerScanAccess(tx, sellerId, orderId) {
   if (!account?.isActive || !account.roles?.includes("seller")) {
     throw new OrderError(403, "Seller account is inactive");
   }
+  await requireNoActiveTrustRestriction(tx, sellerId);
   try {
     await requireVerifiedSeller(tx, sellerId);
     return;
@@ -108003,6 +109626,7 @@ async function sellerReadableOrderIds(tx, sellerId) {
   const [account] = await tx.select({ isActive: user.isActive, roles: user.role }).from(user).where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive || !account.roles?.includes("seller"))
     throw new OrderError(403, "Seller account is inactive");
+  await requireNoActiveTrustRestriction(tx, sellerId);
   try {
     await requireVerifiedSeller(tx, sellerId);
     return null;
@@ -109033,7 +110657,7 @@ var import_endpoints5 = __toESM(require_endpoints());
 var import_event_streams2 = __toESM(require_event_streams());
 var import_protocols6 = __toESM(require_protocols());
 var import_retry4 = __toESM(require_retry());
-var import_schema26 = __toESM(require_schema());
+var import_schema27 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/auth/httpAuthSchemeProvider.js
 var import_httpAuthSchemes = __toESM(require_httpAuthSchemes());
@@ -111196,7 +112820,7 @@ var _mw11 = (Command, cs, config, o) => [
 ];
 
 // node_modules/@aws-sdk/client-s3/dist-es/schemas/schemas_0.js
-var import_schema25 = __toESM(require_schema());
+var import_schema26 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/models/S3ServiceException.js
 var import_client5 = __toESM(require_client3());
@@ -112566,10 +114190,10 @@ var _xawob = "x-amz-write-offset-bytes";
 var _xawrl = "x-amz-website-redirect-location";
 var _xs = "xsi:type";
 var n0 = "com.amazonaws.s3";
-var _s_registry = import_schema25.TypeRegistry.for(_s);
+var _s_registry = import_schema26.TypeRegistry.for(_s);
 var S3ServiceException$ = [-3, _s, "S3ServiceException", 0, [], []];
 _s_registry.registerError(S3ServiceException$, S3ServiceException);
-var n0_registry = import_schema25.TypeRegistry.for(n0);
+var n0_registry = import_schema26.TypeRegistry.for(n0);
 var AccessDenied$ = [
   -3,
   n0,
@@ -117600,7 +119224,7 @@ class S3Client extends import_client25.Client {
     const _config_10 = $resolveS3Config(_config_9, { session: [() => this, CreateSessionCommand] });
     const _config_11 = resolveRuntimeExtensions2(_config_10, configuration?.extensions || []);
     this.config = _config_11;
-    this.middlewareStack.use(import_schema26.getSchemaSerdePlugin(this.config));
+    this.middlewareStack.use(import_schema27.getSchemaSerdePlugin(this.config));
     this.middlewareStack.use(import_client24.getUserAgentPlugin(this.config));
     this.middlewareStack.use(import_retry4.getRetryPlugin(this.config));
     this.middlewareStack.use(import_protocols6.getContentLengthPlugin(this.config));
@@ -117861,7 +119485,13 @@ function validatePriceReductionConfig(basePrice, percent, minimumPrice) {
 // src/modules/marketplace/services/marketplace.visibility.ts
 var sellerRole = sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
 function marketplaceSellerVisibility() {
-  return and(eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, eq(user.isActive, true), eq(user.emailVerified, true), sellerRole);
+  return and(eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, eq(user.isActive, true), eq(user.emailVerified, true), sellerRole, sql3`not exists (
+      select 1 from ${trust_actions}
+      where ${trust_actions.subjectId} = ${user.id}
+        and ${trust_actions.actionType} = 'temporary_restriction'
+        and ${trust_actions.revokedAt} is null
+        and (${trust_actions.endsAt} is null or ${trust_actions.endsAt} > now())
+    )`);
 }
 
 // src/utils/seller-listing-event/index.ts
@@ -118373,6 +120003,7 @@ async function requireActiveUser(tx, userId, role) {
   if (!account?.isActive || !account.roles?.includes(role)) {
     throw new OrderError(403, `${role} account is not active`);
   }
+  await requireNoActiveTrustRestriction(tx, userId);
 }
 
 // src/modules/seller/services/seller.scan-order.ts
@@ -119060,6 +120691,148 @@ async function listOrderInquiries(userId, orderId, side) {
   return db2.select().from(order_inquiries).where(eq(order_inquiries.orderId, orderId));
 }
 
+// src/utils/trust/policy.ts
+var trustPolicyVersion = "monitoring-v3";
+var trustPolicyWeights = {
+  inquiry_non_response: 1,
+  seller_cancellation: 2,
+  low_rating: 1
+};
+function configuredInteger(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isInteger(value) && value >= 0 ? value : fallback;
+}
+var trustActionPolicy = {
+  enabled: process.env.TRUST_ACTIONS_ENABLED?.trim().toLowerCase() === "true",
+  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
+  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
+  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),
+  restrictionHours: configuredInteger("TRUST_RESTRICTION_HOURS", 168)
+};
+function resolveTrustAction(weightedPoints) {
+  if (weightedPoints >= trustActionPolicy.blockedThreshold)
+    return "blocked";
+  if (weightedPoints >= trustActionPolicy.restrictionThreshold)
+    return "temporary_restriction";
+  if (weightedPoints >= trustActionPolicy.warningThreshold)
+    return "warning";
+  return null;
+}
+
+// src/utils/trust/score.ts
+async function readTrustMonitoringScore(subjectId) {
+  const [rows, ratingResult, feedbackResult] = await Promise.all([
+    db2.select({
+      kind: trust_events.kind,
+      classification: trust_events.classification,
+      count: sql3`count(*)::int`
+    }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull2(trust_events.invalidatedAt))).groupBy(trust_events.kind, trust_events.classification),
+    db2.execute(sql3`
+    select count(distinct order_id)::int as count from (
+      select review.order_id from order_reviews as review
+      inner join orders as purchase on purchase.id = review.order_id
+      where purchase.status = 'completed' and review.rating <= 2
+        ${subjectId ? sql3`and review.seller_id = ${subjectId}` : sql3``}
+      union
+      select review.order_id from product_reviews as review
+      inner join orders as purchase on purchase.id = review.order_id
+      where purchase.status = 'completed' and review.rating <= 2
+        ${subjectId ? sql3`and review.seller_id = ${subjectId}` : sql3``}
+    ) as low_ratings
+  `),
+    db2.execute(sql3`
+    select (
+      (select count(*) from order_reviews where length(btrim(coalesce(review, ''))) > 0
+        ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``})
+      + (select count(*) from product_reviews where length(btrim(coalesce(review, ''))) > 0
+        ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``})
+    )::int as count
+  `)
+  ]);
+  const verified = rows.filter((row) => row.classification === "verified");
+  const allegations = rows.filter((row) => row.classification === "allegation");
+  const components = verified.map((row) => ({
+    kind: row.kind,
+    count: Number(row.count),
+    weight: trustPolicyWeights[row.kind] ?? 0,
+    points: Number(row.count) * (trustPolicyWeights[row.kind] ?? 0)
+  }));
+  const ratingSignals = Number(ratingResult.rows[0]?.count ?? 0);
+  const verifiedEventPoints = components.reduce((total, item) => total + item.points, 0);
+  return {
+    policyVersion: trustPolicyVersion,
+    weightedPoints: verifiedEventPoints + ratingSignals * trustPolicyWeights.low_rating,
+    verifiedEventPoints,
+    ratingSignals,
+    writtenFeedbackCount: Number(feedbackResult.rows[0]?.count ?? 0),
+    verifiedEvents: components.reduce((total, item) => total + item.count, 0),
+    allegationFlags: allegations.reduce((total, item) => total + Number(item.count), 0),
+    components: [...components, {
+      kind: "low_rating",
+      count: ratingSignals,
+      weight: trustPolicyWeights.low_rating,
+      points: ratingSignals * trustPolicyWeights.low_rating
+    }]
+  };
+}
+
+// src/utils/trust/evaluate-action.ts
+var actionNoticeKinds = {
+  warning: "trust_action_warning",
+  temporary_restriction: "trust_action_restriction",
+  blocked: "trust_action_blocked"
+};
+async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
+  if (!trustActionPolicy.enabled)
+    return null;
+  const monitoring = await readTrustMonitoringScore(subjectId);
+  const actionType = resolveTrustAction(monitoring.weightedPoints);
+  if (!actionType)
+    return null;
+  const eventConditions = [
+    eq(trust_events.subjectId, subjectId),
+    eq(trust_events.classification, "verified"),
+    isNull2(trust_events.invalidatedAt),
+    sourceEventKey ? eq(trust_events.eventKey, sourceEventKey) : undefined,
+    !sourceEventKey && sourceOrderId ? eq(trust_events.orderId, sourceOrderId) : undefined
+  ];
+  const [sourceEvent] = await db2.select({ id: trust_events.id, orderId: trust_events.orderId }).from(trust_events).where(and(...eventConditions)).orderBy(desc(trust_events.createdAt)).limit(1);
+  const orderId = sourceOrderId ?? sourceEvent?.orderId ?? null;
+  const sourceKey = sourceEventKey ?? sourceOrderId ?? "score";
+  const actionKey = `${trustPolicyVersion}:${subjectId}:${actionType}:${sourceKey}`;
+  const endsAt = actionType === "temporary_restriction" ? new Date(Date.now() + trustActionPolicy.restrictionHours * 3600000) : null;
+  return db2.transaction(async (tx) => {
+    const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
+    if (existing)
+      return existing;
+    const [action] = await tx.insert(trust_actions).values({
+      actionKey,
+      subjectId,
+      actionType,
+      weightedPoints: monitoring.weightedPoints,
+      policyVersion: trustPolicyVersion,
+      reason: `Trust monitoring reached the ${actionType} threshold at ${monitoring.weightedPoints} point(s).`,
+      sourceEventId: sourceEvent?.id ?? null,
+      sourceOrderId: orderId,
+      endsAt
+    }).returning();
+    if (!action)
+      return null;
+    if (actionType === "blocked") {
+      await tx.update(user).set({ isActive: false }).where(eq(user.id, subjectId));
+    }
+    if (orderId) {
+      await queueTrustNotice(tx, {
+        noticeKey: `trust-action:${actionKey}`,
+        recipientId: subjectId,
+        orderId,
+        kind: actionNoticeKinds[actionType]
+      });
+    }
+    return action;
+  });
+}
+
 // src/modules/seller/services/seller.order.cancel.ts
 async function cancelSellerOrder(sellerId, orderId, reason) {
   if (reason.trim().length < 5)
@@ -119105,6 +120878,7 @@ async function cancelSellerOrder(sellerId, orderId, reason) {
       kind: "seller_cancellation_buyer"
     });
   });
+  await evaluateTrustAction(sellerId, orderId, `seller-cancel:${orderId}`);
   return getOrder(orderId, sellerId, "seller");
 }
 
@@ -119427,65 +121201,9 @@ var sellerReportRoute = new Elysia().use(sessionAuth).post("/orders/:id/report",
 var sellerTrustEventParams = t.Object({ id: t.String({ format: "uuid" }) });
 var sellerCorrectionBody = t.Object({ reason: t.String({ minLength: 5, maxLength: 2000 }) });
 
-// src/utils/trust/score.ts
-var monitorWeights = {
-  inquiry_non_response: 1,
-  seller_cancellation: 2
-};
-async function readTrustMonitoringScore(subjectId) {
-  const [rows, ratingResult, feedbackResult] = await Promise.all([
-    db2.select({
-      kind: trust_events.kind,
-      classification: trust_events.classification,
-      count: sql3`count(*)::int`
-    }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull2(trust_events.invalidatedAt))).groupBy(trust_events.kind, trust_events.classification),
-    db2.execute(sql3`
-    select count(distinct order_id)::int as count from (
-      select review.order_id from order_reviews as review
-      inner join orders as purchase on purchase.id = review.order_id
-      where purchase.status = 'completed' and review.rating <= 2
-        ${subjectId ? sql3`and review.seller_id = ${subjectId}` : sql3``}
-      union
-      select review.order_id from product_reviews as review
-      inner join orders as purchase on purchase.id = review.order_id
-      where purchase.status = 'completed' and review.rating <= 2
-        ${subjectId ? sql3`and review.seller_id = ${subjectId}` : sql3``}
-    ) as low_ratings
-  `),
-    db2.execute(sql3`
-    select (
-      (select count(*) from order_reviews where length(btrim(coalesce(review, ''))) > 0
-        ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``})
-      + (select count(*) from product_reviews where length(btrim(coalesce(review, ''))) > 0
-        ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``})
-    )::int as count
-  `)
-  ]);
-  const verified = rows.filter((row) => row.classification === "verified");
-  const allegations = rows.filter((row) => row.classification === "allegation");
-  const components = verified.map((row) => ({
-    kind: row.kind,
-    count: Number(row.count),
-    weight: monitorWeights[row.kind] ?? 0,
-    points: Number(row.count) * (monitorWeights[row.kind] ?? 0)
-  }));
-  const ratingSignals = Number(ratingResult.rows[0]?.count ?? 0);
-  const verifiedEventPoints = components.reduce((total, item) => total + item.points, 0);
-  return {
-    policyVersion: "monitoring-v2",
-    weightedPoints: verifiedEventPoints + ratingSignals,
-    verifiedEventPoints,
-    ratingSignals,
-    writtenFeedbackCount: Number(feedbackResult.rows[0]?.count ?? 0),
-    verifiedEvents: components.reduce((total, item) => total + item.count, 0),
-    allegationFlags: allegations.reduce((total, item) => total + Number(item.count), 0),
-    components: [...components, { kind: "low_rating", count: ratingSignals, weight: 1, points: ratingSignals }]
-  };
-}
-
 // src/modules/seller/services/seller.trust.events.ts
 async function listSellerTrustEvents(sellerId) {
-  const [events, notices] = await Promise.all([
+  const [events, notices, actions] = await Promise.all([
     db2.select({
       id: trust_events.id,
       orderId: trust_events.orderId,
@@ -119499,16 +121217,26 @@ async function listSellerTrustEvents(sellerId) {
       kind: trust_notices.kind,
       createdAt: trust_notices.createdAt,
       sentAt: trust_notices.sentAt
-    }).from(trust_notices).where(eq(trust_notices.recipientId, sellerId)).orderBy(desc(trust_notices.createdAt)).limit(100)
+    }).from(trust_notices).where(eq(trust_notices.recipientId, sellerId)).orderBy(desc(trust_notices.createdAt)).limit(100),
+    db2.select({
+      id: trust_actions.id,
+      actionType: trust_actions.actionType,
+      weightedPoints: trust_actions.weightedPoints,
+      policyVersion: trust_actions.policyVersion,
+      reason: trust_actions.reason,
+      startsAt: trust_actions.startsAt,
+      endsAt: trust_actions.endsAt,
+      revokedAt: trust_actions.revokedAt
+    }).from(trust_actions).where(eq(trust_actions.subjectId, sellerId)).orderBy(desc(trust_actions.createdAt)).limit(100)
   ]);
   const monitoring = await readTrustMonitoringScore(sellerId);
-  return { events, notices, monitoring };
+  return { events, notices, actions, monitoring };
 }
 
 // src/modules/seller/services/seller.trust.correct.ts
 function correctSellerTrustEvent(sellerId, eventId, reason) {
   return db2.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
     const [event] = await tx.select().from(trust_events).where(and(eq(trust_events.id, eventId), eq(trust_events.subjectId, sellerId), eq(trust_events.classification, "verified"))).for("update").limit(1);
     if (!event)
       throw new OrderError(404, "Trust event not found");
@@ -119753,7 +121481,7 @@ var sellerNotificationParams = t.Object({
 async function listSellerNotifications(sellerId, query = {}) {
   const limit = query.limit ?? 20;
   return db2.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
     const unreadCondition = query.unreadOnly ? isNull2(trust_notices.readAt) : undefined;
     let before;
     if (query.cursor) {
@@ -119787,7 +121515,7 @@ async function listSellerNotifications(sellerId, query = {}) {
 // src/modules/seller/services/seller.notification.read.ts
 async function readSellerNotification(sellerId, notificationId) {
   return db2.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
     const [notification] = await tx.select({
       id: trust_notices.id,
       kind: trust_notices.kind,
@@ -119813,7 +121541,7 @@ async function readSellerNotification(sellerId, notificationId) {
 // src/modules/seller/services/seller.notifications.read-all.ts
 async function readAllSellerNotifications(sellerId) {
   return db2.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
     const updated = await tx.update(trust_notices).set({ readAt: new Date }).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt))).returning({ id: trust_notices.id });
     return { updatedCount: updated.length };
   });
@@ -121366,8 +123094,8 @@ var buyerProductReviewBody = t.Object({
 });
 
 // src/modules/buyer/services/buyer.order.review.create.ts
-function createBuyerReview(buyerId, orderId, body) {
-  return db2.transaction(async (tx) => {
+async function createBuyerReview(buyerId, orderId, body) {
+  const review = await db2.transaction(async (tx) => {
     const [order] = await tx.select().from(orders).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId))).limit(1);
     if (!order)
       throw new OrderError(404, "Order not found");
@@ -121384,11 +123112,13 @@ function createBuyerReview(buyerId, orderId, body) {
       throw new OrderError(409, "Order already reviewed");
     return review;
   });
+  await evaluateTrustAction(review.sellerId, review.orderId);
+  return review;
 }
 
 // src/modules/buyer/services/buyer.order.product-review.create.ts
-function createBuyerProductReview(buyerId, orderId, itemId, body) {
-  return db2.transaction(async (tx) => {
+async function createBuyerProductReview(buyerId, orderId, itemId, body) {
+  const review = await db2.transaction(async (tx) => {
     const [purchase] = await tx.select({
       orderId: orders.id,
       buyerId: orders.buyersId,
@@ -121415,6 +123145,8 @@ function createBuyerProductReview(buyerId, orderId, itemId, body) {
       throw new OrderError(409, "This product has already been reviewed for this order");
     return review;
   });
+  await evaluateTrustAction(review.sellerId, review.orderId);
+  return review;
 }
 
 // src/modules/buyer/services/buyer.order.product-review.read.ts
@@ -121889,7 +123621,7 @@ async function createBuyerProductInquiry(buyerId, productId, question) {
   return db2.transaction(async (tx) => {
     await requireActiveUser(tx, buyerId, "buyer");
     await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${productId}), 4)`);
-    const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`)).limit(1);
+    const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), marketplaceSellerVisibility(), gt(sellers_product.productQty, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`)).limit(1);
     if (!product)
       throw new OrderError(404, "Marketplace product not found");
     if (product.sellerId === buyerId)
@@ -122133,7 +123865,7 @@ var buyerRoute = new Elysia({ prefix: "/buyer" }).use(buyerProfileReadRoute).use
 
 // src/modules/admin/services/admin.performance.ts
 async function readAdminPerformance() {
-  const [users, listings, orderRows, trust, trustMonitoring] = await Promise.all([
+  const [users, listings, orderRows, trust, trustMonitoring, activeTrustActions] = await Promise.all([
     db2.select({
       sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
       buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
@@ -122150,8 +123882,10 @@ async function readAdminPerformance() {
       db2.select({ count: sql3`count(*)::int` }).from(trust_notices).where(sql3`${trust_notices.sentAt} is null`),
       db2.select({ count: sql3`count(*)::int` }).from(trust_notices).where(sql3`${trust_notices.sentAt} is null and ${trust_notices.attempts} >= 5`)
     ]),
-    readTrustMonitoringScore()
+    readTrustMonitoringScore(),
+    db2.select({ actionType: trust_actions.actionType, count: sql3`count(*)::int` }).from(trust_actions).where(sql3`${trust_actions.revokedAt} is null and (${trust_actions.endsAt} is null or ${trust_actions.endsAt} > now())`).groupBy(trust_actions.actionType)
   ]);
+  const activeActionCounts = Object.fromEntries(activeTrustActions.map((row) => [row.actionType, Number(row.count)]));
   return {
     users: users[0] ?? { sellers: 0, buyers: 0 },
     listings: listings[0] ?? { total: 0, active: 0 },
@@ -122163,7 +123897,22 @@ async function readAdminPerformance() {
       noticesPending: trust[3][0]?.count ?? 0,
       noticesFailed: trust[4][0]?.count ?? 0
     },
-    trustMonitoring
+    trustMonitoring,
+    trustActions: {
+      enabled: trustActionPolicy.enabled,
+      policyVersion: trustPolicyVersion,
+      thresholds: {
+        warning: trustActionPolicy.warningThreshold,
+        restriction: trustActionPolicy.restrictionThreshold,
+        blocked: trustActionPolicy.blockedThreshold
+      },
+      active: {
+        warning: activeActionCounts.warning ?? 0,
+        temporaryRestriction: activeActionCounts.temporary_restriction ?? 0,
+        blocked: activeActionCounts.blocked ?? 0,
+        total: Object.values(activeActionCounts).reduce((total, count) => total + count, 0)
+      }
+    }
   };
 }
 
@@ -122227,7 +123976,7 @@ var marketplaceSellerParams = t.Object({
 
 // src/modules/marketplace/services/marketplace.product.get.ts
 async function getMarketplaceProduct(productId) {
-  const rows = await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), isNotNull(sellers_product.productPrice), gt(sellers_product.productPrice, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+  const rows = await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), marketplaceSellerVisibility(), isNotNull(sellers_product.productPrice), gt(sellers_product.productPrice, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
   if (!rows[0])
     throw new OrderError(404, "Marketplace product not found");
   const [detail] = await db2.select().from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(eq(sellers_product.id, productId)).limit(1);
@@ -122297,7 +124046,7 @@ async function getMarketplaceSeller(sellerId) {
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
     longitude: sellers_profile.longitude
-  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true), eq(user.isActive, true), eq(user.emailVerified, true), sellerRole2, sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(and(eq(sellers_profile.userId, sellerId), marketplaceSellerVisibility(), eq(sellers_profile.isCurrent, true), eq(user.isActive, true), eq(user.emailVerified, true), sellerRole2, sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
   if (!seller)
     throw new OrderError(404, "Seller storefront not found");
   return {
@@ -123423,6 +125172,529 @@ var integrationsSocialPublishRoute = new Elysia().get("/integrations/social-camp
   headers: t.Object({ authorization: t.Optional(t.String()) })
 });
 
+// src/modules/conversations/services/conversation.error.ts
+class ConversationError extends Error {
+  statusCode;
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = "ConversationError";
+  }
+}
+
+// src/modules/conversations/services/conversation.create.ts
+async function createConversation(buyerId, input) {
+  const body = input.message.trim();
+  if (!body)
+    throw new ConversationError(400, "Message is required");
+  if (input.contextType === "product" && !input.productId)
+    throw new ConversationError(400, "Product is required");
+  if (input.contextType === "order" && !input.orderId)
+    throw new ConversationError(400, "Order is required");
+  if (input.contextType === "seller" && !input.sellerId)
+    throw new ConversationError(400, "Seller is required");
+  return db2.transaction(async (tx) => {
+    await requireActiveUser(tx, buyerId, "buyer");
+    let sellerId;
+    let contextKey;
+    if (input.contextType === "product") {
+      const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, input.productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+      if (!product)
+        throw new ConversationError(404, "Marketplace product not found");
+      sellerId = product.sellerId;
+      contextKey = `product:${product.id}:${buyerId}:${sellerId}`;
+    } else if (input.contextType === "order") {
+      const [order] = await tx.select({
+        id: orders.id,
+        sellerId: orders.sellersId,
+        status: orders.status,
+        expiresAt: orders.expiresAt
+      }).from(orders).where(and(eq(orders.id, input.orderId), eq(orders.buyersId, buyerId))).limit(1);
+      if (!order)
+        throw new ConversationError(404, "Order not found");
+      if (order.status !== "pending" || !order.expiresAt || order.expiresAt <= new Date) {
+        throw new ConversationError(409, "Only active orders accept new messages");
+      }
+      sellerId = order.sellerId;
+      contextKey = `order:${order.id}:${buyerId}:${sellerId}`;
+    } else {
+      const [seller] = await tx.select({ id: user.id }).from(user).innerJoin(sellers_profile, eq(sellers_profile.userId, user.id)).where(and(eq(user.id, input.sellerId), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
+      if (!seller)
+        throw new ConversationError(404, "Seller not found");
+      sellerId = seller.id;
+      contextKey = `seller:${seller.id}:${buyerId}`;
+    }
+    const [existing] = await tx.select().from(conversations).where(eq(conversations.contextKey, contextKey)).limit(1);
+    if (existing)
+      throw new ConversationError(409, "Conversation already exists");
+    if (input.contextType === "product") {
+      await tx.insert(product_inquiries).values({
+        productId: input.productId,
+        buyerId,
+        sellerId,
+        question: body
+      }).onConflictDoNothing();
+    } else if (input.contextType === "order") {
+      await tx.insert(order_inquiries).values({
+        orderId: input.orderId,
+        buyerId,
+        sellerId,
+        question: body
+      }).onConflictDoNothing();
+    }
+    const now = new Date;
+    const [conversation] = await tx.insert(conversations).values({
+      contextType: input.contextType,
+      contextKey,
+      buyerId,
+      sellerId,
+      productId: input.productId,
+      orderId: input.orderId,
+      lastMessageAt: now
+    }).returning();
+    const [message] = await tx.insert(conversation_messages).values({
+      conversationId: conversation.id,
+      senderId: buyerId,
+      clientMessageId: input.clientMessageId,
+      body,
+      createdAt: now
+    }).returning();
+    await tx.insert(conversation_participants).values([
+      { conversationId: conversation.id, userId: buyerId },
+      { conversationId: conversation.id, userId: sellerId }
+    ]);
+    return { conversation, message };
+  });
+}
+
+// src/modules/conversations/services/conversation.realtime.ts
+var subscriptions = new Map;
+var socketConversations = new WeakMap;
+function subscribeConversation(socket, conversationId) {
+  let sockets = subscriptions.get(conversationId);
+  if (!sockets) {
+    sockets = new Set;
+    subscriptions.set(conversationId, sockets);
+  }
+  sockets.add(socket);
+  let conversations = socketConversations.get(socket);
+  if (!conversations) {
+    conversations = new Set;
+    socketConversations.set(socket, conversations);
+  }
+  conversations.add(conversationId);
+}
+function unsubscribeConversation(socket) {
+  const conversations = socketConversations.get(socket);
+  if (!conversations)
+    return;
+  for (const conversationId of conversations) {
+    const sockets = subscriptions.get(conversationId);
+    sockets?.delete(socket);
+    if (sockets?.size === 0)
+      subscriptions.delete(conversationId);
+  }
+  socketConversations.delete(socket);
+}
+function publishConversationMessage(conversationId, message) {
+  const sockets = subscriptions.get(conversationId);
+  if (!sockets)
+    return;
+  const payload = JSON.stringify({ type: "conversation.message.created", conversationId, message });
+  for (const socket of sockets)
+    socket.send(payload);
+}
+
+// src/modules/notifications/services/notifications.outbox.enqueue-conversation.ts
+var aggregationWindowMs = () => {
+  const seconds = Number(process.env.PUSH_MESSAGE_WINDOW_SECONDS ?? 60);
+  return Math.max(10, Math.min(seconds, 3600)) * 1000;
+};
+async function enqueueConversationNotification(tx, recipientUserId, conversationId, type, createdAt) {
+  const windowMs = aggregationWindowMs();
+  const windowStart = new Date(Math.floor(createdAt.getTime() / windowMs) * windowMs);
+  const dedupeKey = `${recipientUserId}:${type}:${windowStart.toISOString()}`;
+  const availableAt = new Date(createdAt.getTime() + windowMs);
+  await tx.insert(notification_outbox).values({
+    recipientUserId,
+    type,
+    aggregationKey: `${type}:${recipientUserId}`,
+    dedupeKey,
+    referenceId: conversationId,
+    itemCount: 1,
+    payload: { conversationId, type },
+    availableAt,
+    createdAt,
+    updatedAt: createdAt
+  }).onConflictDoUpdate({
+    target: notification_outbox.dedupeKey,
+    set: {
+      itemCount: sql3`${notification_outbox.itemCount} + 1`,
+      referenceId: conversationId,
+      availableAt,
+      updatedAt: createdAt
+    }
+  });
+}
+
+// src/modules/conversations/services/conversation.message.create.ts
+async function createConversationMessage(userId, conversationId, input) {
+  const body = input.message.trim();
+  if (!body)
+    throw new ConversationError(400, "Message is required");
+  const result = await db2.transaction(async (tx) => {
+    const [conversation] = await tx.select().from(conversations).where(and(eq(conversations.id, conversationId), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1).for("update");
+    if (!conversation)
+      throw new ConversationError(404, "Conversation not found");
+    if (conversation.status === "closed")
+      throw new ConversationError(409, "Conversation is closed");
+    const [duplicate] = await tx.select().from(conversation_messages).where(and(eq(conversation_messages.conversationId, conversationId), eq(conversation_messages.clientMessageId, input.clientMessageId))).limit(1);
+    if (duplicate)
+      return { conversation, message: duplicate, duplicate: true };
+    const now = new Date;
+    const [message] = await tx.insert(conversation_messages).values({
+      conversationId,
+      senderId: userId,
+      clientMessageId: input.clientMessageId,
+      body,
+      createdAt: now
+    }).returning();
+    await tx.update(conversations).set({ lastMessageAt: now, updatedAt: now }).where(eq(conversations.id, conversationId));
+    await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(eq(conversation_participants.conversationId, conversationId), eq(conversation_participants.userId, userId)));
+    const recipientUserId = userId === conversation.sellerId ? conversation.buyerId : conversation.sellerId;
+    const notificationType = userId === conversation.sellerId ? "buyer_message" : "seller_message";
+    await enqueueConversationNotification(tx, recipientUserId, conversationId, notificationType, now);
+    if (userId === conversation.sellerId) {
+      if (conversation.contextType === "order" && conversation.orderId) {
+        await tx.update(order_inquiries).set({ reply: body, repliedAt: now }).where(and(eq(order_inquiries.orderId, conversation.orderId), eq(order_inquiries.sellerId, userId), isNull2(order_inquiries.repliedAt)));
+      }
+      if (conversation.contextType === "product" && conversation.productId) {
+        await tx.update(product_inquiries).set({ reply: body, repliedAt: now }).where(and(eq(product_inquiries.productId, conversation.productId), eq(product_inquiries.buyerId, conversation.buyerId), eq(product_inquiries.sellerId, userId), isNull2(product_inquiries.repliedAt)));
+      }
+    }
+    return { conversation, message, duplicate: false };
+  });
+  if (!result.duplicate)
+    publishConversationMessage(conversationId, result.message);
+  return result.message;
+}
+
+// src/modules/conversations/services/conversation.messages.list.ts
+async function listConversationMessages(userId, conversationId) {
+  const [conversation] = await db2.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.id, conversationId), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+  if (!conversation)
+    throw new ConversationError(404, "Conversation not found");
+  return db2.select({
+    id: conversation_messages.id,
+    conversationId: conversation_messages.conversationId,
+    senderId: conversation_messages.senderId,
+    clientMessageId: conversation_messages.clientMessageId,
+    body: conversation_messages.body,
+    createdAt: conversation_messages.createdAt
+  }).from(conversation_messages).where(eq(conversation_messages.conversationId, conversationId)).orderBy(asc(conversation_messages.createdAt), asc(conversation_messages.id));
+}
+
+// src/modules/conversations/services/conversation.list.ts
+async function listConversations(userId, limit = 50) {
+  return db2.select({
+    id: conversations.id,
+    contextType: conversations.contextType,
+    productId: conversations.productId,
+    orderId: conversations.orderId,
+    buyerId: conversations.buyerId,
+    sellerId: conversations.sellerId,
+    status: conversations.status,
+    lastMessageAt: conversations.lastMessageAt,
+    createdAt: conversations.createdAt,
+    productName: sellers_product.productName,
+    productImageUrl: sellers_product.imagUrl,
+    sellerName: user.name,
+    sellerImage: user.image,
+    sellerShopName: sellers_profile.shopName,
+    lastMessageBody: sql3`(
+      select latest_message.body
+      from conversation_messages as latest_message
+      where latest_message.conversation_id = ${conversations.id}
+      order by latest_message.created_at desc, latest_message.id desc
+      limit 1
+    )`,
+    unreadCount: sql3`(
+      select count(*)::int from conversation_messages as unread_message
+      where unread_message.conversation_id = ${conversations.id}
+        and unread_message.sender_id <> ${userId}
+        and unread_message.created_at > coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)
+    )`
+  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId)).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId))).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit);
+}
+
+// src/modules/conversations/services/conversation.read.ts
+async function markConversationRead(userId, conversationId) {
+  const [conversation] = await db2.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.id, conversationId), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+  if (!conversation)
+    throw new ConversationError(404, "Conversation not found");
+  const [participant] = await db2.update(conversation_participants).set({ lastReadAt: new Date }).where(and(eq(conversation_participants.conversationId, conversationId), eq(conversation_participants.userId, userId))).returning();
+  return participant;
+}
+
+// src/modules/conversations/services/conversation.websocket-auth.ts
+async function getConversationSocketUserId(request) {
+  const authSession = await auth.api.getSession({ headers: request.headers });
+  if (!authSession)
+    return null;
+  const [account] = await db2.select({ id: user.id, isActive: user.isActive, roles: user.role }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
+  if (!account?.isActive || !account.roles?.some((role) => role === "buyer" || role === "seller"))
+    return null;
+  return account.id;
+}
+async function canAccessConversation(userId, conversationId) {
+  const [conversation] = await db2.select({ id: conversations.id }).from(conversations).where(and(eq(conversations.id, conversationId), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+  return Boolean(conversation);
+}
+
+// src/modules/conversations/model/conversation.ts
+var conversationParams = t.Object({
+  id: t.String({ format: "uuid" })
+});
+var conversationListQuery = t.Object({
+  limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 50 }))
+});
+var createConversationBody = t.Object({
+  contextType: t.Union([t.Literal("product"), t.Literal("order"), t.Literal("seller")]),
+  productId: t.Optional(t.String({ format: "uuid" })),
+  orderId: t.Optional(t.String({ format: "uuid" })),
+  sellerId: t.Optional(t.String()),
+  message: t.String({ minLength: 1, maxLength: 2000 }),
+  clientMessageId: t.String({ minLength: 1, maxLength: 100 })
+});
+var sendConversationMessageBody = t.Object({
+  message: t.String({ minLength: 1, maxLength: 2000 }),
+  clientMessageId: t.String({ minLength: 1, maxLength: 100 })
+});
+
+// src/modules/conversations/index/conversation.routes.ts
+function failure3(error, status) {
+  if (error instanceof ConversationError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Conversation request failed" });
+}
+var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", async ({ session, body, status }) => {
+  try {
+    return status(201, await createConversation(session.userId, body));
+  } catch (error) {
+    return failure3(error, status);
+  }
+}, { role: ["buyer"], body: createConversationBody }).get("/conversations", async ({ session, query, status }) => {
+  try {
+    return await listConversations(session.userId, query.limit);
+  } catch (error) {
+    return failure3(error, status);
+  }
+}, { role: ["buyer", "seller"], query: conversationListQuery }).get("/conversations/:id/messages", async ({ session, params, status }) => {
+  try {
+    return await listConversationMessages(session.userId, params.id);
+  } catch (error) {
+    return failure3(error, status);
+  }
+}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/:id/messages", async ({ session, params, body, status }) => {
+  try {
+    return status(201, await createConversationMessage(session.userId, params.id, body));
+  } catch (error) {
+    return failure3(error, status);
+  }
+}, { role: ["buyer", "seller"], params: conversationParams, body: sendConversationMessageBody }).post("/conversations/:id/read", async ({ session, params, status }) => {
+  try {
+    return await markConversationRead(session.userId, params.id);
+  } catch (error) {
+    return failure3(error, status);
+  }
+}, { role: ["buyer", "seller"], params: conversationParams }).ws("/ws/conversations", {
+  query: t.Object({ conversationId: t.String({ format: "uuid" }) }),
+  async beforeHandle({ request, query, status }) {
+    const userId = await getConversationSocketUserId(request);
+    if (!userId)
+      return status(401);
+    if (!await canAccessConversation(userId, query.conversationId))
+      return status(403);
+  },
+  open(ws) {
+    subscribeConversation(ws, ws.data.query.conversationId);
+    ws.send(JSON.stringify({ type: "conversation.connected", conversationId: ws.data.query.conversationId }));
+  },
+  close(ws) {
+    unsubscribeConversation(ws);
+  }
+});
+
+// src/modules/conversations/index.ts
+var conversationsRoute = new Elysia({ name: "conversations" }).use(conversationRoutes);
+
+// src/modules/notifications/model/notifications.devices.ts
+var registerNotificationDeviceBody = t.Object({
+  platform: t.Union([t.Literal("android"), t.Literal("ios"), t.Literal("web")]),
+  pushToken: t.String({ minLength: 1, maxLength: 4096 }),
+  deviceId: t.Optional(t.String({ minLength: 1, maxLength: 255 })),
+  notificationsEnabled: t.Optional(t.Boolean({ default: true }))
+});
+var notificationDeviceParams = t.Object({
+  id: t.String({ format: "uuid" })
+});
+
+// src/modules/notifications/services/notifications.error.ts
+class NotificationError extends Error {
+  statusCode;
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = "NotificationError";
+  }
+}
+
+// src/modules/notifications/services/notifications.device.remove.ts
+async function removeNotificationDevice(userId, deviceId) {
+  const [device] = await db2.update(notification_devices).set({ isEnabled: false, invalidatedAt: new Date, updatedAt: new Date }).where(and(eq(notification_devices.id, deviceId), eq(notification_devices.userId, userId))).returning({ id: notification_devices.id });
+  if (!device)
+    throw new NotificationError(404, "Notification device not found");
+  return { id: device.id, disabled: true };
+}
+
+// src/modules/notifications/services/notifications.device.register.ts
+async function registerNotificationDevice(userId, input) {
+  const now = new Date;
+  const existing = await db2.select({ id: notification_devices.id }).from(notification_devices).where(or(eq(notification_devices.pushToken, input.pushToken), input.deviceId ? and(eq(notification_devices.userId, userId), eq(notification_devices.deviceId, input.deviceId)) : undefined)).limit(1);
+  const [device] = existing.length ? await db2.update(notification_devices).set({
+    userId,
+    platform: input.platform,
+    pushToken: input.pushToken,
+    deviceId: input.deviceId,
+    isEnabled: input.notificationsEnabled ?? true,
+    lastSeenAt: now,
+    invalidatedAt: null,
+    updatedAt: now
+  }).where(eq(notification_devices.id, existing[0].id)).returning({
+    id: notification_devices.id,
+    platform: notification_devices.platform,
+    isEnabled: notification_devices.isEnabled,
+    lastSeenAt: notification_devices.lastSeenAt
+  }) : await db2.insert(notification_devices).values({
+    userId,
+    platform: input.platform,
+    pushToken: input.pushToken,
+    deviceId: input.deviceId,
+    isEnabled: input.notificationsEnabled ?? true,
+    lastSeenAt: now,
+    createdAt: now,
+    updatedAt: now
+  }).returning({
+    id: notification_devices.id,
+    platform: notification_devices.platform,
+    isEnabled: notification_devices.isEnabled,
+    lastSeenAt: notification_devices.lastSeenAt
+  });
+  return device;
+}
+
+// src/modules/notifications/index/notifications.devices.ts
+function notificationFailure2(error, status) {
+  if (error instanceof NotificationError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Notification device operation failed" });
+}
+var notificationDevicesRoute = new Elysia().use(sessionAuth).post("/notifications/devices", async ({ session, body, status }) => {
+  try {
+    return status(201, await registerNotificationDevice(session.userId, body));
+  } catch (error) {
+    return notificationFailure2(error, status);
+  }
+}, {
+  role: ["buyer", "seller"],
+  body: registerNotificationDeviceBody
+}).delete("/notifications/devices/:id", async ({ session, params, status }) => {
+  try {
+    return await removeNotificationDevice(session.userId, params.id);
+  } catch (error) {
+    return notificationFailure2(error, status);
+  }
+}, {
+  role: ["buyer", "seller"],
+  params: notificationDeviceParams
+});
+
+// src/modules/notifications/index.ts
+var notificationsRoute = new Elysia({ name: "notifications" }).use(notificationDevicesRoute);
+
+// src/modules/trust/model/trust.recovery.ts
+var trustRecoveryRequestBody = t.Object({
+  email: t.String({ format: "email" })
+});
+var trustRecoveryVerifyBody = t.Object({
+  email: t.String({ format: "email" }),
+  otp: t.String({ minLength: 4, maxLength: 12 })
+});
+
+// src/modules/trust/services/trust.recovery.ts
+var recoveryActionTypes = ["blocked", "temporary_restriction"];
+function normalizeEmail(email) {
+  return email.trim().toLowerCase();
+}
+async function hasRecoverableAction(email) {
+  const [candidate] = await db2.select({ id: user.id, isActive: user.isActive }).from(user).where(eq(user.email, email)).limit(1);
+  if (!candidate || candidate.isActive)
+    return false;
+  const [action] = await db2.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, candidate.id), inArray(trust_actions.actionType, recoveryActionTypes), isNull2(trust_actions.revokedAt))).limit(1);
+  return !!action;
+}
+async function requestTrustRecovery(input) {
+  const email = normalizeEmail(input.email);
+  if (await hasRecoverableAction(email)) {
+    try {
+      await auth.api.sendVerificationOTP({ body: { email, type: "forget-password" } });
+    } catch {
+      throw new OrderError(502, "Could not send the recovery code");
+    }
+  }
+  return { success: true };
+}
+async function verifyTrustRecovery(input) {
+  const email = normalizeEmail(input.email);
+  try {
+    await auth.api.checkVerificationOTP({
+      body: { email, type: "forget-password", otp: input.otp.trim() }
+    });
+  } catch {
+    throw new OrderError(400, "The recovery code is invalid or expired");
+  }
+  const restoredAt = new Date;
+  const restored = await db2.transaction(async (tx) => {
+    const [candidate] = await tx.select({ id: user.id, isActive: user.isActive }).from(user).where(eq(user.email, email)).for("update").limit(1);
+    if (!candidate || candidate.isActive) {
+      throw new OrderError(400, "This account does not need recovery");
+    }
+    const actions = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, candidate.id), inArray(trust_actions.actionType, recoveryActionTypes), isNull2(trust_actions.revokedAt))).for("update");
+    if (!actions.length)
+      throw new OrderError(400, "This account does not need recovery");
+    await tx.update(trust_actions).set({
+      revokedAt: restoredAt,
+      revokedBy: candidate.id,
+      revocationReason: "Restored after email OTP verification"
+    }).where(and(eq(trust_actions.subjectId, candidate.id), inArray(trust_actions.actionType, recoveryActionTypes), isNull2(trust_actions.revokedAt)));
+    await tx.update(user).set({ isActive: true }).where(eq(user.id, candidate.id));
+    return candidate.id;
+  });
+  return { success: true, userId: restored, restoredAt: restoredAt.toISOString() };
+}
+
+// src/modules/trust/index/trust.recovery.ts
+var trustRecoveryRoute = new Elysia({ name: "trust.recovery" }).post("/recovery/request", ({ body }) => requestTrustRecovery(body), {
+  body: trustRecoveryRequestBody
+}).post("/recovery/verify", ({ body }) => verifyTrustRecovery(body), {
+  body: trustRecoveryVerifyBody
+});
+
+// src/modules/trust/index.ts
+var trustRoute = new Elysia({ prefix: "/trust" }).use(trustRecoveryRoute);
+
 // src/plugins/validation.plugin.ts
 var validationPlugin = new Elysia({
   name: "validation-plugin"
@@ -123436,7 +125708,7 @@ var validationPlugin = new Elysia({
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 var webCorsOrigin = configuredWebOrigins.length ? [...configuredWebOrigins, localWebOrigin] : localWebOrigin;
-var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

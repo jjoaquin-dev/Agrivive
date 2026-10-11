@@ -16,7 +16,7 @@ export function OrderReportSuccess({ evidence, onClose }: OrderReportSuccessProp
         <CheckCircle2 className="size-6 text-emerald-600" /> Report Filed Successfully
       </div>
       <p className="text-sm text-muted-foreground">
-        Your report and evidence have been recorded for platform monitoring.
+        Your report and evidence have been recorded as an allegation for platform monitoring. A report alone does not add trust points; only verified signals are scored.
       </p>
       {evidence.length > 0 && (
         <div className="rounded-xl border border-border/70 bg-agrivive-background/60 p-3 space-y-2">

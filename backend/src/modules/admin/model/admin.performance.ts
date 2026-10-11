@@ -13,4 +13,10 @@ export type AdminPerformance = {
     allegationFlags: number;
     components: Array<{ kind: string; count: number; weight: number; points: number }>;
   };
+  trustActions: {
+    enabled: boolean;
+    policyVersion: string;
+    thresholds: { warning: number; restriction: number; blocked: number };
+    active: { warning: number; temporaryRestriction: number; blocked: number; total: number };
+  };
 };

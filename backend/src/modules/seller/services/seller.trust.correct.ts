@@ -7,7 +7,7 @@ import { queueTrustNotice } from "../../../utils/trust";
 
 export function correctSellerTrustEvent(sellerId: string, eventId: string, reason: string) {
   return db.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
     const [event] = await tx.select().from(trust_events).where(and(
       eq(trust_events.id, eventId), eq(trust_events.subjectId, sellerId),
       eq(trust_events.classification, "verified"),

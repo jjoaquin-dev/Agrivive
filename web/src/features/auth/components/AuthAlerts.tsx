@@ -3,12 +3,14 @@ import { CheckCircle, Info } from "lucide-react";
 
 type AuthAlertsProps = {
   verifiedNotice?: boolean;
+  restoredNotice?: boolean;
   checkoutNotice?: boolean;
   formError?: string;
 };
 
 export function AuthAlerts({
   verifiedNotice,
+  restoredNotice,
   checkoutNotice,
   formError,
 }: AuthAlertsProps) {
@@ -19,6 +21,15 @@ export function AuthAlerts({
           <CheckCircle className="size-4 text-emerald-600" />
           <AlertDescription>
             Your email was verified successfully! Please sign in.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {restoredNotice ? (
+        <Alert className="mb-5 border-emerald-200 bg-emerald-50 text-emerald-800">
+          <CheckCircle className="size-4 text-emerald-600" />
+          <AlertDescription>
+            Your account was restored. Sign in to continue.
           </AlertDescription>
         </Alert>
       ) : null}

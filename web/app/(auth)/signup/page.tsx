@@ -7,6 +7,7 @@ import { AuthInput } from "@/src/features/auth/components/AuthInput";
 import { AuthShell } from "@/src/features/auth/components/AuthShell";
 import { PasswordChecklist } from "@/src/features/auth/components/PasswordChecklist";
 import { PasswordInput } from "@/src/features/auth/components/PasswordInput";
+import { GoogleSignInButton } from "@/src/features/auth/components/GoogleSignInButton";
 import { validateSignUp, type AuthErrors } from "@/src/features/auth/validation";
 import { authClient } from "@/src/lib/auth-client";
 import { DEFAULT_BUYER_DESTINATION, getNextPathFromLocation, withNextPath } from "@/src/lib/navigation";
@@ -75,6 +76,12 @@ export default function SignUpPage() {
         </>
       }
     >
+      <GoogleSignInButton nextPath={nextPath} />
+      <div className="my-5 flex items-center gap-3 text-xs text-agrivive-muted">
+        <span className="h-px flex-1 bg-agrivive-border" />
+        <span>or create with email</span>
+        <span className="h-px flex-1 bg-agrivive-border" />
+      </div>
       <form onSubmit={handleSubmit} aria-busy={loading}>
         {errors.form ? (
           <Alert variant="destructive" className="mb-5">

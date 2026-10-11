@@ -6,7 +6,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { authClient } from "../../src/api/client";
@@ -150,13 +149,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleForgotPassword = () => {
-    Alert.alert(
-      "Password Recovery",
-      "Please contact your administrator or support at support@agrivive.com to reset your credentials.",
-      [{ text: "OK" }],
-    );
-  };
+  const handleForgotPassword = () => router.push("/(auth)/account-recovery");
 
   return (
     <KeyboardAvoidingView

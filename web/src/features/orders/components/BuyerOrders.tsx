@@ -9,6 +9,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/src/components/PageContainer";
+import { isTrustAccessMessage } from "@/src/lib/api";
+import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 import { useBuyerOrders } from "../hooks/useBuyerOrders";
 import { OrderCard } from "./OrderCard";
 import { OrderFilterTabs, type OrderTab } from "./OrderFilterTabs";
@@ -78,7 +80,8 @@ export function BuyerOrders() {
           </Alert>
         ) : null}
 
-        {error ? (
+        {error && isTrustAccessMessage(error) ? <div className="mb-6"><TrustAccessNotice message={error} /></div> : null}
+        {error && !isTrustAccessMessage(error) ? (
           <Alert variant="destructive" className="mb-6">
             <RefreshCw className="size-4" />
             <AlertTitle>Orders could not refresh</AlertTitle>

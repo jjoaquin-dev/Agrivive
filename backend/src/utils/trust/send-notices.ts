@@ -10,6 +10,10 @@ const messages: Record<string, { subject: string; text: string }> = {
   inquiry_24h_warning: { subject: "Agrivive inquiry warning", text: "A buyer inquiry has been waiting for your reply for 24 hours." },
   inquiry_24h_buyer_notice: { subject: "Agrivive inquiry update", text: "The seller has not replied to your inquiry after 24 hours." },
   trust_event_corrected: { subject: "Agrivive trust record corrected", text: "A trust event was invalidated after its source data was rechecked." },
+  trust_action_warning: { subject: "Agrivive trust warning", text: "Your verified trust history reached the warning threshold. Review your account activity and keep future transactions responsive." },
+  trust_action_restriction: { subject: "Agrivive temporary restriction", text: "Your account has a temporary restriction because verified trust events reached the configured restriction threshold. The restriction will expire automatically unless a newer action applies." },
+  trust_action_blocked: { subject: "Agrivive account recovery", text: "Your account is blocked by the trust policy. Use the Agrivive recovery screen and verify the email OTP to restore access." },
+  trust_action_expired: { subject: "Agrivive restriction ended", text: "Your temporary trust restriction has ended automatically. You can use Agrivive again." },
 };
 
 export async function sendPendingTrustNotices(limit = 25) {

@@ -6,7 +6,7 @@ import { requireVerifiedSeller } from "../../../utils/seller-access";
 
 export async function readSellerNotification(sellerId: string, notificationId: string) {
   return db.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireVerifiedSeller(tx, sellerId, true, true);
 
     const [notification] = await tx.select({
       id: trust_notices.id,

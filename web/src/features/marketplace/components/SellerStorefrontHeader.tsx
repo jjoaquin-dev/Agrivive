@@ -5,6 +5,7 @@ import { sellerTypeLabel } from "../marketplace-labels";
 import type { MarketplaceSellerProfile } from "../types";
 import { SellerFollowButton } from "./SellerFollowButton";
 import { SellerProfileAvatar } from "./SellerProfileAvatar";
+import { MessageSellerButton } from "./MessageSellerButton";
 
 export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerProfile }) {
   const directionsUrl = getDirectionsUrl(seller.latitude, seller.longitude);
@@ -19,6 +20,7 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
             Browse the fresh produce this seller has available for pickup.
           </p>
+          <MessageSellerButton context="seller" id={seller.id} compact />
           <SellerFollowButton sellerId={seller.id} />
         </div>
       </div>

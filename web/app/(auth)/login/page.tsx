@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, Mail, ShieldCheck, UserPlus } from "lucide-react";
+import { KeyRound, LogIn, Mail, ShieldCheck, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
@@ -11,6 +11,7 @@ import { AuthAlerts } from "@/src/features/auth/components/AuthAlerts";
 import { AuthInput } from "@/src/features/auth/components/AuthInput";
 import { AuthShell } from "@/src/features/auth/components/AuthShell";
 import { PasswordInput } from "@/src/features/auth/components/PasswordInput";
+import { GoogleSignInButton } from "@/src/features/auth/components/GoogleSignInButton";
 import { validateEmail, validatePassword, type AuthErrors } from "@/src/features/auth/validation";
 import { DEFAULT_BUYER_DESTINATION, getNextPathFromLocation, withNextPath } from "@/src/lib/navigation";
 
@@ -24,6 +25,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<AuthErrors>({});
   const [nextPath, setNextPath] = useState(DEFAULT_BUYER_DESTINATION);
   const [verifiedNotice, setVerifiedNotice] = useState(false);
+  const [restoredNotice, setRestoredNotice] = useState(false);
   const [checkoutNotice, setCheckoutNotice] = useState(false);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function LoginPage() {
     setNextPath(destination);
     const params = new URLSearchParams(window.location.search);
     if (params.get("verified") === "true") setVerifiedNotice(true);
+    if (params.get("restored") === "true") setRestoredNotice(true);
     if (destination && destination !== DEFAULT_BUYER_DESTINATION) setCheckoutNotice(true);
   }, []);
 
@@ -56,7 +59,12 @@ export default function LoginPage() {
         setErrors({ form: "The email or password you entered is incorrect." });
         return;
       }
-      if (!response.data?.user?.emailVerified) {
+      const signedInUser = response.data?.user as { emailVerified?: boolean; isActive?: boolean } | undefined;
+      if (signedInUser?.isActive === false) {
+        router.replace(withNextPath(`/account-recovery?email=${encodeURIComponent(cleanEmail)}&blocked=true`, nextPath));
+        return;
+      }
+      if (!signedInUser?.emailVerified) {
         await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "email-verification" });
         router.replace(withNextPath(`/verify-email?email=${encodeURIComponent(cleanEmail)}`, nextPath));
         return;
@@ -123,9 +131,17 @@ export default function LoginPage() {
     >
       <AuthAlerts
         verifiedNotice={verifiedNotice}
+        restoredNotice={restoredNotice}
         checkoutNotice={checkoutNotice}
         formError={errors.form}
       />
+
+      <GoogleSignInButton nextPath={nextPath} />
+      <div className="my-5 flex items-center gap-3 text-xs text-agrivive-muted">
+        <span className="h-px flex-1 bg-agrivive-border" />
+        <span>or use your email</span>
+        <span className="h-px flex-1 bg-agrivive-border" />
+      </div>
 
       <form onSubmit={twoFactorRequired ? handleTwoFactor : handleSubmit} aria-busy={loading}>
         <FieldGroup>
@@ -178,6 +194,15 @@ export default function LoginPage() {
                 }}
                 error={errors.password}
               />
+              <div className="-mt-2 flex justify-end">
+                <Link
+                  href={withNextPath(`/account-recovery`, nextPath)}
+                  className="inline-flex min-h-11 items-center gap-1.5 text-xs font-semibold text-agrivive-primary hover:underline"
+                >
+                  <KeyRound className="size-3.5" aria-hidden="true" />
+                  Restore access with email code
+                </Link>
+              </div>
             </>
           )}
 

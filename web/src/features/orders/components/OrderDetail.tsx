@@ -7,7 +7,7 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ApiError, isAbortError } from "@/src/lib/api";
+import { ApiError, isAbortError, isTrustAccessMessage } from "@/src/lib/api";
 import { authClient } from "@/src/lib/auth-client";
 import { usePolling } from "@/src/lib/usePolling";
 import type { BuyerOrder, MarketplaceProduct } from "@/src/features/marketplace/types";
@@ -23,6 +23,7 @@ import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderReportModal } from "./OrderReportModal";
 import { OrderMessages } from "./OrderMessages";
 import { OrderCancellation } from "./OrderCancellation";
+import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 export function OrderDetail() {
   const router = useRouter();
   const id = useParams<{ id: string }>()?.id ?? "";
@@ -61,7 +62,7 @@ export function OrderDetail() {
         setOrder(null);
         setProducts([]);
         if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
-        else setError("You no longer have access to this reservation.");
+        else setError(reason instanceof ApiError ? reason.message : "You no longer have access to this reservation.");
       }
       else setError(reason instanceof ApiError ? reason.message : "We could not load this reservation.");
     } finally { if (run === loadRun.current) setLoading(false); }
@@ -106,7 +107,7 @@ export function OrderDetail() {
         setOrder(null);
         setProducts([]);
         if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
-        else setError("You no longer have access to this reservation.");
+        else setError(reason instanceof ApiError ? reason.message : "You no longer have access to this reservation.");
         return;
       }
       setError(reason instanceof ApiError ? reason.message : "We could not refresh this reservation.");
@@ -115,7 +116,7 @@ export function OrderDetail() {
   });
 
   if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[20px] bg-white" /></PageContainer></main>;
-  if (error && !order) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Alert variant="destructive"><AlertDescription>{error}</AlertDescription><Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></Alert></PageContainer></main>;
+  if (error && !order) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer>{isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}<Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></PageContainer></main>;
   if (!order) return null;
 
   const first = order.items[0];
@@ -141,7 +142,7 @@ export function OrderDetail() {
           <OrderStatusBadge status={order.status} />
         </header>
 
-        {error ? <Alert variant="destructive" className="mt-5"><AlertDescription>{error} {order ? "Showing the last reservation details we loaded; status may have changed." : ""}</AlertDescription>
+        {error ? isTrustAccessMessage(error) ? <div className="mt-5"><TrustAccessNotice message={error} /></div> : <Alert variant="destructive" className="mt-5"><AlertDescription>{error} {order ? "Showing the last reservation details we loaded; status may have changed." : ""}</AlertDescription>
           {order ? <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => void load()}>Try again</Button> : null}
         </Alert> : null}
 
@@ -165,7 +166,7 @@ export function OrderDetail() {
                 setOrder(null);
                 setProducts([]);
                 if (status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
-                else setError("You no longer have access to this reservation.");
+                else setError("Account is temporarily restricted");
               }} />
 
             <div className="border-t border-border/70 pt-4">

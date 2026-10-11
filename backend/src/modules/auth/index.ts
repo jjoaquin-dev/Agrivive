@@ -9,6 +9,7 @@ import { expo } from "@better-auth/expo";
 
 export const auth = betterAuth({
   basePath: "/api/auth",
+  baseURL: process.env.BETTER_AUTH_URL || undefined,
   trustedOrigins: [
     "agrivive://",
     "exp://",
@@ -30,6 +31,14 @@ export const auth = betterAuth({
     provider: "pg", // or "mysql", "sqlite"
     schema,
   }),
+  socialProviders: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ? {
+        google: {
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        },
+      }
+    : {},
   plugins: [
     expo(),
     bearer(),

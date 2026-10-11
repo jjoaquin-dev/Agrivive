@@ -3,9 +3,10 @@ import { db } from "../../../db";
 import { order_reviews, orders } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import type { BuyerReviewBody } from "../model/buyer.order.review";
+import { evaluateTrustAction } from "../../../utils/trust/evaluate-action";
 
-export function createBuyerReview(buyerId: string, orderId: string, body: BuyerReviewBody) {
-  return db.transaction(async (tx) => {
+export async function createBuyerReview(buyerId: string, orderId: string, body: BuyerReviewBody) {
+  const review = await db.transaction(async (tx) => {
     const [order] = await tx.select().from(orders).where(and(
       eq(orders.id, orderId), eq(orders.buyersId, buyerId),
     )).limit(1);
@@ -17,4 +18,6 @@ export function createBuyerReview(buyerId: string, orderId: string, body: BuyerR
     if (!review) throw new OrderError(409, "Order already reviewed");
     return review;
   });
+  await evaluateTrustAction(review.sellerId, review.orderId);
+  return review;
 }

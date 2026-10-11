@@ -10,13 +10,13 @@ This list separates genuine design choices and proposal inconsistencies from fac
 
 | ID | Decision to make | Why it matters |
 |---|---|---|
-| D-01 | Confirm any remaining public-guest behavior and stakeholder provisioning. | Admin monitoring is aggregate and read-only; no admin report decisions or account actions are part of the workflow. |
+| D-01 | Confirm any remaining public-guest behavior and stakeholder provisioning. | Admin monitoring remains aggregate and read-only; trust actions and OTP recovery are system-controlled. |
 | D-02 | Define seller verification and OTP channel; reconcile with current email/password setup. | Access and onboarding requirements depend on it. |
 | D-03 | Decide whether a reservation can contain multiple items or sellers. | Shapes order flow and QR scope. |
 | D-04 | Define when the 24-hour timer starts and which cancellations remain eligible. | Needed for unambiguous stock restoration and buyer messages. |
 | D-05 | Define partial pickup, no-show, and seller cancellation handling. | Quantity, analytics, and trust outcomes differ. |
 | D-07 | Validate visibility thresholds, the 40/40/20 score weights, and normalized recurrence identity with stakeholders. | They are prototype settings, not standards. |
-| D-10 | Define evidence retention and the user correction path for source-data trust records. | Admins monitor aggregate signals only; unsupported reports remain allegations and do not change a user's weighted score or account state. |
+| D-10 | Define evidence retention and the user correction path for source-data trust records. | User correction remains available for eligible source events; unsupported reports remain allegations and do not change a user's weighted score or account state. Blocked-account restoration is system-controlled through email OTP; admins cannot restore accounts. |
 | D-11 | Clarify the non-functional table's `FR-26` to `FR-30` labels and maintain one testable requirement register. | Avoids duplicate or ambiguous traceability. |
 | D-12 | Verify hosting and external-service costs, privacy terms, and beta deployment configuration. | Proposal costs and service versions are planning assumptions. |
 

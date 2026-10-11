@@ -3,6 +3,7 @@ import { db } from "../../../db";
 import { product_inquiries, sellers_product, sellers_profile, user } from "../../../db/schema";
 import { requireActiveUser } from "../../../utils/order-access";
 import { OrderError } from "../../../utils/order-types";
+import { marketplaceSellerVisibility } from "../../../modules/marketplace/services/marketplace.visibility";
 
 export async function createBuyerProductInquiry(buyerId: string, productId: string, question: string) {
   const text = question.trim();
@@ -19,6 +20,7 @@ export async function createBuyerProductInquiry(buyerId: string, productId: stri
         eq(sellers_product.id, productId),
         eq(sellers_product.isActive, true),
         eq(sellers_product.isMarketable, true),
+        marketplaceSellerVisibility(),
         gt(sellers_product.productQty, "0"),
         eq(user.isActive, true),
         eq(user.emailVerified, true),

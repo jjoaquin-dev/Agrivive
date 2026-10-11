@@ -3,6 +3,7 @@ import { db } from "../../../db";
 import { sellers_profile, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
+import { marketplaceSellerVisibility } from "./marketplace.visibility";
 
 const sellerRole = sql`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
 
@@ -21,6 +22,7 @@ export async function getMarketplaceSeller(sellerId: string) {
     .innerJoin(user, eq(user.id, sellers_profile.userId))
     .where(and(
       eq(sellers_profile.userId, sellerId),
+      marketplaceSellerVisibility(),
       eq(sellers_profile.isCurrent, true),
       eq(user.isActive, true),
       eq(user.emailVerified, true),

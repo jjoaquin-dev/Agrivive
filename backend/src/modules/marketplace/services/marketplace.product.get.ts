@@ -5,6 +5,7 @@ import { OrderError } from "../../../utils/order-types";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 import { calculateVisibilityScore } from "../../../utils/visibility-score";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
+import { marketplaceSellerVisibility } from "./marketplace.visibility";
 
 export async function getMarketplaceProduct(productId: string) {
   const rows = await db.select({ id: sellers_product.id })
@@ -15,6 +16,7 @@ export async function getMarketplaceProduct(productId: string) {
       eq(sellers_product.id, productId),
       eq(sellers_product.isActive, true),
       eq(sellers_product.isMarketable, true),
+      marketplaceSellerVisibility(),
       isNotNull(sellers_product.productPrice),
       gt(sellers_product.productPrice, "0"),
       eq(user.isActive, true),
