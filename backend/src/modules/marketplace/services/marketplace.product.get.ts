@@ -44,6 +44,8 @@ export async function getMarketplaceProduct(productId: string) {
   const cycles = await db.select({
     id: listing_cycles.id,
     productId: listing_cycles.productId,
+    vegetableCatalogId: listing_cycles.vegetableCatalogId,
+    scalingType: listing_cycles.scalingType,
     vegetableKey: listing_cycles.vegetableKey,
     startedAt: listing_cycles.startedAt,
   }).from(listing_cycles).innerJoin(sellers_product, eq(listing_cycles.productId, sellers_product.id))
@@ -55,8 +57,13 @@ export async function getMarketplaceProduct(productId: string) {
   const currentCycle = cycles.filter((cycle) => cycle.productId === productId &&
     productRow.publishedAt && cycle.startedAt <= evaluatedAt)
     .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
+  const vegetableCatalogId = currentCycle?.vegetableCatalogId ?? productRow.vegetableCatalogId;
+  const scalingType = currentCycle?.scalingType ?? productRow.scalingType;
   const vegetableKey = currentCycle?.vegetableKey ?? normalizeVegetableName(productRow.productName);
-  const priorCycles = cycles.filter((cycle) => cycle.vegetableKey === vegetableKey &&
+  const priorCycles = cycles.filter((cycle) =>
+    (vegetableCatalogId !== null
+      ? cycle.vegetableCatalogId === vegetableCatalogId && cycle.scalingType === scalingType
+      : cycle.vegetableCatalogId === null && cycle.scalingType === scalingType && cycle.vegetableKey === vegetableKey) &&
     cycle.startedAt < (productRow.publishedAt ?? evaluatedAt) && cycle.id !== currentCycle?.id).length;
   const visibility = calculateVisibilityScore({
     evaluatedAt,

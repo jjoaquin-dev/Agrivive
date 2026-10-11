@@ -24,27 +24,6 @@ The API listens on `http://localhost:3000`. The worker expires pending reservati
 
 Before testing seller follows, apply `backend/drizzle/20261005213227_seller_follow_notices` to a disposable or owner-approved database. Do not apply this migration to production as part of the code-only batch. Applying migrations is an explicit release step; the app does not apply them on startup.
 
-## Market Basket Analysis
-
-The MBA pipeline lives under `analytics/mba/` and does not insert synthetic orders into the application database. Synthetic mode is for demonstration and local testing only:
-
-Run the generator from the repository root:
-
-```powershell
-$env:MBA_MODE = "synthetic"
-python analytics/mba/run_mba.py
-```
-
-Use `MBA_MODE=live` only when a read-only completed-order source is available. Live mode reports `collecting` and returns no rules until `MBA_MIN_COMPLETED_BASKETS` usable completed baskets exist. Cancelled, expired, pending, incomplete, and synthetic records are excluded. n8n remains disabled until live rules are reviewed.
-
-The buyer recommendation endpoint reads the generated report without running Python during a request:
-
-```text
-GET /marketplace/products/:id/recommendations
-```
-
-Set `MBA_REPORT_DIR` when the report directory differs from `../analytics/mba/output`. Synthetic recommendations are shown only outside production with a demo label and resolve to currently available marketplace listings. Live recommendations remain hidden while the report is collecting.
-
 For local email testing set `EMAIL_PROVIDER=mailtrap`. Production should set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL`. OTP values are never written to logs unless `ALLOW_DEV_EMAIL_LOG=true`.
 
 ## Verification
@@ -66,7 +45,7 @@ Set `N8N_PROMOTION_WEBHOOK_URL` and `N8N_PROMOTION_SERVICE_TOKEN` in the backend
 
 The backend computes promotion eligibility from the same `visibility-v4` score used by seller visibility and requires at least `0.70`, a current listing cycle, an active/marketable listing with stock, and a publicly visible seller profile. A newly created cycle is first checked on a later worker pass and remains scheduled for hourly checks while it stays valid and below the threshold. An initial draft creates one follow-up check due six hours after the initial draft is ready. Existing listing cycles are marked skipped by migration so rollout does not create historical promotions.
 
-Use `GET /seller/promotions?limit=20` to list the signed-in seller's ready drafts. Mark one read with `POST /seller/promotions/:id/read` or all with `POST /seller/promotions/read-all`; both require no body. The mobile app obtains a fresh share payload through `GET /seller/promotions/:id/share`. A listing that no longer qualifies returns HTTP 409 and is not shared. The seller must choose a destination or cancel in the native share sheet; n8n never posts to a social account and never changes the price.
+Use `GET /seller/promotions?limit=20` to list the signed-in seller's ready drafts. Mark one read with `POST /seller/promotions/:id/read` or all with `POST /seller/promotions/read-all`; both require no body. The mobile app obtains a fresh share payload through `GET /seller/promotions/:id/share`. A listing that no longer qualifies returns HTTP 409 and is not shared. The seller must choose a destination or cancel in the native share sheet; this legacy draft flow never posts to a social account and never changes the price.
 
 Protected n8n callbacks use `Authorization: Bearer <N8N_PROMOTION_SERVICE_TOKEN>`:
 
@@ -79,6 +58,16 @@ POST /integrations/promotions/jobs/:id/failure     {"code":"invalid_draft"}
 The worker sends only `{ "jobId": "<uuid>", "stage": "initial|followup" }` to n8n. Callback retries are bounded; terminal failure status and a non-sensitive reason are stored for diagnosis. Do not apply `backend/drizzle/20261007082243_seller_priority_promotions` to production as part of this implementation. Apply it only to a disposable or specifically approved test database before manual endpoint acceptance.
 
 `GET /seller/analytics/summary` now returns a factual summary from the already-computed metrics without waiting on an external AI service. Trust monitoring uses policy `monitoring-v2`: verified non-response = 1 point, verified cancellation = 2 points, and each completed order with a 1–2-star rating = 1 rating signal, counted once per order. Written review text is context only; unverified report flags contribute zero points. Neither the score nor the admin page restricts an account.
+
+## Seller Boost Visibility social posting
+
+Sellers can prepare a post from the Marketplace Visibility Guide, select Agrivive's configured Facebook, Instagram, and X pages, edit the captions, and confirm **Post**. TikTok and seller-owned account linking are not included. The backend checks the current listing and `visibility-v4 >= 0.70`, publishes through provider APIs using server-only credentials, and returns a separate status for each channel. Retrying a campaign resubmits failed channels only; successful posts remain saved.
+
+Apply all pending migrations in timestamp order to an approved development/test database before manual acceptance. If not applied yet, run `20261007165336_social_publishing` first, then `20261007181343_official_social_pages`; the latter removes seller-linked account and OAuth-state storage while preserving campaign/post history. Do not apply migrations to production in this implementation.
+
+Set backend environment values from `.env.example`, import `n8n/workflows/agrivive-social-publishing.json`, replace `YOUR_AGRIVIVE_API_HOST`, and attach Header Auth credentials to the webhook and backend requests. The webhook receives only the campaign ID; n8n then fetches selected channel names, reviewed captions, and an eligible product-image URL from the backend. It never receives Meta/X credentials or calls provider APIs. Keep n8n execution retention disabled. The export is inactive until owner configuration and approved test-channel acceptance. Deactivate any older social-posting workflow already running, and do not import/reactivate the legacy TikTok status workflow.
+
+The product image URL is public for platform retrieval but returns only the current eligible image hosted in Agrivive S3. Live publishing still requires a public HTTPS API, valid Facebook Page token and ID, linked Instagram Professional account and Meta permissions, X write credentials, Groq, n8n credentials, and all pending migrations in timestamp order (including the previous social-campaign creation migration before the cleanup migration, if it has not yet been applied). Importing the workflow alone does not enable publishing.
 
 Buyer profile photo endpoints:
 

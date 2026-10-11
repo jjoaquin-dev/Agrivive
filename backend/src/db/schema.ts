@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm/_relations";
 import { sql } from "drizzle-orm";
-import { decimal, integer, smallint } from "drizzle-orm/pg-core";
+import { decimal, integer, jsonb, smallint } from "drizzle-orm/pg-core";
 import {
   pgTable,
   text,
@@ -135,6 +135,28 @@ export const product_type_enum = pgEnum("product_type", [
   "Flower Vegetables",
   "Fruit Vegetables",
   "Seeds and Legumes",
+  "Root Vegetables",
+  "Bulb Vegetables",
+  "Stem Vegetables",
+  "Pod Vegetables",
+  "Tuber Vegetables",
+  "Seed Vegetables",
+]);
+export const vegetable_category_enum = pgEnum("vegetable_category", [
+  "Leafy Greens",
+  "Root Vegetables",
+  "Bulb Vegetables",
+  "Stem Vegetables",
+  "Flower Vegetables",
+  "Fruit Vegetables",
+  "Pod Vegetables",
+  "Tuber Vegetables",
+  "Seed Vegetables",
+]);
+export const vegetable_review_status_enum = pgEnum("vegetable_review_status", [
+  "draft",
+  "approved",
+  "inactive",
 ]);
 export const product_condition_enum = pgEnum("product_condition", [
   "good",
@@ -146,12 +168,35 @@ export const scaling_type_enum = pgEnum("scaling_type", [
   "kilo",
   "pile",
 ]);
+export const vegetable_catalog = pgTable("vegetable_catalog", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  filipinoName: text("filipino_name").notNull(),
+  englishName: text("english_name").notNull(),
+  searchAliases: jsonb("search_aliases").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  searchText: text("search_text").notNull(),
+  category: vegetable_category_enum().notNull(),
+  scientificName: text("scientific_name"),
+  sourceUrl: text("source_url").notNull(),
+  reviewStatus: vegetable_review_status_enum("review_status").default("approved").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+}, (table) => [
+  uniqueIndex("vegetable_catalog_filipino_name_unique").on(table.filipinoName),
+  index("vegetable_catalog_search_text_idx").on(table.searchText),
+  index("vegetable_catalog_category_idx").on(table.category),
+]);
 export const sellers_product = pgTable("sellers_product", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
 
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  vegetableCatalogId: uuid("vegetable_catalog_id")
+    .references(() => vegetable_catalog.id, { onDelete: "restrict" }),
   productName: text("product_name").notNull(),
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
@@ -231,11 +276,16 @@ export const buyer_listing_notices = pgTable("buyer_listing_notices", {
 export const listing_cycles = pgTable("listing_cycles", {
   id: uuid("id").defaultRandom().primaryKey(),
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  vegetableCatalogId: uuid("vegetable_catalog_id")
+    .references(() => vegetable_catalog.id, { onDelete: "restrict" }),
+  scalingType: scaling_type_enum("scaling_type").notNull(),
   vegetableKey: text("vegetable_key").notNull(),
   startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }).notNull(),
 }, (table) => [
   index("listing_cycles_product_started_idx").on(table.productId, table.startedAt),
+  index("listing_cycles_catalog_started_idx").on(table.vegetableCatalogId, table.startedAt),
+  index("listing_cycles_catalog_unit_started_idx").on(table.vegetableCatalogId, table.scalingType, table.startedAt),
   index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt),
 ]);
 
@@ -275,6 +325,56 @@ export const seller_promotion_jobs = pgTable("seller_promotion_jobs", {
   index("seller_promotion_jobs_due_idx").on(table.status, table.nextCheckAt),
   index("seller_promotion_jobs_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_promotion_jobs_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
+]);
+
+export const social_platform = pgEnum("social_platform", ["facebook", "instagram", "tiktok", "x"]);
+export const social_campaign_status = pgEnum("social_campaign_status", [
+  "draft", "queued", "publishing", "processing", "published", "partial", "failed",
+]);
+export const social_campaign_post_status = pgEnum("social_campaign_post_status", [
+  "queued", "processing", "published", "failed",
+]);
+
+export const seller_social_campaigns = pgTable("seller_social_campaigns", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
+  status: social_campaign_status().default("draft").notNull(),
+  posts: jsonb("posts").$type<Record<string, string>>().notNull(),
+  selectedPlatforms: social_platform("selected_platforms").array().default([]).notNull(),
+  tiktokPrivacyLevel: text("tiktok_privacy_level"),
+  tiktokAllowComment: boolean("tiktok_allow_comment"),
+  tiktokBrandOrganic: boolean("tiktok_brand_organic"),
+  tiktokBrandContent: boolean("tiktok_brand_content"),
+  tiktokConsentAt: timestamp("tiktok_consent_at", { withTimezone: true }),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  retryCount: integer("retry_count").default(0).notNull(),
+  leaseUntil: timestamp("lease_until", { withTimezone: true }),
+  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+  index("seller_social_campaigns_seller_created_idx").on(table.sellerId, table.createdAt),
+  index("seller_social_campaigns_due_idx").on(table.status, table.nextCheckAt, table.leaseUntil),
+]);
+
+export const seller_social_campaign_posts = pgTable("seller_social_campaign_posts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campaignId: uuid("campaign_id").notNull().references(() => seller_social_campaigns.id, { onDelete: "cascade" }),
+  platform: social_platform().notNull(),
+  status: social_campaign_post_status().default("queued").notNull(),
+  platformPostId: text("platform_post_id"),
+  postUrl: text("post_url"),
+  lastError: text("last_error"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+  uniqueIndex("seller_social_campaign_posts_campaign_platform_unique").on(table.campaignId, table.platform),
+  index("seller_social_campaign_posts_campaign_idx").on(table.campaignId, table.status),
 ]);
 
 export const product_stock_adjustments = pgTable("product_stock_adjustments", {

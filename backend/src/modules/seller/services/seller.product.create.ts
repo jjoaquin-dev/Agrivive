@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { listing_cycles, sellers_product } from "../../../db/schema";
+import { listing_cycles, sellers_product, vegetable_catalog } from "../../../db/schema";
 import { priceToCents, quantityToHundredths } from "../../../utils/order-amount";
 import { OrderError } from "../../../utils/order-types";
 import type { SellerProductCreate } from "../model/seller.product.create";
@@ -21,13 +21,23 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
   validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
-  const productName = body.productName.trim();
-  const normalizedName = productName.toLowerCase();
-  const lockKey = `${normalizedName}:${body.scalingType}`;
-
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
+    const [catalog] = await tx.select({
+      id: vegetable_catalog.id,
+      filipinoName: vegetable_catalog.filipinoName,
+      category: vegetable_catalog.category,
+    }).from(vegetable_catalog).where(and(
+      eq(vegetable_catalog.id, body.catalogId),
+      eq(vegetable_catalog.isActive, true),
+      eq(vegetable_catalog.reviewStatus, "approved"),
+    )).limit(1);
+    if (!catalog) throw new OrderError(400, "Choose an active vegetable from the catalog");
+
+    const productName = catalog.filipinoName.trim();
+    const normalizedName = productName.toLowerCase();
+    const lockKey = `${normalizedName}:${body.scalingType}`;
     await tx.execute(sql`
       select pg_advisory_xact_lock(hashtext(${userId}), hashtext(${lockKey}))
     `);
@@ -46,11 +56,14 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     if (existing) return null;
 
     const now = new Date();
+    const { catalogId: _catalogId, ...productFields } = body;
     const [postProduct] = await tx
       .insert(sellers_product)
       .values({
-        ...body,
+        ...productFields,
+        vegetableCatalogId: catalog.id,
         productName,
+        productType: catalog.category,
         productPrice: body.productPrice.toString(),
         basePrice: body.productPrice.toString(),
         priceReductionPercent: (body.priceReductionPercent ?? 0).toString(),
@@ -70,6 +83,8 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     if (!postProduct) throw new Error("Failed to post product");
     await tx.insert(listing_cycles).values({
       productId: postProduct.id,
+      vegetableCatalogId: catalog.id,
+      scalingType: body.scalingType,
       vegetableKey: normalizeVegetableName(productName),
       startedAt: now,
       originalQty: body.productQty.toString(),

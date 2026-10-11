@@ -1,10 +1,13 @@
 export type MarketplaceProductType =
   | "Leafy Greens"
-  | "Root and Tuber Vegetables"
-  | "Bulb and Stem Vegetables"
+  | "Root Vegetables"
+  | "Bulb Vegetables"
+  | "Stem Vegetables"
   | "Flower Vegetables"
   | "Fruit Vegetables"
-  | "Seeds and Legumes";
+  | "Pod Vegetables"
+  | "Tuber Vegetables"
+  | "Seed Vegetables";
 
 export type MarketplaceUnit = "sack" | "kilo" | "pile";
 export type MarketplaceSellerType = "supplier" | "supplier_vendor" | "retail_vendor";
@@ -66,14 +69,6 @@ export type MarketplaceProduct = {
 export type MarketplaceProductResponse = {
   products: MarketplaceProduct[];
   nextCursor: string | null;
-};
-
-export type MarketplaceProductRecommendationResponse = {
-  source: "none" | "synthetic" | "real";
-  status: "disabled" | "demo" | "collecting" | "ready" | "unavailable";
-  generatedAt: string | null;
-  basketCount: number;
-  recommendations: MarketplaceProduct[];
 };
 
 export type BuyerOrderItem = {

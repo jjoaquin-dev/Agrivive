@@ -33,18 +33,15 @@ Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/aut
 |---|---|---|
 | GET | `/marketplace/products` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/products/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
-| GET | `/marketplace/products/:id/recommendations` | `backend/src/modules/marketplace/index/marketplace.product.recommendations.ts` |
 | GET | `/marketplace/products/:id/reviews` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/map` | `backend/src/modules/marketplace/index/marketplace.sellers.map.ts` |
 
-`GET /marketplace/products` accepts search and filter fields plus `limit` and `cursor`. It returns a page ranked by visibility score, score tier, newest publication, then product ID. The cursor contains the evaluation time to keep score-based pages in the same order. Visibility currently uses the prototype weights and tiers from `GET /seller/weightedvisibility`; stakeholder validation of those settings is still pending.
+`GET /marketplace/products` accepts search and filter fields plus `limit` and `cursor`. It returns a page ranked by visibility score, score tier, newest publication, then product ID. The cursor contains the evaluation time to keep score-based pages in the same order. The default `VISIBILITY_POLICY=visibility-v4` keeps the current Weighted Surplus Visibility behavior. Setting `VISIBILITY_POLICY=visibility-ahptopsis-v1` enables the feature-flagged AHP–TOPSIS pilot for the marketplace list. The response includes `visibilityPolicyVersion`; seller promotion automation remains on the current WVS policy until the pilot is validated.
 
 `GET /marketplace/sellers/:id` includes `image`, which is a signed seller profile image URL when a photo exists and `null` otherwise.
 
 `GET /marketplace/sellers/map` returns one record per matching seller, including `image` as a signed seller profile image URL when available. Sellers without a photo return `image: null` and the web map shows seller initials instead.
-
-`GET /marketplace/products/:id/recommendations` returns up to three currently available marketplace listings associated with the requested product by the MBA report. Synthetic results are marked with `source: "synthetic"` and `status: "demo"`; live results remain empty while the report is collecting. The route does not require buyer authentication and does not run the Python MBA process during a request.
 
 ## Buyer
 
@@ -112,6 +109,7 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | PATCH | `/seller/profile` | `backend/src/modules/seller/index/seller.profile.update.ts` |
 | DELETE | `/seller/profile` | `backend/src/modules/seller/index/seller.profile.delete.ts` |
 | POST | `/seller/profile/avatar` | `backend/src/modules/seller/index/seller.profile.avatar.ts` |
+| GET | `/seller/vegetable-catalog` | `backend/src/modules/seller/index/seller.vegetable-catalog.ts` |
 | POST | `/seller/products` | `backend/src/modules/seller/index/seller.product.create.ts` |
 | POST | `/seller/addproduct` (legacy alias) | `backend/src/modules/seller/index/seller.product.create.ts` |
 | GET | `/seller/products` | `backend/src/modules/seller/index/seller.products.ts` |
@@ -149,8 +147,31 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | POST | `/seller/promotions/:id/read` | `backend/src/modules/seller/index/seller.promotions.ts` |
 | POST | `/seller/promotions/read-all` | `backend/src/modules/seller/index/seller.promotions.ts` |
 | GET | `/seller/promotions/:id/share` | `backend/src/modules/seller/index/seller.promotions.ts` |
+| GET | `/seller/social-campaigns/channels` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
+| POST | `/seller/social-campaigns/draft` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
+| GET | `/seller/social-campaigns/:id` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
+| POST | `/seller/social-campaigns/:id/publish` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
+| POST | `/seller/social-campaigns/:id/retry` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
+
+`GET /seller/vegetable-catalog?search=kamatis` returns approved catalog records with `id`, Filipino wet-market name, English name, aliases, reference category, scientific name when available, and `sourceUrl`. Search accepts Filipino names, English names, and stored aliases. Fungi and mushrooms are not seeded or returned.
+
+`POST /seller/products` and the legacy `POST /seller/addproduct` alias require `catalogId` instead of a free-text product name or category. Example body:
+
+```json
+{
+  "catalogId": "<vegetable-catalog-uuid>",
+  "imagUrl": "https://api.example.com/seller/product-images/example.jpg",
+  "productPrice": 80,
+  "productQty": 10,
+  "scalingType": "kilo",
+  "isMarketable": true,
+  "lowStockThreshold": 2
+}
+```
+
+The API reads the canonical Filipino name and category from the selected approved catalog record, rejects inactive or unapproved records, and prevents a seller from creating a duplicate name plus selling-unit listing. `PATCH /seller/products/:id` accepts the optional `catalogId` when the seller changes the selected vegetable; product name and category are not accepted as free-text update fields.
 
 `GET /seller/products/:id/share` returns a prepared caption, marketplace link, and image URL. Set `WEB_APP_URL` to the buyer web app origin for absolute share links.
 
@@ -169,6 +190,39 @@ These routes use the server-side `N8N_PROMOTION_SERVICE_TOKEN` as `Authorization
 The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|followup" }`. n8n retrieves the latest public listing context from the protected `context` route, generates wording only, and calls `draft` with `{"headline":"...","caption":"..."}`. Draft callbacks are idempotent. `failure` accepts `{"code":"model_failed|invalid_draft|callback_failed"}` and returns the job to bounded retry or a recorded terminal failure. A ready callback is accepted only after the backend independently confirms current Priority eligibility.
 
 The backend checks initial eligibility hourly using `visibility-v4 >= 0.70`. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
+
+## Seller social publishing to official Agrivive pages
+
+These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page, linked Instagram Professional account, and X account; no seller OAuth linking is used. TikTok publishing is not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.
+
+`GET /seller/social-campaigns/channels` returns each channel's label, caption limit, and configured state. `POST /seller/social-campaigns/draft` accepts `{"productId":"<uuid>"}` and returns an editable draft, listing name, and image preview URL. The backend checks seller ownership, current listing cycle, current public/buyable status, Agrivive-hosted listing photo, and `visibility-v4 >= 0.70`.
+
+`POST /seller/social-campaigns/:id/publish` is the seller's explicit confirmation. Example body:
+
+```json
+{
+  "platforms": ["facebook", "instagram", "x"],
+  "posts": {
+    "facebook": "Reviewed Facebook caption",
+    "instagram": "Reviewed Instagram caption",
+    "x": "Reviewed X post"
+  }
+}
+```
+
+The request requires the normal seller session; the campaign must belong to that seller. The response is `{"campaignId":"<uuid>","status":"queued"}`. `GET /seller/social-campaigns/:id` returns live overall and per-channel statuses and any published links. `POST /seller/social-campaigns/:id/retry` retries only failed channels; already successful posts are retained.
+
+n8n uses `Authorization: Bearer <N8N_SOCIAL_SERVICE_TOKEN>` to coordinate the workflow. Its webhook receives only `{ "campaignId": "<uuid>" }`; it fetches targets and calls the backend per selected platform. It never receives provider access tokens or calls social provider APIs:
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/integrations/social-campaigns/:id/context` | Recheck eligibility and return selected channel names/text plus a public eligible product image URL. |
+| POST | `/integrations/social-campaigns/:id/publish/:platform` | Ask the backend to publish to one selected channel using server-side credentials. |
+| GET | `/integrations/media/social-products/:id` | Stream the current eligible listing photo from private Agrivive storage for platform retrieval. |
+
+Import `n8n/workflows/agrivive-social-publishing.json`, replace `YOUR_AGRIVIVE_API_HOST`, and set Header Auth credentials for the webhook and protected API requests. Keep execution payload retention disabled. The exported workflow is inactive; activate it only after backend setup and approved test-channel checks. If an older social-posting or TikTok status workflow was already imported, deactivate it. Do not import or reactivate `agrivive-tiktok-status-polling.json`.
+
+Set the server-only credentials listed in `backend/.env.example`: public HTTPS API URL, n8n webhook URL/token, Groq key, Meta Graph API version, Agrivive Facebook Page ID and Page access token, linked Instagram Professional account ID, and X OAuth 1.0a write credentials. Meta requires the linked Instagram Professional account and approved posting permissions; X requires write access. No seller account tokens or OAuth callback URLs are used. Apply all pending migrations in timestamp order to an approved development/test database before manual acceptance. If the social-campaign migration is pending, apply `20261007165336_social_publishing` before `20261007181343_official_social_pages`; do not apply migrations to production as part of implementation.
 
 ## Admin monitoring
 

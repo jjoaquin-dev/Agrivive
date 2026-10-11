@@ -2,7 +2,7 @@
 title: Current Implementation
 type: implementation-status
 status: observed
-reviewed: 2026-09-20
+reviewed: 2026-10-11
 ---
 
 # Current Implementation
@@ -20,14 +20,15 @@ This note records the local repository as inspected on **20 September 2026**. It
 - `mobile/`: React Native Expo application (Expo SDK 57, Expo Router, TypeScript) implementing 3-step seller onboarding, Better Auth registration and email OTP, stall profile setup with interactive Davao City map pin, server-derived Verified account badge, and optional TOTP 2FA security.
 - `web/`: no application files observed yet.
 - `analytics/`: a local Python virtual environment and sample data files were observed, but no tracked analytics application.
+- The seller product flow now uses an approved vegetable catalog with Filipino wet-market names, English names, search aliases, and nine reference categories. The catalog excludes fungi and mushrooms. See [[2026-10-11 Vegetable Catalog and Naming]].
 
 ## Important gaps against the proposal
 
 - No implemented buyer web app.
 - No mobile listing screens, reservation management screens, QR scanner screens, or notification inbox yet (scheduled for subsequent mobile delivery).
 - No documented OTP flow in current auth configuration.
-- No complete listing lifecycle, search/filtering, messaging, location view, reservation/QR pickup, n8n workflow, Apriori recommendation service, dashboards, Q10 advisories, or trust processing observed.
-- The current product input covers name, image URL, price, quantity, category, and selling unit; the proposal also calls for condition, storage, inventory age, availability, pickup details, and recent-photo handling.
+- No complete listing lifecycle, search/filtering, messaging, location view, reservation/QR pickup, n8n workflow, dashboards, Q10 advisories, or trust processing observed.
+- The current product input covers a catalog-selected name, derived category, image URL, price, quantity, selling unit, condition, availability, and low-stock settings; storage, inventory age, pickup details, and recent-photo handling remain separate scope considerations.
 
 ## Local working-tree context
 

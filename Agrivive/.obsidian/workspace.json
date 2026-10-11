@@ -11,10 +11,14 @@
             "id": "22c3c61ec89b2992",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "03 Intelligence/Weighted Surplus Visibility.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Weighted Surplus Visibility"
             }
           }
         ]
@@ -184,8 +188,12 @@
       "bases:Create new base": false
     }
   },
-  "active": "22c3c61ec89b2992",
+  "active": "aef41709c623792a",
   "lastOpenFiles": [
+    "04 Delivery/2026-10-10 Recommendation Scope Cleanup.md",
+    "03 Intelligence/Weighted Surplus Visibility.md",
+    "04 Delivery/2026-10-10 MBA Removal.md",
+    "03 Intelligence/Market Basket Analysis.md",
     "04 Delivery/2026-10-03 One-shot Integration Completion.md",
     "04 Delivery/2026-09-21 Avatar Multipart Upload Fix.md",
     "04 Delivery/2026-09-20 ElysiaJS Skill.md",
@@ -208,10 +216,6 @@
     "04 Delivery/2026-09-26 Buyer Web Product Detail Redesign.md",
     "04 Delivery/2026-09-26 Buyer Marketplace Storefront Redesign.md",
     "04 Delivery/2026-09-26 Buyer Web Orders Redesign.md",
-    "04 Delivery/2026-09-26 Buyer Profile Refinement.md",
-    "04 Delivery/2026-09-26 Buyer Web Marketplace Redesign.md",
-    "04 Delivery/2026-09-26 Frontend Design Taste Skill.md",
-    "04 Delivery/2026-09-26 Buyer Web Profile.md",
     "04 Delivery",
     "03 Intelligence",
     "02 Product",

@@ -123,6 +123,7 @@ export default function SellerAnalyticsScreen() {
                 key={v.productId}
                 item={v}
                 productName={products.find((p) => p.id === v.productId)?.productName}
+                onBoost={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: v.productId } })}
               />
             ))
           )}

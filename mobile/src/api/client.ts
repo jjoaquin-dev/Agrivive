@@ -52,9 +52,9 @@ export class ApiError extends Error {
 
 const API_TIMEOUT_MS = 10_000;
 
-function createRequestController(signal?: AbortSignal | null) {
+function createRequestController(signal?: AbortSignal | null, timeoutMs = API_TIMEOUT_MS) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const cancel = () => controller.abort();
 
   if (signal?.aborted) cancel();
@@ -72,6 +72,7 @@ function createRequestController(signal?: AbortSignal | null) {
 export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {},
+  timeoutMs = API_TIMEOUT_MS,
 ): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -96,7 +97,7 @@ export async function apiFetch<T = any>(
     ...((options.headers as Record<string, string>) || {}),
   };
 
-  const request = createRequestController(options.signal);
+  const request = createRequestController(options.signal, timeoutMs);
 
   try {
     const response = await fetch(url, {

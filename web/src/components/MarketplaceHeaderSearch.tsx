@@ -5,11 +5,14 @@ import { cn } from "@/lib/utils";
 
 export const MARKETPLACE_PRODUCT_TYPES: { value: MarketplaceProductType; label: string }[] = [
   { value: "Leafy Greens", label: "Greens" },
-  { value: "Root and Tuber Vegetables", label: "Roots & tubers" },
-  { value: "Bulb and Stem Vegetables", label: "Bulbs & stems" },
+  { value: "Root Vegetables", label: "Root vegetables" },
+  { value: "Bulb Vegetables", label: "Bulb vegetables" },
+  { value: "Stem Vegetables", label: "Stem vegetables" },
   { value: "Flower Vegetables", label: "Flower vegetables" },
   { value: "Fruit Vegetables", label: "Fruit vegetables" },
-  { value: "Seeds and Legumes", label: "Seeds & legumes" },
+  { value: "Pod Vegetables", label: "Pod vegetables" },
+  { value: "Tuber Vegetables", label: "Tuber vegetables" },
+  { value: "Seed Vegetables", label: "Seed vegetables" },
 ];
 
 export function MarketplaceHeaderSearch({ idPrefix, className = "" }: { idPrefix: string; className?: string }) {

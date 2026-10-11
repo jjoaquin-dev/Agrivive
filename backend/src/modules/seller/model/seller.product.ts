@@ -3,11 +3,14 @@ import { t } from "elysia";
 export const sellerProductId = t.Object({ id: t.String({ format: "uuid" }) });
 export const sellerProductType = t.Union([
   t.Literal("Leafy Greens"),
-  t.Literal("Root and Tuber Vegetables"),
-  t.Literal("Bulb and Stem Vegetables"),
+  t.Literal("Root Vegetables"),
+  t.Literal("Bulb Vegetables"),
+  t.Literal("Stem Vegetables"),
   t.Literal("Flower Vegetables"),
   t.Literal("Fruit Vegetables"),
-  t.Literal("Seeds and Legumes"),
+  t.Literal("Pod Vegetables"),
+  t.Literal("Tuber Vegetables"),
+  t.Literal("Seed Vegetables"),
 ]);
 export const sellerProductScalingType = t.Union([
   t.Literal("sack"),
@@ -15,12 +18,11 @@ export const sellerProductScalingType = t.Union([
   t.Literal("pile"),
 ]);
 export const sellerProductUpdate = t.Object({
-  productName: t.Optional(t.String({ minLength: 1, pattern: "\\S" })),
+  catalogId: t.Optional(t.String({ format: "uuid" })),
   imagUrl: t.Optional(t.String({ format: "uri" })),
   productPrice: t.Optional(t.Number({ minimum: 1, maximum: 99_999_999.99 })),
   priceReductionPercent: t.Optional(t.Number({ minimum: 0, maximum: 99.99 })),
   minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99_999_999.99 }))),
-  productType: t.Optional(sellerProductType),
   isMarketable: t.Optional(t.Boolean()),
   lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99_999_999.99 }))),
   condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"])),

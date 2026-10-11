@@ -15,12 +15,12 @@ Build a cross-platform Davao City marketplace in which vegetable sellers and buy
 
 1. Assign active listings Basic, Standard, or Priority visibility using a weighted score, then route eligible promotion actions through n8n. [[Weighted Surplus Visibility]] · [[Marketing Boost]]
 2. Coordinate 24-hour QR reservations and pickup with available, reserved, and sold quantities. [[Reservation and QR Pickup]]
-3. Present descriptive sales and surplus analytics, weather and holiday advisories, and related-product recommendations based on completed in-platform transactions. [[Seller Analytics]] · [[Contextual Advisories]] · [[Market Basket Analysis]]
+3. Present descriptive sales and surplus analytics, weather and holiday advisories, and contextual planning information. [[Seller Analytics]] · [[Contextual Advisories]]
 4. Support ratings, reviews, and transaction reports with rule-based and weighted trust evaluation. [[Trust and Flagging]]
 
 ## In scope
 
-Marketable surplus vegetables; verified seller profiles; structured listings and recent photos; search and filtering; messaging and notifications; seller location and pickup instructions; reservation, QR confirmation, and stock updates; promotion; descriptive analytics; contextual advisories; associated-product recommendations; trust controls; aggregate stakeholder views.
+Marketable surplus vegetables; verified seller profiles; structured listings and recent photos; search and filtering; messaging and notifications; seller location and pickup instructions; reservation, QR confirmation, and stock updates; promotion; descriptive analytics; contextual advisories; trust controls; aggregate stakeholder views.
 
 ## Out of scope
 
@@ -29,10 +29,10 @@ Marketable surplus vegetables; verified seller profiles; structured listings and
 - Delivery, route optimization, and built-in navigation. External navigation links may help with self-pickup.
 - Laboratory inspection, image-based freshness detection, and official food-safety certification.
 - Price enforcement, guaranteed sales, and predictive demand forecasting.
-- External purchases in analytics or market basket analysis.
+- External purchases are not used in operational analytics.
 
 ## Claims to avoid
 
-The visibility score is a promotion priority, not a freshness score. Recommendations are associations in recorded transactions, not predictions of future purchases. Reports alone do not prove fraud.
+The visibility score is a promotion priority, not a freshness score. Descriptive reports do not predict future purchases or prove fraud.
 
 **Source:** PDF pp. 4–5; mechanism limits elaborated on pp. 12–23.

@@ -20,14 +20,22 @@ Prepare promotional material and alerts for active surplus listings while keepin
 5. The seller reviews the generated wording in the mobile Priority Boost inbox. The native share sheet receives current backend product, shop, price, quantity, and listing-link facts. The seller chooses a destination or cancels.
 6. Six hours after an initial draft becomes ready, the backend checks the same listing cycle again and queues no more than one follow-up if it remains eligible. The follow-up does not depend on opening or sharing the initial draft.
 
-There is no automatic posting, buyer promotion notice, seller price change, n8n schedule, or social-account connection in this version. The backend worker owns the hourly and six-hour checks.
+The scheduled draft flow above does not post automatically, notify buyers, change seller prices, or connect social accounts. Seller-initiated social publishing is a separate, explicit confirmation flow described below; it does not change the backend worker's hourly and six-hour eligibility checks.
+
+## Seller-initiated social publishing
+
+The seller's Marketplace Visibility Guide includes a **Boost Visibility** action. The backend rechecks Priority eligibility and prepares editable copy for Agrivive's Facebook Page, linked Instagram Professional account, and X account. The seller selects available official destinations, reviews/edits copy and confirms posting. TikTok and seller-owned account linking are not part of this release.
+
+Provider credentials stay in the backend environment. n8n receives only the campaign ID, then selected platform names, and asks the backend to publish each destination; it never receives provider tokens or directly calls social platform APIs. The backend returns per-channel results, and retries only channels that failed. The public Agrivive media URL serves the current eligible listing photo from private S3.
+
+Live publishing depends on valid backend credentials, Meta and X write permissions, a public HTTPS backend, the social publishing migration, and the n8n workflow/credentials. The existing visibility threshold (`visibility-v4 >= 0.70`) remains unchanged and is enforced by the backend.
 
 ## Responsibility boundaries
 
 - **Backend:** source of truth for `visibility-v4`, current listing status, fresh share facts, job state, follow-up timing, and eligibility.
-- **n8n:** fetches protected context and coordinates copy generation/callbacks; it does not schedule eligibility checks.
+- **n8n:** the older workflow coordinates copy generation for scheduled drafts; the social workflow routes seller-approved channel selections to the backend. It does not calculate eligibility or hold provider credentials.
 - **Text model:** writes wording only. The prompt prohibits factual claims about price, quantity, quality, freshness, origin, safety, discounts, or availability.
-- **Seller:** reviews the draft and decides whether to share through the device's native share sheet.
+- **Seller:** reviews scheduled drafts for native sharing, and separately selects Agrivive's official destinations and confirms social posts.
 
 ## Stop conditions
 
@@ -35,7 +43,7 @@ Sold out, unavailable, deactivated, non-marketable, invalid seller visibility, a
 
 ## Open configuration
 
-The owner must configure the private n8n webhook credential, Groq credential, an enabled Groq model ID, and the backend origin after importing the credential-free workflow. The score weights and `0.70` threshold remain prototype settings pending D-07 stakeholder validation. [[Open Decisions]]
+The owner must configure backend-only Meta/X credentials, the private n8n webhook/API credentials, Groq, the public backend origin, and approved test-channel permissions before activating publishing. The score weights and `0.70` threshold remain prototype settings pending D-07 stakeholder validation. [[Open Decisions]]
 
 **Source:** PDF pp. 14–15.
 

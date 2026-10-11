@@ -18,7 +18,7 @@ source_pages: [5, 8, 9]
 | Pickup | Active matching QR works within 24 hours; invalid, expired, cancelled, and reused codes cannot complete handover. |
 | Visibility | Only eligible listings receive a score; the three normalized inputs and tier match the configured formula. |
 | Promotion | Workflow uses current listing facts, respects seller price consent and minimum, and stops when stock is gone. |
-| Insights | Sell-through counts completed pickups only; zero denominators are handled; recommendations use completed baskets only. |
+| Insights | Sell-through counts completed pickups only and zero denominators are handled. |
 | Advisories | Weather and holiday context produce general planning reminders; outside-service outages leave stored marketplace data available. |
 | Trust/privacy | Unsupported reports do not automatically penalize users; stakeholder views omit personal and sensitive records. |
 

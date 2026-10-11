@@ -1,5 +1,10 @@
 import { apiFetch } from "../../../api/client";
-import type { CreateProductInput, Product, UpdateProductInput } from "../types";
+import type { CreateProductInput, Product, UpdateProductInput, VegetableCatalogItem } from "../types";
+
+export async function fetchVegetableCatalog(search = ""): Promise<VegetableCatalogItem[]> {
+  const query = search.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+  return apiFetch<VegetableCatalogItem[]>(`/seller/vegetable-catalog${query}`);
+}
 
 export async function fetchSellerProducts(): Promise<Product[]> {
   return apiFetch<Product[]>("/seller/products");

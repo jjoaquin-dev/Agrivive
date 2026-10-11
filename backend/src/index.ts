@@ -8,6 +8,8 @@ import { adminRoute } from "./modules/admin";
 import { marketplaceRoute } from "./modules/marketplace";
 import { stakeholderRoute } from "./modules/stakeholder";
 import { integrationsRoute } from "./modules/integrations";
+import { integrationsSocialProductImageRoute } from "./modules/integrations/index/integrations.social-product-image";
+import { integrationsSocialPublishRoute } from "./modules/integrations/index/integrations.social-publish";
 import { validationPlugin } from "./plugins/validation.plugin";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -38,8 +40,9 @@ const app = new Elysia()
   .use(marketplaceRoute)
   .use(stakeholderRoute)
   .use(integrationsRoute)
+  .use(integrationsSocialProductImageRoute)
+  .use(integrationsSocialPublishRoute)
   .get("/", () => "Hello Elysia")
-  .get("/a", () => "Hello Elysia")
   .get("/health", () => ({ status: "ok" }))
   .get("/health/ready", async ({ status }) => {
     try {

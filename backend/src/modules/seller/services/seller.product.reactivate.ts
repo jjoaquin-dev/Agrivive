@@ -36,6 +36,8 @@ export function reactivateSellerProduct(sellerId: string, productId: string) {
     }).where(eq(sellers_product.id, productId)).returning();
     await tx.insert(listing_cycles).values({
       productId,
+      vegetableCatalogId: product.vegetableCatalogId,
+      scalingType: product.scalingType,
       vegetableKey: normalizeVegetableName(product.productName),
       startedAt: now,
       originalQty: product.productQty,

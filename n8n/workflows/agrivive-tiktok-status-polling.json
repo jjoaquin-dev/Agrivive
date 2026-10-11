@@ -1,0 +1,199 @@
+{
+  "name": "Agrivive TikTok Post Status",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "id": "f1000000-0000-4000-8000-000000000001",
+      "name": "Every Minute"
+    },
+    {
+      "parameters": {
+        "url": "=https://YOUR_AGRIVIVE_API_HOST/integrations/social-campaigns/pending-tiktok",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        300
+      ],
+      "id": "f1000000-0000-4000-8000-000000000002",
+      "name": "Fetch Pending TikTok Posts"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.first().json.items || [];\nreturn items.map((item) => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "id": "f1000000-0000-4000-8000-000000000003",
+      "name": "Split Pending Posts"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$json.accessToken}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { publish_id: $json.publishId } }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        300
+      ],
+      "id": "f1000000-0000-4000-8000-000000000004",
+      "name": "Check TikTok Post",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const source = $('Split Pending Posts').item.json;\nconst response = $input.first().json;\nconst data = response.data || response;\nconst value = data.status;\nconst status = value === 'PUBLISH_COMPLETE' ? 'published' : value === 'FAILED' ? 'failed' : 'processing';\nconst id = data.publicaly_available_post_id || data.post_id || source.publishId;\nreturn [{ json: { campaignId: source.campaignId, result: { platform: 'tiktok', status, postId: id, error: status === 'failed' ? (data.fail_reason || 'TikTok could not publish this post.') : undefined } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ],
+      "id": "f1000000-0000-4000-8000-000000000005",
+      "name": "Prepare TikTok Status"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_AGRIVIVE_API_HOST/integrations/social-campaigns/{{$json.campaignId}}/results",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { results: [$json.result] } }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        300
+      ],
+      "id": "f1000000-0000-4000-8000-000000000006",
+      "name": "Save TikTok Status",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Every Minute": {
+      "main": [
+        [
+          {
+            "node": "Fetch Pending TikTok Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Pending TikTok Posts": {
+      "main": [
+        [
+          {
+            "node": "Split Pending Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Pending Posts": {
+      "main": [
+        [
+          {
+            "node": "Check TikTok Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check TikTok Post": {
+      "main": [
+        [
+          {
+            "node": "Prepare TikTok Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare TikTok Status": {
+      "main": [
+        [
+          {
+            "node": "Save TikTok Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false
+  },
+  "versionId": "f1000000-0000-4000-8000-000000000990",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "pinData": {},
+  "tags": []
+}

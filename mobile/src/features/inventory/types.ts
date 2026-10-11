@@ -1,21 +1,37 @@
 export type ProductCategory =
   | "Leafy Greens"
-  | "Root and Tuber Vegetables"
-  | "Bulb and Stem Vegetables"
+  | "Root Vegetables"
+  | "Bulb Vegetables"
+  | "Stem Vegetables"
   | "Flower Vegetables"
   | "Fruit Vegetables"
-  | "Seeds and Legumes";
+  | "Pod Vegetables"
+  | "Tuber Vegetables"
+  | "Seed Vegetables";
 
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
   "Leafy Greens",
-  "Root and Tuber Vegetables",
-  "Bulb and Stem Vegetables",
+  "Root Vegetables",
+  "Bulb Vegetables",
+  "Stem Vegetables",
   "Flower Vegetables",
   "Fruit Vegetables",
-  "Seeds and Legumes",
+  "Pod Vegetables",
+  "Tuber Vegetables",
+  "Seed Vegetables",
 ];
 
 export type ProductScalingType = "kilo" | "sack" | "pile";
+
+export interface VegetableCatalogItem {
+  id: string;
+  filipinoName: string;
+  englishName: string;
+  searchAliases: string[];
+  category: ProductCategory;
+  scientificName?: string | null;
+  sourceUrl: string;
+}
 
 export const SCALING_TYPES: { label: string; value: ProductScalingType; unit: string }[] = [
   { label: "Kilogram (kg)", value: "kilo", unit: "kg" },
@@ -27,6 +43,7 @@ export interface Product {
   id: string;
   userId: string;
   productName: string;
+  vegetableCatalogId?: string | null;
   imagUrl?: string | null;
   displayImageUrl?: string | null;
   productPrice: string | number;
@@ -76,25 +93,23 @@ export interface InventorySummary {
 }
 
 export interface CreateProductInput {
-  productName: string;
+  catalogId: string;
   imagUrl: string;
   productPrice: number;
   priceReductionPercent?: number;
   minimumPrice?: number | null;
   productQty: number;
-  productType: ProductCategory;
   scalingType: ProductScalingType;
   isMarketable: boolean;
   lowStockThreshold?: number | null;
 }
 
 export interface UpdateProductInput {
-  productName?: string;
+  catalogId?: string;
   imagUrl?: string;
   productPrice?: number;
   priceReductionPercent?: number;
   minimumPrice?: number | null;
-  productType?: ProductCategory;
   isMarketable?: boolean;
   lowStockThreshold?: number | null;
 }

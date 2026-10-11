@@ -4,7 +4,7 @@ Date: 2026-10-03
 
 ## What changed
 
-Completed the repository-level integration batch while excluding Market Basket Analysis and live recommendations, n8n marketing automation, background mobile push notifications, payment processing, shelf-life work, and host-specific deployment execution.
+Completed the repository-level integration batch while excluding deferred analytics and live recommendations, n8n marketing automation, background mobile push notifications, payment processing, shelf-life work, and host-specific deployment execution.
 
 - Email delivery now uses an explicit `EMAIL_PROVIDER` choice: Resend for production and Mailtrap for local testing. Missing provider credentials fail clearly, OTP values are not logged by default, and simulated delivery requires `ALLOW_DEV_EMAIL_LOG=true` outside production. Existing verification and trust-notice idempotency keys remain in place.
 - Order expiry, inquiry deadline processing, and trust-notice delivery now run from a dedicated worker with an immediate run, 60-second interval, safe logging, and graceful shutdown. API and worker startup are documented as separate processes.

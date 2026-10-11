@@ -23,7 +23,6 @@ import { MarketplacePrice } from "./MarketplacePrice";
 import { SellerReviewsSection } from "./SellerReviewsSection";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductQuestionsSection } from "./ProductQuestionsSection";
-import { MbaRecommendationsSection } from "./MbaRecommendationsSection";
 import { SimilarProduceSection } from "./SimilarProduceSection";
 
 export function ProductDetail() {
@@ -140,7 +139,6 @@ export function ProductDetail() {
         <SellerReviewsSection sellerId={product.seller.id} shopName={product.seller.shopName} />
         <ProductReviewsSection productId={product.id} />
         <ProductQuestionsSection productId={product.id} />
-        <MbaRecommendationsSection productId={product.id} />
         <SimilarProduceSection currentProductId={product.id} productType={product.productType} />
       </PageContainer>
     </main>
