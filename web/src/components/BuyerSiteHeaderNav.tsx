@@ -29,7 +29,7 @@ export function BuyerSiteHeaderNav({ menuOpen, hasSession, onCloseMenu }: BuyerS
   return (
     <>
       <nav aria-label="Browse produce" className="hidden border-t md:block">
-        <PageContainer className="flex items-center gap-2 overflow-x-auto py-2">
+        <PageContainer className="flex items-center gap-2 overflow-x-auto py-2.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <Link href="/marketplace" className={navLink(false, "gap-2")}>
             <Store aria-hidden="true" className="size-4" />Browse produce
           </Link>

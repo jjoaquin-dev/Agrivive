@@ -70,6 +70,24 @@ Executed an end-to-end UI enhancement across five core buyer web experiences ins
   * Giant low-opacity Laravel-style display watermark typography (`AGRIVIVE`).
   * Sub-bar with Davao market attribution and copyright.
 
+### 8. Navigation Modernization & Map Loading Skeleton Fix (2026-10-13)
+* **Marketplace in Primary Nav Bar (`LandingHeader.tsx`)**: Promoted the Marketplace link into the main `<nav>` anchors rather than hiding it or isolating it as an action button, adhering to **Jakob's Law** and **Hick-Hyman Law**.
+* **Explicit High-Contrast Register Button**: Added an unambiguous, solid Forest Green (`#1F4D3A`) **Register** button alongside **Sign in** across all navigation headers (`LandingHeader`, `BuyerSiteHeader`, `SiteHeader`), adhering to **Fitts's Law** and the **Von Restorff Effect**.
+* **Modern Brand Lockup**: Restored clean brand typography ("Agrivive") adjacent to the modern leaf icon inside an elevated, soft-contrast container.
+* **Map Loading Skeleton Overlap Fix (`InteractiveSellerMap.tsx`)**:
+  * Scoped relative positioning directly to the map canvas container instead of the whole section.
+  * Replaced `top-[4.5rem]` with `top-4 z-10 rounded-xl border border-border/60 bg-white/90 p-3 shadow-sm backdrop-blur-sm`, completely eliminating the visual bug where the shining pulse card collided with the header text and border.
+* **Modular Code Split for Line Count Compliance**:
+  * Extracted `BuyerAccountMenu.tsx` (180 lines) from `BuyerSiteHeader.tsx` (now 104 lines).
+  * Extracted `SiteHeaderMobileNav.tsx` (72 lines) from `SiteHeader.tsx` (now 191 lines).
+
+### 9. Web Favicon & Browser Tab Icon Integration
+* Generated high-resolution multi-format browser tab assets from `web/public/brand/agrivive-logo-icon.png`:
+  * `web/app/icon.png`: $192\times 192\text{px}$ Next.js App Router metadata route icon.
+  * `web/app/apple-icon.png`: $180\times 180\text{px}$ Apple touch icon for iOS / Safari.
+  * `web/app/favicon.ico` & `web/public/favicon.ico`: Multi-size ($16\times 16$, $32\times 32$, $48\times 48\text{px}$) standard Windows/Chrome/Firefox/Edge ICO.
+* Configured `metadata.icons` in `web/app/layout.tsx` to explicitly serve the icon assets.
+
 ---
 
 ## Affected Files
@@ -77,6 +95,10 @@ Executed an end-to-end UI enhancement across five core buyer web experiences ins
 ### Assets
 * `web/public/brand/agrivive-logo-icon.png`
 * `web/public/brand/agrivive-logo-full.png`
+* `web/app/icon.png`
+* `web/app/apple-icon.png`
+* `web/app/favicon.ico`
+* `web/public/favicon.ico`
 * `web/public/brand/cute-veggies-auth.jpg`
 * `web/public/brand/cute-veggies-market.jpg`
 * `web/public/brand/cute-veggies-order.jpg`
@@ -92,10 +114,13 @@ Executed an end-to-end UI enhancement across five core buyer web experiences ins
 * `web/src/features/home/components/HomeMarketPulse.tsx`
 * `web/src/features/home/components/HomeSellerSection.tsx`
 
-### Global & Styling
+### Global & Navigation Components
 * `web/src/styles/tokens.css`
 * `web/src/components/BuyerSiteHeader.tsx`
+* `web/src/components/BuyerAccountMenu.tsx`
+* `web/src/components/BuyerSiteHeaderNav.tsx`
 * `web/src/components/SiteHeader.tsx`
+* `web/src/components/SiteHeaderMobileNav.tsx`
 
 ### Authentication
 * `web/src/features/auth/components/AuthShell.tsx`
@@ -134,8 +159,8 @@ Executed an end-to-end UI enhancement across five core buyer web experiences ins
 
 ## Verification Performed
 
-1. **Line Count Audit**: Every single modified and newly created source file is strictly $< 200$ lines (maximum file size across all 24 components is 199 lines).
+1. **Line Count Audit**: Every single source file across all features is strictly $\le 200$ lines (verified: `InteractiveSellerMap.tsx`: 196 lines, `BuyerSiteHeader.tsx`: 104 lines, `BuyerAccountMenu.tsx`: 180 lines, `SiteHeader.tsx`: 191 lines, `SiteHeaderMobileNav.tsx`: 72 lines, `LandingHeader.tsx`: 117 lines).
 2. **Web TypeScript Typecheck**: `npm run typecheck` in `web/` passed with exit code 0.
 3. **Next.js Production Build**: `npm run build` in `web/` passed with exit code 0; all 16 static and dynamic routes compiled and generated without errors.
 4. **Backend Typecheck**: `bunx tsc --noEmit` in `backend/` passed with exit code 0.
-5. **Backend Production Build**: `bun build src/index.ts --outdir dist --target bun` in `backend/` bundled 1,679 modules in 832ms with exit code 0.
+5. **Backend Production Build**: `bun build src/index.ts --outdir dist --target bun` in `backend/` bundled 1,679 modules with exit code 0.

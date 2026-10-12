@@ -168,22 +168,24 @@ export function InteractiveSellerMap({
           {sellers.length} {sellers.length === 1 ? "seller" : "sellers"}
         </span>
       </div>
-      <div ref={mapElementRef} className="h-[340px] w-full bg-agrivive-background sm:h-[400px] lg:h-[600px]" aria-label="Interactive seller map" />
-      {loading ? (
-        <div className="pointer-events-none absolute inset-x-4 top-[4.5rem] rounded-xl bg-white/90 p-3 shadow-sm">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="mt-2 h-3 w-56" />
-        </div>
-      ) : null}
-      {error ? (
-        <div className="absolute inset-x-4 bottom-4 sm:inset-x-5">
-          <Alert variant="destructive" className="bg-white/95 shadow-lg">
-            <AlertTitle>Map results could not refresh</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-            <Button type="button" size="sm" variant="outline" onClick={onRetry}>Try again</Button>
-          </Alert>
-        </div>
-      ) : null}
+      <div className="relative">
+        <div ref={mapElementRef} className="h-[340px] w-full bg-agrivive-background sm:h-[400px] lg:h-[600px]" aria-label="Interactive seller map" />
+        {loading ? (
+          <div className="pointer-events-none absolute inset-x-4 top-4 z-10 rounded-xl border border-border/60 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="mt-2 h-3 w-56" />
+          </div>
+        ) : null}
+        {error ? (
+          <div className="absolute inset-x-4 bottom-4 z-10 sm:inset-x-5">
+            <Alert variant="destructive" className="bg-white/95 shadow-lg">
+              <AlertTitle>Map results could not refresh</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+              <Button type="button" size="sm" variant="outline" onClick={onRetry}>Try again</Button>
+            </Alert>
+          </div>
+        ) : null}
+      </div>
       {unmappedSellerCount > 0 ? (
         <p className="border-t border-border/70 px-4 py-3 text-xs leading-5 text-muted-foreground sm:px-5">
           {unmappedSellerCount} matching {unmappedSellerCount === 1 ? "seller has" : "sellers have"} no map location yet.
