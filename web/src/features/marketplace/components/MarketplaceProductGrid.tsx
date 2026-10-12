@@ -33,7 +33,7 @@ export function MarketplaceProductGrid({
 }: MarketplaceProductGridProps) {
   if (loading && !products.length) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((item) => (
           <Skeleton key={item} className="h-80 rounded-[18px]" />
         ))}
@@ -68,7 +68,7 @@ export function MarketplaceProductGrid({
         <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={onRetry}>Try again</Button>
       </Alert> : null}
       {loading && stale ? <p className="mb-3 text-sm text-muted-foreground" role="status">Updating listings. Previous results are shown below.</p> : null}
-      <div className={`grid gap-4 sm:grid-cols-2 ${stale ? "pointer-events-none opacity-70" : ""}`} inert={stale}>
+      <div className={`grid gap-5 sm:grid-cols-2 xl:grid-cols-3 ${stale ? "pointer-events-none opacity-70" : ""}`} inert={stale}>
         {products.map((product) => (
           <ProductCard
             key={product.id}

@@ -10,6 +10,7 @@ import { getMarketplaceProduct, getMarketplaceSeller } from "../../marketplace/a
 import { listConversations, type Conversation } from "../api";
 import { ConversationList } from "./ConversationList";
 import { ConversationThread } from "./ConversationThread";
+import { ConversationDetailsPanel } from "./ConversationDetailsPanel";
 import { conversationContextId, launchContextFromConversation, type ConversationLaunchContext } from "../types";
 
 function loginReturnPath() {
@@ -134,11 +135,35 @@ export function BuyerConversations() {
       {error ? <Alert variant="destructive" className="mb-5"><AlertTitle>Messages could not load</AlertTitle><AlertDescription>{error}</AlertDescription></Alert> : null}
 
       <div className="overflow-hidden rounded-[24px] border border-border/80 bg-white shadow-[0_18px_45px_rgba(31,77,58,0.10)]">
-        <div className="grid lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)]">
-          <ConversationList items={items} selectedId={activeConversation?.id ?? null} loading={loading} onSelect={handleSelect} className={hasSelection ? "hidden lg:flex" : "flex"} />
-          <div className={hasSelection ? "flex" : "hidden lg:flex"}>
-            {activeContext ? <ConversationThread context={activeContext} existing={activeConversation} onBack={handleBack} onConversationCreated={handleConversationCreated} /> : <div className="flex min-h-[680px] flex-1 flex-col items-center justify-center bg-[#fbfaf7] px-8 text-center"><span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true">✦</span><h2 className="mt-4 font-heading text-xl font-bold">Choose a conversation</h2><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Select a seller message on the left, or open a product or seller page to start a new conversation.</p></div>}
+        <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_300px]">
+          <ConversationList
+            items={items}
+            selectedId={activeConversation?.id ?? null}
+            loading={loading}
+            onSelect={handleSelect}
+            className={hasSelection ? "hidden lg:flex" : "flex"}
+          />
+          <div className={hasSelection ? "flex min-w-0" : "hidden lg:flex min-w-0"}>
+            {activeContext ? (
+              <ConversationThread
+                context={activeContext}
+                existing={activeConversation}
+                onBack={handleBack}
+                onConversationCreated={handleConversationCreated}
+              />
+            ) : (
+              <div className="flex min-h-[680px] flex-1 flex-col items-center justify-center bg-[#fbfaf7] px-8 text-center">
+                <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true">✦</span>
+                <h2 className="mt-4 font-heading text-xl font-bold">Choose a conversation</h2>
+                <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Select a seller message on the left, or open a product or seller page to start a new conversation.</p>
+              </div>
+            )}
           </div>
+          {activeContext ? (
+            <div className="hidden xl:flex">
+              <ConversationDetailsPanel context={activeContext} />
+            </div>
+          ) : null}
         </div>
       </div>
     </PageContainer>

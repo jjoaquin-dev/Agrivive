@@ -158,7 +158,7 @@ export function InteractiveSellerMap({
   }, [selectedSellerId]);
 
   return (
-    <section aria-label="Seller map" className="relative overflow-hidden rounded-[20px] border border-border/80 bg-white shadow-[0_14px_32px_rgba(31,77,58,0.08)]">
+    <section aria-label="Seller map" className="relative isolate z-0 overflow-hidden rounded-[20px] border border-border/80 bg-white shadow-[0_14px_32px_rgba(31,77,58,0.08)]">
       <div className="flex items-start justify-between gap-4 border-b border-border/70 px-4 py-4 sm:px-5">
         <div>
           <h2 className="font-heading text-lg font-bold tracking-tight">Find a seller nearby</h2>

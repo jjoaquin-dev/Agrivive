@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/src/components/PageContainer";
 import { useMarketplaceBrowser } from "../hooks/useMarketplaceBrowser";
 import { ActiveFilters } from "./ActiveFilters";
-import { MarketplaceFilters } from "./MarketplaceFilters";
+import { MarketplaceFilterSidebar } from "./MarketplaceFilterSidebar";
 import { MarketplaceHero } from "./MarketplaceHero";
 import { MarketplaceProductGrid } from "./MarketplaceProductGrid";
 import { InteractiveSellerMap } from "./InteractiveSellerMap";
@@ -17,7 +17,9 @@ function BrowserFallback() {
         <Skeleton className="h-36 w-full rounded-2xl" />
         <Skeleton className="mt-6 h-36 w-full rounded-2xl" />
         <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3].map((item) => <Skeleton key={item} className="h-96 rounded-2xl" />)}
+          {[1, 2, 3].map((item) => (
+            <Skeleton key={item} className="h-96 rounded-2xl" />
+          ))}
         </div>
       </PageContainer>
     </main>
@@ -54,7 +56,10 @@ function MarketplaceBrowserContent() {
     retry,
     handleUseLocation,
   } = useMarketplaceBrowser();
+
   const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(true);
+
   const mapParams = new URLSearchParams(searchKey);
   const handleSelectSeller = useCallback((sellerId: string) => {
     setSelectedSellerId(sellerId);
@@ -66,30 +71,49 @@ function MarketplaceBrowserContent() {
   return (
     <main className="min-h-[calc(100vh-68px)] bg-background py-6 text-foreground lg:py-10">
       <PageContainer>
-        <MarketplaceHero searchInput={searchInput} onSearchInputChange={setSearchInput} onSearchSubmit={handleSearch} />
-        <div className="mt-3">
-          <MarketplaceFilters {...filterProps} idPrefix="marketplace-filter" hasLocation={hasLocation} locationStatus={locationStatus} locationError={locationError} onUseLocation={handleUseLocation} />
-        </div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-border/80 pt-5">
-          <p className="text-sm font-semibold text-foreground">Listings and pickup map</p>
-          <p className="text-sm font-semibold text-agrivive-primary" aria-live="polite">{loading ? "Finding produce" : `${products.length} listings shown`}</p>
-        </div>
-        <section aria-live="polite" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,1.05fr)] lg:items-start">
-          <div className="order-first lg:order-last lg:sticky lg:top-4">
-            <InteractiveSellerMap
-              sellers={sellerMap.sellers}
-              unmappedSellerCount={sellerMap.unmappedSellerCount}
-              latitude={mapParams.get("latitude") ? Number(mapParams.get("latitude")) : null}
-              longitude={mapParams.get("longitude") ? Number(mapParams.get("longitude")) : null}
-              radiusKm={mapParams.get("radiusKm") ? Number(mapParams.get("radiusKm")) : null}
-              selectedSellerId={selectedSellerId}
-              loading={sellerMapLoading}
-              error={sellerMapError}
-              onSelectSeller={handleSelectSeller}
-              onRetry={retrySellerMap}
+        <MarketplaceHero
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          onSearchSubmit={handleSearch}
+        />
+
+        <section aria-live="polite" className="mt-8 grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
+          {/* Left Column: Filter Sidebar */}
+          <div className="lg:sticky lg:top-[124px]">
+            <MarketplaceFilterSidebar
+              values={filterProps.values}
+              onChange={handleFilterChange}
+              onClearAll={clearFilters}
+              resultsCount={products.length}
+              showMap={showMap}
+              onToggleMap={setShowMap}
+              hasLocation={hasLocation}
+              locationStatus={locationStatus}
+              locationError={locationError}
+              onUseLocation={handleUseLocation}
             />
           </div>
-          <div className="min-w-0">
+
+          {/* Right Column: Main Content Area */}
+          <div className="min-w-0 space-y-6">
+            {/* Collapsible Interactive Map Strip */}
+            {showMap && (
+              <div className="relative isolate z-0 overflow-hidden rounded-[24px] border border-border/80 bg-white p-2 shadow-[0_8px_24px_rgba(31,77,58,0.04)]">
+                <InteractiveSellerMap
+                  sellers={sellerMap.sellers}
+                  unmappedSellerCount={sellerMap.unmappedSellerCount}
+                  latitude={mapParams.get("latitude") ? Number(mapParams.get("latitude")) : null}
+                  longitude={mapParams.get("longitude") ? Number(mapParams.get("longitude")) : null}
+                  radiusKm={mapParams.get("radiusKm") ? Number(mapParams.get("radiusKm")) : null}
+                  selectedSellerId={selectedSellerId}
+                  loading={sellerMapLoading}
+                  error={sellerMapError}
+                  onSelectSeller={handleSelectSeller}
+                  onRetry={retrySellerMap}
+                />
+              </div>
+            )}
+
             <ActiveFilters
               filters={filters}
               search={searchQuery}
@@ -99,6 +123,7 @@ function MarketplaceBrowserContent() {
               onRemoveLocation={handleRemoveLocation}
               onClearAll={clearFilters}
             />
+
             <MarketplaceProductGrid
               products={products}
               loading={loading}
@@ -119,5 +144,9 @@ function MarketplaceBrowserContent() {
 }
 
 export function MarketplaceBrowser() {
-  return <Suspense fallback={<BrowserFallback />}><MarketplaceBrowserContent /></Suspense>;
+  return (
+    <Suspense fallback={<BrowserFallback />}>
+      <MarketplaceBrowserContent />
+    </Suspense>
+  );
 }
