@@ -107,7 +107,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
       )}
 
       <Text style={styles.disclaimerText}>
-        Visibility is calculated systematically from posting age, available stock, and prior listing cycles. Placement rules are automated and read-only.
+        Visibility is calculated from posting age, available stock, and prior listing cycles. Boosting is a separate seller-approved social action.
       </Text>
       <Pressable onPress={onBoost} accessibilityRole="button" style={styles.boostButton}>
         <Sparkles size={17} color={colors.white} />

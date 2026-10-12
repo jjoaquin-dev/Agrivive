@@ -93,11 +93,8 @@ export default function RegisterScreen() {
         return;
       }
 
-      // Successful signup automatically sends verification OTP
-      router.replace({
-        pathname: "/(auth)/verify-email",
-        params: { email: cleanEmail, sent: "true" },
-      });
+      // Signup sends the verification code, then starts the seller profile onboarding.
+      router.replace("/(app)/profile/setup");
     } catch (err: any) {
       console.error("Registration error", err);
       setErrors({

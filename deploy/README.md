@@ -33,7 +33,7 @@ If your GitHub plan or repository visibility does not allow environment secrets,
 
 Add the environment **variable** `PUBLIC_API_URL` with the full `https://` API origin. The web workflow rejects an empty or non-HTTPS value and includes it in the Next.js build as `NEXT_PUBLIC_API_URL`. It is public configuration, not a secret.
 
-On the server, set production `DATABASE_URL`, `BETTER_AUTH_URL`, `WEB_TRUSTED_ORIGINS`, `WEB_APP_URL`, mail and S3 settings, and the rotated `N8N_PROMOTION_SERVICE_TOKEN` as appropriate. Set `N8N_PROMOTION_WEBHOOK_URL` to the n8n webhook origin. Keep the n8n Header Auth credential in sync with the backend's service token. Do not paste token values into GitHub workflow files or logs.
+On the server, set production `DATABASE_URL`, `BETTER_AUTH_URL`, `WEB_TRUSTED_ORIGINS`, `WEB_APP_URL`, mail and S3 settings, and the rotated n8n service tokens as appropriate. Set `N8N_PROMOTION_WEBHOOK_URL` for scheduled draft generation and set `N8N_VISIBILITY_BOOST_WEBHOOK_URL` plus `N8N_VISIBILITY_BOOST_SERVICE_TOKEN` for seller-confirmed social boosts. Keep each n8n Header Auth credential in sync with its backend service token. Do not paste token values into GitHub workflow files or logs.
 
 ## Run and verify
 

@@ -10,6 +10,7 @@ import { stakeholderRoute } from "./modules/stakeholder";
 import { integrationsRoute } from "./modules/integrations";
 import { integrationsSocialProductImageRoute } from "./modules/integrations/index/integrations.social-product-image";
 import { integrationsSocialPublishRoute } from "./modules/integrations/index/integrations.social-publish";
+import { integrationsVisibilityBoostRoute } from "./modules/integrations/index/integrations.visibility-boost";
 import { conversationsRoute } from "./modules/conversations";
 import { notificationsRoute } from "./modules/notifications";
 import { trustRoute } from "./modules/trust";
@@ -48,6 +49,7 @@ const app = new Elysia()
   .use(integrationsRoute)
   .use(integrationsSocialProductImageRoute)
   .use(integrationsSocialPublishRoute)
+  .use(integrationsVisibilityBoostRoute)
   .get("/", () => "Hello Elysia")
   .get("/health", () => ({ status: "ok" }))
   .get("/health/ready", async ({ status }) => {

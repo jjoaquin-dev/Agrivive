@@ -5,6 +5,7 @@ import { ProductForm } from "../../../src/features/inventory/components/ProductF
 import { createSellerProduct } from "../../../src/features/inventory/api/products";
 import type { CreateProductInput } from "../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../src/theme";
+import { requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
 
 export default function CreateProductScreen() {
   const router = useRouter();
@@ -14,18 +15,30 @@ export default function CreateProductScreen() {
     setLoading(true);
     try {
       const res = await createSellerProduct(data as CreateProductInput);
-      Alert.alert(
+      const showProductListed = () => Alert.alert(
         "Product Listed",
         `"${res.products.productName}" has been successfully added to your inventory.`,
         [
+          { text: "View Product", onPress: () => router.replace(`/(app)/inventory/${res.products.id}`) },
+          { text: "Back to Inventory", style: "cancel", onPress: () => router.back() },
+        ],
+      );
+      if (!res.products.isMarketable || Number(res.products.productQty) <= 0) {
+        showProductListed();
+        return;
+      }
+      Alert.alert(
+        "Boost Visibility?",
+        "Share this listing through Agrivive's social workflow so more buyers can find it.",
+        [
+          { text: "Not now", style: "cancel", onPress: showProductListed },
           {
-            text: "View Product",
-            onPress: () => router.replace(`/(app)/inventory/${res.products.id}`),
-          },
-          {
-            text: "Back to Inventory",
-            style: "cancel",
-            onPress: () => router.back(),
+            text: "Boost now",
+            onPress: () => {
+              void requestSellerVisibilityBoost(res.products.id)
+                .then(() => Alert.alert("Boost queued", "Your listing was sent to the Agrivive social workflow.", [{ text: "Continue", onPress: showProductListed }]))
+                .catch((error: any) => Alert.alert("Could Not Boost", error?.message || "Your product is listed, but the boost could not be queued.", [{ text: "Continue", onPress: showProductListed }]));
+            },
           },
         ],
       );

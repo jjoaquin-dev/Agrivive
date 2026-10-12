@@ -224,6 +224,14 @@ export default function LoginScreen() {
             style={styles.submitButton}
           />
 
+          <ButtonComponent
+            title="Use email code instead"
+            variant="ghost"
+            onPress={() => router.push("/(auth)/email-otp-login")}
+            style={styles.emailOtpButton}
+            textStyle={styles.emailOtpButtonText}
+          />
+
           <GoogleSignInButton />
         </View>
 
@@ -302,6 +310,15 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: spacing.xs,
+  },
+  emailOtpButton: {
+    minHeight: 44,
+    marginTop: spacing.sm,
+  },
+  emailOtpButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "700",
   },
   footer: {
     flexDirection: "row",

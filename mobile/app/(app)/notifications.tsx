@@ -17,6 +17,7 @@ import { colors, fonts, radii, spacing } from "../../src/theme";
 import { useSellerNotifications } from "../../src/features/notifications/hooks/useSellerNotifications";
 import { SellerNotificationCard } from "../../src/features/notifications/components/SellerNotificationCard";
 import { SellerPromotionInboxSection } from "../../src/features/notifications/components/SellerPromotionInboxSection";
+import { SellerBoostPromptSection } from "../../src/features/notifications/components/SellerBoostPromptSection";
 import type { SellerNotification } from "../../src/features/notifications/types";
 
 export default function SellerNotificationsScreen() {
@@ -110,6 +111,7 @@ export default function SellerNotificationsScreen() {
               ) : null}
             </View>
             <SellerPromotionInboxSection refreshSignal={promotionRefreshSignal} />
+            <SellerBoostPromptSection refreshSignal={promotionRefreshSignal} />
             <View style={styles.filterRow}>
               <Pressable
                 onPress={() => setUnreadOnly(false)}

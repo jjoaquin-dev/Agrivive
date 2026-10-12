@@ -6,6 +6,8 @@ import { sendSellerListingNotices } from "./send-seller-listing-notices";
 import { checkSellerPromotionEligibility } from "./check-seller-promotion-eligibility";
 import { deliverSellerPromotionWebhooks } from "./deliver-seller-promotion-webhooks";
 import { deliverPushNotifications } from "./deliver-push-notifications";
+import { applySellerPriceReductions } from "./apply-seller-price-reductions";
+import { deliverSellerVisibilityBoosts } from "./deliver-seller-visibility-boosts";
 
 export async function runScheduledJobs() {
   const expiredOrders = await expirePendingOrders();
@@ -13,8 +15,10 @@ export async function runScheduledJobs() {
   const noticesSent = await sendPendingTrustNotices();
   const trustRestrictionsExpired = await expireTrustRestrictions();
   const sellerListingNotices = await sendSellerListingNotices();
+  const sellerPriceReductions = await applySellerPriceReductions();
   const sellerPromotionChecks = await checkSellerPromotionEligibility();
   const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
+  const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPromotionChecks, sellerPromotionWebhooks, pushNotifications };
+  return { expiredOrders, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
 }

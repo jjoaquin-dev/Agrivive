@@ -4,7 +4,6 @@ import { db } from "../../db/index"; // your drizzle instance
 import * as schema from "../../db/schema";
 import { bearer, emailOTP, twoFactor } from "better-auth/plugins";
 import { sendAuthCode } from "../../utils/email";
-import { APIError, createAuthMiddleware } from "better-auth/api";
 import { expo } from "@better-auth/expo";
 
 export const auth = betterAuth({
@@ -53,21 +52,6 @@ export const auth = betterAuth({
     }),
     twoFactor({ issuer: "Agrivive" }),
   ],
-  hooks: {
-    before: createAuthMiddleware(async (ctx) => {
-      if (
-        ctx.path === "/sign-in/email-otp" ||
-        (ctx.path === "/email-otp/send-verification-otp" &&
-          ctx.body?.type === "sign-in") ||
-        (ctx.path === "/email-otp/check-verification-otp" &&
-          ctx.body?.type === "sign-in")
-      ) {
-        throw new APIError("FORBIDDEN", {
-          message: "Email OTP sign-in is disabled",
-        });
-      }
-    }),
-  },
   user: {
     additionalFields: {
       role: {
