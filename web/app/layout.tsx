@@ -26,6 +26,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Agrivive",
   description: "Find and reserve fresh surplus produce.",
+  icons: {
+    icon: [
+      { url: "/brand/agrivive-logo-icon.png", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/brand/agrivive-logo-icon.png",
+    apple: "/brand/agrivive-logo-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
