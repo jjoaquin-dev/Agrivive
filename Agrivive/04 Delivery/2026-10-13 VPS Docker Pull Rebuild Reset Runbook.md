@@ -364,8 +364,55 @@ curl -i http://127.0.0.1:3000/health/ready || true
 curl -I http://127.0.0.1:3001/ || true
 ```
 
+## 10. Next.js Google Fonts build failure
+
+If the web image stops with either of these errors:
+
+```text
+An error occurred in `next/font`.
+Failed to fetch `Inter` from Google Fonts.
+```
+
+or:
+
+```text
+TypeError: null is not an object
+```
+
+the web build is trying to download `Inter` or `Manrope` from Google during the Docker build. The production build must not depend on an external font download being available from the VPS.
+
+The repository fix is already applied in:
+
+```text
+web/app/layout.tsx
+web/src/styles/tokens.css
+```
+
+`next/font/google` has been removed. Agrivive keeps the same font token names and uses local-font and system-font fallbacks instead, so the build remains offline-safe.
+
+After pulling the commit containing this fix, rebuild the web image:
+
+```bash
+cd /srv/agrivive/Agrivive/deploy || exit 1
+
+docker compose \
+  --env-file compose.production.env \
+  -f docker-compose.production.yml \
+  build --no-cache web
+
+docker compose \
+  --env-file compose.production.env \
+  -f docker-compose.production.yml \
+  up -d --force-recreate api worker web proxy
+```
+
+Do not keep retrying the old web image build with `--build`; it will continue to fail while `next/font/google` is present in the pulled source.
+
 ## Verification record
 
 - Documentation added on 2026-10-13.
 - Commands match `deploy/docker-compose.production.yml` and the current `/srv/agrivive/Agrivive` VPS layout.
 - The runbook intentionally does not contain database URLs, API keys, private keys, or production secret values.
+- The offline-safe font fix was applied to `web/app/layout.tsx` and `web/src/styles/tokens.css`.
+- `bun run typecheck` passed from `web/` after the fix.
+- `bun run build` passed from `web/` after the fix and generated all 19 application routes.
