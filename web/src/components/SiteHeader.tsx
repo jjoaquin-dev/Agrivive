@@ -28,9 +28,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-agrivive-border/80 bg-white/95 shadow-[0_1px_0_rgba(31,77,58,0.03)] backdrop-blur">
       <PageContainer className="flex min-h-[68px] items-center justify-between gap-5">
-        <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="Agrivive home">
-          <Image src="/brand/agrivive-logo-icon.png" alt="" width={40} height={40} className="h-10 w-10 rounded-xl" priority />
-          <span className="hidden font-heading text-lg font-bold tracking-[0.12em] text-agrivive-primary sm:inline">AGRIVIVE</span>
+        <Link href="/" className="flex shrink-0 items-center" aria-label="Agrivive home">
+          <Image src="/brand/agrivive-logo-icon.png" alt="Agrivive" width={40} height={40} className="size-10 object-contain" priority />
         </Link>
 
         <nav className="hidden items-center gap-2 text-sm font-semibold md:flex" aria-label="Primary navigation">

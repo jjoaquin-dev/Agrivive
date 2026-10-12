@@ -37,12 +37,19 @@ export function MarketplaceHero({
           <Button type="submit" className="h-12 px-6">Search</Button>
         </form>
       </div>
-      <div className="relative hidden min-h-[280px] overflow-hidden bg-agrivive-primary lg:block">
-        <Image src="/brand/buyer-market-auth.png" alt="Fresh vegetables at a local market stall" fill className="object-cover" sizes="(min-width: 1024px) 35vw, 1px" />
-        <div className="absolute inset-0 bg-gradient-to-t from-agrivive-primary/85 via-agrivive-primary/15 to-transparent" />
-        <div className="absolute inset-x-6 bottom-6 rounded-2xl border border-white/20 bg-agrivive-primary/80 p-4 text-white backdrop-blur-md">
-          <p className="text-xs font-semibold text-emerald-100">Shop with a shorter trip</p>
-          <p className="mt-1 font-heading text-lg font-bold leading-tight">See who has produce ready near you.</p>
+      <div className="relative hidden min-h-[300px] overflow-hidden bg-agrivive-primary lg:block">
+        <Image
+          src="/brand/cute-veggies-market.jpg"
+          alt="3D Nano Banana and cute vegetables at Davao Organic Harvest market"
+          fill
+          className="object-cover object-center"
+          sizes="(min-width: 1024px) 40vw, 1px"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-agrivive-primary/80 via-transparent to-black/10" />
+        <div className="absolute inset-x-6 bottom-6 rounded-2xl border border-white/30 bg-white/85 p-4 text-agrivive-text shadow-md backdrop-blur-md">
+          <p className="text-xs font-bold uppercase tracking-wider text-agrivive-primary">Fresh & Healthy Harvest</p>
+          <p className="mt-0.5 font-heading text-base font-bold leading-tight">Good nutrition rescued directly from Davao market stalls.</p>
         </div>
       </div>
     </section>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,15 +15,18 @@ import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplac
 import { PageContainer } from "@/src/components/PageContainer";
 import { getBuyerOrder } from "../api/orders";
 import { OrderQr } from "./OrderQr";
-import { OrderStatusBadge } from "./OrderStatusBadge";
+import { OrderSummaryHeader } from "./OrderSummaryHeader";
+import { OrderPaymentBreakdown } from "./OrderPaymentBreakdown";
 import { OrderReviews } from "./OrderReviews";
 import { OrderPickupStepper } from "./OrderPickupStepper";
 import { OrderSellerCard } from "./OrderSellerCard";
 import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderReportModal } from "./OrderReportModal";
+import { OrderReportIssueRow } from "./OrderReportIssueRow";
 import { OrderMessages } from "./OrderMessages";
 import { OrderCancellation } from "./OrderCancellation";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
+
 export function OrderDetail() {
   const router = useRouter();
   const id = useParams<{ id: string }>()?.id ?? "";
@@ -50,9 +53,11 @@ export function OrderDetail() {
       lastOrder.current = loaded;
       setOrder(loaded);
       setLastUpdated(new Date());
-      const listingDetails = await Promise.all(loaded.items.map(async (item) => {
-        try { return await getMarketplaceProduct(item.productId); } catch { return null; }
-      }));
+      const listingDetails = await Promise.all(
+        loaded.items.map(async (item) => {
+          try { return await getMarketplaceProduct(item.productId); } catch { return null; }
+        }),
+      );
       if (run !== loadRun.current) return;
       setProducts(listingDetails.filter((item): item is MarketplaceProduct => item !== null));
     } catch (reason) {
@@ -62,10 +67,11 @@ export function OrderDetail() {
         setOrder(null);
         setProducts([]);
         if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
-        else setError(reason instanceof ApiError ? reason.message : "You no longer have access to this reservation.");
-      }
-      else setError(reason instanceof ApiError ? reason.message : "We could not load this reservation.");
-    } finally { if (run === loadRun.current) setLoading(false); }
+        else setError(reason.message);
+      } else setError(reason instanceof ApiError ? reason.message : "We could not load this reservation.");
+    } finally {
+      if (run === loadRun.current) setLoading(false);
+    }
   }, [id, router]);
 
   useEffect(() => {
@@ -107,7 +113,7 @@ export function OrderDetail() {
         setOrder(null);
         setProducts([]);
         if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
-        else setError(reason instanceof ApiError ? reason.message : "You no longer have access to this reservation.");
+        else setError(reason.message);
         return;
       }
       setError(reason instanceof ApiError ? reason.message : "We could not refresh this reservation.");
@@ -115,13 +121,15 @@ export function OrderDetail() {
     shouldStop: (reason) => reason instanceof ApiError && [401, 403, 404].includes(reason.status),
   });
 
-  if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[20px] bg-white" /></PageContainer></main>;
-  if (error && !order) return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer>{isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}<Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></PageContainer></main>;
+  if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) {
+    return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[24px] bg-white" /></PageContainer></main>;
+  }
+  if (error && !order) {
+    return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer>{isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}<Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></PageContainer></main>;
+  }
   if (!order) return null;
 
-  const first = order.items[0];
   const product = products[0];
-  const title = order.items.length > 1 ? `${order.items.length} produce items reserved` : first?.productName || "Produce reservation";
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-6 text-foreground sm:py-8 lg:py-10">
@@ -129,29 +137,21 @@ export function OrderDetail() {
         <Link href="/orders" className={`${buttonVariants({ variant: "ghost", size: "sm" })} -ml-3 text-muted-foreground hover:text-foreground`}>
           <ArrowLeft aria-hidden="true" className="size-4" />Back to reservations
         </Link>
-        <header className="mt-3 flex flex-col justify-between gap-4 rounded-[20px] border border-border/80 bg-white p-5 shadow-[0_12px_28px_rgba(31,77,58,0.06)] sm:flex-row sm:items-start sm:p-6">
-          <div>
-            <p className="font-mono text-xs font-semibold text-agrivive-terracotta">AGR-{order.id.slice(0, 6).toUpperCase()}</p>
-            <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground">{title}</h1>
-            {lastUpdated ? (
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                Updated {lastUpdated.toLocaleTimeString("en-PH")}{order.status === "pending" ? " · Auto-updating status" : ""}
-              </p>
-            ) : null}
-          </div>
-          <OrderStatusBadge status={order.status} />
-        </header>
 
-        {error ? isTrustAccessMessage(error) ? <div className="mt-5"><TrustAccessNotice message={error} /></div> : <Alert variant="destructive" className="mt-5"><AlertDescription>{error} {order ? "Showing the last reservation details we loaded; status may have changed." : ""}</AlertDescription>
-          {order ? <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => void load()}>Try again</Button> : null}
-        </Alert> : null}
+        {/* Top Order Summary Card with Green Savings Badge */}
+        <div className="mt-4">
+          <OrderSummaryHeader order={order} />
+        </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {error ? isTrustAccessMessage(error) ? <div className="mt-5"><TrustAccessNotice message={error} /></div> : <Alert variant="destructive" className="mt-5"><AlertDescription>{error}</AlertDescription></Alert> : null}
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <section className="flex flex-col gap-6">
             <OrderPickupStepper status={order.status} createdAt={order.createdAt} expiresAt={order.expiresAt} />
 
-            <div className="lg:hidden">
+            <div className="space-y-6 lg:hidden">
               <OrderQr payload={order.qrPayload} status={order.status} orderId={order.id} shopName={product?.seller.shopName} />
+              <OrderPaymentBreakdown order={order} />
             </div>
 
             <OrderItemsCard items={order.items} />
@@ -160,27 +160,19 @@ export function OrderDetail() {
 
             {order.status === "completed" ? <OrderReviews order={order} /> : null}
 
-            <OrderCancellation order={order} onCancelled={(updated) => { lastOrder.current = updated; setOrder(updated); }}
+            <OrderCancellation
+              order={order}
+              onCancelled={(updated) => { lastOrder.current = updated; setOrder(updated); }}
               onAuthorizationFailure={(status) => {
                 lastOrder.current = null;
                 setOrder(null);
                 setProducts([]);
                 if (status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
                 else setError("Account is temporarily restricted");
-              }} />
+              }}
+            />
 
-            <div className="border-t border-border/70 pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-2 text-muted-foreground hover:text-destructive"
-                onClick={() => setShowReportModal(true)}
-              >
-                <AlertTriangle className="size-4 text-amber-600" />
-                Report an issue with this order
-              </Button>
-            </div>
+            <OrderReportIssueRow onOpenReport={() => setShowReportModal(true)} />
 
             <OrderReportModal
               orderId={order.id}
@@ -189,9 +181,11 @@ export function OrderDetail() {
             />
           </section>
 
+          {/* Sticky Right Sidebar: QR Pickup Pass & Payment Breakdown */}
           <aside className="hidden lg:block">
-            <div className="sticky top-24">
+            <div className="sticky top-20 space-y-6">
               <OrderQr payload={order.qrPayload} status={order.status} orderId={order.id} shopName={product?.seller.shopName} />
+              <OrderPaymentBreakdown order={order} />
             </div>
           </aside>
         </div>

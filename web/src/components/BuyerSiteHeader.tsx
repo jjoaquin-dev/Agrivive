@@ -130,7 +130,7 @@ export function BuyerSiteHeader() {
         )}
       </Button>
       {profileOpen ? (
-        <div id="buyer-profile-menu" role="menu" className="absolute right-0 top-full z-40 mt-2 w-64 rounded-xl border bg-popover p-2 text-popover-foreground shadow-lg">
+        <div id="buyer-profile-menu" role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border bg-popover p-2 text-popover-foreground shadow-lg">
           <p className="truncate px-3 py-2 text-xs text-muted-foreground">{session.user.name || session.user.email}</p>
           <Link href="/profile" role="menuitem" onClick={() => setProfileOpen(false)} className="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm hover:bg-muted">
             <User aria-hidden="true" className="size-4" />Profile &amp; settings
@@ -159,11 +159,10 @@ export function BuyerSiteHeader() {
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/95 shadow-[0_1px_0_rgba(31,77,58,0.03)] backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 shadow-[0_1px_0_rgba(31,77,58,0.03)] backdrop-blur">
       <PageContainer className="flex min-h-[64px] items-center gap-3 sm:gap-5">
-        <Link href="/marketplace" aria-label="Agrivive marketplace" className="flex shrink-0 items-center gap-2">
-          <Image src="/brand/agrivive-logo-icon.png" alt="" width={32} height={32} className="size-8 rounded-lg" priority />
-          <span className="font-heading text-base font-bold tracking-[0.12em] text-primary sm:text-lg">AGRIVIVE</span>
+        <Link href="/marketplace" aria-label="Agrivive marketplace" className="flex shrink-0 items-center">
+          <Image src="/brand/agrivive-logo-icon.png" alt="Agrivive" width={40} height={40} className="size-10 object-contain" priority />
         </Link>
 
         <MarketplaceHeaderSearch idPrefix="desktop-header" className="hidden max-w-2xl flex-1 md:flex" />

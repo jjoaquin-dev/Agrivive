@@ -54,6 +54,20 @@
 }
 
 /* Agrivive Leaflet Map & Popup Design Overrides */
+.leaflet-container {
+  isolation: isolate !important;
+  z-index: 0 !important;
+}
+
+.leaflet-pane {
+  z-index: 10 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 20 !important;
+}
+
 .leaflet-popup-content-wrapper {
   background: #ffffff !important;
   color: #212523 !important;
