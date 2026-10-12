@@ -8,7 +8,7 @@ const reasons = [
 
 export function HomeWhyAgrivive() {
   return (
-    <section className="bg-agrivive-background py-20 sm:py-28">
+    <section id="why-agrivive" className="bg-agrivive-background py-20 sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20 lg:px-8">
         <div>
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-agrivive-terracotta">Why Agrivive</span>

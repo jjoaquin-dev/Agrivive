@@ -3,6 +3,8 @@ title: UI Enhancement and Nano Banana 3D Mascot System
 date: 2026-10-12
 type: delivery
 status: completed
+commit: 3726b5cb373bc1a70440e9bfd95f5255903d7c92
+commit_message: "Fix Ui and add Landing page"
 ---
 
 # UI Enhancement and Nano Banana 3D Mascot System
@@ -51,18 +53,49 @@ Executed an end-to-end UI enhancement across five core buyer web experiences ins
   * **Column 2 (`ConversationThread.tsx`)**: Live chat thread with incoming/outgoing message bubbles, avatar markers, pinned produce card banner, and bottom input bar with attachment actions and send button.
   * **Column 3 (`ConversationDetailsPanel.tsx`)**: Seller profile card with stall location, quick phone contact action, and recent produce photo gallery.
 
+### 6. Mobile Brand Logo Alignment & Wordmark Removal
+* Processed the new mobile leaf-embossed "A" logo:
+  * Isolated the signature icon mark, removing the "Agrivive" wordmark text beneath it.
+  * Extracted the creamy background to produce a crystal-clear, transparent PNG (`web/public/brand/agrivive-logo-icon.png`) centered on a 512×512 canvas with smooth anti-aliased edges.
+* Updated webpage navigation headers:
+  * Removed the `AGRIVIVE` text span across [`BuyerSiteHeader.tsx`](file:///c:/Users/Arianne%20Bartiquien/Desktop/Agrivive/web/src/components/BuyerSiteHeader.tsx), [`SiteHeader.tsx`](file:///c:/Users/Arianne%20Bartiquien/Desktop/Agrivive/web/src/components/SiteHeader.tsx), and [`AuthShell.tsx`](file:///c:/Users/Arianne%20Bartiquien/Desktop/Agrivive/web/src/features/auth/components/AuthShell.tsx).
+  * Web headers now display only the clean, modern standalone transparent logo icon.
+
+### 7. Landing Page Section Header & Laravel-Style Mascot Footer
+* **Landing Page Section Header (`LandingHeader.tsx`)**: Replaced generic buyer navigation on `/` with smooth anchor section links (`#benefits`, `#why-agrivive`, `#how-it-works`, `#market-pulse`, `#sellers`) and standalone action buttons (`Marketplace`, `Sign In`), paired with the new transparent logo.
+* **3D Vegetable Cutiepies Climbing AGRIVIVE (`cute-veggies-footer.jpg`)**: Generated custom 16:9 3D clay artwork depicting the Nano Banana, baby carrot, glossy tomato, eggplant, climbing peas, and broccoli playing across giant 3D AGRIVIVE letters.
+* **Laravel-Style Footer (`HomeFooter.tsx`)**:
+  * Multi-column category links (Marketplace, Platform, Get Started).
+  * 3D mascot centerpiece banner framed in soft rounded borders.
+  * Giant low-opacity Laravel-style display watermark typography (`AGRIVIVE`).
+  * Sub-bar with Davao market attribution and copyright.
+
 ---
 
 ## Affected Files
 
 ### Assets
+* `web/public/brand/agrivive-logo-icon.png`
+* `web/public/brand/agrivive-logo-full.png`
 * `web/public/brand/cute-veggies-auth.jpg`
 * `web/public/brand/cute-veggies-market.jpg`
 * `web/public/brand/cute-veggies-order.jpg`
+* `web/public/brand/cute-veggies-footer.jpg`
+
+### Landing Page & Home Features
+* `web/app/page.tsx`
+* `web/src/features/home/components/LandingHeader.tsx`
+* `web/src/features/home/components/HomeFooter.tsx`
+* `web/src/features/home/components/HomeFinalCta.tsx`
+* `web/src/features/home/components/HomeBenefits.tsx`
+* `web/src/features/home/components/HomeWhyAgrivive.tsx`
+* `web/src/features/home/components/HomeMarketPulse.tsx`
+* `web/src/features/home/components/HomeSellerSection.tsx`
 
 ### Global & Styling
 * `web/src/styles/tokens.css`
 * `web/src/components/BuyerSiteHeader.tsx`
+* `web/src/components/SiteHeader.tsx`
 
 ### Authentication
 * `web/src/features/auth/components/AuthShell.tsx`

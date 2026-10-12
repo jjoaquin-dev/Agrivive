@@ -4,9 +4,39 @@ import { ArrowRight } from "lucide-react";
 
 export function HomeFinalCta() {
   return (
-    <>
-      <section className="overflow-hidden bg-white py-20 sm:py-28"><div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8"><span className="text-xs font-bold uppercase tracking-[0.2em] text-agrivive-terracotta">A warmer market trip starts here</span><h2 className="mx-auto mt-4 max-w-3xl font-heading text-5xl font-extrabold leading-[0.95] tracking-[-0.06em] text-agrivive-primary sm:text-6xl">Bring a little more good home.</h2><p className="mx-auto mt-5 max-w-xl text-base leading-7 text-agrivive-muted">Find what is ready nearby and make your next pickup feel simple.</p><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link href="/marketplace" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-agrivive-primary px-7 font-semibold text-white transition-[background-color,transform] hover:-translate-y-px hover:bg-agrivive-primaryPressed active:translate-y-px">Browse marketplace <ArrowRight aria-hidden="true" size={18} /></Link><Link href="/signup" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-agrivive-border bg-white px-7 font-semibold text-agrivive-primary transition-[background-color,border-color,transform] hover:-translate-y-px hover:border-agrivive-primary hover:bg-agrivive-background active:translate-y-px">Join Agrivive</Link></div><Image src="/brand/agrivive-welcome-basket.png" alt="A colorful basket of local vegetables" width={1600} height={720} className="mx-auto mt-10 h-auto w-full max-w-4xl" /></div></section>
-      <footer className="bg-agrivive-primary text-white"><div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8"><div><Link href="/" className="font-heading text-xl font-extrabold tracking-[0.12em]">AGRIVIVE</Link><p className="mt-3 max-w-sm text-sm leading-6 text-emerald-50/70">A friendly place to find local produce and make pickup easier.</p></div><nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-emerald-50/80" aria-label="Footer navigation"><Link href="/marketplace" className="hover:text-white">Marketplace</Link><Link href="#how-it-works" className="hover:text-white">How it works</Link><Link href="/login" className="hover:text-white">Sign in</Link><Link href="/signup" className="hover:text-white">Create account</Link></nav></div><div className="border-t border-white/10"><div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-emerald-50/55 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><span>© 2026 Agrivive</span><span>Made for better local market trips.</span></div></div></footer>
-    </>
+    <section className="overflow-hidden bg-white py-20 sm:py-28">
+      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+        <span className="text-xs font-bold uppercase tracking-[0.2em] text-agrivive-terracotta">
+          A warmer market trip starts here
+        </span>
+        <h2 className="mx-auto mt-4 max-w-3xl font-heading text-5xl font-extrabold leading-[0.95] tracking-[-0.06em] text-agrivive-primary sm:text-6xl">
+          Bring a little more good home.
+        </h2>
+        <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-agrivive-muted">
+          Find what is ready nearby and make your next pickup feel simple.
+        </p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/marketplace"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-agrivive-primary px-7 font-semibold text-white transition-[background-color,transform] hover:-translate-y-px hover:bg-agrivive-primaryPressed active:translate-y-px"
+          >
+            Browse marketplace <ArrowRight aria-hidden="true" size={18} />
+          </Link>
+          <Link
+            href="/signup"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl border border-agrivive-border bg-white px-7 font-semibold text-agrivive-primary transition-[background-color,border-color,transform] hover:-translate-y-px hover:border-agrivive-primary hover:bg-agrivive-background active:translate-y-px"
+          >
+            Join Agrivive
+          </Link>
+        </div>
+        <Image
+          src="/brand/agrivive-welcome-basket.png"
+          alt="A colorful basket of local vegetables"
+          width={1600}
+          height={720}
+          className="mx-auto mt-10 h-auto w-full max-w-4xl"
+        />
+      </div>
+    </section>
   );
 }
