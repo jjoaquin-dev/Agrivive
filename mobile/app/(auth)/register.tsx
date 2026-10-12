@@ -13,6 +13,7 @@ import { colors, fonts, spacing } from "../../src/theme";
 import { Mail, Lock, ArrowRight } from "lucide-react-native";
 import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
+import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -183,6 +184,8 @@ export default function RegisterScreen() {
             loading={loading}
             style={styles.submitButton}
           />
+
+          <GoogleSignInButton />
         </View>
 
         <View style={styles.footer}>

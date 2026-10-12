@@ -11,6 +11,7 @@ The Agrivive Seller Mobile application is built with **React Native**, **Expo SD
   - Next/Skip navigation, indicator dots, existing account sign-in link, and SecureStore completion persistence.
 - **Authentication**:
   - Email, password, and confirm password registration (provisional name `Seller`).
+  - Google sign-in and first-time Google account creation through Better Auth's Expo deep-link flow.
   - 6-digit Email OTP verification with 30s resend cooldown.
   - Recovery from interrupted signups.
   - Login with password and automatic detection of Two-Factor Authentication (TOTP).
@@ -49,25 +50,37 @@ EXPO_PUBLIC_API_URL=http://192.168.1.XX:3000
 
 *Note: Database credentials, Resend API keys, and Better Auth secrets remain exclusively on the backend (`backend/.env`).*
 
+Google authentication on mobile opens the provider sign-in page and returns to the app through the `agrivive://` scheme. The backend must use the Web OAuth client ID and secret, with `https://api.agrivive.tech/api/auth/callback/google` registered in Google Cloud. The Android OAuth client ID is public mobile configuration reserved for a future native Android sign-in flow; never place a Google client secret in the mobile app.
+
 ---
 
-## EAS preview APK
+## EAS preview APK and production Android build
 
-The `preview` EAS profile in `mobile/eas.json` creates an installable Android APK for testers. It does not publish to Google Play. The app uses package ID `com.agrivive.seller`.
+The `preview` EAS profile in `mobile/eas.json` creates an installable Android APK for testers. It does not publish to Google Play. The `production` profile creates a store-ready Android App Bundle (`.aab`). The app uses package ID `com.agrivive.seller`. Both profiles pin Bun `1.4.2` so EAS uses the same lockfile-compatible package-manager version as local development.
 
-Before the first build, sign in to an Expo account and set `EXPO_PUBLIC_API_URL` in the EAS `preview` environment to the live HTTPS backend origin. This URL is public app configuration, not a secret. Do not use `localhost` or a development tunnel for a shared APK. Keep local `mobile/.env` files out of Git.
+Before the first build, sign in to an Expo account and set `EXPO_PUBLIC_API_URL` in both EAS environments to the correct HTTPS backend origin. This URL is public app configuration, not a secret. Do not use `localhost` or a development tunnel for a shared APK or store build. Keep local `mobile/.env` files out of Git.
 
-From `mobile/`, run the first build interactively so EAS can link the project, create Android signing credentials, and add `extra.eas.projectId` to `app.json`:
+From `mobile/`, run the first setup interactively so EAS can link the project, create Android signing credentials, and add `extra.eas.projectId` to `app.json`:
 
 ```bash
 npx eas-cli@latest login
+npx eas-cli@latest project:init
 npx eas-cli@latest env:set --name EXPO_PUBLIC_API_URL --value https://api.example.com --environment preview --visibility plaintext
+npx eas-cli@latest env:set --name EXPO_PUBLIC_API_URL --value https://api.example.com --environment production --visibility plaintext
 npx eas-cli@latest build --platform android --profile preview
 ```
 
 Replace `https://api.example.com` with the real HTTPS API origin. Review the generated `app.json` change and commit its EAS project ID. Create an Expo personal access token and store it in GitHub as the `EXPO_TOKEN` repository secret; do not commit or paste the token. Once the setup commit is on `main`, **Build Mobile Preview APK** in GitHub Actions runs checks and waits for the EAS build result. EAS provides the APK installation link; each tester still installs the app on their own device.
 
-The existing mobile CI workflow only checks the code. The preview workflow is manual-triggered and separate from the backend and web VPS deployment workflows.
+Run the store build only after the preview APK passes real-device testing:
+
+```bash
+npx eas-cli@latest build --platform android --profile production
+```
+
+The production build creates an Android App Bundle for Google Play internal testing. It does not automatically publish the app. Upload the bundle to Google Play internal testing first, repeat the seller acceptance checks, and only then start a wider rollout.
+
+The existing mobile CI workflow only checks the code. The preview workflow is manual-triggered and separate from the backend and web VPS deployment workflows. Do not add the production build to an automatic push workflow until the first manual store build has passed.
 
 ---
 
