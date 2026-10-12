@@ -9,7 +9,7 @@ const benefits = [
 
 export function HomeBenefits() {
   return (
-    <section aria-label="Agrivive benefits" className="border-b border-agrivive-border bg-white">
+    <section id="benefits" aria-label="Agrivive benefits" className="border-b border-agrivive-border bg-white">
       <div className="mx-auto grid max-w-7xl gap-0 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
         {benefits.map(({ icon: Icon, label, detail }) => (
           <div key={label} className="flex gap-3 border-b border-agrivive-border py-6 last:border-b-0 sm:border-b-0 sm:px-5 lg:border-r lg:px-6 lg:first:pl-0 lg:last:border-r-0 lg:last:pr-0">

@@ -4,7 +4,7 @@ import { ArrowRight, BarChart3, Info } from "lucide-react";
 
 export function HomeMarketPulse() {
   return (
-    <section className="bg-agrivive-primary py-20 text-white sm:py-28">
+    <section id="market-pulse" className="bg-agrivive-primary py-20 text-white sm:py-28">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-20 lg:px-8">
         <div>
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#F2DFAF]">Public market data</span>
