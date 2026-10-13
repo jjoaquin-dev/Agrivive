@@ -1,5 +1,14 @@
 import { apiFetch } from "../../../api/client";
 import type { SellerBoostPromptsResponse } from "../../notifications/types";
+import type { SellerBoostHistoryResponse, SellerProductBoostResponse } from "../types";
+
+export function fetchSellerProductBoost(productId: string) {
+  return apiFetch<SellerProductBoostResponse>(`/seller/products/${productId}/boost`);
+}
+
+export function fetchSellerBoostHistory() {
+  return apiFetch<SellerBoostHistoryResponse>("/seller/boosts");
+}
 
 export function requestSellerVisibilityBoost(productId: string) {
   return apiFetch<{ boostId: string; status: string; reason: string; productId: string }>(

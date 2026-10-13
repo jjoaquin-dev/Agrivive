@@ -122900,6 +122900,67 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
   });
 }
 
+// src/modules/seller/services/seller.visibility-boost.read.ts
+function errorMessage(status) {
+  return status === "failed" ? "We could not send this boost. You can try again." : null;
+}
+async function readSellerVisibilityBoost(sellerId, productId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [product] = await tx.select({
+      id: sellers_product.id,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl
+    }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
+    if (!product)
+      throw new OrderError(404, "Product not found");
+    const [boost] = await tx.select({
+      id: seller_visibility_boosts.id,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl,
+      reason: seller_visibility_boosts.reason,
+      reductionPeriod: seller_visibility_boosts.reductionPeriod,
+      status: seller_visibility_boosts.status,
+      priceBefore: seller_visibility_boosts.priceBefore,
+      priceAfter: seller_visibility_boosts.priceAfter,
+      createdAt: seller_visibility_boosts.createdAt,
+      sentAt: seller_visibility_boosts.sentAt
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
+    return {
+      product,
+      boost: boost ? { ...boost, errorMessage: errorMessage(boost.status) } : null
+    };
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.history.list.ts
+function errorMessage2(status) {
+  return status === "failed" ? "We could not send this boost. You can try again." : null;
+}
+async function listSellerVisibilityBoostHistory(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const items = await tx.select({
+      id: seller_visibility_boosts.id,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl,
+      reason: seller_visibility_boosts.reason,
+      reductionPeriod: seller_visibility_boosts.reductionPeriod,
+      status: seller_visibility_boosts.status,
+      priceBefore: seller_visibility_boosts.priceBefore,
+      priceAfter: seller_visibility_boosts.priceAfter,
+      createdAt: seller_visibility_boosts.createdAt,
+      sentAt: seller_visibility_boosts.sentAt
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.sellerId, sellerId)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(100);
+    return {
+      items: items.map((item) => ({ ...item, errorMessage: errorMessage2(item.status) })),
+      total: items.length
+    };
+  });
+}
+
 // src/modules/seller/services/seller.visibility-boost.prompts.list.ts
 async function listSellerVisibilityBoostPrompts(sellerId) {
   return db2.transaction(async (tx) => {
@@ -122969,13 +123030,25 @@ function failure2(error, status) {
   console.error("Seller visibility boost request failed", error);
   return status(500, { message: "Boost Visibility could not be completed" });
 }
-var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
+var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:id/boost", async ({ session, params: routeParams, status }) => {
+  try {
+    return await readSellerVisibilityBoost(session.userId, routeParams.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"], params }).post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
   try {
     return await queueSellerVisibilityBoost(session.userId, routeParams.id);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["seller"], params }).get("/boost-prompts", async ({ session, status }) => {
+}, { role: ["seller"], params }).get("/boosts", async ({ session, status }) => {
+  try {
+    return await listSellerVisibilityBoostHistory(session.userId);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"] }).get("/boost-prompts", async ({ session, status }) => {
   try {
     return await listSellerVisibilityBoostPrompts(session.userId);
   } catch (error) {
