@@ -30,6 +30,7 @@ export const notification_type_enum = pgEnum("notification_type", [
   "seller_message",
   "buyer_message",
   "seller_listing",
+  "seller_boost",
 ]);
 
 export const user = pgTable("user", {
@@ -438,6 +439,44 @@ export const seller_social_campaign_posts = pgTable("seller_social_campaign_post
 }, (table) => [
   uniqueIndex("seller_social_campaign_posts_campaign_platform_unique").on(table.campaignId, table.platform),
   index("seller_social_campaign_posts_campaign_idx").on(table.campaignId, table.status),
+]);
+
+export const seller_boost_reason_enum = pgEnum("seller_boost_reason", [
+  "initial",
+  "price_reduction",
+]);
+export const seller_boost_status_enum = pgEnum("seller_boost_status", [
+  "prompt",
+  "queued",
+  "sent",
+  "failed",
+  "dismissed",
+]);
+
+export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  reason: seller_boost_reason_enum("reason").notNull(),
+  reductionPeriod: integer("reduction_period").default(0).notNull(),
+  boostKey: text("boost_key").notNull(),
+  status: seller_boost_status_enum().default("queued").notNull(),
+  retryCount: integer("retry_count").default(0).notNull(),
+  leaseUntil: timestamp("lease_until", { withTimezone: true }),
+  nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
+  priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
+}, (table) => [
+  uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
+  index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
+  index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
 ]);
 
 export const product_stock_adjustments = pgTable("product_stock_adjustments", {

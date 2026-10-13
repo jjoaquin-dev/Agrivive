@@ -26,6 +26,14 @@ function notificationContent(job: OutboxJob) {
       path: `/conversations/${job.referenceId ?? ""}`,
     };
   }
+  if (job.type === "seller_boost") {
+    const productName = typeof payload.productName === "string" ? payload.productName : "Your listing";
+    return {
+      title: "Boost your listing",
+      body: `${productName} has a new price. Boost its visibility now?`,
+      path: "/(app)/notifications",
+    };
+  }
   return {
     title: "New buyer messages",
     body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,

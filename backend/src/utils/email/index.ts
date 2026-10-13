@@ -100,7 +100,6 @@ export async function sendEmail(
 }
 
 export function sendAuthCode(email: string, otp: string, type: string) {
-  if (type === "sign-in") throw new Error("Email OTP sign-in is disabled");
   if (process.env.ALLOW_DEV_EMAIL_LOG === "true") {
     console.log(`[Dev OTP] ${type.toUpperCase()} code generated for ${email}`);
   }

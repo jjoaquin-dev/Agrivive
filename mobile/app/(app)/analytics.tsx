@@ -81,6 +81,9 @@ export default function SellerAnalyticsScreen() {
         <Pressable onPress={() => router.push("/(app)/advisories")} accessibilityRole="button" accessibilityLabel="View contextual advisories" style={styles.advisoryLink}>
           <AlertTriangle size={18} color={colors.primary} /><Text style={styles.advisoryLinkText}>View contextual advisories</Text>
         </Pressable>
+        <Pressable onPress={() => router.push("/(app)/boosts")} accessibilityRole="button" accessibilityLabel="View boost history" style={styles.advisoryLink}>
+          <Sparkles size={18} color={colors.primary} /><Text style={styles.advisoryLinkText}>View boost history</Text>
+        </Pressable>
 
         <Text style={styles.sectionTitle}>Period</Text>
         <View style={styles.chipRow}>{periods.map((period) => <Pressable key={period.days} onPress={() => setDays(period.days)} accessibilityRole="button" accessibilityState={{ selected: days === period.days }} style={[styles.chip, days === period.days && styles.chipSelected]}><Text style={[styles.chipText, days === period.days && styles.chipTextSelected]}>{period.label}</Text></Pressable>)}</View>

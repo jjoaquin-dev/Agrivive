@@ -44,3 +44,20 @@ export interface SellerPromotionSharePayload {
     unit: string;
   };
 }
+
+export interface SellerBoostPrompt {
+  id: string;
+  productId: string;
+  productName: string;
+  reason: "initial" | "price_reduction";
+  reductionPeriod: number;
+  priceBefore: string | null;
+  priceAfter: string | null;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface SellerBoostPromptsResponse {
+  items: SellerBoostPrompt[];
+  unreadCount: number;
+}

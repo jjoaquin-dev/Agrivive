@@ -13,6 +13,8 @@ The Agrivive Seller Mobile application is built with **React Native**, **Expo SD
   - Email, password, and confirm password registration (provisional name `Seller`).
   - Google sign-in and first-time Google account creation through Better Auth's Expo deep-link flow.
   - 6-digit Email OTP verification with 30s resend cooldown.
+  - Seller registration continues to Profile Setup before email verification is completed.
+  - Existing sellers can choose password sign-in or a one-time email-code sign-in.
   - Recovery from interrupted signups.
   - Login with password and automatic detection of Two-Factor Authentication (TOTP).
 - **Seller Profile Setup & Verification**:
@@ -107,12 +109,13 @@ bun run typecheck
 |---|---|---|---|
 | **Onboarding Persistence** | Launch app on clean install; swipe 3 slides, tap "Get Started". Re-launch app. | Slide carousel displays; completion saved to SecureStore; subsequent launches bypass onboarding directly to Login. | Pending device test |
 | **Onboarding Skip** | Tap "Skip" on slide 1 or 2. | Immediately navigates to Login and marks onboarding complete. | Pending device test |
-| **Registration** | Register with new email, password (≥ 8 chars), matching confirm password. | Provisional name `Seller` submitted; redirects to Email OTP screen. | Pending device test |
+| **Registration** | Register with new email, password (≥ 8 chars), matching confirm password. | Provisional name `Seller` submitted; opens Seller Profile Setup before routing to email verification. | Pending device test |
 | **Password Mismatch** | Enter non-matching passwords during registration. | Client-side error displayed; no network request submitted. | Pending device test |
 | **Duplicate Signup** | Attempt registration with already registered email. | Error explains account already exists and offers sign-in link. | Pending device test |
 | **Email OTP** | Enter 6-digit code received via email. | Code verified; user marked email verified; transitions to Profile Setup. | Pending email test |
 | **Invalid / Expired OTP** | Enter incorrect or expired OTP. | Friendly error message displayed; form retained for retry. | Pending email test |
 | **Resend OTP** | Tap "Resend Code" after 30s countdown. | Fresh OTP dispatched; countdown resets to 30s. | Pending email test |
+| **Email-Code Sign-In** | From Login, choose "Use email code instead", request a code, and enter the 6-digit code. | Existing account signs in without a password; incomplete accounts continue to verification or Profile Setup. | Pending email test |
 | **Interrupted Setup** | Close app after email OTP verification before completing stall profile. Re-open and log in. | Server state routes user directly to Profile Setup. | Pending device test |
 | **Stall Profile & Map** | Enter shop name, phone, address; select stall location on Davao City map. | Coordinates recorded; Better Auth name updated; `POST /seller/profile` creates stall profile; seller role assigned. | Pending device test |
 | **Map Permission Denial** | Deny location permission when tapping "Use Current". | Alert explains manual placement; seller can drag/tap pin on map without error. | Pending device test |

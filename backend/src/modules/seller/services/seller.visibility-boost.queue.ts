@@ -1,0 +1,95 @@
+import { and, desc, eq, lte } from "drizzle-orm";
+import { db } from "../../../db";
+import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
+import { OrderError } from "../../../utils/order-types";
+import { requireVerifiedSeller } from "../../../utils/seller-access";
+
+type BoostReason = "initial" | "price_reduction";
+
+export async function queueSellerVisibilityBoost(
+  sellerId: string,
+  productId: string,
+  reason: BoostReason = "initial",
+  promptId?: string,
+) {
+  return db.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const now = new Date();
+    const [product] = await tx.select().from(sellers_product).where(and(
+      eq(sellers_product.id, productId),
+      eq(sellers_product.userId, sellerId),
+    )).for("update").limit(1);
+    if (!product) throw new OrderError(404, "Product not found");
+    if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0) {
+      throw new OrderError(409, "This listing is not available to boost");
+    }
+    if (!product.imagUrl) throw new OrderError(409, "Add a product photo before boosting visibility");
+
+    const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(and(
+      eq(listing_cycles.productId, productId),
+      lte(listing_cycles.startedAt, now),
+    )).orderBy(desc(listing_cycles.startedAt)).limit(1);
+    if (!cycle) throw new OrderError(409, "This listing cycle is not ready to boost");
+
+    if (promptId) {
+      const [prompt] = await tx.select().from(seller_visibility_boosts).where(and(
+        eq(seller_visibility_boosts.id, promptId),
+        eq(seller_visibility_boosts.sellerId, sellerId),
+        eq(seller_visibility_boosts.productId, productId),
+        eq(seller_visibility_boosts.status, "prompt"),
+      )).for("update").limit(1);
+      if (!prompt) throw new OrderError(404, "Boost prompt not found");
+      const [queued] = await tx.update(seller_visibility_boosts).set({
+        status: "queued",
+        readAt: now,
+        nextAttemptAt: now,
+        leaseUntil: null,
+        lastError: null,
+        updatedAt: now,
+      }).where(and(
+        eq(seller_visibility_boosts.id, prompt.id),
+        eq(seller_visibility_boosts.status, "prompt"),
+      )).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (!queued) throw new OrderError(409, "This boost prompt was already handled");
+      return { boostId: queued.id, status: queued.status, reason: prompt.reason, productId };
+    }
+
+    const boostKey = `${cycle.id}:initial`;
+    const [created] = await tx.insert(seller_visibility_boosts).values({
+      listingCycleId: cycle.id,
+      productId,
+      sellerId,
+      reason,
+      reductionPeriod: 0,
+      boostKey,
+      status: "queued",
+      nextAttemptAt: now,
+      priceAfter: product.productPrice,
+    }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey }).returning({
+      id: seller_visibility_boosts.id,
+      status: seller_visibility_boosts.status,
+    });
+    if (created) return { boostId: created.id, status: created.status, reason, productId };
+
+    const [existing] = await tx.select({
+      id: seller_visibility_boosts.id,
+      status: seller_visibility_boosts.status,
+    }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.boostKey, boostKey)).limit(1);
+    if (!existing) throw new Error("Boost request could not be saved");
+    if (existing.status === "failed") {
+      const [retried] = await tx.update(seller_visibility_boosts).set({
+        status: "queued",
+        retryCount: 0,
+        nextAttemptAt: now,
+        leaseUntil: null,
+        lastError: null,
+        updatedAt: now,
+      }).where(and(
+        eq(seller_visibility_boosts.id, existing.id),
+        eq(seller_visibility_boosts.status, "failed"),
+      )).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (retried) return { boostId: retried.id, status: retried.status, reason, productId };
+    }
+    return { boostId: existing.id, status: existing.status, reason, productId };
+  });
+}

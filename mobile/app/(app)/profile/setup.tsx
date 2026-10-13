@@ -101,7 +101,19 @@ export default function ProfileSetupScreen() {
         longitude: coordinates.longitude,
       });
 
-      await refreshSetup();
+      const setup = await refreshSetup();
+
+      if (setup && !setup.emailVerified) {
+        router.replace({
+          pathname: "/(auth)/verify-email",
+          params: {
+            email: session?.user?.email ?? "",
+            sent: "true",
+          },
+        });
+        return;
+      }
+
       router.replace("/(app)/(tabs)/inventory");
     } catch (err: any) {
       console.error("Seller profile setup failed", err);

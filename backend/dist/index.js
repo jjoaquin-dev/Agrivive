@@ -100542,6 +100542,8 @@ __export(exports_schema, {
   product_type_enum: () => product_type_enum,
   roleEnum: () => roleEnum,
   scaling_type_enum: () => scaling_type_enum,
+  seller_boost_reason_enum: () => seller_boost_reason_enum,
+  seller_boost_status_enum: () => seller_boost_status_enum,
   seller_follows: () => seller_follows,
   seller_listing_events: () => seller_listing_events,
   seller_promotion_jobs: () => seller_promotion_jobs,
@@ -100551,6 +100553,7 @@ __export(exports_schema, {
   seller_social_campaign_posts: () => seller_social_campaign_posts,
   seller_social_campaigns: () => seller_social_campaigns,
   seller_type_enum: () => seller_type_enum,
+  seller_visibility_boosts: () => seller_visibility_boosts,
   sellers_product: () => sellers_product,
   sellers_profile: () => sellers_profile,
   session: () => session,
@@ -100655,7 +100658,8 @@ var notification_outbox_status_enum = pgEnum2("notification_outbox_status", [
 var notification_type_enum = pgEnum2("notification_type", [
   "seller_message",
   "buyer_message",
-  "seller_listing"
+  "seller_listing",
+  "seller_boost"
 ]);
 var user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -100997,6 +101001,42 @@ var seller_social_campaign_posts = pgTable("seller_social_campaign_posts", {
 }, (table) => [
   uniqueIndex("seller_social_campaign_posts_campaign_platform_unique").on(table.campaignId, table.platform),
   index("seller_social_campaign_posts_campaign_idx").on(table.campaignId, table.status)
+]);
+var seller_boost_reason_enum = pgEnum2("seller_boost_reason", [
+  "initial",
+  "price_reduction"
+]);
+var seller_boost_status_enum = pgEnum2("seller_boost_status", [
+  "prompt",
+  "queued",
+  "sent",
+  "failed",
+  "dismissed"
+]);
+var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  listingCycleId: uuid2("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
+  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  reason: seller_boost_reason_enum("reason").notNull(),
+  reductionPeriod: integer2("reduction_period").default(0).notNull(),
+  boostKey: text("boost_key").notNull(),
+  status: seller_boost_status_enum().default("queued").notNull(),
+  retryCount: integer2("retry_count").default(0).notNull(),
+  leaseUntil: timestamp("lease_until", { withTimezone: true }),
+  nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
+  priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
+}, (table) => [
+  uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
+  index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
+  index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
 ]);
 var product_stock_adjustments = pgTable("product_stock_adjustments", {
   id: uuid2("id").defaultRandom().primaryKey(),
@@ -103679,8 +103719,6 @@ async function sendEmail(to, subject, text, key) {
   throw new Error("Email provider is not configured");
 }
 function sendAuthCode(email, otp, type) {
-  if (type === "sign-in")
-    throw new Error("Email OTP sign-in is disabled");
   if (process.env.ALLOW_DEV_EMAIL_LOG === "true") {
     console.log(`[Dev OTP] ${type.toUpperCase()} code generated for ${email}`);
   }
@@ -103826,15 +103864,6 @@ var auth = betterAuth({
     }),
     twoFactor2({ issuer: "Agrivive" })
   ],
-  hooks: {
-    before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path === "/sign-in/email-otp" || ctx.path === "/email-otp/send-verification-otp" && ctx.body?.type === "sign-in" || ctx.path === "/email-otp/check-verification-otp" && ctx.body?.type === "sign-in") {
-        throw new APIError2("FORBIDDEN", {
-          message: "Email OTP sign-in is disabled"
-        });
-      }
-    })
-  },
   user: {
     additionalFields: {
       role: {
@@ -122800,8 +122829,253 @@ var sellerVegetableCatalogRoute = new Elysia().use(sessionAuth).get("/vegetable-
   }
 }, { role: ["seller"], query: sellerVegetableCatalogQuery });
 
+// src/modules/seller/services/seller.visibility-boost.queue.ts
+async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial", promptId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const now = new Date;
+    const [product] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).for("update").limit(1);
+    if (!product)
+      throw new OrderError(404, "Product not found");
+    if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0) {
+      throw new OrderError(409, "This listing is not available to boost");
+    }
+    if (!product.imagUrl)
+      throw new OrderError(409, "Add a product photo before boosting visibility");
+    const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, productId), lte(listing_cycles.startedAt, now))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+    if (!cycle)
+      throw new OrderError(409, "This listing cycle is not ready to boost");
+    if (promptId) {
+      const [prompt] = await tx.select().from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId), eq(seller_visibility_boosts.status, "prompt"))).for("update").limit(1);
+      if (!prompt)
+        throw new OrderError(404, "Boost prompt not found");
+      const [queued] = await tx.update(seller_visibility_boosts).set({
+        status: "queued",
+        readAt: now,
+        nextAttemptAt: now,
+        leaseUntil: null,
+        lastError: null,
+        updatedAt: now
+      }).where(and(eq(seller_visibility_boosts.id, prompt.id), eq(seller_visibility_boosts.status, "prompt"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (!queued)
+        throw new OrderError(409, "This boost prompt was already handled");
+      return { boostId: queued.id, status: queued.status, reason: prompt.reason, productId };
+    }
+    const boostKey = `${cycle.id}:initial`;
+    const [created] = await tx.insert(seller_visibility_boosts).values({
+      listingCycleId: cycle.id,
+      productId,
+      sellerId,
+      reason,
+      reductionPeriod: 0,
+      boostKey,
+      status: "queued",
+      nextAttemptAt: now,
+      priceAfter: product.productPrice
+    }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey }).returning({
+      id: seller_visibility_boosts.id,
+      status: seller_visibility_boosts.status
+    });
+    if (created)
+      return { boostId: created.id, status: created.status, reason, productId };
+    const [existing] = await tx.select({
+      id: seller_visibility_boosts.id,
+      status: seller_visibility_boosts.status
+    }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.boostKey, boostKey)).limit(1);
+    if (!existing)
+      throw new Error("Boost request could not be saved");
+    if (existing.status === "failed") {
+      const [retried] = await tx.update(seller_visibility_boosts).set({
+        status: "queued",
+        retryCount: 0,
+        nextAttemptAt: now,
+        leaseUntil: null,
+        lastError: null,
+        updatedAt: now
+      }).where(and(eq(seller_visibility_boosts.id, existing.id), eq(seller_visibility_boosts.status, "failed"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (retried)
+        return { boostId: retried.id, status: retried.status, reason, productId };
+    }
+    return { boostId: existing.id, status: existing.status, reason, productId };
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.read.ts
+function errorMessage(status) {
+  return status === "failed" ? "We could not send this boost. You can try again." : null;
+}
+async function readSellerVisibilityBoost(sellerId, productId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [product] = await tx.select({
+      id: sellers_product.id,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl
+    }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
+    if (!product)
+      throw new OrderError(404, "Product not found");
+    const [boost] = await tx.select({
+      id: seller_visibility_boosts.id,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl,
+      reason: seller_visibility_boosts.reason,
+      reductionPeriod: seller_visibility_boosts.reductionPeriod,
+      status: seller_visibility_boosts.status,
+      priceBefore: seller_visibility_boosts.priceBefore,
+      priceAfter: seller_visibility_boosts.priceAfter,
+      createdAt: seller_visibility_boosts.createdAt,
+      sentAt: seller_visibility_boosts.sentAt
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
+    return {
+      product,
+      boost: boost ? { ...boost, errorMessage: errorMessage(boost.status) } : null
+    };
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.history.list.ts
+function errorMessage2(status) {
+  return status === "failed" ? "We could not send this boost. You can try again." : null;
+}
+async function listSellerVisibilityBoostHistory(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const items = await tx.select({
+      id: seller_visibility_boosts.id,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl,
+      reason: seller_visibility_boosts.reason,
+      reductionPeriod: seller_visibility_boosts.reductionPeriod,
+      status: seller_visibility_boosts.status,
+      priceBefore: seller_visibility_boosts.priceBefore,
+      priceAfter: seller_visibility_boosts.priceAfter,
+      createdAt: seller_visibility_boosts.createdAt,
+      sentAt: seller_visibility_boosts.sentAt
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.sellerId, sellerId)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(100);
+    return {
+      items: items.map((item) => ({ ...item, errorMessage: errorMessage2(item.status) })),
+      total: items.length
+    };
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.prompts.list.ts
+async function listSellerVisibilityBoostPrompts(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const items = await tx.select({
+      id: seller_visibility_boosts.id,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      reason: seller_visibility_boosts.reason,
+      reductionPeriod: seller_visibility_boosts.reductionPeriod,
+      priceBefore: seller_visibility_boosts.priceBefore,
+      priceAfter: seller_visibility_boosts.priceAfter,
+      createdAt: seller_visibility_boosts.createdAt,
+      readAt: seller_visibility_boosts.readAt
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(20);
+    const [unread] = await tx.select({ count: sql3`count(*)::int` }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"), isNull2(seller_visibility_boosts.readAt)));
+    return { items, unreadCount: Number(unread?.count ?? 0) };
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.prompt.read.ts
+async function readSellerVisibilityBoostPrompt(sellerId, promptId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [prompt] = await tx.update(seller_visibility_boosts).set({
+      readAt: new Date,
+      updatedAt: new Date
+    }).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"))).returning({ id: seller_visibility_boosts.id, readAt: seller_visibility_boosts.readAt });
+    if (!prompt)
+      throw new OrderError(404, "Boost prompt not found");
+    return prompt;
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.prompt.dismiss.ts
+async function dismissSellerVisibilityBoostPrompt(sellerId, promptId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [prompt] = await tx.update(seller_visibility_boosts).set({
+      status: "dismissed",
+      readAt: new Date,
+      updatedAt: new Date
+    }).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+    if (!prompt)
+      throw new OrderError(404, "Boost prompt not found");
+    return prompt;
+  });
+}
+
+// src/modules/seller/services/seller.visibility-boost.prompt.accept.ts
+async function acceptSellerVisibilityBoostPrompt(sellerId, promptId) {
+  const prompt = await db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [row] = await tx.select({ productId: seller_visibility_boosts.productId }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"))).limit(1);
+    if (!row)
+      throw new OrderError(404, "Boost prompt not found");
+    return row;
+  });
+  return queueSellerVisibilityBoost(sellerId, prompt.productId, "price_reduction", promptId);
+}
+
+// src/modules/seller/index/seller.visibility-boost.ts
+var params = t.Object({ id: t.String({ format: "uuid" }) });
+function failure2(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error("Seller visibility boost request failed", error);
+  return status(500, { message: "Boost Visibility could not be completed" });
+}
+var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:id/boost", async ({ session, params: routeParams, status }) => {
+  try {
+    return await readSellerVisibilityBoost(session.userId, routeParams.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"], params }).post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
+  try {
+    return await queueSellerVisibilityBoost(session.userId, routeParams.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"], params }).get("/boosts", async ({ session, status }) => {
+  try {
+    return await listSellerVisibilityBoostHistory(session.userId);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"] }).get("/boost-prompts", async ({ session, status }) => {
+  try {
+    return await listSellerVisibilityBoostPrompts(session.userId);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"] }).post("/boost-prompts/:id/boost", async ({ session, params: routeParams, status }) => {
+  try {
+    return await acceptSellerVisibilityBoostPrompt(session.userId, routeParams.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"], params }).post("/boost-prompts/:id/read", async ({ session, params: routeParams, status }) => {
+  try {
+    return await readSellerVisibilityBoostPrompt(session.userId, routeParams.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"], params }).post("/boost-prompts/:id/dismiss", async ({ session, params: routeParams, status }) => {
+  try {
+    return await dismissSellerVisibilityBoostPrompt(session.userId, routeParams.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"], params });
+
 // src/modules/seller/index.ts
-var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerPromotionsRoute).use(sellerSocialCampaignsRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
+var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerPromotionsRoute).use(sellerVisibilityBoostRoute).use(sellerSocialCampaignsRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
 
 // src/modules/buyer/model/buyer.order.create.ts
 var orderModel = t.Object({
@@ -125124,7 +125398,7 @@ async function dispatchSocialCampaignPlatform(campaignId, platform) {
 }
 
 // src/modules/integrations/index/integrations.social-publish.ts
-var params = t.Object({ id: t.String({ format: "uuid" }) });
+var params2 = t.Object({ id: t.String({ format: "uuid" }) });
 var publishParams = t.Object({
   id: t.String({ format: "uuid" }),
   platform: t.Union([
@@ -125141,7 +125415,7 @@ function isSocialServiceAuthorized(authorization) {
   const expectedBytes = Buffer.from(expected);
   return provided.length === expectedBytes.length && provided.length > 0 && timingSafeEqual4(provided, expectedBytes);
 }
-function failure2(error, status) {
+function failure3(error, status) {
   if (error instanceof OrderError)
     return status(error.statusCode, { message: error.message });
   console.error("Social publishing integration failed", error);
@@ -125155,9 +125429,9 @@ var integrationsSocialPublishRoute = new Elysia().get("/integrations/social-camp
   try {
     return await getSocialPublishContext(routeParams.id);
   } catch (error) {
-    return failure2(error, status);
+    return failure3(error, status);
   }
-}, { params, headers: t.Object({ authorization: t.Optional(t.String()) }) }).post("/integrations/social-campaigns/:id/publish/:platform", async ({ headers, params: routeParams, status }) => {
+}, { params: params2, headers: t.Object({ authorization: t.Optional(t.String()) }) }).post("/integrations/social-campaigns/:id/publish/:platform", async ({ headers, params: routeParams, status }) => {
   if (!isSocialServiceAuthorized(headers.authorization))
     return status(401, {
       message: "Social publishing authentication required"
@@ -125165,10 +125439,104 @@ var integrationsSocialPublishRoute = new Elysia().get("/integrations/social-camp
   try {
     return await dispatchSocialCampaignPlatform(routeParams.id, routeParams.platform);
   } catch (error) {
-    return failure2(error, status);
+    return failure3(error, status);
   }
 }, {
   params: publishParams,
+  headers: t.Object({ authorization: t.Optional(t.String()) })
+});
+
+// src/modules/integrations/index/integrations.visibility-boost.ts
+import { timingSafeEqual as timingSafeEqual5 } from "crypto";
+
+// src/modules/integrations/services/integrations.visibility-boost.context.ts
+function publicUrl(base, path) {
+  const origin = base?.trim().replace(/\/$/, "");
+  if (!origin)
+    return path;
+  try {
+    return new URL(path, origin).toString();
+  } catch {
+    return path;
+  }
+}
+async function getVisibilityBoostContext(boostId) {
+  const [row] = await db2.select({
+    boostId: seller_visibility_boosts.id,
+    reason: seller_visibility_boosts.reason,
+    status: seller_visibility_boosts.status,
+    productId: sellers_product.id,
+    productName: sellers_product.productName,
+    productType: sellers_product.productType,
+    unit: sellers_product.scalingType,
+    price: sellers_product.productPrice,
+    quantity: sellers_product.productQty,
+    imageUrl: sellers_product.imagUrl,
+    productActive: sellers_product.isActive,
+    marketable: sellers_product.isMarketable,
+    sellerId: sellers_product.userId,
+    sellerName: user.name,
+    sellerActive: user.isActive,
+    sellerVerified: user.emailVerified,
+    sellerRoles: user.role,
+    shopName: sellers_profile.shopName,
+    listingCycleId: seller_visibility_boosts.listingCycleId
+  }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, seller_visibility_boosts.sellerId), eq(sellers_profile.isCurrent, true))).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+  if (!row)
+    throw new OrderError(404, "Visibility boost not found");
+  if (row.status !== "queued" && row.status !== "sent") {
+    throw new OrderError(409, "Visibility boost is not ready for posting");
+  }
+  if (!row.imageUrl || !row.productActive || !row.marketable || !row.sellerActive || !row.sellerVerified || !row.sellerRoles?.includes("seller") || Number(row.quantity ?? 0) <= 0 || Number(row.price ?? 0) <= 0 || !row.sellerName.trim() || !row.shopName.trim()) {
+    throw new OrderError(409, "Listing facts are no longer complete for posting");
+  }
+  const [cycle] = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, row.productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  if (!cycle || cycle.id !== row.listingCycleId)
+    throw new OrderError(409, "Listing cycle is no longer current");
+  const apiBase = process.env.SOCIAL_PUBLIC_API_URL ?? process.env.BETTER_AUTH_URL;
+  return {
+    boostId: row.boostId,
+    reason: row.reason,
+    product: {
+      id: row.productId,
+      name: row.productName,
+      type: row.productType,
+      unit: row.unit,
+      price: Number(row.price),
+      quantity: Number(row.quantity),
+      imageUrl: publicUrl(apiBase, `/integrations/media/social-products/${row.productId}`),
+      listingUrl: publicUrl(process.env.WEB_APP_URL, `/marketplace/${row.productId}`)
+    },
+    seller: {
+      id: row.sellerId,
+      name: row.sellerName,
+      shopName: row.shopName
+    }
+  };
+}
+
+// src/modules/integrations/index/integrations.visibility-boost.ts
+function isAuthorized(authorization) {
+  const expected = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
+  if (!expected || !authorization?.startsWith("Bearer "))
+    return false;
+  const provided = Buffer.from(authorization.slice(7).trim());
+  const expectedBytes = Buffer.from(expected);
+  return provided.length > 0 && provided.length === expectedBytes.length && timingSafeEqual5(provided, expectedBytes);
+}
+var integrationsVisibilityBoostRoute = new Elysia().get("/integrations/visibility-boosts/:id/context", async ({ headers, params, status }) => {
+  if (!isAuthorized(headers.authorization))
+    return status(401, { message: "Visibility boost authentication required" });
+  try {
+    return await getVisibilityBoostContext(params.id);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error("Visibility boost context failed", error);
+    return status(500, { message: "Visibility boost context is unavailable" });
+  }
+}, {
+  params: t.Object({ id: t.String({ format: "uuid" }) }),
   headers: t.Object({ authorization: t.Optional(t.String()) })
 });
 
@@ -125472,7 +125840,7 @@ var sendConversationMessageBody = t.Object({
 });
 
 // src/modules/conversations/index/conversation.routes.ts
-function failure3(error, status) {
+function failure4(error, status) {
   if (error instanceof ConversationError)
     return status(error.statusCode, { message: error.message });
   console.error(error);
@@ -125482,31 +125850,31 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   try {
     return status(201, await createConversation(session.userId, body));
   } catch (error) {
-    return failure3(error, status);
+    return failure4(error, status);
   }
 }, { role: ["buyer"], body: createConversationBody }).get("/conversations", async ({ session, query, status }) => {
   try {
     return await listConversations(session.userId, query.limit);
   } catch (error) {
-    return failure3(error, status);
+    return failure4(error, status);
   }
 }, { role: ["buyer", "seller"], query: conversationListQuery }).get("/conversations/:id/messages", async ({ session, params, status }) => {
   try {
     return await listConversationMessages(session.userId, params.id);
   } catch (error) {
-    return failure3(error, status);
+    return failure4(error, status);
   }
 }, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/:id/messages", async ({ session, params, body, status }) => {
   try {
     return status(201, await createConversationMessage(session.userId, params.id, body));
   } catch (error) {
-    return failure3(error, status);
+    return failure4(error, status);
   }
 }, { role: ["buyer", "seller"], params: conversationParams, body: sendConversationMessageBody }).post("/conversations/:id/read", async ({ session, params, status }) => {
   try {
     return await markConversationRead(session.userId, params.id);
   } catch (error) {
-    return failure3(error, status);
+    return failure4(error, status);
   }
 }, { role: ["buyer", "seller"], params: conversationParams }).ws("/ws/conversations", {
   query: t.Object({ conversationId: t.String({ format: "uuid" }) }),
@@ -125708,7 +126076,7 @@ var validationPlugin = new Elysia({
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 var webCorsOrigin = configuredWebOrigins.length ? [...configuredWebOrigins, localWebOrigin] : localWebOrigin;
-var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };
