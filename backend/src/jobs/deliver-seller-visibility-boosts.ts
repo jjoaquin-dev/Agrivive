@@ -61,7 +61,13 @@ export async function deliverSellerVisibilityBoosts() {
       });
       const attempt = boost.retryCount + 1;
       if (!response.ok) {
+        const responseBody = await response.text().catch(() => "");
         const exhausted = attempt >= maxAttempts;
+        console.error("Visibility boost webhook rejected", {
+          boostId: boost.id,
+          status: response.status,
+          response: responseBody.slice(0, 500),
+        });
         await db.update(seller_visibility_boosts).set({
           status: exhausted ? "failed" : "queued",
           retryCount: attempt,
