@@ -33,6 +33,7 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     productName: eligibility.productName,
     productType: eligibility.productType,
     shopName: eligibility.shopName,
+    listingUrl: eligibility.listingUrl,
   });
   const [campaign] = await db.insert(seller_social_campaigns).values({
     sellerId,
@@ -43,7 +44,9 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
   return {
     campaignId: campaign.id,
     status: campaign.status,
+    productId: eligibility.productId,
     productName: eligibility.productName,
+    productUrl: eligibility.listingUrl,
     imageUrl: await getProductImageDisplayUrl(product.imageUrl, sellerId),
     posts,
   };

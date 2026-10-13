@@ -17,13 +17,17 @@ export type SocialPost = {
 export type SocialDraft = {
   campaignId: string;
   status: string;
+  productId: string;
   productName: string;
+  productUrl: string;
   imageUrl: string | null;
   posts: Partial<Record<SocialPlatform, string>>;
 };
 export type CampaignStatus = {
   id: string;
+  productId: string;
   productName: string;
+  productUrl: string;
   imageUrl: string | null;
   status: string;
   posts: Record<string, string>;

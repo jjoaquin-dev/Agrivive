@@ -5,11 +5,20 @@ import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { OrderError } from "../../../utils/order-types";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 
+function marketplaceUrl(productId: string) {
+  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "")
+    .trim().replace(/\/$/, "");
+  const path = `/marketplace/${productId}`;
+  try { return base ? new URL(path, base).toString() : path; }
+  catch { return path; }
+}
+
 export async function readSellerSocialCampaign(sellerId: string, campaignId: string) {
   return db.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [campaign] = await tx.select({
       id: seller_social_campaigns.id,
+      productId: sellers_product.id,
       productName: sellers_product.productName,
       sourceImageUrl: sellers_product.imagUrl,
       status: seller_social_campaigns.status,
@@ -29,7 +38,9 @@ export async function readSellerSocialCampaign(sellerId: string, campaignId: str
       .orderBy(asc(seller_social_campaign_posts.platform));
     return {
       id: campaign.id,
+      productId: campaign.productId,
       productName: campaign.productName,
+      productUrl: marketplaceUrl(campaign.productId),
       imageUrl: campaign.sourceImageUrl ? await getProductImageDisplayUrl(campaign.sourceImageUrl, sellerId) : null,
       status: campaign.status,
       posts: campaign.posts,
