@@ -170,12 +170,12 @@ git diff --name-status "$OLD_SHA" "$NEW_SHA" -- backend/drizzle
 If the command prints migration files and the migration is approved, run it with the newly built API image:
 
 ```bash
-cd /srv/agrivive/Agrivive/deploy || exit 1
-
-docker compose \
-  --env-file compose.production.env \
-  -f docker-compose.production.yml \
-  run --rm api bunx drizzle-kit migrate
+	cd /srv/agrivive/Agrivive/deploy || exit 1
+	
+	docker compose \
+	  --env-file compose.production.env \
+	  -f docker-compose.production.yml \
+	  run --rm api bunx drizzle-kit migrate
 ```
 
 Do not add `--network host` to this Compose command. The API service already has host networking in `docker-compose.production.yml`.
