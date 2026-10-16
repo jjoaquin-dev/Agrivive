@@ -137,6 +137,11 @@ export default function LoginScreen() {
           router.replace("/(app)/profile/setup");
           return;
         }
+
+        if (setup.passwordSetupRequired) {
+          router.replace("/(auth)/password-setup");
+          return;
+        }
       }
 
       router.replace("/(app)/(tabs)/home");
@@ -208,7 +213,7 @@ export default function LoginScreen() {
 
           <View style={styles.forgotPasswordRow}>
             <ButtonComponent
-              title="Forgot password?"
+              title="Restore account"
               variant="ghost"
               onPress={handleForgotPassword}
               style={styles.forgotButton}

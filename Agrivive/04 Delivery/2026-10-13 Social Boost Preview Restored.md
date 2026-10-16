@@ -37,6 +37,38 @@ The existing visibility boost status/history routes and database tables were not
 - `backend`: `bun build src/index.ts --outdir dist --target bun` passed.
 - The restored mobile screen remains under the repository's 200-line source-file guideline.
 
+## Mobile status follow-up
+
+Date: 2026-10-13
+
+The publishing result now refreshes safely while a campaign is queued, publishing, or processing. Status-refresh failures are no longer silently discarded, and the result card identifies the specific failed channels before showing the retry action. The campaign response status is typed as the known social-campaign status values instead of an unrestricted string.
+
+Affected files:
+
+- `mobile/app/(app)/boost/[productId].tsx`
+- `mobile/src/features/boost/api/social-campaigns.ts`
+
+Verification:
+
+- `mobile`: `bun run typecheck` passed.
+- No backend or n8n files were changed for this mobile follow-up.
+
+## New-product posting review
+
+Date: 2026-10-13
+
+The Add Product flow now sends a marketable, in-stock new listing to the existing Boost Visibility review screen when the seller chooses “Boost now.” The seller can select the target platform, edit the generated post, review the marketplace link, and submit through the same campaign workflow. The old behavior that queued a visibility webhook immediately from the alert was removed from this path, preventing an unreviewed duplicate post. “Not now” still returns to the product-listed confirmation.
+
+Affected files:
+
+- `mobile/app/(app)/inventory/create.tsx`
+- `mobile/app/(app)/boost/[productId].tsx`
+
+Verification:
+
+- `mobile`: `bun run typecheck` passed.
+- `git diff --check` passed.
+
 ## Commit
 
 No commit created yet.

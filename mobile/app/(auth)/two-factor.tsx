@@ -76,6 +76,11 @@ export default function TwoFactorChallengeScreen() {
           return;
         }
 
+        if (setup.passwordSetupRequired) {
+          router.replace("/(auth)/password-setup");
+          return;
+        }
+
         router.replace("/(app)/(tabs)/home");
       } else {
         router.replace("/");

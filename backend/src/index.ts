@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
 import { auth } from "./modules/auth";
+import { authPasswordRoute } from "./modules/auth/index/auth.password";
 import { cors } from "@elysia/cors";
 import openapi from "@elysia/openapi";
 import { sellerRoute } from "./modules/seller";
@@ -36,6 +37,7 @@ const app = new Elysia()
 
   //auth hadler
   .mount(auth.handler)
+  .use(authPasswordRoute)
 
   //routes
   .use(buyerRoute)

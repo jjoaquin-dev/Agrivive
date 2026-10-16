@@ -23,6 +23,7 @@ export async function getIntegrationPromotionContext(jobId: string) {
       status: "skipped",
       leaseUntil: null,
       lastError: context?.reason ?? "Listing is no longer eligible",
+      completedAt: new Date(),
       updatedAt: new Date(),
     }).where(and(
       eq(seller_promotion_jobs.id, job.id),
@@ -31,12 +32,27 @@ export async function getIntegrationPromotionContext(jobId: string) {
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
   }
 
+  await db.update(seller_promotion_jobs).set({
+    visibilityPolicyVersion: context.policyVersion,
+    visibilityScore: context.visibilityScore.toFixed(4),
+    visibilityTier: context.visibilityTier,
+    visibilityRank: context.visibilityRank,
+    evaluatedAt: context.evaluatedAt,
+    updatedAt: new Date(),
+  }).where(and(
+    eq(seller_promotion_jobs.id, job.id),
+    or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent")),
+  ));
+
   return {
     jobId,
     alreadyReady: false as const,
     stage: job.stage,
     visibilityScore: context.visibilityScore,
+    visibilityTier: context.visibilityTier,
+    visibilityRank: context.visibilityRank,
     policyVersion: context.policyVersion,
+    evaluatedAt: context.evaluatedAt,
     product: {
       id: context.productId,
       name: context.productName,
@@ -47,6 +63,12 @@ export async function getIntegrationPromotionContext(jobId: string) {
       id: context.sellerId,
       name: context.sellerName,
       shopName: context.shopName,
+    },
+    listing: {
+      price: context.price,
+      quantity: context.quantity,
+      originalQuantity: context.originalQuantity,
+      availability: context.availability,
     },
     listingUrl: context.listingUrl,
   };

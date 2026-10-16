@@ -1,8 +1,15 @@
 import React from "react";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
+import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts } from "../../src/theme";
 
 export default function AppLayout() {
+  const { session, setup, isSessionPending, loadingSetup } = useAuth();
+
+  if (!isSessionPending && !loadingSetup && session?.user && setup?.profileComplete && setup.passwordSetupRequired) {
+    return <Redirect href="/(auth)/password-setup" />;
+  }
+
   return (
     <Stack
       screenOptions={{

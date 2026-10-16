@@ -100935,7 +100935,13 @@ var seller_promotion_jobs = pgTable("seller_promotion_jobs", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   headline: text("headline"),
   caption: text("caption"),
+  visibilityPolicyVersion: text("visibility_policy_version"),
+  visibilityScore: decimal("visibility_score", { precision: 5, scale: 4 }),
+  visibilityTier: text("visibility_tier"),
+  visibilityRank: integer2("visibility_rank"),
+  evaluatedAt: timestamp("evaluated_at", { withTimezone: true }),
   readyAt: timestamp("ready_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   readAt: timestamp("read_at", { withTimezone: true }),
   lastError: text("last_error"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -103889,6 +103895,116 @@ var auth = betterAuth({
     enabled: true,
     requireEmailVerification: true
   }
+});
+
+// src/modules/auth/services/auth.session.ts
+var sellerRoute = new Elysia({ name: "auth.session" });
+var sessionAuth = new Elysia().macro({
+  role: (allowedRoles = []) => ({
+    async resolve({ request, status }) {
+      const authSession = await auth.api.getSession({
+        headers: request.headers
+      });
+      if (!authSession) {
+        return status(401);
+      }
+      const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
+      if (!current?.isActive)
+        return status(403);
+      const userRoles = [...current.role ?? []];
+      const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
+      if (stakeholderEmails.has(current.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
+        userRoles.push("stakeholder");
+      }
+      const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
+      if (!hasAllowedRole) {
+        return status(403);
+      }
+      return {
+        user: { ...authSession.user, role: userRoles, isActive: current.isActive },
+        session: authSession.session
+      };
+    }
+  })
+});
+
+// src/modules/auth/model/auth.password.ts
+var authPasswordSetBody = t.Object({
+  newPassword: t.String({ minLength: 8 }),
+  confirmPassword: t.String({ minLength: 8 })
+});
+
+// src/modules/auth/services/auth.password-status.ts
+async function readAuthPasswordStatus(userId) {
+  const accounts = await db2.select({ providerId: account.providerId, password: account.password }).from(account).where(and(eq(account.userId, userId), inArray(account.providerId, ["credential", "google"])));
+  const hasPassword = accounts.some((candidate) => candidate.providerId === "credential" && Boolean(candidate.password));
+  const hasGoogleAccount = accounts.some((candidate) => candidate.providerId === "google");
+  return {
+    hasPassword,
+    passwordSetupRequired: hasGoogleAccount && !hasPassword
+  };
+}
+
+// src/utils/order-types/index.ts
+class OrderError extends Error {
+  statusCode;
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+// src/modules/auth/services/auth.password-set.ts
+async function setGoogleAccountPassword(userId, headers, input) {
+  if (input.newPassword !== input.confirmPassword) {
+    throw new OrderError(400, "Passwords do not match");
+  }
+  const currentStatus = await readAuthPasswordStatus(userId);
+  if (!currentStatus.passwordSetupRequired) {
+    throw new OrderError(409, "A local password is not required for this account");
+  }
+  try {
+    const result = await auth.api.setPassword({
+      body: { newPassword: input.newPassword },
+      headers
+    });
+    if (!result?.status) {
+      throw new OrderError(503, "Could not set the account password");
+    }
+  } catch (error) {
+    if (error instanceof OrderError)
+      throw error;
+    console.error("Failed to set Google account password", error);
+    throw new OrderError(400, "Could not set the account password. Please sign in with Google again and retry.");
+  }
+  return {
+    hasPassword: true,
+    passwordSetupRequired: false
+  };
+}
+
+// src/modules/auth/index/auth.password.ts
+function passwordFailure(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error("Authentication password operation failed", error);
+  return status(500, { message: "Password operation failed" });
+}
+var authPasswordRoute = new Elysia({ prefix: "/auth" }).use(sessionAuth).get("/password-status", async ({ session, status }) => {
+  try {
+    return await readAuthPasswordStatus(session.userId);
+  } catch (error) {
+    return passwordFailure(error, status);
+  }
+}, { role: ["buyer", "seller"] }).post("/password", async ({ session, request, body, status }) => {
+  try {
+    return await setGoogleAccountPassword(session.userId, request.headers, body);
+  } catch (error) {
+    return passwordFailure(error, status);
+  }
+}, {
+  role: ["buyer", "seller"],
+  body: authPasswordSetBody
 });
 
 // node_modules/@elysia/cors/dist/index.mjs
@@ -109464,46 +109580,6 @@ var openapi = ({
 };
 var index_default = openapi;
 
-// src/utils/order-types/index.ts
-class OrderError extends Error {
-  statusCode;
-  constructor(statusCode, message) {
-    super(message);
-    this.statusCode = statusCode;
-  }
-}
-
-// src/modules/auth/services/auth.session.ts
-var sellerRoute = new Elysia({ name: "auth.session" });
-var sessionAuth = new Elysia().macro({
-  role: (allowedRoles = []) => ({
-    async resolve({ request, status }) {
-      const authSession = await auth.api.getSession({
-        headers: request.headers
-      });
-      if (!authSession) {
-        return status(401);
-      }
-      const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
-      if (!current?.isActive)
-        return status(403);
-      const userRoles = [...current.role ?? []];
-      const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
-      if (stakeholderEmails.has(current.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
-        userRoles.push("stakeholder");
-      }
-      const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
-      if (!hasAllowedRole) {
-        return status(403);
-      }
-      return {
-        user: { ...authSession.user, role: userRoles, isActive: current.isActive },
-        session: authSession.session
-      };
-    }
-  })
-});
-
 // src/modules/seller/model/seller.product.ts
 var sellerProductId = t.Object({ id: t.String({ format: "uuid" }) });
 var sellerProductType = t.Union([
@@ -110686,7 +110762,7 @@ var import_endpoints5 = __toESM(require_endpoints());
 var import_event_streams2 = __toESM(require_event_streams());
 var import_protocols6 = __toESM(require_protocols());
 var import_retry4 = __toESM(require_retry());
-var import_schema27 = __toESM(require_schema());
+var import_schema28 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/auth/httpAuthSchemeProvider.js
 var import_httpAuthSchemes = __toESM(require_httpAuthSchemes());
@@ -112849,7 +112925,7 @@ var _mw11 = (Command, cs, config, o) => [
 ];
 
 // node_modules/@aws-sdk/client-s3/dist-es/schemas/schemas_0.js
-var import_schema26 = __toESM(require_schema());
+var import_schema27 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/models/S3ServiceException.js
 var import_client5 = __toESM(require_client3());
@@ -114219,10 +114295,10 @@ var _xawob = "x-amz-write-offset-bytes";
 var _xawrl = "x-amz-website-redirect-location";
 var _xs = "xsi:type";
 var n0 = "com.amazonaws.s3";
-var _s_registry = import_schema26.TypeRegistry.for(_s);
+var _s_registry = import_schema27.TypeRegistry.for(_s);
 var S3ServiceException$ = [-3, _s, "S3ServiceException", 0, [], []];
 _s_registry.registerError(S3ServiceException$, S3ServiceException);
-var n0_registry = import_schema26.TypeRegistry.for(n0);
+var n0_registry = import_schema27.TypeRegistry.for(n0);
 var AccessDenied$ = [
   -3,
   n0,
@@ -119253,7 +119329,7 @@ class S3Client extends import_client25.Client {
     const _config_10 = $resolveS3Config(_config_9, { session: [() => this, CreateSessionCommand] });
     const _config_11 = resolveRuntimeExtensions2(_config_10, configuration?.extensions || []);
     this.config = _config_11;
-    this.middlewareStack.use(import_schema27.getSchemaSerdePlugin(this.config));
+    this.middlewareStack.use(import_schema28.getSchemaSerdePlugin(this.config));
     this.middlewareStack.use(import_client24.getUserAgentPlugin(this.config));
     this.middlewareStack.use(import_retry4.getRetryPlugin(this.config));
     this.middlewareStack.use(import_protocols6.getContentLengthPlugin(this.config));
@@ -119711,169 +119787,235 @@ var sellerProfileCreateRoute = new Elysia().use(sessionAuth).post("/profile", as
   }
 }, { body: sellerProfileModel, role: ["seller", "buyer"] });
 
-// src/utils/visibility-score/index.ts
+// src/utils/ahp-topsis/index.ts
+var criterionCount = 4;
+var consistencyRandomIndex = 0.9;
+var ahpTopsisPolicyVersion = "visibility-ahptopsis-v1";
+var ahpPairwiseMatrix = [
+  [1, 1.333333, 2, 4],
+  [0.75, 1, 1.5, 3],
+  [0.5, 0.666667, 1, 2],
+  [0.25, 0.333333, 0.5, 1]
+];
 var clamp = (value) => Math.min(1, Math.max(0, value));
-var hourMs = 60 * 60 * 1000;
-function calculateVisibilityScore(input) {
-  if (!input.publishedAt || input.publishedAt > input.evaluatedAt || !Number.isFinite(input.quantity) || !Number.isFinite(input.originalQuantity) || input.originalQuantity <= 0)
-    return null;
-  const postingAge = clamp((input.evaluatedAt.getTime() - input.publishedAt.getTime()) / (12 * hourMs));
-  const remainingQuantity = clamp(input.quantity / input.originalQuantity);
-  const recurrence = clamp(input.priorCycles / 3);
-  const score = 0.4 * postingAge + 0.4 * remainingQuantity + 0.2 * recurrence;
+function criterionValues(criteria) {
+  return [criteria.freshness, criteria.stockAvailability, criteria.sellerReliability, criteria.recurrence];
+}
+function valuesToCriteria(values) {
   return {
-    score,
-    tier: score >= 0.7 ? "priority" : score >= 0.4 ? "standard" : "basic",
-    inputs: { postingAge, remainingQuantity, recurrence, priorCycles: input.priorCycles }
+    freshness: values[0] ?? 0,
+    stockAvailability: values[1] ?? 0,
+    sellerReliability: values[2] ?? 0,
+    recurrence: values[3] ?? 0
   };
 }
-function marketplaceVisibilityScoreSql(evaluatedAt, since) {
-  const currentCycleId = sql3`(
-    select current_cycle.id from ${listing_cycles} as current_cycle
-    where current_cycle.product_id = ${sellers_product.id}
-      and current_cycle.started_at <= ${evaluatedAt}
-    order by current_cycle.started_at desc limit 1
-  )`;
-  const currentCatalogId = sql3`coalesce(
-    (select current_cycle.vegetable_catalog_id from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    ${sellers_product.vegetableCatalogId}
-  )`;
-  const currentScalingType = sql3`coalesce(
-    (select current_cycle.scaling_type from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    ${sellers_product.scalingType}
-  )`;
-  const vegetableKey = sql3`coalesce(
-    (select current_cycle.vegetable_key from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    lower(regexp_replace(btrim(${sellers_product.productName}), '[[:space:]]+', ' ', 'g'))
-  )`;
-  const priorCycles = sql3`(
-    select count(*)::int from ${listing_cycles} as prior_cycle
-    inner join ${sellers_product} as prior_product on prior_product.id = prior_cycle.product_id
-    where prior_product.user_id = ${sellers_product.userId}
-      and (
-        (${currentCatalogId} is not null
-          and prior_cycle.vegetable_catalog_id = ${currentCatalogId}
-          and prior_cycle.scaling_type = ${currentScalingType})
-        or (${currentCatalogId} is null and prior_cycle.vegetable_catalog_id is null
-          and prior_cycle.scaling_type = ${currentScalingType}
-          and prior_cycle.vegetable_key = ${vegetableKey})
-      )
-      and prior_cycle.started_at >= ${since}
-      and prior_cycle.started_at < ${sellers_product.publishedAt}
-      and prior_cycle.started_at <= ${evaluatedAt}
-      and prior_cycle.id is distinct from ${currentCycleId}
-  )`;
-  return sql3`(case
-    when ${sellers_product.originalQty} is null
-      or ${sellers_product.originalQty} <= 0 or ${sellers_product.publishedAt} is null
-      or ${sellers_product.publishedAt} > ${evaluatedAt} then null
-    else
-      .40 * least(1, greatest(0, extract(epoch from (${evaluatedAt}::timestamptz - ${sellers_product.publishedAt})) / 43200.0))
-      + .40 * least(1, greatest(0, ${sellers_product.productQty} / nullif(${sellers_product.originalQty}, 0)))
-      + .20 * least(1, greatest(0, ${priorCycles} / 3.0))
-  end)::double precision`;
+function createVisibilityCriteria(input) {
+  return {
+    freshness: clamp(1 - Math.max(0, input.ageHours) / 12),
+    stockAvailability: clamp(input.stockRatio),
+    sellerReliability: clamp(input.sellerReliability),
+    recurrence: clamp(input.priorCycles / 3)
+  };
 }
-function marketplacePriorCyclesSql(evaluatedAt, since) {
-  const currentCycleId = sql3`(
-    select current_cycle.id from ${listing_cycles} as current_cycle
+function calculateAHPWeights(matrix = ahpPairwiseMatrix) {
+  if (matrix.length !== criterionCount || matrix.some((row) => row.length !== criterionCount)) {
+    throw new Error("AHP pairwise matrix must be 4 by 4");
+  }
+  const geometricMeans = matrix.map((row) => Math.pow(row.reduce((product, value) => product * value, 1), 1 / criterionCount));
+  const total = geometricMeans.reduce((sum, value) => sum + value, 0);
+  const weights = geometricMeans.map((value) => value / total);
+  const lambdaRatios = matrix.map((row, rowIndex) => row.reduce((sum, value, columnIndex) => sum + value * weights[columnIndex], 0) / weights[rowIndex]);
+  const lambdaMax = lambdaRatios.reduce((sum, value) => sum + value, 0) / criterionCount;
+  const consistencyIndex = (lambdaMax - criterionCount) / (criterionCount - 1);
+  const consistencyRatio = Math.max(0, consistencyIndex / consistencyRandomIndex);
+  return {
+    weights: valuesToCriteria(weights),
+    consistencyRatio
+  };
+}
+function rankWithAHPAndTOPSIS(alternatives, matrix = ahpPairwiseMatrix) {
+  const { weights, consistencyRatio } = calculateAHPWeights(matrix);
+  if (alternatives.length === 0)
+    return { weights, consistencyRatio, results: [] };
+  const rawColumns = Array.from({ length: criterionCount }, (_, criterionIndex) => alternatives.map((alternative) => criterionValues(alternative.criteria)[criterionIndex] ?? 0));
+  const normalizedColumns = rawColumns.map((column) => {
+    const length = Math.sqrt(column.reduce((sum, value) => sum + value ** 2, 0));
+    return length === 0 ? column.map(() => 0) : column.map((value) => value / length);
+  });
+  const weightValues = criterionValues(weights);
+  const weightedRows = alternatives.map((_, alternativeIndex) => normalizedColumns.map((column, criterionIndex) => column[alternativeIndex] * weightValues[criterionIndex]));
+  const idealBest = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.max(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
+  const idealWorst = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.min(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
+  const results = alternatives.map((alternative, alternativeIndex) => {
+    const weighted = weightedRows[alternativeIndex] ?? [];
+    const distanceToIdeal = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealBest[index] ?? 0)) ** 2, 0));
+    const distanceToWorst = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealWorst[index] ?? 0)) ** 2, 0));
+    const denominator = distanceToIdeal + distanceToWorst;
+    return {
+      id: alternative.id,
+      score: denominator === 0 ? 0.5 : distanceToWorst / denominator,
+      rank: 0,
+      criteria: alternative.criteria,
+      weightedCriteria: valuesToCriteria(weighted),
+      distanceToIdeal,
+      distanceToWorst
+    };
+  }).sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+  return {
+    weights,
+    consistencyRatio,
+    results: results.map((result, index) => ({ ...result, rank: index + 1 }))
+  };
+}
+
+// src/utils/visibility-ranking/index.ts
+var priorityVisibilityThreshold = 0.6;
+function getVisibilityTier(score) {
+  if (score >= priorityVisibilityThreshold)
+    return "Priority Boost";
+  if (score >= 0.4)
+    return "Standard Exposure";
+  return "Basic/Hold";
+}
+function rankVisibilityCandidates(candidates) {
+  const ranking = rankWithAHPAndTOPSIS(candidates.map(({ id, criteria }) => ({ id, criteria })));
+  const candidatesById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+  const results = ranking.results.map((result) => ({
+    ...result,
+    publishedAt: candidatesById.get(result.id)?.publishedAt ?? new Date(0),
+    tier: getVisibilityTier(result.score)
+  })).sort((left, right) => {
+    const scoreDifference = right.score - left.score;
+    if (scoreDifference !== 0)
+      return scoreDifference;
+    const publishedDifference = right.publishedAt.getTime() - left.publishedAt.getTime();
+    return publishedDifference || right.id.localeCompare(left.id);
+  }).map((result, index) => ({ ...result, rank: index + 1 }));
+  return {
+    policyVersion: ahpTopsisPolicyVersion,
+    weights: ranking.weights,
+    consistencyRatio: ranking.consistencyRatio,
+    results
+  };
+}
+
+// src/utils/visibility-ranking/load.ts
+var hourMs = 60 * 60 * 1000;
+var dayMs = 24 * hourMs;
+function hasPublicSellerProfile(row) {
+  return row.sellerActive && row.sellerVerified && row.sellerRoles?.includes("seller") && row.shopName.trim().length > 0 && row.detailAddress.trim().length > 0 && (row.phoneNumber?.trim().length ?? 0) >= 7 && row.latitude !== null && Number.isFinite(row.latitude) && row.latitude >= -90 && row.latitude <= 90 && row.longitude !== null && Number.isFinite(row.longitude) && row.longitude >= -180 && row.longitude <= 180;
+}
+async function loadEligibleVisibilityCandidates(evaluatedAt) {
+  const since = new Date(evaluatedAt.getTime() - 30 * dayMs);
+  const latestCycleStartedAt = sql3`(
+    select max(current_cycle.started_at)
+    from listing_cycles as current_cycle
     where current_cycle.product_id = ${sellers_product.id}
       and current_cycle.started_at <= ${evaluatedAt}
-    order by current_cycle.started_at desc limit 1
   )`;
-  const currentCatalogId = sql3`coalesce(
-    (select current_cycle.vegetable_catalog_id from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    ${sellers_product.vegetableCatalogId}
-  )`;
-  const currentScalingType = sql3`coalesce(
-    (select current_cycle.scaling_type from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    ${sellers_product.scalingType}
-  )`;
-  const vegetableKey = sql3`coalesce(
-    (select current_cycle.vegetable_key from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    lower(regexp_replace(btrim(${sellers_product.productName}), '[[:space:]]+', ' ', 'g'))
-  )`;
-  return sql3`(
-    select count(*)::int from ${listing_cycles} as prior_cycle
-    inner join ${sellers_product} as prior_product on prior_product.id = prior_cycle.product_id
-    where prior_product.user_id = ${sellers_product.userId}
-      and (
-        (${currentCatalogId} is not null
-          and prior_cycle.vegetable_catalog_id = ${currentCatalogId}
-          and prior_cycle.scaling_type = ${currentScalingType})
-        or (${currentCatalogId} is null and prior_cycle.vegetable_catalog_id is null
-          and prior_cycle.scaling_type = ${currentScalingType}
-          and prior_cycle.vegetable_key = ${vegetableKey})
-      )
-      and prior_cycle.started_at >= ${since}
-      and prior_cycle.started_at < ${sellers_product.publishedAt}
-      and prior_cycle.started_at <= ${evaluatedAt}
-      and prior_cycle.id is distinct from ${currentCycleId}
-  )`;
+  const rows = await db2.select({
+    cycleId: listing_cycles.id,
+    productId: sellers_product.id,
+    sellerId: sellers_product.userId,
+    productName: sellers_product.productName,
+    productType: sellers_product.productType,
+    unit: sellers_product.scalingType,
+    sellerName: user.name,
+    sellerActive: user.isActive,
+    sellerVerified: user.emailVerified,
+    sellerRoles: user.role,
+    shopName: sellers_profile.shopName,
+    detailAddress: sellers_profile.detailAddress,
+    phoneNumber: sellers_profile.phoneNumber,
+    latitude: sellers_profile.latitude,
+    longitude: sellers_profile.longitude,
+    publishedAt: sellers_product.publishedAt,
+    price: sellers_product.productPrice,
+    quantity: sellers_product.productQty,
+    originalQuantity: listing_cycles.originalQty,
+    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
+    cycleVegetableKey: listing_cycles.vegetableKey,
+    cycleScalingType: listing_cycles.scalingType
+  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(and(eq(listing_cycles.startedAt, latestCycleStartedAt), lte(listing_cycles.startedAt, evaluatedAt), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), lte(sellers_product.publishedAt, evaluatedAt), eq(user.isActive, true), eq(user.emailVerified, true)));
+  const publicRows = rows.filter((row) => row.publishedAt && row.price && row.quantity && Number(row.quantity) > 0 && Number(row.price) > 0 && Number(row.originalQuantity) > 0 && hasPublicSellerProfile(row));
+  if (!publicRows.length)
+    return [];
+  const sellerIds = [...new Set(publicRows.map((row) => row.sellerId))];
+  const [ratings, cycles] = await Promise.all([
+    db2.select({
+      sellerId: order_reviews.sellerId,
+      reliability: sql3`avg(${order_reviews.rating})::double precision / 5.0`
+    }).from(order_reviews).where(inArray(order_reviews.sellerId, sellerIds)).groupBy(order_reviews.sellerId),
+    db2.select({
+      id: listing_cycles.id,
+      sellerId: sellers_product.userId,
+      vegetableCatalogId: listing_cycles.vegetableCatalogId,
+      scalingType: listing_cycles.scalingType,
+      vegetableKey: listing_cycles.vegetableKey,
+      startedAt: listing_cycles.startedAt
+    }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(and(inArray(sellers_product.userId, sellerIds), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt)))
+  ]);
+  const ratingsBySeller = new Map(ratings.map((rating) => [rating.sellerId, Number(rating.reliability ?? 0.5)]));
+  return publicRows.map((row) => {
+    const identity = getVegetableCycleIdentity(row.cycleVegetableCatalogId, row.cycleVegetableKey || normalizeVegetableName(row.productName), row.cycleScalingType);
+    const priorCycles = cycles.filter((cycle) => cycle.sellerId === row.sellerId && cycle.startedAt < row.publishedAt && getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === identity).length;
+    return {
+      id: row.cycleId,
+      cycleId: row.cycleId,
+      productId: row.productId,
+      sellerId: row.sellerId,
+      productName: row.productName,
+      productType: row.productType,
+      unit: row.unit,
+      sellerName: row.sellerName,
+      shopName: row.shopName,
+      publishedAt: row.publishedAt,
+      price: row.price,
+      quantity: row.quantity,
+      originalQuantity: row.originalQuantity,
+      criteria: createVisibilityCriteria({
+        ageHours: (evaluatedAt.getTime() - row.publishedAt.getTime()) / hourMs,
+        stockRatio: Number(row.quantity) / Number(row.originalQuantity),
+        sellerReliability: ratingsBySeller.get(row.sellerId) ?? 0.5,
+        priorCycles
+      })
+    };
+  });
 }
 
 // src/modules/seller/services/seller.weighted.surplus.visibility.ts
 async function getSellerWeightedSurplusVisibility(sellerId) {
-  return db2.transaction(async (tx) => {
+  const products = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const evaluatedAt = new Date;
-    const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const products = await tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
-    const cycles = products.length ? await tx.select().from(listing_cycles).where(and(inArray(listing_cycles.productId, products.map((product) => product.id)), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt))) : [];
-    return products.map((product) => {
-      const quantity = Number(product.productQty);
-      const original = Number(product.originalQty);
-      const eligible = product.isActive && product.isMarketable && quantity > 0;
-      const base = {
-        productId: product.id,
-        evaluatedAt: evaluatedAt.toISOString(),
-        policyVersion: "visibility-v4"
-      };
-      if (!eligible) {
-        return { ...base, score: null, tier: null, reason: "Listing is not eligible" };
+    return tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
+  });
+  const evaluatedAt = new Date;
+  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+  const ranking = rankVisibilityCandidates(candidates);
+  const candidatesByProduct = new Map(candidates.map((candidate) => [candidate.productId, candidate]));
+  const resultsByCycle = new Map(ranking.results.map((result) => [result.id, result]));
+  return products.map((product) => {
+    const candidate = candidatesByProduct.get(product.id);
+    const result = candidate ? resultsByCycle.get(candidate.cycleId) : null;
+    const base = {
+      productId: product.id,
+      evaluatedAt: evaluatedAt.toISOString(),
+      policyVersion: ranking.policyVersion
+    };
+    if (!candidate || !result) {
+      return { ...base, score: null, tier: null, rank: null, reason: "Listing is not eligible" };
+    }
+    return {
+      ...base,
+      score: Number(result.score.toFixed(4)),
+      tier: result.tier,
+      rank: result.rank,
+      criteria: result.criteria,
+      distances: {
+        toIdeal: Number(result.distanceToIdeal.toFixed(4)),
+        toWorst: Number(result.distanceToWorst.toFixed(4))
       }
-      if (!Number.isFinite(original) || original <= 0 || !product.publishedAt || product.publishedAt > evaluatedAt) {
-        return { ...base, score: null, tier: null, reason: "Missing score inputs" };
-      }
-      const currentCycle = cycles.filter((cycle) => cycle.productId === product.id).sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
-      const vegetableKey = currentCycle && Math.abs(currentCycle.startedAt.getTime() - product.publishedAt.getTime()) <= 60000 ? currentCycle.vegetableKey : normalizeVegetableName(product.productName);
-      const vegetableCatalogId = currentCycle?.vegetableCatalogId ?? product.vegetableCatalogId;
-      const scalingType = currentCycle?.scalingType ?? product.scalingType;
-      const vegetableIdentity = getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType);
-      const priorCycles = cycles.filter((cycle) => getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === vegetableIdentity && cycle.startedAt < product.publishedAt && cycle.id !== currentCycle?.id).length;
-      const visibility = calculateVisibilityScore({
-        evaluatedAt,
-        publishedAt: product.publishedAt,
-        quantity,
-        originalQuantity: original,
-        priorCycles
-      });
-      if (!visibility)
-        return { ...base, score: null, tier: null, reason: "Missing score inputs" };
-      return {
-        ...base,
-        score: Number(visibility.score.toFixed(4)),
-        tier: visibility.tier,
-        inputs: { ...visibility.inputs, vegetableKey, vegetableCatalogId, scalingType }
-      };
-    });
+    };
   });
 }
 
@@ -121348,6 +121490,7 @@ async function getAvatarDisplayUrl(imageUrl) {
 
 // src/modules/seller/services/seller.setup.ts
 async function getSellerSetup(userId) {
+  const passwordStatus = await readAuthPasswordStatus(userId);
   return db2.transaction(async (tx) => {
     const [account] = await tx.select({
       id: user.id,
@@ -121370,6 +121513,7 @@ async function getSellerSetup(userId) {
       emailVerified: account.emailVerified,
       profileComplete,
       sellerVerified,
+      ...passwordStatus,
       twoFactorEnabled: account.twoFactorEnabled,
       badge: sellerVerified ? {
         label: "Verified account",
@@ -122225,7 +122369,6 @@ async function readAllSellerPromotions(sellerId) {
 }
 
 // src/utils/promotion-eligibility/index.ts
-var hour = 60 * 60 * 1000;
 function marketplaceUrl(productId) {
   const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
   const path = `/marketplace/${productId}`;
@@ -122236,104 +122379,64 @@ function marketplaceUrl(productId) {
   }
 }
 async function getPriorityPromotionEligibility(listingCycleId) {
-  const [row] = await db2.select({
-    cycleId: listing_cycles.id,
-    cycleStartedAt: listing_cycles.startedAt,
-    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
-    cycleScalingType: listing_cycles.scalingType,
-    cycleVegetableKey: listing_cycles.vegetableKey,
-    sellerId: sellers_product.userId,
-    productId: sellers_product.id,
-    productName: sellers_product.productName,
-    productType: sellers_product.productType,
-    unit: sellers_product.scalingType,
-    publishedAt: sellers_product.publishedAt,
-    quantity: sellers_product.productQty,
-    originalQuantity: sellers_product.originalQty,
-    price: sellers_product.productPrice,
-    isActive: sellers_product.isActive,
-    isMarketable: sellers_product.isMarketable,
-    sellerActive: user.isActive,
-    sellerVerified: user.emailVerified,
-    sellerRoles: user.role,
-    sellerName: user.name,
-    shopName: sellers_profile.shopName,
-    detailAddress: sellers_profile.detailAddress,
-    phoneNumber: sellers_profile.phoneNumber,
-    latitude: sellers_profile.latitude,
-    longitude: sellers_profile.longitude
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(eq(listing_cycles.id, listingCycleId)).limit(1);
-  if (!row)
-    return null;
   const evaluatedAt = new Date;
-  const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, row.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  const isCurrentCycle = currentCycle[0]?.id === row.cycleId;
-  const quantity = Number(row.quantity);
-  const originalQuantity = Number(row.originalQuantity);
-  const publicSeller = row.sellerActive && row.sellerVerified && row.sellerRoles?.includes("seller") && row.shopName.trim().length > 0 && row.detailAddress.trim().length > 0 && (row.phoneNumber?.trim().length ?? 0) >= 7 && row.latitude !== null && Number.isFinite(row.latitude) && row.latitude >= -90 && row.latitude <= 90 && row.longitude !== null && Number.isFinite(row.longitude) && row.longitude >= -180 && row.longitude <= 180;
-  const marketable = row.isActive && row.isMarketable && Number(row.price) > 0 && quantity > 0;
-  if (!isCurrentCycle || !publicSeller || !marketable || !row.publishedAt || !Number.isFinite(originalQuantity) || originalQuantity <= 0) {
-    return {
-      eligible: false,
-      reason: !isCurrentCycle ? "Listing cycle is no longer current" : "Listing is not currently public and buyable",
-      listingCycleId: row.cycleId,
-      sellerId: row.sellerId,
-      productId: row.productId,
-      visibilityScore: null,
-      policyVersion: "visibility-v4"
-    };
+  const [target] = await db2.select({
+    cycleId: listing_cycles.id,
+    productId: sellers_product.id,
+    sellerId: sellers_product.userId
+  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(eq(listing_cycles.id, listingCycleId)).limit(1);
+  if (!target)
+    return null;
+  const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  if (currentCycle[0]?.id !== target.cycleId) {
+    return ineligible(target, "Listing cycle is no longer current", evaluatedAt);
   }
-  const since = new Date(evaluatedAt.getTime() - 30 * 24 * hour);
-  const cycles = await db2.select({
-    id: listing_cycles.id,
-    productId: listing_cycles.productId,
-    vegetableCatalogId: listing_cycles.vegetableCatalogId,
-    scalingType: listing_cycles.scalingType,
-    vegetableKey: listing_cycles.vegetableKey,
-    startedAt: listing_cycles.startedAt
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(and(eq(sellers_product.userId, row.sellerId), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt)));
-  const recentCurrent = cycles.filter((cycle) => cycle.productId === row.productId && cycle.startedAt <= evaluatedAt).sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
-  const vegetableKey = recentCurrent && row.publishedAt && Math.abs(recentCurrent.startedAt.getTime() - row.publishedAt.getTime()) <= 60000 ? recentCurrent.vegetableKey : normalizeVegetableName(row.productName);
-  const vegetableCatalogId = recentCurrent?.vegetableCatalogId ?? row.cycleVegetableCatalogId;
-  const scalingType = recentCurrent?.scalingType ?? row.cycleScalingType;
-  const vegetableIdentity = getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType);
-  const priorCycles = cycles.filter((cycle) => getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === vegetableIdentity && cycle.startedAt < row.publishedAt && cycle.id !== recentCurrent?.id).length;
-  const visibility = calculateVisibilityScore({
-    evaluatedAt,
-    publishedAt: row.publishedAt,
-    quantity,
-    originalQuantity,
-    priorCycles
-  });
-  if (!visibility || visibility.score < 0.7) {
-    return {
-      eligible: false,
-      reason: "Visibility is below Priority Boost",
-      listingCycleId: row.cycleId,
-      sellerId: row.sellerId,
-      productId: row.productId,
-      visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
-      visibilityTier: visibility?.tier ?? null,
-      policyVersion: "visibility-v4"
-    };
+  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+  const ranking = rankVisibilityCandidates(candidates);
+  const candidate = candidates.find((item) => item.cycleId === listingCycleId);
+  const result = ranking.results.find((item) => item.id === listingCycleId);
+  if (!candidate || !result) {
+    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
   }
+  const shared = {
+    ...target,
+    visibilityScore: Number(result.score.toFixed(4)),
+    visibilityTier: result.tier,
+    visibilityRank: result.rank,
+    policyVersion: ranking.policyVersion,
+    evaluatedAt
+  };
+  if (result.score < 0.6)
+    return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
   return {
     eligible: true,
     reason: null,
-    listingCycleId: row.cycleId,
-    sellerId: row.sellerId,
-    productId: row.productId,
-    visibilityScore: Number(visibility.score.toFixed(4)),
-    visibilityTier: visibility.tier,
-    policyVersion: "visibility-v4",
-    productName: row.productName,
-    productType: row.productType,
-    unit: row.unit,
-    price: row.price,
-    quantity: row.quantity,
-    shopName: row.shopName,
-    sellerName: row.sellerName,
-    listingUrl: marketplaceUrl(row.productId)
+    ...shared,
+    productName: candidate.productName,
+    productType: candidate.productType,
+    unit: candidate.unit,
+    price: candidate.price,
+    quantity: candidate.quantity,
+    originalQuantity: candidate.originalQuantity,
+    availability: Number(candidate.quantity) > 0 ? "available" : "sold_out",
+    shopName: candidate.shopName,
+    sellerName: candidate.sellerName,
+    listingUrl: marketplaceUrl(candidate.productId),
+    criteria: result.criteria
+  };
+}
+function ineligible(target, reason, evaluatedAt) {
+  return {
+    eligible: false,
+    reason,
+    listingCycleId: target.cycleId,
+    sellerId: target.sellerId,
+    productId: target.productId,
+    visibilityScore: null,
+    visibilityTier: null,
+    visibilityRank: null,
+    policyVersion: "visibility-ahptopsis-v1",
+    evaluatedAt
   };
 }
 
@@ -124278,6 +124381,124 @@ var marketplaceSellerParams = t.Object({
   id: t.String({ minLength: 1, maxLength: 128 })
 });
 
+// src/utils/visibility-score/index.ts
+var clamp2 = (value) => Math.min(1, Math.max(0, value));
+var hourMs2 = 60 * 60 * 1000;
+function calculateVisibilityScore(input) {
+  if (!input.publishedAt || input.publishedAt > input.evaluatedAt || !Number.isFinite(input.quantity) || !Number.isFinite(input.originalQuantity) || input.originalQuantity <= 0)
+    return null;
+  const postingAge = clamp2((input.evaluatedAt.getTime() - input.publishedAt.getTime()) / (12 * hourMs2));
+  const remainingQuantity = clamp2(input.quantity / input.originalQuantity);
+  const recurrence = clamp2(input.priorCycles / 3);
+  const score = 0.4 * postingAge + 0.4 * remainingQuantity + 0.2 * recurrence;
+  return {
+    score,
+    tier: score >= 0.7 ? "priority" : score >= 0.4 ? "standard" : "basic",
+    inputs: { postingAge, remainingQuantity, recurrence, priorCycles: input.priorCycles }
+  };
+}
+function marketplaceVisibilityScoreSql(evaluatedAt, since) {
+  const currentCycleId = sql3`(
+    select current_cycle.id from ${listing_cycles} as current_cycle
+    where current_cycle.product_id = ${sellers_product.id}
+      and current_cycle.started_at <= ${evaluatedAt}
+    order by current_cycle.started_at desc limit 1
+  )`;
+  const currentCatalogId = sql3`coalesce(
+    (select current_cycle.vegetable_catalog_id from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    ${sellers_product.vegetableCatalogId}
+  )`;
+  const currentScalingType = sql3`coalesce(
+    (select current_cycle.scaling_type from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    ${sellers_product.scalingType}
+  )`;
+  const vegetableKey = sql3`coalesce(
+    (select current_cycle.vegetable_key from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    lower(regexp_replace(btrim(${sellers_product.productName}), '[[:space:]]+', ' ', 'g'))
+  )`;
+  const priorCycles = sql3`(
+    select count(*)::int from ${listing_cycles} as prior_cycle
+    inner join ${sellers_product} as prior_product on prior_product.id = prior_cycle.product_id
+    where prior_product.user_id = ${sellers_product.userId}
+      and (
+        (${currentCatalogId} is not null
+          and prior_cycle.vegetable_catalog_id = ${currentCatalogId}
+          and prior_cycle.scaling_type = ${currentScalingType})
+        or (${currentCatalogId} is null and prior_cycle.vegetable_catalog_id is null
+          and prior_cycle.scaling_type = ${currentScalingType}
+          and prior_cycle.vegetable_key = ${vegetableKey})
+      )
+      and prior_cycle.started_at >= ${since}
+      and prior_cycle.started_at < ${sellers_product.publishedAt}
+      and prior_cycle.started_at <= ${evaluatedAt}
+      and prior_cycle.id is distinct from ${currentCycleId}
+  )`;
+  return sql3`(case
+    when ${sellers_product.originalQty} is null
+      or ${sellers_product.originalQty} <= 0 or ${sellers_product.publishedAt} is null
+      or ${sellers_product.publishedAt} > ${evaluatedAt} then null
+    else
+      .40 * least(1, greatest(0, extract(epoch from (${evaluatedAt}::timestamptz - ${sellers_product.publishedAt})) / 43200.0))
+      + .40 * least(1, greatest(0, ${sellers_product.productQty} / nullif(${sellers_product.originalQty}, 0)))
+      + .20 * least(1, greatest(0, ${priorCycles} / 3.0))
+  end)::double precision`;
+}
+function marketplacePriorCyclesSql(evaluatedAt, since) {
+  const currentCycleId = sql3`(
+    select current_cycle.id from ${listing_cycles} as current_cycle
+    where current_cycle.product_id = ${sellers_product.id}
+      and current_cycle.started_at <= ${evaluatedAt}
+    order by current_cycle.started_at desc limit 1
+  )`;
+  const currentCatalogId = sql3`coalesce(
+    (select current_cycle.vegetable_catalog_id from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    ${sellers_product.vegetableCatalogId}
+  )`;
+  const currentScalingType = sql3`coalesce(
+    (select current_cycle.scaling_type from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    ${sellers_product.scalingType}
+  )`;
+  const vegetableKey = sql3`coalesce(
+    (select current_cycle.vegetable_key from ${listing_cycles} as current_cycle
+      where current_cycle.product_id = ${sellers_product.id}
+        and current_cycle.started_at <= ${evaluatedAt}
+      order by current_cycle.started_at desc limit 1),
+    lower(regexp_replace(btrim(${sellers_product.productName}), '[[:space:]]+', ' ', 'g'))
+  )`;
+  return sql3`(
+    select count(*)::int from ${listing_cycles} as prior_cycle
+    inner join ${sellers_product} as prior_product on prior_product.id = prior_cycle.product_id
+    where prior_product.user_id = ${sellers_product.userId}
+      and (
+        (${currentCatalogId} is not null
+          and prior_cycle.vegetable_catalog_id = ${currentCatalogId}
+          and prior_cycle.scaling_type = ${currentScalingType})
+        or (${currentCatalogId} is null and prior_cycle.vegetable_catalog_id is null
+          and prior_cycle.scaling_type = ${currentScalingType}
+          and prior_cycle.vegetable_key = ${vegetableKey})
+      )
+      and prior_cycle.started_at >= ${since}
+      and prior_cycle.started_at < ${sellers_product.publishedAt}
+      and prior_cycle.started_at <= ${evaluatedAt}
+      and prior_cycle.id is distinct from ${currentCycleId}
+  )`;
+}
+
 // src/modules/marketplace/services/marketplace.product.get.ts
 async function getMarketplaceProduct(productId) {
   const rows = await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), marketplaceSellerVisibility(), isNotNull(sellers_product.productPrice), gt(sellers_product.productPrice, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
@@ -124359,87 +124580,6 @@ async function getMarketplaceSeller(sellerId) {
   };
 }
 
-// src/utils/ahp-topsis/index.ts
-var criterionCount = 4;
-var consistencyRandomIndex = 0.9;
-var ahpTopsisPolicyVersion = "visibility-ahptopsis-v1";
-var ahpPairwiseMatrix = [
-  [1, 1.333333, 2, 4],
-  [0.75, 1, 1.5, 3],
-  [0.5, 0.666667, 1, 2],
-  [0.25, 0.333333, 0.5, 1]
-];
-var clamp2 = (value) => Math.min(1, Math.max(0, value));
-function criterionValues(criteria) {
-  return [criteria.freshness, criteria.stockAvailability, criteria.sellerReliability, criteria.recurrence];
-}
-function valuesToCriteria(values) {
-  return {
-    freshness: values[0] ?? 0,
-    stockAvailability: values[1] ?? 0,
-    sellerReliability: values[2] ?? 0,
-    recurrence: values[3] ?? 0
-  };
-}
-function createVisibilityCriteria(input) {
-  return {
-    freshness: clamp2(1 - Math.max(0, input.ageHours) / 12),
-    stockAvailability: clamp2(input.stockRatio),
-    sellerReliability: clamp2(input.sellerReliability),
-    recurrence: clamp2(input.priorCycles / 3)
-  };
-}
-function calculateAHPWeights(matrix = ahpPairwiseMatrix) {
-  if (matrix.length !== criterionCount || matrix.some((row) => row.length !== criterionCount)) {
-    throw new Error("AHP pairwise matrix must be 4 by 4");
-  }
-  const geometricMeans = matrix.map((row) => Math.pow(row.reduce((product, value) => product * value, 1), 1 / criterionCount));
-  const total = geometricMeans.reduce((sum, value) => sum + value, 0);
-  const weights = geometricMeans.map((value) => value / total);
-  const lambdaRatios = matrix.map((row, rowIndex) => row.reduce((sum, value, columnIndex) => sum + value * weights[columnIndex], 0) / weights[rowIndex]);
-  const lambdaMax = lambdaRatios.reduce((sum, value) => sum + value, 0) / criterionCount;
-  const consistencyIndex = (lambdaMax - criterionCount) / (criterionCount - 1);
-  const consistencyRatio = Math.max(0, consistencyIndex / consistencyRandomIndex);
-  return {
-    weights: valuesToCriteria(weights),
-    consistencyRatio
-  };
-}
-function rankWithAHPAndTOPSIS(alternatives, matrix = ahpPairwiseMatrix) {
-  const { weights, consistencyRatio } = calculateAHPWeights(matrix);
-  if (alternatives.length === 0)
-    return { weights, consistencyRatio, results: [] };
-  const rawColumns = Array.from({ length: criterionCount }, (_, criterionIndex) => alternatives.map((alternative) => criterionValues(alternative.criteria)[criterionIndex] ?? 0));
-  const normalizedColumns = rawColumns.map((column) => {
-    const length = Math.sqrt(column.reduce((sum, value) => sum + value ** 2, 0));
-    return length === 0 ? column.map(() => 0) : column.map((value) => value / length);
-  });
-  const weightValues = criterionValues(weights);
-  const weightedRows = alternatives.map((_, alternativeIndex) => normalizedColumns.map((column, criterionIndex) => column[alternativeIndex] * weightValues[criterionIndex]));
-  const idealBest = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.max(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
-  const idealWorst = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.min(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
-  const results = alternatives.map((alternative, alternativeIndex) => {
-    const weighted = weightedRows[alternativeIndex] ?? [];
-    const distanceToIdeal = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealBest[index] ?? 0)) ** 2, 0));
-    const distanceToWorst = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealWorst[index] ?? 0)) ** 2, 0));
-    const denominator = distanceToIdeal + distanceToWorst;
-    return {
-      id: alternative.id,
-      score: denominator === 0 ? 0.5 : distanceToWorst / denominator,
-      rank: 0,
-      criteria: alternative.criteria,
-      weightedCriteria: valuesToCriteria(weighted),
-      distanceToIdeal,
-      distanceToWorst
-    };
-  }).sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
-  return {
-    weights,
-    consistencyRatio,
-    results: results.map((result, index) => ({ ...result, rank: index + 1 }))
-  };
-}
-
 // src/modules/marketplace/services/marketplace.distance.ts
 function marketplaceDistanceExpression(latitude, longitude) {
   return sql3`6371 * acos(least(1, greatest(-1,
@@ -124466,7 +124606,10 @@ function rankMarketplaceProductsWithAHP(rows, evaluatedAt, cursor) {
       })
     }];
   });
-  const ranking = rankWithAHPAndTOPSIS(alternatives);
+  const ranking = rankVisibilityCandidates(alternatives.map((alternative) => ({
+    ...alternative,
+    publishedAt: rows.find((row) => row.id === alternative.id)?.publishedAt ?? evaluatedAt
+  })));
   const scores = new Map(ranking.results.map((result) => [result.id, result.score]));
   const orderedRows = [...rows].sort((left, right) => {
     const leftScore = scores.get(left.id) ?? null;
@@ -124955,16 +125098,28 @@ async function getIntegrationPromotionContext(jobId) {
       status: "skipped",
       leaseUntil: null,
       lastError: context?.reason ?? "Listing is no longer eligible",
+      completedAt: new Date,
       updatedAt: new Date
     }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
   }
+  await db2.update(seller_promotion_jobs).set({
+    visibilityPolicyVersion: context.policyVersion,
+    visibilityScore: context.visibilityScore.toFixed(4),
+    visibilityTier: context.visibilityTier,
+    visibilityRank: context.visibilityRank,
+    evaluatedAt: context.evaluatedAt,
+    updatedAt: new Date
+  }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
   return {
     jobId,
     alreadyReady: false,
     stage: job.stage,
     visibilityScore: context.visibilityScore,
+    visibilityTier: context.visibilityTier,
+    visibilityRank: context.visibilityRank,
     policyVersion: context.policyVersion,
+    evaluatedAt: context.evaluatedAt,
     product: {
       id: context.productId,
       name: context.productName,
@@ -124975,6 +125130,12 @@ async function getIntegrationPromotionContext(jobId) {
       id: context.sellerId,
       name: context.sellerName,
       shopName: context.shopName
+    },
+    listing: {
+      price: context.price,
+      quantity: context.quantity,
+      originalQuantity: context.originalQuantity,
+      availability: context.availability
     },
     listingUrl: context.listingUrl
   };
@@ -125009,7 +125170,7 @@ async function saveIntegrationPromotionDraft(jobId, headline, caption) {
   if (!job)
     throw new OrderError(404, "Promotion job not found");
   if (job.status === "ready") {
-    return { jobId, status: job.status, readyAt: job.readyAt, duplicate: true };
+    return { jobId, status: job.status, readyAt: job.readyAt, completedAt: job.completedAt, duplicate: true };
   }
   if (job.status !== "queued" && job.status !== "sent") {
     throw new OrderError(409, "Promotion job is not awaiting a draft");
@@ -125019,6 +125180,7 @@ async function saveIntegrationPromotionDraft(jobId, headline, caption) {
     await db2.update(seller_promotion_jobs).set({
       status: "skipped",
       lastError: eligibility?.reason ?? "Listing is no longer eligible",
+      completedAt: new Date,
       updatedAt: new Date
     }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
@@ -125029,7 +125191,13 @@ async function saveIntegrationPromotionDraft(jobId, headline, caption) {
       status: "ready",
       headline: cleanHeadline,
       caption: cleanCaption,
+      visibilityPolicyVersion: eligibility.policyVersion,
+      visibilityScore: eligibility.visibilityScore?.toFixed(4) ?? null,
+      visibilityTier: eligibility.visibilityTier,
+      visibilityRank: eligibility.visibilityRank,
+      evaluatedAt: eligibility.evaluatedAt,
       readyAt: now,
+      completedAt: now,
       readAt: null,
       leaseUntil: null,
       nextCheckAt: now,
@@ -125057,7 +125225,7 @@ async function saveIntegrationPromotionDraft(jobId, headline, caption) {
         nextCheckAt: followupAt
       }).onConflictDoNothing();
     }
-    return { jobId, status: "ready", readyAt: saved.readyAt, duplicate: false };
+    return { jobId, status: "ready", readyAt: saved.readyAt, completedAt: now, duplicate: false };
   });
 }
 
@@ -125102,12 +125270,14 @@ async function recordIntegrationPromotionFailure(jobId, code) {
   }
   const exhausted = job.retryCount >= retryLimit;
   const delay = Math.min(30000 * 2 ** Math.max(0, job.retryCount - 1), 30 * 60000);
+  const now = new Date;
   const [updated] = await db2.update(seller_promotion_jobs).set({
     status: exhausted ? "failed" : "queued",
     leaseUntil: null,
     nextCheckAt: new Date(Date.now() + delay),
     lastError: failureMessages[code],
-    updatedAt: new Date
+    completedAt: exhausted ? now : null,
+    updatedAt: now
   }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent")))).returning({ status: seller_promotion_jobs.status });
   return { jobId, status: updated?.status ?? job.status, duplicate: !updated };
 }
@@ -126106,7 +126276,7 @@ var validationPlugin = new Elysia({
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 var webCorsOrigin = configuredWebOrigins.length ? [...configuredWebOrigins, localWebOrigin] : localWebOrigin;
-var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(authPasswordRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

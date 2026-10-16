@@ -27,6 +27,13 @@ Protected endpoints use the signed-in user's Better Auth session. Public routes 
 
 Better Auth handles its routes under `/api/auth/*`; see `backend/src/modules/auth/index.ts`. The exact operations depend on the Better Auth plugins enabled there. The current setup includes email/password, Google OAuth, email verification codes, bearer sessions, TOTP, and Expo support. Google sign-in creates a buyer account for a new Google identity and signs in an existing linked identity. Configure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the backend environment. The Google Cloud redirect URI is `http://localhost:3000/api/auth/callback/google` for local development and `<BETTER_AUTH_URL>/api/auth/callback/google` in production.
 
+| Method | Path | Access | Purpose | Route source |
+|---|---|---|---|---|
+| GET | `/auth/password-status` | Signed-in buyer or seller | Returns `hasPassword` and `passwordSetupRequired` without exposing credential data | `backend/src/modules/auth/index/auth.password.ts` |
+| POST | `/auth/password` | Signed-in buyer or seller | Sets a local password for a Google-linked account that does not already have one | `backend/src/modules/auth/index/auth.password.ts` |
+
+Google-linked accounts without a credential password must complete `POST /auth/password` before the web or mobile app allows the completed account experience. Existing password accounts continue using Better Auth's `/api/auth/change-password` operation. The password route uses Better Auth's server-only `setPassword` operation and never accepts or returns a password hash.
+
 ## Trust recovery
 
 | Method | Path | Access | Route source |
@@ -46,7 +53,7 @@ Recovery reuses Better Auth's hashed email OTP flow with `type: "forget-password
 | GET | `/marketplace/sellers/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/map` | `backend/src/modules/marketplace/index/marketplace.sellers.map.ts` |
 
-`GET /marketplace/products` accepts search and filter fields plus `limit` and `cursor`. It returns a page ranked by visibility score, score tier, newest publication, then product ID. The cursor contains the evaluation time to keep score-based pages in the same order. The default `VISIBILITY_POLICY=visibility-v4` keeps the current Weighted Surplus Visibility behavior. Setting `VISIBILITY_POLICY=visibility-ahptopsis-v1` enables the feature-flagged AHP–TOPSIS pilot for the marketplace list. The response includes `visibilityPolicyVersion`; seller promotion automation remains on the current WVS policy until the pilot is validated.
+`GET /marketplace/products` accepts search and filter fields plus `limit` and `cursor`. It returns a page ranked by visibility score, score tier, newest publication, then product ID. The cursor contains the evaluation time to keep score-based pages in the same order. The default `VISIBILITY_POLICY=visibility-v4` keeps the legacy Weighted Surplus Visibility marketplace behavior. Setting `VISIBILITY_POLICY=visibility-ahptopsis-v1` enables the AHP–TOPSIS marketplace ranking. Regardless of the marketplace feature flag, the seller promotion and Priority Boost eligibility path uses the paper-aligned AHP–TOPSIS policy with the four Figure 5 criteria and `Ci* >= 0.60` threshold.
 
 `GET /marketplace/sellers/:id` includes `image`, which is a signed seller profile image URL when a photo exists and `null` otherwise.
 
@@ -196,15 +203,15 @@ These routes use the server-side `N8N_PROMOTION_SERVICE_TOKEN` as `Authorization
 | POST | `/integrations/promotions/jobs/:id/draft` | `backend/src/modules/integrations/index/integrations.promotion.draft.ts` |
 | POST | `/integrations/promotions/jobs/:id/failure` | `backend/src/modules/integrations/index/integrations.promotion.failure.ts` |
 
-The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|followup" }`. n8n retrieves the latest public listing context from the protected `context` route, generates wording only, and calls `draft` with `{"headline":"...","caption":"..."}`. Draft callbacks are idempotent. `failure` accepts `{"code":"model_failed|invalid_draft|callback_failed"}` and returns the job to bounded retry or a recorded terminal failure. A ready callback is accepted only after the backend independently confirms current Priority eligibility.
+The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|followup" }`. n8n retrieves the latest public listing context from the protected `context` route, generates wording only, and calls `draft` with `{"headline":"...","caption":"..."}`. The context is evaluated with `visibility-ahptopsis-v1` and includes the backend-confirmed price, quantity, availability, visibility tier, score, rank, and listing URL. A follow-up may mention only the current price, quantity, and availability supplied by the backend. Draft callbacks are idempotent. `failure` accepts `{"code":"model_failed|invalid_draft|callback_failed"}` and returns the job to bounded retry or a recorded terminal failure. A ready callback is accepted only after the backend independently confirms current Priority eligibility.
 
-The backend checks initial eligibility hourly using `visibility-v4 >= 0.70`. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
+The backend checks initial eligibility hourly with the Figure 5 AHP–TOPSIS engine. It compares all currently eligible active surplus listings, uses weights `0.40/0.30/0.20/0.10`, and queues only listings at `Ci* >= 0.60` for Priority Boost. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. At that follow-up, the backend may apply one configured percentage reduction toward the seller's minimum price before n8n fetches the refreshed context. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
 
 ## Seller social publishing to official Agrivive pages
 
 These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page, linked Instagram Professional account, and X account; no seller OAuth linking is used. TikTok publishing is not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.
 
-`GET /seller/social-campaigns/channels` returns each channel's label, caption limit, and configured state. `POST /seller/social-campaigns/draft` accepts `{"productId":"<uuid>"}` and returns an editable draft, listing name, and image preview URL. The backend checks seller ownership, current listing cycle, current public/buyable status, Agrivive-hosted listing photo, and `visibility-v4 >= 0.70`.
+`GET /seller/social-campaigns/channels` returns each channel's label, caption limit, and configured state. `POST /seller/social-campaigns/draft` accepts `{"productId":"<uuid>"}` and returns an editable draft, listing name, and image preview URL. The backend checks seller ownership, current listing cycle, current public/buyable status, Agrivive-hosted listing photo, and `visibility-ahptopsis-v1 >= 0.60`.
 
 `POST /seller/social-campaigns/:id/publish` is the seller's explicit confirmation. Example body:
 

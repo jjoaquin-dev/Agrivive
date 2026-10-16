@@ -5,7 +5,6 @@ import { ProductForm } from "../../../src/features/inventory/components/ProductF
 import { createSellerProduct } from "../../../src/features/inventory/api/products";
 import type { CreateProductInput } from "../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../src/theme";
-import { requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
 
 export default function CreateProductScreen() {
   const router = useRouter();
@@ -34,11 +33,10 @@ export default function CreateProductScreen() {
           { text: "Not now", style: "cancel", onPress: showProductListed },
           {
             text: "Boost now",
-            onPress: () => {
-              void requestSellerVisibilityBoost(res.products.id)
-                .then(() => Alert.alert("Boost queued", "Your listing was sent to the Agrivive social workflow.", [{ text: "Continue", onPress: showProductListed }]))
-                .catch((error: any) => Alert.alert("Could Not Boost", error?.message || "Your product is listed, but the boost could not be queued.", [{ text: "Continue", onPress: showProductListed }]));
-            },
+            onPress: () => router.replace({
+              pathname: "/(app)/boost/[productId]",
+              params: { productId: res.products.id, entry: "new-product" },
+            }),
           },
         ],
       );

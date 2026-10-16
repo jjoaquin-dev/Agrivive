@@ -9,7 +9,7 @@ status: implemented-awaiting-owner-acceptance
 
 ## Goal
 
-Prepare seller-reviewed share drafts for eligible Priority Boost listings, using the backend's existing `visibility-v4` score. The backend owns eligibility and timing; n8n prepares copy only.
+Prepare seller-reviewed share drafts for eligible Priority Boost listings, using the paper's AHP–TOPSIS Visibility Engine. The backend owns the comparison population, eligibility, ranking, price calculation, and timing; n8n prepares copy only.
 
 ## What changed
 
@@ -19,7 +19,7 @@ Prepare seller-reviewed share drafts for eligible Priority Boost listings, using
 - Added seller-scoped draft list/read/read-all/share endpoints. Share details are rebuilt from current listing data and return unavailable when the listing no longer qualifies.
 - Added a seller Priority Boost inbox section with individual/all read actions and the native share sheet. Existing order/trust notification pagination remains separate.
 - Added a credential-free n8n workflow export and secret-free configuration guidance.
-- Recorded D-06's seller-review/native-share decision. D-07 remains open for stakeholder validation of the visibility policy.
+- Recorded D-06's seller-review/native-share decision. Figure 5 now supplies the accepted AHP–TOPSIS matrix, weights, formulas, and `0.60` Priority Boost threshold.
 
 ## Why
 
@@ -50,6 +50,10 @@ Promotion eligibility and current listing facts must remain under backend contro
 - `backend/src/modules/seller/services/seller.promotions.read-all.ts`
 - `backend/src/modules/seller/services/seller.promotion.share.ts`
 - `backend/src/utils/promotion-eligibility/index.ts`
+- `backend/src/utils/visibility-ranking/index.ts`
+- `backend/src/utils/visibility-ranking/load.ts`
+- `backend/src/modules/seller/services/seller.product.price-reduction.followup.ts`
+- `backend/drizzle/20261016120000_ahptopsis_promotion_history/migration.sql`
 - `backend/src/index.ts`
 - `backend/.env.example`
 - `backend/API_ENDPOINTS.md`
@@ -92,7 +96,7 @@ GET  /seller/promotions/:id/share
 - Mobile `bun run typecheck`: passed on 2026-10-07.
 - Android `bunx expo export --platform android`: passed on 2026-10-07. The first attempt could not write Hermes bytecode to the sandbox's AppData temp directory; retrying with temporary files inside the workspace succeeded. The task-specific temporary export folders were removed afterward.
 - Workflow JSON parsed successfully; n8n credentials and an n8n instance were not available for import/execution verification.
-- Existing score boundary check: at 8.99 hours with full remaining stock and no prior cycles, score was `0.699666...` (below threshold); at 9 hours it was `0.700000...` (Priority); at 9.01 hours it was `0.700333...` (Priority). This checked the existing formula and threshold only, not a database-backed promotion job.
+- Figure 5 acceptance values are now the required ranking check: Listing A=`0.853` (Priority Boost), B=`0.402` (Standard Exposure), and C=`0.372` (Basic/Hold). The AHP consistency ratio must remain below `0.10`; this local check is separate from a database-backed promotion job.
 - No migration has been applied to a database.
 - No owner-run API or on-device acceptance is recorded as complete.
 
@@ -101,9 +105,9 @@ GET  /seller/promotions/:id/share
 - Configure `N8N_PROMOTION_WEBHOOK_URL` and a strong shared token in backend server configuration.
 - Import the workflow, attach the n8n backend and Groq credentials, replace the backend URL, and select a Groq model enabled for the account.
 - Apply the migration only to a disposable or specifically approved test database.
-- Verify below/at/above `0.70`, initial waiting behavior, ineligible listings, initial draft, one six-hour follow-up, duplicate delivery/callback, bounded recovery, read isolation, current share facts, and unavailable share behavior.
+- Verify Figure 5 samples A=`0.853`, B=`0.402`, and C=`0.372`; verify below/at/above `0.60`, initial waiting behavior, ineligible listings, initial draft, one six-hour follow-up with backend price-floor handling, duplicate delivery/callback, bounded recovery, read isolation, current share facts, and unavailable share behavior.
 - Confirm the native share sheet opens and cancellation does not publish content.
-- D-07 visibility weights, threshold, and recurrence identity require stakeholder validation.
+- Owner acceptance still requires applying the new migration to an approved test database, configuring n8n/Groq, and manually exercising the initial and follow-up callbacks. Direct automated social posting remains subject to owner configuration and platform permissions.
 
 The exported workflow defaults to Groq model ID `openai/gpt-oss-20b` for JSON-mode draft generation; change it to another model only if that model is available to the configured Groq account and supports the required JSON response mode. No Groq key is stored in the workflow export.
 

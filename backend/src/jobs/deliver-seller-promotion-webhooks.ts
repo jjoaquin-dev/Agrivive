@@ -55,6 +55,7 @@ export async function deliverSellerPromotionWebhooks() {
         status: "failed",
         leaseUntil: null,
         lastError: "No draft response was received after the retry limit",
+        completedAt: now,
         updatedAt: now,
       }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "sent")));
       failed++;
@@ -89,6 +90,7 @@ export async function deliverSellerPromotionWebhooks() {
           leaseUntil: null,
           nextCheckAt: new Date(now.getTime() + retryDelay(attempt)),
           lastError: `n8n webhook returned HTTP ${response.status}`,
+          completedAt: exhausted ? now : null,
           updatedAt: now,
         }).where(and(
           eq(seller_promotion_jobs.id, job.id),
@@ -120,6 +122,7 @@ export async function deliverSellerPromotionWebhooks() {
         leaseUntil: null,
         nextCheckAt: new Date(now.getTime() + retryDelay(attempt)),
         lastError: "n8n webhook delivery failed",
+        completedAt: exhausted ? now : null,
         updatedAt: now,
       }).where(and(
         eq(seller_promotion_jobs.id, job.id),
