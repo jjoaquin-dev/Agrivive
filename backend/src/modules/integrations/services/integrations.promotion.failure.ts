@@ -27,12 +27,14 @@ export async function recordIntegrationPromotionFailure(
 
   const exhausted = job.retryCount >= retryLimit;
   const delay = Math.min(30_000 * 2 ** Math.max(0, job.retryCount - 1), 30 * 60_000);
+  const now = new Date();
   const [updated] = await db.update(seller_promotion_jobs).set({
     status: exhausted ? "failed" : "queued",
     leaseUntil: null,
     nextCheckAt: new Date(Date.now() + delay),
     lastError: failureMessages[code],
-    updatedAt: new Date(),
+    completedAt: exhausted ? now : null,
+    updatedAt: now,
   }).where(and(
     eq(seller_promotion_jobs.id, job.id),
     or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent")),

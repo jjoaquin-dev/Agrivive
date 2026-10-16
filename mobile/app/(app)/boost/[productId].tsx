@@ -15,7 +15,8 @@ import { colors, fonts, radii, spacing } from "../../../src/theme";
 
 export default function BoostVisibilityScreen() {
   const router = useRouter();
-  const { productId } = useLocalSearchParams<{ productId: string }>();
+  const { productId, entry } = useLocalSearchParams<{ productId: string; entry?: string }>();
+  const openedFromProductCreate = entry === "new-product";
   const [boostData, setBoostData] = useState<SellerProductBoostResponse | null>(null);
   const [boostLoading, setBoostLoading] = useState(true);
   const [boostError, setBoostError] = useState("");
@@ -82,8 +83,18 @@ export default function BoostVisibilityScreen() {
 
   useEffect(() => {
     if (!campaign || !["queued", "publishing", "processing"].includes(campaign.status)) return;
-    const timer = setInterval(() => fetchSocialCampaign(campaign.id).then(setCampaign).catch(() => {}), 4_000);
-    return () => clearInterval(timer);
+    let active = true;
+    const refresh = async () => {
+      try {
+        const next = await fetchSocialCampaign(campaign.id);
+        if (active) setCampaign(next);
+      } catch (reason: any) {
+        if (active) setError(reason?.message || "Could not refresh the publishing status.");
+      }
+    };
+    void refresh();
+    const timer = setInterval(() => void refresh(), 4_000);
+    return () => { active = false; clearInterval(timer); };
   }, [campaign?.id, campaign?.status]);
 
   const queueBoost = async () => {
@@ -153,12 +164,12 @@ export default function BoostVisibilityScreen() {
     {boostLoading ? <ActivityIndicator color={colors.primary} style={styles.statusLoader} /> : null}
     {boostData?.boost ? <BoostStatusCard boost={boostData.boost} /> : null}
     {boostError ? <Text accessibilityRole="alert" style={styles.error}>{boostError}</Text> : null}
-    {!boostLoading && !statusWaiting && !campaign ? <ButtonComponent title={statusActionTitle} onPress={() => void statusAction()} loading={busy && !draft} style={styles.statusAction} icon={status === "failed" ? <RotateCcw size={17} color={colors.white} /> : undefined} /> : null}
+    {!openedFromProductCreate && !boostLoading && !statusWaiting && !campaign ? <ButtonComponent title={statusActionTitle} onPress={() => void statusAction()} loading={busy && !draft} style={styles.statusAction} icon={status === "failed" ? <RotateCcw size={17} color={colors.white} /> : undefined} /> : null}
     {error && !draft && channels.length ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Your post is not ready yet</Text><Text accessibilityRole="alert" style={styles.error}>{error}</Text><ButtonComponent title="Try again" variant="secondary" onPress={() => setAttempt((value) => value + 1)} style={styles.action} /></View> : null}
     {error && !channels.length ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Agrivive pages could not be loaded</Text><Text accessibilityRole="alert" style={styles.error}>{error}</Text><ButtonComponent title="Try again" variant="secondary" onPress={() => void loadChannels()} style={styles.action} /></View> : null}
     {!error && channels.length > 0 && !channels.some((channel) => channel.configured) ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Posting is not available yet</Text><Text style={styles.muted}>Agrivive’s official pages are being set up. Please try again later.</Text><ButtonComponent title="Check again" variant="secondary" onPress={() => void loadChannels()} style={styles.action} /></View> : null}
     {draft && !campaign ? <SocialCampaignReview productName={draft.productName} productUrl={draft.productUrl} imageUrl={draft.imageUrl} channels={channels} selectedPlatforms={selected} onTogglePlatform={togglePlatform} posts={posts} onChangePost={(platform, text) => setPosts((current) => ({ ...current, [platform]: text }))} busy={busy} error={error} onPublish={confirm} /> : null}
-    {campaign ? <View style={styles.result}><Text style={styles.resultTitle}>Publishing status: {statusLabel(campaign.status)}</Text><Pressable onPress={() => void Linking.openURL(campaign.productUrl)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View product in marketplace</Text></Pressable>{campaign.lastError ? <Text style={styles.error}>{campaign.lastError}</Text> : null}{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}{campaign.results.map((post) => <View key={post.platform} style={styles.postResult}><Text style={styles.muted}>{platformLabel(post.platform)} · {statusLabel(post.status)}{post.lastError ? ` — ${post.lastError}` : ""}</Text>{post.postUrl ? <Pressable onPress={() => void Linking.openURL(post.postUrl!)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View post</Text></Pressable> : null}</View>)}{campaign.results.some((post) => post.status === "failed") ? <ButtonComponent title="Retry failed channels" onPress={() => void retry()} disabled={busy} style={styles.action} /> : null}</View> : null}
+    {campaign ? <View style={styles.result}><Text style={styles.resultTitle}>Publishing status: {statusLabel(campaign.status)}</Text><Pressable onPress={() => void Linking.openURL(campaign.productUrl)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View product in marketplace</Text></Pressable>{campaign.lastError ? <Text style={styles.error}>{campaign.lastError}</Text> : null}{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}{campaign.results.some((post) => post.status === "failed") ? <Text style={styles.statusMeta}>Needs attention: {campaign.results.filter((post) => post.status === "failed").map((post) => platformLabel(post.platform)).join(", ")}</Text> : null}{campaign.results.map((post) => <View key={post.platform} style={styles.postResult}><Text style={styles.muted}>{platformLabel(post.platform)} · {statusLabel(post.status)}{post.lastError ? ` — ${post.lastError}` : ""}</Text>{post.postUrl ? <Pressable onPress={() => void Linking.openURL(post.postUrl!)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View post</Text></Pressable> : null}</View>)}{campaign.results.some((post) => post.status === "failed") ? <ButtonComponent title="Retry failed channels" onPress={() => void retry()} disabled={busy} style={styles.action} /> : null}</View> : null}
     <Pressable onPress={() => router.push("/(app)/boosts")} accessibilityRole="button" style={styles.historyLink}><Text style={styles.historyLinkText}>View boost history</Text></Pressable>
     <ButtonComponent title="Back" variant="ghost" onPress={() => router.back()} style={styles.back} textStyle={styles.backText} />
   </ScrollView></SafeAreaView>;

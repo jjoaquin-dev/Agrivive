@@ -137,6 +137,11 @@ export default function VerifyEmailScreen() {
         return;
       }
 
+      if (setup.passwordSetupRequired) {
+        router.replace("/(auth)/password-setup");
+        return;
+      }
+
       router.replace("/(app)/(tabs)/home");
     } catch (err: any) {
       console.error("Email verification error", err);

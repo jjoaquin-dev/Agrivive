@@ -49,6 +49,10 @@ export default function AuthLayout() {
         name="account-recovery"
         options={{ title: "Restore Account" }}
       />
+      <Stack.Screen
+        name="password-setup"
+        options={{ title: "Set Password", headerBackVisible: false }}
+      />
     </Stack>
   );
 }

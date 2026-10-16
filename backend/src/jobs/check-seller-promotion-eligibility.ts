@@ -1,6 +1,7 @@
 import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { db } from "../db";
 import { listing_cycles, seller_promotion_jobs, sellers_product } from "../db/schema";
+import { applySellerPromotionPriceReduction } from "../modules/seller/services/seller.product.price-reduction.followup";
 import { getPriorityPromotionEligibility } from "../utils/promotion-eligibility";
 
 const hourMs = 60 * 60 * 1000;
@@ -60,21 +61,50 @@ export async function checkSellerPromotionEligibility() {
       )).returning({ id: seller_promotion_jobs.id });
       if (!claimed.length) continue;
 
-      const eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+      let eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
       if (!eligibility) {
         await db.update(seller_promotion_jobs).set({
           status: "skipped",
           leaseUntil: null,
           lastError: "Listing cycle is no longer available",
+          completedAt: now,
           updatedAt: now,
         }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
         skipped++;
         continue;
       }
 
+      if (job.stage === "followup" && eligibility.eligible) {
+        const productId = eligibility.productId;
+        await db.transaction(async (tx) => {
+          await applySellerPromotionPriceReduction(tx, productId, now);
+        });
+        eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+        if (!eligibility) {
+          await db.update(seller_promotion_jobs).set({
+            status: "skipped",
+            leaseUntil: null,
+            lastError: "Listing cycle is no longer available",
+            completedAt: now,
+            updatedAt: now,
+          }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
+          skipped++;
+          continue;
+        }
+      }
+
+      const evaluationFields = {
+        visibilityPolicyVersion: eligibility.policyVersion,
+        visibilityScore: eligibility.visibilityScore === null ? null : eligibility.visibilityScore.toFixed(4),
+        visibilityTier: eligibility.visibilityTier,
+        visibilityRank: eligibility.visibilityRank,
+        evaluatedAt: eligibility.evaluatedAt,
+      };
+
       if (!eligibility.eligible && eligibility.visibilityScore !== null &&
         job.stage === "initial") {
         await db.update(seller_promotion_jobs).set({
+          ...evaluationFields,
           nextCheckAt: new Date(now.getTime() + hourMs),
           leaseUntil: null,
           lastError: null,
@@ -86,9 +116,11 @@ export async function checkSellerPromotionEligibility() {
 
       if (!eligibility.eligible) {
         await db.update(seller_promotion_jobs).set({
+          ...evaluationFields,
           status: "skipped",
           leaseUntil: null,
           lastError: eligibility.reason ?? "Listing is no longer eligible",
+          completedAt: now,
           updatedAt: now,
         }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
         skipped++;
@@ -96,6 +128,7 @@ export async function checkSellerPromotionEligibility() {
       }
 
       const updated = await db.update(seller_promotion_jobs).set({
+        ...evaluationFields,
         status: "queued",
         nextCheckAt: now,
         leaseUntil: null,

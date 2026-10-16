@@ -14,6 +14,7 @@ export type SocialPost = {
   postUrl: string | null;
   lastError: string | null;
 };
+export type SocialCampaignStatus = "draft" | "queued" | "publishing" | "processing" | "published" | "partial" | "failed";
 export type SocialDraft = {
   campaignId: string;
   status: string;
@@ -29,7 +30,7 @@ export type CampaignStatus = {
   productName: string;
   productUrl: string;
   imageUrl: string | null;
-  status: string;
+  status: SocialCampaignStatus;
   posts: Record<string, string>;
   lastError: string | null;
   results: SocialPost[];

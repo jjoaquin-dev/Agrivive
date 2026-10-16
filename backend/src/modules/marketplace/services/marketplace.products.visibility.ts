@@ -1,4 +1,5 @@
-import { createVisibilityCriteria, rankWithAHPAndTOPSIS } from "../../../utils/ahp-topsis";
+import { createVisibilityCriteria } from "../../../utils/ahp-topsis";
+import { rankVisibilityCandidates } from "../../../utils/visibility-ranking";
 
 export type MarketplaceVisibilityCursor = {
   score: number | null;
@@ -38,7 +39,10 @@ export function rankMarketplaceProductsWithAHP(
       }),
     }];
   });
-  const ranking = rankWithAHPAndTOPSIS(alternatives);
+  const ranking = rankVisibilityCandidates(alternatives.map((alternative) => ({
+    ...alternative,
+    publishedAt: rows.find((row) => row.id === alternative.id)?.publishedAt ?? evaluatedAt,
+  })));
   const scores = new Map(ranking.results.map((result) => [result.id, result.score]));
   const orderedRows = [...rows].sort((left, right) => {
     const leftScore = scores.get(left.id) ?? null;

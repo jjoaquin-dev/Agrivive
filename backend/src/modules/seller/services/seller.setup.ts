@@ -4,8 +4,11 @@ import { sellers_profile, user } from "../../../db/schema";
 import { isSellerProfileComplete } from "../../../utils/seller-profile-completion";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
+import { readAuthPasswordStatus } from "../../auth/services/auth.password-status";
 
 export async function getSellerSetup(userId: string) {
+  const passwordStatus = await readAuthPasswordStatus(userId);
+
   return db.transaction(async (tx) => {
     const [account] = await tx.select({ id: user.id, name: user.name, email: user.email,
       image: user.image,
@@ -24,6 +27,7 @@ export async function getSellerSetup(userId: string) {
       emailVerified: account.emailVerified,
       profileComplete,
       sellerVerified,
+      ...passwordStatus,
       twoFactorEnabled: account.twoFactorEnabled,
       badge: sellerVerified ? {
         label: "Verified account",

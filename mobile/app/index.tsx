@@ -78,6 +78,10 @@ export default function Index() {
       return <Redirect href="/(app)/profile/setup" />;
     }
 
+    if (setup.passwordSetupRequired) {
+      return <Redirect href="/(auth)/password-setup" />;
+    }
+
     if (setup.sellerVerified || setup.nextStep === "ready") {
       return <Redirect href="/(app)/(tabs)/home" />;
     }

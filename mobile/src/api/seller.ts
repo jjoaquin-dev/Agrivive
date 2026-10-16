@@ -30,6 +30,8 @@ export interface SellerSetupResponse {
   emailVerified: boolean;
   profileComplete: boolean;
   sellerVerified: boolean;
+  hasPassword: boolean;
+  passwordSetupRequired: boolean;
   twoFactorEnabled: boolean;
   badge: VerifiedBadge | null;
   nextStep: "verify-email" | "profile" | "ready";

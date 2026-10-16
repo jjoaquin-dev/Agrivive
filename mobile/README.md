@@ -12,6 +12,7 @@ The Agrivive Seller Mobile application is built with **React Native**, **Expo SD
 - **Authentication**:
   - Email, password, and confirm password registration (provisional name `Seller`).
   - Google sign-in and first-time Google account creation through Better Auth's Expo deep-link flow.
+  - Google-created accounts must set a local password before entering the completed seller app.
   - 6-digit Email OTP verification with 30s resend cooldown.
   - Seller registration continues to Profile Setup before email verification is completed.
   - Existing sellers can choose password sign-in or a one-time email-code sign-in.
@@ -27,6 +28,7 @@ The Agrivive Seller Mobile application is built with **React Native**, **Expo SD
   - Optional TOTP enrollment in Profile Settings: password confirmation → QR code scan (`react-native-qrcode-svg`) or manual key → 6-digit confirmation code → emergency backup codes.
   - Login supports both 6-digit TOTP code and emergency backup code recovery.
   - Password-confirmed 2FA disabling.
+  - Profile Security supports setting or updating the local password.
 
 ---
 
@@ -116,6 +118,7 @@ bun run typecheck
 | **Invalid / Expired OTP** | Enter incorrect or expired OTP. | Friendly error message displayed; form retained for retry. | Pending email test |
 | **Resend OTP** | Tap "Resend Code" after 30s countdown. | Fresh OTP dispatched; countdown resets to 30s. | Pending email test |
 | **Email-Code Sign-In** | From Login, choose "Use email code instead", request a code, and enter the 6-digit code. | Existing account signs in without a password; incomplete accounts continue to verification or Profile Setup. | Pending email test |
+| **Google Password Setup** | Sign in with Google on a new account, then create a password with at least 8 characters. | Password setup is required before the completed seller app opens. | Pending device test |
 | **Interrupted Setup** | Close app after email OTP verification before completing stall profile. Re-open and log in. | Server state routes user directly to Profile Setup. | Pending device test |
 | **Stall Profile & Map** | Enter shop name, phone, address; select stall location on Davao City map. | Coordinates recorded; Better Auth name updated; `POST /seller/profile` creates stall profile; seller role assigned. | Pending device test |
 | **Map Permission Denial** | Deny location permission when tapping "Use Current". | Alert explains manual placement; seller can drag/tap pin on map without error. | Pending device test |
@@ -125,5 +128,6 @@ bun run typecheck
 | **Mandatory TOTP Login** | Log out after enabling 2FA. Log in with email and password. | Password accepted; prompt for 6-digit TOTP code appears before granting session. | Pending device test |
 | **Backup Code Recovery** | On TOTP login prompt, select "Use backup code" and enter one-time code. | Session granted; backup code consumed. | Pending device test |
 | **Disable TOTP** | In Security Settings, tap "Disable 2FA" and confirm password. | 2FA deactivated; subsequent logins require only password. | Pending device test |
+| **Password Update** | Open Profile → Security, then enter a new password and confirmation. | Local password is set or updated with a clear success/error result. | Pending device test |
 | **Profile Edit** | Update stall name, phone, address, or map pin in Edit Profile. | `PATCH /seller/profile` updates stall info without creating duplicates. | Pending device test |
 | **Logout** | Tap "Sign Out" in Profile overview. | Session cleared from SecureStore; redirects to Login screen. | Pending device test |

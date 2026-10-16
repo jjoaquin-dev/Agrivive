@@ -19,7 +19,7 @@ export async function saveIntegrationPromotionDraft(
     .where(eq(seller_promotion_jobs.id, jobId)).limit(1);
   if (!job) throw new OrderError(404, "Promotion job not found");
   if (job.status === "ready") {
-    return { jobId, status: job.status, readyAt: job.readyAt, duplicate: true };
+    return { jobId, status: job.status, readyAt: job.readyAt, completedAt: job.completedAt, duplicate: true };
   }
   if (job.status !== "queued" && job.status !== "sent") {
     throw new OrderError(409, "Promotion job is not awaiting a draft");
@@ -30,6 +30,7 @@ export async function saveIntegrationPromotionDraft(
     await db.update(seller_promotion_jobs).set({
       status: "skipped",
       lastError: eligibility?.reason ?? "Listing is no longer eligible",
+      completedAt: new Date(),
       updatedAt: new Date(),
     }).where(and(
       eq(seller_promotion_jobs.id, job.id),
@@ -44,7 +45,13 @@ export async function saveIntegrationPromotionDraft(
       status: "ready",
       headline: cleanHeadline,
       caption: cleanCaption,
+      visibilityPolicyVersion: eligibility.policyVersion,
+      visibilityScore: eligibility.visibilityScore?.toFixed(4) ?? null,
+      visibilityTier: eligibility.visibilityTier,
+      visibilityRank: eligibility.visibilityRank,
+      evaluatedAt: eligibility.evaluatedAt,
       readyAt: now,
+      completedAt: now,
       readAt: null,
       leaseUntil: null,
       nextCheckAt: now,
@@ -77,6 +84,6 @@ export async function saveIntegrationPromotionDraft(
         nextCheckAt: followupAt,
       }).onConflictDoNothing();
     }
-    return { jobId, status: "ready" as const, readyAt: saved.readyAt, duplicate: false };
+    return { jobId, status: "ready" as const, readyAt: saved.readyAt, completedAt: now, duplicate: false };
   });
 }

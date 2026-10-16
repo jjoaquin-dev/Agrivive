@@ -25,6 +25,7 @@ import { CardComponent } from "../../../src/components/CardComponent";
 import { InputComponent } from "../../../src/components/InputComponent";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { BadgeComponent } from "../../../src/components/BadgeComponent";
+import { PasswordSecurityCard } from "../../../src/features/auth/components/PasswordSecurityCard";
 
 export default function SecurityScreen() {
   const { setup, refreshSetup } = useAuth();
@@ -265,6 +266,8 @@ export default function SecurityScreen() {
             />
           ) : null}
         </CardComponent>
+
+        <PasswordSecurityCard />
 
         {/* Step: Confirm Password to Enable 2FA */}
         {step === "enable-password" ? (

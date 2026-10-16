@@ -6,6 +6,7 @@ import "../src/styles/tokens.css";
 import { CartProvider } from "@/src/features/cart/CartProvider";
 import { CartDrawer } from "@/src/features/cart/components/CartDrawer";
 import { WishlistProvider } from "@/src/features/wishlist/WishlistProvider";
+import { PasswordSetupGuard } from "@/src/features/auth/components/PasswordSetupGuard";
 
 export const metadata: Metadata = {
   title: "Agrivive",
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="font-body antialiased">
         <WishlistProvider>
           <CartProvider>
+            <PasswordSetupGuard />
             {children}
             <CartDrawer />
           </CartProvider>
