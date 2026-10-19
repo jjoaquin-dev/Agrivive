@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Paperclip, Send, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -39,6 +39,7 @@ export default function ConversationDetailScreen() {
   }, [addMessage, id]);
 
   const title = useMemo(() => conversation?.contextType === "product" ? conversation.productName || "Listing conversation" : conversation?.contextType === "seller" ? conversation.sellerShopName || conversation.sellerName || "Seller conversation" : "Order conversation", [conversation]);
+  const senderName = useMemo(() => conversation?.buyerName || "Buyer", [conversation]);
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -86,6 +87,7 @@ export default function ConversationDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["bottom"]}>
+      <Stack.Screen options={{ title: senderName }} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -93,7 +95,7 @@ export default function ConversationDetailScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>Live conversation with the buyer</Text>
+          <Text style={styles.subtitle}>Live conversation with {senderName}</Text>
         </View>
         <FlatList
           data={messages}
@@ -102,7 +104,11 @@ export default function ConversationDetailScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.messages}
           renderItem={({ item }) => (
-            <ConversationBubble item={item} isMine={item.senderId === conversation?.sellerId} />
+            <ConversationBubble
+              item={item}
+              isMine={item.senderId === conversation?.sellerId}
+              senderName={senderName}
+            />
           )}
           ListEmptyComponent={<Text style={styles.muted}>No messages yet.</Text>}
         />

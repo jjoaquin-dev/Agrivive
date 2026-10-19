@@ -14,6 +14,8 @@ export type Conversation = {
   sellerName: string;
   sellerShopName: string | null;
   sellerImage: string | null;
+  buyerName?: string | null;
+  buyerImage?: string | null;
   lastMessageBody: string | null;
   unreadCount: number;
 };

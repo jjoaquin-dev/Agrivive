@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "06 Audits and Discrepancies/06 n8n Priority Promotion and Price Reduction Functional Test Cases.md",
+                "file": "06 Audits and Discrepancies/07 Descriptive Sales Trend Analytics Functional Test Cases.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "06 n8n Priority Promotion and Price Reduction Functional Test Cases"
+              "title": "07 Descriptive Sales Trend Analytics Functional Test Cases"
             }
           }
         ]
@@ -190,6 +190,10 @@
   },
   "active": "22c3c61ec89b2992",
   "lastOpenFiles": [
+    "04 Delivery/2026-10-20 Aging Produce Stock Guard, Instagram Permalink Fix, and Visibility Guide Priority Ordering.md",
+    "06 Audits and Discrepancies/06 n8n Priority Promotion and Price Reduction Functional Test Cases.md",
+    "04 Delivery/2026-10-20 Market Pulse Landing Integration and Session Route Guards.md",
+    "04 Delivery/2026-10-20 Public Stakeholder Analytics Total Dashboard and PDF Export.md",
     "04 Delivery/2026-10-20 Product Archive and Dual-Role Account Fixes.md",
     "04 Delivery/2026-10-20 Meta Graph API and Instagram Business Setup.md",
     "04 Delivery/2026-10-20 Descriptive Sales Trend Alignment with Proposal Framework.md",
@@ -202,7 +206,6 @@
     "04 Delivery/2026-10-19 Chat Attachments Avatars and Marketplace Map Pinpoint Fix.md",
     "04 Delivery/2026-10-19 Next.js Remote Images and S3 Presigned URLs Fix.md",
     "02 Product/Feature Map.md",
-    "06 Audits and Discrepancies/06 n8n Priority Promotion and Price Reduction Functional Test Cases.md",
     "06 Audits and Discrepancies/04 Flagging and Trust Functional Test Cases.md",
     "04 Delivery/2026-10-19 n8n Priority Promotion Functional Test Suite.md",
     "04 Delivery/2026-10-18 AHP-TOPSIS Visibility Functional Test Cases.md",
@@ -213,9 +216,6 @@
     "06 Audits and Discrepancies/03 Flagging and Trust Features Needing Enhancement.md",
     "04 Delivery/2026-10-13 VPS Docker Pull Rebuild Reset Runbook.md",
     "04 Delivery/2026-10-13 Social Boost Preview Restored.md",
-    "04 Delivery/2026-10-13 Visibility Boost Webhook Diagnostics.md",
-    "04 Delivery/2026-10-13 Seller Visibility Boost Status and History.md",
-    "04 Delivery/2026-10-13 Mobile EAS Release Configuration.md",
     "04 Delivery",
     "03 Intelligence",
     "02 Product",

@@ -84,6 +84,12 @@ export default function AppLayout() {
         }}
       />
       <Stack.Screen
+        name="conversations/[id]"
+        options={{
+          title: "Conversation",
+        }}
+      />
+      <Stack.Screen
         name="activity"
         options={{
           title: "Change History",

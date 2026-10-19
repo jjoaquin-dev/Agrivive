@@ -3,17 +3,12 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Award, Info, Sparkles, TrendingUp } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerVisibilityItem } from "../api/seller-visibility";
+import { VisibilityFactorsGrid } from "./VisibilityFactorsGrid";
 
 interface VisibilityBreakdownCardProps {
   item: SellerVisibilityItem;
   productName?: string;
   onBoost: () => void;
-}
-
-function factorLabel(value: number | undefined) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? `${(value * 100).toFixed(0)}%`
-    : "Not available";
 }
 
 export function VisibilityBreakdownCard({ item, productName, onBoost }: VisibilityBreakdownCardProps) {
@@ -73,30 +68,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
             </View>
           </View>
 
-          <View style={styles.factorsGrid}>
-            <View style={styles.factorItem}>
-              <Text style={styles.factorLabel}>Posting Age Factor</Text>
-              <Text style={styles.factorValue}>
-                {factorLabel(item.inputs?.postingAge ?? (item as any).criteria?.freshness)}
-              </Text>
-            </View>
-
-            <View style={styles.factorItem}>
-              <Text style={styles.factorLabel}>Available Stock Factor</Text>
-              <Text style={styles.factorValue}>
-                {factorLabel(item.inputs?.remainingQuantity ?? (item as any).criteria?.stockAvailability)}
-              </Text>
-            </View>
-
-            <View style={styles.factorItem}>
-              <Text style={styles.factorLabel}>Prior cycles (30d)</Text>
-              <Text style={styles.factorValue}>
-                {Number.isFinite(item.inputs?.priorCycles)
-                  ? `${item.inputs?.priorCycles}`
-                  : "Not available"}
-              </Text>
-            </View>
-          </View>
+          <VisibilityFactorsGrid item={item} />
         </>
       ) : (
         <View style={styles.unrankedNotice}>
@@ -108,7 +80,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
       )}
 
       <Text style={styles.disclaimerText}>
-        Visibility is calculated from posting age, available stock, and prior listing cycles. Boosting is a separate seller-approved social action.
+        Visibility is calculated from Freshness (40%), Available Stock (30%), Seller Reliability (20%), and Surplus Recurrence (10%).
       </Text>
       <Pressable onPress={onBoost} accessibilityRole="button" style={styles.boostButton}>
         <Sparkles size={17} color={colors.white} />
@@ -119,143 +91,21 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.base,
-    marginBottom: spacing.md,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  titleColumn: {
-    flex: 1,
-  },
-  productName: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 16,
-    color: colors.text,
-  },
-  metaSubtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  tierBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: radii.full,
-  },
-  tierBadgeText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 11,
-    letterSpacing: 0.5,
-  },
-  scoreRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "rgba(31, 77, 58, 0.04)",
-    borderRadius: radii.input,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  scoreLabel: {
-    fontFamily: fonts.body.medium,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  scoreValue: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 22,
-    color: colors.primary,
-    marginTop: 2,
-  },
-  scoreGuide: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-    marginLeft: spacing.lg,
-  },
-  scoreGuideText: {
-    fontFamily: fonts.body.regular,
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.text,
-    flex: 1,
-  },
-  factorsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  factorItem: {
-    width: "48%",
-    backgroundColor: colors.background,
-    borderRadius: radii.input,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  factorLabel: {
-    fontFamily: fonts.body.medium,
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  factorValue: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
-    color: colors.text,
-    marginTop: 2,
-  },
-  unrankedNotice: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(199, 149, 62, 0.12)",
-    borderRadius: radii.input,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  unrankedText: {
-    flex: 1,
-    fontFamily: fonts.body.regular,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.text,
-  },
-  disclaimerText: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    lineHeight: 16,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  boostButton: {
-    minHeight: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.primary,
-    borderRadius: radii.button,
-    marginTop: spacing.md,
-  },
-  boostButtonText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
-    color: colors.white,
-  },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md },
+  headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.sm, marginBottom: spacing.md },
+  titleColumn: { flex: 1 },
+  productName: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
+  metaSubtitle: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  tierBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radii.full },
+  tierBadgeText: { fontFamily: fonts.body.semiBold, fontSize: 11, letterSpacing: 0.5 },
+  scoreRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(31, 77, 58, 0.04)", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.md },
+  scoreLabel: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
+  scoreValue: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.primary, marginTop: 2 },
+  scoreGuide: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1, marginLeft: spacing.lg },
+  scoreGuideText: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 16, color: colors.text, flex: 1 },
+  unrankedNotice: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(199, 149, 62, 0.12)", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.sm },
+  unrankedText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.text },
+  disclaimerText: { fontFamily: fonts.body.regular, fontSize: 11, lineHeight: 16, color: colors.textMuted, marginTop: spacing.xs },
+  boostButton: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, backgroundColor: colors.primary, borderRadius: radii.button, marginTop: spacing.md },
+  boostButtonText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.white },
 });

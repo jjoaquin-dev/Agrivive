@@ -1,12 +1,15 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
-import { Check } from "lucide-react-native";
-import { colors, spacing } from "../../../theme";
+import { ScrollView, KeyboardAvoidingView, Platform, View, Text } from "react-native";
+import { AlertTriangle, Check } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { colors } from "../../../theme";
 import { InputComponent } from "../../../components/InputComponent";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { StockActionTabs, type StockActionType } from "./StockActionTabs";
 import { StockProjectionCard } from "./StockProjectionCard";
 import { StockReasonSelector, TAKE_AWAY_REASONS } from "./StockReasonSelector";
+import { StockFreshnessWarningModal } from "./StockFreshnessWarningModal";
+import { styles } from "./StockChangeFormStyles";
 import { hasTwoDecimalsOrLess } from "../validation";
 import type { Product } from "../types";
 
@@ -25,6 +28,7 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
   onSubmit,
   loading,
 }) => {
+  const router = useRouter();
   const [actionType, setActionType] = useState<StockActionType>(initialType);
   const [quantityStr, setQuantityStr] = useState("");
   const [reason, setReason] = useState(
@@ -32,11 +36,20 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
   );
   const [customReason, setCustomReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showAgingModal, setShowAgingModal] = useState(false);
 
   const currentQty = parseFloat(product.productQty as string) || 0;
   const unitLabel = product.scalingType === "kilo" ? "kg" : product.scalingType;
-
   const inputQty = parseFloat(quantityStr) || 0;
+
+  const isAgingBatch = useMemo(() => {
+    if (actionType !== "in" || currentQty <= 0 || !product.publishedAt) return false;
+    const publishedTime = new Date(product.publishedAt).getTime();
+    if (isNaN(publishedTime)) return false;
+    const hoursElapsed = (Date.now() - publishedTime) / (1000 * 60 * 60);
+    return hoursElapsed >= 12;
+  }, [actionType, currentQty, product.publishedAt]);
+
   const projectedQty = useMemo(() => {
     if (isNaN(inputQty) || inputQty <= 0) return currentQty;
     if (actionType === "in") return currentQty + inputQty;
@@ -49,6 +62,18 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
     setActionType(type);
     setError(null);
     setReason(type === "in" ? "New harvest or added produce" : TAKE_AWAY_REASONS[0]);
+  };
+
+  const executeSubmit = async () => {
+    const delta = actionType === "in" ? inputQty : -inputQty;
+    const finalReason = customReason.trim() ? customReason.trim() : reason;
+    try {
+      await onSubmit(delta, finalReason);
+      setShowAgingModal(false);
+    } catch (err: any) {
+      setError(err?.message || "Could not save the amount change. Please try again.");
+      setShowAgingModal(false);
+    }
   };
 
   const handleConfirm = async () => {
@@ -72,12 +97,24 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
       return;
     }
 
-    const delta = actionType === "in" ? inputQty : -inputQty;
-    try {
-      await onSubmit(delta, finalReason);
-    } catch (err: any) {
-      setError(err?.message || "Could not save the amount change. Please try again.");
+    if (isAgingBatch) {
+      setShowAgingModal(true);
+      return;
     }
+
+    await executeSubmit();
+  };
+
+  const handlePostNewHarvest = () => {
+    setShowAgingModal(false);
+    router.push({
+      pathname: "/(app)/inventory/create",
+      params: {
+        catalogId: product.vegetableCatalogId || "",
+        unit: product.scalingType,
+        name: product.productName,
+      },
+    });
   };
 
   return (
@@ -100,6 +137,15 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
           unitLabel={unitLabel}
           isExcessStockOut={isExcessStockOut}
         />
+
+        {isAgingBatch ? (
+          <View style={styles.agingBanner}>
+            <AlertTriangle size={16} color={colors.terracotta} />
+            <Text style={styles.agingBannerText}>
+              This batch is over 12 hours old (0% Freshness). Adding produce here will keep the old batch age and discounted price.
+            </Text>
+          </View>
+        ) : null}
 
         <InputComponent
           label={`${actionType === "in" ? "Quantity to Add" : "Quantity to Deduct"} (${unitLabel})`}
@@ -138,18 +184,16 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
           disabled={loading || isExcessStockOut}
           style={styles.submitButton}
         />
+
+        <StockFreshnessWarningModal
+          visible={showAgingModal}
+          productName={product.productName}
+          onPostNewHarvest={handlePostNewHarvest}
+          onProceedAnyway={executeSubmit}
+          onCancel={() => setShowAgingModal(false)}
+          loading={loading}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
-    paddingBottom: 140,
-  },
-  submitButton: {
-    marginTop: spacing.md,
-  },
-});

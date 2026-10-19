@@ -93910,6 +93910,106 @@ function asc(column) {
 function desc(column) {
   return sql3`${column} desc`;
 }
+// node_modules/drizzle-orm/alias.js
+var ColumnTableAliasProxyHandler = class {
+  static [entityKind] = "ColumnTableAliasProxyHandler";
+  constructor(table, ignoreColumnAlias) {
+    this.table = table;
+    this.ignoreColumnAlias = ignoreColumnAlias;
+  }
+  get(columnObj, prop) {
+    if (prop === "table")
+      return this.table;
+    if (prop === "isAlias" && this.ignoreColumnAlias)
+      return false;
+    return columnObj[prop];
+  }
+};
+var ViewSelectionAliasProxyHandler = class {
+  static [entityKind] = "ViewSelectionAliasProxyHandler";
+  constructor(view, selection, ignoreColumnAlias) {
+    this.view = view;
+    this.selection = selection;
+    this.ignoreColumnAlias = ignoreColumnAlias;
+  }
+  get(selection, prop) {
+    const value = selection[prop];
+    if (is(value, Column))
+      return new Proxy(value, new ColumnTableAliasProxyHandler(this.view, this.ignoreColumnAlias));
+    if (is(value, Subquery) || is(value, SQL) || is(value, SQL.Aliased) || isSQLWrapper(value) || typeof value !== "object" || value === null)
+      return value;
+    return new Proxy(value, this);
+  }
+};
+var TableAliasProxyHandler = class {
+  static [entityKind] = "TableAliasProxyHandler";
+  constructor(alias, replaceOriginalName, ignoreColumnAlias) {
+    this.alias = alias;
+    this.replaceOriginalName = replaceOriginalName;
+    this.ignoreColumnAlias = ignoreColumnAlias;
+  }
+  get(target, prop) {
+    if (prop === Table.Symbol.IsAlias)
+      return true;
+    if (prop === Table.Symbol.Name)
+      return this.alias;
+    if (this.replaceOriginalName && prop === Table.Symbol.OriginalName)
+      return this.alias;
+    if (prop === ViewBaseConfig)
+      return {
+        ...target[ViewBaseConfig],
+        name: this.alias,
+        isAlias: true,
+        selectedFields: new Proxy(target[ViewBaseConfig].selectedFields, new ViewSelectionAliasProxyHandler(new Proxy(target, this), target[ViewBaseConfig].selectedFields, this.ignoreColumnAlias))
+      };
+    if (prop === Table.Symbol.Columns) {
+      const columns = target[Table.Symbol.Columns];
+      if (!columns)
+        return columns;
+      if (is(target, View))
+        return new Proxy(target[Table.Symbol.Columns], new ViewSelectionAliasProxyHandler(new Proxy(target, this), target[Table.Symbol.Columns], this.ignoreColumnAlias));
+      const proxiedColumns = {};
+      Object.keys(columns).map((key) => {
+        proxiedColumns[key] = new Proxy(columns[key], new ColumnTableAliasProxyHandler(new Proxy(target, this), this.ignoreColumnAlias));
+      });
+      return proxiedColumns;
+    }
+    const value = target[prop];
+    if (is(value, Column))
+      return new Proxy(value, new ColumnTableAliasProxyHandler(new Proxy(target, this), this.ignoreColumnAlias));
+    return value;
+  }
+};
+var ColumnAliasProxyHandler = class {
+  static [entityKind] = "ColumnAliasProxyHandler";
+  constructor(alias) {
+    this.alias = alias;
+  }
+  get(target, prop) {
+    if (prop === "isAlias")
+      return true;
+    if (prop === "name")
+      return this.alias;
+    if (prop === "keyAsName")
+      return false;
+    if (prop === OriginalColumn)
+      return () => target;
+    return target[prop];
+  }
+};
+function aliasedTable(table, tableAlias) {
+  return new Proxy(table, new TableAliasProxyHandler(tableAlias, false, false));
+}
+function aliasedColumn(column, alias) {
+  return new Proxy(column, new ColumnAliasProxyHandler(alias));
+}
+Column.prototype.as = function(alias) {
+  return aliasedColumn(this, alias);
+};
+function getOriginalColumnFromAlias(column) {
+  return column[OriginalColumn]();
+}
+
 // node_modules/drizzle-orm/utils.js
 var FnConstructor = Object.getPrototypeOf(() => null).constructor;
 function makeJitQueryMapperInner(columns, joinsNotNullableMap = {}) {
@@ -97944,106 +98044,6 @@ function extractUsedTable(table) {
   return [];
 }
 
-// node_modules/drizzle-orm/alias.js
-var ColumnTableAliasProxyHandler2 = class {
-  static [entityKind] = "ColumnTableAliasProxyHandler";
-  constructor(table, ignoreColumnAlias) {
-    this.table = table;
-    this.ignoreColumnAlias = ignoreColumnAlias;
-  }
-  get(columnObj, prop) {
-    if (prop === "table")
-      return this.table;
-    if (prop === "isAlias" && this.ignoreColumnAlias)
-      return false;
-    return columnObj[prop];
-  }
-};
-var ViewSelectionAliasProxyHandler2 = class {
-  static [entityKind] = "ViewSelectionAliasProxyHandler";
-  constructor(view, selection, ignoreColumnAlias) {
-    this.view = view;
-    this.selection = selection;
-    this.ignoreColumnAlias = ignoreColumnAlias;
-  }
-  get(selection, prop) {
-    const value = selection[prop];
-    if (is(value, Column))
-      return new Proxy(value, new ColumnTableAliasProxyHandler2(this.view, this.ignoreColumnAlias));
-    if (is(value, Subquery) || is(value, SQL) || is(value, SQL.Aliased) || isSQLWrapper(value) || typeof value !== "object" || value === null)
-      return value;
-    return new Proxy(value, this);
-  }
-};
-var TableAliasProxyHandler2 = class {
-  static [entityKind] = "TableAliasProxyHandler";
-  constructor(alias, replaceOriginalName, ignoreColumnAlias) {
-    this.alias = alias;
-    this.replaceOriginalName = replaceOriginalName;
-    this.ignoreColumnAlias = ignoreColumnAlias;
-  }
-  get(target, prop) {
-    if (prop === Table.Symbol.IsAlias)
-      return true;
-    if (prop === Table.Symbol.Name)
-      return this.alias;
-    if (this.replaceOriginalName && prop === Table.Symbol.OriginalName)
-      return this.alias;
-    if (prop === ViewBaseConfig)
-      return {
-        ...target[ViewBaseConfig],
-        name: this.alias,
-        isAlias: true,
-        selectedFields: new Proxy(target[ViewBaseConfig].selectedFields, new ViewSelectionAliasProxyHandler2(new Proxy(target, this), target[ViewBaseConfig].selectedFields, this.ignoreColumnAlias))
-      };
-    if (prop === Table.Symbol.Columns) {
-      const columns = target[Table.Symbol.Columns];
-      if (!columns)
-        return columns;
-      if (is(target, View))
-        return new Proxy(target[Table.Symbol.Columns], new ViewSelectionAliasProxyHandler2(new Proxy(target, this), target[Table.Symbol.Columns], this.ignoreColumnAlias));
-      const proxiedColumns = {};
-      Object.keys(columns).map((key) => {
-        proxiedColumns[key] = new Proxy(columns[key], new ColumnTableAliasProxyHandler2(new Proxy(target, this), this.ignoreColumnAlias));
-      });
-      return proxiedColumns;
-    }
-    const value = target[prop];
-    if (is(value, Column))
-      return new Proxy(value, new ColumnTableAliasProxyHandler2(new Proxy(target, this), this.ignoreColumnAlias));
-    return value;
-  }
-};
-var ColumnAliasProxyHandler2 = class {
-  static [entityKind] = "ColumnAliasProxyHandler";
-  constructor(alias) {
-    this.alias = alias;
-  }
-  get(target, prop) {
-    if (prop === "isAlias")
-      return true;
-    if (prop === "name")
-      return this.alias;
-    if (prop === "keyAsName")
-      return false;
-    if (prop === OriginalColumn)
-      return () => target;
-    return target[prop];
-  }
-};
-function aliasedTable2(table, tableAlias) {
-  return new Proxy(table, new TableAliasProxyHandler2(tableAlias, false, false));
-}
-function aliasedColumn2(column, alias) {
-  return new Proxy(column, new ColumnAliasProxyHandler2(alias));
-}
-Column.prototype.as = function(alias) {
-  return aliasedColumn2(this, alias);
-};
-function getOriginalColumnFromAlias2(column) {
-  return column[OriginalColumn]();
-}
-
 // node_modules/drizzle-orm/selection-proxy.js
 var SelectionProxyHandler = class SelectionProxyHandler {
   static [entityKind] = "SelectionProxyHandler";
@@ -98080,7 +98080,7 @@ var SelectionProxyHandler = class SelectionProxyHandler {
     }
     if (is(value, Column)) {
       if (this.config.alias)
-        return new Proxy(value, new ColumnTableAliasProxyHandler2(new Proxy(value.table, new TableAliasProxyHandler2(this.config.alias, this.config.replaceOriginalName ?? false, true)), true));
+        return new Proxy(value, new ColumnTableAliasProxyHandler(new Proxy(value.table, new TableAliasProxyHandler(this.config.alias, this.config.replaceOriginalName ?? false, true)), true));
       return value;
     }
     if (typeof value !== "object" || value === null)
@@ -98985,8 +98985,8 @@ function relationsFilterToSQL2(table, filter, tableRelations = {}, tablesRelatio
         const relation = tableRelations[target];
         if (!relation)
           throw new DrizzleError2({ message: `Unknown relational filter field: "${target}"` });
-        const targetTable = aliasedTable2(relation.targetTable, `f${depth}`);
-        const throughTable = relation.throughTable ? aliasedTable2(relation.throughTable, `ft${depth}`) : undefined;
+        const targetTable = aliasedTable(relation.targetTable, `f${depth}`);
+        const throughTable = relation.throughTable ? aliasedTable(relation.throughTable, `ft${depth}`) : undefined;
         const targetConfig = tablesRelations[relation.targetTableName];
         const { filter: relationFilter, joinCondition } = relationToSQL2(relation, table, targetTable, throughTable);
         const filter = and(relationFilter, typeof value === "boolean" ? undefined : relationsFilterToSQL2(targetTable, value, targetConfig.relations, tablesRelations, depth + 1));
@@ -99174,9 +99174,9 @@ var PgDialect = class {
       } else if (is(field, Column)) {
         let name;
         if (isSingleTable)
-          name = field.isAlias ? sql3.identifier(getOriginalColumnFromAlias2(field).name) : sql3.identifier(field.name);
+          name = field.isAlias ? sql3.identifier(getOriginalColumnFromAlias(field).name) : sql3.identifier(field.name);
         else
-          name = field.isAlias ? getOriginalColumnFromAlias2(field) : field;
+          name = field.isAlias ? getOriginalColumnFromAlias(field) : field;
         const casted = ignoreCastCodecs ? name : this.codecs.apply(field, "cast", name, override);
         chunk.push(field.isAlias ? sql3`${casted} as ${field}` : casted);
       } else if (is(field, Subquery))
@@ -99501,7 +99501,7 @@ var PgDialect = class {
     const currentPath = errorPath ?? "";
     const currentDepth = depth ?? 0;
     if (!currentDepth)
-      table = aliasedTable2(table, `d${currentDepth}`);
+      table = aliasedTable(table, `d${currentDepth}`);
     const limit = isSingle ? 1 : params?.limit;
     const offset = params?.offset;
     const where = params?.where && relationWhere ? and(relationsFilterToSQL2(table, params.where, tableConfig.relations, schema), relationWhere) : params?.where ? relationsFilterToSQL2(table, params.where, tableConfig.relations, schema) : relationWhere;
@@ -99523,8 +99523,8 @@ var PgDialect = class {
       return sql3.join(withEntries.map(([k, join]) => {
         const relation = tableConfig.relations[k];
         const isSingle = is(relation, One2);
-        const targetTable = aliasedTable2(relation.targetTable, `d${currentDepth + 1}`);
-        const throughTable = relation.throughTable ? aliasedTable2(relation.throughTable, `tr${currentDepth}`) : undefined;
+        const targetTable = aliasedTable(relation.targetTable, `d${currentDepth + 1}`);
+        const throughTable = relation.throughTable ? aliasedTable(relation.throughTable, `tr${currentDepth}`) : undefined;
         const { filter, joinCondition } = relationToSQL2(relation, table, targetTable, throughTable);
         selectionArr.push(sql3`${sql3.identifier(k)}.${sql3.identifier("r")} as ${sql3.identifier(k)}`);
         const throughJoin = throughTable ? sql3` inner join ${getTableAsAliasSQL2(throughTable)} on ${joinCondition}` : undefined;
@@ -120224,8 +120224,9 @@ async function getSellerWeightedSurplusVisibility(sellerId) {
       inputs: {
         postingAge: result.criteria.freshness,
         remainingQuantity: result.criteria.stockAvailability,
+        sellerReliability: result.criteria.sellerReliability,
         recurrence: result.criteria.recurrence,
-        priorCycles: Math.round(result.criteria.recurrence * 10),
+        priorCycles: Math.round(result.criteria.recurrence * 3),
         vegetableKey: candidate.productName
       },
       distances: {
@@ -123001,6 +123002,31 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
   const [cycle] = await db2.select({ id: listing_cycles.id }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(and(eq(listing_cycles.productId, productId), eq(sellers_product.userId, sellerId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   if (!cycle)
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
+  const [product] = await db2.select({
+    imageUrl: sellers_product.imagUrl,
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
+  }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
+  if (!product?.imageUrl)
+    throw new OrderError(409, "Add a product photo before posting");
+  const existingPublished = await db2.select({
+    id: seller_social_campaigns.id,
+    status: seller_social_campaigns.status
+  }).from(seller_social_campaigns).where(and(eq(seller_social_campaigns.productId, productId), eq(seller_social_campaigns.listingCycleId, cycle.id), inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"]))).orderBy(desc(seller_social_campaigns.createdAt));
+  const maxAllowedPosts = (product.priceReductionPeriodsApplied ?? 0) + 1;
+  if (existingPublished.length >= maxAllowedPosts) {
+    const latest = existingPublished[0];
+    return {
+      alreadyPublished: true,
+      campaignId: latest.id,
+      status: latest.status,
+      productId,
+      productName: "",
+      productUrl: "",
+      imageUrl: await getProductImageDisplayUrl(product.imageUrl, sellerId),
+      posts: {},
+      message: "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction."
+    };
+  }
   const eligibility = await getPriorityPromotionEligibility(cycle.id);
   if (!eligibility || eligibility.sellerId !== sellerId) {
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
@@ -123008,9 +123034,6 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
   if (!("productName" in eligibility) || !eligibility.eligible && eligibility.reason !== "Visibility is below Priority Boost") {
     throw new OrderError(409, eligibility.reason ?? "This listing is not ready for Boost Visibility");
   }
-  const [product] = await db2.select({ imageUrl: sellers_product.imagUrl }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
-  if (!product?.imageUrl)
-    throw new OrderError(409, "Add a product photo before posting");
   try {
     validateProductImageReference(product.imageUrl, sellerId);
   } catch {
@@ -123022,6 +123045,7 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
   if (!bucket || image.hostname !== `${bucket}.s3.${region}.amazonaws.com`) {
     throw new OrderError(409, "Upload the product photo to Agrivive before posting");
   }
+  const [existingDraft] = await db2.select().from(seller_social_campaigns).where(and(eq(seller_social_campaigns.productId, productId), eq(seller_social_campaigns.listingCycleId, cycle.id), eq(seller_social_campaigns.status, "draft"))).limit(1);
   const posts = await generateSocialPromotionPosts({
     productName: eligibility.productName,
     productType: eligibility.productType,
@@ -123030,6 +123054,18 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
     price: eligibility.price,
     unit: eligibility.unit
   });
+  if (existingDraft) {
+    await db2.update(seller_social_campaigns).set({ posts, updatedAt: new Date }).where(eq(seller_social_campaigns.id, existingDraft.id));
+    return {
+      campaignId: existingDraft.id,
+      status: existingDraft.status,
+      productId: eligibility.productId,
+      productName: eligibility.productName,
+      productUrl: eligibility.listingUrl,
+      imageUrl: await getProductImageDisplayUrl(product.imageUrl, sellerId),
+      posts
+    };
+  }
   const [campaign] = await db2.insert(seller_social_campaigns).values({
     sellerId,
     productId: eligibility.productId,
@@ -123073,6 +123109,14 @@ async function publishSellerSocialCampaign(sellerId, campaignId, input) {
     throw new OrderError(409, "This post has already been sent");
   if (!input.platforms.length || new Set(input.platforms).size !== input.platforms.length) {
     throw new OrderError(400, "Choose each Agrivive channel only once");
+  }
+  const [product] = await db2.select({
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
+  }).from(sellers_product).where(and(eq(sellers_product.id, draft.productId), eq(sellers_product.userId, sellerId))).limit(1);
+  const existingPublished = await db2.select({ id: seller_social_campaigns.id }).from(seller_social_campaigns).where(and(eq(seller_social_campaigns.productId, draft.productId), eq(seller_social_campaigns.listingCycleId, draft.listingCycleId), inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"])));
+  const maxAllowedPosts = (product?.priceReductionPeriodsApplied ?? 0) + 1;
+  if (existingPublished.length >= maxAllowedPosts) {
+    throw new OrderError(409, "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction.");
   }
   const channelMap = new Map(getSocialChannelAvailability().map((channel) => [channel.platform, channel]));
   const posts = {};
@@ -125365,7 +125409,7 @@ var marketplaceRoute = new Elysia({ prefix: "/marketplace" }).use(marketplaceSel
 
 // src/modules/stakeholder/services/stakeholder.summary.ts
 async function readStakeholderSummary() {
-  const [users, listings, orderRows, reports] = await Promise.all([
+  const [users, listings, orderRows, reports, cropRows, rescueRows] = await Promise.all([
     db2.select({
       sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
       buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
@@ -125375,14 +125419,32 @@ async function readStakeholderSummary() {
       active: sql3`count(*) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`
     }).from(sellers_product),
     db2.select({ status: orders.status, count: sql3`count(*)::int` }).from(orders).groupBy(orders.status),
-    db2.select({ total: sql3`count(*)::int` }).from(order_reports)
+    db2.select({ total: sql3`count(*)::int` }).from(order_reports),
+    db2.select({
+      category: vegetable_catalog.category,
+      activeCount: sql3`count(*)::int`
+    }).from(sellers_product).innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).groupBy(vegetable_catalog.category),
+    db2.select({
+      totalRescuedQty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`
+    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).where(eq(orders.status, "completed"))
   ]);
+  const orderMap = Object.fromEntries(orderRows.map((r) => [r.status, Number(r.count)]));
+  const completed = orderMap.completed ?? 0;
+  const expired = orderMap.expired ?? 0;
+  const cancelled = orderMap.cancelled ?? 0;
+  const totalDecided = completed + expired + cancelled;
+  const fulfillmentRate = totalDecided > 0 ? Math.round(completed / totalDecided * 100) : 100;
   return {
     generatedAt: new Date().toISOString(),
     users: users[0] ?? { sellers: 0, buyers: 0 },
     listings: listings[0] ?? { total: 0, active: 0 },
-    orders: Object.fromEntries(orderRows.map((row) => [row.status, Number(row.count)])),
-    reports: { total: Number(reports[0]?.total ?? 0) }
+    orders: orderMap,
+    reports: { total: Number(reports[0]?.total ?? 0) },
+    cropCategories: cropRows.map((r) => ({ category: String(r.category), activeCount: Number(r.activeCount) })),
+    rescueMetrics: {
+      totalRescuedQty: Number(rescueRows[0]?.totalRescuedQty ?? 0),
+      fulfillmentRate
+    }
   };
 }
 
@@ -125797,7 +125859,8 @@ async function publishInstagramPhoto(imageUrl, caption) {
   const version = process.env.META_GRAPH_API_VERSION?.trim();
   if (!instagramId || !token || !version)
     throw new OrderError(503, "Instagram publishing is not configured");
-  const base = `https://graph.facebook.com/${version}/${instagramId}`;
+  const host = `https://graph.facebook.com/${version}`;
+  const base = `${host}/${instagramId}`;
   const create = await fetch(`${base}/media`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/x-www-form-urlencoded" },
@@ -125816,12 +125879,13 @@ async function publishInstagramPhoto(imageUrl, caption) {
   const result = await publish.json().catch(() => ({}));
   if (!publish.ok || !result.id)
     throw new Error("Instagram could not publish this post");
-  const permalinkResponse = await fetch(`${base}/${result.id}?fields=permalink`, {
+  const permalinkResponse = await fetch(`${host}/${result.id}?fields=permalink,shortcode`, {
     headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(1e4)
   }).catch(() => null);
   const permalinkResult = await permalinkResponse?.json().catch(() => ({}));
-  return { postId: result.id, postUrl: permalinkResult?.permalink };
+  const postUrl = permalinkResult?.permalink || (permalinkResult?.shortcode ? `https://www.instagram.com/p/${permalinkResult.shortcode}/` : null);
+  return { postId: result.id, postUrl };
 }
 
 // src/modules/integrations/services/integrations.social-publish-x.ts
@@ -126348,6 +126412,7 @@ async function listConversationMessages(userId, conversationId) {
 
 // src/modules/conversations/services/conversation.list.ts
 async function listConversations(userId, limit = 50) {
+  const buyerUser = aliasedTable(user, "buyer_user");
   const rows = await db2.select({
     id: conversations.id,
     contextType: conversations.contextType,
@@ -126363,6 +126428,8 @@ async function listConversations(userId, limit = 50) {
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,
+    buyerName: buyerUser.name,
+    buyerImage: buyerUser.image,
     lastMessageBody: sql3`(
       select latest_message.body
       from conversation_messages as latest_message
@@ -126376,10 +126443,11 @@ async function listConversations(userId, limit = 50) {
         and unread_message.sender_id <> ${userId}
         and unread_message.created_at > coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)
     )`
-  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId)).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId))).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit);
+  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).innerJoin(buyerUser, eq(buyerUser.id, conversations.buyerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId)).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId))).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit);
   return Promise.all(rows.map(async (row) => ({
     ...row,
-    sellerImage: await getAvatarDisplayUrl(row.sellerImage)
+    sellerImage: await getAvatarDisplayUrl(row.sellerImage),
+    buyerImage: await getAvatarDisplayUrl(row.buyerImage)
   })));
 }
 

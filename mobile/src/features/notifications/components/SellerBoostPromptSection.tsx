@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Megaphone, Sparkles } from "lucide-react-native";
-import { acceptSellerBoostPrompt, dismissSellerBoostPrompt, fetchSellerBoostPrompts } from "../../boost/api/visibility-boosts";
+import { useRouter } from "expo-router";
+import { dismissSellerBoostPrompt, fetchSellerBoostPrompts } from "../../boost/api/visibility-boosts";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerBoostPrompt } from "../types";
 
 export function SellerBoostPromptSection({ refreshSignal }: { refreshSignal: number }) {
+  const router = useRouter();
   const [items, setItems] = useState<SellerBoostPrompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -26,17 +28,12 @@ export function SellerBoostPromptSection({ refreshSignal }: { refreshSignal: num
 
   useEffect(() => { void load(); }, [refreshSignal]);
 
-  const boost = async (item: SellerBoostPrompt) => {
-    setBusyId(item.id);
-    setError("");
-    try {
-      await acceptSellerBoostPrompt(item.id);
-      setItems((current) => current.filter((candidate) => candidate.id !== item.id));
-    } catch (reason: any) {
-      setError(reason?.message || "Could not queue the visibility boost.");
-    } finally {
-      setBusyId(null);
-    }
+  const handlePreviewPost = (item: SellerBoostPrompt) => {
+    // Navigate to post preview screen before sending to n8n
+    router.push({
+      pathname: "/(app)/boost/[productId]",
+      params: { productId: item.productId, promptId: item.id },
+    });
   };
 
   const dismiss = async (item: SellerBoostPrompt) => {
@@ -72,11 +69,23 @@ export function SellerBoostPromptSection({ refreshSignal }: { refreshSignal: num
             {item.priceBefore && item.priceAfter ? `₱${Number(item.priceBefore).toFixed(2)} → ₱${Number(item.priceAfter).toFixed(2)}` : "New price available"}
           </Text>
           <View style={styles.actions}>
-            <Pressable onPress={() => void boost(item)} disabled={busyId !== null} style={({ pressed }) => [styles.boost, pressed && styles.pressed]}>
-              {busyId === item.id ? <ActivityIndicator color={colors.white} /> : <Sparkles size={16} color={colors.white} />}
-              <Text style={styles.boostText}>Boost now</Text>
+            <Pressable
+              onPress={() => handlePreviewPost(item)}
+              disabled={busyId !== null}
+              accessibilityRole="button"
+              accessibilityLabel={`Preview and boost ${item.productName}`}
+              style={({ pressed }) => [styles.boost, pressed && styles.pressed]}
+            >
+              <Sparkles size={16} color={colors.white} />
+              <Text style={styles.boostText}>Preview Post</Text>
             </Pressable>
-            <Pressable onPress={() => void dismiss(item)} disabled={busyId !== null} style={({ pressed }) => [styles.dismiss, pressed && styles.pressed]}>
+            <Pressable
+              onPress={() => void dismiss(item)}
+              disabled={busyId !== null}
+              accessibilityRole="button"
+              accessibilityLabel="Not now"
+              style={({ pressed }) => [styles.dismiss, pressed && styles.pressed]}
+            >
               <Text style={styles.dismissText}>Not now</Text>
             </Pressable>
           </View>

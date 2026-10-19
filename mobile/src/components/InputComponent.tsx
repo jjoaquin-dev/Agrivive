@@ -47,9 +47,15 @@ export const InputComponent: React.FC<InputComponentProps> = ({
           style={styles.input}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={isPassword && !showPassword}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           {...textInputProps}
+          onFocus={(e) => {
+            setIsFocused(true);
+            textInputProps.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            textInputProps.onBlur?.(e);
+          }}
         />
         {isPassword ? (
           <Pressable

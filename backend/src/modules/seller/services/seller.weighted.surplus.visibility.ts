@@ -51,8 +51,9 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
       inputs: {
         postingAge: result.criteria.freshness,
         remainingQuantity: result.criteria.stockAvailability,
+        sellerReliability: result.criteria.sellerReliability,
         recurrence: result.criteria.recurrence,
-        priorCycles: Math.round(result.criteria.recurrence * 10),
+        priorCycles: Math.round(result.criteria.recurrence * 3),
         vegetableKey: candidate.productName,
       },
       distances: {

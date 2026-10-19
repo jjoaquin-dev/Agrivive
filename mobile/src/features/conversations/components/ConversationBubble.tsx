@@ -15,16 +15,18 @@ function parseContent(text: string) {
 export function ConversationBubble({
   item,
   isMine,
+  senderName,
 }: {
   item: ConversationMessage;
   isMine: boolean;
+  senderName?: string;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
   const { text, imageUrl } = parseContent(item.body);
 
   return (
     <View style={[styles.bubble, isMine ? styles.mine : styles.theirs]}>
-      <Text style={styles.sender}>{isMine ? "You" : "Buyer"}</Text>
+      <Text style={styles.sender}>{isMine ? "You" : (senderName || "Buyer")}</Text>
       {imageUrl ? (
         <>
           <Pressable onPress={() => setModalOpen(true)} style={styles.imageWrapper}>
