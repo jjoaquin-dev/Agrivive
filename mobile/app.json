@@ -1,12 +1,17 @@
 {
   "expo": {
-    "name": "Agrivive Seller",
+    "name": "Agrivive",
     "slug": "mobile",
     "scheme": "agrivive",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8F6F1"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agrivive.seller",
@@ -17,7 +22,7 @@
     "android": {
       "package": "com.agrivive.seller",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F8F6F1",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -35,7 +40,15 @@
       "expo-router",
       "expo-secure-store",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#F8F6F1"
+        }
+      ],
       "expo-build-properties",
       "expo-location",
       "expo-notifications"
