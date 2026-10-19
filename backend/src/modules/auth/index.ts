@@ -11,12 +11,16 @@ export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || undefined,
   trustedOrigins: [
     "agrivive://",
-    "exp://",
-    "http://localhost:*",
-    "http://127.0.0.1:*",
-    "http://10.0.2.2:*",
-    "http://192.168.*:*",
-    "http://10.*:*",
+    ...(process.env.NODE_ENV !== "production"
+      ? [
+          "exp://",
+          "http://localhost:*",
+          "http://127.0.0.1:*",
+          "http://10.0.2.2:*",
+          "http://192.168.*:*",
+          "http://10.*:*",
+        ]
+      : []),
     ...(process.env.MOBILE_TRUSTED_ORIGINS ?? "")
       .split(",")
       .map((origin) => origin.trim())

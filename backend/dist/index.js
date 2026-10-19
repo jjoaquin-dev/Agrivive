@@ -103840,12 +103840,14 @@ var auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || undefined,
   trustedOrigins: [
     "agrivive://",
-    "exp://",
-    "http://localhost:*",
-    "http://127.0.0.1:*",
-    "http://10.0.2.2:*",
-    "http://192.168.*:*",
-    "http://10.*:*",
+    ...[
+      "exp://",
+      "http://localhost:*",
+      "http://127.0.0.1:*",
+      "http://10.0.2.2:*",
+      "http://192.168.*:*",
+      "http://10.*:*"
+    ],
     ...(process.env.MOBILE_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean),
     ...(process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean)
   ],
@@ -126487,7 +126489,8 @@ async function uploadConversationAttachment(userId, file) {
   const key = `conversations/${userId}/${randomUUID()}.${ext}`;
   await uploadToS3({ buffer, key, contentType: file.type });
   const displayUrl = await getConversationAttachmentDisplayUrl(key);
-  return { url: displayUrl, filename: file.name };
+  const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/\.{2,}/g, ".").slice(0, 100);
+  return { url: displayUrl, filename: safeFilename || "attachment" };
 }
 
 // src/modules/conversations/model/conversation.ts
@@ -126749,11 +126752,68 @@ var validationPlugin = new Elysia({
   }
 });
 
+// src/plugins/security-headers.plugin.ts
+var securityHeadersPlugin = new Elysia({ name: "security-headers" }).onRequest(({ set }) => {
+  set.headers["X-Content-Type-Options"] = "nosniff";
+  set.headers["X-Frame-Options"] = "DENY";
+  set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+  set.headers["Permissions-Policy"] = "camera=(self), geolocation=(self), microphone=()";
+  if (false) {}
+});
+
+// src/plugins/rate-limit.plugin.ts
+function createRateLimitPlugin(options = {}) {
+  const windowMs = options.windowMs ?? 60000;
+  const maxRequests = options.maxRequests ?? 120;
+  const authMaxRequests = options.authMaxRequests ?? 30;
+  const clients = new Map;
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of clients.entries()) {
+      if (now > record.resetAt) {
+        clients.delete(key);
+      }
+    }
+  }, 120000).unref?.();
+  return new Elysia({ name: "rate-limit-plugin" }).onRequest(({ request, set }) => {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    if (path === "/health" || path === "/health/ready" || path === "/") {
+      return;
+    }
+    const forwarded = request.headers.get("x-forwarded-for");
+    const clientIp = (forwarded ? forwarded.split(",")[0].trim() : null) || request.headers.get("x-real-ip") || "127.0.0.1";
+    const now = Date.now();
+    const isAuthRoute = path.startsWith("/api/auth") || path.startsWith("/auth");
+    const effectiveLimit = isAuthRoute ? authMaxRequests : maxRequests;
+    const recordKey = `${clientIp}:${isAuthRoute ? "auth" : "gen"}`;
+    let record = clients.get(recordKey);
+    if (!record || now > record.resetAt) {
+      record = { count: 1, resetAt: now + windowMs };
+      clients.set(recordKey, record);
+    } else {
+      record.count++;
+    }
+    set.headers["x-ratelimit-limit"] = effectiveLimit.toString();
+    set.headers["x-ratelimit-remaining"] = Math.max(0, effectiveLimit - record.count).toString();
+    set.headers["x-ratelimit-reset"] = Math.ceil(record.resetAt / 1000).toString();
+    if (record.count > effectiveLimit) {
+      const retryAfterSeconds = Math.max(1, Math.ceil((record.resetAt - now) / 1000));
+      set.headers["retry-after"] = retryAfterSeconds.toString();
+      set.status = 429;
+      return { message: "Too many requests, please try again shortly." };
+    }
+  });
+}
+var rateLimitPlugin = createRateLimitPlugin();
+
 // src/index.ts
+var isDev = true;
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
-var webCorsOrigin = configuredWebOrigins.length ? [...configuredWebOrigins, localWebOrigin] : localWebOrigin;
-var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var webCorsOrigin = configuredWebOrigins.length ? isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins : localWebOrigin;
+var openapiPlugin = isDev ? index_default() : new Elysia({ name: "noop-openapi" });
+var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

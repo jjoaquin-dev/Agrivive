@@ -16,5 +16,9 @@ export async function uploadConversationAttachment(userId: string, file: File) {
 
   await uploadToS3({ buffer, key, contentType: file.type });
   const displayUrl = await getConversationAttachmentDisplayUrl(key);
-  return { url: displayUrl, filename: file.name };
+  const safeFilename = file.name
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/\.{2,}/g, ".")
+    .slice(0, 100);
+  return { url: displayUrl, filename: safeFilename || "attachment" };
 }

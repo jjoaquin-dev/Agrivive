@@ -1,0 +1,25 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Dependencies & Package Managers
+node_modules/
+.bun/
+
+# Build Outputs & Bundles
+dist/
+build/
+.next/
+.expo/
+*.tsbuildinfo
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
