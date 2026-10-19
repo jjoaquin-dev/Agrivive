@@ -37,6 +37,8 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     productType: eligibility.productType,
     shopName: eligibility.shopName,
     listingUrl: eligibility.listingUrl,
+    price: eligibility.price,
+    unit: eligibility.unit,
   });
   const [campaign] = await db.insert(seller_social_campaigns).values({
     sellerId,

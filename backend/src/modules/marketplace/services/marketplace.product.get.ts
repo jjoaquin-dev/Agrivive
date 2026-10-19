@@ -3,6 +3,7 @@ import { db } from "../../../db";
 import { listing_cycles, sellers_product, sellers_profile, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
+import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { calculateVisibilityScore } from "../../../utils/visibility-score";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { marketplaceSellerVisibility } from "./marketplace.visibility";
@@ -91,6 +92,7 @@ export async function getMarketplaceProduct(productId: string) {
     seller: {
       id: profile.userId,
       name: detail.user.name,
+      image: await getAvatarDisplayUrl(detail.user.image),
       shopName: profile.shopName,
       sellerType: profile.sellerType,
       detailAddress: profile.detailAddress,

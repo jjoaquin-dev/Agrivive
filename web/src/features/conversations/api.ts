@@ -65,6 +65,15 @@ export function markConversationRead(conversationId: string) {
   return apiRequest(`/conversations/${encodeURIComponent(conversationId)}/read`, { method: "POST" });
 }
 
+export function uploadConversationAttachment(file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  return apiRequest<{ url: string; filename: string }>("/conversations/attachment", {
+    method: "POST",
+    body,
+  });
+}
+
 export function conversationWebSocketUrl(conversationId: string) {
   const url = new URL(apiPath(`/ws/conversations?conversationId=${encodeURIComponent(conversationId)}`));
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";

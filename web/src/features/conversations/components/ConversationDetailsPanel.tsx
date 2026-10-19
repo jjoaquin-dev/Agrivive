@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, MapPin, MoreHorizontal, Phone, ShieldCheck, Store } from "lucide-react";
@@ -13,6 +14,7 @@ export function ConversationDetailsPanel({
   context: ConversationLaunchContext;
   className?: string;
 }) {
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const shopName = context.sellerShopName || context.sellerName || "Market Stall";
   const initials = shopName
     .split(" ")
@@ -43,13 +45,14 @@ export function ConversationDetailsPanel({
       {/* Seller Avatar & Identity */}
       <div className="flex flex-col items-center py-6 text-center">
         <div className="relative size-20 overflow-hidden rounded-full border-2 border-border/80 bg-gradient-to-br from-agrivive-primary/10 to-agrivive-sage/20 shadow-xs">
-          {context.sellerImage ? (
+          {context.sellerImage && !avatarFailed ? (
             <Image
               src={context.sellerImage}
               alt={shopName}
               fill
               className="object-cover object-center"
               unoptimized
+              onError={() => setAvatarFailed(true)}
             />
           ) : (
             <div className="flex size-full items-center justify-center font-heading text-xl font-bold text-agrivive-primary">
@@ -115,6 +118,7 @@ export function ConversationDetailsPanel({
                   alt={context.productName || "Produce"}
                   fill
                   className="object-cover"
+                  unoptimized
                 />
               </div>
             ) : (
@@ -131,33 +135,6 @@ export function ConversationDetailsPanel({
           </Link>
         </div>
       )}
-
-      {/* Media & Links Gallery */}
-      <div className="mt-6 border-t border-border/70 pt-4">
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          <span>Stall Produce Gallery</span>
-          <span className="text-[10px] text-muted-foreground">Fresh harvest</span>
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {[
-            "/brand/cute-veggies-order.jpg",
-            "/brand/cute-veggies-auth.jpg",
-            "/brand/cute-veggies-market.jpg",
-          ].map((src, index) => (
-            <div
-              key={index}
-              className="relative aspect-square overflow-hidden rounded-xl border border-border/70 bg-muted"
-            >
-              <Image
-                src={src}
-                alt="Produce thumbnail"
-                fill
-                className="object-cover transition-transform hover:scale-105"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
     </aside>
   );
 }

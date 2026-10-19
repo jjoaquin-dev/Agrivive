@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
@@ -27,15 +19,6 @@ const filters: { id: SellerOrderFilter; label: string }[] = [
 export default function OrdersScreen() {
   const router = useRouter();
   const { filter, setFilter, orders, loading, refreshing, loadingMore, error, refresh, loadMore } = useSellerOrders();
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.muted}>Loading orders...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.screen}>
@@ -96,10 +79,17 @@ export default function OrdersScreen() {
         onEndReachedThreshold={0.5}
         ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} /> : null}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>No orders here</Text>
-            <Text style={styles.muted}>New buyer orders will appear here.</Text>
-          </View>
+          loading ? (
+            <View style={styles.empty}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.muted}>Loading orders...</Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>No orders here</Text>
+              <Text style={styles.muted}>New buyer orders will appear here.</Text>
+            </View>
+          )
         }
       />
     </View>
@@ -108,7 +98,6 @@ export default function OrdersScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
   muted: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.sm },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 24, color: colors.text },

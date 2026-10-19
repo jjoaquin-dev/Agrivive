@@ -20,7 +20,8 @@ export default function SellerOrderScanScreen() {
   const [scanning, setScanning] = useState(true);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [handoverError, setHandoverError] = useState<string | null>(null);
 
   const [activePayload, setActivePayload] = useState<string | null>(null);
   const [activeOrder, setActiveOrder] = useState<SellerOrder | null>(null);
@@ -28,14 +29,13 @@ export default function SellerOrderScanScreen() {
   const handleBarcodeScanned = async ({ data }: BarcodeScanningResult) => {
     if (!scanning || loadingOrder || submitting) return;
     setScanning(false);
-    setError(null);
+    setScanError(null);
 
     const parts = data.split(".");
     const targetOrderId = parts.length === 3 ? parts[1] : orderId;
 
     if (!targetOrderId) {
-      setError("This QR code is not a valid Agrivive pickup pass.");
-      setScanning(true);
+      setScanError("This QR code is not a valid Agrivive pickup pass.");
       return;
     }
 
@@ -45,8 +45,7 @@ export default function SellerOrderScanScreen() {
       setActivePayload(data);
       setActiveOrder(order);
     } catch (err: any) {
-      setError(err?.message || "Could not retrieve order details. Please check connection.");
-      setScanning(true);
+      setScanError(err?.message || "Could not retrieve order details. Please check connection.");
     } finally {
       setLoadingOrder(false);
     }
@@ -55,7 +54,7 @@ export default function SellerOrderScanScreen() {
   const handleConfirmHandover = async (adjustments: ScanOrderItemAdjustment[]) => {
     if (!activePayload) return;
     setSubmitting(true);
-    setError(null);
+    setHandoverError(null);
     try {
       const completed = await scanSellerOrder({
         qrPayload: activePayload,
@@ -63,9 +62,10 @@ export default function SellerOrderScanScreen() {
       });
       setActiveOrder(null);
       setActivePayload(null);
+      setHandoverError(null);
       router.replace({ pathname: "/(app)/orders/[id]", params: { id: completed.id } });
     } catch (err: any) {
-      setError(err?.message || "Could not complete pickup.");
+      setHandoverError(err?.message || "Could not complete pickup.");
     } finally {
       setSubmitting(false);
     }
@@ -101,12 +101,12 @@ export default function SellerOrderScanScreen() {
         </View>
         <View style={styles.scanBox} />
         {loadingOrder ? <ActivityIndicator color={colors.white} size="large" /> : null}
-        {error ? (
+        {scanError ? (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{scanError}</Text>
             <ButtonComponent
               title="Scan Again"
-              onPress={() => { setError(null); setScanning(true); }}
+              onPress={() => { setScanError(null); setScanning(true); }}
               variant="secondary"
             />
           </View>
@@ -117,9 +117,11 @@ export default function SellerOrderScanScreen() {
         visible={Boolean(activeOrder)}
         order={activeOrder}
         submitting={submitting}
+        error={handoverError}
         onClose={() => {
           setActiveOrder(null);
           setActivePayload(null);
+          setHandoverError(null);
           setScanning(true);
         }}
         onConfirm={handleConfirmHandover}

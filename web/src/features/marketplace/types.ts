@@ -15,6 +15,7 @@ export type MarketplaceSellerType = "supplier" | "supplier_vendor" | "retail_ven
 export type MarketplaceSeller = {
   id: string;
   name: string;
+  image?: string | null;
   shopName: string;
   sellerType: MarketplaceSellerType;
   detailAddress: string;

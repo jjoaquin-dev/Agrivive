@@ -23,6 +23,7 @@ export interface SellerAnalyticsResponse {
   };
   filter: {
     productId?: string;
+    productName?: string;
     unit?: AnalyticsUnit;
   };
   metrics: SellerAnalyticsMetrics;

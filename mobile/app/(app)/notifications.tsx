@@ -77,17 +77,6 @@ export default function SellerNotificationsScreen() {
     return true;
   });
 
-  if (loading && !refreshing) {
-    return (
-      <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.muted}>Loading notifications...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
       <FlatList
@@ -112,7 +101,6 @@ export default function SellerNotificationsScreen() {
               )}
             </View>
 
-            {/* Category Filter Pills */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
               {CATEGORIES.map((cat) => {
                 const isSelected = category === cat.id;
@@ -137,7 +125,6 @@ export default function SellerNotificationsScreen() {
               </Pressable>
             </ScrollView>
 
-            {/* Priority Boost Sections visible on All or Priority Boost tabs */}
             {(category === "all" || category === "boosts") && (
               <>
                 <SellerBoostPromptSection refreshSignal={promotionRefreshSignal} />
@@ -158,11 +145,18 @@ export default function SellerNotificationsScreen() {
         onEndReachedThreshold={0.5}
         ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} /> : null}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIconCircle}><Bell size={26} color={colors.primary} /></View>
-            <Text style={styles.emptyTitle}>No notifications</Text>
-            <Text style={styles.muted}>Updates matching this category will appear here.</Text>
-          </View>
+          loading ? (
+            <View style={styles.empty}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.muted}>Loading notifications...</Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <View style={styles.emptyIconCircle}><Bell size={26} color={colors.primary} /></View>
+              <Text style={styles.emptyTitle}>No notifications</Text>
+              <Text style={styles.muted}>Updates matching this category will appear here.</Text>
+            </View>
+          )
         }
       />
     </SafeAreaView>
@@ -172,7 +166,6 @@ export default function SellerNotificationsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   listContent: { padding: spacing.base, paddingBottom: spacing.xxxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   muted: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.xs, textAlign: "center" },
   header: { marginBottom: spacing.base },
   headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", marginBottom: spacing.sm },

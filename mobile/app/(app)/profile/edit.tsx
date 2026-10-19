@@ -198,10 +198,12 @@ export default function ProfileEditScreen() {
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <View style={styles.header}>
           <Text style={styles.title}>Edit stall information</Text>
@@ -347,7 +349,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: spacing.base,
     paddingTop: spacing.base,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: 140,
   },
   header: {
     marginBottom: spacing.base,

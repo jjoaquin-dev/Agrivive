@@ -8,9 +8,10 @@ import {
   sellers_profile,
   user,
 } from "../../../db/schema";
+import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 
 export async function listConversations(userId: string, limit = 50) {
-  return db.select({
+  const rows = await db.select({
     id: conversations.id,
     contextType: conversations.contextType,
     productId: conversations.productId,
@@ -52,4 +53,11 @@ export async function listConversations(userId: string, limit = 50) {
     .where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))
     .orderBy(desc(conversations.lastMessageAt), desc(conversations.id))
     .limit(limit);
+
+  return Promise.all(
+    rows.map(async (row) => ({
+      ...row,
+      sellerImage: await getAvatarDisplayUrl(row.sellerImage),
+    }))
+  );
 }

@@ -8,6 +8,7 @@ import { listConversations } from "../services/conversation.list";
 import { markConversationRead } from "../services/conversation.read";
 import { canAccessConversation, getConversationSocketUserId } from "../services/conversation.websocket-auth";
 import { subscribeConversation, unsubscribeConversation } from "../services/conversation.realtime";
+import { uploadConversationAttachment } from "../services/conversation.attachment";
 import {
   conversationListQuery,
   conversationParams,
@@ -42,6 +43,10 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     try { return await markConversationRead(session.userId, params.id); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], params: conversationParams })
+  .post("/conversations/attachment", async ({ session, body, status }) => {
+    try { return status(201, await uploadConversationAttachment(session.userId, body.file)); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"], body: t.Object({ file: t.File({ maxSize: "10m" }) }) })
   .ws("/ws/conversations", {
     query: t.Object({ conversationId: t.String({ format: "uuid" }) }),
     async beforeHandle({ request, query, status }) {

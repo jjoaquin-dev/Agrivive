@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { Minus, Plus, RefreshCw, X } from "lucide-react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AlertCircle, X } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
-import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import type { ScanOrderItemAdjustment } from "../api/seller-orders";
 import type { SellerOrder } from "../types";
+import { OrderHandoverItemRow } from "./OrderHandoverItemRow";
 
 export interface OrderHandoverSheetProps {
   visible: boolean;
@@ -20,6 +13,7 @@ export interface OrderHandoverSheetProps {
   onClose: () => void;
   onConfirm: (adjustments: ScanOrderItemAdjustment[]) => Promise<void>;
   submitting?: boolean;
+  error?: string | null;
 }
 
 export function OrderHandoverSheet({
@@ -28,6 +22,7 @@ export function OrderHandoverSheet({
   onClose,
   onConfirm,
   submitting = false,
+  error = null,
 }: OrderHandoverSheetProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
@@ -83,63 +78,14 @@ export function OrderHandoverSheet({
               Weigh produce at stall. Adjust dispensed amount if buyer collects less than reserved.
             </Text>
 
-            {order.items.map((item) => {
-              const reserved = Number(item.quantity ?? 0);
-              const unitPrice = Number(item.unitPrice ?? 0);
-              const current = quantities[item.id] !== undefined ? quantities[item.id] : reserved;
-              const diff = reserved - current;
-              const subtotal = current * unitPrice;
-
-              return (
-                <View key={item.id} style={styles.itemCard}>
-                  <View style={styles.itemTop}>
-                    <Text style={styles.itemName}>{item.productName || "Fresh Produce"}</Text>
-                    <Text style={styles.itemSubtotal}>₱{subtotal.toFixed(2)}</Text>
-                  </View>
-                  <Text style={styles.itemPrice}>
-                    Reserved: {reserved} {item.scalingType || "kg"} (₱{unitPrice.toFixed(2)} / {item.scalingType || "kg"})
-                  </Text>
-
-                  <View style={styles.stepperRow}>
-                    <Text style={styles.stepperLabel}>Actual Handed Over:</Text>
-                    <View style={styles.stepperControl}>
-                      <Pressable
-                        onPress={() => updateQuantity(item.id, current - 0.5, reserved)}
-                        style={styles.stepBtn}
-                        accessibilityLabel="Decrease amount"
-                      >
-                        <Minus size={16} color={colors.text} />
-                      </Pressable>
-                      <TextInput
-                        keyboardType="decimal-pad"
-                        value={String(current)}
-                        onChangeText={(txt) => {
-                          const val = parseFloat(txt) || 0;
-                          updateQuantity(item.id, val, reserved);
-                        }}
-                        style={styles.stepperInput}
-                      />
-                      <Pressable
-                        onPress={() => updateQuantity(item.id, current + 0.5, reserved)}
-                        style={styles.stepBtn}
-                        accessibilityLabel="Increase amount"
-                      >
-                        <Plus size={16} color={colors.text} />
-                      </Pressable>
-                    </View>
-                  </View>
-
-                  {diff > 0.001 ? (
-                    <View style={styles.restoredPill}>
-                      <RefreshCw size={13} color={colors.primary} />
-                      <Text style={styles.restoredText}>
-                        {diff.toFixed(2)} {item.scalingType || "kg"} will return to active stock
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              );
-            })}
+            {order.items.map((item) => (
+              <OrderHandoverItemRow
+                key={item.id}
+                item={item}
+                current={quantities[item.id] !== undefined ? quantities[item.id] : Number(item.quantity ?? 0)}
+                onUpdateQuantity={updateQuantity}
+              />
+            ))}
 
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
@@ -157,6 +103,13 @@ export function OrderHandoverSheet({
               ) : null}
             </View>
           </ScrollView>
+
+          {error ? (
+            <View style={styles.errorBox}>
+              <AlertCircle size={16} color={colors.error} />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.actions}>
             <ButtonComponent
@@ -188,18 +141,6 @@ const styles = StyleSheet.create({
   closeBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   scroll: { marginBottom: spacing.md },
   sectionNotice: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, backgroundColor: colors.background, padding: spacing.sm, borderRadius: radii.sm, marginBottom: spacing.md },
-  itemCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card, padding: spacing.md, marginBottom: spacing.sm },
-  itemTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  itemName: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
-  itemSubtotal: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.primary },
-  itemPrice: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2, marginBottom: spacing.sm },
-  stepperRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing.xs },
-  stepperLabel: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
-  stepperControl: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: radii.button },
-  stepBtn: { width: 38, height: 38, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
-  stepperInput: { minWidth: 50, textAlign: "center", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text, paddingHorizontal: spacing.xs },
-  restoredPill: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(31, 77, 58, 0.08)", paddingVertical: 4, paddingHorizontal: 8, borderRadius: radii.full, marginTop: spacing.sm, gap: 6 },
-  restoredText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.primary },
   summaryCard: { backgroundColor: colors.background, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.sm },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   summaryLabel: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
@@ -207,5 +148,7 @@ const styles = StyleSheet.create({
   summaryMainLabel: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
   summaryNewValue: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.primary },
   summaryHint: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted, marginTop: 4 },
+  errorBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(186, 26, 26, 0.08)", padding: spacing.sm, borderRadius: radii.sm, marginBottom: spacing.sm },
+  errorText: { flex: 1, fontFamily: fonts.body.medium, fontSize: 12, color: colors.error },
   actions: { paddingTop: spacing.xs },
 });

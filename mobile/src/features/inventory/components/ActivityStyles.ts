@@ -1,0 +1,47 @@
+import { StyleSheet } from "react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
+
+export const activityStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
+  listContent: { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.xxxl },
+  header: { marginBottom: spacing.base },
+  noticeBanner: {
+    flexDirection: "row",
+    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    borderRadius: radii.card,
+    padding: spacing.md,
+    marginBottom: spacing.base,
+  },
+  noticeIcon: { marginRight: spacing.sm, marginTop: 2 },
+  noticeText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, color: colors.text, lineHeight: 18 },
+  filterRow: { flexDirection: "row", gap: spacing.xs },
+  filterChip: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    borderRadius: radii.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 36,
+  },
+  filterChipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterChipText: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.text },
+  filterChipTextSelected: { color: colors.white, fontFamily: fonts.body.semiBold },
+  sectionContainer: { marginBottom: spacing.lg },
+  sectionDateTitle: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 14,
+    color: colors.textMuted,
+    marginBottom: spacing.xs,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  sectionCard: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.base },
+  centerContainer: { paddingVertical: spacing.xxxl, alignItems: "center", justifyContent: "center" },
+  loadingText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: spacing.sm },
+  emptyIconCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: "rgba(31, 77, 58, 0.08)", justifyContent: "center", alignItems: "center", marginBottom: spacing.md },
+  emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text, marginBottom: 4 },
+  emptySub: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", paddingHorizontal: spacing.lg },
+});

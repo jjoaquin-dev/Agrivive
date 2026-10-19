@@ -161,10 +161,12 @@ export default function LoginScreen() {
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         <View style={styles.header}>
           <Text style={styles.title}>Welcome back</Text>

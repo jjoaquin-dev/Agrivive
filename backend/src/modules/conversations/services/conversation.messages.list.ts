@@ -1,6 +1,7 @@
 import { and, asc, eq, or } from "drizzle-orm";
 import { db } from "../../../db";
 import { conversation_messages, conversations } from "../../../db/schema";
+import { presignConversationMessageBody } from "../../../utils/s3-conversation";
 import { ConversationError } from "./conversation.error";
 
 export async function listConversationMessages(userId: string, conversationId: string) {
@@ -10,7 +11,7 @@ export async function listConversationMessages(userId: string, conversationId: s
   )).limit(1);
   if (!conversation) throw new ConversationError(404, "Conversation not found");
 
-  return db.select({
+  const rows = await db.select({
     id: conversation_messages.id,
     conversationId: conversation_messages.conversationId,
     senderId: conversation_messages.senderId,
@@ -20,4 +21,9 @@ export async function listConversationMessages(userId: string, conversationId: s
   }).from(conversation_messages)
     .where(eq(conversation_messages.conversationId, conversationId))
     .orderBy(asc(conversation_messages.createdAt), asc(conversation_messages.id));
+
+  return Promise.all(rows.map(async (row) => ({
+    ...row,
+    body: await presignConversationMessageBody(row.body),
+  })));
 }

@@ -21,7 +21,8 @@ Agrivive/06 Audits and Discrepancies/
   ├── 03 Flagging and Trust Features Needing Enhancement.md
   ├── 04 Flagging and Trust Functional Test Cases.md
   ├── 05 AHP-TOPSIS Visibility Functional Test Cases.md
-  └── 06 n8n Priority Promotion and Price Reduction Functional Test Cases.md
+  ├── 06 n8n Priority Promotion and Price Reduction Functional Test Cases.md
+  └── 07 Descriptive Sales Trend Analytics Functional Test Cases.md
 ```
 
 ---
@@ -54,6 +55,14 @@ A verification audit of the automated promotion pipeline, Groq AI copywriting (`
 | Note | Focus Area | Key Findings |
 | :--- | :--- | :--- |
 | `[[06 n8n Priority Promotion and Price Reduction Functional Test Cases]]` | **n8n Priority Promotion Functional Test Suite (N8N-001 to N8N-010)** | • 10/10 test cases verified and 100% implemented.<br>• Background scheduler claims jobs and dispatches webhooks to n8n without blocking.<br>• Groq generates headline ($\le 80$ chars) and caption ($\le 280$ chars) under strict neutrality constraints.<br>• Automated 6-hour price reduction with integer cents arithmetic and seller price floor protection.<br>• Bearer token authentication and stop conditions for sold-out produce. |
+
+### 4. Descriptive Sales Trend Analytics Framework (Section 2.3.2.4)
+
+A verification audit of the descriptive sales analytics engine, mathematical equations, zero-division safeguards, QR pickup physical handover gating, and public aggregate access.
+
+| Note | Focus Area | Key Findings |
+| :--- | :--- | :--- |
+| `[[07 Descriptive Sales Trend Analytics Functional Test Cases]]` | **Descriptive Analytics Functional Test Suite (DSA-001 to DSA-015)** | • 15/15 test cases verified and 100% implemented.<br>• Verifies Equation 2 ($STR$) and Equation 3 ($STC$) against live database records.<br>• Sales count strictly QR-validated completions; uncompleted reservations excluded.<br>• Defensive zero-baseline (`notComputable = true`) preventing math exceptions.<br>• Public aggregate marketplace overview accessible without stakeholder login or PII exposure. |
 
 ---
 

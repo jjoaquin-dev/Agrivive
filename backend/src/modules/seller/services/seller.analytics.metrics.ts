@@ -6,85 +6,19 @@ import {
   orders,
   sellers_product,
 } from "../../../db/schema";
-import { OrderError } from "../../../utils/order-types";
 import { getVegetableCycleIdentity } from "../../../utils/vegetable-identity";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import type {
   SellerAnalyticsMetrics,
   SellerAnalyticsQuery,
 } from "../model/seller.analytics";
-
-type Period = {
-  start: Date;
-  end: Date;
-  from: string;
-  to: string;
-};
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function dateOnly(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function startOfUtcDay(value: string) {
-  const date = new Date(`${value}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime()) || dateOnly(date) !== value) {
-    throw new OrderError(400, "Analytics dates must use YYYY-MM-DD format");
-  }
-  return date;
-}
-
-function resolvePeriod(query: SellerAnalyticsQuery) {
-  if ((query.from && !query.to) || (!query.from && query.to)) {
-    throw new OrderError(400, "Analytics requires both from and to dates");
-  }
-
-  const todayStart = startOfUtcDay(dateOnly(new Date()));
-  const end = query.to ? new Date(startOfUtcDay(query.to).getTime() + DAY_MS) : todayStart;
-  const start = query.from
-    ? startOfUtcDay(query.from)
-    : new Date(end.getTime() - 30 * DAY_MS);
-
-  if (start >= end) {
-    throw new OrderError(400, "Analytics from date must be before the to date");
-  }
-
-  const duration = end.getTime() - start.getTime();
-  const previousStart = new Date(start.getTime() - duration);
-  return {
-    current: { start, end, from: dateOnly(start), to: dateOnly(new Date(end.getTime() - DAY_MS)) },
-    previous: {
-      start: previousStart,
-      end: start,
-      from: dateOnly(previousStart),
-      to: dateOnly(new Date(start.getTime() - DAY_MS)),
-    },
-  };
-}
-
-function scaledDecimal(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return 0n;
-  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(String(value));
-  if (!match) return 0n;
-  const cents = BigInt(match[2]) * 100n + BigInt((match[3] ?? "").padEnd(2, "0") || "0");
-  return match[1] ? -cents : cents;
-}
-
-function formatScaled(value: bigint) {
-  const sign = value < 0n ? "-" : "";
-  const absolute = value < 0n ? -value : value;
-  return `${sign}${absolute / 100n}.${(absolute % 100n).toString().padStart(2, "0")}`;
-}
-
-function percentage(numerator: bigint, denominator: bigint) {
-  if (denominator === 0n) return null;
-  return Number((numerator * 10_000n) / denominator) / 100;
-}
-
-function inPeriod(value: Date | null, period: Period) {
-  return value !== null && value >= period.start && value < period.end;
-}
+import {
+  formatScaled,
+  inPeriod,
+  percentage,
+  resolvePeriod,
+  scaledDecimal,
+} from "./seller.analytics.helpers";
 
 export async function getSellerAnalyticsMetrics(
   sellerId: string,
@@ -100,7 +34,12 @@ export async function getSellerAnalyticsMetrics(
     if (query.unit) productConditions.push(eq(sellers_product.scalingType, query.unit));
 
     const products = await tx
-      .select({ id: sellers_product.id, productQty: sellers_product.productQty, scalingType: sellers_product.scalingType })
+      .select({
+        id: sellers_product.id,
+        productName: sellers_product.productName,
+        productQty: sellers_product.productQty,
+        scalingType: sellers_product.scalingType,
+      })
       .from(sellers_product)
       .where(and(...productConditions));
 
@@ -109,15 +48,35 @@ export async function getSellerAnalyticsMetrics(
     const cycles = empty
       ? []
       : await tx
-          .select({ productId: listing_cycles.productId, vegetableCatalogId: listing_cycles.vegetableCatalogId, scalingType: listing_cycles.scalingType, vegetableKey: listing_cycles.vegetableKey, originalQty: listing_cycles.originalQty, startedAt: listing_cycles.startedAt })
+          .select({
+            productId: listing_cycles.productId,
+            vegetableCatalogId: listing_cycles.vegetableCatalogId,
+            scalingType: listing_cycles.scalingType,
+            vegetableKey: listing_cycles.vegetableKey,
+            originalQty: listing_cycles.originalQty,
+            startedAt: listing_cycles.startedAt,
+          })
           .from(listing_cycles)
-          .where(and(inArray(listing_cycles.productId, productIds), gte(listing_cycles.startedAt, periods.previous.start), lt(listing_cycles.startedAt, periods.current.end)));
+          .where(
+            and(
+              inArray(listing_cycles.productId, productIds),
+              gte(listing_cycles.startedAt, periods.previous.start),
+              lt(listing_cycles.startedAt, periods.current.end),
+            ),
+          );
+
     const items = empty
       ? []
       : await tx
-          .select({ orderId: ordered_items.ordersId, productId: ordered_items.productId, quantity: ordered_items.quantity, subtotal: ordered_items.subtotal })
+          .select({
+            orderId: ordered_items.ordersId,
+            productId: ordered_items.productId,
+            quantity: ordered_items.quantity,
+            subtotal: ordered_items.subtotal,
+          })
           .from(ordered_items)
           .where(inArray(ordered_items.productId, productIds));
+
     const sellerOrders = await tx
       .select({
         id: orders.id,
@@ -143,6 +102,7 @@ export async function getSellerAnalyticsMetrics(
     let cancelledQuantity = 0n;
     let expiredQuantity = 0n;
     let completedSalesTotal = 0n;
+
     for (const item of items) {
       if (!selected.has(item.productId)) continue;
       const order = orderById.get(item.orderId);
@@ -179,6 +139,7 @@ export async function getSellerAnalyticsMetrics(
         })
         .map((cycle) => getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType)),
     ).size;
+
     const completedQuantityChange = percentage(
       previousCompletedQuantity === 0n ? 0n : completedQuantity - previousCompletedQuantity,
       previousCompletedQuantity,
@@ -186,6 +147,7 @@ export async function getSellerAnalyticsMetrics(
     const sellThroughRate = percentage(completedQuantity, postedQuantity);
     const completedChange = previousCompletedQuantity === 0n ? null : completedQuantityChange;
     const remainingQuantity = availableQuantity + activeReservedQuantity;
+    const matchedProduct = query.productId ? products.find((p) => p.id === query.productId) : undefined;
 
     return {
       period: {
@@ -196,6 +158,7 @@ export async function getSellerAnalyticsMetrics(
       },
       filter: {
         ...(query.productId ? { productId: query.productId } : {}),
+        ...(matchedProduct?.productName ? { productName: matchedProduct.productName } : {}),
         ...(query.unit ? { unit: query.unit } : {}),
       },
       metrics: {
