@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { authClient } from "../../../api/client";
+import { useAuth } from "../../../context/AuthContext";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, spacing } from "../../../theme";
 
 export function GoogleSignInButton() {
   const router = useRouter();
+  const { refreshSetup, completeOnboarding } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,7 +32,27 @@ export function GoogleSignInButton() {
         return;
       }
 
-      router.replace("/");
+      await completeOnboarding();
+      const setup = await refreshSetup();
+
+      if (setup) {
+        if (!setup.profileComplete || setup.nextStep === "profile") {
+          router.replace("/(app)/profile/setup");
+          return;
+        }
+
+        if (setup.passwordSetupRequired || setup.nextStep === "password-setup") {
+          router.replace("/(auth)/password-setup");
+          return;
+        }
+
+        if (setup.sellerVerified || setup.nextStep === "ready") {
+          router.replace("/(app)/(tabs)/home");
+          return;
+        }
+      }
+
+      router.replace("/(app)/profile/setup");
     } catch {
       setError("We could not start Google sign-in. Please try again.");
     } finally {

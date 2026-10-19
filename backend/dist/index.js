@@ -100669,6 +100669,7 @@ var user = pgTable("user", {
   image: text("image"),
   role: roleEnum().array().default(["buyer"]),
   isActive: boolean4("is_active").default(true).notNull(),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).defaultNow().notNull(),
   twoFactorEnabled: boolean4("two_factor_enabled").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
@@ -101188,7 +101189,7 @@ var conversation_messages = pgTable("conversation_messages", {
 var trust_events = pgTable("trust_events", {
   id: uuid2("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
-  orderId: uuid2("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid2("order_id").references(() => orders.id, { onDelete: "cascade" }),
   subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
   classification: text("classification").notNull(),
@@ -101204,7 +101205,7 @@ var trust_notices = pgTable("trust_notices", {
   id: uuid2("id").defaultRandom().primaryKey(),
   noticeKey: text("notice_key").notNull().unique(),
   recipientId: text("recipient_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  orderId: uuid2("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid2("order_id").references(() => orders.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
   attempts: integer2("attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
@@ -103897,6 +103898,23 @@ var auth = betterAuth({
   }
 });
 
+// src/utils/user-activity/index.ts
+var touchCache = new Map;
+var THROTTLE_MS = 60 * 60 * 1000;
+async function touchUserActivity(userId) {
+  const now = Date.now();
+  const lastTouch = touchCache.get(userId);
+  if (lastTouch && now - lastTouch < THROTTLE_MS) {
+    return;
+  }
+  touchCache.set(userId, now);
+  try {
+    await db2.update(user).set({ lastActiveAt: new Date(now) }).where(eq(user.id, userId));
+  } catch (error) {
+    console.error("Failed to update lastActiveAt for user", userId, error);
+  }
+}
+
 // src/modules/auth/services/auth.session.ts
 var sellerRoute = new Elysia({ name: "auth.session" });
 var sessionAuth = new Elysia().macro({
@@ -103911,6 +103929,7 @@ var sessionAuth = new Elysia().macro({
       const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
       if (!current?.isActive)
         return status(403);
+      touchUserActivity(authSession.user.id);
       const userRoles = [...current.role ?? []];
       const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
       if (stakeholderEmails.has(current.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
@@ -110762,7 +110781,7 @@ var import_endpoints5 = __toESM(require_endpoints());
 var import_event_streams2 = __toESM(require_event_streams());
 var import_protocols6 = __toESM(require_protocols());
 var import_retry4 = __toESM(require_retry());
-var import_schema28 = __toESM(require_schema());
+var import_schema29 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/auth/httpAuthSchemeProvider.js
 var import_httpAuthSchemes = __toESM(require_httpAuthSchemes());
@@ -112925,7 +112944,7 @@ var _mw11 = (Command, cs, config, o) => [
 ];
 
 // node_modules/@aws-sdk/client-s3/dist-es/schemas/schemas_0.js
-var import_schema27 = __toESM(require_schema());
+var import_schema28 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/models/S3ServiceException.js
 var import_client5 = __toESM(require_client3());
@@ -114295,10 +114314,10 @@ var _xawob = "x-amz-write-offset-bytes";
 var _xawrl = "x-amz-website-redirect-location";
 var _xs = "xsi:type";
 var n0 = "com.amazonaws.s3";
-var _s_registry = import_schema27.TypeRegistry.for(_s);
+var _s_registry = import_schema28.TypeRegistry.for(_s);
 var S3ServiceException$ = [-3, _s, "S3ServiceException", 0, [], []];
 _s_registry.registerError(S3ServiceException$, S3ServiceException);
-var n0_registry = import_schema27.TypeRegistry.for(n0);
+var n0_registry = import_schema28.TypeRegistry.for(n0);
 var AccessDenied$ = [
   -3,
   n0,
@@ -119329,7 +119348,7 @@ class S3Client extends import_client25.Client {
     const _config_10 = $resolveS3Config(_config_9, { session: [() => this, CreateSessionCommand] });
     const _config_11 = resolveRuntimeExtensions2(_config_10, configuration?.extensions || []);
     this.config = _config_11;
-    this.middlewareStack.use(import_schema28.getSchemaSerdePlugin(this.config));
+    this.middlewareStack.use(import_schema29.getSchemaSerdePlugin(this.config));
     this.middlewareStack.use(import_client24.getUserAgentPlugin(this.config));
     this.middlewareStack.use(import_retry4.getRetryPlugin(this.config));
     this.middlewareStack.use(import_protocols6.getContentLengthPlugin(this.config));
@@ -120036,8 +120055,13 @@ var sellerWeightedVisiblityRoute = new Elysia().use(sessionAuth).get("/weightedv
 }, { role: ["seller"] });
 
 // src/modules/seller/model/seller.scan-order.ts
+var scanOrderItemAdjustment = t.Object({
+  itemId: t.String({ format: "uuid" }),
+  dispensedQuantity: t.Number({ minimum: 0 })
+});
 var scanOrderBody = t.Object({
-  qrPayload: t.String({ minLength: 1, maxLength: 128 })
+  qrPayload: t.String({ minLength: 1, maxLength: 128 }),
+  items: t.Optional(t.Array(scanOrderItemAdjustment))
 });
 var orderIdParams = t.Object({
   id: t.String({ format: "uuid" })
@@ -120186,19 +120210,78 @@ async function scanSellerOrder(sellerId, body) {
     await requireActiveUser(tx, sellerId, "seller");
     await requireSellerScanAccess(tx, sellerId, orderId);
     const now = new Date;
-    const [completed] = await tx.update(orders).set({ status: "completed", completedAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.sellersId, sellerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id });
-    if (completed)
-      return;
-    const [current] = await tx.select({ sellerId: orders.sellersId, status: orders.status, expiresAt: orders.expiresAt }).from(orders).where(eq(orders.id, orderId)).limit(1);
+    const [current] = await tx.select({
+      id: orders.id,
+      sellerId: orders.sellersId,
+      status: orders.status,
+      expiresAt: orders.expiresAt,
+      totalAmount: orders.totalAmount
+    }).from(orders).where(eq(orders.id, orderId)).limit(1);
     if (!current)
       throw new OrderError(404, "Order not found");
     if (current.sellerId !== sellerId) {
       throw new OrderError(403, "This order belongs to another seller");
     }
-    if (current.status === "pending" && current.expiresAt && current.expiresAt <= now) {
+    if (current.status !== "pending") {
+      throw new OrderError(409, "Order is no longer pending");
+    }
+    if (current.expiresAt && current.expiresAt <= now) {
       throw new OrderError(410, "Order has expired");
     }
-    throw new OrderError(409, "Order is no longer pending");
+    const existingItems = await tx.select({
+      id: ordered_items.id,
+      productId: ordered_items.productId,
+      quantity: ordered_items.quantity,
+      unitPrice: ordered_items.unitPrice,
+      subtotal: ordered_items.subtotal
+    }).from(ordered_items).where(eq(ordered_items.ordersId, orderId));
+    if (!existingItems.length) {
+      throw new OrderError(400, "Order has no items");
+    }
+    let finalTotalAmount = Number(current.totalAmount);
+    if (body.items && body.items.length > 0) {
+      const adjustmentMap = new Map;
+      for (const adj of body.items) {
+        adjustmentMap.set(adj.itemId, adj.dispensedQuantity);
+      }
+      let newTotal = 0;
+      let totalDispensed = 0;
+      for (const item of existingItems) {
+        const reservedQty = Number(item.quantity ?? 0);
+        const unitPrice = Number(item.unitPrice ?? 0);
+        const dispensedQty = adjustmentMap.has(item.id) ? adjustmentMap.get(item.id) : reservedQty;
+        if (dispensedQty < 0) {
+          throw new OrderError(400, "Dispensed amount cannot be negative");
+        }
+        if (dispensedQty > reservedQty + 0.0001) {
+          throw new OrderError(400, `Dispensed amount cannot be greater than reserved amount (${reservedQty})`);
+        }
+        totalDispensed += dispensedQty;
+        const newSubtotal = Number((dispensedQty * unitPrice).toFixed(2));
+        newTotal += newSubtotal;
+        const diff = reservedQty - dispensedQty;
+        if (diff > 0.0001) {
+          await tx.update(sellers_product).set({
+            productQty: sql3`${sellers_product.productQty} + ${diff.toFixed(2)}`
+          }).where(eq(sellers_product.id, item.productId));
+          await tx.update(ordered_items).set({
+            quantity: dispensedQty.toFixed(2),
+            subtotal: newSubtotal.toFixed(2),
+            updatedAt: now
+          }).where(eq(ordered_items.id, item.id));
+        }
+      }
+      if (totalDispensed <= 0) {
+        throw new OrderError(400, "Cannot complete handover with 0 amount. Please cancel the order instead.");
+      }
+      finalTotalAmount = Number(newTotal.toFixed(2));
+    }
+    await tx.update(orders).set({
+      status: "completed",
+      totalAmount: finalTotalAmount.toFixed(2),
+      completedAt: now,
+      updatedAt: now
+    }).where(and(eq(orders.id, orderId), eq(orders.sellersId, sellerId), eq(orders.status, "pending")));
   });
   return getOrder(orderId, sellerId, "seller");
 }
@@ -120867,14 +120950,15 @@ var trustPolicyVersion = "monitoring-v3";
 var trustPolicyWeights = {
   inquiry_non_response: 1,
   seller_cancellation: 2,
-  low_rating: 1
+  low_rating: 1,
+  buyer_failed_reservation: 2
 };
 function configuredInteger(name, fallback) {
   const value = Number(process.env[name]);
   return Number.isInteger(value) && value >= 0 ? value : fallback;
 }
 var trustActionPolicy = {
-  enabled: process.env.TRUST_ACTIONS_ENABLED?.trim().toLowerCase() === "true",
+  enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
   warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
   restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
   blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),
@@ -120992,14 +121076,12 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
     if (actionType === "blocked") {
       await tx.update(user).set({ isActive: false }).where(eq(user.id, subjectId));
     }
-    if (orderId) {
-      await queueTrustNotice(tx, {
-        noticeKey: `trust-action:${actionKey}`,
-        recipientId: subjectId,
-        orderId,
-        kind: actionNoticeKinds[actionType]
-      });
-    }
+    await queueTrustNotice(tx, {
+      noticeKey: `trust-action:${actionKey}`,
+      recipientId: subjectId,
+      orderId: orderId ?? null,
+      kind: actionNoticeKinds[actionType]
+    });
     return action;
   });
 }
@@ -121413,6 +121495,8 @@ function correctSellerTrustEvent(sellerId, eventId, reason) {
       throw new OrderError(404, "Trust event not found");
     let valid = true;
     if (event.kind === "seller_cancellation") {
+      if (!event.orderId)
+        throw new OrderError(400, "Cancellation event missing order");
       const [order] = await tx.select({ status: orders.status, cancelledBy: orders.cancelledBy }).from(orders).where(eq(orders.id, event.orderId)).limit(1);
       valid = order?.status === "cancelled" && order.cancelledBy === "seller";
     } else if (event.kind === "inquiry_non_response" && event.sourceId) {
@@ -121519,7 +121603,7 @@ async function getSellerSetup(userId) {
         label: "Verified account",
         explanation: "Email verified and seller profile completed."
       } : null,
-      nextStep: !account.emailVerified ? "verify-email" : sellerVerified ? "ready" : "profile"
+      nextStep: !account.emailVerified ? "verify-email" : !profileComplete ? "profile" : passwordStatus.passwordSetupRequired ? "password-setup" : sellerVerified ? "ready" : "profile"
     };
   });
 }
@@ -122404,14 +122488,7 @@ async function getPriorityPromotionEligibility(listingCycleId) {
     visibilityTier: result.tier,
     visibilityRank: result.rank,
     policyVersion: ranking.policyVersion,
-    evaluatedAt
-  };
-  if (result.score < 0.6)
-    return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
-  return {
-    eligible: true,
-    reason: null,
-    ...shared,
+    evaluatedAt,
     productName: candidate.productName,
     productType: candidate.productType,
     unit: candidate.unit,
@@ -122423,6 +122500,13 @@ async function getPriorityPromotionEligibility(listingCycleId) {
     sellerName: candidate.sellerName,
     listingUrl: marketplaceUrl(candidate.productId),
     criteria: result.criteria
+  };
+  if (result.score < 0.6)
+    return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
+  return {
+    eligible: true,
+    reason: null,
+    ...shared
   };
 }
 function ineligible(target, reason, evaluatedAt) {
@@ -122658,8 +122742,11 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
   if (!cycle)
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
   const eligibility = await getPriorityPromotionEligibility(cycle.id);
-  if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
-    throw new OrderError(409, eligibility?.reason ?? "This listing is not ready for Boost Visibility");
+  if (!eligibility || eligibility.sellerId !== sellerId) {
+    throw new OrderError(404, "This listing is not ready for Boost Visibility");
+  }
+  if (!("productName" in eligibility) || !eligibility.eligible && eligibility.reason !== "Visibility is below Priority Boost") {
+    throw new OrderError(409, eligibility.reason ?? "This listing is not ready for Boost Visibility");
   }
   const [product] = await db2.select({ imageUrl: sellers_product.imagUrl }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
   if (!product?.imageUrl)

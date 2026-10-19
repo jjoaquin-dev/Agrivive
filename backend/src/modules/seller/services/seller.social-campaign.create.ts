@@ -15,8 +15,11 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     .orderBy(desc(listing_cycles.startedAt)).limit(1);
   if (!cycle) throw new OrderError(404, "This listing is not ready for Boost Visibility");
   const eligibility = await getPriorityPromotionEligibility(cycle.id);
-  if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
-    throw new OrderError(409, eligibility?.reason ?? "This listing is not ready for Boost Visibility");
+  if (!eligibility || eligibility.sellerId !== sellerId) {
+    throw new OrderError(404, "This listing is not ready for Boost Visibility");
+  }
+  if (!("productName" in eligibility) || (!eligibility.eligible && eligibility.reason !== "Visibility is below Priority Boost")) {
+    throw new OrderError(409, eligibility.reason ?? "This listing is not ready for Boost Visibility");
   }
   const [product] = await db.select({ imageUrl: sellers_product.imagUrl }).from(sellers_product)
     .where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);

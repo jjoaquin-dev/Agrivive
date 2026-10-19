@@ -6,7 +6,7 @@ import type { OrderTransaction } from "../order-types";
 
 export function recordTrustEvent(tx: OrderTransaction, input: {
   eventKey: string;
-  orderId: string;
+  orderId?: string | null;
   subjectId: string;
   kind: string;
   classification: "verified" | "allegation";
@@ -18,7 +18,7 @@ export function recordTrustEvent(tx: OrderTransaction, input: {
 export function queueTrustNotice(tx: OrderTransaction, input: {
   noticeKey: string;
   recipientId: string;
-  orderId: string;
+  orderId?: string | null;
   kind: string;
 }) {
   return tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();

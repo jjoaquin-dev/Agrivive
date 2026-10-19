@@ -7,7 +7,10 @@ export async function restoreOrderStock(tx: OrderTransaction, orderId: string) {
     .select({ productId: ordered_items.productId, quantity: ordered_items.quantity })
     .from(ordered_items)
     .where(eq(ordered_items.ordersId, orderId));
-  if (!items.length || items.some((item) => item.quantity === null)) {
+  if (!items.length) {
+    return;
+  }
+  if (items.some((item) => item.quantity === null)) {
     throw new Error("Order items are missing a quantity");
   }
   for (const item of items) {

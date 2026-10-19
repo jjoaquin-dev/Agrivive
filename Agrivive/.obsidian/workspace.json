@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "04 Delivery/2026-10-13 VPS Docker Pull Rebuild Reset Runbook.md",
+                "file": "06 Audits and Discrepancies/06 n8n Priority Promotion and Price Reduction Functional Test Cases.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-10-13 VPS Docker Pull Rebuild Reset Runbook"
+              "title": "06 n8n Priority Promotion and Price Reduction Functional Test Cases"
             }
           }
         ]
@@ -190,6 +190,17 @@
   },
   "active": "22c3c61ec89b2992",
   "lastOpenFiles": [
+    "02 Product/Feature Map.md",
+    "06 Audits and Discrepancies/06 n8n Priority Promotion and Price Reduction Functional Test Cases.md",
+    "06 Audits and Discrepancies/04 Flagging and Trust Functional Test Cases.md",
+    "04 Delivery/2026-10-19 n8n Priority Promotion Functional Test Suite.md",
+    "04 Delivery/2026-10-18 AHP-TOPSIS Visibility Functional Test Cases.md",
+    "06 Audits and Discrepancies/05 AHP-TOPSIS Visibility Functional Test Cases.md",
+    "06 Audits and Discrepancies/02 Flagging and Trust Scope Narrowed.md",
+    "06 Audits and Discrepancies/01 Flagging and Trust Discrepancies.md",
+    "06 Audits and Discrepancies/00 Audits and Discrepancies Index.md",
+    "06 Audits and Discrepancies/03 Flagging and Trust Features Needing Enhancement.md",
+    "04 Delivery/2026-10-13 VPS Docker Pull Rebuild Reset Runbook.md",
     "04 Delivery/2026-10-13 Social Boost Preview Restored.md",
     "04 Delivery/2026-10-13 Visibility Boost Webhook Diagnostics.md",
     "04 Delivery/2026-10-13 Seller Visibility Boost Status and History.md",
@@ -205,17 +216,6 @@
     "04 Delivery/2026-09-20 Direct Order Backend.md",
     "04 Delivery/Open Decisions.md",
     "02 Product/Reservation and QR Pickup.md",
-    "02 Product/Product Journeys.md",
-    "01 Foundation/Project Brief.md",
-    "04 Delivery/2026-09-26 Agrivive Advertisement Preparation.md",
-    "04 Delivery/2026-09-26 Buyer Web Orders Suite Redesign and UX Laws.md",
-    "04 Delivery/2026-09-26 Typography Alignment and Icon Harmonization.md",
-    "04 Delivery/2026-09-26 Buyer Web Profile Polish and Per-Field Errors.md",
-    "04 Delivery/2026-09-26 Buyer Web Product Card Polish.md",
-    "04 Delivery/2026-09-26 Buyer Marketplace Header.md",
-    "04 Delivery/2026-09-26 Buyer Seller Storefront.md",
-    "04 Delivery/2026-09-26 Buyer Marketplace UI Cleanup.md",
-    "04 Delivery/2026-09-26 Buyer Product Reviews Frontend.md",
     "04 Delivery",
     "03 Intelligence",
     "02 Product",

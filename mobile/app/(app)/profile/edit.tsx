@@ -28,6 +28,7 @@ import {
   Coordinates,
   DAVAO_CITY_COORDINATES,
 } from "../../../src/components/MapPickerComponent";
+import { PasswordSecurityCard } from "../../../src/features/auth/components/PasswordSecurityCard";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
@@ -321,6 +322,16 @@ export default function ProfileEditScreen() {
             loading={loading}
             style={styles.submitButton}
           />
+
+          <View style={styles.passwordDivider} />
+
+          <View style={styles.passwordSection}>
+            <Text style={styles.sectionHeading}>Password Settings</Text>
+            <Text style={styles.sectionHint}>
+              Manage your password to secure your account or sign in with your email.
+            </Text>
+            <PasswordSecurityCard />
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -434,5 +445,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     fontFamily: fonts.body.regular,
+  },
+  passwordDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xl,
+  },
+  passwordSection: {
+    marginBottom: spacing.xl,
+  },
+  sectionHeading: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 18,
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
 });

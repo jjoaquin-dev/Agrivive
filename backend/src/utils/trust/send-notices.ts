@@ -14,6 +14,9 @@ const messages: Record<string, { subject: string; text: string }> = {
   trust_action_restriction: { subject: "Agrivive temporary restriction", text: "Your account has a temporary restriction because verified trust events reached the configured restriction threshold. The restriction will expire automatically unless a newer action applies." },
   trust_action_blocked: { subject: "Agrivive account recovery", text: "Your account is blocked by the trust policy. Use the Agrivive recovery screen and verify the email OTP to restore access." },
   trust_action_expired: { subject: "Agrivive restriction ended", text: "Your temporary trust restriction has ended automatically. You can use Agrivive again." },
+  buyer_failed_reservation_warning: { subject: "Agrivive uncollected reservation notice", text: "A vegetable reservation expired before pickup. This incident has been recorded in your buyer trust history." },
+  inactivity_3w_warning: { subject: "Agrivive inactivity reminder", text: "You have not been active in Agrivive for three weeks. Please log in or update your activity to maintain your account standing." },
+  inactivity_1m_blocked: { subject: "Agrivive account blocked due to inactivity", text: "Your account has been deactivated after 30 days of inactivity. Please follow the recovery process to restore access." },
 };
 
 export async function sendPendingTrustNotices(limit = 25) {
@@ -38,8 +41,8 @@ export async function sendPendingTrustNotices(limit = 25) {
     const message = messages[notice.kind];
     if (!recipient || !message) continue;
     try {
-      await sendEmail(recipient.email, message.subject, `${message.text}\nOrder: ${notice.orderId}`,
-        `trust:${notice.noticeKey}`);
+      const details = `${message.text}${notice.orderId ? `\nOrder: ${notice.orderId}` : ""}`;
+      await sendEmail(recipient.email, message.subject, details, `trust:${notice.noticeKey}`);
       await db.update(trust_notices).set({ sentAt: new Date(), lockedUntil: null })
         .where(eq(trust_notices.id, notice.id));
       sent++;

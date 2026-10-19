@@ -1,4 +1,5 @@
 import { expirePendingOrders } from "../modules/buyer/services/buyer.order.expire";
+import { checkUserInactivity } from "./check-user-inactivity";
 import { processInquiryDeadlines } from "../utils/trust/process-inquiries";
 import { sendPendingTrustNotices } from "../utils/trust/send-notices";
 import { expireTrustRestrictions } from "../utils/trust/expire-restrictions";
@@ -11,6 +12,7 @@ import { deliverSellerVisibilityBoosts } from "./deliver-seller-visibility-boost
 
 export async function runScheduledJobs() {
   const expiredOrders = await expirePendingOrders();
+  const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
   const trustRestrictionsExpired = await expireTrustRestrictions();
@@ -20,5 +22,5 @@ export async function runScheduledJobs() {
   const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
+  return { expiredOrders, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
 }

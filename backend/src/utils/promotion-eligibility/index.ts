@@ -58,6 +58,17 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
     visibilityRank: result.rank,
     policyVersion: ranking.policyVersion,
     evaluatedAt,
+    productName: candidate.productName,
+    productType: candidate.productType,
+    unit: candidate.unit,
+    price: candidate.price,
+    quantity: candidate.quantity,
+    originalQuantity: candidate.originalQuantity,
+    availability: Number(candidate.quantity) > 0 ? ("available" as const) : ("sold_out" as const),
+    shopName: candidate.shopName,
+    sellerName: candidate.sellerName,
+    listingUrl: marketplaceUrl(candidate.productId),
+    criteria: result.criteria,
   } as const;
   if (result.score < 0.60) return { eligible: false as const, reason: "Visibility is below Priority Boost", ...shared };
 
@@ -65,17 +76,6 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
     eligible: true as const,
     reason: null,
     ...shared,
-    productName: candidate.productName,
-    productType: candidate.productType,
-    unit: candidate.unit,
-    price: candidate.price,
-    quantity: candidate.quantity,
-    originalQuantity: candidate.originalQuantity,
-    availability: Number(candidate.quantity) > 0 ? "available" as const : "sold_out" as const,
-    shopName: candidate.shopName,
-    sellerName: candidate.sellerName,
-    listingUrl: marketplaceUrl(candidate.productId),
-    criteria: result.criteria,
   };
 }
 

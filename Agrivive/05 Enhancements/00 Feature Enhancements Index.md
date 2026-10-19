@@ -19,7 +19,8 @@ Agrivive/05 Enhancements/
   ├── 01 Descriptive Sales Trend Analytics Enhancements.md
   ├── 02 Marketplace Visibility and AHP-TOPSIS Refinements.md
   ├── 03 Order Lifecycle and Smart Reservation Reconciliation.md
-  └── 04 Seller Operations and Multi-Channel Promotion.md
+  ├── 04 Seller Operations and Multi-Channel Promotion.md
+  └── 05 Mobile and Backend Flow Enhancements.md
 ```
 
 ---
@@ -56,7 +57,7 @@ Agrivive/05 Enhancements/
   * Integration testing and monitoring for n8n-powered Priority Boost copy generation and official social page publishing (`[[Open Decisions#D-06]]`, `[[Open Decisions#D-13]]`).
 
 ### 5. Trust, Flagging & Account Lifecycle
-* **Document Notes:** `[[00 Audits and Discrepancies Index]]`, `[[03 Flagging and Trust Features Needing Enhancement]]`
+* **Document Notes:** `[[00 Audits and Discrepancies Index]]`, `[[03 Flagging and Trust Features Needing Enhancement]]`, `[[04 Flagging and Trust Functional Test Cases]]`
 * **Focus:**
   * 3-week inactivity warning and 30-day automated account blocking (Paper Section 2.3.2.6 parity).
   * Reciprocal buyer failed reservation tracking and inventory hoarding limits.

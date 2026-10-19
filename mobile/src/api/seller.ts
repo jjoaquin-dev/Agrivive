@@ -34,7 +34,7 @@ export interface SellerSetupResponse {
   passwordSetupRequired: boolean;
   twoFactorEnabled: boolean;
   badge: VerifiedBadge | null;
-  nextStep: "verify-email" | "profile" | "ready";
+  nextStep: "verify-email" | "profile" | "password-setup" | "ready";
 }
 
 export interface SellerProfileCreateInput {

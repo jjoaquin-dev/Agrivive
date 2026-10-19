@@ -3,6 +3,7 @@ import { auth } from "..";
 import { eq } from "drizzle-orm";
 import { db } from "../../../db";
 import { user as users } from "../../../db/schema";
+import { touchUserActivity } from "../../../utils/user-activity";
 
 export type Rtype = "admin" | "buyer" | "seller" | "stakeholder";
 
@@ -25,6 +26,7 @@ export const sessionAuth = new Elysia()
         const [current] = await db.select({ role: users.role, isActive: users.isActive, email: users.email })
           .from(users).where(eq(users.id, authSession.user.id)).limit(1);
         if (!current?.isActive) return status(403);
+        void touchUserActivity(authSession.user.id);
         const userRoles = [...(current.role ?? [])];
         const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "")
           .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));

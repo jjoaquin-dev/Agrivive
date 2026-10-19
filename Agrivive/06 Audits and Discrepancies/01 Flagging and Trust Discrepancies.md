@@ -8,6 +8,10 @@ references: ["Section 2.3.2.6", "Table 17", "Table 18", "Equation 3"]
 
 # Flagging and Trust Mechanism — Paper vs. System Discrepancies
 
+> [!NOTE] Resolution Status (2026-10-18)
+> The omissions identified in this audit note (3-week/1-month inactivity rules and buyer reservation no-show penalties) have been **fully implemented and verified (10/10 tests passed)**.
+> See [[04 Flagging and Trust Functional Test Cases]] and [[2026-10-18 Full Flagging and Trust Mechanism Implementation]].
+
 This document contrasts the theoretical descriptions in **Section 2.3.2.6 of the Agrivive Research Paper** with the actual implementation in `backend/src/utils/trust/` and related services.
 
 ---

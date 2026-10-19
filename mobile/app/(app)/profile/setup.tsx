@@ -114,7 +114,12 @@ export default function ProfileSetupScreen() {
         return;
       }
 
-      router.replace("/(app)/(tabs)/inventory");
+      if (setup?.passwordSetupRequired || setup?.nextStep === "password-setup") {
+        router.replace("/(auth)/password-setup");
+        return;
+      }
+
+      router.replace("/(app)/(tabs)/home");
     } catch (err: any) {
       console.error("Seller profile setup failed", err);
       setErrors({

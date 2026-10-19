@@ -41,6 +41,9 @@ export const user = pgTable("user", {
   image: text("image"),
   role: roleEnum().array().default(["buyer"]),
   isActive: boolean("is_active").default(true).notNull(),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -665,7 +668,7 @@ export const conversation_messages = pgTable("conversation_messages", {
 export const trust_events = pgTable("trust_events", {
   id: uuid("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
-  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
   classification: text("classification").notNull(),
@@ -682,7 +685,7 @@ export const trust_notices = pgTable("trust_notices", {
   id: uuid("id").defaultRandom().primaryKey(),
   noticeKey: text("notice_key").notNull().unique(),
   recipientId: text("recipient_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
   attempts: integer("attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
