@@ -16,9 +16,11 @@ import { LoginTwoFactorSection } from "@/src/features/auth/components/LoginTwoFa
 import { LoginRememberRow } from "@/src/features/auth/components/LoginRememberRow";
 import { validateEmail, validatePassword, type AuthErrors } from "@/src/features/auth/validation";
 import { DEFAULT_BUYER_DESTINATION, getNextPathFromLocation, withNextPath } from "@/src/lib/navigation";
+import { authClient } from "@/src/lib/auth-client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, isPending: sessionPending } = authClient.useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -30,6 +32,10 @@ export default function LoginPage() {
   const [notices, setNotices] = useState({ verified: false, restored: false, checkout: false });
 
   useEffect(() => {
+    if (!sessionPending && session?.user) {
+      router.replace(nextPath || "/marketplace");
+      return;
+    }
     const destination = getNextPathFromLocation();
     setNextPath(destination);
     const params = new URLSearchParams(window.location.search);
@@ -38,7 +44,7 @@ export default function LoginPage() {
       restored: params.get("restored") === "true",
       checkout: Boolean(destination && destination !== DEFAULT_BUYER_DESTINATION),
     });
-  }, []);
+  }, [sessionPending, session, nextPath, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

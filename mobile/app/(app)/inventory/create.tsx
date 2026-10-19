@@ -1,14 +1,26 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, Alert } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { ProductForm } from "../../../src/features/inventory/components/ProductForm";
 import { createSellerProduct } from "../../../src/features/inventory/api/products";
-import type { CreateProductInput } from "../../../src/features/inventory/types";
+import type { CreateProductInput, ProductScalingType } from "../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../src/theme";
 
 export default function CreateProductScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ catalogId?: string; unit?: ProductScalingType; name?: string }>();
   const [loading, setLoading] = useState(false);
+
+  const initialProduct = params.catalogId
+    ? ({
+        vegetableCatalogId: params.catalogId,
+        productName: params.name || "",
+        scalingType: params.unit || "kilo",
+        productPrice: "",
+        productQty: "",
+        isMarketable: true,
+      } as any)
+    : undefined;
 
   const handleCreate = async (data: any) => {
     setLoading(true);
@@ -37,7 +49,7 @@ export default function CreateProductScreen() {
           List your marketable vegetable surplus with pricing, quantity, and optional low-stock alert.
         </Text>
       </View>
-      <ProductForm mode="create" onSubmit={handleCreate} loading={loading} />
+      <ProductForm mode="create" initialProduct={initialProduct} onSubmit={handleCreate} loading={loading} />
     </View>
   );
 }

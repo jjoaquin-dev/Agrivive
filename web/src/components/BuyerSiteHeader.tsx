@@ -25,8 +25,8 @@ export function BuyerSiteHeader() {
       <PageContainer className="flex min-h-[66px] items-center gap-4 sm:gap-6">
         {/* Brand Lockup */}
         <Link
-          href="/marketplace"
-          aria-label="Agrivive marketplace"
+          href={session?.user ? "/marketplace" : "/"}
+          aria-label={session?.user ? "Agrivive marketplace" : "Agrivive home"}
           className="group flex shrink-0 items-center gap-2.5"
         >
           <div className="flex size-10 items-center justify-center rounded-xl bg-agrivive-primary/5 p-1 transition-transform group-hover:scale-105">

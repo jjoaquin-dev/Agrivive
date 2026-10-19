@@ -4,7 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { CheckCircle2, Clock3, RotateCcw, Sparkles, XCircle } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
-import { fetchSellerProductBoost, requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
+import { acceptSellerBoostPrompt, fetchSellerProductBoost, requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
 import { SocialCampaignReview } from "../../../src/features/boost/components/SocialCampaignReview";
 import {
   createSocialDraft, fetchSocialCampaign, fetchSocialChannels, publishSocialDraft, retrySocialDraft,
@@ -15,7 +15,7 @@ import { colors, fonts, radii, spacing } from "../../../src/theme";
 
 export default function BoostVisibilityScreen() {
   const router = useRouter();
-  const { productId, entry } = useLocalSearchParams<{ productId: string; entry?: string }>();
+  const { productId, entry, promptId } = useLocalSearchParams<{ productId: string; entry?: string; promptId?: string }>();
   const openedFromProductCreate = entry === "new-product";
   const [boostData, setBoostData] = useState<SellerProductBoostResponse | null>(null);
   const [boostLoading, setBoostLoading] = useState(true);
@@ -68,8 +68,15 @@ export default function BoostVisibilityScreen() {
     requestInFlight.current = true;
     setDraftLoading(true);
     setError("");
-    createSocialDraft(productId).then((result) => {
+    createSocialDraft(productId).then(async (result: any) => {
       if (!active) return;
+      if (result.alreadyPublished && result.campaignId) {
+        try {
+          const existing = await fetchSocialCampaign(result.campaignId);
+          if (active) setCampaign(existing);
+        } catch {}
+        return;
+      }
       setDraft(result);
       setPosts(result.posts);
     }).catch((reason: any) => {
@@ -127,7 +134,12 @@ export default function BoostVisibilityScreen() {
     setError("");
     try {
       await publishSocialDraft({ campaignId: draft.campaignId, platforms: selected, posts });
+      const activePromptId = promptId || (boostData?.boost?.status === "prompt" ? boostData.boost.id : null);
+      if (activePromptId) {
+        try { await acceptSellerBoostPrompt(activePromptId); } catch {}
+      }
       setCampaign(await fetchSocialCampaign(draft.campaignId));
+      await loadBoostStatus();
     } catch (reason: any) { setError(reason?.message || "Could not start posting. Your draft is saved."); }
     finally { setBusy(false); }
   };
@@ -150,8 +162,8 @@ export default function BoostVisibilityScreen() {
   const status = boostData?.boost?.status;
   const promptNeedsReview = status === "prompt";
   const statusWaiting = status === "queued" || status === "sent";
-  const statusActionTitle = promptNeedsReview ? "Review boost prompt" : status === "failed" ? "Try again" : status === "dismissed" ? "Boost again" : "Boost this listing";
-  const statusAction = promptNeedsReview ? () => router.push("/(app)/notifications") : queueBoost;
+  const statusActionTitle = status === "failed" ? "Try again" : status === "dismissed" ? "Boost again" : "Boost this listing";
+  const statusAction = queueBoost;
 
   if (channelsLoading || draftLoading) return <SafeAreaView style={styles.center}>
     <ActivityIndicator color={colors.primary} />
@@ -164,12 +176,12 @@ export default function BoostVisibilityScreen() {
     {boostLoading ? <ActivityIndicator color={colors.primary} style={styles.statusLoader} /> : null}
     {boostData?.boost ? <BoostStatusCard boost={boostData.boost} /> : null}
     {boostError ? <Text accessibilityRole="alert" style={styles.error}>{boostError}</Text> : null}
-    {!openedFromProductCreate && !boostLoading && !statusWaiting && !campaign ? <ButtonComponent title={statusActionTitle} onPress={() => void statusAction()} loading={busy && !draft} style={styles.statusAction} icon={status === "failed" ? <RotateCcw size={17} color={colors.white} /> : undefined} /> : null}
+    {!openedFromProductCreate && !boostLoading && !statusWaiting && !campaign && !promptNeedsReview ? <ButtonComponent title={statusActionTitle} onPress={() => void statusAction()} loading={busy && !draft} style={styles.statusAction} icon={status === "failed" ? <RotateCcw size={17} color={colors.white} /> : undefined} /> : null}
     {error && !draft && channels.length ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Your post is not ready yet</Text><Text accessibilityRole="alert" style={styles.error}>{error}</Text><ButtonComponent title="Try again" variant="secondary" onPress={() => setAttempt((value) => value + 1)} style={styles.action} /></View> : null}
     {error && !channels.length ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Agrivive pages could not be loaded</Text><Text accessibilityRole="alert" style={styles.error}>{error}</Text><ButtonComponent title="Try again" variant="secondary" onPress={() => void loadChannels()} style={styles.action} /></View> : null}
     {!error && channels.length > 0 && !channels.some((channel) => channel.configured) ? <View style={styles.emptyCard}><Text style={styles.emptyTitle}>Posting is not available yet</Text><Text style={styles.muted}>Agrivive’s official pages are being set up. Please try again later.</Text><ButtonComponent title="Check again" variant="secondary" onPress={() => void loadChannels()} style={styles.action} /></View> : null}
     {draft && !campaign ? <SocialCampaignReview productName={draft.productName} productUrl={draft.productUrl} imageUrl={draft.imageUrl} channels={channels} selectedPlatforms={selected} onTogglePlatform={togglePlatform} posts={posts} onChangePost={(platform, text) => setPosts((current) => ({ ...current, [platform]: text }))} busy={busy} error={error} onPublish={confirm} /> : null}
-    {campaign ? <View style={styles.result}><Text style={styles.resultTitle}>Publishing status: {statusLabel(campaign.status)}</Text><Pressable onPress={() => void Linking.openURL(campaign.productUrl)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View product in marketplace</Text></Pressable>{campaign.lastError ? <Text style={styles.error}>{campaign.lastError}</Text> : null}{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}{campaign.results.some((post) => post.status === "failed") ? <Text style={styles.statusMeta}>Needs attention: {campaign.results.filter((post) => post.status === "failed").map((post) => platformLabel(post.platform)).join(", ")}</Text> : null}{campaign.results.map((post) => <View key={post.platform} style={styles.postResult}><Text style={styles.muted}>{platformLabel(post.platform)} · {statusLabel(post.status)}{post.lastError ? ` — ${post.lastError}` : ""}</Text>{post.postUrl ? <Pressable onPress={() => void Linking.openURL(post.postUrl!)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View post</Text></Pressable> : null}</View>)}{campaign.results.some((post) => post.status === "failed") ? <ButtonComponent title="Retry failed channels" onPress={() => void retry()} disabled={busy} style={styles.action} /> : null}</View> : null}
+    {campaign ? <View style={styles.result}>{campaign.status === "published" ? <View style={styles.alreadyPostedNotice}><CheckCircle2 size={16} color={colors.success} /><Text style={styles.alreadyPostedText}>Already posted to Agrivive official pages. This listing can be posted again when the scheduled 12-hour price reduction occurs.</Text></View> : null}<Text style={styles.resultTitle}>Publishing status: {statusLabel(campaign.status)}</Text><Pressable onPress={() => void Linking.openURL(campaign.productUrl)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View product in marketplace</Text></Pressable>{campaign.lastError ? <Text style={styles.error}>{campaign.lastError}</Text> : null}{error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}{campaign.results.some((post) => post.status === "failed") ? <Text style={styles.statusMeta}>Needs attention: {campaign.results.filter((post) => post.status === "failed").map((post) => platformLabel(post.platform)).join(", ")}</Text> : null}{campaign.results.map((post) => <View key={post.platform} style={styles.postResult}><Text style={styles.muted}>{platformLabel(post.platform)} · {statusLabel(post.status)}{post.lastError ? ` — ${post.lastError}` : ""}</Text>{post.postUrl ? <Pressable onPress={() => void Linking.openURL(post.postUrl!)} accessibilityRole="link" style={styles.openLink}><Text style={styles.link}>View post</Text></Pressable> : null}</View>)}{campaign.results.some((post) => post.status === "failed") ? <ButtonComponent title="Retry failed channels" onPress={() => void retry()} disabled={busy} style={styles.action} /> : null}</View> : null}
     <Pressable onPress={() => router.push("/(app)/boosts")} accessibilityRole="button" style={styles.historyLink}><Text style={styles.historyLinkText}>View boost history</Text></Pressable>
     <ButtonComponent title="Back" variant="ghost" onPress={() => router.back()} style={styles.back} textStyle={styles.backText} />
   </ScrollView></SafeAreaView>;
@@ -181,11 +193,12 @@ function BoostStatusCard({ boost }: { boost: NonNullable<SellerProductBoostRespo
   const Icon = failed ? XCircle : boost.status === "sent" ? CheckCircle2 : Clock3;
   return <View style={[styles.statusCard, { borderColor: tone }]}><View style={styles.statusRow}><Icon size={20} color={tone} /><Text style={[styles.statusTitle, { color: tone }]}>{boostStatusLabel(boost.status)}</Text></View><Text style={styles.statusMeta}>{boostReasonLabel(boost.reason)} · {formatDate(boost.createdAt)}</Text>{boost.priceBefore && boost.priceAfter ? <Text style={styles.statusMeta}>Price: ₱{Number(boost.priceBefore).toFixed(2)} → ₱{Number(boost.priceAfter).toFixed(2)}</Text> : null}{boost.errorMessage ? <Text style={styles.statusError}>{boost.errorMessage}</Text> : null}</View>;
 }
-
 function platformLabel(platform: string) { return ({ facebook: "Facebook", instagram: "Instagram", x: "X", tiktok: "TikTok" } as Record<string, string>)[platform] || platform; }
 function statusLabel(status: string) { return ({ queued: "Waiting", publishing: "Posting", processing: "Posting", published: "Posted", partial: "Some channels need attention", failed: "Could not post" } as Record<string, string>)[status] || status; }
 function formatDate(value: string) { return new Date(value).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }); }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.base, paddingBottom: spacing.xxxl }, center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }, headingRow: { flexDirection: "row", alignItems: "center" }, icon: { width: 46, height: 46, borderRadius: 23, backgroundColor: "rgba(31, 77, 58, 0.12)", alignItems: "center", justifyContent: "center", marginRight: spacing.md }, headingCopy: { flex: 1 }, title: { fontFamily: fonts.heading.bold, fontSize: 28, color: colors.text }, subtitle: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.primary, marginTop: 2 }, muted: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: spacing.xs }, statusLoader: { marginTop: spacing.md }, statusCard: { backgroundColor: colors.surface, borderWidth: 1, borderRadius: radii.card, padding: spacing.base, marginTop: spacing.base }, statusRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm }, statusTitle: { fontFamily: fonts.body.semiBold, fontSize: 16 }, statusMeta: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted, marginTop: spacing.sm }, statusError: { fontFamily: fonts.body.medium, fontSize: 13, lineHeight: 19, color: colors.error, marginTop: spacing.sm }, statusAction: { marginTop: spacing.md, minHeight: 48 }, error: { color: colors.error, fontFamily: fonts.body.medium, fontSize: 14, lineHeight: 20, marginTop: spacing.md }, emptyCard: { marginTop: spacing.base, padding: spacing.base, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border }, emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text }, action: { marginTop: spacing.md }, result: { marginTop: spacing.base, padding: spacing.base, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border }, resultTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text }, postResult: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: spacing.sm }, openLink: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" }, link: { color: colors.primary, fontFamily: fonts.body.semiBold, fontSize: 13 }, historyLink: { minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: spacing.md }, historyLinkText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary }, back: { marginTop: spacing.xs, minHeight: 44 }, backText: { color: colors.primary, fontSize: 14, fontWeight: "700" },
+  alreadyPostedNotice: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "rgba(63, 125, 88, 0.12)", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: "rgba(63, 125, 88, 0.3)" },
+  alreadyPostedText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 16, color: colors.text },
 });

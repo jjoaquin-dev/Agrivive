@@ -1,4 +1,4 @@
-import { and, desc, eq, or, sql } from "drizzle-orm";
+import { aliasedTable, and, desc, eq, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   conversation_messages,
@@ -11,6 +11,8 @@ import {
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 
 export async function listConversations(userId: string, limit = 50) {
+  const buyerUser = aliasedTable(user, "buyer_user");
+
   const rows = await db.select({
     id: conversations.id,
     contextType: conversations.contextType,
@@ -26,6 +28,8 @@ export async function listConversations(userId: string, limit = 50) {
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,
+    buyerName: buyerUser.name,
+    buyerImage: buyerUser.image,
     lastMessageBody: sql<string | null>`(
       select latest_message.body
       from conversation_messages as latest_message
@@ -45,6 +49,7 @@ export async function listConversations(userId: string, limit = 50) {
       eq(conversation_participants.userId, userId),
     ))
     .innerJoin(user, eq(user.id, conversations.sellerId))
+    .innerJoin(buyerUser, eq(buyerUser.id, conversations.buyerId))
     .leftJoin(sellers_profile, and(
       eq(sellers_profile.userId, conversations.sellerId),
       eq(sellers_profile.isCurrent, true),
@@ -58,6 +63,7 @@ export async function listConversations(userId: string, limit = 50) {
     rows.map(async (row) => ({
       ...row,
       sellerImage: await getAvatarDisplayUrl(row.sellerImage),
-    }))
+      buyerImage: await getAvatarDisplayUrl(row.buyerImage),
+    })),
   );
 }

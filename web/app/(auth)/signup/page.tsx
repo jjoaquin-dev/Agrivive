@@ -19,17 +19,74 @@ import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 
+interface EmailCheckResult {
+  exists: boolean;
+  roleCount: number;
+  currentRoles: string[];
+  canUseEmail: boolean;
+  hasTargetRole: boolean;
+  message: string;
+}
+
 export default function SignUpPage() {
   const router = useRouter();
+  const { data: session, isPending: sessionPending } = authClient.useSession();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [accountNotice, setAccountNotice] = useState<string | null>(null);
   const [errors, setErrors] = useState<AuthErrors>({});
   const [nextPath, setNextPath] = useState(DEFAULT_BUYER_DESTINATION);
 
-  useEffect(() => setNextPath(getNextPathFromLocation()), []);
+  useEffect(() => {
+    if (!sessionPending && session?.user) {
+      router.replace(nextPath || "/marketplace");
+      return;
+    }
+    setNextPath(getNextPathFromLocation());
+  }, [sessionPending, session, nextPath, router]);
+
+  async function checkEmailPreflight(cleanEmail: string): Promise<EmailCheckResult | null> {
+    try {
+      return await apiRequest<EmailCheckResult>("/auth/check-email", {
+        method: "POST",
+        body: JSON.stringify({ email: cleanEmail, targetRole: "buyer" }),
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleEmailBlur() {
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) return;
+
+    const check = await checkEmailPreflight(cleanEmail);
+    if (!check) return;
+
+    if (check.roleCount >= 2) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "This email already has both Buyer and Seller profiles (maximum 2 roles reached). Please sign in instead.",
+      }));
+      setAccountNotice(null);
+    } else if (check.hasTargetRole) {
+      setErrors((prev) => ({
+        ...prev,
+        email: "An account with this email is already registered as a Buyer. Please sign in instead.",
+      }));
+      setAccountNotice(null);
+    } else if (check.exists && check.canUseEmail) {
+      setErrors((prev) => ({ ...prev, email: undefined }));
+      setAccountNotice("Existing Seller account found. Enter your password to add the Buyer profile.");
+    } else {
+      setErrors((prev) => ({ ...prev, email: undefined }));
+      setAccountNotice(null);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,60 +95,91 @@ export default function SignUpPage() {
     setLoading(true);
     setErrors({});
     const cleanEmail = email.trim().toLowerCase();
+
     try {
-      const response = await authClient.signUp.email({
-        name: name.trim(),
-        email: cleanEmail,
-        password,
-      });
-      if (response.error) {
-        const message = response.error.message?.toLowerCase() ?? "";
-        if (message.includes("already") || message.includes("exist")) {
-          try {
-            const check = await apiRequest<any>("/auth/check-email", {
-              method: "POST",
-              body: JSON.stringify({ email: cleanEmail, targetRole: "buyer" }),
-            });
-            if (check.roleCount >= 2) {
-              setErrors({
-                email: "This email already has both Buyer and Seller profiles. Please sign in instead.",
-              });
-              return;
-            }
-            if (check.hasTargetRole) {
-              setErrors({
-                email: "An account with this email is already registered as a Buyer. Please sign in instead.",
-              });
-              return;
-            }
-            if (check.canUseEmail) {
-              await apiRequest<any>("/auth/register-role", {
-                method: "POST",
-                body: JSON.stringify({
-                  email: cleanEmail,
-                  password,
-                  name: name.trim(),
-                  targetRole: "buyer",
-                }),
-              });
-              await authClient.signIn.email({
-                email: cleanEmail,
-                password,
-              });
-              router.replace(nextPath);
-              return;
-            }
-          } catch (checkErr: any) {
-            setErrors({
-              email: checkErr?.message || "An account with this email already exists. Sign in instead.",
-            });
-            return;
-          }
-        }
-        setErrors({ form: response.error.message || "Could not create your account." });
+      // 1. Mandatory Preflight Duplicate Filtering
+      const check = await checkEmailPreflight(cleanEmail);
+
+      if (!check) {
+        setErrors({ form: "Could not connect to verify your email. Please try again." });
+        setLoading(false);
         return;
       }
-      router.replace(withNextPath(`/verify-email?email=${encodeURIComponent(cleanEmail)}&sent=true`, nextPath));
+
+      // Max 2 roles rule: if 2 roles already exist, email cannot be used
+      if (check.roleCount >= 2) {
+        setErrors({
+          email: "This email already has both Buyer and Seller profiles (maximum 2 roles reached). Please sign in instead.",
+        });
+        setLoading(false);
+        return; // HARD STOP: Never redirect!
+      }
+
+      // If already a Buyer: cannot register duplicate Buyer role
+      if (check.hasTargetRole) {
+        setErrors({
+          email: "An account with this email is already registered as a Buyer. Please sign in instead.",
+        });
+        setLoading(false);
+        return; // HARD STOP: Never redirect!
+      }
+
+      // If account has 1 role (e.g. Seller): expand role using account password
+      if (check.exists && check.canUseEmail) {
+        try {
+          await apiRequest<any>("/auth/register-role", {
+            method: "POST",
+            body: JSON.stringify({
+              email: cleanEmail,
+              password,
+              name: name.trim(),
+              targetRole: "buyer",
+            }),
+          });
+
+          await authClient.signIn.email({
+            email: cleanEmail,
+            password,
+          });
+
+          router.replace(nextPath);
+          return;
+        } catch (expandErr: any) {
+          const errMsg = expandErr?.message || "";
+          if (errMsg.toLowerCase().includes("password") || expandErr?.statusCode === 401) {
+            setErrors({
+              password: "Incorrect password for your existing account. Enter your password to add the Buyer profile.",
+            });
+          } else {
+            setErrors({
+              form: errMsg || "Failed to link Buyer profile to your account.",
+            });
+          }
+          setLoading(false);
+          return; // HARD STOP: Never redirect!
+        }
+      }
+
+      // Brand new account (0 roles): register with targetRole buyer and verify OTP
+      try {
+        await apiRequest<any>("/auth/register-role", {
+          method: "POST",
+          body: JSON.stringify({
+            email: cleanEmail,
+            password,
+            name: name.trim(),
+            targetRole: "buyer",
+          }),
+        });
+
+        router.replace(withNextPath(`/verify-email?email=${encodeURIComponent(cleanEmail)}&sent=true`, nextPath));
+      } catch (regErr: any) {
+        setErrors({
+          form: regErr?.message || "Failed to register account. Please try again.",
+        });
+        setLoading(false);
+        return;
+      }
     } catch {
       setErrors({ form: "We could not connect. Check your connection and try again." });
     } finally {
@@ -122,13 +210,20 @@ export default function SignUpPage() {
         <span>or create with email</span>
         <span className="h-px flex-1 bg-agrivive-border" />
       </div>
-      <form onSubmit={handleSubmit} aria-busy={loading}>
-        {errors.form ? (
-          <Alert variant="destructive" className="mb-5">
-            <AlertDescription>{errors.form}</AlertDescription>
-          </Alert>
-        ) : null}
 
+      {errors.form ? (
+        <Alert variant="destructive" className="mb-5">
+          <AlertDescription>{errors.form}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {accountNotice ? (
+        <Alert className="mb-5 border-agrivive-primary/30 bg-agrivive-primary/5 text-agrivive-primary">
+          <AlertDescription>{accountNotice}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <form onSubmit={handleSubmit} aria-busy={loading}>
         <FieldGroup>
           <AuthInput
             id="name"
@@ -140,6 +235,7 @@ export default function SignUpPage() {
             onChange={(event) => {
               setName(event.target.value);
               if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+              if (errors.form) setErrors((prev) => ({ ...prev, form: undefined }));
             }}
             error={errors.name}
           />
@@ -152,10 +248,12 @@ export default function SignUpPage() {
             autoComplete="email"
             placeholder="maria@example.com"
             value={email}
+            onBlur={handleEmailBlur}
             onChange={(event) => {
               setEmail(event.target.value);
               if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
               if (errors.form) setErrors((prev) => ({ ...prev, form: undefined }));
+              if (accountNotice) setAccountNotice(null);
             }}
             error={errors.email}
           />
@@ -198,6 +296,11 @@ export default function SignUpPage() {
               <>
                 <Spinner data-icon="inline-start" />
                 Creating account...
+              </>
+            ) : accountNotice ? (
+              <>
+                <UserPlus data-icon="inline-start" />
+                Add Buyer Profile
               </>
             ) : (
               <>

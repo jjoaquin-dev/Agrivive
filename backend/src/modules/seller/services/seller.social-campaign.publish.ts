@@ -1,6 +1,6 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../../../db";
-import { seller_social_campaign_posts, seller_social_campaigns } from "../../../db/schema";
+import { seller_social_campaign_posts, seller_social_campaigns, sellers_product } from "../../../db/schema";
 import { getPriorityPromotionEligibility } from "../../../utils/promotion-eligibility";
 import { getSocialChannelAvailability } from "../../../utils/social-publishing";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
@@ -16,6 +16,23 @@ export async function publishSellerSocialCampaign(sellerId: string, campaignId: 
   if (draft.status !== "draft") throw new OrderError(409, "This post has already been sent");
   if (!input.platforms.length || new Set(input.platforms).size !== input.platforms.length) {
     throw new OrderError(400, "Choose each Agrivive channel only once");
+  }
+
+  const [product] = await db.select({
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
+  }).from(sellers_product)
+    .where(and(eq(sellers_product.id, draft.productId), eq(sellers_product.userId, sellerId))).limit(1);
+
+  const existingPublished = await db.select({ id: seller_social_campaigns.id }).from(seller_social_campaigns)
+    .where(and(
+      eq(seller_social_campaigns.productId, draft.productId),
+      eq(seller_social_campaigns.listingCycleId, draft.listingCycleId),
+      inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"]),
+    ));
+
+  const maxAllowedPosts = (product?.priceReductionPeriodsApplied ?? 0) + 1;
+  if (existingPublished.length >= maxAllowedPosts) {
+    throw new OrderError(409, "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction.");
   }
 
   const channelMap = new Map(getSocialChannelAvailability().map((channel) => [channel.platform, channel]));

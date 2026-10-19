@@ -60,8 +60,15 @@ export default function SellerAnalyticsScreen() {
   }, [refreshing]);
 
   const filteredVisibility = useMemo(() => {
-    if (productId) return visibilityList.filter((v) => v.productId === productId);
-    return visibilityList;
+    let list = visibilityList;
+    if (productId) list = list.filter((v) => v.productId === productId);
+    return [...list].sort((a, b) => {
+      // Highest placement score / points at the top
+      const scoreA = a.score ?? -1;
+      const scoreB = b.score ?? -1;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return (a.rank ?? 999) - (b.rank ?? 999);
+    });
   }, [visibilityList, productId]);
 
   if (loading && !refreshing && !analytics) {
