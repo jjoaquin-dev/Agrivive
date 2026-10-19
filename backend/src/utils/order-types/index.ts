@@ -6,9 +6,10 @@ export type OrderStatus = "pending" | "completed" | "cancelled" | "expired";
 
 export class OrderError extends Error {
   constructor(
-    public readonly statusCode: 400 | 403 | 404 | 409 | 410 | 502 | 503,
+    public readonly statusCode: 400 | 401 | 403 | 404 | 409 | 410 | 502 | 503,
     message: string,
   ) {
     super(message);
   }
 }
+

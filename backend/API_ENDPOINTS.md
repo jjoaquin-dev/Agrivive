@@ -132,6 +132,7 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | GET | `/seller/products/:id` | `backend/src/modules/seller/index/seller.product.get.ts` |
 | PATCH | `/seller/products/:id` | `backend/src/modules/seller/index/seller.products.ts` |
 | DELETE | `/seller/products/:id` | `backend/src/modules/seller/index/seller.product.archive.ts` |
+| POST | `/seller/products/:id/archive` | `backend/src/modules/seller/index/seller.product.archive.ts` |
 | POST | `/seller/products/:id/deactivate` | `backend/src/modules/seller/index/seller.products.ts` |
 | POST | `/seller/products/:id/reactivate` | `backend/src/modules/seller/index/seller.product.reactivate.ts` |
 | POST | `/seller/products/:id/restock` | `backend/src/modules/seller/index/seller.products.ts` |
