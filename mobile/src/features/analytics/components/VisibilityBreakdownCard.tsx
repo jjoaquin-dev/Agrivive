@@ -17,19 +17,20 @@ function factorLabel(value: number | undefined) {
 }
 
 export function VisibilityBreakdownCard({ item, productName, onBoost }: VisibilityBreakdownCardProps) {
-  const tierColor =
-    item.tier === "priority"
-      ? colors.primary
-      : item.tier === "standard"
-      ? colors.success
-      : colors.textMuted;
+  const isPriority = item.tier?.toLowerCase().includes("priority");
+  const isStandard = item.tier?.toLowerCase().includes("standard");
 
-  const tierBg =
-    item.tier === "priority"
-      ? "rgba(31, 77, 58, 0.12)"
-      : item.tier === "standard"
-      ? "rgba(63, 125, 88, 0.12)"
-      : "rgba(100, 116, 139, 0.12)";
+  const tierColor = isPriority
+    ? colors.primary
+    : isStandard
+    ? colors.success
+    : colors.textMuted;
+
+  const tierBg = isPriority
+    ? "rgba(31, 77, 58, 0.12)"
+    : isStandard
+    ? "rgba(63, 125, 88, 0.12)"
+    : "rgba(100, 116, 139, 0.12)";
 
   return (
     <View style={styles.card}>
@@ -42,7 +43,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
         </View>
 
         <View style={[styles.tierBadge, { backgroundColor: tierBg }]}>
-          {item.tier === "priority" ? (
+          {isPriority ? (
             <Sparkles size={12} color={tierColor} />
           ) : (
             <Award size={12} color={tierColor} />
@@ -53,7 +54,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
         </View>
       </View>
 
-      {item.score !== null && item.inputs ? (
+      {item.score !== null ? (
         <>
           <View style={styles.scoreRow}>
             <View>
@@ -63,9 +64,9 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
             <View style={styles.scoreGuide}>
               <TrendingUp size={16} color={colors.primary} />
               <Text style={styles.scoreGuideText}>
-                {item.tier === "priority"
+                {isPriority
                   ? "Featured near top of buyer browse"
-                  : item.tier === "standard"
+                  : isStandard
                   ? "Balanced marketplace search ranking"
                   : "Standard catalog position"}
               </Text>
@@ -76,22 +77,22 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
             <View style={styles.factorItem}>
               <Text style={styles.factorLabel}>Posting Age Factor</Text>
               <Text style={styles.factorValue}>
-                {factorLabel(item.inputs.postingAge)}
+                {factorLabel(item.inputs?.postingAge ?? (item as any).criteria?.freshness)}
               </Text>
             </View>
 
             <View style={styles.factorItem}>
               <Text style={styles.factorLabel}>Available Stock Factor</Text>
               <Text style={styles.factorValue}>
-                {factorLabel(item.inputs.remainingQuantity)}
+                {factorLabel(item.inputs?.remainingQuantity ?? (item as any).criteria?.stockAvailability)}
               </Text>
             </View>
 
             <View style={styles.factorItem}>
               <Text style={styles.factorLabel}>Prior cycles (30d)</Text>
               <Text style={styles.factorValue}>
-                {Number.isFinite(item.inputs.priorCycles)
-                  ? `${item.inputs.priorCycles}`
+                {Number.isFinite(item.inputs?.priorCycles)
+                  ? `${item.inputs?.priorCycles}`
                   : "Not available"}
               </Text>
             </View>
@@ -101,7 +102,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
         <View style={styles.unrankedNotice}>
           <Info size={16} color={colors.warning} />
           <Text style={styles.unrankedText}>
-            {item.reason || "Ensure stock is positive to receive visibility ranking."}
+            {item.reason || "Ensure stock is positive and listing is active to receive visibility ranking."}
           </Text>
         </View>
       )}

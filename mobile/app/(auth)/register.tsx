@@ -8,7 +8,8 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { authClient } from "../../src/api/client";
+import { authClient, apiFetch } from "../../src/api/client";
+
 import { colors, fonts, spacing } from "../../src/theme";
 import { Mail, Lock, ArrowRight } from "lucide-react-native";
 import { InputComponent } from "../../src/components/InputComponent";
@@ -80,9 +81,45 @@ export default function RegisterScreen() {
           msg.includes("already") ||
           msg.includes("exist")
         ) {
-          setErrors({
-            email: "An account with this email already exists. Please sign in instead.",
-          });
+          try {
+            const check = await apiFetch<any>("/auth/check-email", {
+              method: "POST",
+              body: JSON.stringify({ email: cleanEmail, targetRole: "seller" }),
+            });
+            if (check.roleCount >= 2) {
+              setErrors({
+                email: "This email already has both Buyer and Seller profiles. Please sign in instead.",
+              });
+              return;
+            }
+            if (check.hasTargetRole) {
+              setErrors({
+                email: "An account with this email is already registered as a Seller. Please sign in instead.",
+              });
+              return;
+            }
+            if (check.canUseEmail) {
+              await apiFetch<any>("/auth/register-role", {
+                method: "POST",
+                body: JSON.stringify({
+                  email: cleanEmail,
+                  password,
+                  targetRole: "seller",
+                }),
+              });
+              await authClient.signIn.email({
+                email: cleanEmail,
+                password,
+              });
+              router.replace("/(app)/profile/setup");
+              return;
+            }
+          } catch (checkErr: any) {
+            setErrors({
+              email: checkErr?.message || "An account with this email already exists. Please sign in instead.",
+            });
+            return;
+          }
         } else if (msg.includes("password")) {
           setErrors({ password: response.error.message });
         } else {

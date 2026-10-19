@@ -104026,6 +104026,186 @@ var authPasswordRoute = new Elysia({ prefix: "/auth" }).use(sessionAuth).get("/p
   body: authPasswordSetBody
 });
 
+// src/modules/auth/model/auth.role-register.ts
+var authRoleRegisterBody = t.Object({
+  email: t.String({ format: "email" }),
+  password: t.String({ minLength: 8 }),
+  name: t.Optional(t.String()),
+  targetRole: t.Union([t.Literal("buyer"), t.Literal("seller")])
+});
+var authRoleCheckBody = t.Object({
+  email: t.String({ format: "email" }),
+  targetRole: t.Union([t.Literal("buyer"), t.Literal("seller")])
+});
+
+// src/modules/auth/services/auth.role-check.ts
+async function checkEmailRoleStatus(email, targetRole) {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail)
+    throw new OrderError(400, "Email is required");
+  const [existing] = await db2.select({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive
+  }).from(user).where(eq(user.email, cleanEmail)).limit(1);
+  if (!existing) {
+    return {
+      exists: false,
+      roleCount: 0,
+      currentRoles: [],
+      canUseEmail: true,
+      hasTargetRole: false,
+      message: "Email is available for registration."
+    };
+  }
+  const currentRoles = existing.role ?? [];
+  const roleCount = currentRoles.length;
+  const hasTargetRole = currentRoles.includes(targetRole);
+  if (roleCount >= 2) {
+    return {
+      exists: true,
+      roleCount,
+      currentRoles,
+      canUseEmail: false,
+      hasTargetRole,
+      message: "This email already has both Buyer and Seller roles. Please sign in instead."
+    };
+  }
+  if (hasTargetRole) {
+    return {
+      exists: true,
+      roleCount,
+      currentRoles,
+      canUseEmail: false,
+      hasTargetRole: true,
+      message: `An account with this email is already registered as a ${targetRole === "seller" ? "Seller" : "Buyer"}. Please sign in instead.`
+    };
+  }
+  return {
+    exists: true,
+    roleCount,
+    currentRoles,
+    canUseEmail: true,
+    hasTargetRole: false,
+    message: `Existing Agrivive account found. Enter your password to add the ${targetRole === "seller" ? "Seller" : "Buyer"} role.`
+  };
+}
+
+// src/modules/auth/services/auth.role-expand.ts
+async function registerOrExpandRole(headers, input) {
+  const cleanEmail = input.email.trim().toLowerCase();
+  const targetRole = input.targetRole;
+  if (!cleanEmail)
+    throw new OrderError(400, "Email is required");
+  if (!input.password || input.password.length < 8) {
+    throw new OrderError(400, "Password must be at least 8 characters");
+  }
+  if (targetRole !== "buyer" && targetRole !== "seller") {
+    throw new OrderError(400, "Invalid target role");
+  }
+  const [existing] = await db2.select({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive,
+    emailVerified: user.emailVerified
+  }).from(user).where(eq(user.email, cleanEmail)).limit(1);
+  if (!existing) {
+    try {
+      const response = await auth.api.signUpEmail({
+        body: {
+          email: cleanEmail,
+          password: input.password,
+          name: input.name?.trim() || (targetRole === "seller" ? "Seller" : "Buyer")
+        },
+        headers
+      });
+      if (targetRole === "seller" && response?.user?.id) {
+        await db2.update(user).set({ role: ["seller"] }).where(eq(user.id, response.user.id));
+      }
+      const resAny = response;
+      return {
+        isNewAccount: true,
+        roleAdded: false,
+        user: response?.user,
+        session: resAny?.session ?? null,
+        token: response?.token
+      };
+    } catch (err) {
+      if (err instanceof OrderError)
+        throw err;
+      throw new OrderError(400, err?.message || "Failed to create account");
+    }
+  }
+  if (!existing.isActive) {
+    throw new OrderError(403, "Account is deactivated");
+  }
+  const currentRoles = existing.role ?? [];
+  if (currentRoles.includes(targetRole)) {
+    throw new OrderError(409, `An account with this email is already registered as a ${targetRole === "seller" ? "Seller" : "Buyer"}. Please sign in instead.`);
+  }
+  if (currentRoles.length >= 2) {
+    throw new OrderError(409, "This email already has both Buyer and Seller roles. No additional roles can be created for this account. Please sign in.");
+  }
+  const pwdStatus = await readAuthPasswordStatus(existing.id);
+  if (pwdStatus.passwordSetupRequired) {
+    throw new OrderError(400, "This account was registered with Google without a password. Please sign in with Google or set a password first.");
+  }
+  let signInRes;
+  try {
+    signInRes = await auth.api.signInEmail({
+      body: {
+        email: cleanEmail,
+        password: input.password
+      },
+      headers
+    });
+  } catch {
+    throw new OrderError(401, `An existing Agrivive account was found for this email. Please enter your existing password to activate your ${targetRole === "seller" ? "Seller" : "Buyer"} profile.`);
+  }
+  await db2.update(user).set({
+    role: sql3`array_append(coalesce(${user.role}, ARRAY[]::"role"[]), ${targetRole}::"role")`,
+    updatedAt: new Date
+  }).where(eq(user.id, existing.id));
+  const updatedRoles = [...currentRoles, targetRole];
+  return {
+    isNewAccount: false,
+    roleAdded: true,
+    targetRole,
+    user: {
+      ...signInRes?.user,
+      role: updatedRoles
+    },
+    session: signInRes?.session,
+    token: signInRes?.token,
+    message: `Your account now has ${targetRole === "seller" ? "Seller" : "Buyer"} access.`
+  };
+}
+
+// src/modules/auth/index/auth.role-register.ts
+function roleAuthFailure(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error("Role auth operation failed", error);
+  return status(500, { message: "Role operation failed" });
+}
+var authRoleRegisterRoute = new Elysia({ prefix: "/auth" }).post("/check-email", async ({ body, status }) => {
+  try {
+    const result = await checkEmailRoleStatus(body.email, body.targetRole);
+    return status(200, result);
+  } catch (error) {
+    return roleAuthFailure(error, status);
+  }
+}, { body: authRoleCheckBody }).post("/register-role", async ({ request, body, status }) => {
+  try {
+    const result = await registerOrExpandRole(request.headers, body);
+    return status(result.isNewAccount ? 201 : 200, result);
+  } catch (error) {
+    return roleAuthFailure(error, status);
+  }
+}, { body: authRoleRegisterBody });
+
 // node_modules/@elysia/cors/dist/index.mjs
 var isBun2 = typeof new Headers()?.toJSON === "function";
 var processHeaders = (headers) => {
@@ -110781,7 +110961,7 @@ var import_endpoints5 = __toESM(require_endpoints());
 var import_event_streams2 = __toESM(require_event_streams());
 var import_protocols6 = __toESM(require_protocols());
 var import_retry4 = __toESM(require_retry());
-var import_schema29 = __toESM(require_schema());
+var import_schema31 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/auth/httpAuthSchemeProvider.js
 var import_httpAuthSchemes = __toESM(require_httpAuthSchemes());
@@ -112944,7 +113124,7 @@ var _mw11 = (Command, cs, config, o) => [
 ];
 
 // node_modules/@aws-sdk/client-s3/dist-es/schemas/schemas_0.js
-var import_schema28 = __toESM(require_schema());
+var import_schema30 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/models/S3ServiceException.js
 var import_client5 = __toESM(require_client3());
@@ -114314,10 +114494,10 @@ var _xawob = "x-amz-write-offset-bytes";
 var _xawrl = "x-amz-website-redirect-location";
 var _xs = "xsi:type";
 var n0 = "com.amazonaws.s3";
-var _s_registry = import_schema28.TypeRegistry.for(_s);
+var _s_registry = import_schema30.TypeRegistry.for(_s);
 var S3ServiceException$ = [-3, _s, "S3ServiceException", 0, [], []];
 _s_registry.registerError(S3ServiceException$, S3ServiceException);
-var n0_registry = import_schema28.TypeRegistry.for(n0);
+var n0_registry = import_schema30.TypeRegistry.for(n0);
 var AccessDenied$ = [
   -3,
   n0,
@@ -119348,7 +119528,7 @@ class S3Client extends import_client25.Client {
     const _config_10 = $resolveS3Config(_config_9, { session: [() => this, CreateSessionCommand] });
     const _config_11 = resolveRuntimeExtensions2(_config_10, configuration?.extensions || []);
     this.config = _config_11;
-    this.middlewareStack.use(import_schema29.getSchemaSerdePlugin(this.config));
+    this.middlewareStack.use(import_schema31.getSchemaSerdePlugin(this.config));
     this.middlewareStack.use(import_client24.getUserAgentPlugin(this.config));
     this.middlewareStack.use(import_retry4.getRetryPlugin(this.config));
     this.middlewareStack.use(import_protocols6.getContentLengthPlugin(this.config));
@@ -120022,14 +120202,32 @@ async function getSellerWeightedSurplusVisibility(sellerId) {
       policyVersion: ranking.policyVersion
     };
     if (!candidate || !result) {
-      return { ...base, score: null, tier: null, rank: null, reason: "Listing is not eligible" };
+      let reason = "Listing is not eligible";
+      if (!product.isActive) {
+        reason = "Listing is archived / inactive";
+      } else if (!product.isMarketable) {
+        reason = "Listing is marked not marketable";
+      } else if (Number(product.productQty) <= 0) {
+        reason = "Stock is zero";
+      } else if (Number(product.productPrice) <= 0) {
+        reason = "Price must be greater than zero";
+      }
+      return { ...base, score: null, tier: null, rank: null, reason };
     }
+    const tierNormalized = result.tier.toLowerCase().includes("priority") ? "priority" : result.tier.toLowerCase().includes("standard") ? "standard" : "basic";
     return {
       ...base,
       score: Number(result.score.toFixed(4)),
-      tier: result.tier,
+      tier: tierNormalized,
       rank: result.rank,
       criteria: result.criteria,
+      inputs: {
+        postingAge: result.criteria.freshness,
+        remainingQuantity: result.criteria.stockAvailability,
+        recurrence: result.criteria.recurrence,
+        priorCycles: Math.round(result.criteria.recurrence * 10),
+        vegetableKey: candidate.productName
+      },
       distances: {
         toIdeal: Number(result.distanceToIdeal.toFixed(4)),
         toWorst: Number(result.distanceToWorst.toFixed(4))
@@ -120725,6 +120923,10 @@ function archiveSellerProduct(sellerId, productId) {
       throw new OrderError(404, "Product not found");
     if (!current.isActive)
       return current;
+    const [activeReservation] = await tx.select({ orderId: orders.id }).from(ordered_items).innerJoin(orders, eq(orders.id, ordered_items.ordersId)).where(and(eq(ordered_items.productId, productId), eq(orders.status, "pending"))).limit(1);
+    if (activeReservation) {
+      throw new OrderError(409, "Cannot archive this produce because it is currently reserved by a buyer. Please complete or cancel the pickup first.");
+    }
     const [product] = await tx.update(sellers_product).set({ isActive: false, updatedAt: new Date }).where(eq(sellers_product.id, productId)).returning();
     return product;
   });
@@ -120799,11 +121001,17 @@ var sellerProductGetRoute = new Elysia().use(sessionAuth).get("/products/:id", a
 var sellerProductArchiveParams = sellerProductId;
 
 // src/modules/seller/index/seller.product.archive.ts
-var sellerProductArchiveRoute = new Elysia().use(sessionAuth).delete("/products/:id", async ({ session, params, set, status }) => {
+var sellerProductArchiveRoute = new Elysia().use(sessionAuth).delete("/products/:id", async ({ session, params, status }) => {
   try {
-    await archiveSellerProduct(session.userId, params.id);
-    set.status = 204;
-    return;
+    const product = await archiveSellerProduct(session.userId, params.id);
+    return status(200, product);
+  } catch (error) {
+    return sellerProductFailure(error, status);
+  }
+}, { role: ["seller"], params: sellerProductArchiveParams }).post("/products/:id/archive", async ({ session, params, status }) => {
+  try {
+    const product = await archiveSellerProduct(session.userId, params.id);
+    return status(200, product);
   } catch (error) {
     return sellerProductFailure(error, status);
   }
@@ -126477,7 +126685,7 @@ var validationPlugin = new Elysia({
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 var webCorsOrigin = configuredWebOrigins.length ? [...configuredWebOrigins, localWebOrigin] : localWebOrigin;
-var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(authPasswordRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(cors({ origin: webCorsOrigin, credentials: true })).use(index_default()).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

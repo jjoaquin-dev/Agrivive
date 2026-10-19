@@ -25,14 +25,36 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
       policyVersion: ranking.policyVersion,
     };
     if (!candidate || !result) {
-      return { ...base, score: null, tier: null, rank: null, reason: "Listing is not eligible" };
+      let reason = "Listing is not eligible";
+      if (!product.isActive) {
+        reason = "Listing is archived / inactive";
+      } else if (!product.isMarketable) {
+        reason = "Listing is marked not marketable";
+      } else if (Number(product.productQty) <= 0) {
+        reason = "Stock is zero";
+      } else if (Number(product.productPrice) <= 0) {
+        reason = "Price must be greater than zero";
+      }
+      return { ...base, score: null, tier: null, rank: null, reason };
     }
+    const tierNormalized = result.tier.toLowerCase().includes("priority")
+      ? "priority"
+      : result.tier.toLowerCase().includes("standard")
+      ? "standard"
+      : "basic";
     return {
       ...base,
       score: Number(result.score.toFixed(4)),
-      tier: result.tier,
+      tier: tierNormalized,
       rank: result.rank,
       criteria: result.criteria,
+      inputs: {
+        postingAge: result.criteria.freshness,
+        remainingQuantity: result.criteria.stockAvailability,
+        recurrence: result.criteria.recurrence,
+        priorCycles: Math.round(result.criteria.recurrence * 10),
+        vegetableKey: candidate.productName,
+      },
       distances: {
         toIdeal: Number(result.distanceToIdeal.toFixed(4)),
         toWorst: Number(result.distanceToWorst.toFixed(4)),
@@ -40,3 +62,4 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
     };
   });
 }
+

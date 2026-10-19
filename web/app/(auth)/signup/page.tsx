@@ -10,6 +10,8 @@ import { PasswordInput } from "@/src/features/auth/components/PasswordInput";
 import { GoogleSignInButton } from "@/src/features/auth/components/GoogleSignInButton";
 import { validateSignUp, type AuthErrors } from "@/src/features/auth/validation";
 import { authClient } from "@/src/lib/auth-client";
+import { apiRequest } from "@/src/lib/api";
+
 import { DEFAULT_BUYER_DESTINATION, getNextPathFromLocation, withNextPath } from "@/src/lib/navigation";
 import { LogIn, Mail, User, UserPlus } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -44,11 +46,49 @@ export default function SignUpPage() {
       });
       if (response.error) {
         const message = response.error.message?.toLowerCase() ?? "";
-        setErrors(
-          message.includes("already") || message.includes("exist")
-            ? { email: "An account with this email already exists. Sign in instead." }
-            : { form: response.error.message || "Could not create your account." },
-        );
+        if (message.includes("already") || message.includes("exist")) {
+          try {
+            const check = await apiRequest<any>("/auth/check-email", {
+              method: "POST",
+              body: JSON.stringify({ email: cleanEmail, targetRole: "buyer" }),
+            });
+            if (check.roleCount >= 2) {
+              setErrors({
+                email: "This email already has both Buyer and Seller profiles. Please sign in instead.",
+              });
+              return;
+            }
+            if (check.hasTargetRole) {
+              setErrors({
+                email: "An account with this email is already registered as a Buyer. Please sign in instead.",
+              });
+              return;
+            }
+            if (check.canUseEmail) {
+              await apiRequest<any>("/auth/register-role", {
+                method: "POST",
+                body: JSON.stringify({
+                  email: cleanEmail,
+                  password,
+                  name: name.trim(),
+                  targetRole: "buyer",
+                }),
+              });
+              await authClient.signIn.email({
+                email: cleanEmail,
+                password,
+              });
+              router.replace(nextPath);
+              return;
+            }
+          } catch (checkErr: any) {
+            setErrors({
+              email: checkErr?.message || "An account with this email already exists. Sign in instead.",
+            });
+            return;
+          }
+        }
+        setErrors({ form: response.error.message || "Could not create your account." });
         return;
       }
       router.replace(withNextPath(`/verify-email?email=${encodeURIComponent(cleanEmail)}&sent=true`, nextPath));
