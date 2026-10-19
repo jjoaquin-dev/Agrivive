@@ -26,11 +26,10 @@ The scheduled draft flow above does not post automatically, notify buyers, chang
 
 The paper's seller flow is implemented as a separate, explicit action from the read-only visibility score:
 
-1. After a seller adds an active, marketable listing, the mobile app asks, **"Boost Visibility?"**.
-2. If the seller chooses **Boost now**, the backend records one idempotent boost for the current listing cycle and queues an n8n webhook. The webhook receives only the boost ID and reason; n8n fetches the current price, quantity, photo, seller, and listing link through the protected backend context route before posting to the configured social destination.
-3. If the seller chooses **Not now**, the listing remains active and the Boost Visibility action remains available from seller analytics.
-4. At each configured 12-hour price-reduction point, the scheduled worker applies the reduction only while the listing remains active, marketable, and in stock. It then creates one seller boost prompt for that reduction period and queues a seller push notification.
-5. The seller may choose **Boost now** or **Not now** from the prompt. A confirmed prompt queues another idempotent n8n webhook using the updated price and current availability.
+1. When a seller lists fresh produce, it is added to inventory without an immediate boost prompt, avoiding conflict with the AHP–TOPSIS multi-criteria evaluation rules.
+2. The listing cycle is evaluated by the scheduled worker against the market population. Once it achieves Priority Boost eligibility ($C_i^* \ge 0.60$), the Boost Visibility action is available from the seller's Boosts dashboard and analytics. If the seller chooses **Boost now**, the backend records an idempotent boost for the current listing cycle and queues an n8n webhook. The webhook receives only the boost ID and reason; n8n fetches the current price, quantity, photo, seller, and listing link through the protected backend context route before posting to the configured social destination.
+3. At each scheduled price-reduction point, the worker applies the reduction only while the listing remains active, marketable, and in stock, creating an updated boost prompt and seller notification.
+4. The seller may choose **Boost now** or **Not now** from the prompt. A confirmed prompt queues an idempotent n8n webhook using the updated price and current availability.
 
 Seller confirmation is the trigger for social posting. The AHP–TOPSIS score determines promotional priority; it does not confirm food safety, freshness, quality, or a completed sale. Safety checks still reject inactive, non-marketable, sold-out, incomplete, or unauthorized listings.
 

@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
 
 export const styles = StyleSheet.create({
-  container: { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.xxxl },
+  container: { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: 140 },
   errorBox: { backgroundColor: "rgba(184, 84, 80, 0.1)", borderWidth: 1, borderColor: colors.error, borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.base },
   errorBoxText: { color: colors.error, fontSize: 14, fontFamily: fonts.body.medium },
   section: { marginBottom: spacing.base },

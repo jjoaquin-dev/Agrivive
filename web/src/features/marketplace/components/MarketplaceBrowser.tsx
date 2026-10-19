@@ -61,10 +61,15 @@ function MarketplaceBrowserContent() {
   const [showMap, setShowMap] = useState(true);
 
   const mapParams = new URLSearchParams(searchKey);
-  const handleSelectSeller = useCallback((sellerId: string) => {
+  const handleSelectSellerFromMap = useCallback((sellerId: string) => {
     setSelectedSellerId(sellerId);
+  }, []);
+
+  const handleSelectSellerFromCard = useCallback((sellerId: string) => {
+    setSelectedSellerId(sellerId);
+    setShowMap(true);
     window.requestAnimationFrame(() => {
-      document.getElementById(`seller-card-${sellerId}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      document.getElementById("interactive-seller-map")?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   }, []);
 
@@ -98,7 +103,7 @@ function MarketplaceBrowserContent() {
           <div className="min-w-0 space-y-6">
             {/* Collapsible Interactive Map Strip */}
             {showMap && (
-              <div className="relative isolate z-0 overflow-hidden rounded-[24px] border border-border/80 bg-white p-2 shadow-[0_8px_24px_rgba(31,77,58,0.04)]">
+              <div id="interactive-seller-map" className="relative isolate z-0 overflow-hidden rounded-[24px] border border-border/80 bg-white p-2 shadow-[0_8px_24px_rgba(31,77,58,0.04)]">
                 <InteractiveSellerMap
                   sellers={sellerMap.sellers}
                   unmappedSellerCount={sellerMap.unmappedSellerCount}
@@ -108,7 +113,7 @@ function MarketplaceBrowserContent() {
                   selectedSellerId={selectedSellerId}
                   loading={sellerMapLoading}
                   error={sellerMapError}
-                  onSelectSeller={handleSelectSeller}
+                  onSelectSeller={handleSelectSellerFromMap}
                   onRetry={retrySellerMap}
                 />
               </div>
@@ -134,7 +139,7 @@ function MarketplaceBrowserContent() {
               onRetry={retry}
               onLoadMore={handleLoadMore}
               selectedSellerId={selectedSellerId}
-              onSelectSeller={handleSelectSeller}
+              onSelectSeller={handleSelectSellerFromCard}
             />
           </div>
         </section>

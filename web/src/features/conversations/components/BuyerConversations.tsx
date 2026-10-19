@@ -77,7 +77,7 @@ export function BuyerConversations() {
         sellerId: product.seller.id,
         sellerName: product.seller.name,
         sellerShopName: product.seller.shopName,
-        sellerImage: null,
+        sellerImage: product.seller.image ?? null,
         productId: product.id,
         productName: product.productName,
         productImageUrl: product.imageUrl,

@@ -4,6 +4,7 @@ export const trustPolicyWeights = {
   inquiry_non_response: 1,
   seller_cancellation: 2,
   low_rating: 1,
+  buyer_failed_reservation: 2,
 } as const;
 
 function configuredInteger(name: string, fallback: number) {
@@ -12,7 +13,7 @@ function configuredInteger(name: string, fallback: number) {
 }
 
 export const trustActionPolicy = {
-  enabled: process.env.TRUST_ACTIONS_ENABLED?.trim().toLowerCase() === "true",
+  enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
   warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
   restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
   blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),

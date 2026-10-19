@@ -1,21 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import Link from "next/link";
-import { ArrowLeft, CheckCheck, MessageCircle, Paperclip, Send, Smile, Store } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, MessageCircle, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConversationThread } from "../hooks/useConversationThread";
 import type { Conversation } from "../api";
 import type { ConversationLaunchContext } from "../types";
 import { ConversationContextCard } from "./ConversationContextCard";
+import { ConversationMessageBubble } from "./ConversationMessageBubble";
+import { ConversationInput } from "./ConversationInput";
 
 function displayName(context: ConversationLaunchContext) {
   return context.sellerShopName || context.sellerName || "Seller";
-}
-
-function formatMessageTime(value: string) {
-  return new Date(value).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" });
 }
 
 export function ConversationThread({
@@ -30,7 +26,7 @@ export function ConversationThread({
   onConversationCreated: (conversation: Conversation) => void;
 }) {
   const thread = useConversationThread(context.contextType, context.contextId, 0, existing?.id);
-  const [draft, setDraft] = useState("");
+  const [headerAvatarFailed, setHeaderAvatarFailed] = useState(false);
   const endOfMessages = useRef<HTMLDivElement | null>(null);
   const announcedConversation = useRef<string | null>(existing?.id ?? null);
   const sellerName = displayName(context);
@@ -45,18 +41,6 @@ export function ConversationThread({
     endOfMessages.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [thread.messages.length]);
 
-  async function handleSend(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (await thread.send(draft)) setDraft("");
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      event.currentTarget.form?.requestSubmit();
-    }
-  }
-
   return (
     <section className="flex min-h-[680px] flex-1 flex-col bg-[#FDFCFB]" aria-label={`Conversation with ${sellerName}`}>
       {/* Header */}
@@ -64,8 +48,13 @@ export function ConversationThread({
         <Button type="button" variant="ghost" size="icon" onClick={onBack} className="lg:hidden" aria-label="Back to messages">
           <ArrowLeft className="size-5" />
         </Button>
-        {context.sellerImage ? (
-          <img src={context.sellerImage} alt="" className="size-10 rounded-full object-cover ring-2 ring-primary/10" />
+        {context.sellerImage && !headerAvatarFailed ? (
+          <img
+            src={context.sellerImage}
+            alt=""
+            className="size-10 rounded-full object-cover ring-2 ring-primary/10"
+            onError={() => setHeaderAvatarFailed(true)}
+          />
         ) : (
           <span className="flex size-10 items-center justify-center rounded-full bg-agrivive-background text-primary ring-2 ring-primary/10">
             <Store className="size-4" aria-hidden="true" />
@@ -101,88 +90,24 @@ export function ConversationThread({
         ) : null}
 
         {!thread.loading
-          ? thread.messages.map((item) => {
-              const isMine = Boolean(thread.conversation && item.senderId === thread.conversation.buyerId);
-              return (
-                <div key={item.id} className={`mb-4 flex gap-2.5 ${isMine ? "justify-end" : "justify-start"}`}>
-                  {!isMine && (
-                    <div className="size-7 shrink-0 overflow-hidden rounded-full bg-muted mt-1">
-                      {context.sellerImage ? (
-                        <img src={context.sellerImage} alt="" className="size-full object-cover" />
-                      ) : (
-                        <div className="flex size-full items-center justify-center text-[10px] font-bold text-primary">
-                          <Store className="size-3" />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className={`max-w-[min(80%,520px)] ${isMine ? "items-end" : "items-start"} flex flex-col`}>
-                    <div
-                      className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-xs ${
-                        isMine
-                          ? "rounded-br-sm bg-agrivive-primary text-white"
-                          : "rounded-bl-sm border border-border/80 bg-white text-foreground"
-                      }`}
-                    >
-                      {item.body}
-                    </div>
-                    <span className="mt-1 flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
-                      {formatMessageTime(item.createdAt)}
-                      {isMine ? <CheckCheck className="size-3 text-agrivive-primary" aria-label="Sent" /> : null}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
+          ? thread.messages.map((item) => (
+              <ConversationMessageBubble
+                key={item.id}
+                item={item}
+                isMine={Boolean(thread.conversation && item.senderId === thread.conversation.buyerId)}
+                sellerImage={context.sellerImage}
+              />
+            ))
           : null}
         <div ref={endOfMessages} />
       </div>
 
-      {/* Input Console matching reference */}
-      {thread.requiresAuth ? (
-        <div className="border-t border-border/70 bg-white p-4">
-          <p className="text-sm text-muted-foreground">Sign in to message this seller.</p>
-          <Link href="/login?next=%2Fmessages" className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-white">
-            Sign in to message
-          </Link>
-        </div>
-      ) : (
-        <div className="border-t border-border/70 bg-white p-3 sm:p-4">
-          {thread.error ? (
-            <Alert variant="destructive" className="mb-3 text-xs">
-              <AlertDescription>{thread.error}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          <form onSubmit={handleSend} className="rounded-2xl border border-border/80 bg-white p-2.5 shadow-xs">
-            <textarea
-              id="conversation-message-input"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type message here..."
-              maxLength={2000}
-              rows={2}
-              disabled={thread.sending}
-              className="w-full resize-none border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-60"
-            />
-            <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-2">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <button type="button" aria-label="Attach file" className="flex size-8 items-center justify-center rounded-lg hover:bg-muted">
-                  <Paperclip className="size-4" />
-                </button>
-                <button type="button" aria-label="Insert emoji" className="flex size-8 items-center justify-center rounded-lg hover:bg-muted">
-                  <Smile className="size-4" />
-                </button>
-              </div>
-              <Button type="submit" disabled={thread.sending || !draft.trim()} className="gap-1.5 rounded-xl px-4 py-2 font-semibold">
-                <span>Send</span>
-                <Send className="size-3.5" />
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
+      <ConversationInput
+        onSendMessage={thread.send}
+        sending={thread.sending}
+        requiresAuth={thread.requiresAuth}
+        error={thread.error}
+      />
     </section>
   );
 }

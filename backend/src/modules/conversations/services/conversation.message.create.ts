@@ -11,6 +11,7 @@ import type { SendConversationMessageBody } from "../model/conversation";
 import { ConversationError } from "./conversation.error";
 import { publishConversationMessage } from "./conversation.realtime";
 import { enqueueConversationNotification } from "../../notifications/services/notifications.outbox.enqueue-conversation";
+import { presignConversationMessageBody } from "../../../utils/s3-conversation";
 
 export async function createConversationMessage(userId: string, conversationId: string, input: SendConversationMessageBody) {
   const body = input.message.trim();
@@ -78,6 +79,9 @@ export async function createConversationMessage(userId: string, conversationId: 
     return { conversation, message, duplicate: false };
   });
 
-  if (!result.duplicate) publishConversationMessage(conversationId, result.message);
-  return result.message;
+  const displayBody = await presignConversationMessageBody(result.message.body);
+  const outgoingMessage = { ...result.message, body: displayBody };
+
+  if (!result.duplicate) publishConversationMessage(conversationId, outgoingMessage);
+  return outgoingMessage;
 }

@@ -27,10 +27,23 @@ export async function fetchSellerOrder(orderId: string, signal?: AbortSignal): P
   return apiFetch<SellerOrder>(`/seller/orders/${orderId}`, { signal });
 }
 
-export async function scanSellerOrder(qrPayload: string): Promise<SellerOrder> {
+export interface ScanOrderItemAdjustment {
+  itemId: string;
+  dispensedQuantity: number;
+}
+
+export interface ScanSellerOrderParams {
+  qrPayload: string;
+  items?: ScanOrderItemAdjustment[];
+}
+
+export async function scanSellerOrder(
+  params: ScanSellerOrderParams | string,
+): Promise<SellerOrder> {
+  const body = typeof params === "string" ? { qrPayload: params } : params;
   return apiFetch<SellerOrder>("/seller/orders/scan", {
     method: "POST",
-    body: JSON.stringify({ qrPayload }),
+    body: JSON.stringify(body),
   });
 }
 

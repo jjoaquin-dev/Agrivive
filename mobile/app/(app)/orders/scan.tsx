@@ -5,27 +5,67 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Camera } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
-import { scanSellerOrder } from "../../../src/features/orders/api/seller-orders";
+import {
+  fetchSellerOrder,
+  scanSellerOrder,
+  type ScanOrderItemAdjustment,
+} from "../../../src/features/orders/api/seller-orders";
+import { OrderHandoverSheet } from "../../../src/features/orders/components/OrderHandoverSheet";
+import type { SellerOrder } from "../../../src/features/orders/types";
 
 export default function SellerOrderScanScreen() {
   const router = useRouter();
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(true);
+  const [loadingOrder, setLoadingOrder] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [handoverError, setHandoverError] = useState<string | null>(null);
+
+  const [activePayload, setActivePayload] = useState<string | null>(null);
+  const [activeOrder, setActiveOrder] = useState<SellerOrder | null>(null);
 
   const handleBarcodeScanned = async ({ data }: BarcodeScanningResult) => {
-    if (!scanning || submitting) return;
+    if (!scanning || loadingOrder || submitting) return;
     setScanning(false);
-    setSubmitting(true);
-    setError(null);
+    setScanError(null);
+
+    const parts = data.split(".");
+    const targetOrderId = parts.length === 3 ? parts[1] : orderId;
+
+    if (!targetOrderId) {
+      setScanError("This QR code is not a valid Agrivive pickup pass.");
+      return;
+    }
+
     try {
-      const order = await scanSellerOrder(data);
-      router.replace({ pathname: "/(app)/orders/[id]", params: { id: order.id || orderId || "" } });
+      setLoadingOrder(true);
+      const order = await fetchSellerOrder(targetOrderId);
+      setActivePayload(data);
+      setActiveOrder(order);
     } catch (err: any) {
-      setError(err?.message || "This QR code could not be accepted.");
-      setScanning(true);
+      setScanError(err?.message || "Could not retrieve order details. Please check connection.");
+    } finally {
+      setLoadingOrder(false);
+    }
+  };
+
+  const handleConfirmHandover = async (adjustments: ScanOrderItemAdjustment[]) => {
+    if (!activePayload) return;
+    setSubmitting(true);
+    setHandoverError(null);
+    try {
+      const completed = await scanSellerOrder({
+        qrPayload: activePayload,
+        items: adjustments,
+      });
+      setActiveOrder(null);
+      setActivePayload(null);
+      setHandoverError(null);
+      router.replace({ pathname: "/(app)/orders/[id]", params: { id: completed.id } });
+    } catch (err: any) {
+      setHandoverError(err?.message || "Could not complete pickup.");
     } finally {
       setSubmitting(false);
     }
@@ -33,7 +73,14 @@ export default function SellerOrderScanScreen() {
 
   if (!permission) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   if (!permission.granted) {
-    return <View style={styles.center}><Camera size={42} color={colors.primary} /><Text style={styles.title}>Camera access is needed</Text><Text style={styles.text}>Allow camera access to scan a buyer’s pickup code.</Text><ButtonComponent title="Allow Camera" onPress={requestPermission} style={styles.action} /></View>;
+    return (
+      <View style={styles.center}>
+        <Camera size={42} color={colors.primary} />
+        <Text style={styles.title}>Camera access is needed</Text>
+        <Text style={styles.text}>Allow camera access to scan a buyer’s pickup code.</Text>
+        <ButtonComponent title="Allow Camera" onPress={requestPermission} style={styles.action} />
+      </View>
+    );
   }
 
   return (
@@ -48,11 +95,37 @@ export default function SellerOrderScanScreen() {
         <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close scanner" style={styles.backButton}>
           <ArrowLeft size={24} color={colors.white} />
         </Pressable>
-        <View style={styles.instruction}><Text style={styles.instructionTitle}>Scan buyer QR</Text><Text style={styles.instructionText}>Place the code inside the box.</Text></View>
+        <View style={styles.instruction}>
+          <Text style={styles.instructionTitle}>Scan buyer QR</Text>
+          <Text style={styles.instructionText}>Place the code inside the box to verify order.</Text>
+        </View>
         <View style={styles.scanBox} />
-        {submitting ? <ActivityIndicator color={colors.white} size="large" /> : null}
-        {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text><ButtonComponent title="Scan Again" onPress={() => { setError(null); setScanning(true); }} variant="secondary" /></View> : null}
+        {loadingOrder ? <ActivityIndicator color={colors.white} size="large" /> : null}
+        {scanError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{scanError}</Text>
+            <ButtonComponent
+              title="Scan Again"
+              onPress={() => { setScanError(null); setScanning(true); }}
+              variant="secondary"
+            />
+          </View>
+        ) : null}
       </View>
+
+      <OrderHandoverSheet
+        visible={Boolean(activeOrder)}
+        order={activeOrder}
+        submitting={submitting}
+        error={handoverError}
+        onClose={() => {
+          setActiveOrder(null);
+          setActivePayload(null);
+          setHandoverError(null);
+          setScanning(true);
+        }}
+        onConfirm={handleConfirmHandover}
+      />
     </View>
   );
 }

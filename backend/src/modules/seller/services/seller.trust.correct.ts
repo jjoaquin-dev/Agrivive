@@ -15,6 +15,7 @@ export function correctSellerTrustEvent(sellerId: string, eventId: string, reaso
     if (!event) throw new OrderError(404, "Trust event not found");
     let valid = true;
     if (event.kind === "seller_cancellation") {
+      if (!event.orderId) throw new OrderError(400, "Cancellation event missing order");
       const [order] = await tx.select({ status: orders.status, cancelledBy: orders.cancelledBy })
         .from(orders).where(eq(orders.id, event.orderId)).limit(1);
       valid = order?.status === "cancelled" && order.cancelledBy === "seller";

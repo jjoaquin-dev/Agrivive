@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import {
   type CreateProductInput,
@@ -86,38 +86,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-      {errors.general ? <View style={styles.errorBox}><Text style={styles.errorBoxText}>{errors.general}</Text></View> : null}
-      <ProductFormIdentity
-        imageUrl={imagUrl}
-        displayImageUrl={displayImageUrl}
-        initialName={initialProduct?.productName}
-        initialCatalogId={initialProduct?.vegetableCatalogId}
-        errors={errors}
-        onImageSelected={(permanentUrl, displayUrl) => { setImagUrl(permanentUrl); setDisplayImageUrl(displayUrl); clearFieldError("imagUrl"); }}
-        onImageRemoved={() => { setImagUrl(""); setDisplayImageUrl(""); }}
-        onCatalogSelected={(item) => { setCatalogId(item?.id || ""); clearFieldError("catalogId"); }}
-      />
-      <ProductFormOperations
-        mode={mode}
-        scalingType={scalingType}
-        setScalingType={setScalingType}
-        productQty={productQty}
-        setProductQty={setProductQty}
-        productPrice={productPrice}
-        setProductPrice={setProductPrice}
-        priceReductionPercent={priceReductionPercent}
-        setPriceReductionPercent={setPriceReductionPercent}
-        minimumPrice={minimumPrice}
-        setMinimumPrice={setMinimumPrice}
-        lowStockThreshold={lowStockThreshold}
-        setLowStockThreshold={setLowStockThreshold}
-        isMarketable={isMarketable}
-        setIsMarketable={setIsMarketable}
-        errors={errors}
-        clearFieldError={clearFieldError}
-      />
-      <ButtonComponent title={submitButtonText} onPress={handleSubmit} loading={loading} style={styles.submitButton} />
-    </ScrollView>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      >
+        {errors.general ? <View style={styles.errorBox}><Text style={styles.errorBoxText}>{errors.general}</Text></View> : null}
+        <ProductFormIdentity
+          imageUrl={imagUrl}
+          displayImageUrl={displayImageUrl}
+          initialName={initialProduct?.productName}
+          initialCatalogId={initialProduct?.vegetableCatalogId}
+          errors={errors}
+          onImageSelected={(permanentUrl, displayUrl) => { setImagUrl(permanentUrl); setDisplayImageUrl(displayUrl); clearFieldError("imagUrl"); }}
+          onImageRemoved={() => { setImagUrl(""); setDisplayImageUrl(""); }}
+          onCatalogSelected={(item) => { setCatalogId(item?.id || ""); clearFieldError("catalogId"); }}
+        />
+        <ProductFormOperations
+          mode={mode}
+          scalingType={scalingType}
+          setScalingType={setScalingType}
+          productQty={productQty}
+          setProductQty={setProductQty}
+          productPrice={productPrice}
+          setProductPrice={setProductPrice}
+          priceReductionPercent={priceReductionPercent}
+          setPriceReductionPercent={setPriceReductionPercent}
+          minimumPrice={minimumPrice}
+          setMinimumPrice={setMinimumPrice}
+          lowStockThreshold={lowStockThreshold}
+          setLowStockThreshold={setLowStockThreshold}
+          isMarketable={isMarketable}
+          setIsMarketable={setIsMarketable}
+          errors={errors}
+          clearFieldError={clearFieldError}
+        />
+        <ButtonComponent title={submitButtonText} onPress={handleSubmit} loading={loading} style={styles.submitButton} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };

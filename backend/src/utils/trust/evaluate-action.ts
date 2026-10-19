@@ -55,14 +55,12 @@ export async function evaluateTrustAction(subjectId: string, sourceOrderId?: str
     if (actionType === "blocked") {
       await tx.update(user).set({ isActive: false }).where(eq(user.id, subjectId));
     }
-    if (orderId) {
-      await queueTrustNotice(tx, {
-        noticeKey: `trust-action:${actionKey}`,
-        recipientId: subjectId,
-        orderId,
-        kind: actionNoticeKinds[actionType],
-      });
-    }
+    await queueTrustNotice(tx, {
+      noticeKey: `trust-action:${actionKey}`,
+      recipientId: subjectId,
+      orderId: orderId ?? null,
+      kind: actionNoticeKinds[actionType],
+    });
     return action;
   });
 }

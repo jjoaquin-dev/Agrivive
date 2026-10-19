@@ -91,6 +91,7 @@ export const ButtonComponent: React.FC<ButtonComponentProps> = ({
         styles.base,
         variantStyles[variant],
         pressed && isInteractive ? pressedStyles[variant] : null,
+        pressed && isInteractive ? styles.pressedScale : null,
         disabled ? styles.disabled : null,
         style,
       ]}
@@ -140,5 +141,8 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: colors.textMuted,
+  },
+  pressedScale: {
+    transform: [{ scale: 0.98 }],
   },
 });

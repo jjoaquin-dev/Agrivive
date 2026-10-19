@@ -14,7 +14,7 @@ export default function CreateProductScreen() {
     setLoading(true);
     try {
       const res = await createSellerProduct(data as CreateProductInput);
-      const showProductListed = () => Alert.alert(
+      Alert.alert(
         "Product Listed",
         `"${res.products.productName}" has been successfully added to your inventory.`,
         [
@@ -22,24 +22,8 @@ export default function CreateProductScreen() {
           { text: "Back to Inventory", style: "cancel", onPress: () => router.back() },
         ],
       );
-      if (!res.products.isMarketable || Number(res.products.productQty) <= 0) {
-        showProductListed();
-        return;
-      }
-      Alert.alert(
-        "Boost Visibility?",
-        "Share this listing through Agrivive's social workflow so more buyers can find it.",
-        [
-          { text: "Not now", style: "cancel", onPress: showProductListed },
-          {
-            text: "Boost now",
-            onPress: () => router.replace({
-              pathname: "/(app)/boost/[productId]",
-              params: { productId: res.products.id, entry: "new-product" },
-            }),
-          },
-        ],
-      );
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to add product to inventory.");
     } finally {
       setLoading(false);
     }

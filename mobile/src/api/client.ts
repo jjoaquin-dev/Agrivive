@@ -84,8 +84,16 @@ export async function apiFetch<T = any>(
     // Ignore cookie retrieval failure if none exists
   }
 
-  const session = await authClient.getSession();
-  const token = session.data?.session?.token;
+  let session: any = null;
+  try {
+    session = await Promise.race([
+      authClient.getSession(),
+      new Promise((resolve) => setTimeout(() => resolve(null), 3500)),
+    ]);
+  } catch {
+    // Continue with existing credentials if lookup fails
+  }
+  const token = session?.data?.session?.token;
 
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 

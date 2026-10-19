@@ -6,8 +6,11 @@
 export const colors = {
   primary: "#1F4D3A",
   primaryPressed: "#17392B",
+  primaryLight: "rgba(31, 77, 58, 0.08)",
+  primarySurface: "rgba(31, 77, 58, 0.04)",
   background: "#F8F6F1",
   surface: "#FFFFFF",
+  surfaceMuted: "#F3EFE6",
   text: "#202622",
   textMuted: "#6F776F",
   sage: "#A8BFA3",
@@ -46,12 +49,29 @@ export const spacing = {
 export const radii = {
   sm: 6,
   input: 10,
-  button: 10,
-  card: 12,
-  sheet: 16,
+  button: 14,
+  card: 16,
+  sheet: 20,
   full: 9999,
 } as const;
 
 export const touchTargets = {
   min: 48,
+} as const;
+
+export const shadows = {
+  card: {
+    shadowColor: "#1F4D3A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  elevated: {
+    shadowColor: "#1F4D3A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
 } as const;

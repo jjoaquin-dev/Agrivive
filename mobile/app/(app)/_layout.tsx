@@ -84,6 +84,12 @@ export default function AppLayout() {
         }}
       />
       <Stack.Screen
+        name="activity"
+        options={{
+          title: "Change History",
+        }}
+      />
+      <Stack.Screen
         name="analytics"
         options={{
           title: "Analytics",

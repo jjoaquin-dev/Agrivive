@@ -114,7 +114,12 @@ export default function ProfileSetupScreen() {
         return;
       }
 
-      router.replace("/(app)/(tabs)/inventory");
+      if (setup?.passwordSetupRequired || setup?.nextStep === "password-setup") {
+        router.replace("/(auth)/password-setup");
+        return;
+      }
+
+      router.replace("/(app)/(tabs)/home");
     } catch (err: any) {
       console.error("Seller profile setup failed", err);
       setErrors({
@@ -132,11 +137,13 @@ export default function ProfileSetupScreen() {
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
       >
         <ScrollView
           ref={scrollViewRef}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           <View style={styles.header}>
             <Text style={styles.stepBadge}>Step 3 of 3 • Profile Setup</Text>
@@ -255,7 +262,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.base,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.xxxl,
+    paddingBottom: 140,
   },
   header: {
     marginBottom: spacing.base,

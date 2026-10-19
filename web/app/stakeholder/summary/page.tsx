@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { AlertCircle, BarChart2, CheckCircle2, Clock, FileText, Lock, ShoppingBag, Users } from "lucide-react";
+import {
+  AlertCircle,
+  BarChart2,
+  CheckCircle2,
+  Clock,
+  FileText,
+  ShoppingBag,
+  Users,
+} from "lucide-react";
 import { BuyerSiteHeader } from "@/src/components/BuyerSiteHeader";
 import { PageContainer } from "@/src/components/PageContainer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ApiError } from "@/src/lib/api";
 import { getStakeholderSummary, type StakeholderSummary } from "@/src/features/stakeholder/api/summary";
 
 export default function StakeholderSummaryPage() {
   const [data, setData] = useState<StakeholderSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -21,14 +26,10 @@ export default function StakeholderSummaryPage() {
     getStakeholderSummary(controller.signal)
       .then((res) => {
         setData(res);
-        setAccessDenied(false);
+        setError(null);
       })
       .catch((err) => {
-        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-          setAccessDenied(true);
-        } else {
-          setError(err?.message || "Failed to load stakeholder summary.");
-        }
+        setError(err?.message || "Failed to load marketplace summary.");
       })
       .finally(() => setLoading(false));
 
@@ -42,10 +43,10 @@ export default function StakeholderSummaryPage() {
         <PageContainer>
           <div className="mb-8">
             <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
-              Stakeholder Platform Overview
+              Marketplace Platform Overview
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              High-level aggregate statistics across Agrivive marketplace operations and community activity.
+              Public high-level aggregate statistics across Agrivive marketplace operations and community activity.
             </p>
             {data?.generatedAt ? (
               <p className="mt-1 text-xs text-muted-foreground">
@@ -60,22 +61,6 @@ export default function StakeholderSummaryPage() {
                 <div key={i} className="h-36 animate-pulse rounded-2xl bg-card" />
               ))}
             </div>
-          ) : accessDenied ? (
-            <Card className="mx-auto max-w-md p-8 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
-                <Lock className="size-6" />
-              </div>
-              <h2 className="mt-4 font-heading text-lg font-bold">Stakeholder Access Required</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Your account is not registered in the approved stakeholder list. Approved stakeholder emails are managed securely on the server.
-              </p>
-              <Link
-                href="/login?next=/stakeholder/summary"
-                className="mt-5 inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90"
-              >
-                Sign in with another account
-              </Link>
-            </Card>
           ) : error || !data ? (
             <Card className="p-8 text-center">
               <AlertCircle className="mx-auto size-8 text-destructive" />

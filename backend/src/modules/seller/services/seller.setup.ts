@@ -33,7 +33,15 @@ export async function getSellerSetup(userId: string) {
         label: "Verified account",
         explanation: "Email verified and seller profile completed.",
       } : null,
-      nextStep: !account.emailVerified ? "verify-email" as const : sellerVerified ? "ready" as const : "profile" as const,
+      nextStep: !account.emailVerified
+        ? ("verify-email" as const)
+        : !profileComplete
+        ? ("profile" as const)
+        : passwordStatus.passwordSetupRequired
+        ? ("password-setup" as const)
+        : sellerVerified
+        ? ("ready" as const)
+        : ("profile" as const),
     };
   });
 }

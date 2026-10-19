@@ -4,6 +4,7 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
 import { registerNotificationDevice } from "../api/notification-devices";
+import { useUnreadReminder } from "../hooks/useUnreadReminder";
 
 const canUseNotifications =
   Platform.OS !== "web" &&
@@ -12,6 +13,7 @@ const canUseNotifications =
 export function NotificationRegistration() {
   const router = useRouter();
   const { session } = useAuth();
+  useUnreadReminder();
 
   useEffect(() => {
     if (!canUseNotifications) return;

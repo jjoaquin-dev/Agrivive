@@ -20,6 +20,7 @@ export type SellerAnalyticsMetrics = {
   };
   filter: {
     productId?: string;
+    productName?: string;
     unit?: "sack" | "kilo" | "pile";
   };
   metrics: {

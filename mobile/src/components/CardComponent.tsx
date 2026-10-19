@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View, ViewProps, ViewStyle } from "react-native";
-import { colors, radii, spacing } from "../theme";
+import { colors, radii, spacing, shadows } from "../theme";
 
 export interface CardComponentProps extends ViewProps {
   style?: ViewStyle;
@@ -26,10 +26,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: radii.card,
     padding: spacing.base,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    ...shadows.card,
   },
 });
