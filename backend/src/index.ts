@@ -17,8 +17,12 @@ import { conversationsRoute } from "./modules/conversations";
 import { notificationsRoute } from "./modules/notifications";
 import { trustRoute } from "./modules/trust";
 import { validationPlugin } from "./plugins/validation.plugin";
+import { securityHeadersPlugin } from "./plugins/security-headers.plugin";
+import { rateLimitPlugin } from "./plugins/rate-limit.plugin";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
+
+const isDev = process.env.NODE_ENV !== "production";
 
 const configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "")
   .split(",")
@@ -27,14 +31,18 @@ const configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "")
 
 const localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
 const webCorsOrigin = configuredWebOrigins.length
-  ? [...configuredWebOrigins, localWebOrigin]
+  ? (isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins)
   : localWebOrigin;
 
+const openapiPlugin = isDev ? openapi() : new Elysia({ name: "noop-openapi" });
+
 const app = new Elysia()
+  .use(securityHeadersPlugin)
+  .use(rateLimitPlugin)
   .use(cors({ origin: webCorsOrigin, credentials: true }))
 
   //openapi
-  .use(openapi())
+  .use(openapiPlugin)
 
   //auth hadler
   .mount(auth.handler)
