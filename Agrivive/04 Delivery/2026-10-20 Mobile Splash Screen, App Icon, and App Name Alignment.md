@@ -22,14 +22,12 @@ related_documents:
      - `backgroundColor`: `"#F8F6F1"` (Agrivive Warm Cream background token).
    - Configured the `expo-splash-screen` plugin options with matching image (`imageWidth: 240`) and Warm Cream background (`#F8F6F1`), ensuring a smooth transition without flicker into root views rendered by `mobile/app/_layout.tsx`.
 
-3. **High-Resolution Brand Asset Generation**:
-   - Replaced all default Expo placeholders in `mobile/assets/` using the official Agrivive identity:
-     - `mobile/assets/icon.png`: 1024×1024 app icon featuring the Agrivive leaf sprout mark centered on a solid Warm Cream (`#F8F6F1`) canvas with safe zone margins for iOS squircle and Android masking.
-     - `mobile/assets/splash-icon.png`: 1024×1024 high-resolution splash image featuring the vertical Agrivive brand logo (centered green sprout mark + "Agrivive" brand typography) on transparent background.
-     - `mobile/assets/android-icon-foreground.png`: 512×512 adaptive icon foreground containing the Agrivive sprout mark centered strictly within the Android 66% safe zone diameter.
-     - `mobile/assets/android-icon-background.png`: 512×512 solid `#F8F6F1` background.
-     - `mobile/assets/android-icon-monochrome.png`: 432×432 monochrome silhouette for Android 13+ Material You themed icons.
-     - `mobile/assets/favicon.png`: 48×48 web favicon featuring the Agrivive sprout mark.
+3. **High-Resolution Brand Asset Generation & Cache Busting**:
+   - Replaced all default Expo placeholders and created uniquely-named brand assets in `mobile/assets/` to bust Expo Go's on-device OkHttp image disk cache:
+     - `mobile/assets/agrivive-icon.png`: 1024×1024 app icon featuring the Agrivive leaf sprout mark centered on a solid Warm Cream (`#F8F6F1`) canvas.
+     - `mobile/assets/agrivive-splash.png`: 1024×1024 high-resolution splash image featuring the vertical Agrivive brand logo on transparent background.
+     - `mobile/assets/agrivive-adaptive-foreground.png`: 512×512 adaptive icon foreground containing the Agrivive sprout mark centered strictly within the Android 66% safe zone diameter.
+   - Removed `backgroundImage` and blueprint gridlines from `android.adaptiveIcon`, ensuring clean solid `#F8F6F1` background.
    - Updated `android.adaptiveIcon.backgroundColor` in `mobile/app.json` from Expo blue (`#E6F4FE`) to `#F8F6F1`.
 
 ## Why
