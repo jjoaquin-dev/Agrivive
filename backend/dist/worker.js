@@ -28465,6 +28465,7 @@ var user = pgTable("user", {
   image: text("image"),
   role: roleEnum().array().default(["buyer"]),
   isActive: boolean("is_active").default(true).notNull(),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).defaultNow().notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
@@ -28731,7 +28732,13 @@ var seller_promotion_jobs = pgTable("seller_promotion_jobs", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   headline: text("headline"),
   caption: text("caption"),
+  visibilityPolicyVersion: text("visibility_policy_version"),
+  visibilityScore: decimal("visibility_score", { precision: 5, scale: 4 }),
+  visibilityTier: text("visibility_tier"),
+  visibilityRank: integer("visibility_rank"),
+  evaluatedAt: timestamp("evaluated_at", { withTimezone: true }),
   readyAt: timestamp("ready_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
   readAt: timestamp("read_at", { withTimezone: true }),
   lastError: text("last_error"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -28978,7 +28985,7 @@ var conversation_messages = pgTable("conversation_messages", {
 var trust_events = pgTable("trust_events", {
   id: uuid("id").defaultRandom().primaryKey(),
   eventKey: text("event_key").notNull().unique(),
-  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
   classification: text("classification").notNull(),
@@ -28994,7 +29001,7 @@ var trust_notices = pgTable("trust_notices", {
   id: uuid("id").defaultRandom().primaryKey(),
   noticeKey: text("notice_key").notNull().unique(),
   recipientId: text("recipient_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
   attempts: integer("attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
@@ -29065,7 +29072,10 @@ var product_reviews = pgTable("product_reviews", {
 // src/utils/order-stock/index.ts
 async function restoreOrderStock(tx, orderId) {
   const items = await tx.select({ productId: ordered_items.productId, quantity: ordered_items.quantity }).from(ordered_items).where(eq(ordered_items.ordersId, orderId));
-  if (!items.length || items.some((item) => item.quantity === null)) {
+  if (!items.length) {
+    return;
+  }
+  if (items.some((item) => item.quantity === null)) {
     throw new Error("Order items are missing a quantity");
   }
   for (const item of items) {
@@ -29073,24 +29083,6 @@ async function restoreOrderStock(tx, orderId) {
     if (!updated)
       throw new Error("Order product is missing");
   }
-}
-
-// src/modules/buyer/services/buyer.order.expire.ts
-async function expirePendingOrders(limit = 100) {
-  const due = await db.select({ id: orders.id }).from(orders).where(and(eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).orderBy(orders.expiresAt).limit(limit);
-  let expiredCount = 0;
-  for (const row of due) {
-    const expired = await db.transaction(async (tx) => {
-      const [updated] = await tx.update(orders).set({ status: "expired", expiredAt: new Date, updatedAt: new Date }).where(and(eq(orders.id, row.id), eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).returning({ id: orders.id });
-      if (!updated)
-        return false;
-      await restoreOrderStock(tx, updated.id);
-      return true;
-    });
-    if (expired)
-      expiredCount++;
-  }
-  return expiredCount;
 }
 
 // src/utils/trust/index.ts
@@ -29139,14 +29131,15 @@ var trustPolicyVersion = "monitoring-v3";
 var trustPolicyWeights = {
   inquiry_non_response: 1,
   seller_cancellation: 2,
-  low_rating: 1
+  low_rating: 1,
+  buyer_failed_reservation: 2
 };
 function configuredInteger(name, fallback) {
   const value = Number(process.env[name]);
   return Number.isInteger(value) && value >= 0 ? value : fallback;
 }
 var trustActionPolicy = {
-  enabled: process.env.TRUST_ACTIONS_ENABLED?.trim().toLowerCase() === "true",
+  enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
   warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
   restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
   blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),
@@ -29264,16 +29257,103 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
     if (actionType === "blocked") {
       await tx.update(user).set({ isActive: false }).where(eq(user.id, subjectId));
     }
-    if (orderId) {
-      await queueTrustNotice(tx, {
-        noticeKey: `trust-action:${actionKey}`,
-        recipientId: subjectId,
-        orderId,
-        kind: actionNoticeKinds[actionType]
-      });
-    }
+    await queueTrustNotice(tx, {
+      noticeKey: `trust-action:${actionKey}`,
+      recipientId: subjectId,
+      orderId: orderId ?? null,
+      kind: actionNoticeKinds[actionType]
+    });
     return action;
   });
+}
+
+// src/modules/buyer/services/buyer.order.expire.ts
+async function expirePendingOrders(limit = 100) {
+  const due = await db.select({ id: orders.id, buyersId: orders.buyersId, sellersId: orders.sellersId }).from(orders).where(and(eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).orderBy(orders.expiresAt).limit(limit);
+  let expiredCount = 0;
+  for (const row of due) {
+    const expired = await db.transaction(async (tx) => {
+      const [updated] = await tx.update(orders).set({ status: "expired", expiredAt: new Date, updatedAt: new Date }).where(and(eq(orders.id, row.id), eq(orders.status, "pending"), lte(orders.expiresAt, new Date))).returning({ id: orders.id, buyersId: orders.buyersId, sellersId: orders.sellersId });
+      if (!updated)
+        return null;
+      await restoreOrderStock(tx, updated.id);
+      const eventKey = `buyer-expired:${updated.id}`;
+      await recordTrustEvent(tx, {
+        eventKey,
+        orderId: updated.id,
+        subjectId: updated.buyersId,
+        kind: "buyer_failed_reservation",
+        classification: "verified",
+        sourceId: updated.id
+      });
+      await queueTrustNotice(tx, {
+        noticeKey: `buyer-expired-notice:${updated.id}`,
+        recipientId: updated.buyersId,
+        orderId: updated.id,
+        kind: "buyer_failed_reservation_warning"
+      });
+      return { buyerId: updated.buyersId, orderId: updated.id, eventKey };
+    });
+    if (expired) {
+      expiredCount++;
+      await evaluateTrustAction(expired.buyerId, expired.orderId, expired.eventKey);
+    }
+  }
+  return expiredCount;
+}
+
+// src/jobs/check-user-inactivity.ts
+async function checkUserInactivity(limit = 100) {
+  const now = new Date;
+  const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 3600000);
+  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 3600000);
+  let warningsIssued = 0;
+  let accountsBlocked = 0;
+  const blockCandidates = await db.select({ id: user.id }).from(user).where(and(eq(user.isActive, true), lt(user.lastActiveAt, oneMonthAgo))).limit(limit);
+  for (const candidate of blockCandidates) {
+    await db.transaction(async (tx) => {
+      await tx.update(user).set({ isActive: false }).where(eq(user.id, candidate.id));
+      const actionKey = `${trustPolicyVersion}:${candidate.id}:blocked:inactivity-30d`;
+      await tx.insert(trust_actions).values({
+        actionKey,
+        subjectId: candidate.id,
+        actionType: "blocked",
+        weightedPoints: 0,
+        policyVersion: trustPolicyVersion,
+        reason: "Account has been inactive for more than 30 days."
+      }).onConflictDoNothing({ target: trust_actions.actionKey });
+      await queueTrustNotice(tx, {
+        noticeKey: `inactivity-blocked:${candidate.id}`,
+        recipientId: candidate.id,
+        kind: "inactivity_1m_blocked"
+      });
+    });
+    accountsBlocked++;
+  }
+  const warnCandidates = await db.select({ id: user.id }).from(user).where(and(eq(user.isActive, true), lt(user.lastActiveAt, threeWeeksAgo), sql`${user.lastActiveAt} >= ${oneMonthAgo}`)).limit(limit);
+  for (const candidate of warnCandidates) {
+    const actionKey = `${trustPolicyVersion}:${candidate.id}:warning:inactivity-21d`;
+    await db.transaction(async (tx) => {
+      const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
+      if (!existing) {
+        await tx.insert(trust_actions).values({
+          actionKey,
+          subjectId: candidate.id,
+          actionType: "warning",
+          weightedPoints: 0,
+          policyVersion: trustPolicyVersion,
+          reason: "Account has been inactive for three weeks."
+        });
+        await queueTrustNotice(tx, {
+          noticeKey: `inactivity-warning:${candidate.id}`,
+          recipientId: candidate.id,
+          kind: "inactivity_3w_warning"
+        });
+        warningsIssued++;
+      }
+    });
+  }
+  return { warningsIssued, accountsBlocked };
 }
 
 // src/utils/trust/process-inquiries.ts
@@ -29396,7 +29476,10 @@ var messages = {
   trust_action_warning: { subject: "Agrivive trust warning", text: "Your verified trust history reached the warning threshold. Review your account activity and keep future transactions responsive." },
   trust_action_restriction: { subject: "Agrivive temporary restriction", text: "Your account has a temporary restriction because verified trust events reached the configured restriction threshold. The restriction will expire automatically unless a newer action applies." },
   trust_action_blocked: { subject: "Agrivive account recovery", text: "Your account is blocked by the trust policy. Use the Agrivive recovery screen and verify the email OTP to restore access." },
-  trust_action_expired: { subject: "Agrivive restriction ended", text: "Your temporary trust restriction has ended automatically. You can use Agrivive again." }
+  trust_action_expired: { subject: "Agrivive restriction ended", text: "Your temporary trust restriction has ended automatically. You can use Agrivive again." },
+  buyer_failed_reservation_warning: { subject: "Agrivive uncollected reservation notice", text: "A vegetable reservation expired before pickup. This incident has been recorded in your buyer trust history." },
+  inactivity_3w_warning: { subject: "Agrivive inactivity reminder", text: "You have not been active in Agrivive for three weeks. Please log in or update your activity to maintain your account standing." },
+  inactivity_1m_blocked: { subject: "Agrivive account blocked due to inactivity", text: "Your account has been deactivated after 30 days of inactivity. Please follow the recovery process to restore access." }
 };
 async function sendPendingTrustNotices(limit = 25) {
   let sent = 0;
@@ -29416,8 +29499,9 @@ async function sendPendingTrustNotices(limit = 25) {
     if (!recipient || !message)
       continue;
     try {
-      await sendEmail(recipient.email, message.subject, `${message.text}
-Order: ${notice.orderId}`, `trust:${notice.noticeKey}`);
+      const details = `${message.text}${notice.orderId ? `
+Order: ${notice.orderId}` : ""}`;
+      await sendEmail(recipient.email, message.subject, details, `trust:${notice.noticeKey}`);
       await db.update(trust_notices).set({ sentAt: new Date, lockedUntil: null }).where(eq(trust_notices.id, notice.id));
       sent++;
     } catch (error) {
@@ -29517,6 +29601,151 @@ async function sendSellerListingNotices(limit = 25) {
   return { processedEvents, noticesCreated, pushJobsCreated };
 }
 
+// src/modules/seller/services/seller.product.price-reduction.followup.ts
+function cents(value) {
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
+  if (!match)
+    throw new Error("Invalid price amount");
+  return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+}
+function decimal3(value) {
+  return `${value / 100n}.${(value % 100n).toString().padStart(2, "0")}`;
+}
+async function applySellerPromotionPriceReduction(tx, productId, now = new Date) {
+  const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
+  if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 || !current.productPrice || !current.minimumPrice || Number(current.priceReductionPercent ?? 0) <= 0)
+    return null;
+  const currentCents = cents(current.productPrice);
+  const floor = cents(current.minimumPrice);
+  if (currentCents <= floor)
+    return null;
+  const basisPoints = BigInt(Math.round(Number(current.priceReductionPercent) * 100));
+  const reducedCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
+  const nextCents = reducedCents < floor ? floor : reducedCents;
+  if (nextCents >= currentCents)
+    return null;
+  const [updated] = await tx.update(sellers_product).set({
+    productPrice: decimal3(nextCents),
+    priceReductionPeriodsApplied: current.priceReductionPeriodsApplied + 1,
+    updatedAt: now
+  }).where(eq(sellers_product.id, productId)).returning({
+    productPrice: sellers_product.productPrice
+  });
+  return updated ? { before: current.productPrice, after: updated.productPrice } : null;
+}
+
+// src/utils/ahp-topsis/index.ts
+var criterionCount = 4;
+var consistencyRandomIndex = 0.9;
+var ahpTopsisPolicyVersion = "visibility-ahptopsis-v1";
+var ahpPairwiseMatrix = [
+  [1, 1.333333, 2, 4],
+  [0.75, 1, 1.5, 3],
+  [0.5, 0.666667, 1, 2],
+  [0.25, 0.333333, 0.5, 1]
+];
+var clamp = (value) => Math.min(1, Math.max(0, value));
+function criterionValues(criteria) {
+  return [criteria.freshness, criteria.stockAvailability, criteria.sellerReliability, criteria.recurrence];
+}
+function valuesToCriteria(values) {
+  return {
+    freshness: values[0] ?? 0,
+    stockAvailability: values[1] ?? 0,
+    sellerReliability: values[2] ?? 0,
+    recurrence: values[3] ?? 0
+  };
+}
+function createVisibilityCriteria(input) {
+  return {
+    freshness: clamp(1 - Math.max(0, input.ageHours) / 12),
+    stockAvailability: clamp(input.stockRatio),
+    sellerReliability: clamp(input.sellerReliability),
+    recurrence: clamp(input.priorCycles / 3)
+  };
+}
+function calculateAHPWeights(matrix = ahpPairwiseMatrix) {
+  if (matrix.length !== criterionCount || matrix.some((row) => row.length !== criterionCount)) {
+    throw new Error("AHP pairwise matrix must be 4 by 4");
+  }
+  const geometricMeans = matrix.map((row) => Math.pow(row.reduce((product, value) => product * value, 1), 1 / criterionCount));
+  const total = geometricMeans.reduce((sum, value) => sum + value, 0);
+  const weights = geometricMeans.map((value) => value / total);
+  const lambdaRatios = matrix.map((row, rowIndex) => row.reduce((sum, value, columnIndex) => sum + value * weights[columnIndex], 0) / weights[rowIndex]);
+  const lambdaMax = lambdaRatios.reduce((sum, value) => sum + value, 0) / criterionCount;
+  const consistencyIndex = (lambdaMax - criterionCount) / (criterionCount - 1);
+  const consistencyRatio = Math.max(0, consistencyIndex / consistencyRandomIndex);
+  return {
+    weights: valuesToCriteria(weights),
+    consistencyRatio
+  };
+}
+function rankWithAHPAndTOPSIS(alternatives, matrix = ahpPairwiseMatrix) {
+  const { weights, consistencyRatio } = calculateAHPWeights(matrix);
+  if (alternatives.length === 0)
+    return { weights, consistencyRatio, results: [] };
+  const rawColumns = Array.from({ length: criterionCount }, (_, criterionIndex) => alternatives.map((alternative) => criterionValues(alternative.criteria)[criterionIndex] ?? 0));
+  const normalizedColumns = rawColumns.map((column) => {
+    const length = Math.sqrt(column.reduce((sum, value) => sum + value ** 2, 0));
+    return length === 0 ? column.map(() => 0) : column.map((value) => value / length);
+  });
+  const weightValues = criterionValues(weights);
+  const weightedRows = alternatives.map((_, alternativeIndex) => normalizedColumns.map((column, criterionIndex) => column[alternativeIndex] * weightValues[criterionIndex]));
+  const idealBest = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.max(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
+  const idealWorst = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.min(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
+  const results = alternatives.map((alternative, alternativeIndex) => {
+    const weighted = weightedRows[alternativeIndex] ?? [];
+    const distanceToIdeal = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealBest[index] ?? 0)) ** 2, 0));
+    const distanceToWorst = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealWorst[index] ?? 0)) ** 2, 0));
+    const denominator = distanceToIdeal + distanceToWorst;
+    return {
+      id: alternative.id,
+      score: denominator === 0 ? 0.5 : distanceToWorst / denominator,
+      rank: 0,
+      criteria: alternative.criteria,
+      weightedCriteria: valuesToCriteria(weighted),
+      distanceToIdeal,
+      distanceToWorst
+    };
+  }).sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+  return {
+    weights,
+    consistencyRatio,
+    results: results.map((result, index) => ({ ...result, rank: index + 1 }))
+  };
+}
+
+// src/utils/visibility-ranking/index.ts
+var priorityVisibilityThreshold = 0.6;
+function getVisibilityTier(score) {
+  if (score >= priorityVisibilityThreshold)
+    return "Priority Boost";
+  if (score >= 0.4)
+    return "Standard Exposure";
+  return "Basic/Hold";
+}
+function rankVisibilityCandidates(candidates) {
+  const ranking = rankWithAHPAndTOPSIS(candidates.map(({ id, criteria }) => ({ id, criteria })));
+  const candidatesById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+  const results = ranking.results.map((result) => ({
+    ...result,
+    publishedAt: candidatesById.get(result.id)?.publishedAt ?? new Date(0),
+    tier: getVisibilityTier(result.score)
+  })).sort((left, right) => {
+    const scoreDifference = right.score - left.score;
+    if (scoreDifference !== 0)
+      return scoreDifference;
+    const publishedDifference = right.publishedAt.getTime() - left.publishedAt.getTime();
+    return publishedDifference || right.id.localeCompare(left.id);
+  }).map((result, index) => ({ ...result, rank: index + 1 }));
+  return {
+    policyVersion: ahpTopsisPolicyVersion,
+    weights: ranking.weights,
+    consistencyRatio: ranking.consistencyRatio,
+    results
+  };
+}
+
 // src/utils/vegetable-identity/index.ts
 function normalizeVegetableName(name) {
   return name.trim().replace(/\s+/g, " ").toLowerCase();
@@ -29526,25 +29755,91 @@ function getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType
   return vegetable + ":unit:" + (scalingType ?? "unknown");
 }
 
-// src/utils/visibility-score/index.ts
-var clamp = (value) => Math.min(1, Math.max(0, value));
+// src/utils/visibility-ranking/load.ts
 var hourMs = 60 * 60 * 1000;
-function calculateVisibilityScore(input) {
-  if (!input.publishedAt || input.publishedAt > input.evaluatedAt || !Number.isFinite(input.quantity) || !Number.isFinite(input.originalQuantity) || input.originalQuantity <= 0)
-    return null;
-  const postingAge = clamp((input.evaluatedAt.getTime() - input.publishedAt.getTime()) / (12 * hourMs));
-  const remainingQuantity = clamp(input.quantity / input.originalQuantity);
-  const recurrence = clamp(input.priorCycles / 3);
-  const score = 0.4 * postingAge + 0.4 * remainingQuantity + 0.2 * recurrence;
-  return {
-    score,
-    tier: score >= 0.7 ? "priority" : score >= 0.4 ? "standard" : "basic",
-    inputs: { postingAge, remainingQuantity, recurrence, priorCycles: input.priorCycles }
-  };
+var dayMs = 24 * hourMs;
+function hasPublicSellerProfile(row) {
+  return row.sellerActive && row.sellerVerified && row.sellerRoles?.includes("seller") && row.shopName.trim().length > 0 && row.detailAddress.trim().length > 0 && (row.phoneNumber?.trim().length ?? 0) >= 7 && row.latitude !== null && Number.isFinite(row.latitude) && row.latitude >= -90 && row.latitude <= 90 && row.longitude !== null && Number.isFinite(row.longitude) && row.longitude >= -180 && row.longitude <= 180;
+}
+async function loadEligibleVisibilityCandidates(evaluatedAt) {
+  const since = new Date(evaluatedAt.getTime() - 30 * dayMs);
+  const latestCycleStartedAt = sql`(
+    select max(current_cycle.started_at)
+    from listing_cycles as current_cycle
+    where current_cycle.product_id = ${sellers_product.id}
+      and current_cycle.started_at <= ${evaluatedAt}
+  )`;
+  const rows = await db.select({
+    cycleId: listing_cycles.id,
+    productId: sellers_product.id,
+    sellerId: sellers_product.userId,
+    productName: sellers_product.productName,
+    productType: sellers_product.productType,
+    unit: sellers_product.scalingType,
+    sellerName: user.name,
+    sellerActive: user.isActive,
+    sellerVerified: user.emailVerified,
+    sellerRoles: user.role,
+    shopName: sellers_profile.shopName,
+    detailAddress: sellers_profile.detailAddress,
+    phoneNumber: sellers_profile.phoneNumber,
+    latitude: sellers_profile.latitude,
+    longitude: sellers_profile.longitude,
+    publishedAt: sellers_product.publishedAt,
+    price: sellers_product.productPrice,
+    quantity: sellers_product.productQty,
+    originalQuantity: listing_cycles.originalQty,
+    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
+    cycleVegetableKey: listing_cycles.vegetableKey,
+    cycleScalingType: listing_cycles.scalingType
+  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(and(eq(listing_cycles.startedAt, latestCycleStartedAt), lte(listing_cycles.startedAt, evaluatedAt), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), lte(sellers_product.publishedAt, evaluatedAt), eq(user.isActive, true), eq(user.emailVerified, true)));
+  const publicRows = rows.filter((row) => row.publishedAt && row.price && row.quantity && Number(row.quantity) > 0 && Number(row.price) > 0 && Number(row.originalQuantity) > 0 && hasPublicSellerProfile(row));
+  if (!publicRows.length)
+    return [];
+  const sellerIds = [...new Set(publicRows.map((row) => row.sellerId))];
+  const [ratings, cycles] = await Promise.all([
+    db.select({
+      sellerId: order_reviews.sellerId,
+      reliability: sql`avg(${order_reviews.rating})::double precision / 5.0`
+    }).from(order_reviews).where(inArray(order_reviews.sellerId, sellerIds)).groupBy(order_reviews.sellerId),
+    db.select({
+      id: listing_cycles.id,
+      sellerId: sellers_product.userId,
+      vegetableCatalogId: listing_cycles.vegetableCatalogId,
+      scalingType: listing_cycles.scalingType,
+      vegetableKey: listing_cycles.vegetableKey,
+      startedAt: listing_cycles.startedAt
+    }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(and(inArray(sellers_product.userId, sellerIds), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt)))
+  ]);
+  const ratingsBySeller = new Map(ratings.map((rating) => [rating.sellerId, Number(rating.reliability ?? 0.5)]));
+  return publicRows.map((row) => {
+    const identity = getVegetableCycleIdentity(row.cycleVegetableCatalogId, row.cycleVegetableKey || normalizeVegetableName(row.productName), row.cycleScalingType);
+    const priorCycles = cycles.filter((cycle) => cycle.sellerId === row.sellerId && cycle.startedAt < row.publishedAt && getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === identity).length;
+    return {
+      id: row.cycleId,
+      cycleId: row.cycleId,
+      productId: row.productId,
+      sellerId: row.sellerId,
+      productName: row.productName,
+      productType: row.productType,
+      unit: row.unit,
+      sellerName: row.sellerName,
+      shopName: row.shopName,
+      publishedAt: row.publishedAt,
+      price: row.price,
+      quantity: row.quantity,
+      originalQuantity: row.originalQuantity,
+      criteria: createVisibilityCriteria({
+        ageHours: (evaluatedAt.getTime() - row.publishedAt.getTime()) / hourMs,
+        stockRatio: Number(row.quantity) / Number(row.originalQuantity),
+        sellerReliability: ratingsBySeller.get(row.sellerId) ?? 0.5,
+        priorCycles
+      })
+    };
+  });
 }
 
 // src/utils/promotion-eligibility/index.ts
-var hour = 60 * 60 * 1000;
 function marketplaceUrl(productId) {
   const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
   const path = `/marketplace/${productId}`;
@@ -29554,105 +29849,70 @@ function marketplaceUrl(productId) {
     return path;
   }
 }
-async function getPriorityPromotionEligibility(listingCycleId) {
-  const [row] = await db.select({
-    cycleId: listing_cycles.id,
-    cycleStartedAt: listing_cycles.startedAt,
-    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
-    cycleScalingType: listing_cycles.scalingType,
-    cycleVegetableKey: listing_cycles.vegetableKey,
-    sellerId: sellers_product.userId,
-    productId: sellers_product.id,
-    productName: sellers_product.productName,
-    productType: sellers_product.productType,
-    unit: sellers_product.scalingType,
-    publishedAt: sellers_product.publishedAt,
-    quantity: sellers_product.productQty,
-    originalQuantity: sellers_product.originalQty,
-    price: sellers_product.productPrice,
-    isActive: sellers_product.isActive,
-    isMarketable: sellers_product.isMarketable,
-    sellerActive: user.isActive,
-    sellerVerified: user.emailVerified,
-    sellerRoles: user.role,
-    sellerName: user.name,
-    shopName: sellers_profile.shopName,
-    detailAddress: sellers_profile.detailAddress,
-    phoneNumber: sellers_profile.phoneNumber,
-    latitude: sellers_profile.latitude,
-    longitude: sellers_profile.longitude
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(eq(listing_cycles.id, listingCycleId)).limit(1);
-  if (!row)
-    return null;
+async function getPriorityPromotionEligibility(listingCycleId, options) {
   const evaluatedAt = new Date;
-  const currentCycle = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, row.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  const isCurrentCycle = currentCycle[0]?.id === row.cycleId;
-  const quantity = Number(row.quantity);
-  const originalQuantity = Number(row.originalQuantity);
-  const publicSeller = row.sellerActive && row.sellerVerified && row.sellerRoles?.includes("seller") && row.shopName.trim().length > 0 && row.detailAddress.trim().length > 0 && (row.phoneNumber?.trim().length ?? 0) >= 7 && row.latitude !== null && Number.isFinite(row.latitude) && row.latitude >= -90 && row.latitude <= 90 && row.longitude !== null && Number.isFinite(row.longitude) && row.longitude >= -180 && row.longitude <= 180;
-  const marketable = row.isActive && row.isMarketable && Number(row.price) > 0 && quantity > 0;
-  if (!isCurrentCycle || !publicSeller || !marketable || !row.publishedAt || !Number.isFinite(originalQuantity) || originalQuantity <= 0) {
-    return {
-      eligible: false,
-      reason: !isCurrentCycle ? "Listing cycle is no longer current" : "Listing is not currently public and buyable",
-      listingCycleId: row.cycleId,
-      sellerId: row.sellerId,
-      productId: row.productId,
-      visibilityScore: null,
-      policyVersion: "visibility-v4"
-    };
+  const [target] = await db.select({
+    cycleId: listing_cycles.id,
+    productId: sellers_product.id,
+    sellerId: sellers_product.userId,
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
+  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(eq(listing_cycles.id, listingCycleId)).limit(1);
+  if (!target)
+    return null;
+  const currentCycle = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  if (currentCycle[0]?.id !== target.cycleId) {
+    return ineligible(target, "Listing cycle is no longer current", evaluatedAt);
   }
-  const since = new Date(evaluatedAt.getTime() - 30 * 24 * hour);
-  const cycles = await db.select({
-    id: listing_cycles.id,
-    productId: listing_cycles.productId,
-    vegetableCatalogId: listing_cycles.vegetableCatalogId,
-    scalingType: listing_cycles.scalingType,
-    vegetableKey: listing_cycles.vegetableKey,
-    startedAt: listing_cycles.startedAt
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(and(eq(sellers_product.userId, row.sellerId), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt)));
-  const recentCurrent = cycles.filter((cycle) => cycle.productId === row.productId && cycle.startedAt <= evaluatedAt).sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
-  const vegetableKey = recentCurrent && row.publishedAt && Math.abs(recentCurrent.startedAt.getTime() - row.publishedAt.getTime()) <= 60000 ? recentCurrent.vegetableKey : normalizeVegetableName(row.productName);
-  const vegetableCatalogId = recentCurrent?.vegetableCatalogId ?? row.cycleVegetableCatalogId;
-  const scalingType = recentCurrent?.scalingType ?? row.cycleScalingType;
-  const vegetableIdentity = getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType);
-  const priorCycles = cycles.filter((cycle) => getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === vegetableIdentity && cycle.startedAt < row.publishedAt && cycle.id !== recentCurrent?.id).length;
-  const visibility = calculateVisibilityScore({
+  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+  const ranking = rankVisibilityCandidates(candidates);
+  const candidate = candidates.find((item) => item.cycleId === listingCycleId);
+  const result = ranking.results.find((item) => item.id === listingCycleId);
+  if (!candidate || !result) {
+    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
+  }
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isPriorityScore = result.score >= 0.6;
+  const shared = {
+    ...target,
+    visibilityScore: Number(result.score.toFixed(4)),
+    visibilityTier: result.tier,
+    visibilityRank: result.rank,
+    policyVersion: ranking.policyVersion,
     evaluatedAt,
-    publishedAt: row.publishedAt,
-    quantity,
-    originalQuantity,
-    priorCycles
-  });
-  if (!visibility || visibility.score < 0.7) {
-    return {
-      eligible: false,
-      reason: "Visibility is below Priority Boost",
-      listingCycleId: row.cycleId,
-      sellerId: row.sellerId,
-      productId: row.productId,
-      visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
-      visibilityTier: visibility?.tier ?? null,
-      policyVersion: "visibility-v4"
-    };
+    productName: candidate.productName,
+    productType: candidate.productType,
+    unit: candidate.unit,
+    price: candidate.price,
+    quantity: candidate.quantity,
+    originalQuantity: candidate.originalQuantity,
+    availability: Number(candidate.quantity) > 0 ? "available" : "sold_out",
+    shopName: candidate.shopName,
+    sellerName: candidate.sellerName,
+    listingUrl: marketplaceUrl(candidate.productId),
+    criteria: result.criteria,
+    priceReductionPeriodsApplied: target.priceReductionPeriodsApplied ?? 0
+  };
+  if (!isPriorityScore && !isPriceReduced) {
+    return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
   }
   return {
     eligible: true,
     reason: null,
-    listingCycleId: row.cycleId,
-    sellerId: row.sellerId,
-    productId: row.productId,
-    visibilityScore: Number(visibility.score.toFixed(4)),
-    visibilityTier: visibility.tier,
-    policyVersion: "visibility-v4",
-    productName: row.productName,
-    productType: row.productType,
-    unit: row.unit,
-    price: row.price,
-    quantity: row.quantity,
-    shopName: row.shopName,
-    sellerName: row.sellerName,
-    listingUrl: marketplaceUrl(row.productId)
+    ...shared
+  };
+}
+function ineligible(target, reason, evaluatedAt) {
+  return {
+    eligible: false,
+    reason,
+    listingCycleId: target.cycleId,
+    sellerId: target.sellerId,
+    productId: target.productId,
+    visibilityScore: null,
+    visibilityTier: null,
+    visibilityRank: null,
+    policyVersion: "visibility-ahptopsis-v1",
+    evaluatedAt
   };
 }
 
@@ -29694,19 +29954,46 @@ async function checkSellerPromotionEligibility() {
       }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting"), lte(seller_promotion_jobs.nextCheckAt, now), or(isNull(seller_promotion_jobs.leaseUntil), lte(seller_promotion_jobs.leaseUntil, now)))).returning({ id: seller_promotion_jobs.id });
       if (!claimed.length)
         continue;
-      const eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+      let eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
       if (!eligibility) {
         await db.update(seller_promotion_jobs).set({
           status: "skipped",
           leaseUntil: null,
           lastError: "Listing cycle is no longer available",
+          completedAt: now,
           updatedAt: now
         }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
         skipped++;
         continue;
       }
+      if (job.stage === "followup" && eligibility.eligible) {
+        const productId = eligibility.productId;
+        await db.transaction(async (tx) => {
+          await applySellerPromotionPriceReduction(tx, productId, now);
+        });
+        eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
+        if (!eligibility) {
+          await db.update(seller_promotion_jobs).set({
+            status: "skipped",
+            leaseUntil: null,
+            lastError: "Listing cycle is no longer available",
+            completedAt: now,
+            updatedAt: now
+          }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
+          skipped++;
+          continue;
+        }
+      }
+      const evaluationFields = {
+        visibilityPolicyVersion: eligibility.policyVersion,
+        visibilityScore: eligibility.visibilityScore === null ? null : eligibility.visibilityScore.toFixed(4),
+        visibilityTier: eligibility.visibilityTier,
+        visibilityRank: eligibility.visibilityRank,
+        evaluatedAt: eligibility.evaluatedAt
+      };
       if (!eligibility.eligible && eligibility.visibilityScore !== null && job.stage === "initial") {
         await db.update(seller_promotion_jobs).set({
+          ...evaluationFields,
           nextCheckAt: new Date(now.getTime() + hourMs2),
           leaseUntil: null,
           lastError: null,
@@ -29717,15 +30004,18 @@ async function checkSellerPromotionEligibility() {
       }
       if (!eligibility.eligible) {
         await db.update(seller_promotion_jobs).set({
+          ...evaluationFields,
           status: "skipped",
           leaseUntil: null,
           lastError: eligibility.reason ?? "Listing is no longer eligible",
+          completedAt: now,
           updatedAt: now
         }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
         skipped++;
         continue;
       }
       const updated = await db.update(seller_promotion_jobs).set({
+        ...evaluationFields,
         status: "queued",
         nextCheckAt: now,
         leaseUntil: null,
@@ -29789,6 +30079,7 @@ async function deliverSellerPromotionWebhooks() {
         status: "failed",
         leaseUntil: null,
         lastError: "No draft response was received after the retry limit",
+        completedAt: now,
         updatedAt: now
       }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "sent")));
       failed++;
@@ -29821,6 +30112,7 @@ async function deliverSellerPromotionWebhooks() {
           leaseUntil: null,
           nextCheckAt: new Date(now.getTime() + retryDelay(attempt)),
           lastError: `n8n webhook returned HTTP ${response.status}`,
+          completedAt: exhausted ? now : null,
           updatedAt: now
         }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
         if (exhausted)
@@ -29846,6 +30138,7 @@ async function deliverSellerPromotionWebhooks() {
         leaseUntil: null,
         nextCheckAt: new Date(now.getTime() + retryDelay(attempt)),
         lastError: "n8n webhook delivery failed",
+        completedAt: exhausted ? now : null,
         updatedAt: now
       }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
       if (exhausted)
@@ -30096,17 +30389,17 @@ async function deliverPushNotifications() {
 
 // src/modules/seller/services/seller.product.price-reduction.ts
 var PRICE_PERIOD_MS = 12 * 60 * 60 * 1000;
-function cents(value) {
+function cents2(value) {
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
   if (!match)
     throw new Error("Invalid price amount");
   return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
 }
-function decimal3(centsValue) {
+function decimal4(centsValue) {
   return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
 }
 function nextReductionAt(product) {
-  if (!product.priceScheduleStartedAt || Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice || !product.productPrice || cents(product.productPrice) <= cents(product.minimumPrice))
+  if (!product.priceScheduleStartedAt || Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice || !product.productPrice || cents2(product.productPrice) <= cents2(product.minimumPrice))
     return null;
   return new Date(product.priceScheduleStartedAt.getTime() + (product.priceReductionPeriodsApplied + 1) * PRICE_PERIOD_MS).toISOString();
 }
@@ -30123,8 +30416,8 @@ async function applySellerProductPriceReduction(tx, productId, now = new Date) {
     return { ...current, nextPriceReductionAt: nextReductionAt(current) };
   }
   const basisPoints = BigInt(Math.round(reductionPercent * 100));
-  const floor = cents(current.minimumPrice);
-  let currentCents = cents(current.productPrice);
+  const floor = cents2(current.minimumPrice);
+  let currentCents = cents2(current.productPrice);
   for (let period = current.priceReductionPeriodsApplied;period < targetPeriods; period += 1) {
     currentCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
     if (currentCents <= floor) {
@@ -30133,7 +30426,7 @@ async function applySellerProductPriceReduction(tx, productId, now = new Date) {
     }
   }
   const [updated] = await tx.update(sellers_product).set({
-    productPrice: decimal3(currentCents),
+    productPrice: decimal4(currentCents),
     priceReductionPeriodsApplied: targetPeriods,
     updatedAt: now
   }).where(and(eq(sellers_product.id, productId))).returning();
@@ -30300,6 +30593,7 @@ async function deliverSellerVisibilityBoosts() {
 // src/jobs/run-scheduled.ts
 async function runScheduledJobs() {
   const expiredOrders = await expirePendingOrders();
+  const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
   const trustRestrictionsExpired = await expireTrustRestrictions();
@@ -30309,7 +30603,7 @@ async function runScheduledJobs() {
   const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
+  return { expiredOrders, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
 }
 
 // src/worker.ts

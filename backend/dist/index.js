@@ -122715,12 +122715,13 @@ function marketplaceUrl(productId) {
     return path;
   }
 }
-async function getPriorityPromotionEligibility(listingCycleId) {
+async function getPriorityPromotionEligibility(listingCycleId, options) {
   const evaluatedAt = new Date;
   const [target] = await db2.select({
     cycleId: listing_cycles.id,
     productId: sellers_product.id,
-    sellerId: sellers_product.userId
+    sellerId: sellers_product.userId,
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
   }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(eq(listing_cycles.id, listingCycleId)).limit(1);
   if (!target)
     return null;
@@ -122735,6 +122736,8 @@ async function getPriorityPromotionEligibility(listingCycleId) {
   if (!candidate || !result) {
     return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
   }
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isPriorityScore = result.score >= 0.6;
   const shared = {
     ...target,
     visibilityScore: Number(result.score.toFixed(4)),
@@ -122752,10 +122755,12 @@ async function getPriorityPromotionEligibility(listingCycleId) {
     shopName: candidate.shopName,
     sellerName: candidate.sellerName,
     listingUrl: marketplaceUrl(candidate.productId),
-    criteria: result.criteria
+    criteria: result.criteria,
+    priceReductionPeriodsApplied: target.priceReductionPeriodsApplied ?? 0
   };
-  if (result.score < 0.6)
+  if (!isPriorityScore && !isPriceReduced) {
     return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
+  }
   return {
     eligible: true,
     reason: null,
@@ -122796,7 +122801,7 @@ async function getSellerPromotionShare(sellerId, promotionId) {
       throw new OrderError(404, "Promotion draft not found");
     return row;
   });
-  const listing = await getPriorityPromotionEligibility(job.listingCycleId);
+  const listing = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
   if (!listing?.eligible) {
     throw new OrderError(409, "This listing is no longer eligible to share");
   }
@@ -123033,7 +123038,7 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
   if (!eligibility || eligibility.sellerId !== sellerId) {
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
   }
-  if (!("productName" in eligibility) || !eligibility.eligible && eligibility.reason !== "Visibility is below Priority Boost") {
+  if (!("productName" in eligibility) || !eligibility.eligible) {
     throw new OrderError(409, eligibility.reason ?? "This listing is not ready for Boost Visibility");
   }
   try {
@@ -125506,7 +125511,7 @@ async function getIntegrationPromotionContext(jobId) {
   if (job.status !== "queued" && job.status !== "sent") {
     throw new OrderError(409, "Promotion job is not awaiting a draft");
   }
-  const context = await getPriorityPromotionEligibility(job.listingCycleId);
+  const context = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
   if (!context?.eligible) {
     await db2.update(seller_promotion_jobs).set({
       status: "skipped",
@@ -125589,7 +125594,7 @@ async function saveIntegrationPromotionDraft(jobId, headline, caption) {
   if (job.status !== "queued" && job.status !== "sent") {
     throw new OrderError(409, "Promotion job is not awaiting a draft");
   }
-  const eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
   if (!eligibility?.eligible) {
     await db2.update(seller_promotion_jobs).set({
       status: "skipped",
@@ -125629,7 +125634,7 @@ async function saveIntegrationPromotionDraft(jobId, headline, caption) {
       throw new OrderError(409, "Promotion job changed before the draft was saved");
     }
     if (job.stage === "initial") {
-      const followupAt = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+      const followupAt = new Date(now.getTime() + 12 * 60 * 60 * 1000);
       await tx.insert(seller_promotion_jobs).values({
         listingCycleId: job.listingCycleId,
         productId: job.productId,

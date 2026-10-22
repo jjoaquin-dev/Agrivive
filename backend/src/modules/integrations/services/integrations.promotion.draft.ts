@@ -25,7 +25,7 @@ export async function saveIntegrationPromotionDraft(
     throw new OrderError(409, "Promotion job is not awaiting a draft");
   }
 
-  const eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
   if (!eligibility?.eligible) {
     await db.update(seller_promotion_jobs).set({
       status: "skipped",
@@ -74,7 +74,7 @@ export async function saveIntegrationPromotionDraft(
     }
 
     if (job.stage === "initial") {
-      const followupAt = new Date(now.getTime() + 6 * 60 * 60 * 1000);
+      const followupAt = new Date(now.getTime() + 12 * 60 * 60 * 1000);
       await tx.insert(seller_promotion_jobs).values({
         listingCycleId: job.listingCycleId,
         productId: job.productId,
