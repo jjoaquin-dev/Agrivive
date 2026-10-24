@@ -34,9 +34,9 @@ export default function ConversationDetailScreen() {
     let active = true;
     let socket: WebSocket | null = null;
     void Promise.all([fetchConversations(), fetchConversationMessages(id)])
-      .then(async ([items, history]) => {
+      .then(async ([convosRes, history]) => {
         if (!active) return;
-        setConversation(items.find((item) => item.id === id) ?? null);
+        setConversation(convosRes.items.find((item) => item.id === id) ?? null);
         setMessages(history);
         await markConversationRead(id);
         socket = await openConversationSocket(id, addMessage, () => setError("Live messages unavailable. Pull down to refresh."));

@@ -28,5 +28,10 @@ export const sellerProductUpdate = t.Object({
   condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"])),
 }, { minProperties: 1, additionalProperties: false });
 export const sellerProductRestock = t.Object({ quantity: t.Number({ minimum: .01, maximum: 99_999_999 }) });
+export const sellerProductListQuery = t.Object({
+  limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 20 })),
+  cursor: t.Optional(t.String({ format: "uuid" })),
+});
 export type SellerProductUpdate = typeof sellerProductUpdate.static;
 export type SellerProductRestock = typeof sellerProductRestock.static;
+export type SellerProductListQuery = typeof sellerProductListQuery.static;

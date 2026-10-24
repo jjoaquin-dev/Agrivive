@@ -7,40 +7,61 @@ export type InventoryFilterTab = "all" | "low_stock" | "out_of_stock" | "archive
 
 export function useInventory() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [serverSummary, setServerSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "all">("all");
   const [filterTab, setFilterTab] = useState<InventoryFilterTab>("all");
 
-  const loadProducts = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError(null);
+  const loadProducts = useCallback(async (reset = true) => {
+    if (reset) {
+      setLoading(true);
+      setError(null);
+    } else {
+      setLoadingMore(true);
+    }
 
     try {
-      const data = await fetchSellerProducts();
-      setProducts(data);
+      const response = await fetchSellerProducts({
+        limit: 20,
+        cursor: reset ? undefined : nextCursor ?? undefined,
+      });
+      setProducts((prev) => (reset ? response.items : [...prev, ...response.items]));
+      setNextCursor(response.nextCursor);
+      if (response.summary) {
+        setServerSummary(response.summary);
+      }
     } catch (err: any) {
       console.error("Failed to load seller products", err);
       setError(err?.message || "Could not load products. Please check connection.");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [nextCursor]);
 
   useFocusEffect(
     useCallback(() => {
-      void loadProducts();
-    }, [loadProducts]),
+      void loadProducts(true);
+    }, []),
   );
 
   const onRefresh = useCallback(() => {
-    loadProducts(true);
+    setRefreshing(true);
+    setNextCursor(null);
+    void loadProducts(true);
   }, [loadProducts]);
+
+  const loadMore = useCallback(() => {
+    if (!nextCursor || loadingMore || loading) return;
+    void loadProducts(false);
+  }, [loadProducts, loading, loadingMore, nextCursor]);
 
   // Inventory Dashboard Summaries
   const summary = useMemo<InventorySummary>(() => {
@@ -78,14 +99,14 @@ export function useInventory() {
     }
 
     return {
-      totalProducts: activeCount,
-      lowStockCount,
-      outOfStockCount,
-      activeCount,
-      archivedCount,
+      totalProducts: serverSummary?.totalProducts ?? activeCount,
+      lowStockCount: serverSummary?.lowStockCount ?? lowStockCount,
+      outOfStockCount: serverSummary?.outOfStockCount ?? outOfStockCount,
+      activeCount: serverSummary?.activeCount ?? activeCount,
+      archivedCount: serverSummary?.archivedCount ?? archivedCount,
       unitTotals,
     };
-  }, [products]);
+  }, [products, serverSummary]);
 
   // Low stock products list (for alerts on Home)
   const lowStockProducts = useMemo(() => {
@@ -139,6 +160,8 @@ export function useInventory() {
     lowStockProducts,
     loading,
     refreshing,
+    loadingMore,
+    hasMore: Boolean(nextCursor),
     error,
     searchQuery,
     setSearchQuery,
@@ -147,5 +170,6 @@ export function useInventory() {
     filterTab,
     setFilterTab,
     refresh: onRefresh,
+    loadMore,
   };
 }

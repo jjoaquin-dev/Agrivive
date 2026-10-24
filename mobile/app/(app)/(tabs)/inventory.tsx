@@ -36,6 +36,7 @@ export default function InventoryScreen() {
     summary,
     loading,
     refreshing,
+    loadingMore,
     error,
     searchQuery,
     setSearchQuery,
@@ -44,6 +45,7 @@ export default function InventoryScreen() {
     filterTab,
     setFilterTab,
     refresh,
+    loadMore,
   } = useInventory();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -361,6 +363,9 @@ export default function InventoryScreen() {
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator color="#0F920F" style={{ marginVertical: 16 }} /> : null}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

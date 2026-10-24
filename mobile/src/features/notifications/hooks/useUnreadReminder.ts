@@ -24,15 +24,16 @@ export function useUnreadReminder() {
       if (!active) return;
 
       try {
-        const [notifRes, convos] = await Promise.all([
+        const [notifRes, convosRes] = await Promise.all([
           fetchSellerNotifications({ unreadOnly: true, limit: 1 }).catch(() => null),
-          fetchConversations().catch(() => []),
+          fetchConversations().catch(() => ({ items: [], nextCursor: null })),
         ]);
 
         if (!active) return;
 
         const unreadNotifs = notifRes?.unreadCount ?? 0;
-        const unreadConvos = (convos || []).reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        const convoList = Array.isArray(convosRes) ? convosRes : (convosRes?.items || []);
+        const unreadConvos = convoList.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
         const totalUnread = unreadNotifs + unreadConvos;
 
         if (totalUnread > 0) {

@@ -28,6 +28,7 @@ export interface SellerProductBoostResponse {
 export interface SellerBoostHistoryResponse {
   items: SellerVisibilityBoost[];
   total: number;
+  nextCursor?: string | null;
 }
 
 export function boostStatusLabel(status: SellerVisibilityBoostStatus) {

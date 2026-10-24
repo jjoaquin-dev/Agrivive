@@ -20,7 +20,7 @@ interface SectionedItem {
 }
 
 export default function NotificationsScreen() {
-  const { items, counts, unreadCount, urgentCount, loading, refreshing, refresh, markAllRead } = useUnifiedNotifications();
+  const { items, counts, unreadCount, urgentCount, loading, refreshing, loadingMore, refresh, loadMore, markAllRead } = useUnifiedNotifications();
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -107,6 +107,9 @@ export default function NotificationsScreen() {
         data={sectionedData}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} /> : null}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.primary]} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>

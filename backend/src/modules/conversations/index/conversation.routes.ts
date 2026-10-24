@@ -29,7 +29,7 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     catch (error) { return failure(error, status); }
   }, { role: ["buyer"], body: createConversationBody })
   .get("/conversations", async ({ session, query, status }) => {
-    try { return await listConversations(session.userId, query.limit); }
+    try { return await listConversations(session.userId, query.limit, query.cursor); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], query: conversationListQuery })
   .get("/conversations/:id/messages", async ({ session, params, status }) => {

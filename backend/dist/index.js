@@ -109809,6 +109809,10 @@ var sellerProductUpdate = t.Object({
   condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
 }, { minProperties: 1, additionalProperties: false });
 var sellerProductRestock = t.Object({ quantity: t.Number({ minimum: 0.01, maximum: 99999999 }) });
+var sellerProductListQuery = t.Object({
+  limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 20 })),
+  cursor: t.Optional(t.String({ format: "uuid" }))
+});
 
 // src/modules/seller/model/seller.product.create.ts
 var sellerProductCreate = t.Object({
@@ -120716,20 +120720,46 @@ async function applySellerProductPriceReduction(tx, productId, now = new Date) {
 }
 
 // src/modules/seller/services/seller.product.list.ts
-async function listSellerProducts(sellerId) {
-  const products = await db2.transaction(async (tx) => {
+async function listSellerProducts(sellerId, limit = 20, cursor) {
+  return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const products = await tx.select().from(sellers_product).where(eq(sellers_product.userId, sellerId));
+    let before;
+    if (cursor) {
+      const [anchor] = await tx.select({ id: sellers_product.id, createdAt: sellers_product.createdAt }).from(sellers_product).where(and(eq(sellers_product.id, cursor), eq(sellers_product.userId, sellerId))).limit(1);
+      if (anchor) {
+        before = or(lt(sellers_product.createdAt, anchor.createdAt), and(eq(sellers_product.createdAt, anchor.createdAt), lt(sellers_product.id, anchor.id)));
+      }
+    }
+    const rows = await tx.select().from(sellers_product).where(and(eq(sellers_product.userId, sellerId), before)).orderBy(desc(sellers_product.createdAt), desc(sellers_product.id)).limit(limit + 1);
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
     const updatedProducts = [];
-    for (const product of products) {
+    for (const product of page) {
       updatedProducts.push(await applySellerProductPriceReduction(tx, product.id));
     }
-    return updatedProducts;
+    const [stats] = await tx.select({
+      total: sql3`count(*)::int`,
+      active: sql3`count(*) filter (where is_active = true)::int`,
+      archived: sql3`count(*) filter (where is_active = false)::int`,
+      lowStock: sql3`count(*) filter (where is_active = true and product_qty <= coalesce(low_stock_threshold, 0))::int`,
+      outOfStock: sql3`count(*) filter (where is_active = true and product_qty <= 0)::int`
+    }).from(sellers_product).where(eq(sellers_product.userId, sellerId));
+    const items = await Promise.all(updatedProducts.filter((product) => product !== null).map(async (product) => ({
+      ...product,
+      displayImageUrl: await getProductImageDisplayUrl(product.imagUrl, sellerId)
+    })));
+    return {
+      items,
+      nextCursor: hasMore && page.length > 0 ? page[page.length - 1].id : null,
+      summary: {
+        totalProducts: Number(stats?.total ?? 0),
+        activeCount: Number(stats?.active ?? 0),
+        archivedCount: Number(stats?.archived ?? 0),
+        lowStockCount: Number(stats?.lowStock ?? 0),
+        outOfStockCount: Number(stats?.outOfStock ?? 0)
+      }
+    };
   });
-  return Promise.all(products.filter((product) => product !== null).map(async (product) => ({
-    ...product,
-    displayImageUrl: await getProductImageDisplayUrl(product.imagUrl, sellerId)
-  })));
 }
 
 // src/modules/seller/services/seller.product.update.ts
@@ -120927,13 +120957,13 @@ function sellerProductFailure(error, status) {
 }
 
 // src/modules/seller/index/seller.products.ts
-var sellerProductsRoute = new Elysia().use(sessionAuth).get("/products", async ({ session, status }) => {
+var sellerProductsRoute = new Elysia().use(sessionAuth).get("/products", async ({ session, query, status }) => {
   try {
-    return await listSellerProducts(session.userId);
+    return await listSellerProducts(session.userId, query?.limit, query?.cursor);
   } catch (error) {
     return sellerProductFailure(error, status);
   }
-}, { role: ["seller"] }).patch("/products/:id", async ({ session, params, body, status }) => {
+}, { role: ["seller"], query: t.Optional(sellerProductListQuery) }).patch("/products/:id", async ({ session, params, body, status }) => {
   try {
     return await updateSellerProduct(session.userId, params.id, body);
   } catch (error) {
@@ -123451,10 +123481,20 @@ async function readSellerVisibilityBoost(sellerId, productId) {
 function errorMessage2(status) {
   return status === "failed" ? "We could not send this boost. You can try again." : null;
 }
-async function listSellerVisibilityBoostHistory(sellerId) {
+async function listSellerVisibilityBoostHistory(sellerId, limit = 20, cursor) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const items = await tx.select({
+    let before;
+    if (cursor) {
+      const cursorDate = new Date(cursor);
+      if (!isNaN(cursorDate.getTime())) {
+        before = lt(seller_visibility_boosts.createdAt, cursorDate);
+      }
+    }
+    const conditions = [eq(seller_visibility_boosts.sellerId, sellerId)];
+    if (before)
+      conditions.push(before);
+    const rows = await tx.select({
       id: seller_visibility_boosts.id,
       productId: seller_visibility_boosts.productId,
       productName: sellers_product.productName,
@@ -123466,19 +123506,36 @@ async function listSellerVisibilityBoostHistory(sellerId) {
       priceAfter: seller_visibility_boosts.priceAfter,
       createdAt: seller_visibility_boosts.createdAt,
       sentAt: seller_visibility_boosts.sentAt
-    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.sellerId, sellerId)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(100);
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(...conditions)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(limit + 1);
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
     return {
       items: items.map((item) => ({ ...item, errorMessage: errorMessage2(item.status) })),
+      nextCursor,
       total: items.length
     };
   });
 }
 
 // src/modules/seller/services/seller.visibility-boost.prompts.list.ts
-async function listSellerVisibilityBoostPrompts(sellerId) {
+async function listSellerVisibilityBoostPrompts(sellerId, limit = 20, cursor) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const items = await tx.select({
+    let before;
+    if (cursor) {
+      const cursorDate = new Date(cursor);
+      if (!isNaN(cursorDate.getTime())) {
+        before = lt(seller_visibility_boosts.createdAt, cursorDate);
+      }
+    }
+    const conditions = [
+      eq(seller_visibility_boosts.sellerId, sellerId),
+      eq(seller_visibility_boosts.status, "prompt")
+    ];
+    if (before)
+      conditions.push(before);
+    const rows = await tx.select({
       id: seller_visibility_boosts.id,
       productId: seller_visibility_boosts.productId,
       productName: sellers_product.productName,
@@ -123488,9 +123545,12 @@ async function listSellerVisibilityBoostPrompts(sellerId) {
       priceAfter: seller_visibility_boosts.priceAfter,
       createdAt: seller_visibility_boosts.createdAt,
       readAt: seller_visibility_boosts.readAt
-    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(20);
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(...conditions)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(limit + 1);
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
     const [unread] = await tx.select({ count: sql3`count(*)::int` }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"), isNull2(seller_visibility_boosts.readAt)));
-    return { items, unreadCount: Number(unread?.count ?? 0) };
+    return { items, unreadCount: Number(unread?.count ?? 0), nextCursor };
   });
 }
 
@@ -123567,19 +123627,19 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["seller"], params }).get("/boosts", async ({ session, status }) => {
+}, { role: ["seller"], params }).get("/boosts", async ({ session, query, status }) => {
   try {
-    return await listSellerVisibilityBoostHistory(session.userId);
+    return await listSellerVisibilityBoostHistory(session.userId, query?.limit, query?.cursor);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["seller"] }).get("/boost-prompts", async ({ session, status }) => {
+}, { role: ["seller"], query: t.Optional(t.Object({ limit: t.Optional(t.Integer({ minimum: 1, maximum: 100 })), cursor: t.Optional(t.String()) })) }).get("/boost-prompts", async ({ session, query, status }) => {
   try {
-    return await listSellerVisibilityBoostPrompts(session.userId);
+    return await listSellerVisibilityBoostPrompts(session.userId, query?.limit, query?.cursor);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["seller"] }).post("/boost-prompts/read-all", async ({ session, status }) => {
+}, { role: ["seller"], query: t.Optional(t.Object({ limit: t.Optional(t.Integer({ minimum: 1, maximum: 100 })), cursor: t.Optional(t.String()) })) }).post("/boost-prompts/read-all", async ({ session, status }) => {
   try {
     return await readAllSellerVisibilityBoostPrompts(session.userId);
   } catch (error) {
@@ -126430,8 +126490,15 @@ async function listConversationMessages(userId, conversationId) {
 }
 
 // src/modules/conversations/services/conversation.list.ts
-async function listConversations(userId, limit = 50) {
+async function listConversations(userId, limit = 50, cursor) {
   const buyerUser = aliasedTable(user, "buyer_user");
+  let before;
+  if (cursor) {
+    const [anchor] = await db2.select({ id: conversations.id, lastMessageAt: conversations.lastMessageAt }).from(conversations).where(and(eq(conversations.id, cursor), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+    if (anchor) {
+      before = or(lt(conversations.lastMessageAt, anchor.lastMessageAt), and(eq(conversations.lastMessageAt, anchor.lastMessageAt), lt(conversations.id, anchor.id)));
+    }
+  }
   const rows = await db2.select({
     id: conversations.id,
     contextType: conversations.contextType,
@@ -126481,12 +126548,18 @@ async function listConversations(userId, limit = 50) {
         and unread_message.sender_id <> ${userId}
         and unread_message.created_at > coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)
     )`
-  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).innerJoin(buyerUser, eq(buyerUser.id, conversations.buyerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId)).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId))).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit);
-  return Promise.all(rows.map(async (row) => ({
+  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).innerJoin(buyerUser, eq(buyerUser.id, conversations.buyerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId)).where(and(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)), before)).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit + 1);
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const items = await Promise.all(page.map(async (row) => ({
     ...row,
     sellerImage: await getAvatarDisplayUrl(row.sellerImage),
     buyerImage: await getAvatarDisplayUrl(row.buyerImage)
   })));
+  return {
+    items,
+    nextCursor: hasMore && page.length > 0 ? page[page.length - 1].id : null
+  };
 }
 
 // src/modules/conversations/services/conversation.read.ts
@@ -126544,7 +126617,8 @@ var conversationParams = t.Object({
   id: t.String({ format: "uuid" })
 });
 var conversationListQuery = t.Object({
-  limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 50 }))
+  limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 50 })),
+  cursor: t.Optional(t.String())
 });
 var createConversationBody = t.Object({
   contextType: t.Union([t.Literal("product"), t.Literal("order"), t.Literal("seller")]),
@@ -126574,7 +126648,7 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   }
 }, { role: ["buyer"], body: createConversationBody }).get("/conversations", async ({ session, query, status }) => {
   try {
-    return await listConversations(session.userId, query.limit);
+    return await listConversations(session.userId, query.limit, query.cursor);
   } catch (error) {
     return failure4(error, status);
   }
