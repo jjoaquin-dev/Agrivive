@@ -11,7 +11,7 @@ export async function getSocialPublishContext(campaignId: string) {
   if (!["queued", "publishing", "processing"].includes(campaign.status)) {
     throw new OrderError(409, "Social campaign is not awaiting publication");
   }
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db.update(seller_social_campaigns).set({
       status: "failed", lastError: "Listing is no longer eligible", completedAt: new Date(), updatedAt: new Date(),
@@ -20,6 +20,10 @@ export async function getSocialPublishContext(campaignId: string) {
       status: "failed", lastError: "Listing is no longer eligible", completedAt: new Date(), updatedAt: new Date(),
     }).where(eq(seller_social_campaign_posts.campaignId, campaignId));
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
+  }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId })
+      .where(eq(seller_social_campaigns.id, campaignId));
   }
 
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Share } from "react-native";
 import { useRouter } from "expo-router";
 import { useSellerNotifications } from "./useSellerNotifications";
@@ -15,8 +15,7 @@ function formatRelativeTime(date: Date): string {
   if (diffMin < 1) return "Just now";
   if (diffMin < 60) return `${diffMin} min ago`;
   const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
-  return Math.floor(diffHours / 24) === 1 ? "Yesterday" : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return diffHours < 24 ? `${diffHours} hr${diffHours > 1 ? "s" : ""} ago` : Math.floor(diffHours / 24) === 1 ? "Yesterday" : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export function useUnifiedNotifications() {
@@ -26,6 +25,7 @@ export function useUnifiedNotifications() {
   const [items, setItems] = useState<UnifiedNotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const markedReadIdsRef = useRef<Set<string>>(new Set());
 
   const loadData = useCallback(async () => {
     try {
@@ -126,13 +126,15 @@ export function useUnifiedNotifications() {
       if (boostsRes.status === "fulfilled") {
         for (const boost of boostsRes.value.items) {
           const date = new Date(boost.createdAt);
+          const isRead = Boolean(boost.readAt) || markedReadIdsRef.current.has(`boost:${boost.id}`);
           list.push({
             id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Priority Visibility Boost",
             subtitle: `${boost.productName} is eligible for priority boost promotion.`,
-            timestamp: formatRelativeTime(date), rawDate: date, read: Boolean(boost.readAt), urgent: false, iconType: "megaphone",
+            timestamp: formatRelativeTime(date), rawDate: date, read: isRead, urgent: false, iconType: "megaphone",
             primaryAction: {
               label: "Preview Post",
               onPress: () => {
+                markedReadIdsRef.current.add(`boost:${boost.id}`);
                 void markSellerBoostPromptRead(boost.id);
                 router.push({ pathname: "/(app)/boost/[productId]", params: { productId: boost.productId, promptId: boost.id } });
               },
@@ -173,14 +175,11 @@ export function useUnifiedNotifications() {
     void sellerPromotions.refresh();
     void loadData();
   };
-
   const markAllRead = async () => {
+    items.forEach((item) => markedReadIdsRef.current.add(item.id));
+    setItems((prev) => prev.map((item) => ({ ...item, read: true })));
     try {
-      await Promise.allSettled([
-        sellerNotices.markAllRead(), sellerPromotions.markAllRead(),
-        markAllSellerBoostPromptsRead(), markAllConversationsRead(),
-      ]);
-      setItems((prev) => prev.map((item) => ({ ...item, read: true })));
+      await Promise.allSettled([sellerNotices.markAllRead(), sellerPromotions.markAllRead(), markAllSellerBoostPromptsRead(), markAllConversationsRead()]);
     } catch {}
   };
 

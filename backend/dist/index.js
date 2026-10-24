@@ -122704,20 +122704,19 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
   if (!target)
     return null;
   const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  if (currentCycle[0]?.id !== target.cycleId) {
-    return ineligible(target, "Listing cycle is no longer current", evaluatedAt);
-  }
+  const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
   const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
   const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === listingCycleId);
+  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
   if (!candidate || !result) {
     return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
   }
-  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup" || options?.allowActiveListing === true;
   const isPriorityScore = result.score >= 0.6;
   const shared = {
     ...target,
+    cycleId: activeCycleId,
     visibilityScore: Number(result.score.toFixed(4)),
     visibilityTier: result.tier,
     visibilityRank: result.rank,
@@ -123217,9 +123216,12 @@ async function retrySellerSocialCampaign(sellerId, campaignId) {
     const failed = await tx.select({ platform: seller_social_campaign_posts.platform }).from(seller_social_campaign_posts).where(and(eq(seller_social_campaign_posts.campaignId, campaignId), eq(seller_social_campaign_posts.status, "failed")));
     if (!failed.length)
       throw new OrderError(409, "There are no failed channels to retry");
-    const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+    const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
     if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
       throw new OrderError(409, eligibility?.reason ?? "This listing is no longer ready for Boost Visibility");
+    }
+    if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+      await tx.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId }).where(eq(seller_social_campaigns.id, campaignId));
     }
     await tx.update(seller_social_campaign_posts).set({
       status: "queued",
@@ -123513,7 +123515,7 @@ async function readAllSellerVisibilityBoostPrompts(sellerId) {
     const rows = await tx.update(seller_visibility_boosts).set({
       readAt: new Date,
       updatedAt: new Date
-    }).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"), isNull2(seller_visibility_boosts.readAt))).returning({ id: seller_visibility_boosts.id });
+    }).where(and(eq(seller_visibility_boosts.sellerId, sellerId), isNull2(seller_visibility_boosts.readAt))).returning({ id: seller_visibility_boosts.id });
     return { updatedCount: rows.length };
   });
 }
@@ -125786,7 +125788,7 @@ async function getSocialPublishContext(campaignId) {
   if (!["queued", "publishing", "processing"].includes(campaign.status)) {
     throw new OrderError(409, "Social campaign is not awaiting publication");
   }
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db2.update(seller_social_campaigns).set({
       status: "failed",
@@ -125801,6 +125803,9 @@ async function getSocialPublishContext(campaignId) {
       updatedAt: new Date
     }).where(eq(seller_social_campaign_posts.campaignId, campaignId));
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
+  }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db2.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId }).where(eq(seller_social_campaigns.id, campaignId));
   }
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");
   if (!apiBase?.startsWith("https://"))
@@ -125960,7 +125965,7 @@ async function dispatchSocialCampaignPlatform(campaignId, platform) {
   }
   if (existing[0].status !== "queued")
     throw new OrderError(409, "This channel is not queued for posting");
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db2.update(seller_social_campaign_posts).set({
       status: "failed",
@@ -125970,6 +125975,9 @@ async function dispatchSocialCampaignPlatform(campaignId, platform) {
     }).where(and(eq(seller_social_campaign_posts.campaignId, campaignId), eq(seller_social_campaign_posts.status, "queued")));
     await refreshCampaignStatus(campaignId);
     throw new OrderError(409, eligibility?.reason ?? "Listing is no longer eligible for Priority Boost");
+  }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db2.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId }).where(eq(seller_social_campaigns.id, campaignId));
   }
   const channel = getSocialChannelAvailability().find((item) => item.platform === platform);
   if (!channel?.configured)

@@ -29860,20 +29860,19 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
   if (!target)
     return null;
   const currentCycle = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  if (currentCycle[0]?.id !== target.cycleId) {
-    return ineligible(target, "Listing cycle is no longer current", evaluatedAt);
-  }
+  const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
   const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
   const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === listingCycleId);
+  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
   if (!candidate || !result) {
     return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
   }
-  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup" || options?.allowActiveListing === true;
   const isPriorityScore = result.score >= 0.6;
   const shared = {
     ...target,
+    cycleId: activeCycleId,
     visibilityScore: Number(result.score.toFixed(4)),
     visibilityTier: result.tier,
     visibilityRank: result.rank,

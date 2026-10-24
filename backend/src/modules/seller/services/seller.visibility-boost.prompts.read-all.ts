@@ -13,7 +13,6 @@ export async function readAllSellerVisibilityBoostPrompts(sellerId: string) {
       })
       .where(and(
         eq(seller_visibility_boosts.sellerId, sellerId),
-        eq(seller_visibility_boosts.status, "prompt"),
         isNull(seller_visibility_boosts.readAt),
       ))
       .returning({ id: seller_visibility_boosts.id });

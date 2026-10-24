@@ -42,8 +42,19 @@ export function markSellerBoostPromptRead(promptId: string) {
   );
 }
 
-export function markAllSellerBoostPromptsRead() {
-  return apiFetch<{ updatedCount: number }>("/seller/boost-prompts/read-all", {
-    method: "POST",
-  });
+export async function markAllSellerBoostPromptsRead() {
+  try {
+    return await apiFetch<{ updatedCount: number }>("/seller/boost-prompts/read-all", {
+      method: "POST",
+    });
+  } catch {
+    try {
+      const res = await fetchSellerBoostPrompts();
+      const unread = (res.items || []).filter((p) => !p.readAt);
+      await Promise.allSettled(unread.map((p) => markSellerBoostPromptRead(p.id)));
+      return { updatedCount: unread.length };
+    } catch {
+      return { updatedCount: 0 };
+    }
+  }
 }
