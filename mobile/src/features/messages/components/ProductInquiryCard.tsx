@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   },
   openCard: {
     borderColor: colors.primary,
-    backgroundColor: "rgba(31, 77, 58, 0.02)",
+    backgroundColor: colors.primarySurface,
   },
   headerRow: {
     flexDirection: "row",

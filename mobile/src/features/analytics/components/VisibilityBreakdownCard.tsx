@@ -22,7 +22,7 @@ export function VisibilityBreakdownCard({ item, productName, onBoost }: Visibili
     : colors.textMuted;
 
   const tierBg = isPriority
-    ? "rgba(31, 77, 58, 0.12)"
+    ? colors.primaryLight
     : isStandard
     ? "rgba(63, 125, 88, 0.12)"
     : "rgba(100, 116, 139, 0.12)";
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   metaSubtitle: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   tierBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radii.full },
   tierBadgeText: { fontFamily: fonts.body.semiBold, fontSize: 11, letterSpacing: 0.5 },
-  scoreRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(31, 77, 58, 0.04)", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.md },
+  scoreRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.primarySurface, borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.md },
   scoreLabel: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
   scoreValue: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.primary, marginTop: 2 },
   scoreGuide: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1, marginLeft: spacing.lg },
