@@ -6,6 +6,7 @@ import { createConversationMessage } from "../services/conversation.message.crea
 import { listConversationMessages } from "../services/conversation.messages.list";
 import { listConversations } from "../services/conversation.list";
 import { markConversationRead } from "../services/conversation.read";
+import { markAllConversationsRead } from "../services/conversation.read-all";
 import { canAccessConversation, getConversationSocketUserId } from "../services/conversation.websocket-auth";
 import { subscribeConversation, unsubscribeConversation } from "../services/conversation.realtime";
 import { uploadConversationAttachment } from "../services/conversation.attachment";
@@ -43,6 +44,10 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     try { return await markConversationRead(session.userId, params.id); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], params: conversationParams })
+  .post("/conversations/read-all", async ({ session, status }) => {
+    try { return await markAllConversationsRead(session.userId); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"] })
   .post("/conversations/attachment", async ({ session, body, status }) => {
     try { return status(201, await uploadConversationAttachment(session.userId, body.file)); }
     catch (error) { return failure(error, status); }

@@ -122678,7 +122678,7 @@ async function readSellerPromotion(sellerId, promotionId) {
 async function readAllSellerPromotions(sellerId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const rows = await tx.update(seller_promotion_jobs).set({ readAt: new Date, updatedAt: new Date }).where(and(eq(seller_promotion_jobs.sellerId, sellerId), eq(seller_promotion_jobs.status, "ready"), isNull2(seller_promotion_jobs.readAt))).returning({ id: seller_promotion_jobs.id });
+    const rows = await tx.update(seller_promotion_jobs).set({ readAt: new Date, updatedAt: new Date }).where(and(eq(seller_promotion_jobs.sellerId, sellerId), isNull2(seller_promotion_jobs.readAt))).returning({ id: seller_promotion_jobs.id });
     return { updatedCount: rows.length };
   });
 }
@@ -123506,6 +123506,18 @@ async function readSellerVisibilityBoostPrompt(sellerId, promptId) {
   });
 }
 
+// src/modules/seller/services/seller.visibility-boost.prompts.read-all.ts
+async function readAllSellerVisibilityBoostPrompts(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const rows = await tx.update(seller_visibility_boosts).set({
+      readAt: new Date,
+      updatedAt: new Date
+    }).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"), isNull2(seller_visibility_boosts.readAt))).returning({ id: seller_visibility_boosts.id });
+    return { updatedCount: rows.length };
+  });
+}
+
 // src/modules/seller/services/seller.visibility-boost.prompt.dismiss.ts
 async function dismissSellerVisibilityBoostPrompt(sellerId, promptId) {
   return db2.transaction(async (tx) => {
@@ -123562,6 +123574,12 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
 }, { role: ["seller"] }).get("/boost-prompts", async ({ session, status }) => {
   try {
     return await listSellerVisibilityBoostPrompts(session.userId);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"] }).post("/boost-prompts/read-all", async ({ session, status }) => {
+  try {
+    return await readAllSellerVisibilityBoostPrompts(session.userId);
   } catch (error) {
     return failure2(error, status);
   }
@@ -126472,6 +126490,16 @@ async function markConversationRead(userId, conversationId) {
   return participant;
 }
 
+// src/modules/conversations/services/conversation.read-all.ts
+async function markAllConversationsRead(userId) {
+  const userConvos = await db2.select({ id: conversations.id }).from(conversations).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)));
+  if (userConvos.length === 0)
+    return { updatedCount: 0 };
+  const ids = userConvos.map((c) => c.id);
+  const updated = await db2.update(conversation_participants).set({ lastReadAt: new Date }).where(and(inArray(conversation_participants.conversationId, ids), eq(conversation_participants.userId, userId))).returning({ id: conversation_participants.id });
+  return { updatedCount: updated.length };
+}
+
 // src/modules/conversations/services/conversation.websocket-auth.ts
 async function getConversationSocketUserId(request) {
   const authSession = await auth.api.getSession({ headers: request.headers });
@@ -126560,7 +126588,13 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   } catch (error) {
     return failure4(error, status);
   }
-}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/attachment", async ({ session, body, status }) => {
+}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/read-all", async ({ session, status }) => {
+  try {
+    return await markAllConversationsRead(session.userId);
+  } catch (error) {
+    return failure4(error, status);
+  }
+}, { role: ["buyer", "seller"] }).post("/conversations/attachment", async ({ session, body, status }) => {
   try {
     return status(201, await uploadConversationAttachment(session.userId, body.file));
   } catch (error) {

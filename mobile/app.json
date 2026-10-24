@@ -21,6 +21,7 @@
     },
     "android": {
       "package": "com.agrivive.seller",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/agrivive-adaptive-foreground.png"

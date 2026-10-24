@@ -3,9 +3,9 @@ import { Share } from "react-native";
 import { useRouter } from "expo-router";
 import { useSellerNotifications } from "./useSellerNotifications";
 import { useSellerPromotions } from "./useSellerPromotions";
-import { fetchSellerBoostPrompts } from "../../boost/api/visibility-boosts";
+import { fetchSellerBoostPrompts, markAllSellerBoostPromptsRead, markSellerBoostPromptRead } from "../../boost/api/visibility-boosts";
 import { fetchSellerOrders } from "../../orders/api/seller-orders";
-import { fetchConversations } from "../../conversations/api";
+import { fetchConversations, markAllConversationsRead } from "../../conversations/api";
 import { fetchSellerProducts } from "../../inventory/api/products";
 import { getSellerPromotionShare } from "../api/seller-promotions";
 import type { NotificationCategory, UnifiedNotificationItem } from "../types";
@@ -16,8 +16,7 @@ function formatRelativeTime(date: Date): string {
   if (diffMin < 60) return `${diffMin} min ago`;
   const diffHours = Math.floor(diffMin / 60);
   if (diffHours < 24) return `${diffHours} hr${diffHours > 1 ? "s" : ""} ago`;
-  if (Math.floor(diffHours / 24) === 1) return "Yesterday";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return Math.floor(diffHours / 24) === 1 ? "Yesterday" : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export function useUnifiedNotifications() {
@@ -47,14 +46,12 @@ export function useUnifiedNotifications() {
           const expiresAt = order.expiresAt ? new Date(order.expiresAt) : null;
           const isExpiringSoon = order.status === "pending" && expiresAt && (expiresAt.getTime() - Date.now() < 3 * 3600 * 1000) && (expiresAt.getTime() > Date.now());
           const date = new Date(order.updatedAt || order.createdAt);
-
           if (order.status === "pending") {
             list.push({
               id: `order:${order.id}`, category: "reservations", kind: isExpiringSoon ? "reservation_expiring" : "new_reservation",
               title: isExpiringSoon ? "Reservation Expiring Soon" : "New Reservation",
               subtitle: `${shortCode} · ${itemSummary} · ${isExpiringSoon ? "Expires in 2 hrs" : "Expires in 6 hrs"}`,
-              timestamp: formatRelativeTime(date), rawDate: date, read: !isExpiringSoon, urgent: Boolean(isExpiringSoon),
-              iconType: isExpiringSoon ? "clock" : "package",
+              timestamp: formatRelativeTime(date), rawDate: date, read: !isExpiringSoon, urgent: Boolean(isExpiringSoon), iconType: isExpiringSoon ? "clock" : "package",
               primaryAction: { label: "View Reservation", onPress: () => router.push({ pathname: "/(app)/orders/[id]", params: { id: order.id } }), variant: isExpiringSoon ? "warning" : "primary" },
               secondaryAction: isExpiringSoon ? { label: "Scan QR", onPress: () => router.push("/(app)/orders/scan") } : { label: "Message Buyer", onPress: () => router.push("/(app)/(tabs)/messages") },
             });
@@ -133,12 +130,18 @@ export function useUnifiedNotifications() {
             id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Priority Visibility Boost",
             subtitle: `${boost.productName} is eligible for priority boost promotion.`,
             timestamp: formatRelativeTime(date), rawDate: date, read: Boolean(boost.readAt), urgent: false, iconType: "megaphone",
-            primaryAction: { label: "Preview Post", onPress: () => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: boost.productId, promptId: boost.id } }) },
+            primaryAction: {
+              label: "Preview Post",
+              onPress: () => {
+                void markSellerBoostPromptRead(boost.id);
+                router.push({ pathname: "/(app)/boost/[productId]", params: { productId: boost.productId, promptId: boost.id } });
+              },
+            },
           });
         }
       }
 
-      // 5. Live Product Listings (Published Listings)
+      // 5. Live Product Listings
       if (prodsRes.status === "fulfilled") {
         for (const prod of prodsRes.value.slice(0, 3)) {
           if (prod.publishedAt) {
@@ -154,7 +157,6 @@ export function useUnifiedNotifications() {
         }
       }
 
-      // Sort newest first
       list.sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
       setItems(list);
     } finally {
@@ -174,7 +176,10 @@ export function useUnifiedNotifications() {
 
   const markAllRead = async () => {
     try {
-      await Promise.allSettled([sellerNotices.markAllRead(), sellerPromotions.markAllRead()]);
+      await Promise.allSettled([
+        sellerNotices.markAllRead(), sellerPromotions.markAllRead(),
+        markAllSellerBoostPromptsRead(), markAllConversationsRead(),
+      ]);
       setItems((prev) => prev.map((item) => ({ ...item, read: true })));
     } catch {}
   };

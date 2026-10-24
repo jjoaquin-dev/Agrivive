@@ -34,3 +34,16 @@ export function dismissSellerBoostPrompt(promptId: string) {
     { method: "POST" },
   );
 }
+
+export function markSellerBoostPromptRead(promptId: string) {
+  return apiFetch<{ id: string; readAt: string }>(
+    `/seller/boost-prompts/${promptId}/read`,
+    { method: "POST" },
+  );
+}
+
+export function markAllSellerBoostPromptsRead() {
+  return apiFetch<{ updatedCount: number }>("/seller/boost-prompts/read-all", {
+    method: "POST",
+  });
+}
