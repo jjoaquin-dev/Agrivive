@@ -70,3 +70,8 @@ related_documents:
    - Backend Worker: `bun build src/worker.ts --outdir dist --target bun` — 300 modules bundled.
 3. **Line Count Limits**:
    - All source code files verified $\le 200$ lines.
+
+## Git Commit
+
+- **Hash**: `1ada73f`
+- **Message**: `fix: 12-hour boost eligibility conflict and notification revert loop`
