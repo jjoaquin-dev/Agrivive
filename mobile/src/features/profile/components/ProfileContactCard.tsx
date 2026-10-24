@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { fonts, radii, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface ProfileContactCardProps {
   phoneNumber: string;
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: radii.card || 16,
     borderWidth: 1,
-    borderColor: "#E5E2DA",
+    borderColor: colors.border,
     padding: spacing.base,
     marginBottom: spacing.base,
   },

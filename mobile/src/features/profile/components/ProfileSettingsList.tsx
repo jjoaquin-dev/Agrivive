@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import { Bell, ShieldCheck, Lock, History, ChevronRight, LogOut } from "lucide-react-native";
-import { fonts, radii, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface ProfileSettingsListProps {
   onNotifications: () => void;
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: radii.card || 14,
     borderWidth: 1,
-    borderColor: "#E5E2DA",
+    borderColor: colors.border,
     padding: spacing.base,
   },
   itemPressed: {
