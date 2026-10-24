@@ -58,6 +58,7 @@ related_documents:
 - `mobile/src/features/notifications/hooks/useUnifiedNotifications.ts`
 - `web/src/features/home/components/HomeSellerSection.tsx`
 - `web/src/features/home/components/HomeFooter.tsx`
+- `mobile/app.json`
 
 ## Verification performed
 
@@ -68,10 +69,12 @@ related_documents:
 2. **Build Verification**:
    - Backend: `bun build src/index.ts --outdir dist --target bun` — 1,706 modules bundled.
    - Backend Worker: `bun build src/worker.ts --outdir dist --target bun` — 300 modules bundled.
-3. **Line Count Limits**:
+3. **Expo Doctor**:
+   - `npx expo-doctor` — 21/21 checks passed. No issues detected.
+4. **Line Count Limits**:
    - All source code files verified $\le 200$ lines.
 
-## Git Commit
+## Git Commits
 
-- **Hash**: `1ada73f`
-- **Message**: `fix: 12-hour boost eligibility conflict and notification revert loop`
+- **`1ada73f`**: `fix: 12-hour boost eligibility conflict and notification revert loop`
+- **`d52a260`**: `fix(mobile): remove deprecated root splash schema in app.json`
