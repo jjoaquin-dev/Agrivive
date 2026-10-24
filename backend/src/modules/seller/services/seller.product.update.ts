@@ -48,15 +48,6 @@ export function updateSellerProduct(sellerId: string, productId: string, body: S
       catalog = selectedCatalog;
     }
     const name = catalog?.filipinoName.trim();
-    if (name !== undefined && name.toLowerCase() !== current.productName.trim().toLowerCase()) {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${sellerId}), hashtext(${`${name.toLowerCase()}:${current.scalingType}`}))`);
-      const [duplicate] = await tx.select({ id: sellers_product.id }).from(sellers_product).where(and(
-        eq(sellers_product.userId, sellerId), eq(sellers_product.scalingType, current.scalingType),
-        ne(sellers_product.id, productId),
-        sql`lower(btrim(${sellers_product.productName})) = ${name.toLowerCase()}`,
-      )).limit(1);
-      if (duplicate) throw new OrderError(409, "Product already listed with this selling unit");
-    }
     const now = new Date();
     const [updated] = await tx.update(sellers_product).set({
       ...(catalog ? {

@@ -36,25 +36,6 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     if (!catalog) throw new OrderError(400, "Choose an active vegetable from the catalog");
 
     const productName = catalog.filipinoName.trim();
-    const normalizedName = productName.toLowerCase();
-    const lockKey = `${normalizedName}:${body.scalingType}`;
-    await tx.execute(sql`
-      select pg_advisory_xact_lock(hashtext(${userId}), hashtext(${lockKey}))
-    `);
-
-    const [existing] = await tx
-      .select({ id: sellers_product.id })
-      .from(sellers_product)
-      .where(
-        and(
-          eq(sellers_product.userId, userId),
-          eq(sellers_product.scalingType, body.scalingType),
-          sql`lower(btrim(${sellers_product.productName})) = ${normalizedName}`,
-        ),
-      )
-      .limit(1);
-    if (existing) return null;
-
     const now = new Date();
     const { catalogId: _catalogId, ...productFields } = body;
     const [postProduct] = await tx

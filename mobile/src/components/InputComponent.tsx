@@ -6,6 +6,7 @@ import {
   View,
   TextInputProps,
   Pressable,
+  TextStyle,
   ViewStyle,
 } from "react-native";
 import { Eye, EyeOff } from "lucide-react-native";
@@ -16,6 +17,8 @@ export interface InputComponentProps extends TextInputProps {
   error?: string | null;
   hint?: string | null;
   containerStyle?: ViewStyle;
+  inputWrapperStyle?: ViewStyle;
+  labelStyle?: TextStyle;
   isPassword?: boolean;
   leftIcon?: React.ReactNode;
 }
@@ -25,6 +28,8 @@ export const InputComponent: React.FC<InputComponentProps> = ({
   error,
   hint,
   containerStyle,
+  inputWrapperStyle,
+  labelStyle,
   isPassword = false,
   leftIcon,
   ...textInputProps
@@ -34,10 +39,11 @@ export const InputComponent: React.FC<InputComponentProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, labelStyle]}>{label}</Text>
       <View
         style={[
           styles.inputWrapper,
+          inputWrapperStyle,
           isFocused && styles.inputFocused,
           error ? styles.inputError : null,
         ]}

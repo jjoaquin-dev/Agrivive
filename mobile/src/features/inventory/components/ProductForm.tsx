@@ -56,9 +56,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       if (!result.isValid) return setErrors(result.errors);
       try { await onSubmit(payload); }
       catch (err: any) {
-        setErrors(err?.statusCode === 409 || err?.message?.includes("already listed")
-          ? { catalogId: "This vegetable and selling unit are already in your inventory." }
-          : { general: err?.message || "Failed to create product. Please try again." });
+        setErrors({ general: err?.message || "Failed to create product. Please try again." });
       }
       return;
     }
@@ -79,9 +77,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!result.isValid) return setErrors(result.errors);
     try { await onSubmit(payload); }
     catch (err: any) {
-      setErrors(err?.statusCode === 409 || err?.message?.includes("already listed")
-        ? { catalogId: "This vegetable and selling unit are already in your inventory." }
-        : { general: err?.message || "Failed to save product. Please try again." });
+      setErrors({ general: err?.message || "Failed to save product. Please try again." });
     }
   };
 

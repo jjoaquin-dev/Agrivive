@@ -60443,6 +60443,135 @@ var init_dist_es9 = __esm(() => {
   init_fromIni();
 });
 
+// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
+var exports_type3 = {};
+__export(exports_type3, {
+  Any: () => Any,
+  Argument: () => Argument,
+  Array: () => Array2,
+  AsyncIterator: () => AsyncIterator,
+  Awaited: () => Awaited,
+  BigInt: () => BigInt2,
+  Boolean: () => Boolean2,
+  Capitalize: () => Capitalize,
+  Composite: () => Composite,
+  Const: () => Const,
+  Constructor: () => Constructor,
+  ConstructorParameters: () => ConstructorParameters,
+  Date: () => Date2,
+  Enum: () => Enum,
+  Exclude: () => Exclude,
+  Extends: () => Extends,
+  Extract: () => Extract,
+  Function: () => Function2,
+  Index: () => Index,
+  InstanceType: () => InstanceType,
+  Instantiate: () => Instantiate,
+  Integer: () => Integer,
+  Intersect: () => Intersect,
+  Iterator: () => Iterator,
+  KeyOf: () => KeyOf,
+  Literal: () => Literal,
+  Lowercase: () => Lowercase,
+  Mapped: () => Mapped,
+  Module: () => Module,
+  Never: () => Never,
+  Not: () => Not2,
+  Null: () => Null,
+  Number: () => Number2,
+  Object: () => Object2,
+  Omit: () => Omit,
+  Optional: () => Optional,
+  Parameters: () => Parameters,
+  Partial: () => Partial,
+  Pick: () => Pick,
+  Promise: () => Promise2,
+  Readonly: () => Readonly,
+  ReadonlyOptional: () => ReadonlyOptional,
+  Record: () => Record,
+  Recursive: () => Recursive,
+  Ref: () => Ref,
+  RegExp: () => RegExp2,
+  Required: () => Required,
+  Rest: () => Rest,
+  ReturnType: () => ReturnType,
+  String: () => String2,
+  Symbol: () => Symbol2,
+  TemplateLiteral: () => TemplateLiteral,
+  Transform: () => Transform,
+  Tuple: () => Tuple,
+  Uint8Array: () => Uint8Array2,
+  Uncapitalize: () => Uncapitalize,
+  Undefined: () => Undefined,
+  Union: () => Union,
+  Unknown: () => Unknown,
+  Unsafe: () => Unsafe,
+  Uppercase: () => Uppercase,
+  Void: () => Void
+});
+
+// src/db/schema.ts
+var exports_schema = {};
+__export(exports_schema, {
+  account: () => account,
+  buyer_listing_notices: () => buyer_listing_notices,
+  buyer_saved_products: () => buyer_saved_products,
+  checkouts: () => checkouts,
+  conversation_context_enum: () => conversation_context_enum,
+  conversation_messages: () => conversation_messages,
+  conversation_participants: () => conversation_participants,
+  conversation_status_enum: () => conversation_status_enum,
+  conversations: () => conversations,
+  listing_cycles: () => listing_cycles,
+  notification_device_platform_enum: () => notification_device_platform_enum,
+  notification_devices: () => notification_devices,
+  notification_outbox: () => notification_outbox,
+  notification_outbox_status_enum: () => notification_outbox_status_enum,
+  notification_type_enum: () => notification_type_enum,
+  order_inquiries: () => order_inquiries,
+  order_report_evidence: () => order_report_evidence,
+  order_reports: () => order_reports,
+  order_reviews: () => order_reviews,
+  order_status: () => order_status,
+  ordered_items: () => ordered_items,
+  orders: () => orders,
+  product_condition_enum: () => product_condition_enum,
+  product_inquiries: () => product_inquiries,
+  product_reviews: () => product_reviews,
+  product_stock_adjustments: () => product_stock_adjustments,
+  product_type_enum: () => product_type_enum,
+  roleEnum: () => roleEnum,
+  scaling_type_enum: () => scaling_type_enum,
+  seller_boost_reason_enum: () => seller_boost_reason_enum,
+  seller_boost_status_enum: () => seller_boost_status_enum,
+  seller_follows: () => seller_follows,
+  seller_listing_events: () => seller_listing_events,
+  seller_promotion_jobs: () => seller_promotion_jobs,
+  seller_promotion_stage: () => seller_promotion_stage,
+  seller_promotion_status: () => seller_promotion_status,
+  seller_scan_grace: () => seller_scan_grace,
+  seller_social_campaign_posts: () => seller_social_campaign_posts,
+  seller_social_campaigns: () => seller_social_campaigns,
+  seller_type_enum: () => seller_type_enum,
+  seller_visibility_boosts: () => seller_visibility_boosts,
+  sellers_product: () => sellers_product,
+  sellers_profile: () => sellers_profile,
+  session: () => session,
+  social_campaign_post_status: () => social_campaign_post_status,
+  social_campaign_status: () => social_campaign_status,
+  social_platform: () => social_platform,
+  trust_actions: () => trust_actions,
+  trust_corrections: () => trust_corrections,
+  trust_events: () => trust_events,
+  trust_notices: () => trust_notices,
+  twoFactor: () => twoFactor,
+  user: () => user,
+  vegetable_catalog: () => vegetable_catalog,
+  vegetable_category_enum: () => vegetable_category_enum,
+  vegetable_review_status_enum: () => vegetable_review_status_enum,
+  verification: () => verification
+});
+
 // node_modules/memoirist/dist/bun/index.js
 var Y = (v, b) => {
   let A = b?.length ? {} : null;
@@ -63146,74 +63275,6 @@ function Unsafe(options = {}) {
 function Void(options) {
   return CreateType({ [Kind]: "Void", type: "void" }, options);
 }
-
-// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
-var exports_type3 = {};
-__export(exports_type3, {
-  Any: () => Any,
-  Argument: () => Argument,
-  Array: () => Array2,
-  AsyncIterator: () => AsyncIterator,
-  Awaited: () => Awaited,
-  BigInt: () => BigInt2,
-  Boolean: () => Boolean2,
-  Capitalize: () => Capitalize,
-  Composite: () => Composite,
-  Const: () => Const,
-  Constructor: () => Constructor,
-  ConstructorParameters: () => ConstructorParameters,
-  Date: () => Date2,
-  Enum: () => Enum,
-  Exclude: () => Exclude,
-  Extends: () => Extends,
-  Extract: () => Extract,
-  Function: () => Function2,
-  Index: () => Index,
-  InstanceType: () => InstanceType,
-  Instantiate: () => Instantiate,
-  Integer: () => Integer,
-  Intersect: () => Intersect,
-  Iterator: () => Iterator,
-  KeyOf: () => KeyOf,
-  Literal: () => Literal,
-  Lowercase: () => Lowercase,
-  Mapped: () => Mapped,
-  Module: () => Module,
-  Never: () => Never,
-  Not: () => Not2,
-  Null: () => Null,
-  Number: () => Number2,
-  Object: () => Object2,
-  Omit: () => Omit,
-  Optional: () => Optional,
-  Parameters: () => Parameters,
-  Partial: () => Partial,
-  Pick: () => Pick,
-  Promise: () => Promise2,
-  Readonly: () => Readonly,
-  ReadonlyOptional: () => ReadonlyOptional,
-  Record: () => Record,
-  Recursive: () => Recursive,
-  Ref: () => Ref,
-  RegExp: () => RegExp2,
-  Required: () => Required,
-  Rest: () => Rest,
-  ReturnType: () => ReturnType,
-  String: () => String2,
-  Symbol: () => Symbol2,
-  TemplateLiteral: () => TemplateLiteral,
-  Transform: () => Transform,
-  Tuple: () => Tuple,
-  Uint8Array: () => Uint8Array2,
-  Uncapitalize: () => Uncapitalize,
-  Undefined: () => Undefined,
-  Union: () => Union,
-  Unknown: () => Unknown,
-  Unsafe: () => Unsafe,
-  Uppercase: () => Uppercase,
-  Void: () => Void
-});
-
 // node_modules/@sinclair/typebox/build/esm/type/type/index.mjs
 var Type = exports_type3;
 
@@ -100509,68 +100570,6 @@ var pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 var db2 = drizzle({ client: pool });
-
-// src/db/schema.ts
-var exports_schema = {};
-__export(exports_schema, {
-  account: () => account,
-  buyer_listing_notices: () => buyer_listing_notices,
-  buyer_saved_products: () => buyer_saved_products,
-  checkouts: () => checkouts,
-  conversation_context_enum: () => conversation_context_enum,
-  conversation_messages: () => conversation_messages,
-  conversation_participants: () => conversation_participants,
-  conversation_status_enum: () => conversation_status_enum,
-  conversations: () => conversations,
-  listing_cycles: () => listing_cycles,
-  notification_device_platform_enum: () => notification_device_platform_enum,
-  notification_devices: () => notification_devices,
-  notification_outbox: () => notification_outbox,
-  notification_outbox_status_enum: () => notification_outbox_status_enum,
-  notification_type_enum: () => notification_type_enum,
-  order_inquiries: () => order_inquiries,
-  order_report_evidence: () => order_report_evidence,
-  order_reports: () => order_reports,
-  order_reviews: () => order_reviews,
-  order_status: () => order_status,
-  ordered_items: () => ordered_items,
-  orders: () => orders,
-  product_condition_enum: () => product_condition_enum,
-  product_inquiries: () => product_inquiries,
-  product_reviews: () => product_reviews,
-  product_stock_adjustments: () => product_stock_adjustments,
-  product_type_enum: () => product_type_enum,
-  roleEnum: () => roleEnum,
-  scaling_type_enum: () => scaling_type_enum,
-  seller_boost_reason_enum: () => seller_boost_reason_enum,
-  seller_boost_status_enum: () => seller_boost_status_enum,
-  seller_follows: () => seller_follows,
-  seller_listing_events: () => seller_listing_events,
-  seller_promotion_jobs: () => seller_promotion_jobs,
-  seller_promotion_stage: () => seller_promotion_stage,
-  seller_promotion_status: () => seller_promotion_status,
-  seller_scan_grace: () => seller_scan_grace,
-  seller_social_campaign_posts: () => seller_social_campaign_posts,
-  seller_social_campaigns: () => seller_social_campaigns,
-  seller_type_enum: () => seller_type_enum,
-  seller_visibility_boosts: () => seller_visibility_boosts,
-  sellers_product: () => sellers_product,
-  sellers_profile: () => sellers_profile,
-  session: () => session,
-  social_campaign_post_status: () => social_campaign_post_status,
-  social_campaign_status: () => social_campaign_status,
-  social_platform: () => social_platform,
-  trust_actions: () => trust_actions,
-  trust_corrections: () => trust_corrections,
-  trust_events: () => trust_events,
-  trust_notices: () => trust_notices,
-  twoFactor: () => twoFactor,
-  user: () => user,
-  vegetable_catalog: () => vegetable_catalog,
-  vegetable_category_enum: () => vegetable_category_enum,
-  vegetable_review_status_enum: () => vegetable_review_status_enum,
-  verification: () => verification
-});
 // node_modules/drizzle-orm/pg-core/columns/enum.js
 var PgEnumObjectColumnBuilder2 = class extends PgColumnBuilder {
   static [entityKind] = "PgEnumObjectColumnBuilder";
@@ -119836,14 +119835,6 @@ async function createSellerProduct(userId, body) {
     if (!catalog)
       throw new OrderError(400, "Choose an active vegetable from the catalog");
     const productName = catalog.filipinoName.trim();
-    const normalizedName = productName.toLowerCase();
-    const lockKey = `${normalizedName}:${body.scalingType}`;
-    await tx.execute(sql3`
-      select pg_advisory_xact_lock(hashtext(${userId}), hashtext(${lockKey}))
-    `);
-    const [existing] = await tx.select({ id: sellers_product.id }).from(sellers_product).where(and(eq(sellers_product.userId, userId), eq(sellers_product.scalingType, body.scalingType), sql3`lower(btrim(${sellers_product.productName})) = ${normalizedName}`)).limit(1);
-    if (existing)
-      return null;
     const now = new Date;
     const { catalogId: _catalogId, ...productFields } = body;
     const [postProduct] = await tx.insert(sellers_product).values({
@@ -119884,11 +119875,6 @@ async function createSellerProduct(userId, body) {
 var sellerProductCreateRoute = new Elysia().use(sessionAuth).post("/products", async ({ session, body, status }) => {
   try {
     const product = await createSellerProduct(session.userId, body);
-    if (!product) {
-      return status(409, {
-        message: "Product already listed with this selling unit"
-      });
-    }
     return status(201, {
       message: "Product created",
       products: product
@@ -119903,8 +119889,6 @@ var sellerProductCreateRoute = new Elysia().use(sessionAuth).post("/products", a
 }, { role: ["seller"], body: sellerProductCreate }).post("/addproduct", async ({ session, body, status }) => {
   try {
     const product = await createSellerProduct(session.userId, body);
-    if (!product)
-      return status(409, { message: "Product already listed with this selling unit" });
     return status(201, { message: "Product created", products: product });
   } catch (error) {
     if (error instanceof OrderError)
@@ -120782,12 +120766,6 @@ function updateSellerProduct(sellerId, productId, body) {
       catalog = selectedCatalog;
     }
     const name = catalog?.filipinoName.trim();
-    if (name !== undefined && name.toLowerCase() !== current.productName.trim().toLowerCase()) {
-      await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${sellerId}), hashtext(${`${name.toLowerCase()}:${current.scalingType}`}))`);
-      const [duplicate] = await tx.select({ id: sellers_product.id }).from(sellers_product).where(and(eq(sellers_product.userId, sellerId), eq(sellers_product.scalingType, current.scalingType), ne(sellers_product.id, productId), sql3`lower(btrim(${sellers_product.productName})) = ${name.toLowerCase()}`)).limit(1);
-      if (duplicate)
-        throw new OrderError(409, "Product already listed with this selling unit");
-    }
     const now = new Date;
     const [updated] = await tx.update(sellers_product).set({
       ...catalog ? {
