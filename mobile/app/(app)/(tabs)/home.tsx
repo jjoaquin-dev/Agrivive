@@ -106,7 +106,7 @@ export default function HomeScreen() {
       />
 
       <DashboardMetrics
-        activeListingsCount={summary.inStockCount}
+        activeListingsCount={summary.activeCount}
         reservedLabel={reservedLabel}
         completedPickupsCount={orderCounts.completed}
         availableSurplusLabel={availableSurplusLabel}
@@ -128,7 +128,7 @@ export default function HomeScreen() {
       />
 
       <DashboardListingsSummary
-        activeCount={summary.inStockCount}
+        activeCount={summary.activeCount}
         draftCount={products.filter((p) => !p.isMarketable || !p.isActive).length}
         reservedCount={orderCounts.active}
         soldOutCount={summary.outOfStockCount}
