@@ -82,3 +82,8 @@ Implemented cursor-based pagination and infinite scrolling across all data-drive
 - `mobile`: `bunx tsc --noEmit` passed (0 errors).
 - `web`: `bunx tsc --noEmit` passed (0 errors).
 - All modified and newly created files were verified with `wc -l` to be strictly $\le 200$ lines.
+
+## Commit Details
+- **Hash**: `6a5acf7`
+- **Message**: `add cursor pagination and infinite scroll to all data screens`
+
