@@ -122678,7 +122678,7 @@ async function readSellerPromotion(sellerId, promotionId) {
 async function readAllSellerPromotions(sellerId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const rows = await tx.update(seller_promotion_jobs).set({ readAt: new Date, updatedAt: new Date }).where(and(eq(seller_promotion_jobs.sellerId, sellerId), eq(seller_promotion_jobs.status, "ready"), isNull2(seller_promotion_jobs.readAt))).returning({ id: seller_promotion_jobs.id });
+    const rows = await tx.update(seller_promotion_jobs).set({ readAt: new Date, updatedAt: new Date }).where(and(eq(seller_promotion_jobs.sellerId, sellerId), isNull2(seller_promotion_jobs.readAt))).returning({ id: seller_promotion_jobs.id });
     return { updatedCount: rows.length };
   });
 }
@@ -122704,20 +122704,19 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
   if (!target)
     return null;
   const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  if (currentCycle[0]?.id !== target.cycleId) {
-    return ineligible(target, "Listing cycle is no longer current", evaluatedAt);
-  }
+  const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
   const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
   const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === listingCycleId);
+  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
   if (!candidate || !result) {
     return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
   }
-  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup" || options?.allowActiveListing === true;
   const isPriorityScore = result.score >= 0.6;
   const shared = {
     ...target,
+    cycleId: activeCycleId,
     visibilityScore: Number(result.score.toFixed(4)),
     visibilityTier: result.tier,
     visibilityRank: result.rank,
@@ -123217,9 +123216,12 @@ async function retrySellerSocialCampaign(sellerId, campaignId) {
     const failed = await tx.select({ platform: seller_social_campaign_posts.platform }).from(seller_social_campaign_posts).where(and(eq(seller_social_campaign_posts.campaignId, campaignId), eq(seller_social_campaign_posts.status, "failed")));
     if (!failed.length)
       throw new OrderError(409, "There are no failed channels to retry");
-    const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+    const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
     if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
       throw new OrderError(409, eligibility?.reason ?? "This listing is no longer ready for Boost Visibility");
+    }
+    if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+      await tx.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId }).where(eq(seller_social_campaigns.id, campaignId));
     }
     await tx.update(seller_social_campaign_posts).set({
       status: "queued",
@@ -123506,6 +123508,18 @@ async function readSellerVisibilityBoostPrompt(sellerId, promptId) {
   });
 }
 
+// src/modules/seller/services/seller.visibility-boost.prompts.read-all.ts
+async function readAllSellerVisibilityBoostPrompts(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const rows = await tx.update(seller_visibility_boosts).set({
+      readAt: new Date,
+      updatedAt: new Date
+    }).where(and(eq(seller_visibility_boosts.sellerId, sellerId), isNull2(seller_visibility_boosts.readAt))).returning({ id: seller_visibility_boosts.id });
+    return { updatedCount: rows.length };
+  });
+}
+
 // src/modules/seller/services/seller.visibility-boost.prompt.dismiss.ts
 async function dismissSellerVisibilityBoostPrompt(sellerId, promptId) {
   return db2.transaction(async (tx) => {
@@ -123562,6 +123576,12 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
 }, { role: ["seller"] }).get("/boost-prompts", async ({ session, status }) => {
   try {
     return await listSellerVisibilityBoostPrompts(session.userId);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["seller"] }).post("/boost-prompts/read-all", async ({ session, status }) => {
+  try {
+    return await readAllSellerVisibilityBoostPrompts(session.userId);
   } catch (error) {
     return failure2(error, status);
   }
@@ -125768,7 +125788,7 @@ async function getSocialPublishContext(campaignId) {
   if (!["queued", "publishing", "processing"].includes(campaign.status)) {
     throw new OrderError(409, "Social campaign is not awaiting publication");
   }
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db2.update(seller_social_campaigns).set({
       status: "failed",
@@ -125783,6 +125803,9 @@ async function getSocialPublishContext(campaignId) {
       updatedAt: new Date
     }).where(eq(seller_social_campaign_posts.campaignId, campaignId));
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
+  }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db2.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId }).where(eq(seller_social_campaigns.id, campaignId));
   }
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");
   if (!apiBase?.startsWith("https://"))
@@ -125942,7 +125965,7 @@ async function dispatchSocialCampaignPlatform(campaignId, platform) {
   }
   if (existing[0].status !== "queued")
     throw new OrderError(409, "This channel is not queued for posting");
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db2.update(seller_social_campaign_posts).set({
       status: "failed",
@@ -125952,6 +125975,9 @@ async function dispatchSocialCampaignPlatform(campaignId, platform) {
     }).where(and(eq(seller_social_campaign_posts.campaignId, campaignId), eq(seller_social_campaign_posts.status, "queued")));
     await refreshCampaignStatus(campaignId);
     throw new OrderError(409, eligibility?.reason ?? "Listing is no longer eligible for Priority Boost");
+  }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db2.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId }).where(eq(seller_social_campaigns.id, campaignId));
   }
   const channel = getSocialChannelAvailability().find((item) => item.platform === platform);
   if (!channel?.configured)
@@ -126163,13 +126189,11 @@ async function createConversation(buyerId, input) {
   return db2.transaction(async (tx) => {
     await requireActiveUser(tx, buyerId, "buyer");
     let sellerId;
-    let contextKey;
     if (input.contextType === "product") {
       const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, input.productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
       if (!product)
         throw new ConversationError(404, "Marketplace product not found");
       sellerId = product.sellerId;
-      contextKey = `product:${product.id}:${buyerId}:${sellerId}`;
     } else if (input.contextType === "order") {
       const [order] = await tx.select({
         id: orders.id,
@@ -126183,17 +126207,12 @@ async function createConversation(buyerId, input) {
         throw new ConversationError(409, "Only active orders accept new messages");
       }
       sellerId = order.sellerId;
-      contextKey = `order:${order.id}:${buyerId}:${sellerId}`;
     } else {
       const [seller] = await tx.select({ id: user.id }).from(user).innerJoin(sellers_profile, eq(sellers_profile.userId, user.id)).where(and(eq(user.id, input.sellerId), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
       if (!seller)
         throw new ConversationError(404, "Seller not found");
       sellerId = seller.id;
-      contextKey = `seller:${seller.id}:${buyerId}`;
     }
-    const [existing] = await tx.select().from(conversations).where(eq(conversations.contextKey, contextKey)).limit(1);
-    if (existing)
-      throw new ConversationError(409, "Conversation already exists");
     if (input.contextType === "product") {
       await tx.insert(product_inquiries).values({
         productId: input.productId,
@@ -126210,27 +126229,42 @@ async function createConversation(buyerId, input) {
       }).onConflictDoNothing();
     }
     const now = new Date;
-    const [conversation] = await tx.insert(conversations).values({
-      contextType: input.contextType,
-      contextKey,
-      buyerId,
-      sellerId,
-      productId: input.productId,
-      orderId: input.orderId,
-      lastMessageAt: now
-    }).returning();
+    const [existing] = await tx.select().from(conversations).where(and(eq(conversations.buyerId, buyerId), eq(conversations.sellerId, sellerId))).orderBy(desc(conversations.lastMessageAt)).limit(1);
+    let activeConversation = existing;
+    if (existing) {
+      const [updated] = await tx.update(conversations).set({
+        contextType: input.contextType,
+        productId: input.productId ?? existing.productId,
+        orderId: input.orderId ?? existing.orderId,
+        lastMessageAt: now,
+        status: "open",
+        updatedAt: now
+      }).where(eq(conversations.id, existing.id)).returning();
+      activeConversation = updated;
+    } else {
+      const [created] = await tx.insert(conversations).values({
+        contextType: input.contextType,
+        contextKey: `direct:${buyerId}:${sellerId}`,
+        buyerId,
+        sellerId,
+        productId: input.productId,
+        orderId: input.orderId,
+        lastMessageAt: now
+      }).returning();
+      activeConversation = created;
+      await tx.insert(conversation_participants).values([
+        { conversationId: activeConversation.id, userId: buyerId },
+        { conversationId: activeConversation.id, userId: sellerId }
+      ]);
+    }
     const [message] = await tx.insert(conversation_messages).values({
-      conversationId: conversation.id,
+      conversationId: activeConversation.id,
       senderId: buyerId,
       clientMessageId: input.clientMessageId,
       body,
       createdAt: now
     }).returning();
-    await tx.insert(conversation_participants).values([
-      { conversationId: conversation.id, userId: buyerId },
-      { conversationId: conversation.id, userId: sellerId }
-    ]);
-    return { conversation, message };
+    return { conversation: activeConversation, message };
   });
 }
 
@@ -126408,8 +126442,27 @@ async function listConversations(userId, limit = 50) {
     status: conversations.status,
     lastMessageAt: conversations.lastMessageAt,
     createdAt: conversations.createdAt,
-    productName: sellers_product.productName,
-    productImageUrl: sellers_product.imagUrl,
+    productName: sql3`coalesce(
+      ${sellers_product.productName},
+      (
+        select oi.product_name
+        from ordered_items as oi
+        where oi.orders_id = ${conversations.orderId}
+        order by oi.created_at asc
+        limit 1
+      )
+    )`,
+    productImageUrl: sql3`coalesce(
+      ${sellers_product.imagUrl},
+      (
+        select p_oi.image_url
+        from ordered_items as oi
+        join sellers_product as p_oi on p_oi.id = oi.product_id
+        where oi.orders_id = ${conversations.orderId}
+        order by oi.created_at asc
+        limit 1
+      )
+    )`,
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,
@@ -126443,6 +126496,16 @@ async function markConversationRead(userId, conversationId) {
     throw new ConversationError(404, "Conversation not found");
   const [participant] = await db2.update(conversation_participants).set({ lastReadAt: new Date }).where(and(eq(conversation_participants.conversationId, conversationId), eq(conversation_participants.userId, userId))).returning();
   return participant;
+}
+
+// src/modules/conversations/services/conversation.read-all.ts
+async function markAllConversationsRead(userId) {
+  const userConvos = await db2.select({ id: conversations.id }).from(conversations).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)));
+  if (userConvos.length === 0)
+    return { updatedCount: 0 };
+  const ids = userConvos.map((c) => c.id);
+  const updated = await db2.update(conversation_participants).set({ lastReadAt: new Date }).where(and(inArray(conversation_participants.conversationId, ids), eq(conversation_participants.userId, userId))).returning({ id: conversation_participants.id });
+  return { updatedCount: updated.length };
 }
 
 // src/modules/conversations/services/conversation.websocket-auth.ts
@@ -126533,7 +126596,13 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   } catch (error) {
     return failure4(error, status);
   }
-}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/attachment", async ({ session, body, status }) => {
+}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/read-all", async ({ session, status }) => {
+  try {
+    return await markAllConversationsRead(session.userId);
+  } catch (error) {
+    return failure4(error, status);
+  }
+}, { role: ["buyer", "seller"] }).post("/conversations/attachment", async ({ session, body, status }) => {
   try {
     return status(201, await uploadConversationAttachment(session.userId, body.file));
   } catch (error) {

@@ -23,8 +23,27 @@ export async function listConversations(userId: string, limit = 50) {
     status: conversations.status,
     lastMessageAt: conversations.lastMessageAt,
     createdAt: conversations.createdAt,
-    productName: sellers_product.productName,
-    productImageUrl: sellers_product.imagUrl,
+    productName: sql<string | null>`coalesce(
+      ${sellers_product.productName},
+      (
+        select oi.product_name
+        from ordered_items as oi
+        where oi.orders_id = ${conversations.orderId}
+        order by oi.created_at asc
+        limit 1
+      )
+    )`,
+    productImageUrl: sql<string | null>`coalesce(
+      ${sellers_product.imagUrl},
+      (
+        select p_oi.image_url
+        from ordered_items as oi
+        join sellers_product as p_oi on p_oi.id = oi.product_id
+        where oi.orders_id = ${conversations.orderId}
+        order by oi.created_at asc
+        limit 1
+      )
+    )`,
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,

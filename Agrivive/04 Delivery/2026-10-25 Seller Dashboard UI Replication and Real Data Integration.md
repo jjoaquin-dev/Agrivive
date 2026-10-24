@@ -1,5 +1,5 @@
 ---
-title: Seller Dashboard UI Replication and Real Data Integration
+title: Seller Dashboard UI Replication (Strict RULE.md Compliance)
 date: 2026-10-25
 type: delivery
 status: verified
@@ -9,107 +9,71 @@ related_documents:
   - "[[05 Enhancements/05 Mobile and Backend Flow Enhancements]]"
 ---
 
-# Seller Dashboard UI Replication and Real Data Integration
+# Seller Dashboard UI Replication (Strict RULE.md Compliance)
 
 ## What changed
 
-Replicated the complete Seller Dashboard UI from the approved design reference (`media_1792860454963_76b79a91.png`) following the strict field-mapping and architectural principles in `.agents/rules/design-replication-rule/RULE.md` and repository guidelines in `AGENTS.md`.
+Applied the visual design, typography, card shapes, 2×2 metric grid, and 3×2 pastel tile styling from the reference design (`media_1792860454963_76b79a91.png`) **strictly to our actual existing system fields and data**, eliminating all mock/synthetic placeholders in full adherence to `.agents/rules/design-replication-rule/RULE.md`.
 
-Every visual component maps 100% directly to real system models, backend API responses, and user state:
+### Field & Component Mapping:
 
-1. **`DashboardHeader.tsx` & `DashboardHeaderBrand.tsx`**:
-   - Replicated top brand row: Agrivive logo in Forest Green (`#16A34A`), stall address with `MapPin` (derived from `setup.profile.detailAddress` or `shopName`), circular notification bell with unread indicator dot, and seller avatar circle with initials (`MS`).
-   - Dynamic time-based greeting ("Good morning," / "Good afternoon," / "Good evening,"), bold seller name (`setup.account.name` or `session.user.name`), `✓ Verified` badge when verified, and seller role tagline.
+1. **`DashboardHeader.tsx`**:
+   - Replicated top brand row: Agrivive logo in Forest Green (`#16A34A`), stall location with `MapPin` (bound strictly to `setup.profile.shopName`), circular notification bell with unread indicator dot (`unreadCount > 0`), and seller initials avatar circle (`MS` derived from `sellerName`).
+   - Greeting ("Good morning," / "Maayong adlaw,"), seller name (`setup.account.name || session.user.name || "Seller"`), `✓ Verified` badge (bound to `setup.sellerVerified`), and tagline.
 
 2. **`DashboardTwinActions.tsx`**:
-   - Primary full-width **"Add Surplus Product"** card in `#0F920F` with circular vegetable sprout icon, subtitle, and chevron `>` navigating to `/(app)/inventory/create`.
-   - Secondary **"Scan Pickup QR"** white card with green QR icon in light mint square navigating to `/(app)/orders/scan`.
+   - Primary full-width Forest Green **"Add Surplus Product"** card (`#0F920F`) with circular icon and chevron `>` navigating to `/(app)/inventory/create`.
+   - Secondary **"Scan Pickup QR"** white card (`#FFFFFF`, border `#E5E7EB`) with green QR icon in light mint square navigating to `/(app)/orders/scan`.
 
 3. **`DashboardMetrics.tsx`**:
-   - 2x2 grid of metric cards:
-     - 📋 **Active Listings**: Real active listings count (`summary.activeCount`) in green.
-     - 📦 **Reserved**: Real reserved volume (`{reservedKg} kg reserved` or active reservation orders count) in indigo `#4F46E5`.
-     - ✅ **Completed Pickups**: Real completed orders count (`orderCounts.completed`) via QR in green.
-     - 🍃 **Available Surplus**: Real available inventory across units (`{kiloTotal} kg · {sackTotal} sacks`) in warm amber `#D97706`.
+   - 2×2 grid of metric cards mapped strictly to existing `summary: InventorySummary`:
+     - 📋 **Active Listings**: Bound to `summary.activeCount` (green `#16A34A`, "Visible to buyers").
+     - ⚠️ **Low Amount**: Bound to `summary.lowStockCount` (amber `#D97706`, "Needs attention").
+     - 📦 **Out of Stock**: Bound to `summary.outOfStockCount` (coral `#DC2626`, "Depleted produce").
+     - 🍃 **Available Surplus**: Bound to `summary.unitTotals` (`${kilo} kg · ${sack} sacks`, indigo `#4F46E5`, "Across active listings").
 
-4. **`DashboardAttentionGrid.tsx`**:
-   - 3x2 grid of pastel colored alert cards under "Needs Your Attention" (Tap any item for details):
-     - ⏰ **Expiring Soon**: Count of buyer reservations within 6h of expiration (`/(app)/(tabs)/orders`).
-     - ⚠️ **Low Stock**: Real count of produce at or below low stock threshold (`/(app)/(tabs)/inventory`).
-     - 💬 **Messages**: Real open customer inquiry / conversation count (`/(app)/(tabs)/messages`).
-     - 🌡️ **Weather Alert**: Navigation to real-time Davao weather advisory (`/(app)/advisories`).
-     - 📢 **Content Ready**: Real visibility boost prompts ready for social promotion (`/(app)/boosts`).
-     - 🔄 **Update Needed**: Navigation to stock audit history and ledger (`/(app)/activity`).
+4. **`DashboardOperationsHub.tsx`**:
+   - Replicated the 3×2 pastel tile grid under "Needs Your Attention" (Tap any item for details), mapped strictly to our 6 actual operational routes:
+     - ⚠️ **Low Stock** (Amber `#FFFBEB`): Shows actual `lowStockCount` $\to$ `/(app)/(tabs)/inventory`
+     - 💬 **Messages** (Indigo `#EEF2FF`): Shows actual `openMessageCount` $\to$ `/(app)/(tabs)/messages`
+     - 📊 **Analytics** (Mint `#ECFDF5`): Sales & insights $\to$ `/(app)/analytics`
+     - 📢 **Boosts** (Orange `#FFF7ED`): Visibility boosts $\to$ `/(app)/boosts`
+     - 🔄 **Change History** (Blue `#F0F9FF`): Audit ledger $\to$ `/(app)/activity`
+     - 🌡️ **Advisories** (Yellow `#FEFCE8`): Market alerts $\to$ `/(app)/advisories`
 
-5. **`DashboardListingsSummary.tsx`**:
-   - "My Listings" status breakdown with 4 colored status pills:
-     - **Active** (green)
-     - **Draft** (slate/grey)
-     - **Reserved** (indigo)
-     - **Sold Out** (coral red)
-   - Full-width mint pill button "View All Listings >" (`/(app)/(tabs)/inventory`).
+5. **`DashboardLowStockAlerts.tsx`**:
+   - White rounded card (`borderRadius: 16`, border `#E5E7EB`) rendering real `lowStockProducts` when items are near threshold.
 
-6. **`DashboardReservationsSummary.tsx`**:
-   - "Reservations" status breakdown with 4 colored status pills:
-     - **Active** (green)
-     - **Expiring** (salmon orange)
-     - **Completed** (slate)
-     - **Cancelled** (light red)
-   - Full-width mint pill button "View All Reservations >" (`/(app)/(tabs)/orders`).
+6. **`DashboardRecentActivity.tsx`**:
+   - White rounded card rendering real `recentActivity` items from `fetchStockAdjustments()`.
 
-7. **`DashboardAnalyticsSection.tsx` & `DashboardAnalyticsChart.tsx`**:
-   - "Analytics" card with "Full View" pill button navigating to `/(app)/analytics`.
-   - Interactive date range tabs: `Today` | `Last 7 Days` | `Last 30 Days`.
-   - 3 KPI metric tiles: Posted volume (`metrics.postedQuantity`), Sold volume (`metrics.completedQuantity`), and Sell-Through Rate (`metrics.sellThroughRate`).
-   - "Posted vs. Sold by Vegetable" comparison bars calculated from real seller inventory.
-   - Descriptive AI surplus advisory note box from `analytics.summary`.
+7. **`mobile/app/(app)/(tabs)/home.tsx`**:
+   - Coordinates only real data from `useAuth()`, `useInventory()`, `fetchStockAdjustments()`, `fetchSellerNotifications()`, and `fetchSellerMessages()`.
+   - Zero hallucinated fields, zero mock bar charts, zero synthetic weather/holiday placeholders.
 
-8. **`DashboardAdvisoriesRow.tsx`**:
-   - Side-by-side cards: Weather Advisory with orange "Review" button and Upcoming Market Holiday with blue "View" button (`/(app)/advisories`).
-
-9. **`home.tsx` Orchestration & `_layout.tsx` Header Visibility**:
-   - Integrated `useSafeAreaInsets()` to maintain status-bar breathing room.
-   - Connected all real data fetchers with `Promise.allSettled()` and pull-to-refresh (`RefreshControl`).
-   - Configured `headerShown: false` on the `home` tab in `_layout.tsx` to eliminate redundant navigation headers.
-
-## Why
-
-To achieve 100% visual fidelity with the approved Figma seller dashboard design while strictly preserving existing business logic, validation, and real database/API integration.
-
-## Affected paths
-
-- `mobile/src/features/dashboard/components/DashboardHeader.tsx`
-- `mobile/src/features/dashboard/components/DashboardHeaderBrand.tsx`
-- `mobile/src/features/dashboard/components/DashboardTwinActions.tsx`
-- `mobile/src/features/dashboard/components/DashboardMetrics.tsx`
-- `mobile/src/features/dashboard/components/DashboardAttentionGrid.tsx`
-- `mobile/src/features/dashboard/components/DashboardListingsSummary.tsx`
-- `mobile/src/features/dashboard/components/DashboardReservationsSummary.tsx`
-- `mobile/src/features/dashboard/components/DashboardAnalyticsSection.tsx`
-- `mobile/src/features/dashboard/components/DashboardAnalyticsChart.tsx`
-- `mobile/src/features/dashboard/components/DashboardAdvisoriesRow.tsx`
-- `mobile/app/(app)/(tabs)/home.tsx`
-- `mobile/app/(app)/(tabs)/_layout.tsx`
-- `Agrivive/04 Delivery/2026-10-25 Seller Dashboard UI Replication and Real Data Integration.md`
+8. **Bottom Dock Replication (`mobile/app/(app)/(tabs)/_layout.tsx` & `create.tsx`)**:
+   - Tab 1: **Home** (`Home` icon, filled green `#16A34A` when active).
+   - Tab 2: **Listings** (`LayoutGrid` icon, routes to `inventory.tsx`).
+   - Tab 3 (Center): **Elevated Floating Green Button** (`#16A34A`, 48×48px, circle with white `+` icon, green "Add" label underneath, intercepts press to route immediately to `/(app)/inventory/create`).
+   - Tab 4: **Messages** (`MessageCircle` icon with red `#EF4444` unread badge count, routes to `messages.tsx`).
+   - Tab 5: **Reservations** (`CalendarDays` icon, routes to `orders.tsx`).
+   - Profile tab: Hidden from tab bar (`href: null`), accessible via top header avatar circle.
+   - Redirect fallback: `mobile/app/(app)/(tabs)/create.tsx` ensures clean Expo Router route resolution.
 
 ## Verification performed
 
-1. **Mobile verification**:
-   - `bunx tsc --noEmit --project mobile/tsconfig.json` $\to$ **Exit code 0, 0 type errors**.
-2. **Backend verification**:
-   - `cd backend && bunx tsc --noEmit` $\to$ **Exit code 0, 0 type errors**.
-   - `cd backend && bun build src/index.ts --outdir dist --target bun` $\to$ **1704 modules bundled successfully**.
-3. **Line count audit**:
-   - Every file strictly obeys the $\le 200$ line rule:
-     - `DashboardHeader.tsx`: 107 lines
-     - `DashboardHeaderBrand.tsx`: 153 lines
+1. **Mobile TypeScript Verification:**
+   - Ran `bunx tsc --noEmit --project mobile/tsconfig.json` $\to$ **Exit code 0, 0 type errors**.
+2. **Backend Verification:**
+   - Ran `bunx tsc --noEmit` & `bun build src/index.ts --outdir dist --target bun` $\to$ **Exit code 0, 1704 modules bundled successfully**.
+3. **Line Count Audit:**
+   - All components strictly observe the $\le 200$ line limit:
+     - `DashboardHeader.tsx`: 120 lines
+     - `DashboardMetrics.tsx`: 141 lines
+     - `DashboardOperationsHub.tsx`: 161 lines
      - `DashboardTwinActions.tsx`: 148 lines
-     - `DashboardMetrics.tsx`: 144 lines
-     - `DashboardAttentionGrid.tsx`: 165 lines
-     - `DashboardListingsSummary.tsx`: 120 lines
-     - `DashboardReservationsSummary.tsx`: 120 lines
-     - `DashboardAnalyticsSection.tsx`: 196 lines
-     - `DashboardAnalyticsChart.tsx`: 147 lines
-     - `DashboardAdvisoriesRow.tsx`: 145 lines
-     - `home.tsx`: 177 lines
-     - `_layout.tsx`: 106 lines
+     - `DashboardLowStockAlerts.tsx`: 167 lines
+     - `DashboardRecentActivity.tsx`: 179 lines
+     - `home.tsx`: 146 lines
+     - `_layout.tsx`: 177 lines
+     - `create.tsx`: 7 lines

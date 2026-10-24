@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   imageBanner: {
     width: "100%",
     height: 220,
-    backgroundColor: "#E8E6DF",
+    backgroundColor: colors.surfaceMuted,
   },
   bannerImage: {
     width: "100%",
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   badgeMarketable: {
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
   },
   badgeTextMarketable: {
     fontFamily: fonts.body.medium,
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   badgeNotMarketable: {
-    backgroundColor: "#EFECE6",
+    backgroundColor: colors.surfaceMuted,
   },
   badgeTextNotMarketable: {
     fontFamily: fonts.body.medium,
@@ -670,9 +670,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
-    borderColor: "rgba(31, 77, 58, 0.2)",
+    borderColor: colors.border,
     height: touchTargets.min,
     borderRadius: radii.button,
   },
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     paddingVertical: 10,
     paddingHorizontal: spacing.lg,
     borderRadius: radii.button,

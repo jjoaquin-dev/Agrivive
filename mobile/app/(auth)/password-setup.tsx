@@ -61,13 +61,13 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
+    fontSize: 26,
     marginBottom: spacing.xs,
   },
   subtitle: {
     color: colors.textMuted,
     fontFamily: fonts.body.regular,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

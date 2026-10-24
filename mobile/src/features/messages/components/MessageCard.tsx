@@ -35,10 +35,10 @@ export function MessageCard({ message, onPress }: { message: SellerMessage; onPr
 
 const styles = StyleSheet.create({
   card: { minHeight: 92, flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.sm },
-  openCard: { borderColor: colors.primary, backgroundColor: "rgba(31, 77, 58, 0.04)" },
+  openCard: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
   pressed: { opacity: 0.75 },
   iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
-  openIcon: { backgroundColor: "rgba(31, 77, 58, 0.12)" },
+  openIcon: { backgroundColor: colors.primaryLight },
   body: { flex: 1, marginRight: spacing.sm },
   titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   title: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.text },

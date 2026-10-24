@@ -44,7 +44,7 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
   }
   if (existing[0].status !== "queued") throw new OrderError(409, "This channel is not queued for posting");
 
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db.update(seller_social_campaign_posts).set({
       status: "failed", lastError: "Listing is no longer eligible", completedAt: new Date(), updatedAt: new Date(),
@@ -54,6 +54,10 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
     ));
     await refreshCampaignStatus(campaignId);
     throw new OrderError(409, eligibility?.reason ?? "Listing is no longer eligible for Priority Boost");
+  }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId })
+      .where(eq(seller_social_campaigns.id, campaignId));
   }
   const channel = getSocialChannelAvailability().find((item) => item.platform === platform);
   if (!channel?.configured) throw new OrderError(503, `${channel?.label ?? "This channel"} is not configured`);

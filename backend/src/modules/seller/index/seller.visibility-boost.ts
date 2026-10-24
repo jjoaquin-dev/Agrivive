@@ -6,6 +6,7 @@ import { readSellerVisibilityBoost } from "../services/seller.visibility-boost.r
 import { listSellerVisibilityBoostHistory } from "../services/seller.visibility-boost.history.list";
 import { listSellerVisibilityBoostPrompts } from "../services/seller.visibility-boost.prompts.list";
 import { readSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.read";
+import { readAllSellerVisibilityBoostPrompts } from "../services/seller.visibility-boost.prompts.read-all";
 import { dismissSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.dismiss";
 import { acceptSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.accept";
 
@@ -42,6 +43,13 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
   .get("/boost-prompts", async ({ session, status }) => {
     try {
       return await listSellerVisibilityBoostPrompts(session.userId);
+    } catch (error) {
+      return failure(error, status);
+    }
+  }, { role: ["seller"] })
+  .post("/boost-prompts/read-all", async ({ session, status }) => {
+    try {
+      return await readAllSellerVisibilityBoostPrompts(session.userId);
     } catch (error) {
       return failure(error, status);
     }

@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { CheckCircle2, Clock3, RotateCcw, Sparkles, XCircle } from "lucide-react-native";
+import { CheckCircle2, RotateCcw, Sparkles } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
-import { acceptSellerBoostPrompt, fetchSellerProductBoost, requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
+import { acceptSellerBoostPrompt, fetchSellerProductBoost, markSellerBoostPromptRead, requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
 import { SocialCampaignReview } from "../../../src/features/boost/components/SocialCampaignReview";
+import { BoostStatusCard } from "../../../src/features/boost/components/BoostStatusCard";
 import {
   createSocialDraft, fetchSocialCampaign, fetchSocialChannels, publishSocialDraft, retrySocialDraft,
   type CampaignStatus, type SocialChannel, type SocialDraft, type SocialPlatform,
 } from "../../../src/features/boost/api/social-campaigns";
-import { boostReasonLabel, boostStatusLabel, type SellerProductBoostResponse } from "../../../src/features/boost/types";
+import type { SellerProductBoostResponse } from "../../../src/features/boost/types";
 import { colors, fonts, radii, spacing } from "../../../src/theme";
 
 export default function BoostVisibilityScreen() {
@@ -18,20 +19,13 @@ export default function BoostVisibilityScreen() {
   const { productId, entry, promptId } = useLocalSearchParams<{ productId: string; entry?: string; promptId?: string }>();
   const openedFromProductCreate = entry === "new-product";
   const [boostData, setBoostData] = useState<SellerProductBoostResponse | null>(null);
-  const [boostLoading, setBoostLoading] = useState(true);
-  const [boostError, setBoostError] = useState("");
-  const [channels, setChannels] = useState<SocialChannel[]>([]);
-  const [selected, setSelected] = useState<SocialPlatform[]>([]);
-  const [draft, setDraft] = useState<SocialDraft | null>(null);
-  const [campaign, setCampaign] = useState<CampaignStatus | null>(null);
+  const [boostLoading, setBoostLoading] = useState(true), [boostError, setBoostError] = useState("");
+  const [channels, setChannels] = useState<SocialChannel[]>([]), [selected, setSelected] = useState<SocialPlatform[]>([]);
+  const [draft, setDraft] = useState<SocialDraft | null>(null), [campaign, setCampaign] = useState<CampaignStatus | null>(null);
   const [posts, setPosts] = useState<Partial<Record<SocialPlatform, string>>>({});
-  const [channelsLoading, setChannelsLoading] = useState(true);
-  const [draftLoading, setDraftLoading] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  const requestInFlight = useRef(false);
-  const initializedSelection = useRef(false);
+  const [channelsLoading, setChannelsLoading] = useState(true), [draftLoading, setDraftLoading] = useState(false);
+  const [busy, setBusy] = useState(false), [error, setError] = useState(""), [attempt, setAttempt] = useState(0);
+  const requestInFlight = useRef(false), initializedSelection = useRef(false);
 
   const loadBoostStatus = useCallback(async () => {
     if (!productId) return;
@@ -43,6 +37,10 @@ export default function BoostVisibilityScreen() {
   }, [productId]);
 
   useFocusEffect(useCallback(() => { void loadBoostStatus(); }, [loadBoostStatus]));
+
+  useEffect(() => {
+    if (promptId) void markSellerBoostPromptRead(promptId);
+  }, [promptId]);
 
   const loadChannels = useCallback(async () => {
     setChannelsLoading(true);
@@ -187,18 +185,11 @@ export default function BoostVisibilityScreen() {
   </ScrollView></SafeAreaView>;
 }
 
-function BoostStatusCard({ boost }: { boost: NonNullable<SellerProductBoostResponse["boost"]> }) {
-  const failed = boost.status === "failed";
-  const tone = failed ? colors.error : boost.status === "sent" ? colors.success : colors.primary;
-  const Icon = failed ? XCircle : boost.status === "sent" ? CheckCircle2 : Clock3;
-  return <View style={[styles.statusCard, { borderColor: tone }]}><View style={styles.statusRow}><Icon size={20} color={tone} /><Text style={[styles.statusTitle, { color: tone }]}>{boostStatusLabel(boost.status)}</Text></View><Text style={styles.statusMeta}>{boostReasonLabel(boost.reason)} · {formatDate(boost.createdAt)}</Text>{boost.priceBefore && boost.priceAfter ? <Text style={styles.statusMeta}>Price: ₱{Number(boost.priceBefore).toFixed(2)} → ₱{Number(boost.priceAfter).toFixed(2)}</Text> : null}{boost.errorMessage ? <Text style={styles.statusError}>{boost.errorMessage}</Text> : null}</View>;
-}
-function platformLabel(platform: string) { return ({ facebook: "Facebook", instagram: "Instagram", x: "X", tiktok: "TikTok" } as Record<string, string>)[platform] || platform; }
-function statusLabel(status: string) { return ({ queued: "Waiting", publishing: "Posting", processing: "Posting", published: "Posted", partial: "Some channels need attention", failed: "Could not post" } as Record<string, string>)[status] || status; }
-function formatDate(value: string) { return new Date(value).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }); }
+const platformLabel = (p: string) => ({ facebook: "Facebook", instagram: "Instagram", x: "X", tiktok: "TikTok" } as Record<string, string>)[p] || p;
+const statusLabel = (s: string) => ({ queued: "Waiting", publishing: "Posting", processing: "Posting", published: "Posted", partial: "Some channels need attention", failed: "Could not post" } as Record<string, string>)[s] || s;
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.base, paddingBottom: spacing.xxxl }, center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }, headingRow: { flexDirection: "row", alignItems: "center" }, icon: { width: 46, height: 46, borderRadius: 23, backgroundColor: "rgba(31, 77, 58, 0.12)", alignItems: "center", justifyContent: "center", marginRight: spacing.md }, headingCopy: { flex: 1 }, title: { fontFamily: fonts.heading.bold, fontSize: 28, color: colors.text }, subtitle: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.primary, marginTop: 2 }, muted: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: spacing.xs }, statusLoader: { marginTop: spacing.md }, statusCard: { backgroundColor: colors.surface, borderWidth: 1, borderRadius: radii.card, padding: spacing.base, marginTop: spacing.base }, statusRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm }, statusTitle: { fontFamily: fonts.body.semiBold, fontSize: 16 }, statusMeta: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted, marginTop: spacing.sm }, statusError: { fontFamily: fonts.body.medium, fontSize: 13, lineHeight: 19, color: colors.error, marginTop: spacing.sm }, statusAction: { marginTop: spacing.md, minHeight: 48 }, error: { color: colors.error, fontFamily: fonts.body.medium, fontSize: 14, lineHeight: 20, marginTop: spacing.md }, emptyCard: { marginTop: spacing.base, padding: spacing.base, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border }, emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text }, action: { marginTop: spacing.md }, result: { marginTop: spacing.base, padding: spacing.base, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border }, resultTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text }, postResult: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: spacing.sm }, openLink: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" }, link: { color: colors.primary, fontFamily: fonts.body.semiBold, fontSize: 13 }, historyLink: { minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: spacing.md }, historyLinkText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary }, back: { marginTop: spacing.xs, minHeight: 44 }, backText: { color: colors.primary, fontSize: 14, fontWeight: "700" },
+  safe: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.base, paddingBottom: spacing.xxxl }, center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }, headingRow: { flexDirection: "row", alignItems: "center" }, icon: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginRight: spacing.md }, headingCopy: { flex: 1 }, title: { fontFamily: fonts.heading.bold, fontSize: 24, lineHeight: 32, color: colors.text }, subtitle: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.primary, marginTop: 2 }, muted: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: spacing.xs }, statusLoader: { marginTop: spacing.md }, statusMeta: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted, marginTop: spacing.sm }, statusAction: { marginTop: spacing.md, minHeight: 48 }, error: { color: colors.error, fontFamily: fonts.body.medium, fontSize: 14, lineHeight: 20, marginTop: spacing.md }, emptyCard: { marginTop: spacing.base, padding: spacing.base, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border }, emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text }, action: { marginTop: spacing.md }, result: { marginTop: spacing.base, padding: spacing.base, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border }, resultTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text }, postResult: { borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: spacing.sm }, openLink: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" }, link: { color: colors.primary, fontFamily: fonts.body.semiBold, fontSize: 13 }, historyLink: { minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: spacing.md }, historyLinkText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary }, back: { marginTop: spacing.xs, minHeight: 44 }, backText: { color: colors.primary, fontSize: 14, fontWeight: "700" },
   alreadyPostedNotice: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "rgba(63, 125, 88, 0.12)", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: "rgba(63, 125, 88, 0.3)" },
   alreadyPostedText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 16, color: colors.text },
 });

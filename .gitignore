@@ -16,6 +16,8 @@ build/
 .next/
 .expo/
 *.tsbuildinfo
+*.apk
+web/public/downloads/*.apk
 
 # Operating System & IDE
 .DS_Store

@@ -7,11 +7,6 @@
     "orientation": "portrait",
     "icon": "./assets/agrivive-icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/agrivive-splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F8F6F1"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.agrivive.seller",
@@ -21,8 +16,9 @@
     },
     "android": {
       "package": "com.agrivive.seller",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#F8F6F1",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/agrivive-adaptive-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -44,7 +40,7 @@
           "image": "./assets/agrivive-splash.png",
           "imageWidth": 240,
           "resizeMode": "contain",
-          "backgroundColor": "#F8F6F1"
+          "backgroundColor": "#FFFFFF"
         }
       ],
       "expo-build-properties",

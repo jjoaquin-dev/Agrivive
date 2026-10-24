@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   badge: {
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: radii.sm,

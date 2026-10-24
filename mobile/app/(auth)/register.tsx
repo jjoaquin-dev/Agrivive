@@ -337,15 +337,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
+    fontSize: 26,
     color: colors.text,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fonts.body.regular,
-    fontSize: 15,
+    fontSize: 14,
     color: colors.textMuted,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   errorBox: {
     backgroundColor: "rgba(184, 84, 80, 0.1)",
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 8,

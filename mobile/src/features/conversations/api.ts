@@ -35,6 +35,10 @@ export function markConversationRead(conversationId: string) {
   return apiFetch(`/conversations/${encodeURIComponent(conversationId)}/read`, { method: "POST" });
 }
 
+export function markAllConversationsRead() {
+  return apiFetch<{ updatedCount: number }>("/conversations/read-all", { method: "POST" });
+}
+
 export async function uploadConversationAttachment(imageUri: string): Promise<{ url: string; filename: string }> {
   const formData = new FormData();
   formData.append("file", new File(imageUri));

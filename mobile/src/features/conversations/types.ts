@@ -11,6 +11,7 @@ export type Conversation = {
   lastMessageAt: string;
   createdAt: string;
   productName: string | null;
+  productImageUrl?: string | null;
   sellerName: string;
   sellerShopName: string | null;
   sellerImage: string | null;
