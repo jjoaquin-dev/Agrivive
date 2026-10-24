@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     height: HERO_HEIGHT,
     borderRadius: 24,
     overflow: "hidden",
-    backgroundColor: "#EFECE4",
+    backgroundColor: colors.surfaceMuted,
     marginTop: spacing.xs,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },

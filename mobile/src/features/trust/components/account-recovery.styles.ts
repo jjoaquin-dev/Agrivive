@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
   header: { alignItems: "center", marginBottom: spacing.xl },
   iconCircle: {
     alignItems: "center",
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     borderRadius: 999,
     justifyContent: "center",
     marginBottom: spacing.base,
@@ -21,15 +21,16 @@ export const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
+    fontSize: 24,
+    lineHeight: 32,
     marginBottom: spacing.xs,
     textAlign: "center",
   },
   subtitle: {
     color: colors.textMuted,
     fontFamily: fonts.body.regular,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: "center",
   },
   form: { marginBottom: spacing.base },

@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     padding: spacing.base,
   },
   uploadBoxPressed: {
-    backgroundColor: "#F3F1EC",
+    backgroundColor: colors.surfaceMuted,
   },
   uploadBoxError: {
     borderColor: colors.error,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.xs,

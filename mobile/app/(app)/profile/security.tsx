@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   secretBox: {
-    backgroundColor: "rgba(31, 77, 58, 0.06)",
+    backgroundColor: colors.primarySurface,
     padding: spacing.sm,
     borderRadius: 8,
     alignItems: "center",

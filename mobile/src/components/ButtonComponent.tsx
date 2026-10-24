@@ -8,7 +8,7 @@ import {
   TextStyle,
   StyleProp,
 } from "react-native";
-import { colors, radii, spacing, touchTargets } from "../theme";
+import { colors, fonts, radii, spacing, touchTargets } from "../theme";
 
 export type ButtonVariant = "primary" | "secondary" | "destructive" | "ghost";
 
@@ -52,7 +52,7 @@ const pressedStyles: Record<ButtonVariant, ViewStyle> = {
     backgroundColor: "#9E423E",
   },
   ghost: {
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
   },
 };
 
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   textBase: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontFamily: fonts.body.semiBold,
+    fontSize: 15,
     textAlign: "center",
   },
   disabledText: {

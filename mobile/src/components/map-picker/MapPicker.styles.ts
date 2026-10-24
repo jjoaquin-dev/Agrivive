@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1.5,
     borderColor: colors.border,
-    backgroundColor: "#E8E6DF",
+    backgroundColor: colors.surfaceMuted,
   },
   mapContainerError: {
     borderColor: colors.error,

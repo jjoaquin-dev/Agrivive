@@ -98,7 +98,7 @@ export function SellerBoostPromptSection({ refreshSignal }: { refreshSignal: num
 const styles = StyleSheet.create({
   section: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.base, marginBottom: spacing.lg },
   headingRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.sm },
-  icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(31, 77, 58, 0.1)", alignItems: "center", justifyContent: "center", marginRight: spacing.sm },
+  icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginRight: spacing.sm },
   headingCopy: { flex: 1 },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   subtitle: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 2 },

@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   conversation_messages,
@@ -25,7 +25,6 @@ export async function createConversation(buyerId: string, input: CreateConversat
   return db.transaction(async (tx) => {
     await requireActiveUser(tx, buyerId, "buyer");
     let sellerId: string;
-    let contextKey: string;
 
     if (input.contextType === "product") {
       const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId })
@@ -46,7 +45,6 @@ export async function createConversation(buyerId: string, input: CreateConversat
         )).limit(1);
       if (!product) throw new ConversationError(404, "Marketplace product not found");
       sellerId = product.sellerId;
-      contextKey = `product:${product.id}:${buyerId}:${sellerId}`;
     } else if (input.contextType === "order") {
       const [order] = await tx.select({
         id: orders.id,
@@ -60,7 +58,6 @@ export async function createConversation(buyerId: string, input: CreateConversat
         throw new ConversationError(409, "Only active orders accept new messages");
       }
       sellerId = order.sellerId;
-      contextKey = `order:${order.id}:${buyerId}:${sellerId}`;
     } else {
       const [seller] = await tx.select({ id: user.id })
         .from(user)
@@ -76,12 +73,7 @@ export async function createConversation(buyerId: string, input: CreateConversat
         )).limit(1);
       if (!seller) throw new ConversationError(404, "Seller not found");
       sellerId = seller.id;
-      contextKey = `seller:${seller.id}:${buyerId}`;
     }
-
-    const [existing] = await tx.select().from(conversations)
-      .where(eq(conversations.contextKey, contextKey)).limit(1);
-    if (existing) throw new ConversationError(409, "Conversation already exists");
 
     if (input.contextType === "product") {
       await tx.insert(product_inquiries).values({
@@ -94,26 +86,56 @@ export async function createConversation(buyerId: string, input: CreateConversat
     }
 
     const now = new Date();
-    const [conversation] = await tx.insert(conversations).values({
-      contextType: input.contextType,
-      contextKey,
-      buyerId,
-      sellerId,
-      productId: input.productId,
-      orderId: input.orderId,
-      lastMessageAt: now,
-    }).returning();
+
+    // Check if a conversation between these two accounts already exists
+    const [existing] = await tx.select().from(conversations)
+      .where(and(
+        eq(conversations.buyerId, buyerId),
+        eq(conversations.sellerId, sellerId),
+      ))
+      .orderBy(desc(conversations.lastMessageAt))
+      .limit(1);
+
+    let activeConversation = existing;
+
+    if (existing) {
+      // Re-use the existing conversation thread, updating context to the latest product/order
+      const [updated] = await tx.update(conversations).set({
+        contextType: input.contextType,
+        productId: input.productId ?? existing.productId,
+        orderId: input.orderId ?? existing.orderId,
+        lastMessageAt: now,
+        status: "open",
+        updatedAt: now,
+      }).where(eq(conversations.id, existing.id)).returning();
+      activeConversation = updated;
+    } else {
+      // Create one unified conversation for this account pair
+      const [created] = await tx.insert(conversations).values({
+        contextType: input.contextType,
+        contextKey: `direct:${buyerId}:${sellerId}`,
+        buyerId,
+        sellerId,
+        productId: input.productId,
+        orderId: input.orderId,
+        lastMessageAt: now,
+      }).returning();
+      activeConversation = created;
+
+      await tx.insert(conversation_participants).values([
+        { conversationId: activeConversation.id, userId: buyerId },
+        { conversationId: activeConversation.id, userId: sellerId },
+      ]);
+    }
+
     const [message] = await tx.insert(conversation_messages).values({
-      conversationId: conversation.id,
+      conversationId: activeConversation.id,
       senderId: buyerId,
       clientMessageId: input.clientMessageId,
       body,
       createdAt: now,
     }).returning();
-    await tx.insert(conversation_participants).values([
-      { conversationId: conversation.id, userId: buyerId },
-      { conversationId: conversation.id, userId: sellerId },
-    ]);
-    return { conversation, message };
+
+    return { conversation: activeConversation, message };
   });
 }

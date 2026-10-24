@@ -1,9 +1,20 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { BarChart3, TrendingUp, History, AlertTriangle, ArrowRight } from "lucide-react-native";
-import { colors, fonts, radii, spacing, shadows } from "../../../theme";
+import {
+  TriangleAlert,
+  MessageCircle,
+  BarChart3,
+  TrendingUp,
+  History,
+  AlertTriangle,
+} from "lucide-react-native";
+import { fonts, radii, spacing } from "../../../theme";
 
 interface DashboardOperationsHubProps {
+  lowStockCount?: number;
+  openMessageCount?: number;
+  onPressInventory: () => void;
+  onPressMessages: () => void;
   onAnalytics: () => void;
   onBoosts: () => void;
   onActivity: () => void;
@@ -11,66 +22,88 @@ interface DashboardOperationsHubProps {
 }
 
 export const DashboardOperationsHub: React.FC<DashboardOperationsHubProps> = ({
+  lowStockCount = 0,
+  openMessageCount = 0,
+  onPressInventory,
+  onPressMessages,
   onAnalytics,
   onBoosts,
   onActivity,
   onAdvisories,
 }) => {
-  const hubItems = [
+  const items = [
+    {
+      id: "lowStock",
+      label: lowStockCount > 0 ? `${lowStockCount} Low Stock` : "Low Stock",
+      icon: <TriangleAlert size={22} color="#D97706" />,
+      bg: "#FFFBEB",
+      textColor: "#D97706",
+      onPress: onPressInventory,
+    },
+    {
+      id: "messages",
+      label: openMessageCount > 0 ? `${openMessageCount} Messages` : "Messages",
+      icon: <MessageCircle size={22} color="#4F46E5" />,
+      bg: "#EEF2FF",
+      textColor: "#4F46E5",
+      onPress: onPressMessages,
+    },
     {
       id: "analytics",
       label: "Analytics",
-      sub: "Sales & Insights",
-      icon: <BarChart3 size={20} color={colors.primary} />,
-      iconBg: "rgba(31, 77, 58, 0.08)",
+      icon: <BarChart3 size={22} color="#16A34A" />,
+      bg: "#ECFDF5",
+      textColor: "#16A34A",
       onPress: onAnalytics,
     },
     {
       id: "boosts",
       label: "Boosts",
-      sub: "Promote Produce",
-      icon: <TrendingUp size={20} color={colors.terracotta} />,
-      iconBg: "rgba(201, 120, 80, 0.12)",
+      icon: <TrendingUp size={22} color="#EA580C" />,
+      bg: "#FFF7ED",
+      textColor: "#EA580C",
       onPress: onBoosts,
     },
     {
       id: "activity",
       label: "Change History",
-      sub: "Stock Audit Ledger",
-      icon: <History size={20} color="#3F7D58" />,
-      iconBg: "rgba(63, 125, 88, 0.12)",
+      icon: <History size={22} color="#0284C7" />,
+      bg: "#F0F9FF",
+      textColor: "#0284C7",
       onPress: onActivity,
     },
     {
       id: "advisories",
       label: "Advisories",
-      sub: "Market Alerts",
-      icon: <AlertTriangle size={20} color={colors.warning} />,
-      iconBg: "rgba(199, 149, 62, 0.15)",
+      icon: <AlertTriangle size={22} color="#CA8A04" />,
+      bg: "#FEFCE8",
+      textColor: "#CA8A04",
       onPress: onAdvisories,
     },
   ];
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionHeading}>Operations Hub</Text>
+    <View style={styles.section}>
+      <Text style={styles.heading}>Needs Your Attention</Text>
+      <Text style={styles.subheading}>Tap any item for details</Text>
+
       <View style={styles.grid}>
-        {hubItems.map((item) => (
+        {items.map((item) => (
           <Pressable
             key={item.id}
             onPress={item.onPress}
             accessibilityRole="button"
             accessibilityLabel={item.label}
-            style={({ pressed }) => [styles.hubCard, pressed && styles.cardPressed]}
+            style={({ pressed }) => [
+              styles.tile,
+              { backgroundColor: item.bg },
+              pressed && styles.tilePressed,
+            ]}
           >
-            <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
-              {item.icon}
-            </View>
-            <View style={styles.textWrap}>
-              <Text style={styles.label}>{item.label}</Text>
-              <Text style={styles.sub}>{item.sub}</Text>
-            </View>
-            <ArrowRight size={14} color={colors.textMuted} />
+            <View style={styles.iconWrap}>{item.icon}</View>
+            <Text style={[styles.tileLabel, { color: item.textColor }]} numberOfLines={2}>
+              {item.label}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -79,57 +112,50 @@ export const DashboardOperationsHub: React.FC<DashboardOperationsHubProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  section: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: radii.card,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 14,
     marginBottom: spacing.base,
   },
-  sectionHeading: {
+  heading: {
     fontFamily: fonts.heading.bold,
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: spacing.sm,
+    fontSize: 16,
+    color: "#1E1E1E",
+  },
+  subheading: {
+    fontFamily: fonts.body.regular,
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 2,
+    marginBottom: 12,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  hubCard: {
-    width: "48.5%",
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
+    gap: 8,
     justifyContent: "space-between",
-    ...shadows.card,
   },
-  cardPressed: {
-    transform: [{ scale: 0.98 }],
-    backgroundColor: "rgba(31, 77, 58, 0.02)",
-  },
-  iconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+  tile: {
+    width: "31.5%",
+    aspectRatio: 1.15,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    padding: 8,
   },
-  textWrap: {
-    flex: 1,
-    marginLeft: spacing.sm,
-    marginRight: 4,
+  iconWrap: {
+    marginBottom: 6,
   },
-  label: {
+  tileLabel: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 13,
-    color: colors.text,
+    fontSize: 11,
+    textAlign: "center",
   },
-  sub: {
-    fontFamily: fonts.body.regular,
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 1,
+  tilePressed: {
+    transform: [{ scale: 0.96 }],
+    opacity: 0.85,
   },
 });

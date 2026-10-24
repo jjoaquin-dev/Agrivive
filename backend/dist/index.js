@@ -126163,13 +126163,11 @@ async function createConversation(buyerId, input) {
   return db2.transaction(async (tx) => {
     await requireActiveUser(tx, buyerId, "buyer");
     let sellerId;
-    let contextKey;
     if (input.contextType === "product") {
       const [product] = await tx.select({ id: sellers_product.id, sellerId: sellers_product.userId }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).where(and(eq(sellers_product.id, input.productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
       if (!product)
         throw new ConversationError(404, "Marketplace product not found");
       sellerId = product.sellerId;
-      contextKey = `product:${product.id}:${buyerId}:${sellerId}`;
     } else if (input.contextType === "order") {
       const [order] = await tx.select({
         id: orders.id,
@@ -126183,17 +126181,12 @@ async function createConversation(buyerId, input) {
         throw new ConversationError(409, "Only active orders accept new messages");
       }
       sellerId = order.sellerId;
-      contextKey = `order:${order.id}:${buyerId}:${sellerId}`;
     } else {
       const [seller] = await tx.select({ id: user.id }).from(user).innerJoin(sellers_profile, eq(sellers_profile.userId, user.id)).where(and(eq(user.id, input.sellerId), eq(user.isActive, true), eq(user.emailVerified, true), sql3`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`, eq(sellers_profile.isCurrent, true), isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
       if (!seller)
         throw new ConversationError(404, "Seller not found");
       sellerId = seller.id;
-      contextKey = `seller:${seller.id}:${buyerId}`;
     }
-    const [existing] = await tx.select().from(conversations).where(eq(conversations.contextKey, contextKey)).limit(1);
-    if (existing)
-      throw new ConversationError(409, "Conversation already exists");
     if (input.contextType === "product") {
       await tx.insert(product_inquiries).values({
         productId: input.productId,
@@ -126210,27 +126203,42 @@ async function createConversation(buyerId, input) {
       }).onConflictDoNothing();
     }
     const now = new Date;
-    const [conversation] = await tx.insert(conversations).values({
-      contextType: input.contextType,
-      contextKey,
-      buyerId,
-      sellerId,
-      productId: input.productId,
-      orderId: input.orderId,
-      lastMessageAt: now
-    }).returning();
+    const [existing] = await tx.select().from(conversations).where(and(eq(conversations.buyerId, buyerId), eq(conversations.sellerId, sellerId))).orderBy(desc(conversations.lastMessageAt)).limit(1);
+    let activeConversation = existing;
+    if (existing) {
+      const [updated] = await tx.update(conversations).set({
+        contextType: input.contextType,
+        productId: input.productId ?? existing.productId,
+        orderId: input.orderId ?? existing.orderId,
+        lastMessageAt: now,
+        status: "open",
+        updatedAt: now
+      }).where(eq(conversations.id, existing.id)).returning();
+      activeConversation = updated;
+    } else {
+      const [created] = await tx.insert(conversations).values({
+        contextType: input.contextType,
+        contextKey: `direct:${buyerId}:${sellerId}`,
+        buyerId,
+        sellerId,
+        productId: input.productId,
+        orderId: input.orderId,
+        lastMessageAt: now
+      }).returning();
+      activeConversation = created;
+      await tx.insert(conversation_participants).values([
+        { conversationId: activeConversation.id, userId: buyerId },
+        { conversationId: activeConversation.id, userId: sellerId }
+      ]);
+    }
     const [message] = await tx.insert(conversation_messages).values({
-      conversationId: conversation.id,
+      conversationId: activeConversation.id,
       senderId: buyerId,
       clientMessageId: input.clientMessageId,
       body,
       createdAt: now
     }).returning();
-    await tx.insert(conversation_participants).values([
-      { conversationId: conversation.id, userId: buyerId },
-      { conversationId: conversation.id, userId: sellerId }
-    ]);
-    return { conversation, message };
+    return { conversation: activeConversation, message };
   });
 }
 
@@ -126408,8 +126416,27 @@ async function listConversations(userId, limit = 50) {
     status: conversations.status,
     lastMessageAt: conversations.lastMessageAt,
     createdAt: conversations.createdAt,
-    productName: sellers_product.productName,
-    productImageUrl: sellers_product.imagUrl,
+    productName: sql3`coalesce(
+      ${sellers_product.productName},
+      (
+        select oi.product_name
+        from ordered_items as oi
+        where oi.orders_id = ${conversations.orderId}
+        order by oi.created_at asc
+        limit 1
+      )
+    )`,
+    productImageUrl: sql3`coalesce(
+      ${sellers_product.imagUrl},
+      (
+        select p_oi.image_url
+        from ordered_items as oi
+        join sellers_product as p_oi on p_oi.id = oi.product_id
+        where oi.orders_id = ${conversations.orderId}
+        order by oi.created_at asc
+        limit 1
+      )
+    )`,
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,

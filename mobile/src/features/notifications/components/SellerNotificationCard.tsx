@@ -49,10 +49,10 @@ export function SellerNotificationCard({ item, onPress }: { item: SellerNotifica
 
 const styles = StyleSheet.create({
   card: { minHeight: 92, flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.sm },
-  unread: { borderColor: colors.primary, backgroundColor: "rgba(31, 77, 58, 0.04)" },
+  unread: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
   pressed: { opacity: 0.75 },
   icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
-  iconUnread: { backgroundColor: "rgba(31, 77, 58, 0.12)" },
+  iconUnread: { backgroundColor: colors.primaryLight },
   content: { flex: 1, marginRight: spacing.sm },
   titleRow: { flexDirection: "row", alignItems: "center" },
   title: { flex: 1, fontFamily: fonts.body.semiBold, fontSize: 16, lineHeight: 22, color: colors.text },

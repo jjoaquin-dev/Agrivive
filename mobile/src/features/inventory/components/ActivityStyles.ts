@@ -7,7 +7,7 @@ export const activityStyles = StyleSheet.create({
   header: { marginBottom: spacing.base },
   noticeBanner: {
     flexDirection: "row",
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     borderRadius: radii.card,
     padding: spacing.md,
     marginBottom: spacing.base,
@@ -41,7 +41,7 @@ export const activityStyles = StyleSheet.create({
   sectionCard: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.base },
   centerContainer: { paddingVertical: spacing.xxxl, alignItems: "center", justifyContent: "center" },
   loadingText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: spacing.sm },
-  emptyIconCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: "rgba(31, 77, 58, 0.08)", justifyContent: "center", alignItems: "center", marginBottom: spacing.md },
+  emptyIconCircle: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primaryLight, justifyContent: "center", alignItems: "center", marginBottom: spacing.md },
   emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text, marginBottom: 4 },
   emptySub: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", paddingHorizontal: spacing.lg },
 });
