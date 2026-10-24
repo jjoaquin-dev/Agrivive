@@ -6,12 +6,14 @@ import {
   StyleSheet,
   Text,
   View,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { ArrowLeft, KeyRound, Mail, Send } from "lucide-react-native";
+import { ArrowLeft, Mail } from "lucide-react-native";
 import { authClient } from "../../src/api/client";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { InputComponent } from "../../src/components/InputComponent";
+import { OtpInputComponent } from "../../src/components/OtpInputComponent";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, spacing } from "../../src/theme";
 
@@ -115,6 +117,14 @@ export default function EmailOtpLoginScreen() {
     }
   };
 
+  const formatCountdown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const isCodeFilled = otp.trim().length === 6;
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
@@ -123,116 +133,248 @@ export default function EmailOtpLoginScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
+        <View style={styles.topNav}>
+          <Pressable
+            onPress={() => {
+              if (step === "code") {
+                setStep("email");
+                setOtp("");
+                setError("");
+              } else {
+                router.replace("/(auth)/login");
+              }
+            }}
+            style={styles.backButton}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <ArrowLeft size={22} color="#1E1E1E" />
+          </Pressable>
+        </View>
+
         <View style={styles.header}>
-          <Text style={styles.title}>Sign in with email code</Text>
+          <Text style={styles.title}>
+            {step === "email" ? "Sign In With Code" : "Verification Code"}
+          </Text>
           <Text style={styles.subtitle}>
             {step === "email"
-              ? "We will send a one-time code to your Agrivive email."
-              : `Enter the code sent to ${email}.`}
+              ? "We will send a 6-digit one-time code to your Agrivive email address."
+              : `Enter The 6-Digit Code We Sent To\n${email}`}
           </Text>
         </View>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorBoxText}>{error}</Text>
+          </View>
+        ) : null}
 
         <View style={styles.form}>
           {step === "email" ? (
             <>
               <InputComponent
-                label="Email Address"
+                label="Email"
                 placeholder="seller@example.com"
+                placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 value={email}
-                leftIcon={<Mail size={18} color={colors.textMuted} />}
+                leftIcon={<Mail size={20} color="#4B5563" strokeWidth={1.5} />}
+                inputWrapperStyle={styles.inputRounded}
+                labelStyle={styles.inputLabel}
                 onChangeText={(value) => {
                   setEmail(value);
                   setError("");
                 }}
               />
               <ButtonComponent
-                title="Send email code"
-                icon={<Send size={18} color={colors.white} />}
+                title="Send Code"
                 onPress={() => void sendCode()}
                 loading={loading}
                 style={styles.primaryButton}
+                textStyle={styles.primaryButtonText}
               />
             </>
           ) : (
             <>
-              <InputComponent
-                label="6-Digit Email Code"
-                placeholder="123456"
-                keyboardType="number-pad"
-                maxLength={6}
+              <OtpInputComponent
+                length={6}
                 value={otp}
-                leftIcon={<KeyRound size={18} color={colors.textMuted} />}
-                onChangeText={(value) => {
+                onChange={(value) => {
                   setOtp(value);
                   setError("");
                 }}
+                disabled={loading}
               />
+
+              <View style={styles.resendRow}>
+                {resendCountdown > 0 ? (
+                  <Text style={styles.resendText}>
+                    Resend Code in {formatCountdown(resendCountdown)}
+                  </Text>
+                ) : (
+                  <Pressable
+                    onPress={() => void sendCode()}
+                    disabled={loading}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Resend code"
+                  >
+                    <Text style={styles.resendLinkText}>Resend Code</Text>
+                  </Pressable>
+                )}
+              </View>
+
               <ButtonComponent
-                title="Sign in with code"
+                title="Verify Code"
                 onPress={() => void verifyCode()}
                 loading={loading}
-                style={styles.primaryButton}
-              />
-              <ButtonComponent
-                title={resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend code"}
-                variant="ghost"
-                onPress={() => void sendCode()}
-                disabled={resendCountdown > 0 || loading}
-                style={styles.secondaryButton}
-                textStyle={styles.secondaryText}
+                disabled={!isCodeFilled && !loading}
+                style={[styles.primaryButton, !isCodeFilled && styles.primaryButtonDisabled]}
+                textStyle={[styles.primaryButtonText, !isCodeFilled && styles.primaryButtonTextDisabled]}
               />
             </>
           )}
         </View>
 
-        <ButtonComponent
-          title="Use password instead"
-          variant="ghost"
+        <Pressable
           onPress={() => router.replace("/(auth)/login")}
-          icon={<ArrowLeft size={16} color={colors.primary} />}
-          style={styles.backButton}
-          textStyle={styles.secondaryText}
-        />
+          style={styles.bottomLink}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Sign in with password instead"
+        >
+          <Text style={styles.bottomLinkText}>Sign in with password instead</Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardContainer: { flex: 1, backgroundColor: colors.background },
+  keyboardContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.xxl,
+    paddingHorizontal: 24,
+    paddingTop: 48,
+    paddingBottom: spacing.xxl,
   },
-  header: { marginBottom: spacing.xl },
+  topNav: {
+    marginBottom: 48,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
   title: {
-    color: colors.text,
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
-    marginBottom: spacing.xs,
+    fontSize: 24,
+    color: "#1E1E1E",
+    marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
-    color: colors.textMuted,
     fontFamily: fonts.body.regular,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
+    textAlign: "center",
+    maxWidth: 290,
   },
-  error: {
+  errorBox: {
+    backgroundColor: "rgba(184, 84, 80, 0.08)",
+    borderWidth: 1,
+    borderColor: colors.error,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.base,
+  },
+  errorBoxText: {
     color: colors.error,
     fontSize: 13,
-    marginBottom: spacing.md,
+    fontWeight: "500",
+    textAlign: "center",
   },
-  form: { marginBottom: spacing.md },
-  primaryButton: { marginTop: spacing.sm, minHeight: 48 },
-  secondaryButton: { minHeight: 44, marginTop: spacing.sm },
-  secondaryText: { color: colors.primary, fontSize: 14, fontWeight: "700" },
-  backButton: { minHeight: 44 },
+  form: {
+    width: "100%",
+  },
+  inputLabel: {
+    color: "#4B5563",
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  inputRounded: {
+    borderRadius: 12,
+    borderColor: "#E5E7EB",
+    borderWidth: 1,
+    minHeight: 50,
+    backgroundColor: "#FFFFFF",
+  },
+  primaryButton: {
+    backgroundColor: "#0F920F",
+    borderRadius: 999,
+    minHeight: 50,
+    marginTop: 20,
+    shadowColor: "#0F920F",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    borderWidth: 1,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  primaryButtonTextDisabled: {
+    color: "#9CA3AF",
+  },
+  resendRow: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  resendText: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontFamily: fonts.body.regular,
+  },
+  resendLinkText: {
+    fontSize: 13,
+    color: "#0F920F",
+    fontFamily: fonts.body.semiBold,
+    fontWeight: "600",
+  },
+  bottomLink: {
+    alignItems: "center",
+    marginTop: 28,
+    paddingVertical: 8,
+  },
+  bottomLinkText: {
+    fontSize: 14,
+    color: "#0F920F",
+    fontWeight: "600",
+  },
 });

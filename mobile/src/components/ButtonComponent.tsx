@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  StyleProp,
 } from "react-native";
 import { colors, radii, spacing, touchTargets } from "../theme";
 
@@ -17,8 +18,8 @@ export interface ButtonComponentProps {
   variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   icon?: React.ReactNode;
 }
 

@@ -1,83 +1,60 @@
 import React from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
-import { Bell, BellDot, MessageCircle, MessageCircleMore, Store } from "lucide-react-native";
-import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { StyleSheet, View, Text } from "react-native";
+import { Check } from "lucide-react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { DashboardHeaderBrand } from "./DashboardHeaderBrand";
 
 interface DashboardHeaderProps {
   sellerName: string;
   shopName?: string | null;
+  detailAddress?: string | null;
+  isVerified?: boolean;
   unreadCount: number;
-  openMessageCount: number;
-  onPressMessages: () => void;
   onPressNotifications: () => void;
+  onPressProfile: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   sellerName,
   shopName,
+  detailAddress,
+  isVerified = true,
   unreadCount,
-  openMessageCount,
-  onPressMessages,
   onPressNotifications,
+  onPressProfile,
 }) => {
-  const hasMessages = openMessageCount > 0;
-  const hasNotifs = unreadCount > 0;
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning,";
+    if (hour < 18) return "Good afternoon,";
+    return "Good evening,";
+  };
 
   return (
     <View style={styles.header}>
-      <View style={styles.topRow}>
-        <View style={styles.textColumn}>
-          <Text style={styles.greeting}>Maayong adlaw,</Text>
+      <DashboardHeaderBrand
+        sellerName={sellerName}
+        shopName={shopName}
+        detailAddress={detailAddress}
+        unreadCount={unreadCount}
+        onPressNotifications={onPressNotifications}
+        onPressProfile={onPressProfile}
+      />
+
+      <View style={styles.greetingSection}>
+        <Text style={styles.greetingText}>{getGreeting()}</Text>
+        <View style={styles.nameRow}>
           <Text style={styles.sellerName} numberOfLines={1}>{sellerName}</Text>
-          {shopName ? (
-            <View style={styles.shopBadge}>
-              <Store size={14} color={colors.primary} style={styles.shopIcon} />
-              <Text style={styles.shopText} numberOfLines={1}>{shopName}</Text>
+          {isVerified ? (
+            <View style={styles.verifiedBadge}>
+              <Check size={11} color="#FFFFFF" strokeWidth={3} />
+              <Text style={styles.verifiedText}>Verified</Text>
             </View>
           ) : null}
         </View>
-
-        <View style={styles.actions}>
-          <Pressable
-            onPress={onPressMessages}
-            accessibilityRole="button"
-            accessibilityLabel={hasMessages ? `${openMessageCount} unread buyer messages` : "Buyer messages"}
-            style={[styles.iconButton, hasMessages && styles.iconButtonActive]}
-          >
-            {hasMessages ? (
-              <MessageCircleMore size={22} color={colors.terracotta} />
-            ) : (
-              <MessageCircle size={22} color={colors.primary} />
-            )}
-            {hasMessages ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {openMessageCount > 9 ? "9+" : openMessageCount}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-
-          <Pressable
-            onPress={onPressNotifications}
-            accessibilityRole="button"
-            accessibilityLabel={hasNotifs ? `${unreadCount} unread notifications` : "Notifications"}
-            style={[styles.iconButton, hasNotifs && styles.iconButtonActive]}
-          >
-            {hasNotifs ? (
-              <BellDot size={22} color={colors.terracotta} />
-            ) : (
-              <Bell size={22} color={colors.primary} />
-            )}
-            {hasNotifs ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-        </View>
+        <Text style={styles.roleSubtitle}>
+          Supplier-Vendor · Manage your surplus products today.
+        </Text>
       </View>
     </View>
   );
@@ -87,80 +64,44 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.base,
   },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+  greetingSection: {
+    marginTop: spacing.xs,
   },
-  textColumn: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  greeting: {
+  greetingText: {
     fontFamily: fonts.body.regular,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textMuted,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 2,
   },
   sellerName: {
     fontFamily: fonts.heading.bold,
-    fontSize: 24,
+    fontSize: 22,
     color: colors.text,
-    marginTop: 2,
+    letterSpacing: -0.4,
   },
-  shopBadge: {
+  verifiedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    gap: 3,
+    backgroundColor: "#16A34A",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: radii.full,
-    marginTop: spacing.xs,
   },
-  shopIcon: {
-    marginRight: 4,
-  },
-  shopText: {
-    fontFamily: fonts.body.medium,
-    fontSize: 12,
-    color: colors.primary,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  iconButton: {
-    width: touchTargets.min,
-    height: touchTargets.min,
-    borderRadius: radii.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  iconButtonActive: {
-    borderColor: colors.terracotta,
-    backgroundColor: "rgba(201, 120, 80, 0.08)",
-  },
-  badge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    minWidth: 20,
-    height: 20,
-    paddingHorizontal: 4,
-    borderRadius: 10,
-    backgroundColor: colors.error,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.background,
-  },
-  badgeText: {
+  verifiedText: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 10,
-    color: colors.white,
+    fontSize: 11,
+    color: "#FFFFFF",
+  },
+  roleSubtitle: {
+    fontFamily: fonts.body.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 4,
   },
 });

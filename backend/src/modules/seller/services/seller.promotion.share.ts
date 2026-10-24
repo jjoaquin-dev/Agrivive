@@ -28,7 +28,7 @@ export async function getSellerPromotionShare(sellerId: string, promotionId: str
     return row;
   });
 
-  const listing = await getPriorityPromotionEligibility(job.listingCycleId);
+  const listing = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
   if (!listing?.eligible) {
     throw new OrderError(409, "This listing is no longer eligible to share");
   }

@@ -25,12 +25,20 @@ type PromotionEligibilityResult = {
   evaluatedAt: Date;
 };
 
-export async function getPriorityPromotionEligibility(listingCycleId: string) {
+export type PromotionEligibilityOptions = {
+  stage?: "initial" | "followup";
+};
+
+export async function getPriorityPromotionEligibility(
+  listingCycleId: string,
+  options?: PromotionEligibilityOptions,
+) {
   const evaluatedAt = new Date();
   const [target] = await db.select({
     cycleId: listing_cycles.id,
     productId: sellers_product.id,
     sellerId: sellers_product.userId,
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
   }).from(listing_cycles)
     .innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId))
     .where(eq(listing_cycles.id, listingCycleId)).limit(1);
@@ -51,6 +59,9 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
     return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
   }
 
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isPriorityScore = result.score >= 0.60;
+
   const shared = {
     ...target,
     visibilityScore: Number(result.score.toFixed(4)),
@@ -69,8 +80,11 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
     sellerName: candidate.sellerName,
     listingUrl: marketplaceUrl(candidate.productId),
     criteria: result.criteria,
+    priceReductionPeriodsApplied: target.priceReductionPeriodsApplied ?? 0,
   } as const;
-  if (result.score < 0.60) return { eligible: false as const, reason: "Visibility is below Priority Boost", ...shared };
+  if (!isPriorityScore && !isPriceReduced) {
+    return { eligible: false as const, reason: "Visibility is below Priority Boost", ...shared };
+  }
 
   return {
     eligible: true as const,
@@ -80,7 +94,7 @@ export async function getPriorityPromotionEligibility(listingCycleId: string) {
 }
 
 function ineligible(
-  target: { cycleId: string; sellerId: string; productId: string },
+  target: { cycleId: string; sellerId: string; productId: string; priceReductionPeriodsApplied?: number },
   reason: string,
   evaluatedAt: Date,
 ): PromotionEligibilityResult {

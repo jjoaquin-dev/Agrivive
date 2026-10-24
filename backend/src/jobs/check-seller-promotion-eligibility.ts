@@ -61,7 +61,7 @@ export async function checkSellerPromotionEligibility() {
       )).returning({ id: seller_promotion_jobs.id });
       if (!claimed.length) continue;
 
-      let eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+      let eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
       if (!eligibility) {
         await db.update(seller_promotion_jobs).set({
           status: "skipped",
@@ -79,7 +79,7 @@ export async function checkSellerPromotionEligibility() {
         await db.transaction(async (tx) => {
           await applySellerPromotionPriceReduction(tx, productId, now);
         });
-        eligibility = await getPriorityPromotionEligibility(job.listingCycleId);
+        eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
         if (!eligibility) {
           await db.update(seller_promotion_jobs).set({
             status: "skipped",

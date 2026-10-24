@@ -6,13 +6,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { authClient } from "../../src/api/client";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, spacing } from "../../src/theme";
-import { KeyRound, CheckCircle2, RotateCcw, ArrowLeft } from "lucide-react-native";
-import { InputComponent } from "../../src/components/InputComponent";
+import { ArrowLeft } from "lucide-react-native";
+import { OtpInputComponent } from "../../src/components/OtpInputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 
 export default function VerifyEmailScreen() {
@@ -64,7 +65,6 @@ export default function VerifyEmailScreen() {
     }
   };
 
-  // Auto-send verification code if not already sent by signup or login
   useEffect(() => {
     if (params.sent === "true") return;
 
@@ -74,7 +74,6 @@ export default function VerifyEmailScreen() {
     }
   }, [params.sent, targetEmail]);
 
-  // Countdown timer for OTP resend cooldown
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
@@ -112,12 +111,11 @@ export default function VerifyEmailScreen() {
 
       if (response.error) {
         setOtpError(
-          response.error.message || "Invalid or expired verification code. Please request a new one.",
+          response.error.message || "Incorrect code. Please try again.",
         );
         return;
       }
 
-      // Sync updated account state
       const setup = await refreshSetup();
 
       if (!setup) {
@@ -158,6 +156,14 @@ export default function VerifyEmailScreen() {
     await sendOtp();
   };
 
+  const formatCountdown = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const isFilled = otp.trim().length === 6;
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
@@ -166,13 +172,25 @@ export default function VerifyEmailScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
+        <View style={styles.topNav}>
+          <Pressable
+            onPress={() => router.replace("/(auth)/login")}
+            style={styles.backButton}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go back to login"
+          >
+            <ArrowLeft size={22} color="#1E1E1E" />
+          </Pressable>
+        </View>
+
         <View style={styles.header}>
-          <Text style={styles.title}>Verify your email</Text>
+          <Text style={styles.title}>Verification Code</Text>
           <Text style={styles.subtitle}>
-            We sent a 6-digit confirmation code to:
+            {"Enter The 6-Digit Code We Sent To\n" + (targetEmail || "your email")}
           </Text>
-          <Text style={styles.emailBadge}>{targetEmail || "your email"}</Text>
         </View>
 
         {generalError ? (
@@ -188,50 +206,45 @@ export default function VerifyEmailScreen() {
         ) : null}
 
         <View style={styles.form}>
-          <InputComponent
-            label="6-Digit Verification Code"
-            placeholder="123456"
-            keyboardType="number-pad"
-            maxLength={6}
-            leftIcon={<KeyRound size={18} color={colors.textMuted} />}
+          <OtpInputComponent
+            length={6}
             value={otp}
-            error={otpError}
-            onChangeText={(text) => {
-              setOtp(text);
+            onChange={(val) => {
+              setOtp(val);
               if (otpError) setOtpError(null);
               if (generalError) setGeneralError(null);
             }}
-          />
-
-          <ButtonComponent
-            title="Verify & Continue"
-            icon={<CheckCircle2 size={18} color={colors.white} />}
-            onPress={handleVerify}
-            loading={loading}
-            style={styles.submitButton}
+            error={otpError}
+            disabled={loading}
           />
 
           <View style={styles.resendRow}>
-            <Text style={styles.resendPrompt}>Didn't receive the code? </Text>
-            <ButtonComponent
-              title={countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
-              variant="ghost"
-              onPress={handleResend}
-              disabled={countdown > 0 || resending}
-              loading={resending}
-              style={styles.resendButton}
-              textStyle={styles.resendButtonText}
-            />
+            {countdown > 0 ? (
+              <Text style={styles.resendText}>
+                Resend Code in {formatCountdown(countdown)}
+              </Text>
+            ) : (
+              <Pressable
+                onPress={handleResend}
+                disabled={resending}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Resend code"
+              >
+                <Text style={styles.resendLinkText}>
+                  {resending ? "Sending..." : "Resend Code"}
+                </Text>
+              </Pressable>
+            )}
           </View>
-        </View>
 
-        <View style={styles.footer}>
           <ButtonComponent
-            title="Back to Sign In"
-            icon={<ArrowLeft size={16} color={colors.primary} />}
-            variant="ghost"
-            onPress={() => router.replace("/(auth)/login")}
-            textStyle={styles.backLinkText}
+            title="Verify Code"
+            onPress={handleVerify}
+            loading={loading}
+            disabled={!isFilled && !loading}
+            style={[styles.submitButton, !isFilled && styles.submitButtonDisabled]}
+            textStyle={[styles.submitButtonText, !isFilled && styles.submitButtonTextDisabled]}
           />
         </View>
       </ScrollView>
@@ -242,48 +255,47 @@ export default function VerifyEmailScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
+    paddingHorizontal: 24,
+    paddingTop: 48,
     paddingBottom: spacing.xxl,
+  },
+  topNav: {
+    marginBottom: 48,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
+    alignItems: "flex-start",
   },
   header: {
-    marginBottom: spacing.xl,
     alignItems: "center",
+    marginBottom: 32,
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
-    color: colors.text,
-    marginBottom: spacing.xs,
+    fontSize: 24,
+    color: "#1E1E1E",
+    marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontFamily: fonts.body.regular,
-    fontSize: 15,
-    color: colors.textMuted,
+    fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
     textAlign: "center",
-    marginBottom: spacing.sm,
-  },
-  emailBadge: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 15,
-    color: colors.primary,
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 8,
-    textAlign: "center",
+    maxWidth: 280,
   },
   errorBox: {
-    backgroundColor: "rgba(184, 84, 80, 0.1)",
+    backgroundColor: "rgba(184, 84, 80, 0.08)",
     borderWidth: 1,
     borderColor: colors.error,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.base,
   },
@@ -291,12 +303,13 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 13,
     fontWeight: "500",
+    textAlign: "center",
   },
   successBox: {
-    backgroundColor: "rgba(63, 125, 88, 0.1)",
+    backgroundColor: "rgba(63, 125, 88, 0.08)",
     borderWidth: 1,
     borderColor: colors.success,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.base,
   },
@@ -304,39 +317,51 @@ const styles = StyleSheet.create({
     color: colors.success,
     fontSize: 13,
     fontWeight: "500",
+    textAlign: "center",
   },
   form: {
-    marginBottom: spacing.xl,
-  },
-  submitButton: {
-    marginTop: spacing.sm,
+    width: "100%",
   },
   resendRow: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: spacing.lg,
+    marginTop: 8,
+    marginBottom: 28,
   },
-  resendPrompt: {
-    fontSize: 14,
-    color: colors.textMuted,
+  resendText: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontFamily: fonts.body.regular,
   },
-  resendButton: {
-    minHeight: 36,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 0,
+  resendLinkText: {
+    fontSize: 13,
+    color: "#0F920F",
+    fontFamily: fonts.body.semiBold,
+    fontWeight: "600",
   },
-  resendButtonText: {
-    fontSize: 14,
+  submitButton: {
+    backgroundColor: "#0F920F",
+    borderRadius: 999,
+    minHeight: 50,
+    shadowColor: "#0F920F",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    borderWidth: 1,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitButtonText: {
+    fontSize: 16,
     fontWeight: "700",
-    color: colors.primary,
+    color: "#FFFFFF",
   },
-  footer: {
-    alignItems: "center",
-    marginTop: spacing.base,
-  },
-  backLinkText: {
-    color: colors.textMuted,
-    fontSize: 14,
+  submitButtonTextDisabled: {
+    color: "#9CA3AF",
   },
 });

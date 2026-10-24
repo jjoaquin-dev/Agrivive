@@ -10,6 +10,7 @@ import { useRouter } from "expo-router";
 import { KeyRound, Mail, ShieldCheck } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { InputComponent } from "../../src/components/InputComponent";
+import { OtpInputComponent } from "../../src/components/OtpInputComponent";
 import { requestTrustRecovery, verifyTrustRecovery } from "../../src/features/trust/api/recovery";
 import { styles } from "../../src/features/trust/components/account-recovery.styles";
 import { colors } from "../../src/theme";
@@ -107,18 +108,15 @@ export default function AccountRecoveryScreen() {
           />
 
           {step === "otp" ? (
-            <InputComponent
-              label="Recovery Code"
-              placeholder="123456"
-              keyboardType="number-pad"
-              maxLength={6}
+            <OtpInputComponent
+              length={6}
               value={otp}
-              leftIcon={<KeyRound size={18} color={colors.textMuted} />}
-              onChangeText={(text) => {
+              onChange={(text) => {
                 setOtp(text);
                 setError(null);
               }}
-              hint="The code expires and can only be used once."
+              error={error}
+              disabled={loading}
             />
           ) : null}
 

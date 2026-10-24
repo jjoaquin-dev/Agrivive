@@ -53,7 +53,7 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
   if (!eligibility || eligibility.sellerId !== sellerId) {
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
   }
-  if (!("productName" in eligibility) || (!eligibility.eligible && eligibility.reason !== "Visibility is below Priority Boost")) {
+  if (!("productName" in eligibility) || !eligibility.eligible) {
     throw new OrderError(409, eligibility.reason ?? "This listing is not ready for Boost Visibility");
   }
 

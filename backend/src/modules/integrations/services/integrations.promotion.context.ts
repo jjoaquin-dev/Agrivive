@@ -17,7 +17,7 @@ export async function getIntegrationPromotionContext(jobId: string) {
     throw new OrderError(409, "Promotion job is not awaiting a draft");
   }
 
-  const context = await getPriorityPromotionEligibility(job.listingCycleId);
+  const context = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
   if (!context?.eligible) {
     await db.update(seller_promotion_jobs).set({
       status: "skipped",

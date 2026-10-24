@@ -56,6 +56,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
+          headerShown: false,
           title: "Home",
           tabBarIcon: ({ color, size }) => <Home color={color} size={size || 22} />,
         }}

@@ -1,0 +1,65 @@
+services:
+  api:
+    network_mode: host
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: unless-stopped
+    command: ["bun", "dist/index.js"]
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bun -e "fetch('http://127.0.0.1:3000/health/ready').then((response) =>
+          process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    network_mode: host
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    restart: unless-stopped
+    command: ["bun", "dist/worker.js"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  web:
+    network_mode: host
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    env_file:
+      - .env
+    restart: unless-stopped
+    command: ["bun", "run", "start"]
+
+  proxy:
+    network_mode: host
+    image: caddy:2-alpine
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+    env_file:
+      - .env
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
