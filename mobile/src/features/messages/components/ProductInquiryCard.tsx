@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     padding: spacing.sm,
     borderRadius: radii.input,
-    backgroundColor: "rgba(31, 77, 58, 0.05)",
+    backgroundColor: colors.primarySurface,
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
   },
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     height: touchTargets.min,
-    backgroundColor: "rgba(31, 77, 58, 0.08)",
+    backgroundColor: colors.primaryLight,
     borderRadius: radii.button,
   },
   openReplyButtonText: {
