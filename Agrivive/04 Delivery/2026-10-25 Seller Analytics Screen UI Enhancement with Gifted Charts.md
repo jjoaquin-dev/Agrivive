@@ -65,15 +65,18 @@ Replicated the visual appearance, typography, layout, 2×4 KPI metrics grid, seg
 ## Verification performed
 
 1. **Commit Information:**
-   - Commit Hash: `aa91ed0`
-   - Commit Message: `Enhance seller analytics screen UI with gifted charts and real data integration`
+   - Commit Hash: `aa91ed0`, `45f1854`
+   - Commit Message: `Enhance seller analytics screen UI with gifted charts and real data integration` & `fix(mobile): add expo-linear-gradient for gifted-charts gradient support`
 2. **Package Installation:**
    - Added `react-native-gifted-charts` (`@1.4.81`) cleanly into `mobile/package.json`.
-3. **Mobile TypeScript Verification:**
+   - Added `expo-linear-gradient` (`~57.0.2`) to satisfy gifted-charts gradient requirement in Expo.
+3. **Expo Bundle Verification:**
+   - Ran `bunx expo export --platform android` $\to$ **Exit code 0, 3,886 modules bundled cleanly in Metro**.
+4. **Mobile TypeScript Verification:**
    - Ran `bunx tsc --noEmit` in `mobile/` $\to$ **Exit code 0, 0 type errors**.
-4. **Backend Verification:**
+5. **Backend Verification:**
    - Ran `bunx tsc --noEmit` & `bun build src/index.ts --outdir dist --target bun` in `backend/` $\to$ **Exit code 0, 1704 modules bundled successfully**.
-5. **Line Count Audit:**
+6. **Line Count Audit:**
    - All source files strictly comply with the $\le 200$ line limit:
      - `mobile/app/(app)/analytics.tsx`: 182 lines
      - `AnalyticsFilterRow.styles.ts`: 106 lines
