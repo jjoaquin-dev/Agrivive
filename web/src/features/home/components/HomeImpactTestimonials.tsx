@@ -1,4 +1,4 @@
-"use client";
+import Image from "next/image";
 
 const testimonials = [
   {
@@ -94,10 +94,12 @@ export function HomeImpactTestimonials() {
 
               {/* Author Footer: Avatar + Name + Role & Location */}
               <div className="mt-6 flex items-center gap-3.5 border-t border-neutral-100 pt-5">
-                <img
+                <Image
                   src={item.avatar}
                   alt={item.name}
-                  className="h-11 w-11 rounded-full object-cover border border-neutral-200"
+                  width={44}
+                  height={44}
+                  className="rounded-full object-cover border border-neutral-200"
                 />
                 <div className="flex flex-col">
                   <p className="font-heading text-sm font-bold text-neutral-900 group-hover:text-[#457D00] transition-colors">

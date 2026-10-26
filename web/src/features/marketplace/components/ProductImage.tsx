@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ImageOff } from "lucide-react";
 
 type ProductImageProps = {
@@ -24,5 +25,14 @@ export function ProductImage({ src, alt, category, className = "size-full object
     );
   }
 
-  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
+      className={className}
+      onError={() => setFailed(true)}
+    />
+  );
 }

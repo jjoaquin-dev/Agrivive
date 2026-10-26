@@ -1,7 +1,16 @@
 {$WEB_DOMAIN} {
+    encode zstd gzip
+
+    @static {
+        path /_next/static/* /brand/* /categories/* /produce/* /how-it-works/* /avatars/*
+    }
+    header @static Cache-Control "public, max-age=31536000, immutable"
+
     reverse_proxy 127.0.0.1:3001
 }
 
 {$API_DOMAIN} {
+    encode zstd gzip
+
     reverse_proxy 127.0.0.1:3000
 }

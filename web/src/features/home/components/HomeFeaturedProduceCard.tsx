@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Check, Heart, MapPin, Minus, Plus, ShoppingCart } from "lucide-react";
 
@@ -35,9 +36,11 @@ export function HomeFeaturedProduceCard({ item }: { item: FeaturedProduceItem })
             href="/marketplace"
             className="relative flex h-full w-full items-center justify-center"
           >
-            <img
+            <Image
               src={item.image}
               alt={item.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
               className="h-full w-full object-contain mix-blend-multiply transition-transform duration-300 ease-out group-hover:scale-105"
             />
           </Link>

@@ -1,12 +1,24 @@
 import type { Metadata } from "next";
-import "leaflet/dist/leaflet.css";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import { Lato, Poppins } from "next/font/google";
 import "../src/styles/tokens.css";
 import { CartProvider } from "@/src/features/cart/CartProvider";
 import { CartDrawer } from "@/src/features/cart/components/CartDrawer";
 import { WishlistProvider } from "@/src/features/wishlist/WishlistProvider";
 import { PasswordSetupGuard } from "@/src/features/auth/components/PasswordSetupGuard";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-heading",
+  display: "swap",
+});
+
+const lato = Lato({
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Agrivive",
@@ -22,15 +34,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="font-body" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={`${poppins.variable} ${lato.variable} font-body`} suppressHydrationWarning>
       <body className="font-body antialiased" suppressHydrationWarning>
         <WishlistProvider>
           <CartProvider>

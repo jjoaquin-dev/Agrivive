@@ -6,7 +6,13 @@ const s3Region = process.env.NEXT_PUBLIC_AWS_REGION || process.env.AWS_REGION ||
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
+  output: "standalone",
+  experimental: {
+    optimizePackageImports: ["lucide-react", "@base-ui/react"],
+  },
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     remotePatterns: [
       ...(s3Bucket
         ? [

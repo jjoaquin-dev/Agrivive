@@ -1,4 +1,4 @@
-"use client";
+import Image from "next/image";
 
 const steps = [
   {
@@ -78,9 +78,11 @@ export function HomeHowItWorks() {
                   </span>
                 </div>
 
-                <img
+                <Image
                   src={item.image}
                   alt={item.alt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 />
               </div>

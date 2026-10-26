@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 interface MarketplacePriceSliderProps {
   minPrice: string;
@@ -22,8 +22,39 @@ export function MarketplacePriceSlider({
   const minSliderId = useId();
   const maxSliderId = useId();
 
-  const currentMin = minPrice !== "" ? Math.max(minLimit, Math.min(Number(minPrice), maxLimit)) : minLimit;
-  const currentMax = maxPrice !== "" ? Math.max(minLimit, Math.min(Number(maxPrice), maxLimit)) : maxLimit;
+  const [localMin, setLocalMin] = useState(minPrice);
+  const [localMax, setLocalMax] = useState(maxPrice);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setLocalMin(minPrice);
+  }, [minPrice]);
+
+  useEffect(() => {
+    setLocalMax(maxPrice);
+  }, [maxPrice]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
+
+  function triggerChange(key: "minPrice" | "maxPrice", value: string) {
+    if (key === "minPrice") setLocalMin(value);
+    else setLocalMax(value);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      onChange(key, value);
+    }, 300);
+  }
+
+  const currentMin = localMin !== "" ? Math.max(minLimit, Math.min(Number(localMin), maxLimit)) : minLimit;
+  const currentMax = localMax !== "" ? Math.max(minLimit, Math.min(Number(localMax), maxLimit)) : maxLimit;
 
   const leftPercent = ((currentMin - minLimit) / (maxLimit - minLimit)) * 100;
   const rightPercent = ((currentMax - minLimit) / (maxLimit - minLimit)) * 100;
@@ -55,7 +86,7 @@ export function MarketplacePriceSlider({
           aria-label="Minimum price"
           onChange={(e) => {
             const val = Math.min(Number(e.target.value), currentMax);
-            onChange("minPrice", val === minLimit ? "" : String(val));
+            triggerChange("minPrice", val === minLimit ? "" : String(val));
           }}
           className="pointer-events-none absolute inset-0 z-20 w-full appearance-none bg-transparent 
             [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full 
@@ -78,7 +109,7 @@ export function MarketplacePriceSlider({
           aria-label="Maximum price"
           onChange={(e) => {
             const val = Math.max(Number(e.target.value), currentMin);
-            onChange("maxPrice", val === maxLimit ? "" : String(val));
+            triggerChange("maxPrice", val === maxLimit ? "" : String(val));
           }}
           className="pointer-events-none absolute inset-0 z-20 w-full appearance-none bg-transparent 
             [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full 
@@ -110,8 +141,8 @@ export function MarketplacePriceSlider({
             max={maxLimit}
             step={10}
             placeholder="0"
-            value={minPrice}
-            onChange={(e) => onChange("minPrice", e.target.value)}
+            value={localMin}
+            onChange={(e) => triggerChange("minPrice", e.target.value)}
             aria-label="Minimum price"
             className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-400 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
           />
@@ -127,8 +158,8 @@ export function MarketplacePriceSlider({
             max={maxLimit}
             step={10}
             placeholder="1000"
-            value={maxPrice}
-            onChange={(e) => onChange("maxPrice", e.target.value)}
+            value={localMax}
+            onChange={(e) => triggerChange("maxPrice", e.target.value)}
             aria-label="Maximum price"
             className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-400 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
           />
