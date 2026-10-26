@@ -168,7 +168,7 @@ export default function BoostVisibilityScreen() {
   </ScrollView></SafeAreaView>;
 }
 
-const platformLabel = (p: string) => ({ facebook: "Facebook", instagram: "Instagram", x: "X", tiktok: "TikTok" } as Record<string, string>)[p] || p;
+const platformLabel = (p: string) => ({ facebook: "Facebook", instagram: "Instagram" } as Record<string, string>)[p] || p;
 const statusLabel = (s: string) => ({ queued: "Waiting", publishing: "Posting", processing: "Posting", published: "Posted", partial: "Some channels need attention", failed: "Could not post" } as Record<string, string>)[s] || s;
 
 const styles = StyleSheet.create({
