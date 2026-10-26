@@ -60443,6 +60443,15652 @@ var init_dist_es9 = __esm(() => {
   init_fromIni();
 });
 
+// node_modules/extend/index.js
+var require_extend = __commonJS(function(exports, module) {
+  var hasOwn = Object.prototype.hasOwnProperty;
+  var toStr = Object.prototype.toString;
+  var defineProperty = Object.defineProperty;
+  var gOPD = Object.getOwnPropertyDescriptor;
+  var isArray = function isArray(arr) {
+    if (typeof Array.isArray === "function") {
+      return Array.isArray(arr);
+    }
+    return toStr.call(arr) === "[object Array]";
+  };
+  var isPlainObject = function isPlainObject(obj) {
+    if (!obj || toStr.call(obj) !== "[object Object]") {
+      return false;
+    }
+    var hasOwnConstructor = hasOwn.call(obj, "constructor");
+    var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, "isPrototypeOf");
+    if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
+      return false;
+    }
+    var key;
+    for (key in obj) {}
+    return typeof key === "undefined" || hasOwn.call(obj, key);
+  };
+  var setProperty = function setProperty(target, options) {
+    if (defineProperty && options.name === "__proto__") {
+      defineProperty(target, options.name, {
+        enumerable: true,
+        configurable: true,
+        value: options.newValue,
+        writable: true
+      });
+    } else {
+      target[options.name] = options.newValue;
+    }
+  };
+  var getProperty = function getProperty(obj, name) {
+    if (name === "__proto__") {
+      if (!hasOwn.call(obj, name)) {
+        return;
+      } else if (gOPD) {
+        return gOPD(obj, name).value;
+      }
+    }
+    return obj[name];
+  };
+  module.exports = function extend() {
+    var options, name, src, copy, copyIsArray, clone;
+    var target = arguments[0];
+    var i = 1;
+    var length = arguments.length;
+    var deep = false;
+    if (typeof target === "boolean") {
+      deep = target;
+      target = arguments[1] || {};
+      i = 2;
+    }
+    if (target == null || typeof target !== "object" && typeof target !== "function") {
+      target = {};
+    }
+    for (;i < length; ++i) {
+      options = arguments[i];
+      if (options != null) {
+        for (name in options) {
+          src = getProperty(target, name);
+          copy = getProperty(options, name);
+          if (target !== copy) {
+            if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
+              if (copyIsArray) {
+                copyIsArray = false;
+                clone = src && isArray(src) ? src : [];
+              } else {
+                clone = src && isPlainObject(src) ? src : {};
+              }
+              setProperty(target, { name, newValue: extend(deep, clone, copy) });
+            } else if (typeof copy !== "undefined") {
+              setProperty(target, { name, newValue: copy });
+            }
+          }
+        }
+      }
+    }
+    return target;
+  };
+});
+
+// node_modules/gaxios/package.json
+var require_package = __commonJS(function(exports, module) {
+  module.exports = {
+    name: "gaxios",
+    version: "7.3.1",
+    description: "A simple common HTTP client specifically for Google APIs and services.",
+    main: "build/cjs/src/index.js",
+    types: "build/cjs/src/index.d.ts",
+    files: [
+      "build/"
+    ],
+    exports: {
+      ".": {
+        import: {
+          types: "./build/esm/src/index.d.ts",
+          default: "./build/esm/src/index.js"
+        },
+        require: {
+          types: "./build/cjs/src/index.d.ts",
+          default: "./build/cjs/src/index.js"
+        }
+      }
+    },
+    scripts: {
+      lint: "gts check --no-inline-config",
+      test: "c8 mocha build/esm/test",
+      "presystem-test": "npm run compile",
+      "system-test": "mocha build/esm/system-test --timeout 80000",
+      compile: "tsc -b ./tsconfig.json ./tsconfig.cjs.json && node utils/enable-esm.mjs",
+      fix: "gts fix",
+      prepare: "npm run compile",
+      pretest: "npm run compile",
+      webpack: "webpack",
+      "prebrowser-test": "npm run compile",
+      "browser-test": "node build/browser-test/browser-test-runner.js",
+      docs: "jsdoc -c .jsdoc.js",
+      "samples-test": "cd samples/ && npm link ../ && npm test && cd ../",
+      prelint: "cd samples; npm link ../; npm install",
+      clean: "gts clean"
+    },
+    repository: {
+      type: "git",
+      directory: "core/packages/gaxios",
+      url: "https://github.com/googleapis/google-cloud-node.git"
+    },
+    keywords: [
+      "google"
+    ],
+    engines: {
+      node: ">=18"
+    },
+    author: "Google, LLC",
+    license: "Apache-2.0",
+    devDependencies: {
+      "@babel/plugin-proposal-private-methods": "^7.18.6",
+      "@types/cors": "^2.8.6",
+      "@types/express": "^5.0.0",
+      "@types/extend": "^3.0.1",
+      "@types/mocha": "^10.0.10",
+      "@types/multiparty": "4.2.1",
+      "@types/mv": "^2.1.0",
+      "@types/ncp": "^2.0.8",
+      "@types/node": "^24.0.0",
+      "@types/sinon": "^21.0.0",
+      "@types/tmp": "^0.2.6",
+      assert: "^2.0.0",
+      browserify: "^17.0.0",
+      c8: "^10.1.3",
+      cors: "^2.8.5",
+      express: "^5.0.0",
+      gts: "^6.0.2",
+      "is-docker": "^3.0.0",
+      jsdoc: "^4.0.4",
+      "jsdoc-fresh": "^5.0.0",
+      "jsdoc-region-tag": "^4.0.0",
+      karma: "^6.0.0",
+      "karma-chrome-launcher": "^3.0.0",
+      "karma-coverage": "^2.0.0",
+      "karma-firefox-launcher": "^2.0.0",
+      "karma-mocha": "^2.0.0",
+      "karma-remap-coverage": "^0.1.5",
+      "karma-sourcemap-loader": "^0.4.0",
+      "karma-webpack": "^5.0.0",
+      mocha: "^11.1.0",
+      multiparty: "^4.2.1",
+      mv: "^2.1.1",
+      ncp: "^2.0.0",
+      nock: "14.0.5",
+      "null-loader": "^4.0.1",
+      "pack-n-play": "^4.0.0",
+      puppeteer: "^24.0.0",
+      sinon: "21.0.3",
+      "stream-browserify": "^3.0.0",
+      tmp: "0.2.7",
+      "ts-loader": "^9.5.2",
+      typescript: "5.8.3",
+      "undici-types": "^7.24.1",
+      webpack: "^5.97.1",
+      "webpack-cli": "^6.0.1"
+    },
+    dependencies: {
+      extend: "^3.0.2",
+      "https-proxy-agent": "^7.0.1",
+      "node-fetch": "^3.3.2"
+    },
+    homepage: "https://github.com/googleapis/google-cloud-node/tree/main/core/packages/gaxios"
+  };
+});
+
+// node_modules/gaxios/build/cjs/src/util.cjs
+var require_util2 = __commonJS(function(exports, module) {
+  var pkg = require_package();
+  module.exports = { pkg };
+});
+
+// node_modules/gaxios/build/cjs/src/common.js
+var require_common2 = __commonJS(function(exports) {
+  var __importDefault = exports && exports.__importDefault || function(mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GaxiosError = exports.GAXIOS_ERROR_SYMBOL = undefined;
+  exports.defaultErrorRedactor = defaultErrorRedactor;
+  var extend_1 = __importDefault(require_extend());
+  var util_cjs_1 = __importDefault(require_util2());
+  var pkg = util_cjs_1.default.pkg;
+  exports.GAXIOS_ERROR_SYMBOL = Symbol.for(`${pkg.name}-gaxios-error`);
+
+  class GaxiosError extends Error {
+    config;
+    response;
+    code;
+    status;
+    error;
+    [exports.GAXIOS_ERROR_SYMBOL] = pkg.version;
+    static [Symbol.hasInstance](instance) {
+      if (instance && typeof instance === "object" && exports.GAXIOS_ERROR_SYMBOL in instance && instance[exports.GAXIOS_ERROR_SYMBOL] === pkg.version) {
+        return true;
+      }
+      return Function.prototype[Symbol.hasInstance].call(GaxiosError, instance);
+    }
+    constructor(message, config, response, cause) {
+      super(message, { cause });
+      this.config = config;
+      this.response = response;
+      this.error = cause instanceof Error ? cause : undefined;
+      this.config = (0, extend_1.default)(true, {}, config);
+      if (this.response) {
+        this.response.config = (0, extend_1.default)(true, {}, this.response.config);
+      }
+      if (this.response) {
+        try {
+          this.response.data = translateData(this.config.responseType, this.response?.bodyUsed ? this.response?.data : undefined);
+        } catch {}
+        this.status = this.response.status;
+      }
+      if (cause instanceof DOMException) {
+        this.code = cause.name;
+      } else if (cause && typeof cause === "object" && "code" in cause && (typeof cause.code === "string" || typeof cause.code === "number")) {
+        this.code = cause.code;
+      }
+    }
+    static extractAPIErrorFromResponse(res, defaultErrorMessage = "The request failed") {
+      let message = defaultErrorMessage;
+      if (typeof res.data === "string") {
+        message = res.data;
+      }
+      if (res.data && typeof res.data === "object" && "error" in res.data && res.data.error && !res.ok) {
+        if (typeof res.data.error === "string") {
+          return {
+            message: res.data.error,
+            code: res.status,
+            status: res.statusText
+          };
+        }
+        if (typeof res.data.error === "object") {
+          message = "message" in res.data.error && typeof res.data.error.message === "string" ? res.data.error.message : message;
+          const status = "status" in res.data.error && typeof res.data.error.status === "string" ? res.data.error.status : res.statusText;
+          const code = "code" in res.data.error && typeof res.data.error.code === "number" ? res.data.error.code : res.status;
+          if ("errors" in res.data.error && Array.isArray(res.data.error.errors)) {
+            const errorMessages = [];
+            for (const e of res.data.error.errors) {
+              if (typeof e === "object" && "message" in e && typeof e.message === "string") {
+                errorMessages.push(e.message);
+              }
+            }
+            return Object.assign({
+              message: errorMessages.join(`
+`) || message,
+              code,
+              status
+            }, res.data.error);
+          }
+          return Object.assign({
+            message,
+            code,
+            status
+          }, res.data.error);
+        }
+      }
+      return {
+        message,
+        code: res.status,
+        status: res.statusText
+      };
+    }
+  }
+  exports.GaxiosError = GaxiosError;
+  function translateData(responseType, data) {
+    switch (responseType) {
+      case "stream":
+        return data;
+      case "json":
+        return JSON.parse(JSON.stringify(data));
+      case "arraybuffer":
+        return JSON.parse(Buffer.from(data).toString("utf8"));
+      case "blob":
+        return JSON.parse(data.text());
+      default:
+        return data;
+    }
+  }
+  function defaultErrorRedactor(data) {
+    const REDACT = "<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.";
+    function redactHeaders(headers) {
+      if (!headers)
+        return;
+      headers.forEach((_, key) => {
+        if (/^authentication$/i.test(key) || /^authorization$/i.test(key) || /secret/i.test(key))
+          headers.set(key, REDACT);
+      });
+    }
+    function redactString(obj, key) {
+      if (typeof obj === "object" && obj !== null && typeof obj[key] === "string") {
+        const text = obj[key];
+        if (/grant_type=/i.test(text) || /assertion=/i.test(text) || /secret/i.test(text)) {
+          obj[key] = REDACT;
+        }
+      }
+    }
+    function redactObject(obj) {
+      if (!obj || typeof obj !== "object") {
+        return;
+      } else if (obj instanceof FormData || obj instanceof URLSearchParams || "forEach" in obj && "set" in obj) {
+        obj.forEach((_, key) => {
+          if (["grant_type", "assertion"].includes(key) || /secret/.test(key)) {
+            obj.set(key, REDACT);
+          }
+        });
+      } else {
+        if ("grant_type" in obj) {
+          obj["grant_type"] = REDACT;
+        }
+        if ("assertion" in obj) {
+          obj["assertion"] = REDACT;
+        }
+        if ("client_secret" in obj) {
+          obj["client_secret"] = REDACT;
+        }
+      }
+    }
+    if (data.config) {
+      redactHeaders(data.config.headers);
+      redactString(data.config, "data");
+      redactObject(data.config.data);
+      redactString(data.config, "body");
+      redactObject(data.config.body);
+      if (data.config.url.searchParams.has("token")) {
+        data.config.url.searchParams.set("token", REDACT);
+      }
+      if (data.config.url.searchParams.has("client_secret")) {
+        data.config.url.searchParams.set("client_secret", REDACT);
+      }
+    }
+    if (data.response) {
+      defaultErrorRedactor({ config: data.response.config });
+      redactHeaders(data.response.headers);
+      if (data.response.bodyUsed) {
+        redactString(data.response, "data");
+        redactObject(data.response.data);
+      }
+    }
+    return data;
+  }
+});
+
+// node_modules/gaxios/build/cjs/src/retry.js
+var require_retry2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.getRetryConfig = getRetryConfig;
+  async function getRetryConfig(err) {
+    let config = getConfig(err);
+    if (!err || !err.config || !config && !err.config.retry) {
+      return { shouldRetry: false };
+    }
+    config = config || {};
+    config.currentRetryAttempt = config.currentRetryAttempt || 0;
+    config.retry = config.retry === undefined || config.retry === null ? 3 : config.retry;
+    config.httpMethodsToRetry = config.httpMethodsToRetry || [
+      "GET",
+      "HEAD",
+      "PUT",
+      "OPTIONS",
+      "DELETE"
+    ];
+    config.noResponseRetries = config.noResponseRetries === undefined || config.noResponseRetries === null ? 2 : config.noResponseRetries;
+    config.retryDelayMultiplier = config.retryDelayMultiplier ? config.retryDelayMultiplier : 2;
+    config.timeOfFirstRequest = config.timeOfFirstRequest ? config.timeOfFirstRequest : Date.now();
+    config.totalTimeout = config.totalTimeout ? config.totalTimeout : Number.MAX_SAFE_INTEGER;
+    config.maxRetryDelay = config.maxRetryDelay ? config.maxRetryDelay : Number.MAX_SAFE_INTEGER;
+    const retryRanges = [
+      [100, 199],
+      [408, 408],
+      [429, 429],
+      [500, 599]
+    ];
+    config.statusCodesToRetry = config.statusCodesToRetry || retryRanges;
+    err.config.retryConfig = config;
+    const shouldRetryFn = config.shouldRetry || shouldRetryRequest;
+    if (!await shouldRetryFn(err)) {
+      return { shouldRetry: false, config: err.config };
+    }
+    const delay = getNextRetryDelay(config);
+    err.config.retryConfig.currentRetryAttempt += 1;
+    const backoff = config.retryBackoff ? config.retryBackoff(err, delay) : new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    });
+    if (config.onRetryAttempt) {
+      await config.onRetryAttempt(err);
+    }
+    await backoff;
+    return { shouldRetry: true, config: err.config };
+  }
+  function shouldRetryRequest(err) {
+    const config = getConfig(err);
+    if (err.config.signal?.aborted && err.code !== "TimeoutError" || err.code === "AbortError") {
+      return false;
+    }
+    if (!config || config.retry === 0) {
+      return false;
+    }
+    if (!err.response && (config.currentRetryAttempt || 0) >= config.noResponseRetries) {
+      return false;
+    }
+    if (!config.httpMethodsToRetry || !config.httpMethodsToRetry.includes(err.config.method?.toUpperCase() || "GET")) {
+      return false;
+    }
+    if (err.response && err.response.status) {
+      let isInRange = false;
+      for (const [min, max] of config.statusCodesToRetry) {
+        const status = err.response.status;
+        if (status >= min && status <= max) {
+          isInRange = true;
+          break;
+        }
+      }
+      if (!isInRange) {
+        return false;
+      }
+    }
+    config.currentRetryAttempt = config.currentRetryAttempt || 0;
+    if (config.currentRetryAttempt >= config.retry) {
+      return false;
+    }
+    return true;
+  }
+  function getConfig(err) {
+    if (err && err.config && err.config.retryConfig) {
+      return err.config.retryConfig;
+    }
+    return;
+  }
+  function getNextRetryDelay(config) {
+    const retryDelay = config.currentRetryAttempt ? 0 : config.retryDelay ?? 100;
+    const calculatedDelay = retryDelay + (Math.pow(config.retryDelayMultiplier, config.currentRetryAttempt) - 1) / 2 * 1000;
+    const maxAllowableDelay = config.totalTimeout - (Date.now() - config.timeOfFirstRequest);
+    return Math.min(calculatedDelay, maxAllowableDelay, config.maxRetryDelay);
+  }
+});
+
+// node_modules/gaxios/build/cjs/src/interceptor.js
+var require_interceptor = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GaxiosInterceptorManager = undefined;
+
+  class GaxiosInterceptorManager extends Set {
+  }
+  exports.GaxiosInterceptorManager = GaxiosInterceptorManager;
+});
+
+// node_modules/agent-base/dist/helpers.js
+var require_helpers = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+  } : function(o, v) {
+    o["default"] = v;
+  });
+  var __importStar = exports && exports.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
+          __createBinding(result, mod, k);
+    }
+    __setModuleDefault(result, mod);
+    return result;
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.req = exports.json = exports.toBuffer = undefined;
+  var http = __importStar(__require("http"));
+  var https = __importStar(__require("https"));
+  async function toBuffer(stream) {
+    let length = 0;
+    const chunks = [];
+    for await (const chunk of stream) {
+      length += chunk.length;
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks, length);
+  }
+  exports.toBuffer = toBuffer;
+  async function json(stream) {
+    const buf = await toBuffer(stream);
+    const str = buf.toString("utf8");
+    try {
+      return JSON.parse(str);
+    } catch (_err) {
+      const err = _err;
+      err.message += ` (input: ${str})`;
+      throw err;
+    }
+  }
+  exports.json = json;
+  function req(url, opts = {}) {
+    const href = typeof url === "string" ? url : url.href;
+    const req = (href.startsWith("https:") ? https : http).request(url, opts);
+    const promise = new Promise((resolve, reject) => {
+      req.once("response", resolve).once("error", reject).end();
+    });
+    req.then = promise.then.bind(promise);
+    return req;
+  }
+  exports.req = req;
+});
+
+// node_modules/agent-base/dist/index.js
+var require_dist3 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+  } : function(o, v) {
+    o["default"] = v;
+  });
+  var __importStar = exports && exports.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
+          __createBinding(result, mod, k);
+    }
+    __setModuleDefault(result, mod);
+    return result;
+  };
+  var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+    for (var p in m)
+      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+        __createBinding(exports2, m, p);
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Agent = undefined;
+  var net = __importStar(__require("net"));
+  var http = __importStar(__require("http"));
+  var https_1 = __require("https");
+  __exportStar(require_helpers(), exports);
+  var INTERNAL = Symbol("AgentBaseInternalState");
+
+  class Agent extends http.Agent {
+    constructor(opts) {
+      super(opts);
+      this[INTERNAL] = {};
+    }
+    isSecureEndpoint(options) {
+      if (options) {
+        if (typeof options.secureEndpoint === "boolean") {
+          return options.secureEndpoint;
+        }
+        if (typeof options.protocol === "string") {
+          return options.protocol === "https:";
+        }
+      }
+      const { stack } = new Error;
+      if (typeof stack !== "string")
+        return false;
+      return stack.split(`
+`).some((l) => l.indexOf("(https.js:") !== -1 || l.indexOf("node:https:") !== -1);
+    }
+    incrementSockets(name) {
+      if (this.maxSockets === Infinity && this.maxTotalSockets === Infinity) {
+        return null;
+      }
+      if (!this.sockets[name]) {
+        this.sockets[name] = [];
+      }
+      const fakeSocket = new net.Socket({ writable: false });
+      this.sockets[name].push(fakeSocket);
+      this.totalSocketCount++;
+      return fakeSocket;
+    }
+    decrementSockets(name, socket) {
+      if (!this.sockets[name] || socket === null) {
+        return;
+      }
+      const sockets = this.sockets[name];
+      const index = sockets.indexOf(socket);
+      if (index !== -1) {
+        sockets.splice(index, 1);
+        this.totalSocketCount--;
+        if (sockets.length === 0) {
+          delete this.sockets[name];
+        }
+      }
+    }
+    getName(options) {
+      const secureEndpoint = this.isSecureEndpoint(options);
+      if (secureEndpoint) {
+        return https_1.Agent.prototype.getName.call(this, options);
+      }
+      return super.getName(options);
+    }
+    createSocket(req, options, cb) {
+      const connectOpts = {
+        ...options,
+        secureEndpoint: this.isSecureEndpoint(options)
+      };
+      const name = this.getName(connectOpts);
+      const fakeSocket = this.incrementSockets(name);
+      Promise.resolve().then(() => this.connect(req, connectOpts)).then((socket) => {
+        this.decrementSockets(name, fakeSocket);
+        if (socket instanceof http.Agent) {
+          try {
+            return socket.addRequest(req, connectOpts);
+          } catch (err) {
+            return cb(err);
+          }
+        }
+        this[INTERNAL].currentSocket = socket;
+        super.createSocket(req, options, cb);
+      }, (err) => {
+        this.decrementSockets(name, fakeSocket);
+        cb(err);
+      });
+    }
+    createConnection() {
+      const socket = this[INTERNAL].currentSocket;
+      this[INTERNAL].currentSocket = undefined;
+      if (!socket) {
+        throw new Error("No socket was returned in the `connect()` function");
+      }
+      return socket;
+    }
+    get defaultPort() {
+      return this[INTERNAL].defaultPort ?? (this.protocol === "https:" ? 443 : 80);
+    }
+    set defaultPort(v) {
+      if (this[INTERNAL]) {
+        this[INTERNAL].defaultPort = v;
+      }
+    }
+    get protocol() {
+      return this[INTERNAL].protocol ?? (this.isSecureEndpoint() ? "https:" : "http:");
+    }
+    set protocol(v) {
+      if (this[INTERNAL]) {
+        this[INTERNAL].protocol = v;
+      }
+    }
+  }
+  exports.Agent = Agent;
+});
+
+// node_modules/https-proxy-agent/dist/parse-proxy-response.js
+var require_parse_proxy_response = __commonJS(function(exports) {
+  var __importDefault = exports && exports.__importDefault || function(mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.parseProxyResponse = undefined;
+  var debug_1 = __importDefault(require_src());
+  var debug = (0, debug_1.default)("https-proxy-agent:parse-proxy-response");
+  function parseProxyResponse(socket) {
+    return new Promise((resolve, reject) => {
+      let buffersLength = 0;
+      const buffers = [];
+      function read() {
+        const b = socket.read();
+        if (b)
+          ondata(b);
+        else
+          socket.once("readable", read);
+      }
+      function cleanup() {
+        socket.removeListener("end", onend);
+        socket.removeListener("error", onerror);
+        socket.removeListener("readable", read);
+      }
+      function onend() {
+        cleanup();
+        debug("onend");
+        reject(new Error("Proxy connection ended before receiving CONNECT response"));
+      }
+      function onerror(err) {
+        cleanup();
+        debug("onerror %o", err);
+        reject(err);
+      }
+      function ondata(b) {
+        buffers.push(b);
+        buffersLength += b.length;
+        const buffered = Buffer.concat(buffers, buffersLength);
+        const endOfHeaders = buffered.indexOf(`\r
+\r
+`);
+        if (endOfHeaders === -1) {
+          debug("have not received end of HTTP headers yet...");
+          read();
+          return;
+        }
+        const headerParts = buffered.slice(0, endOfHeaders).toString("ascii").split(`\r
+`);
+        const firstLine = headerParts.shift();
+        if (!firstLine) {
+          socket.destroy();
+          return reject(new Error("No header received from proxy CONNECT response"));
+        }
+        const firstLineParts = firstLine.split(" ");
+        const statusCode = +firstLineParts[1];
+        const statusText = firstLineParts.slice(2).join(" ");
+        const headers = {};
+        for (const header of headerParts) {
+          if (!header)
+            continue;
+          const firstColon = header.indexOf(":");
+          if (firstColon === -1) {
+            socket.destroy();
+            return reject(new Error(`Invalid header from proxy CONNECT response: "${header}"`));
+          }
+          const key = header.slice(0, firstColon).toLowerCase();
+          const value = header.slice(firstColon + 1).trimStart();
+          const current = headers[key];
+          if (typeof current === "string") {
+            headers[key] = [current, value];
+          } else if (Array.isArray(current)) {
+            current.push(value);
+          } else {
+            headers[key] = value;
+          }
+        }
+        debug("got proxy server response: %o %o", firstLine, headers);
+        cleanup();
+        resolve({
+          connect: {
+            statusCode,
+            statusText,
+            headers
+          },
+          buffered
+        });
+      }
+      socket.on("error", onerror);
+      socket.on("end", onend);
+      read();
+    });
+  }
+  exports.parseProxyResponse = parseProxyResponse;
+});
+
+// node_modules/https-proxy-agent/dist/index.js
+var require_dist4 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+  } : function(o, v) {
+    o["default"] = v;
+  });
+  var __importStar = exports && exports.__importStar || function(mod) {
+    if (mod && mod.__esModule)
+      return mod;
+    var result = {};
+    if (mod != null) {
+      for (var k in mod)
+        if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k))
+          __createBinding(result, mod, k);
+    }
+    __setModuleDefault(result, mod);
+    return result;
+  };
+  var __importDefault = exports && exports.__importDefault || function(mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.HttpsProxyAgent = undefined;
+  var net = __importStar(__require("net"));
+  var tls = __importStar(__require("tls"));
+  var assert_1 = __importDefault(__require("assert"));
+  var debug_1 = __importDefault(require_src());
+  var agent_base_1 = require_dist3();
+  var url_1 = __require("url");
+  var parse_proxy_response_1 = require_parse_proxy_response();
+  var debug = (0, debug_1.default)("https-proxy-agent");
+  var setServernameFromNonIpHost = (options) => {
+    if (options.servername === undefined && options.host && !net.isIP(options.host)) {
+      return {
+        ...options,
+        servername: options.host
+      };
+    }
+    return options;
+  };
+
+  class HttpsProxyAgent extends agent_base_1.Agent {
+    constructor(proxy, opts) {
+      super(opts);
+      this.options = { path: undefined };
+      this.proxy = typeof proxy === "string" ? new url_1.URL(proxy) : proxy;
+      this.proxyHeaders = opts?.headers ?? {};
+      debug("Creating new HttpsProxyAgent instance: %o", this.proxy.href);
+      const host = (this.proxy.hostname || this.proxy.host).replace(/^\[|\]$/g, "");
+      const port = this.proxy.port ? parseInt(this.proxy.port, 10) : this.proxy.protocol === "https:" ? 443 : 80;
+      this.connectOpts = {
+        ALPNProtocols: ["http/1.1"],
+        ...opts ? omit(opts, "headers") : null,
+        host,
+        port
+      };
+    }
+    async connect(req, opts) {
+      const { proxy } = this;
+      if (!opts.host) {
+        throw new TypeError('No "host" provided');
+      }
+      let socket;
+      if (proxy.protocol === "https:") {
+        debug("Creating `tls.Socket`: %o", this.connectOpts);
+        socket = tls.connect(setServernameFromNonIpHost(this.connectOpts));
+      } else {
+        debug("Creating `net.Socket`: %o", this.connectOpts);
+        socket = net.connect(this.connectOpts);
+      }
+      const headers = typeof this.proxyHeaders === "function" ? this.proxyHeaders() : { ...this.proxyHeaders };
+      const host = net.isIPv6(opts.host) ? `[${opts.host}]` : opts.host;
+      let payload = `CONNECT ${host}:${opts.port} HTTP/1.1\r
+`;
+      if (proxy.username || proxy.password) {
+        const auth = `${decodeURIComponent(proxy.username)}:${decodeURIComponent(proxy.password)}`;
+        headers["Proxy-Authorization"] = `Basic ${Buffer.from(auth).toString("base64")}`;
+      }
+      headers.Host = `${host}:${opts.port}`;
+      if (!headers["Proxy-Connection"]) {
+        headers["Proxy-Connection"] = this.keepAlive ? "Keep-Alive" : "close";
+      }
+      for (const name of Object.keys(headers)) {
+        payload += `${name}: ${headers[name]}\r
+`;
+      }
+      const proxyResponsePromise = (0, parse_proxy_response_1.parseProxyResponse)(socket);
+      socket.write(`${payload}\r
+`);
+      const { connect, buffered } = await proxyResponsePromise;
+      req.emit("proxyConnect", connect);
+      this.emit("proxyConnect", connect, req);
+      if (connect.statusCode === 200) {
+        req.once("socket", resume);
+        if (opts.secureEndpoint) {
+          debug("Upgrading socket connection to TLS");
+          return tls.connect({
+            ...omit(setServernameFromNonIpHost(opts), "host", "path", "port"),
+            socket
+          });
+        }
+        return socket;
+      }
+      socket.destroy();
+      const fakeSocket = new net.Socket({ writable: false });
+      fakeSocket.readable = true;
+      req.once("socket", (s) => {
+        debug("Replaying proxy buffer for failed request");
+        (0, assert_1.default)(s.listenerCount("data") > 0);
+        s.push(buffered);
+        s.push(null);
+      });
+      return fakeSocket;
+    }
+  }
+  HttpsProxyAgent.protocols = ["http", "https"];
+  exports.HttpsProxyAgent = HttpsProxyAgent;
+  function resume(socket) {
+    socket.resume();
+  }
+  function omit(obj, ...keys) {
+    const ret = {};
+    let key;
+    for (key in obj) {
+      if (!keys.includes(key)) {
+        ret[key] = obj[key];
+      }
+    }
+    return ret;
+  }
+});
+
+// node_modules/gaxios/build/cjs/src/gaxios.js
+var require_gaxios = __commonJS(function(exports) {
+  var __importDefault = exports && exports.__importDefault || function(mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+  var _a;
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Gaxios = undefined;
+  var extend_1 = __importDefault(require_extend());
+  var https_1 = __require("https");
+  var common_js_1 = require_common2();
+  var retry_js_1 = require_retry2();
+  var stream_1 = __require("stream");
+  var interceptor_js_1 = require_interceptor();
+  var randomUUID = async () => globalThis.crypto?.randomUUID() || (await import("crypto")).randomUUID();
+  var HTTP_STATUS_NO_CONTENT = 204;
+
+  class Gaxios {
+    agentCache = new Map;
+    defaults;
+    interceptors;
+    constructor(defaults) {
+      this.defaults = defaults || {};
+      this.interceptors = {
+        request: new interceptor_js_1.GaxiosInterceptorManager,
+        response: new interceptor_js_1.GaxiosInterceptorManager
+      };
+    }
+    fetch(...args) {
+      const input = args[0];
+      const init = args[1];
+      let url = undefined;
+      const headers = new Headers;
+      if (typeof input === "string") {
+        url = new URL(input);
+      } else if (input instanceof URL) {
+        url = input;
+      } else if (input && input.url) {
+        url = new URL(input.url);
+      }
+      if (input && typeof input === "object" && "headers" in input) {
+        _a.mergeHeaders(headers, input.headers);
+      }
+      if (init) {
+        _a.mergeHeaders(headers, new Headers(init.headers));
+      }
+      if (typeof input === "object" && !(input instanceof URL)) {
+        return this.request({ ...init, ...input, headers, url });
+      } else {
+        return this.request({ ...init, headers, url });
+      }
+    }
+    async request(opts = {}) {
+      let prepared = await this.#prepareRequest(opts);
+      prepared = await this.#applyRequestInterceptors(prepared);
+      return this.#applyResponseInterceptors(this._request(prepared));
+    }
+    async _defaultAdapter(config) {
+      const fetchImpl = config.fetchImplementation || this.defaults.fetchImplementation || await _a.#getFetch();
+      const preparedOpts = { ...config };
+      delete preparedOpts.data;
+      const res = await fetchImpl(config.url, preparedOpts);
+      const data = await this.getResponseData(config, res);
+      if (!Object.getOwnPropertyDescriptor(res, "data")?.configurable) {
+        Object.defineProperties(res, {
+          data: {
+            configurable: true,
+            writable: true,
+            enumerable: true,
+            value: data
+          }
+        });
+      }
+      return Object.assign(res, { config, data });
+    }
+    async _request(opts) {
+      try {
+        let translatedResponse;
+        if (opts.adapter) {
+          translatedResponse = await opts.adapter(opts, this._defaultAdapter.bind(this));
+        } else {
+          translatedResponse = await this._defaultAdapter(opts);
+        }
+        if (!opts.validateStatus(translatedResponse.status)) {
+          if (opts.responseType === "stream") {
+            const response = [];
+            for await (const chunk of translatedResponse.data) {
+              response.push(chunk);
+            }
+            translatedResponse.data = Buffer.concat(response.map((c) => typeof c === "string" ? Buffer.from(c) : c)).toString("utf8");
+          }
+          const errorInfo = common_js_1.GaxiosError.extractAPIErrorFromResponse(translatedResponse, `Request failed with status code ${translatedResponse.status}`);
+          throw new common_js_1.GaxiosError(errorInfo?.message, opts, translatedResponse, errorInfo);
+        }
+        return translatedResponse;
+      } catch (e) {
+        let err;
+        if (e instanceof common_js_1.GaxiosError) {
+          err = e;
+        } else if (e instanceof Error) {
+          err = new common_js_1.GaxiosError(e.message, opts, undefined, e);
+        } else {
+          err = new common_js_1.GaxiosError("Unexpected Gaxios Error", opts, undefined, e);
+        }
+        const { shouldRetry, config } = await (0, retry_js_1.getRetryConfig)(err);
+        if (shouldRetry && config) {
+          err.config.retryConfig.currentRetryAttempt = config.retryConfig.currentRetryAttempt;
+          opts.retryConfig = err.config?.retryConfig;
+          this.#appendTimeoutToSignal(opts);
+          return this._request(opts);
+        }
+        if (opts.errorRedactor) {
+          opts.errorRedactor(err);
+        }
+        throw err;
+      }
+    }
+    async getResponseData(opts, res) {
+      if (res.status === HTTP_STATUS_NO_CONTENT) {
+        return "";
+      }
+      if (opts.maxContentLength && res.headers.has("content-length") && opts.maxContentLength < Number.parseInt(res.headers?.get("content-length") || "")) {
+        throw new common_js_1.GaxiosError("Response's `Content-Length` is over the limit.", opts, Object.assign(res, { config: opts }));
+      }
+      switch (opts.responseType) {
+        case "stream":
+          return res.body;
+        case "json": {
+          const data = await res.text();
+          try {
+            return JSON.parse(data);
+          } catch {
+            return data;
+          }
+        }
+        case "arraybuffer":
+          return res.arrayBuffer();
+        case "blob":
+          return res.blob();
+        case "text":
+          return res.text();
+        default:
+          return this.getResponseDataFromContentType(res);
+      }
+    }
+    #urlMayUseProxy(url, noProxy = []) {
+      const candidate = new URL(url);
+      const noProxyList = [...noProxy];
+      const noProxyEnvList = (process.env.NO_PROXY ?? process.env.no_proxy)?.split(",") || [];
+      for (const rule of noProxyEnvList) {
+        noProxyList.push(rule.trim());
+      }
+      for (const rule of noProxyList) {
+        if (rule instanceof RegExp) {
+          if (rule.test(candidate.toString())) {
+            return false;
+          }
+        } else if (rule instanceof URL) {
+          if (rule.origin === candidate.origin) {
+            return false;
+          }
+        } else if (rule.startsWith("*.") || rule.startsWith(".")) {
+          const cleanedRule = rule.replace(/^\*\./, ".");
+          if (candidate.hostname.endsWith(cleanedRule)) {
+            return false;
+          }
+        } else if (rule === candidate.origin || rule === candidate.hostname || rule === candidate.href) {
+          return false;
+        }
+      }
+      return true;
+    }
+    async#applyRequestInterceptors(options) {
+      let promiseChain = Promise.resolve(options);
+      for (const interceptor of this.interceptors.request.values()) {
+        if (interceptor) {
+          promiseChain = promiseChain.then(interceptor.resolved, interceptor.rejected);
+        }
+      }
+      return promiseChain;
+    }
+    async#applyResponseInterceptors(response) {
+      let promiseChain = Promise.resolve(response);
+      for (const interceptor of this.interceptors.response.values()) {
+        if (interceptor) {
+          promiseChain = promiseChain.then(interceptor.resolved, interceptor.rejected);
+        }
+      }
+      return promiseChain;
+    }
+    async#prepareRequest(options) {
+      const preparedHeaders = new Headers(this.defaults.headers);
+      _a.mergeHeaders(preparedHeaders, options.headers);
+      const opts = (0, extend_1.default)(true, {}, this.defaults, options);
+      if (!opts.url) {
+        throw new Error("URL is required.");
+      }
+      if (opts.baseURL) {
+        opts.url = new URL(opts.url, opts.baseURL);
+      }
+      opts.url = new URL(opts.url);
+      if (opts.params) {
+        if (opts.paramsSerializer) {
+          let additionalQueryParams = opts.paramsSerializer(opts.params);
+          if (additionalQueryParams.startsWith("?")) {
+            additionalQueryParams = additionalQueryParams.slice(1);
+          }
+          const prefix = opts.url.toString().includes("?") ? "&" : "?";
+          opts.url = opts.url + prefix + additionalQueryParams;
+        } else {
+          const url = opts.url instanceof URL ? opts.url : new URL(opts.url);
+          for (const [key, value] of new URLSearchParams(opts.params)) {
+            url.searchParams.append(key, value);
+          }
+          opts.url = url;
+        }
+      }
+      if (typeof options.maxContentLength === "number") {
+        opts.size = options.maxContentLength;
+      }
+      if (typeof options.maxRedirects === "number") {
+        opts.follow = options.maxRedirects;
+      }
+      const shouldDirectlyPassData = typeof opts.data === "string" || opts.data instanceof ArrayBuffer || opts.data instanceof Blob || globalThis.File && opts.data instanceof File || opts.data instanceof FormData || opts.data instanceof stream_1.Readable || opts.data instanceof ReadableStream || opts.data instanceof String || opts.data instanceof URLSearchParams || ArrayBuffer.isView(opts.data) || ["Blob", "File", "FormData"].includes(opts.data?.constructor?.name || "");
+      if (opts.multipart?.length) {
+        const boundary = await randomUUID();
+        preparedHeaders.set("content-type", `multipart/related; boundary=${boundary}`);
+        opts.body = stream_1.Readable.from(this.getMultipartRequest(opts.multipart, boundary));
+      } else if (shouldDirectlyPassData) {
+        opts.body = opts.data;
+      } else if (typeof opts.data === "object") {
+        if (preparedHeaders.get("Content-Type") === "application/x-www-form-urlencoded") {
+          opts.body = opts.paramsSerializer ? opts.paramsSerializer(opts.data) : new URLSearchParams(opts.data);
+        } else {
+          if (!preparedHeaders.has("content-type")) {
+            preparedHeaders.set("content-type", "application/json");
+          }
+          opts.body = JSON.stringify(opts.data);
+        }
+      } else if (opts.data) {
+        opts.body = opts.data;
+      }
+      opts.validateStatus = opts.validateStatus || this.validateStatus;
+      opts.responseType = opts.responseType || "unknown";
+      if (!preparedHeaders.has("accept") && opts.responseType === "json") {
+        preparedHeaders.set("accept", "application/json");
+      }
+      const proxy = opts.proxy || process?.env?.HTTPS_PROXY || process?.env?.https_proxy || process?.env?.HTTP_PROXY || process?.env?.http_proxy;
+      if (opts.agent) {} else if (proxy && this.#urlMayUseProxy(opts.url, opts.noProxy)) {
+        const HttpsProxyAgent = await _a.#getProxyAgent();
+        if (this.agentCache.has(proxy)) {
+          opts.agent = this.agentCache.get(proxy);
+        } else {
+          opts.agent = new HttpsProxyAgent(proxy, {
+            cert: opts.cert,
+            key: opts.key
+          });
+          this.agentCache.set(proxy, opts.agent);
+        }
+      } else if (opts.cert && opts.key) {
+        if (this.agentCache.has(opts.key)) {
+          opts.agent = this.agentCache.get(opts.key);
+        } else {
+          opts.agent = new https_1.Agent({
+            cert: opts.cert,
+            key: opts.key
+          });
+          this.agentCache.set(opts.key, opts.agent);
+        }
+      }
+      if (typeof opts.errorRedactor !== "function" && opts.errorRedactor !== false) {
+        opts.errorRedactor = common_js_1.defaultErrorRedactor;
+      }
+      if (opts.body && !("duplex" in opts)) {
+        opts.duplex = "half";
+      }
+      this.#appendTimeoutToSignal(opts);
+      return Object.assign(opts, {
+        headers: preparedHeaders,
+        url: opts.url instanceof URL ? opts.url : new URL(opts.url)
+      });
+    }
+    #appendTimeoutToSignal(opts) {
+      if (opts.timeout) {
+        const timeoutSignal = AbortSignal.timeout(opts.timeout);
+        if (opts.signal && !opts.signal.aborted) {
+          opts.signal = AbortSignal.any([opts.signal, timeoutSignal]);
+        } else {
+          opts.signal = timeoutSignal;
+        }
+      }
+    }
+    validateStatus(status) {
+      return status >= 200 && status < 300;
+    }
+    async getResponseDataFromContentType(response) {
+      let contentType = response.headers.get("Content-Type");
+      if (contentType === null) {
+        return response.text();
+      }
+      contentType = contentType.toLowerCase();
+      if (contentType.includes("application/json")) {
+        let data = await response.text();
+        try {
+          data = JSON.parse(data);
+        } catch {}
+        return data;
+      } else if (contentType.match(/^text\//)) {
+        return response.text();
+      } else {
+        return response.blob();
+      }
+    }
+    async* getMultipartRequest(multipartOptions, boundary) {
+      const finale = `--${boundary}--`;
+      for (const currentPart of multipartOptions) {
+        const partContentType = currentPart.headers.get("Content-Type") || "application/octet-stream";
+        const preamble = `--${boundary}\r
+Content-Type: ${partContentType}\r
+\r
+`;
+        yield preamble;
+        if (typeof currentPart.content === "string") {
+          yield currentPart.content;
+        } else {
+          yield* currentPart.content;
+        }
+        yield `\r
+`;
+      }
+      yield finale;
+    }
+    static #proxyAgent;
+    static #fetch;
+    static async#getProxyAgent() {
+      this.#proxyAgent ||= (await Promise.resolve().then(() => __toESM(require_dist4()))).HttpsProxyAgent;
+      return this.#proxyAgent;
+    }
+    static async#getFetch() {
+      const hasWindow = typeof window !== "undefined" && !!window;
+      this.#fetch ||= hasWindow ? window.fetch : (await import("node-fetch")).default;
+      return this.#fetch;
+    }
+    static mergeHeaders(base, ...append) {
+      base = base instanceof Headers ? base : new Headers(base);
+      for (const headers of append) {
+        const add = headers instanceof Headers ? headers : new Headers(headers);
+        add.forEach((value, key) => {
+          key === "set-cookie" ? base.append(key, value) : base.set(key, value);
+        });
+      }
+      return base;
+    }
+  }
+  exports.Gaxios = Gaxios;
+  _a = Gaxios;
+});
+
+// node_modules/gaxios/build/cjs/src/index.js
+var require_src4 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+    for (var p in m)
+      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+        __createBinding(exports2, m, p);
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.instance = exports.Gaxios = exports.GaxiosError = undefined;
+  exports.request = request;
+  var gaxios_js_1 = require_gaxios();
+  Object.defineProperty(exports, "Gaxios", { enumerable: true, get: function() {
+    return gaxios_js_1.Gaxios;
+  } });
+  var common_js_1 = require_common2();
+  Object.defineProperty(exports, "GaxiosError", { enumerable: true, get: function() {
+    return common_js_1.GaxiosError;
+  } });
+  __exportStar(require_interceptor(), exports);
+  exports.instance = new gaxios_js_1.Gaxios;
+  async function request(opts) {
+    return exports.instance.request(opts);
+  }
+});
+
+// node_modules/bignumber.js/bignumber.js
+var require_bignumber = __commonJS(function(exports, module) {
+  (function(globalObject) {
+    var BigNumber, isNumeric = /^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i, { ceil: mathceil, floor: mathfloor } = Math, bignumberError = "[BigNumber Error] ", tooManyDigits = bignumberError + "Number primitive has more than 15 significant digits: ", BASE = 100000000000000, LOG_BASE = 14, MAX_SAFE_INTEGER = 9007199254740991, POWS_TEN = [1, 10, 100, 1000, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 10000000000, 100000000000, 1000000000000, 10000000000000], SQRT_BASE = 1e7, MAX = 1e9;
+    function clone(configObject) {
+      var div, convertBase, parseNumeric, P = BigNumber.prototype = { constructor: BigNumber, toString: null, valueOf: null }, ONE = new BigNumber(1), DECIMAL_PLACES = 20, ROUNDING_MODE = 4, TO_EXP_NEG = -7, TO_EXP_POS = 21, MIN_EXP = -1e7, MAX_EXP = 1e7, CRYPTO = false, MODULO_MODE = 1, POW_PRECISION = 0, FORMAT = {
+        prefix: "",
+        groupSize: 3,
+        secondaryGroupSize: 0,
+        groupSeparator: ",",
+        decimalSeparator: ".",
+        fractionGroupSize: 0,
+        fractionGroupSeparator: "\xA0",
+        suffix: ""
+      }, ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz", alphabetHasNormalDecimalDigits = true;
+      function BigNumber(v, b) {
+        var alphabet, c, caseChanged, e, i, isNum, len, str, x = this;
+        if (!(x instanceof BigNumber))
+          return new BigNumber(v, b);
+        if (b == null) {
+          if (v && v._isBigNumber === true) {
+            x.s = v.s;
+            if (!v.c || v.e > MAX_EXP) {
+              x.c = x.e = null;
+            } else if (v.e < MIN_EXP) {
+              x.c = [x.e = 0];
+            } else {
+              x.e = v.e;
+              x.c = v.c.slice();
+            }
+            return;
+          }
+          if ((isNum = typeof v == "number") && v * 0 == 0) {
+            x.s = 1 / v < 0 ? (v = -v, -1) : 1;
+            if (v === ~~v) {
+              for (e = 0, i = v;i >= 10; i /= 10, e++)
+                ;
+              if (e > MAX_EXP) {
+                x.c = x.e = null;
+              } else {
+                x.e = e;
+                x.c = [v];
+              }
+              return;
+            }
+            str = String(v);
+          } else {
+            if (!isNumeric.test(str = String(v)))
+              return parseNumeric(x, str, isNum);
+            x.s = str.charCodeAt(0) == 45 ? (str = str.slice(1), -1) : 1;
+          }
+          if ((e = str.indexOf(".")) > -1)
+            str = str.replace(".", "");
+          if ((i = str.search(/e/i)) > 0) {
+            if (e < 0)
+              e = i;
+            e += +str.slice(i + 1);
+            str = str.substring(0, i);
+          } else if (e < 0) {
+            e = str.length;
+          }
+        } else {
+          intCheck(b, 2, ALPHABET.length, "Base");
+          if (b == 10 && alphabetHasNormalDecimalDigits) {
+            x = new BigNumber(v);
+            return round(x, DECIMAL_PLACES + x.e + 1, ROUNDING_MODE);
+          }
+          str = String(v);
+          if (isNum = typeof v == "number") {
+            if (v * 0 != 0)
+              return parseNumeric(x, str, isNum, b);
+            x.s = 1 / v < 0 ? (str = str.slice(1), -1) : 1;
+            if (BigNumber.DEBUG && str.replace(/^0\.0*|\./, "").length > 15) {
+              throw Error(tooManyDigits + v);
+            }
+          } else {
+            x.s = str.charCodeAt(0) === 45 ? (str = str.slice(1), -1) : 1;
+          }
+          alphabet = ALPHABET.slice(0, b);
+          e = i = 0;
+          for (len = str.length;i < len; i++) {
+            if (alphabet.indexOf(c = str.charAt(i)) < 0) {
+              if (c == ".") {
+                if (i > e) {
+                  e = len;
+                  continue;
+                }
+              } else if (!caseChanged) {
+                if (str == str.toUpperCase() && (str = str.toLowerCase()) || str == str.toLowerCase() && (str = str.toUpperCase())) {
+                  caseChanged = true;
+                  i = -1;
+                  e = 0;
+                  continue;
+                }
+              }
+              return parseNumeric(x, String(v), isNum, b);
+            }
+          }
+          isNum = false;
+          str = convertBase(str, b, 10, x.s);
+          if ((e = str.indexOf(".")) > -1)
+            str = str.replace(".", "");
+          else
+            e = str.length;
+        }
+        for (i = 0;str.charCodeAt(i) === 48; i++)
+          ;
+        for (len = str.length;str.charCodeAt(--len) === 48; )
+          ;
+        if (str = str.slice(i, ++len)) {
+          len -= i;
+          if (isNum && BigNumber.DEBUG && len > 15 && (v > MAX_SAFE_INTEGER || v !== mathfloor(v))) {
+            throw Error(tooManyDigits + x.s * v);
+          }
+          if ((e = e - i - 1) > MAX_EXP) {
+            x.c = x.e = null;
+          } else if (e < MIN_EXP) {
+            x.c = [x.e = 0];
+          } else {
+            x.e = e;
+            x.c = [];
+            i = (e + 1) % LOG_BASE;
+            if (e < 0)
+              i += LOG_BASE;
+            if (i < len) {
+              if (i)
+                x.c.push(+str.slice(0, i));
+              for (len -= LOG_BASE;i < len; ) {
+                x.c.push(+str.slice(i, i += LOG_BASE));
+              }
+              i = LOG_BASE - (str = str.slice(i)).length;
+            } else {
+              i -= len;
+            }
+            for (;i--; str += "0")
+              ;
+            x.c.push(+str);
+          }
+        } else {
+          x.c = [x.e = 0];
+        }
+      }
+      BigNumber.clone = clone;
+      BigNumber.ROUND_UP = 0;
+      BigNumber.ROUND_DOWN = 1;
+      BigNumber.ROUND_CEIL = 2;
+      BigNumber.ROUND_FLOOR = 3;
+      BigNumber.ROUND_HALF_UP = 4;
+      BigNumber.ROUND_HALF_DOWN = 5;
+      BigNumber.ROUND_HALF_EVEN = 6;
+      BigNumber.ROUND_HALF_CEIL = 7;
+      BigNumber.ROUND_HALF_FLOOR = 8;
+      BigNumber.EUCLID = 9;
+      BigNumber.config = BigNumber.set = function(obj) {
+        var p, v;
+        if (obj != null) {
+          if (typeof obj == "object") {
+            if (obj.hasOwnProperty(p = "DECIMAL_PLACES")) {
+              v = obj[p];
+              intCheck(v, 0, MAX, p);
+              DECIMAL_PLACES = v;
+            }
+            if (obj.hasOwnProperty(p = "ROUNDING_MODE")) {
+              v = obj[p];
+              intCheck(v, 0, 8, p);
+              ROUNDING_MODE = v;
+            }
+            if (obj.hasOwnProperty(p = "EXPONENTIAL_AT")) {
+              v = obj[p];
+              if (v && v.pop) {
+                intCheck(v[0], -MAX, 0, p);
+                intCheck(v[1], 0, MAX, p);
+                TO_EXP_NEG = v[0];
+                TO_EXP_POS = v[1];
+              } else {
+                intCheck(v, -MAX, MAX, p);
+                TO_EXP_NEG = -(TO_EXP_POS = v < 0 ? -v : v);
+              }
+            }
+            if (obj.hasOwnProperty(p = "RANGE")) {
+              v = obj[p];
+              if (v && v.pop) {
+                intCheck(v[0], -MAX, -1, p);
+                intCheck(v[1], 1, MAX, p);
+                MIN_EXP = v[0];
+                MAX_EXP = v[1];
+              } else {
+                intCheck(v, -MAX, MAX, p);
+                if (v) {
+                  MIN_EXP = -(MAX_EXP = v < 0 ? -v : v);
+                } else {
+                  throw Error(bignumberError + p + " cannot be zero: " + v);
+                }
+              }
+            }
+            if (obj.hasOwnProperty(p = "CRYPTO")) {
+              v = obj[p];
+              if (v === !!v) {
+                if (v) {
+                  if (typeof crypto != "undefined" && crypto && (crypto.getRandomValues || crypto.randomBytes)) {
+                    CRYPTO = v;
+                  } else {
+                    CRYPTO = !v;
+                    throw Error(bignumberError + "crypto unavailable");
+                  }
+                } else {
+                  CRYPTO = v;
+                }
+              } else {
+                throw Error(bignumberError + p + " not true or false: " + v);
+              }
+            }
+            if (obj.hasOwnProperty(p = "MODULO_MODE")) {
+              v = obj[p];
+              intCheck(v, 0, 9, p);
+              MODULO_MODE = v;
+            }
+            if (obj.hasOwnProperty(p = "POW_PRECISION")) {
+              v = obj[p];
+              intCheck(v, 0, MAX, p);
+              POW_PRECISION = v;
+            }
+            if (obj.hasOwnProperty(p = "FORMAT")) {
+              v = obj[p];
+              if (typeof v == "object")
+                FORMAT = v;
+              else
+                throw Error(bignumberError + p + " not an object: " + v);
+            }
+            if (obj.hasOwnProperty(p = "ALPHABET")) {
+              v = obj[p];
+              if (typeof v == "string" && !/^.?$|[+\-.\s]|(.).*\1/.test(v)) {
+                alphabetHasNormalDecimalDigits = v.slice(0, 10) == "0123456789";
+                ALPHABET = v;
+              } else {
+                throw Error(bignumberError + p + " invalid: " + v);
+              }
+            }
+          } else {
+            throw Error(bignumberError + "Object expected: " + obj);
+          }
+        }
+        return {
+          DECIMAL_PLACES,
+          ROUNDING_MODE,
+          EXPONENTIAL_AT: [TO_EXP_NEG, TO_EXP_POS],
+          RANGE: [MIN_EXP, MAX_EXP],
+          CRYPTO,
+          MODULO_MODE,
+          POW_PRECISION,
+          FORMAT,
+          ALPHABET
+        };
+      };
+      BigNumber.isBigNumber = function(v) {
+        if (!v || v._isBigNumber !== true)
+          return false;
+        if (!BigNumber.DEBUG)
+          return true;
+        var i, n, { c, e, s } = v;
+        out:
+          if ({}.toString.call(c) == "[object Array]") {
+            if ((s === 1 || s === -1) && e >= -MAX && e <= MAX && e === mathfloor(e)) {
+              if (c[0] === 0) {
+                if (e === 0 && c.length === 1)
+                  return true;
+                break out;
+              }
+              i = (e + 1) % LOG_BASE;
+              if (i < 1)
+                i += LOG_BASE;
+              if (String(c[0]).length == i) {
+                for (i = 0;i < c.length; i++) {
+                  n = c[i];
+                  if (n < 0 || n >= BASE || n !== mathfloor(n))
+                    break out;
+                }
+                if (n !== 0)
+                  return true;
+              }
+            }
+          } else if (c === null && e === null && (s === null || s === 1 || s === -1)) {
+            return true;
+          }
+        throw Error(bignumberError + "Invalid BigNumber: " + v);
+      };
+      BigNumber.maximum = BigNumber.max = function() {
+        return maxOrMin(arguments, -1);
+      };
+      BigNumber.minimum = BigNumber.min = function() {
+        return maxOrMin(arguments, 1);
+      };
+      BigNumber.random = function() {
+        var pow2_53 = 9007199254740992;
+        var random53bitInt = Math.random() * pow2_53 & 2097151 ? function() {
+          return mathfloor(Math.random() * pow2_53);
+        } : function() {
+          return (Math.random() * 1073741824 | 0) * 8388608 + (Math.random() * 8388608 | 0);
+        };
+        return function(dp) {
+          var a, b, e, k, v, i = 0, c = [], rand = new BigNumber(ONE);
+          if (dp == null)
+            dp = DECIMAL_PLACES;
+          else
+            intCheck(dp, 0, MAX);
+          k = mathceil(dp / LOG_BASE);
+          if (CRYPTO) {
+            if (crypto.getRandomValues) {
+              a = crypto.getRandomValues(new Uint32Array(k *= 2));
+              for (;i < k; ) {
+                v = a[i] * 131072 + (a[i + 1] >>> 11);
+                if (v >= 9000000000000000) {
+                  b = crypto.getRandomValues(new Uint32Array(2));
+                  a[i] = b[0];
+                  a[i + 1] = b[1];
+                } else {
+                  c.push(v % 100000000000000);
+                  i += 2;
+                }
+              }
+              i = k / 2;
+            } else if (crypto.randomBytes) {
+              a = crypto.randomBytes(k *= 7);
+              for (;i < k; ) {
+                v = (a[i] & 31) * 281474976710656 + a[i + 1] * 1099511627776 + a[i + 2] * 4294967296 + a[i + 3] * 16777216 + (a[i + 4] << 16) + (a[i + 5] << 8) + a[i + 6];
+                if (v >= 9000000000000000) {
+                  crypto.randomBytes(7).copy(a, i);
+                } else {
+                  c.push(v % 100000000000000);
+                  i += 7;
+                }
+              }
+              i = k / 7;
+            } else {
+              CRYPTO = false;
+              throw Error(bignumberError + "crypto unavailable");
+            }
+          }
+          if (!CRYPTO) {
+            for (;i < k; ) {
+              v = random53bitInt();
+              if (v < 9000000000000000)
+                c[i++] = v % 100000000000000;
+            }
+          }
+          k = c[--i];
+          dp %= LOG_BASE;
+          if (k && dp) {
+            v = POWS_TEN[LOG_BASE - dp];
+            c[i] = mathfloor(k / v) * v;
+          }
+          for (;c[i] === 0; c.pop(), i--)
+            ;
+          if (i < 0) {
+            c = [e = 0];
+          } else {
+            for (e = -1;c[0] === 0; c.splice(0, 1), e -= LOG_BASE)
+              ;
+            for (i = 1, v = c[0];v >= 10; v /= 10, i++)
+              ;
+            if (i < LOG_BASE)
+              e -= LOG_BASE - i;
+          }
+          rand.e = e;
+          rand.c = c;
+          return rand;
+        };
+      }();
+      BigNumber.sum = function() {
+        var i = 1, args = arguments, sum = new BigNumber(args[0]);
+        for (;i < args.length; )
+          sum = sum.plus(args[i++]);
+        return sum;
+      };
+      convertBase = function() {
+        var decimal = "0123456789";
+        function toBaseOut(str, baseIn, baseOut, alphabet) {
+          var j, arr = [0], arrL, i = 0, len = str.length;
+          for (;i < len; ) {
+            for (arrL = arr.length;arrL--; arr[arrL] *= baseIn)
+              ;
+            arr[0] += alphabet.indexOf(str.charAt(i++));
+            for (j = 0;j < arr.length; j++) {
+              if (arr[j] > baseOut - 1) {
+                if (arr[j + 1] == null)
+                  arr[j + 1] = 0;
+                arr[j + 1] += arr[j] / baseOut | 0;
+                arr[j] %= baseOut;
+              }
+            }
+          }
+          return arr.reverse();
+        }
+        return function(str, baseIn, baseOut, sign, callerIsToString) {
+          var alphabet, d, e, k, r, x, xc, y, i = str.indexOf("."), dp = DECIMAL_PLACES, rm = ROUNDING_MODE;
+          if (i >= 0) {
+            k = POW_PRECISION;
+            POW_PRECISION = 0;
+            str = str.replace(".", "");
+            y = new BigNumber(baseIn);
+            x = y.pow(str.length - i);
+            POW_PRECISION = k;
+            y.c = toBaseOut(toFixedPoint(coeffToString(x.c), x.e, "0"), 10, baseOut, decimal);
+            y.e = y.c.length;
+          }
+          xc = toBaseOut(str, baseIn, baseOut, callerIsToString ? (alphabet = ALPHABET, decimal) : (alphabet = decimal, ALPHABET));
+          e = k = xc.length;
+          for (;xc[--k] == 0; xc.pop())
+            ;
+          if (!xc[0])
+            return alphabet.charAt(0);
+          if (i < 0) {
+            --e;
+          } else {
+            x.c = xc;
+            x.e = e;
+            x.s = sign;
+            x = div(x, y, dp, rm, baseOut);
+            xc = x.c;
+            r = x.r;
+            e = x.e;
+          }
+          d = e + dp + 1;
+          i = xc[d];
+          k = baseOut / 2;
+          r = r || d < 0 || xc[d + 1] != null;
+          r = rm < 4 ? (i != null || r) && (rm == 0 || rm == (x.s < 0 ? 3 : 2)) : i > k || i == k && (rm == 4 || r || rm == 6 && xc[d - 1] & 1 || rm == (x.s < 0 ? 8 : 7));
+          if (d < 1 || !xc[0]) {
+            str = r ? toFixedPoint(alphabet.charAt(1), -dp, alphabet.charAt(0)) : alphabet.charAt(0);
+          } else {
+            xc.length = d;
+            if (r) {
+              for (--baseOut;++xc[--d] > baseOut; ) {
+                xc[d] = 0;
+                if (!d) {
+                  ++e;
+                  xc = [1].concat(xc);
+                }
+              }
+            }
+            for (k = xc.length;!xc[--k]; )
+              ;
+            for (i = 0, str = "";i <= k; str += alphabet.charAt(xc[i++]))
+              ;
+            str = toFixedPoint(str, e, alphabet.charAt(0));
+          }
+          return str;
+        };
+      }();
+      div = function() {
+        function multiply(x, k, base) {
+          var m, temp, xlo, xhi, carry = 0, i = x.length, klo = k % SQRT_BASE, khi = k / SQRT_BASE | 0;
+          for (x = x.slice();i--; ) {
+            xlo = x[i] % SQRT_BASE;
+            xhi = x[i] / SQRT_BASE | 0;
+            m = khi * xlo + xhi * klo;
+            temp = klo * xlo + m % SQRT_BASE * SQRT_BASE + carry;
+            carry = (temp / base | 0) + (m / SQRT_BASE | 0) + khi * xhi;
+            x[i] = temp % base;
+          }
+          if (carry)
+            x = [carry].concat(x);
+          return x;
+        }
+        function compare(a, b, aL, bL) {
+          var i, cmp;
+          if (aL != bL) {
+            cmp = aL > bL ? 1 : -1;
+          } else {
+            for (i = cmp = 0;i < aL; i++) {
+              if (a[i] != b[i]) {
+                cmp = a[i] > b[i] ? 1 : -1;
+                break;
+              }
+            }
+          }
+          return cmp;
+        }
+        function subtract(a, b, aL, base) {
+          var i = 0;
+          for (;aL--; ) {
+            a[aL] -= i;
+            i = a[aL] < b[aL] ? 1 : 0;
+            a[aL] = i * base + a[aL] - b[aL];
+          }
+          for (;!a[0] && a.length > 1; a.splice(0, 1))
+            ;
+        }
+        return function(x, y, dp, rm, base) {
+          var cmp, e, i, more, n, prod, prodL, q, qc, rem, remL, rem0, xi, xL, yc0, yL, yz, s = x.s == y.s ? 1 : -1, xc = x.c, yc = y.c;
+          if (!xc || !xc[0] || !yc || !yc[0]) {
+            return new BigNumber(!x.s || !y.s || (xc ? yc && xc[0] == yc[0] : !yc) ? NaN : xc && xc[0] == 0 || !yc ? s * 0 : s / 0);
+          }
+          q = new BigNumber(s);
+          qc = q.c = [];
+          e = x.e - y.e;
+          s = dp + e + 1;
+          if (!base) {
+            base = BASE;
+            e = bitFloor(x.e / LOG_BASE) - bitFloor(y.e / LOG_BASE);
+            s = s / LOG_BASE | 0;
+          }
+          for (i = 0;yc[i] == (xc[i] || 0); i++)
+            ;
+          if (yc[i] > (xc[i] || 0))
+            e--;
+          if (s < 0) {
+            qc.push(1);
+            more = true;
+          } else {
+            xL = xc.length;
+            yL = yc.length;
+            i = 0;
+            s += 2;
+            n = mathfloor(base / (yc[0] + 1));
+            if (n > 1) {
+              yc = multiply(yc, n, base);
+              xc = multiply(xc, n, base);
+              yL = yc.length;
+              xL = xc.length;
+            }
+            xi = yL;
+            rem = xc.slice(0, yL);
+            remL = rem.length;
+            for (;remL < yL; rem[remL++] = 0)
+              ;
+            yz = yc.slice();
+            yz = [0].concat(yz);
+            yc0 = yc[0];
+            if (yc[1] >= base / 2)
+              yc0++;
+            do {
+              n = 0;
+              cmp = compare(yc, rem, yL, remL);
+              if (cmp < 0) {
+                rem0 = rem[0];
+                if (yL != remL)
+                  rem0 = rem0 * base + (rem[1] || 0);
+                n = mathfloor(rem0 / yc0);
+                if (n > 1) {
+                  if (n >= base)
+                    n = base - 1;
+                  prod = multiply(yc, n, base);
+                  prodL = prod.length;
+                  remL = rem.length;
+                  while (compare(prod, rem, prodL, remL) == 1) {
+                    n--;
+                    subtract(prod, yL < prodL ? yz : yc, prodL, base);
+                    prodL = prod.length;
+                    cmp = 1;
+                  }
+                } else {
+                  if (n == 0) {
+                    cmp = n = 1;
+                  }
+                  prod = yc.slice();
+                  prodL = prod.length;
+                }
+                if (prodL < remL)
+                  prod = [0].concat(prod);
+                subtract(rem, prod, remL, base);
+                remL = rem.length;
+                if (cmp == -1) {
+                  while (compare(yc, rem, yL, remL) < 1) {
+                    n++;
+                    subtract(rem, yL < remL ? yz : yc, remL, base);
+                    remL = rem.length;
+                  }
+                }
+              } else if (cmp === 0) {
+                n++;
+                rem = [0];
+              }
+              qc[i++] = n;
+              if (rem[0]) {
+                rem[remL++] = xc[xi] || 0;
+              } else {
+                rem = [xc[xi]];
+                remL = 1;
+              }
+            } while ((xi++ < xL || rem[0] != null) && s--);
+            more = rem[0] != null;
+            if (!qc[0])
+              qc.splice(0, 1);
+          }
+          if (base == BASE) {
+            for (i = 1, s = qc[0];s >= 10; s /= 10, i++)
+              ;
+            round(q, dp + (q.e = i + e * LOG_BASE - 1) + 1, rm, more);
+          } else {
+            q.e = e;
+            q.r = +more;
+          }
+          return q;
+        };
+      }();
+      function format(n, i, rm, id) {
+        var c0, e, ne, len, str;
+        if (rm == null)
+          rm = ROUNDING_MODE;
+        else
+          intCheck(rm, 0, 8);
+        if (!n.c)
+          return n.toString();
+        c0 = n.c[0];
+        ne = n.e;
+        if (i == null) {
+          str = coeffToString(n.c);
+          str = id == 1 || id == 2 && (ne <= TO_EXP_NEG || ne >= TO_EXP_POS) ? toExponential(str, ne) : toFixedPoint(str, ne, "0");
+        } else {
+          n = round(new BigNumber(n), i, rm);
+          e = n.e;
+          str = coeffToString(n.c);
+          len = str.length;
+          if (id == 1 || id == 2 && (i <= e || e <= TO_EXP_NEG)) {
+            for (;len < i; str += "0", len++)
+              ;
+            str = toExponential(str, e);
+          } else {
+            i -= ne + (id === 2 && e > ne);
+            str = toFixedPoint(str, e, "0");
+            if (e + 1 > len) {
+              if (--i > 0)
+                for (str += ".";i--; str += "0")
+                  ;
+            } else {
+              i += e - len;
+              if (i > 0) {
+                if (e + 1 == len)
+                  str += ".";
+                for (;i--; str += "0")
+                  ;
+              }
+            }
+          }
+        }
+        return n.s < 0 && c0 ? "-" + str : str;
+      }
+      function maxOrMin(args, n) {
+        var k, y, i = 1, x = new BigNumber(args[0]);
+        for (;i < args.length; i++) {
+          y = new BigNumber(args[i]);
+          if (!y.s || (k = compare(x, y)) === n || k === 0 && x.s === n) {
+            x = y;
+          }
+        }
+        return x;
+      }
+      function normalise(n, c, e) {
+        var i = 1, j = c.length;
+        for (;!c[--j]; c.pop())
+          ;
+        for (j = c[0];j >= 10; j /= 10, i++)
+          ;
+        if ((e = i + e * LOG_BASE - 1) > MAX_EXP) {
+          n.c = n.e = null;
+        } else if (e < MIN_EXP) {
+          n.c = [n.e = 0];
+        } else {
+          n.e = e;
+          n.c = c;
+        }
+        return n;
+      }
+      parseNumeric = function() {
+        var basePrefix = /^(-?)0([xbo])(?=\w[\w.]*$)/i, dotAfter = /^([^.]+)\.$/, dotBefore = /^\.([^.]+)$/, isInfinityOrNaN = /^-?(Infinity|NaN)$/, whitespaceOrPlus = /^\s*\+(?=[\w.])|^\s+|\s+$/g;
+        return function(x, str, isNum, b) {
+          var base, s = isNum ? str : str.replace(whitespaceOrPlus, "");
+          if (isInfinityOrNaN.test(s)) {
+            x.s = isNaN(s) ? null : s < 0 ? -1 : 1;
+          } else {
+            if (!isNum) {
+              s = s.replace(basePrefix, function(m, p1, p2) {
+                base = (p2 = p2.toLowerCase()) == "x" ? 16 : p2 == "b" ? 2 : 8;
+                return !b || b == base ? p1 : m;
+              });
+              if (b) {
+                base = b;
+                s = s.replace(dotAfter, "$1").replace(dotBefore, "0.$1");
+              }
+              if (str != s)
+                return new BigNumber(s, base);
+            }
+            if (BigNumber.DEBUG) {
+              throw Error(bignumberError + "Not a" + (b ? " base " + b : "") + " number: " + str);
+            }
+            x.s = null;
+          }
+          x.c = x.e = null;
+        };
+      }();
+      function round(x, sd, rm, r) {
+        var d, i, j, k, n, ni, rd, xc = x.c, pows10 = POWS_TEN;
+        if (xc) {
+          out: {
+            for (d = 1, k = xc[0];k >= 10; k /= 10, d++)
+              ;
+            i = sd - d;
+            if (i < 0) {
+              i += LOG_BASE;
+              j = sd;
+              n = xc[ni = 0];
+              rd = mathfloor(n / pows10[d - j - 1] % 10);
+            } else {
+              ni = mathceil((i + 1) / LOG_BASE);
+              if (ni >= xc.length) {
+                if (r) {
+                  for (;xc.length <= ni; xc.push(0))
+                    ;
+                  n = rd = 0;
+                  d = 1;
+                  i %= LOG_BASE;
+                  j = i - LOG_BASE + 1;
+                } else {
+                  break out;
+                }
+              } else {
+                n = k = xc[ni];
+                for (d = 1;k >= 10; k /= 10, d++)
+                  ;
+                i %= LOG_BASE;
+                j = i - LOG_BASE + d;
+                rd = j < 0 ? 0 : mathfloor(n / pows10[d - j - 1] % 10);
+              }
+            }
+            r = r || sd < 0 || xc[ni + 1] != null || (j < 0 ? n : n % pows10[d - j - 1]);
+            r = rm < 4 ? (rd || r) && (rm == 0 || rm == (x.s < 0 ? 3 : 2)) : rd > 5 || rd == 5 && (rm == 4 || r || rm == 6 && (i > 0 ? j > 0 ? n / pows10[d - j] : 0 : xc[ni - 1]) % 10 & 1 || rm == (x.s < 0 ? 8 : 7));
+            if (sd < 1 || !xc[0]) {
+              xc.length = 0;
+              if (r) {
+                sd -= x.e + 1;
+                xc[0] = pows10[(LOG_BASE - sd % LOG_BASE) % LOG_BASE];
+                x.e = -sd || 0;
+              } else {
+                xc[0] = x.e = 0;
+              }
+              return x;
+            }
+            if (i == 0) {
+              xc.length = ni;
+              k = 1;
+              ni--;
+            } else {
+              xc.length = ni + 1;
+              k = pows10[LOG_BASE - i];
+              xc[ni] = j > 0 ? mathfloor(n / pows10[d - j] % pows10[j]) * k : 0;
+            }
+            if (r) {
+              for (;; ) {
+                if (ni == 0) {
+                  for (i = 1, j = xc[0];j >= 10; j /= 10, i++)
+                    ;
+                  j = xc[0] += k;
+                  for (k = 1;j >= 10; j /= 10, k++)
+                    ;
+                  if (i != k) {
+                    x.e++;
+                    if (xc[0] == BASE)
+                      xc[0] = 1;
+                  }
+                  break;
+                } else {
+                  xc[ni] += k;
+                  if (xc[ni] != BASE)
+                    break;
+                  xc[ni--] = 0;
+                  k = 1;
+                }
+              }
+            }
+            for (i = xc.length;xc[--i] === 0; xc.pop())
+              ;
+          }
+          if (x.e > MAX_EXP) {
+            x.c = x.e = null;
+          } else if (x.e < MIN_EXP) {
+            x.c = [x.e = 0];
+          }
+        }
+        return x;
+      }
+      function valueOf(n) {
+        var str, e = n.e;
+        if (e === null)
+          return n.toString();
+        str = coeffToString(n.c);
+        str = e <= TO_EXP_NEG || e >= TO_EXP_POS ? toExponential(str, e) : toFixedPoint(str, e, "0");
+        return n.s < 0 ? "-" + str : str;
+      }
+      P.absoluteValue = P.abs = function() {
+        var x = new BigNumber(this);
+        if (x.s < 0)
+          x.s = 1;
+        return x;
+      };
+      P.comparedTo = function(y, b) {
+        return compare(this, new BigNumber(y, b));
+      };
+      P.decimalPlaces = P.dp = function(dp, rm) {
+        var c, n, v, x = this;
+        if (dp != null) {
+          intCheck(dp, 0, MAX);
+          if (rm == null)
+            rm = ROUNDING_MODE;
+          else
+            intCheck(rm, 0, 8);
+          return round(new BigNumber(x), dp + x.e + 1, rm);
+        }
+        if (!(c = x.c))
+          return null;
+        n = ((v = c.length - 1) - bitFloor(this.e / LOG_BASE)) * LOG_BASE;
+        if (v = c[v])
+          for (;v % 10 == 0; v /= 10, n--)
+            ;
+        if (n < 0)
+          n = 0;
+        return n;
+      };
+      P.dividedBy = P.div = function(y, b) {
+        return div(this, new BigNumber(y, b), DECIMAL_PLACES, ROUNDING_MODE);
+      };
+      P.dividedToIntegerBy = P.idiv = function(y, b) {
+        return div(this, new BigNumber(y, b), 0, 1);
+      };
+      P.exponentiatedBy = P.pow = function(n, m) {
+        var half, isModExp, i, k, more, nIsBig, nIsNeg, nIsOdd, y, x = this;
+        n = new BigNumber(n);
+        if (n.c && !n.isInteger()) {
+          throw Error(bignumberError + "Exponent not an integer: " + valueOf(n));
+        }
+        if (m != null)
+          m = new BigNumber(m);
+        nIsBig = n.e > 14;
+        if (!x.c || !x.c[0] || x.c[0] == 1 && !x.e && x.c.length == 1 || !n.c || !n.c[0]) {
+          y = new BigNumber(Math.pow(+valueOf(x), nIsBig ? n.s * (2 - isOdd(n)) : +valueOf(n)));
+          return m ? y.mod(m) : y;
+        }
+        nIsNeg = n.s < 0;
+        if (m) {
+          if (m.c ? !m.c[0] : !m.s)
+            return new BigNumber(NaN);
+          isModExp = !nIsNeg && x.isInteger() && m.isInteger();
+          if (isModExp)
+            x = x.mod(m);
+        } else if (n.e > 9 && (x.e > 0 || x.e < -1 || (x.e == 0 ? x.c[0] > 1 || nIsBig && x.c[1] >= 240000000 : x.c[0] < 80000000000000 || nIsBig && x.c[0] <= 99999750000000))) {
+          k = x.s < 0 && isOdd(n) ? -0 : 0;
+          if (x.e > -1)
+            k = 1 / k;
+          return new BigNumber(nIsNeg ? 1 / k : k);
+        } else if (POW_PRECISION) {
+          k = mathceil(POW_PRECISION / LOG_BASE + 2);
+        }
+        if (nIsBig) {
+          half = new BigNumber(0.5);
+          if (nIsNeg)
+            n.s = 1;
+          nIsOdd = isOdd(n);
+        } else {
+          i = Math.abs(+valueOf(n));
+          nIsOdd = i % 2;
+        }
+        y = new BigNumber(ONE);
+        for (;; ) {
+          if (nIsOdd) {
+            y = y.times(x);
+            if (!y.c)
+              break;
+            if (k) {
+              if (y.c.length > k)
+                y.c.length = k;
+            } else if (isModExp) {
+              y = y.mod(m);
+            }
+          }
+          if (i) {
+            i = mathfloor(i / 2);
+            if (i === 0)
+              break;
+            nIsOdd = i % 2;
+          } else {
+            n = n.times(half);
+            round(n, n.e + 1, 1);
+            if (n.e > 14) {
+              nIsOdd = isOdd(n);
+            } else {
+              i = +valueOf(n);
+              if (i === 0)
+                break;
+              nIsOdd = i % 2;
+            }
+          }
+          x = x.times(x);
+          if (k) {
+            if (x.c && x.c.length > k)
+              x.c.length = k;
+          } else if (isModExp) {
+            x = x.mod(m);
+          }
+        }
+        if (isModExp)
+          return y;
+        if (nIsNeg)
+          y = ONE.div(y);
+        return m ? y.mod(m) : k ? round(y, POW_PRECISION, ROUNDING_MODE, more) : y;
+      };
+      P.integerValue = function(rm) {
+        var n = new BigNumber(this);
+        if (rm == null)
+          rm = ROUNDING_MODE;
+        else
+          intCheck(rm, 0, 8);
+        return round(n, n.e + 1, rm);
+      };
+      P.isEqualTo = P.eq = function(y, b) {
+        return compare(this, new BigNumber(y, b)) === 0;
+      };
+      P.isFinite = function() {
+        return !!this.c;
+      };
+      P.isGreaterThan = P.gt = function(y, b) {
+        return compare(this, new BigNumber(y, b)) > 0;
+      };
+      P.isGreaterThanOrEqualTo = P.gte = function(y, b) {
+        return (b = compare(this, new BigNumber(y, b))) === 1 || b === 0;
+      };
+      P.isInteger = function() {
+        return !!this.c && bitFloor(this.e / LOG_BASE) > this.c.length - 2;
+      };
+      P.isLessThan = P.lt = function(y, b) {
+        return compare(this, new BigNumber(y, b)) < 0;
+      };
+      P.isLessThanOrEqualTo = P.lte = function(y, b) {
+        return (b = compare(this, new BigNumber(y, b))) === -1 || b === 0;
+      };
+      P.isNaN = function() {
+        return !this.s;
+      };
+      P.isNegative = function() {
+        return this.s < 0;
+      };
+      P.isPositive = function() {
+        return this.s > 0;
+      };
+      P.isZero = function() {
+        return !!this.c && this.c[0] == 0;
+      };
+      P.minus = function(y, b) {
+        var i, j, t, xLTy, x = this, a = x.s;
+        y = new BigNumber(y, b);
+        b = y.s;
+        if (!a || !b)
+          return new BigNumber(NaN);
+        if (a != b) {
+          y.s = -b;
+          return x.plus(y);
+        }
+        var xe = x.e / LOG_BASE, ye = y.e / LOG_BASE, xc = x.c, yc = y.c;
+        if (!xe || !ye) {
+          if (!xc || !yc)
+            return xc ? (y.s = -b, y) : new BigNumber(yc ? x : NaN);
+          if (!xc[0] || !yc[0]) {
+            return yc[0] ? (y.s = -b, y) : new BigNumber(xc[0] ? x : ROUNDING_MODE == 3 ? -0 : 0);
+          }
+        }
+        xe = bitFloor(xe);
+        ye = bitFloor(ye);
+        xc = xc.slice();
+        if (a = xe - ye) {
+          if (xLTy = a < 0) {
+            a = -a;
+            t = xc;
+          } else {
+            ye = xe;
+            t = yc;
+          }
+          t.reverse();
+          for (b = a;b--; t.push(0))
+            ;
+          t.reverse();
+        } else {
+          j = (xLTy = (a = xc.length) < (b = yc.length)) ? a : b;
+          for (a = b = 0;b < j; b++) {
+            if (xc[b] != yc[b]) {
+              xLTy = xc[b] < yc[b];
+              break;
+            }
+          }
+        }
+        if (xLTy) {
+          t = xc;
+          xc = yc;
+          yc = t;
+          y.s = -y.s;
+        }
+        b = (j = yc.length) - (i = xc.length);
+        if (b > 0)
+          for (;b--; xc[i++] = 0)
+            ;
+        b = BASE - 1;
+        for (;j > a; ) {
+          if (xc[--j] < yc[j]) {
+            for (i = j;i && !xc[--i]; xc[i] = b)
+              ;
+            --xc[i];
+            xc[j] += BASE;
+          }
+          xc[j] -= yc[j];
+        }
+        for (;xc[0] == 0; xc.splice(0, 1), --ye)
+          ;
+        if (!xc[0]) {
+          y.s = ROUNDING_MODE == 3 ? -1 : 1;
+          y.c = [y.e = 0];
+          return y;
+        }
+        return normalise(y, xc, ye);
+      };
+      P.modulo = P.mod = function(y, b) {
+        var q, s, x = this;
+        y = new BigNumber(y, b);
+        if (!x.c || !y.s || y.c && !y.c[0]) {
+          return new BigNumber(NaN);
+        } else if (!y.c || x.c && !x.c[0]) {
+          return new BigNumber(x);
+        }
+        if (MODULO_MODE == 9) {
+          s = y.s;
+          y.s = 1;
+          q = div(x, y, 0, 3);
+          y.s = s;
+          q.s *= s;
+        } else {
+          q = div(x, y, 0, MODULO_MODE);
+        }
+        y = x.minus(q.times(y));
+        if (!y.c[0] && MODULO_MODE == 1)
+          y.s = x.s;
+        return y;
+      };
+      P.multipliedBy = P.times = function(y, b) {
+        var c, e, i, j, k, m, xcL, xlo, xhi, ycL, ylo, yhi, zc, base, sqrtBase, x = this, xc = x.c, yc = (y = new BigNumber(y, b)).c;
+        if (!xc || !yc || !xc[0] || !yc[0]) {
+          if (!x.s || !y.s || xc && !xc[0] && !yc || yc && !yc[0] && !xc) {
+            y.c = y.e = y.s = null;
+          } else {
+            y.s *= x.s;
+            if (!xc || !yc) {
+              y.c = y.e = null;
+            } else {
+              y.c = [0];
+              y.e = 0;
+            }
+          }
+          return y;
+        }
+        e = bitFloor(x.e / LOG_BASE) + bitFloor(y.e / LOG_BASE);
+        y.s *= x.s;
+        xcL = xc.length;
+        ycL = yc.length;
+        if (xcL < ycL) {
+          zc = xc;
+          xc = yc;
+          yc = zc;
+          i = xcL;
+          xcL = ycL;
+          ycL = i;
+        }
+        for (i = xcL + ycL, zc = [];i--; zc.push(0))
+          ;
+        base = BASE;
+        sqrtBase = SQRT_BASE;
+        for (i = ycL;--i >= 0; ) {
+          c = 0;
+          ylo = yc[i] % sqrtBase;
+          yhi = yc[i] / sqrtBase | 0;
+          for (k = xcL, j = i + k;j > i; ) {
+            xlo = xc[--k] % sqrtBase;
+            xhi = xc[k] / sqrtBase | 0;
+            m = yhi * xlo + xhi * ylo;
+            xlo = ylo * xlo + m % sqrtBase * sqrtBase + zc[j] + c;
+            c = (xlo / base | 0) + (m / sqrtBase | 0) + yhi * xhi;
+            zc[j--] = xlo % base;
+          }
+          zc[j] = c;
+        }
+        if (c) {
+          ++e;
+        } else {
+          zc.splice(0, 1);
+        }
+        return normalise(y, zc, e);
+      };
+      P.negated = function() {
+        var x = new BigNumber(this);
+        x.s = -x.s || null;
+        return x;
+      };
+      P.plus = function(y, b) {
+        var t, x = this, a = x.s;
+        y = new BigNumber(y, b);
+        b = y.s;
+        if (!a || !b)
+          return new BigNumber(NaN);
+        if (a != b) {
+          y.s = -b;
+          return x.minus(y);
+        }
+        var xe = x.e / LOG_BASE, ye = y.e / LOG_BASE, xc = x.c, yc = y.c;
+        if (!xe || !ye) {
+          if (!xc || !yc)
+            return new BigNumber(a / 0);
+          if (!xc[0] || !yc[0])
+            return yc[0] ? y : new BigNumber(xc[0] ? x : a * 0);
+        }
+        xe = bitFloor(xe);
+        ye = bitFloor(ye);
+        xc = xc.slice();
+        if (a = xe - ye) {
+          if (a > 0) {
+            ye = xe;
+            t = yc;
+          } else {
+            a = -a;
+            t = xc;
+          }
+          t.reverse();
+          for (;a--; t.push(0))
+            ;
+          t.reverse();
+        }
+        a = xc.length;
+        b = yc.length;
+        if (a - b < 0) {
+          t = yc;
+          yc = xc;
+          xc = t;
+          b = a;
+        }
+        for (a = 0;b; ) {
+          a = (xc[--b] = xc[b] + yc[b] + a) / BASE | 0;
+          xc[b] = BASE === xc[b] ? 0 : xc[b] % BASE;
+        }
+        if (a) {
+          xc = [a].concat(xc);
+          ++ye;
+        }
+        return normalise(y, xc, ye);
+      };
+      P.precision = P.sd = function(sd, rm) {
+        var c, n, v, x = this;
+        if (sd != null && sd !== !!sd) {
+          intCheck(sd, 1, MAX);
+          if (rm == null)
+            rm = ROUNDING_MODE;
+          else
+            intCheck(rm, 0, 8);
+          return round(new BigNumber(x), sd, rm);
+        }
+        if (!(c = x.c))
+          return null;
+        v = c.length - 1;
+        n = v * LOG_BASE + 1;
+        if (v = c[v]) {
+          for (;v % 10 == 0; v /= 10, n--)
+            ;
+          for (v = c[0];v >= 10; v /= 10, n++)
+            ;
+        }
+        if (sd && x.e + 1 > n)
+          n = x.e + 1;
+        return n;
+      };
+      P.shiftedBy = function(k) {
+        intCheck(k, -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER);
+        return this.times("1e" + k);
+      };
+      P.squareRoot = P.sqrt = function() {
+        var m, n, r, rep, t, x = this, { c, s, e } = x, dp = DECIMAL_PLACES + 4, half = new BigNumber("0.5");
+        if (s !== 1 || !c || !c[0]) {
+          return new BigNumber(!s || s < 0 && (!c || c[0]) ? NaN : c ? x : 1 / 0);
+        }
+        s = Math.sqrt(+valueOf(x));
+        if (s == 0 || s == 1 / 0) {
+          n = coeffToString(c);
+          if ((n.length + e) % 2 == 0)
+            n += "0";
+          s = Math.sqrt(+n);
+          e = bitFloor((e + 1) / 2) - (e < 0 || e % 2);
+          if (s == 1 / 0) {
+            n = "5e" + e;
+          } else {
+            n = s.toExponential();
+            n = n.slice(0, n.indexOf("e") + 1) + e;
+          }
+          r = new BigNumber(n);
+        } else {
+          r = new BigNumber(s + "");
+        }
+        if (r.c[0]) {
+          e = r.e;
+          s = e + dp;
+          if (s < 3)
+            s = 0;
+          for (;; ) {
+            t = r;
+            r = half.times(t.plus(div(x, t, dp, 1)));
+            if (coeffToString(t.c).slice(0, s) === (n = coeffToString(r.c)).slice(0, s)) {
+              if (r.e < e)
+                --s;
+              n = n.slice(s - 3, s + 1);
+              if (n == "9999" || !rep && n == "4999") {
+                if (!rep) {
+                  round(t, t.e + DECIMAL_PLACES + 2, 0);
+                  if (t.times(t).eq(x)) {
+                    r = t;
+                    break;
+                  }
+                }
+                dp += 4;
+                s += 4;
+                rep = 1;
+              } else {
+                if (!+n || !+n.slice(1) && n.charAt(0) == "5") {
+                  round(r, r.e + DECIMAL_PLACES + 2, 1);
+                  m = !r.times(r).eq(x);
+                }
+                break;
+              }
+            }
+          }
+        }
+        return round(r, r.e + DECIMAL_PLACES + 1, ROUNDING_MODE, m);
+      };
+      P.toExponential = function(dp, rm) {
+        if (dp != null) {
+          intCheck(dp, 0, MAX);
+          dp++;
+        }
+        return format(this, dp, rm, 1);
+      };
+      P.toFixed = function(dp, rm) {
+        if (dp != null) {
+          intCheck(dp, 0, MAX);
+          dp = dp + this.e + 1;
+        }
+        return format(this, dp, rm);
+      };
+      P.toFormat = function(dp, rm, format) {
+        var str, x = this;
+        if (format == null) {
+          if (dp != null && rm && typeof rm == "object") {
+            format = rm;
+            rm = null;
+          } else if (dp && typeof dp == "object") {
+            format = dp;
+            dp = rm = null;
+          } else {
+            format = FORMAT;
+          }
+        } else if (typeof format != "object") {
+          throw Error(bignumberError + "Argument not an object: " + format);
+        }
+        str = x.toFixed(dp, rm);
+        if (x.c) {
+          var i, arr = str.split("."), g1 = +format.groupSize, g2 = +format.secondaryGroupSize, groupSeparator = format.groupSeparator || "", intPart = arr[0], fractionPart = arr[1], isNeg = x.s < 0, intDigits = isNeg ? intPart.slice(1) : intPart, len = intDigits.length;
+          if (g2) {
+            i = g1;
+            g1 = g2;
+            g2 = i;
+            len -= i;
+          }
+          if (g1 > 0 && len > 0) {
+            i = len % g1 || g1;
+            intPart = intDigits.substr(0, i);
+            for (;i < len; i += g1)
+              intPart += groupSeparator + intDigits.substr(i, g1);
+            if (g2 > 0)
+              intPart += groupSeparator + intDigits.slice(i);
+            if (isNeg)
+              intPart = "-" + intPart;
+          }
+          str = fractionPart ? intPart + (format.decimalSeparator || "") + ((g2 = +format.fractionGroupSize) ? fractionPart.replace(new RegExp("\\d{" + g2 + "}\\B", "g"), "$&" + (format.fractionGroupSeparator || "")) : fractionPart) : intPart;
+        }
+        return (format.prefix || "") + str + (format.suffix || "");
+      };
+      P.toFraction = function(md) {
+        var d, d0, d1, d2, e, exp, n, n0, n1, q, r, s, x = this, xc = x.c;
+        if (md != null) {
+          n = new BigNumber(md);
+          if (!n.isInteger() && (n.c || n.s !== 1) || n.lt(ONE)) {
+            throw Error(bignumberError + "Argument " + (n.isInteger() ? "out of range: " : "not an integer: ") + valueOf(n));
+          }
+        }
+        if (!xc)
+          return new BigNumber(x);
+        d = new BigNumber(ONE);
+        n1 = d0 = new BigNumber(ONE);
+        d1 = n0 = new BigNumber(ONE);
+        s = coeffToString(xc);
+        e = d.e = s.length - x.e - 1;
+        d.c[0] = POWS_TEN[(exp = e % LOG_BASE) < 0 ? LOG_BASE + exp : exp];
+        md = !md || n.comparedTo(d) > 0 ? e > 0 ? d : n1 : n;
+        exp = MAX_EXP;
+        MAX_EXP = 1 / 0;
+        n = new BigNumber(s);
+        n0.c[0] = 0;
+        for (;; ) {
+          q = div(n, d, 0, 1);
+          d2 = d0.plus(q.times(d1));
+          if (d2.comparedTo(md) == 1)
+            break;
+          d0 = d1;
+          d1 = d2;
+          n1 = n0.plus(q.times(d2 = n1));
+          n0 = d2;
+          d = n.minus(q.times(d2 = d));
+          n = d2;
+        }
+        d2 = div(md.minus(d0), d1, 0, 1);
+        n0 = n0.plus(d2.times(n1));
+        d0 = d0.plus(d2.times(d1));
+        n0.s = n1.s = x.s;
+        e = e * 2;
+        r = div(n1, d1, e, ROUNDING_MODE).minus(x).abs().comparedTo(div(n0, d0, e, ROUNDING_MODE).minus(x).abs()) < 1 ? [n1, d1] : [n0, d0];
+        MAX_EXP = exp;
+        return r;
+      };
+      P.toNumber = function() {
+        return +valueOf(this);
+      };
+      P.toPrecision = function(sd, rm) {
+        if (sd != null)
+          intCheck(sd, 1, MAX);
+        return format(this, sd, rm, 2);
+      };
+      P.toString = function(b) {
+        var str, n = this, s = n.s, e = n.e;
+        if (e === null) {
+          if (s) {
+            str = "Infinity";
+            if (s < 0)
+              str = "-" + str;
+          } else {
+            str = "NaN";
+          }
+        } else {
+          if (b == null) {
+            str = e <= TO_EXP_NEG || e >= TO_EXP_POS ? toExponential(coeffToString(n.c), e) : toFixedPoint(coeffToString(n.c), e, "0");
+          } else if (b === 10 && alphabetHasNormalDecimalDigits) {
+            n = round(new BigNumber(n), DECIMAL_PLACES + e + 1, ROUNDING_MODE);
+            str = toFixedPoint(coeffToString(n.c), n.e, "0");
+          } else {
+            intCheck(b, 2, ALPHABET.length, "Base");
+            str = convertBase(toFixedPoint(coeffToString(n.c), e, "0"), 10, b, s, true);
+          }
+          if (s < 0 && n.c[0])
+            str = "-" + str;
+        }
+        return str;
+      };
+      P.valueOf = P.toJSON = function() {
+        return valueOf(this);
+      };
+      P._isBigNumber = true;
+      if (configObject != null)
+        BigNumber.set(configObject);
+      return BigNumber;
+    }
+    function bitFloor(n) {
+      var i = n | 0;
+      return n > 0 || n === i ? i : i - 1;
+    }
+    function coeffToString(a) {
+      var s, z, i = 1, j = a.length, r = a[0] + "";
+      for (;i < j; ) {
+        s = a[i++] + "";
+        z = LOG_BASE - s.length;
+        for (;z--; s = "0" + s)
+          ;
+        r += s;
+      }
+      for (j = r.length;r.charCodeAt(--j) === 48; )
+        ;
+      return r.slice(0, j + 1 || 1);
+    }
+    function compare(x, y) {
+      var a, b, xc = x.c, yc = y.c, i = x.s, j = y.s, k = x.e, l = y.e;
+      if (!i || !j)
+        return null;
+      a = xc && !xc[0];
+      b = yc && !yc[0];
+      if (a || b)
+        return a ? b ? 0 : -j : i;
+      if (i != j)
+        return i;
+      a = i < 0;
+      b = k == l;
+      if (!xc || !yc)
+        return b ? 0 : !xc ^ a ? 1 : -1;
+      if (!b)
+        return k > l ^ a ? 1 : -1;
+      j = (k = xc.length) < (l = yc.length) ? k : l;
+      for (i = 0;i < j; i++)
+        if (xc[i] != yc[i])
+          return xc[i] > yc[i] ^ a ? 1 : -1;
+      return k == l ? 0 : k > l ^ a ? 1 : -1;
+    }
+    function intCheck(n, min, max, name) {
+      if (n < min || n > max || n !== mathfloor(n)) {
+        throw Error(bignumberError + (name || "Argument") + (typeof n == "number" ? n < min || n > max ? " out of range: " : " not an integer: " : " not a primitive number: ") + String(n));
+      }
+    }
+    function isOdd(n) {
+      var k = n.c.length - 1;
+      return bitFloor(n.e / LOG_BASE) == k && n.c[k] % 2 != 0;
+    }
+    function toExponential(str, e) {
+      return (str.length > 1 ? str.charAt(0) + "." + str.slice(1) : str) + (e < 0 ? "e" : "e+") + e;
+    }
+    function toFixedPoint(str, e, z) {
+      var len, zs;
+      if (e < 0) {
+        for (zs = z + ".";++e; zs += z)
+          ;
+        str = zs + str;
+      } else {
+        len = str.length;
+        if (++e > len) {
+          for (zs = z, e -= len;--e; zs += z)
+            ;
+          str += zs;
+        } else if (e < len) {
+          str = str.slice(0, e) + "." + str.slice(e);
+        }
+      }
+      return str;
+    }
+    BigNumber = clone();
+    BigNumber["default"] = BigNumber.BigNumber = BigNumber;
+    if (typeof define == "function" && define.amd) {
+      define(function() {
+        return BigNumber;
+      });
+    } else if (typeof module != "undefined" && module.exports) {
+      module.exports = BigNumber;
+    } else {
+      if (!globalObject) {
+        globalObject = typeof self != "undefined" && self ? self : window;
+      }
+      globalObject.BigNumber = BigNumber;
+    }
+  })(exports);
+});
+
+// node_modules/json-bigint/lib/stringify.js
+var require_stringify = __commonJS(function(exports, module) {
+  var BigNumber = require_bignumber();
+  var JSON2 = exports;
+  (function() {
+    function f(n) {
+      return n < 10 ? "0" + n : n;
+    }
+    var cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g, escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g, gap, indent, meta = {
+      "\b": "\\b",
+      "\t": "\\t",
+      "\n": "\\n",
+      "\f": "\\f",
+      "\r": "\\r",
+      '"': "\\\"",
+      "\\": "\\\\"
+    }, rep;
+    function quote(string) {
+      escapable.lastIndex = 0;
+      return escapable.test(string) ? '"' + string.replace(escapable, function(a) {
+        var c = meta[a];
+        return typeof c === "string" ? c : "\\u" + ("0000" + a.charCodeAt(0).toString(16)).slice(-4);
+      }) + '"' : '"' + string + '"';
+    }
+    function str(key, holder) {
+      var i, k, v, length, mind = gap, partial, value = holder[key], isBigNumber = value != null && (value instanceof BigNumber || BigNumber.isBigNumber(value));
+      if (value && typeof value === "object" && typeof value.toJSON === "function") {
+        value = value.toJSON(key);
+      }
+      if (typeof rep === "function") {
+        value = rep.call(holder, key, value);
+      }
+      switch (typeof value) {
+        case "string":
+          if (isBigNumber) {
+            return value;
+          } else {
+            return quote(value);
+          }
+        case "number":
+          return isFinite(value) ? String(value) : "null";
+        case "boolean":
+        case "null":
+        case "bigint":
+          return String(value);
+        case "object":
+          if (!value) {
+            return "null";
+          }
+          gap += indent;
+          partial = [];
+          if (Object.prototype.toString.apply(value) === "[object Array]") {
+            length = value.length;
+            for (i = 0;i < length; i += 1) {
+              partial[i] = str(i, value) || "null";
+            }
+            v = partial.length === 0 ? "[]" : gap ? `[
+` + gap + partial.join(`,
+` + gap) + `
+` + mind + "]" : "[" + partial.join(",") + "]";
+            gap = mind;
+            return v;
+          }
+          if (rep && typeof rep === "object") {
+            length = rep.length;
+            for (i = 0;i < length; i += 1) {
+              if (typeof rep[i] === "string") {
+                k = rep[i];
+                v = str(k, value);
+                if (v) {
+                  partial.push(quote(k) + (gap ? ": " : ":") + v);
+                }
+              }
+            }
+          } else {
+            Object.keys(value).forEach(function(k) {
+              var v = str(k, value);
+              if (v) {
+                partial.push(quote(k) + (gap ? ": " : ":") + v);
+              }
+            });
+          }
+          v = partial.length === 0 ? "{}" : gap ? `{
+` + gap + partial.join(`,
+` + gap) + `
+` + mind + "}" : "{" + partial.join(",") + "}";
+          gap = mind;
+          return v;
+      }
+    }
+    if (typeof JSON2.stringify !== "function") {
+      JSON2.stringify = function(value, replacer, space) {
+        var i;
+        gap = "";
+        indent = "";
+        if (typeof space === "number") {
+          for (i = 0;i < space; i += 1) {
+            indent += " ";
+          }
+        } else if (typeof space === "string") {
+          indent = space;
+        }
+        rep = replacer;
+        if (replacer && typeof replacer !== "function" && (typeof replacer !== "object" || typeof replacer.length !== "number")) {
+          throw new Error("JSON.stringify");
+        }
+        return str("", { "": value });
+      };
+    }
+  })();
+});
+
+// node_modules/json-bigint/lib/parse.js
+var require_parse = __commonJS(function(exports, module) {
+  var BigNumber = null;
+  var suspectProtoRx = /(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])/;
+  var suspectConstructorRx = /(?:c|\\u0063)(?:o|\\u006[Ff])(?:n|\\u006[Ee])(?:s|\\u0073)(?:t|\\u0074)(?:r|\\u0072)(?:u|\\u0075)(?:c|\\u0063)(?:t|\\u0074)(?:o|\\u006[Ff])(?:r|\\u0072)/;
+  var json_parse = function(options) {
+    var _options = {
+      strict: false,
+      storeAsString: false,
+      alwaysParseAsBig: false,
+      useNativeBigInt: false,
+      protoAction: "error",
+      constructorAction: "error"
+    };
+    if (options !== undefined && options !== null) {
+      if (options.strict === true) {
+        _options.strict = true;
+      }
+      if (options.storeAsString === true) {
+        _options.storeAsString = true;
+      }
+      _options.alwaysParseAsBig = options.alwaysParseAsBig === true ? options.alwaysParseAsBig : false;
+      _options.useNativeBigInt = options.useNativeBigInt === true ? options.useNativeBigInt : false;
+      if (typeof options.constructorAction !== "undefined") {
+        if (options.constructorAction === "error" || options.constructorAction === "ignore" || options.constructorAction === "preserve") {
+          _options.constructorAction = options.constructorAction;
+        } else {
+          throw new Error(`Incorrect value for constructorAction option, must be "error", "ignore" or undefined but passed ${options.constructorAction}`);
+        }
+      }
+      if (typeof options.protoAction !== "undefined") {
+        if (options.protoAction === "error" || options.protoAction === "ignore" || options.protoAction === "preserve") {
+          _options.protoAction = options.protoAction;
+        } else {
+          throw new Error(`Incorrect value for protoAction option, must be "error", "ignore" or undefined but passed ${options.protoAction}`);
+        }
+      }
+    }
+    var at, ch, escapee = {
+      '"': '"',
+      "\\": "\\",
+      "/": "/",
+      b: "\b",
+      f: "\f",
+      n: `
+`,
+      r: "\r",
+      t: "\t"
+    }, text, error = function(m) {
+      throw {
+        name: "SyntaxError",
+        message: m,
+        at,
+        text
+      };
+    }, next = function(c) {
+      if (c && c !== ch) {
+        error("Expected '" + c + "' instead of '" + ch + "'");
+      }
+      ch = text.charAt(at);
+      at += 1;
+      return ch;
+    }, number = function() {
+      var number, string = "";
+      if (ch === "-") {
+        string = "-";
+        next("-");
+      }
+      while (ch >= "0" && ch <= "9") {
+        string += ch;
+        next();
+      }
+      if (ch === ".") {
+        string += ".";
+        while (next() && ch >= "0" && ch <= "9") {
+          string += ch;
+        }
+      }
+      if (ch === "e" || ch === "E") {
+        string += ch;
+        next();
+        if (ch === "-" || ch === "+") {
+          string += ch;
+          next();
+        }
+        while (ch >= "0" && ch <= "9") {
+          string += ch;
+          next();
+        }
+      }
+      number = +string;
+      if (!isFinite(number)) {
+        error("Bad number");
+      } else {
+        if (BigNumber == null)
+          BigNumber = require_bignumber();
+        if (string.length > 15)
+          return _options.storeAsString ? string : _options.useNativeBigInt ? BigInt(string) : new BigNumber(string);
+        else
+          return !_options.alwaysParseAsBig ? number : _options.useNativeBigInt ? BigInt(number) : new BigNumber(number);
+      }
+    }, string = function() {
+      var hex, i, string = "", uffff;
+      if (ch === '"') {
+        var startAt = at;
+        while (next()) {
+          if (ch === '"') {
+            if (at - 1 > startAt)
+              string += text.substring(startAt, at - 1);
+            next();
+            return string;
+          }
+          if (ch === "\\") {
+            if (at - 1 > startAt)
+              string += text.substring(startAt, at - 1);
+            next();
+            if (ch === "u") {
+              uffff = 0;
+              for (i = 0;i < 4; i += 1) {
+                hex = parseInt(next(), 16);
+                if (!isFinite(hex)) {
+                  break;
+                }
+                uffff = uffff * 16 + hex;
+              }
+              string += String.fromCharCode(uffff);
+            } else if (typeof escapee[ch] === "string") {
+              string += escapee[ch];
+            } else {
+              break;
+            }
+            startAt = at;
+          }
+        }
+      }
+      error("Bad string");
+    }, white = function() {
+      while (ch && ch <= " ") {
+        next();
+      }
+    }, word = function() {
+      switch (ch) {
+        case "t":
+          next("t");
+          next("r");
+          next("u");
+          next("e");
+          return true;
+        case "f":
+          next("f");
+          next("a");
+          next("l");
+          next("s");
+          next("e");
+          return false;
+        case "n":
+          next("n");
+          next("u");
+          next("l");
+          next("l");
+          return null;
+      }
+      error("Unexpected '" + ch + "'");
+    }, value, array = function() {
+      var array = [];
+      if (ch === "[") {
+        next("[");
+        white();
+        if (ch === "]") {
+          next("]");
+          return array;
+        }
+        while (ch) {
+          array.push(value());
+          white();
+          if (ch === "]") {
+            next("]");
+            return array;
+          }
+          next(",");
+          white();
+        }
+      }
+      error("Bad array");
+    }, object = function() {
+      var key, object = Object.create(null);
+      if (ch === "{") {
+        next("{");
+        white();
+        if (ch === "}") {
+          next("}");
+          return object;
+        }
+        while (ch) {
+          key = string();
+          white();
+          next(":");
+          if (_options.strict === true && Object.hasOwnProperty.call(object, key)) {
+            error('Duplicate key "' + key + '"');
+          }
+          if (suspectProtoRx.test(key) === true) {
+            if (_options.protoAction === "error") {
+              error("Object contains forbidden prototype property");
+            } else if (_options.protoAction === "ignore") {
+              value();
+            } else {
+              object[key] = value();
+            }
+          } else if (suspectConstructorRx.test(key) === true) {
+            if (_options.constructorAction === "error") {
+              error("Object contains forbidden constructor property");
+            } else if (_options.constructorAction === "ignore") {
+              value();
+            } else {
+              object[key] = value();
+            }
+          } else {
+            object[key] = value();
+          }
+          white();
+          if (ch === "}") {
+            next("}");
+            return object;
+          }
+          next(",");
+          white();
+        }
+      }
+      error("Bad object");
+    };
+    value = function() {
+      white();
+      switch (ch) {
+        case "{":
+          return object();
+        case "[":
+          return array();
+        case '"':
+          return string();
+        case "-":
+          return number();
+        default:
+          return ch >= "0" && ch <= "9" ? number() : word();
+      }
+    };
+    return function(source, reviver) {
+      var result;
+      text = source + "";
+      at = 0;
+      ch = " ";
+      result = value();
+      white();
+      if (ch) {
+        error("Syntax error");
+      }
+      return typeof reviver === "function" ? function walk(holder, key) {
+        var k, v, value = holder[key];
+        if (value && typeof value === "object") {
+          Object.keys(value).forEach(function(k) {
+            v = walk(value, k);
+            if (v !== undefined) {
+              value[k] = v;
+            } else {
+              delete value[k];
+            }
+          });
+        }
+        return reviver.call(holder, key, value);
+      }({ "": result }, "") : result;
+    };
+  };
+  module.exports = json_parse;
+});
+
+// node_modules/json-bigint/index.js
+var require_json_bigint = __commonJS(function(exports, module) {
+  var json_stringify = require_stringify().stringify;
+  var json_parse = require_parse();
+  module.exports = function(options) {
+    return {
+      parse: json_parse(options),
+      stringify: json_stringify
+    };
+  };
+  module.exports.parse = json_parse();
+  module.exports.stringify = json_stringify;
+});
+
+// node_modules/gcp-metadata/build/src/gcp-residency.js
+var require_gcp_residency = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GCE_LINUX_BIOS_PATHS = undefined;
+  exports.isGoogleCloudServerless = isGoogleCloudServerless;
+  exports.isGoogleComputeEngineLinux = isGoogleComputeEngineLinux;
+  exports.isGoogleComputeEngineMACAddress = isGoogleComputeEngineMACAddress;
+  exports.isGoogleComputeEngine = isGoogleComputeEngine;
+  exports.detectGCPResidency = detectGCPResidency;
+  var fs_1 = __require("fs");
+  var os_1 = __require("os");
+  exports.GCE_LINUX_BIOS_PATHS = {
+    BIOS_DATE: "/sys/class/dmi/id/bios_date",
+    BIOS_VENDOR: "/sys/class/dmi/id/bios_vendor"
+  };
+  var GCE_MAC_ADDRESS_REGEX = /^42:01/;
+  var SERVERLESS_ENV_VARS = [
+    "CLOUD_RUN_JOB",
+    "FUNCTION_NAME",
+    "K_SERVICE",
+    "CLOUD_RUN_WORKER_POOL"
+  ];
+  function isGoogleCloudServerless() {
+    return SERVERLESS_ENV_VARS.some((key) => Boolean(process.env[key]));
+  }
+  function isGoogleComputeEngineLinux() {
+    if ((0, os_1.platform)() !== "linux")
+      return false;
+    try {
+      (0, fs_1.statSync)(exports.GCE_LINUX_BIOS_PATHS.BIOS_DATE);
+      const biosVendor = (0, fs_1.readFileSync)(exports.GCE_LINUX_BIOS_PATHS.BIOS_VENDOR, "utf8");
+      return /Google/.test(biosVendor);
+    } catch {
+      return false;
+    }
+  }
+  function isGoogleComputeEngineMACAddress() {
+    const interfaces = (0, os_1.networkInterfaces)();
+    for (const item of Object.values(interfaces)) {
+      if (!item)
+        continue;
+      for (const { mac } of item) {
+        if (GCE_MAC_ADDRESS_REGEX.test(mac)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  function isGoogleComputeEngine() {
+    return isGoogleComputeEngineLinux() || isGoogleComputeEngineMACAddress();
+  }
+  function detectGCPResidency() {
+    return isGoogleCloudServerless() || isGoogleComputeEngine();
+  }
+});
+
+// node_modules/google-logging-utils/build/src/colours.js
+var require_colours = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Colours = undefined;
+
+  class Colours {
+    static enabled = false;
+    static reset = "";
+    static bright = "";
+    static dim = "";
+    static red = "";
+    static green = "";
+    static yellow = "";
+    static blue = "";
+    static magenta = "";
+    static cyan = "";
+    static white = "";
+    static grey = "";
+    static isEnabled(stream) {
+      return stream && stream.isTTY && (typeof stream.getColorDepth === "function" ? stream.getColorDepth() > 2 : true);
+    }
+    static refresh() {
+      Colours.enabled = Colours.isEnabled(process?.stderr);
+      if (!this.enabled) {
+        Colours.reset = "";
+        Colours.bright = "";
+        Colours.dim = "";
+        Colours.red = "";
+        Colours.green = "";
+        Colours.yellow = "";
+        Colours.blue = "";
+        Colours.magenta = "";
+        Colours.cyan = "";
+        Colours.white = "";
+        Colours.grey = "";
+      } else {
+        Colours.reset = "\x1B[0m";
+        Colours.bright = "\x1B[1m";
+        Colours.dim = "\x1B[2m";
+        Colours.red = "\x1B[31m";
+        Colours.green = "\x1B[32m";
+        Colours.yellow = "\x1B[33m";
+        Colours.blue = "\x1B[34m";
+        Colours.magenta = "\x1B[35m";
+        Colours.cyan = "\x1B[36m";
+        Colours.white = "\x1B[37m";
+        Colours.grey = "\x1B[90m";
+      }
+    }
+  }
+  exports.Colours = Colours;
+  Colours.refresh();
+});
+
+// node_modules/google-logging-utils/build/src/types.js
+var require_types2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.LogSeverity = undefined;
+  var LogSeverity;
+  (function(LogSeverity) {
+    LogSeverity["DEFAULT"] = "DEFAULT";
+    LogSeverity["DEBUG"] = "DEBUG";
+    LogSeverity["INFO"] = "INFO";
+    LogSeverity["WARNING"] = "WARNING";
+    LogSeverity["ERROR"] = "ERROR";
+  })(LogSeverity || (exports.LogSeverity = LogSeverity = {}));
+});
+
+// node_modules/google-logging-utils/build/src/logging-utils.js
+var require_logging_utils = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+  } : function(o, v) {
+    o["default"] = v;
+  });
+  var __importStar = exports && exports.__importStar || function() {
+    var ownKeys = function(o) {
+      ownKeys = Object.getOwnPropertyNames || function(o) {
+        var ar = [];
+        for (var k in o)
+          if (Object.prototype.hasOwnProperty.call(o, k))
+            ar[ar.length] = k;
+        return ar;
+      };
+      return ownKeys(o);
+    };
+    return function(mod) {
+      if (mod && mod.__esModule)
+        return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k = ownKeys(mod), i = 0;i < k.length; i++)
+          if (k[i] !== "default")
+            __createBinding(result, mod, k[i]);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
+  }();
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.env = exports.DebugLogBackendBase = exports.placeholder = exports.AdhocDebugLogger = undefined;
+  exports.getNodeBackend = getNodeBackend;
+  exports.getDebugBackend = getDebugBackend;
+  exports.getStructuredBackend = getStructuredBackend;
+  exports.setBackend = setBackend;
+  exports.log = log;
+  var events_1 = __require("events");
+  var process2 = __importStar(__require("process"));
+  var util = __importStar(__require("util"));
+  var colours_1 = require_colours();
+  var types_1 = require_types2();
+
+  class AdhocDebugLogger extends events_1.EventEmitter {
+    namespace;
+    upstream;
+    func;
+    constructor(namespace, upstream) {
+      super();
+      this.namespace = namespace;
+      this.upstream = upstream;
+      this.func = Object.assign(this.invoke.bind(this), {
+        instance: this,
+        on: (event, listener) => this.on(event, listener)
+      });
+      this.func.debug = (...args) => this.invokeSeverity(types_1.LogSeverity.DEBUG, ...args);
+      this.func.info = (...args) => this.invokeSeverity(types_1.LogSeverity.INFO, ...args);
+      this.func.warn = (...args) => this.invokeSeverity(types_1.LogSeverity.WARNING, ...args);
+      this.func.error = (...args) => this.invokeSeverity(types_1.LogSeverity.ERROR, ...args);
+      this.func.sublog = (namespace) => log(namespace, this.func);
+    }
+    invoke(fields, ...args) {
+      if (this.upstream) {
+        try {
+          this.upstream(fields, ...args);
+        } catch (e) {}
+      }
+      try {
+        this.emit("log", fields, args);
+      } catch (e) {}
+    }
+    invokeSeverity(severity, ...args) {
+      this.invoke({ severity }, ...args);
+    }
+  }
+  exports.AdhocDebugLogger = AdhocDebugLogger;
+  exports.placeholder = new AdhocDebugLogger("", () => {}).func;
+
+  class DebugLogBackendBase {
+    cached = new Map;
+    filters = [];
+    filtersSet = false;
+    constructor() {
+      let nodeFlag = process2.env[exports.env.nodeEnables] ?? "*";
+      if (nodeFlag === "all") {
+        nodeFlag = "*";
+      }
+      this.filters = nodeFlag.split(",");
+    }
+    log(namespace, fields, ...args) {
+      try {
+        if (!this.filtersSet) {
+          this.setFilters();
+          this.filtersSet = true;
+        }
+        let logger = this.cached.get(namespace);
+        if (!logger) {
+          logger = this.makeLogger(namespace);
+          this.cached.set(namespace, logger);
+        }
+        logger(fields, ...args);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+  exports.DebugLogBackendBase = DebugLogBackendBase;
+
+  class NodeBackend extends DebugLogBackendBase {
+    enabledRegexp = /.*/g;
+    isEnabled(namespace) {
+      return this.enabledRegexp.test(namespace);
+    }
+    makeLogger(namespace) {
+      if (!this.enabledRegexp.test(namespace)) {
+        return () => {};
+      }
+      return (fields, ...args) => {
+        const nscolour = `${colours_1.Colours.green}${namespace}${colours_1.Colours.reset}`;
+        const pid = `${colours_1.Colours.yellow}${process2.pid}${colours_1.Colours.reset}`;
+        let level;
+        switch (fields.severity) {
+          case types_1.LogSeverity.ERROR:
+            level = `${colours_1.Colours.red}${fields.severity}${colours_1.Colours.reset}`;
+            break;
+          case types_1.LogSeverity.INFO:
+            level = `${colours_1.Colours.magenta}${fields.severity}${colours_1.Colours.reset}`;
+            break;
+          case types_1.LogSeverity.WARNING:
+            level = `${colours_1.Colours.yellow}${fields.severity}${colours_1.Colours.reset}`;
+            break;
+          default:
+            level = fields.severity ?? types_1.LogSeverity.DEFAULT;
+            break;
+        }
+        const msg = util.formatWithOptions({ colors: colours_1.Colours.enabled }, ...args);
+        const filteredFields = Object.assign({}, fields);
+        delete filteredFields.severity;
+        const fieldsJson = Object.getOwnPropertyNames(filteredFields).length ? JSON.stringify(filteredFields) : "";
+        const fieldsColour = fieldsJson ? `${colours_1.Colours.grey}${fieldsJson}${colours_1.Colours.reset}` : "";
+        console.error("%s [%s|%s] %s%s", pid, nscolour, level, msg, fieldsJson ? ` ${fieldsColour}` : "");
+      };
+    }
+    setFilters() {
+      const totalFilters = this.filters.join(",");
+      const regexp = totalFilters.replace(/[|\\{}()[\]^$+?.]/g, "\\$&").replace(/\*/g, ".*").replace(/,/g, "$|^");
+      this.enabledRegexp = new RegExp(`^${regexp}$`, "i");
+    }
+  }
+  function getNodeBackend() {
+    return new NodeBackend;
+  }
+
+  class DebugBackend extends DebugLogBackendBase {
+    debugPkg;
+    constructor(pkg) {
+      super();
+      this.debugPkg = pkg;
+    }
+    makeLogger(namespace) {
+      const debugLogger = this.debugPkg(namespace);
+      return (fields, ...args) => {
+        debugLogger(args[0], ...args.slice(1));
+      };
+    }
+    setFilters() {
+      const existingFilters = process2.env["NODE_DEBUG"] ?? "";
+      process2.env["NODE_DEBUG"] = `${existingFilters}${existingFilters ? "," : ""}${this.filters.join(",")}`;
+    }
+  }
+  function getDebugBackend(debugPkg) {
+    return new DebugBackend(debugPkg);
+  }
+
+  class StructuredBackend extends DebugLogBackendBase {
+    upstream;
+    constructor(upstream) {
+      super();
+      this.upstream = upstream ?? undefined;
+    }
+    makeLogger(namespace) {
+      const debugLogger = this.upstream?.makeLogger(namespace);
+      return (fields, ...args) => {
+        const severity = fields.severity ?? types_1.LogSeverity.INFO;
+        const json = Object.assign({
+          severity,
+          message: util.format(...args)
+        }, fields);
+        const jsonString = JSON.stringify(json);
+        if (debugLogger) {
+          debugLogger(fields, jsonString);
+        } else {
+          console.log("%s", jsonString);
+        }
+      };
+    }
+    setFilters() {
+      this.upstream?.setFilters();
+    }
+  }
+  function getStructuredBackend(upstream) {
+    return new StructuredBackend(upstream);
+  }
+  exports.env = {
+    nodeEnables: "GOOGLE_SDK_NODE_LOGGING"
+  };
+  var loggerCache = new Map;
+  var cachedBackend = undefined;
+  function setBackend(backend) {
+    cachedBackend = backend;
+    loggerCache.clear();
+  }
+  function log(namespace, parent) {
+    if (!cachedBackend) {
+      const enablesFlag = process2.env[exports.env.nodeEnables];
+      if (!enablesFlag) {
+        return exports.placeholder;
+      }
+    }
+    if (!namespace) {
+      return exports.placeholder;
+    }
+    if (parent) {
+      namespace = `${parent.instance.namespace}:${namespace}`;
+    }
+    const existing = loggerCache.get(namespace);
+    if (existing) {
+      return existing.func;
+    }
+    if (cachedBackend === null) {
+      return exports.placeholder;
+    } else if (cachedBackend === undefined) {
+      cachedBackend = getNodeBackend();
+    }
+    const logger = (() => {
+      let previousBackend = undefined;
+      const newLogger = new AdhocDebugLogger(namespace, (fields, ...args) => {
+        if (previousBackend !== cachedBackend) {
+          if (cachedBackend === null) {
+            return;
+          } else if (cachedBackend === undefined) {
+            cachedBackend = getNodeBackend();
+          }
+          previousBackend = cachedBackend;
+        }
+        cachedBackend?.log(namespace, fields, ...args);
+      });
+      return newLogger;
+    })();
+    loggerCache.set(namespace, logger);
+    return logger.func;
+  }
+});
+
+// node_modules/google-logging-utils/build/src/index.js
+var require_src5 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+    for (var p in m)
+      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+        __createBinding(exports2, m, p);
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  __exportStar(require_logging_utils(), exports);
+});
+
+// node_modules/gcp-metadata/build/src/index.js
+var require_src6 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+  } : function(o, v) {
+    o["default"] = v;
+  });
+  var __importStar = exports && exports.__importStar || function() {
+    var ownKeys = function(o) {
+      ownKeys = Object.getOwnPropertyNames || function(o) {
+        var ar = [];
+        for (var k in o)
+          if (Object.prototype.hasOwnProperty.call(o, k))
+            ar[ar.length] = k;
+        return ar;
+      };
+      return ownKeys(o);
+    };
+    return function(mod) {
+      if (mod && mod.__esModule)
+        return mod;
+      var result = {};
+      if (mod != null) {
+        for (var k = ownKeys(mod), i = 0;i < k.length; i++)
+          if (k[i] !== "default")
+            __createBinding(result, mod, k[i]);
+      }
+      __setModuleDefault(result, mod);
+      return result;
+    };
+  }();
+  var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+    for (var p in m)
+      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+        __createBinding(exports2, m, p);
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.gcpResidencyCache = exports.METADATA_SERVER_DETECTION = exports.HEADERS = exports.HEADER_VALUE = exports.HEADER_NAME = exports.SECONDARY_HOST_ADDRESS = exports.HOST_ADDRESS = exports.BASE_PATH = undefined;
+  exports.instance = instance;
+  exports.project = project;
+  exports.universe = universe;
+  exports.bulk = bulk;
+  exports.isAvailable = isAvailable;
+  exports.resetIsAvailableCache = resetIsAvailableCache;
+  exports.getGCPResidency = getGCPResidency;
+  exports.setGCPResidency = setGCPResidency;
+  exports.requestTimeout = requestTimeout;
+  var gaxios_1 = require_src4();
+  var jsonBigint = require_json_bigint();
+  var gcp_residency_1 = require_gcp_residency();
+  var logger = __importStar(require_src5());
+  exports.BASE_PATH = "/computeMetadata/v1";
+  exports.HOST_ADDRESS = "http://169.254.169.254";
+  exports.SECONDARY_HOST_ADDRESS = "http://metadata.google.internal.";
+  exports.HEADER_NAME = "Metadata-Flavor";
+  exports.HEADER_VALUE = "Google";
+  exports.HEADERS = Object.freeze({ [exports.HEADER_NAME]: exports.HEADER_VALUE });
+  var log = logger.log("gcp-metadata");
+  exports.METADATA_SERVER_DETECTION = Object.freeze({
+    "assume-present": "don't try to ping the metadata server, but assume it's present",
+    none: "don't try to ping the metadata server, but don't try to use it either",
+    "bios-only": "treat the result of a BIOS probe as canonical (don't fall back to pinging)",
+    "ping-only": "skip the BIOS probe, and go straight to pinging"
+  });
+  function getBaseUrl(baseUrl) {
+    if (!baseUrl) {
+      baseUrl = process.env.GCE_METADATA_IP || process.env.GCE_METADATA_HOST || exports.HOST_ADDRESS;
+    }
+    if (!/^https?:\/\//.test(baseUrl)) {
+      baseUrl = `http://${baseUrl}`;
+    }
+    return new URL(exports.BASE_PATH, baseUrl).href;
+  }
+  function validate(options) {
+    Object.keys(options).forEach((key) => {
+      switch (key) {
+        case "params":
+        case "property":
+        case "headers":
+          break;
+        case "qs":
+          throw new Error("'qs' is not a valid configuration option. Please use 'params' instead.");
+        default:
+          throw new Error(`'${key}' is not a valid configuration option.`);
+      }
+    });
+  }
+  async function metadataAccessor(type, options = {}, noResponseRetries = 3, fastFail = false) {
+    const headers = new Headers(exports.HEADERS);
+    let metadataKey = "";
+    let params = {};
+    if (typeof type === "object") {
+      const metadataAccessor = type;
+      new Headers(metadataAccessor.headers).forEach((value, key) => headers.set(key, value));
+      metadataKey = metadataAccessor.metadataKey;
+      params = metadataAccessor.params || params;
+      noResponseRetries = metadataAccessor.noResponseRetries || noResponseRetries;
+      fastFail = metadataAccessor.fastFail || fastFail;
+    } else {
+      metadataKey = type;
+    }
+    if (typeof options === "string") {
+      metadataKey += `/${options}`;
+    } else {
+      validate(options);
+      if (options.property) {
+        metadataKey += `/${options.property}`;
+      }
+      new Headers(options.headers).forEach((value, key) => headers.set(key, value));
+      params = options.params || params;
+    }
+    const requestMethod = fastFail ? fastFailMetadataRequest : gaxios_1.request;
+    const req = {
+      url: `${getBaseUrl()}/${metadataKey}`,
+      headers,
+      retryConfig: { noResponseRetries },
+      params,
+      responseType: "text",
+      timeout: requestTimeout()
+    };
+    log.info("instance request %j", req);
+    const res = await requestMethod(req);
+    log.info("instance metadata is %s", res.data);
+    const metadataFlavor = res.headers.get(exports.HEADER_NAME);
+    if (metadataFlavor !== exports.HEADER_VALUE) {
+      throw new RangeError(`Invalid response from metadata service: incorrect ${exports.HEADER_NAME} header. Expected '${exports.HEADER_VALUE}', got ${metadataFlavor ? `'${metadataFlavor}'` : "no header"}`);
+    }
+    if (typeof res.data === "string") {
+      try {
+        return jsonBigint.parse(res.data);
+      } catch {}
+    }
+    return res.data;
+  }
+  async function fastFailMetadataRequest(options) {
+    const secondaryOptions = {
+      ...options,
+      url: options.url?.toString().replace(getBaseUrl(), getBaseUrl(exports.SECONDARY_HOST_ADDRESS))
+    };
+    const r1 = (0, gaxios_1.request)(options);
+    const r2 = (0, gaxios_1.request)(secondaryOptions);
+    return Promise.any([r1, r2]);
+  }
+  function instance(options) {
+    return metadataAccessor("instance", options);
+  }
+  function project(options) {
+    return metadataAccessor("project", options);
+  }
+  function universe(options) {
+    return metadataAccessor("universe", options);
+  }
+  async function bulk(properties) {
+    const r = {};
+    await Promise.all(properties.map((item) => {
+      return (async () => {
+        const res = await metadataAccessor(item);
+        const key = item.metadataKey;
+        r[key] = res;
+      })();
+    }));
+    return r;
+  }
+  function detectGCPAvailableRetries() {
+    return process.env.DETECT_GCP_RETRIES ? Number(process.env.DETECT_GCP_RETRIES) : 0;
+  }
+  var cachedIsAvailableResponse;
+  var EXPECTED_NETWORK_ERROR_CODES = new Set([
+    "EHOSTDOWN",
+    "EHOSTUNREACH",
+    "ENETUNREACH",
+    "ENOENT",
+    "ENOTFOUND",
+    "ECONNREFUSED"
+  ]);
+  var TIMEOUT_NAMES_AND_CODES = new Set([
+    "AbortError",
+    "TimeoutError"
+  ]);
+  var TIMEOUT_TYPES = new Set([
+    "aborted",
+    "request-timeout"
+  ]);
+  var MAX_ERROR_DEPTH = 20;
+  function isErrorWithDetails(val) {
+    return typeof val === "object" && val !== null;
+  }
+  function getErrorCodes(err, visited = new Set, depth = 0) {
+    if (!isErrorWithDetails(err) || visited.has(err) || depth > MAX_ERROR_DEPTH) {
+      return ["UNKNOWN"];
+    }
+    visited.add(err);
+    if (err.name === "AggregateError" && Array.isArray(err.errors)) {
+      if (err.errors.length === 0) {
+        return ["UNKNOWN"];
+      }
+      return err.errors.flatMap((subErr) => getErrorCodes(subErr, visited, depth + 1));
+    }
+    if (err.name !== undefined && TIMEOUT_NAMES_AND_CODES.has(err.name) || err.code !== undefined && TIMEOUT_NAMES_AND_CODES.has(err.code) || err.type !== undefined && TIMEOUT_TYPES.has(err.type)) {
+      return ["ETIMEDOUT"];
+    }
+    if ((typeof err.code === "string" || typeof err.code === "number") && err.code !== "") {
+      return [String(err.code)];
+    }
+    const nested = err.cause ?? err.error;
+    if (nested !== undefined) {
+      return getErrorCodes(nested, visited, depth + 1);
+    }
+    return ["UNKNOWN"];
+  }
+  async function isAvailable() {
+    if (process.env.METADATA_SERVER_DETECTION) {
+      const value = process.env.METADATA_SERVER_DETECTION.trim().toLocaleLowerCase();
+      if (!(value in exports.METADATA_SERVER_DETECTION)) {
+        throw new RangeError(`Unknown \`METADATA_SERVER_DETECTION\` env variable. Got \`${value}\`, but it should be \`${Object.keys(exports.METADATA_SERVER_DETECTION).join("`, `")}\`, or unset`);
+      }
+      switch (value) {
+        case "assume-present":
+          return true;
+        case "none":
+          return false;
+        case "bios-only":
+          return getGCPResidency();
+        case "ping-only":
+      }
+    }
+    try {
+      if (cachedIsAvailableResponse === undefined) {
+        cachedIsAvailableResponse = (async () => {
+          try {
+            await metadataAccessor("instance", undefined, detectGCPAvailableRetries(), !(process.env.GCE_METADATA_IP || process.env.GCE_METADATA_HOST));
+            return true;
+          } catch (e) {
+            if (process.env.DEBUG_AUTH) {
+              console.info(e);
+            }
+            if (!isErrorWithDetails(e)) {
+              process.emitWarning(`received unexpected error = ${String(e)} code = UNKNOWN`, "MetadataLookupWarning");
+              return false;
+            }
+            if (e.type === "request-timeout" || e.response?.status === 404) {
+              return false;
+            }
+            const codes = getErrorCodes(e);
+            const isExpected = codes.length > 0 && codes.every((code) => EXPECTED_NETWORK_ERROR_CODES.has(code));
+            if (!isExpected) {
+              const code = [...new Set(codes)].join(", ");
+              process.emitWarning(`received unexpected error = ${e.message} code = ${code}`, "MetadataLookupWarning");
+            }
+            return false;
+          }
+        })();
+      }
+      return await cachedIsAvailableResponse;
+    } catch (e) {
+      return false;
+    }
+  }
+  function resetIsAvailableCache() {
+    cachedIsAvailableResponse = undefined;
+  }
+  exports.gcpResidencyCache = null;
+  function getGCPResidency() {
+    if (exports.gcpResidencyCache === null) {
+      setGCPResidency();
+    }
+    return exports.gcpResidencyCache;
+  }
+  function setGCPResidency(value = null) {
+    exports.gcpResidencyCache = value !== null ? value : (0, gcp_residency_1.detectGCPResidency)();
+  }
+  function requestTimeout() {
+    return getGCPResidency() ? 0 : 3000;
+  }
+  __exportStar(require_gcp_residency(), exports);
+});
+
+// node_modules/base64-js/index.js
+var require_base64_js = __commonJS(function(exports) {
+  exports.byteLength = byteLength;
+  exports.toByteArray = toByteArray;
+  exports.fromByteArray = fromByteArray;
+  var lookup = [];
+  var revLookup = [];
+  var Arr = typeof Uint8Array !== "undefined" ? Uint8Array : Array;
+  var code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  for (i = 0, len = code.length;i < len; ++i) {
+    lookup[i] = code[i];
+    revLookup[code.charCodeAt(i)] = i;
+  }
+  var i;
+  var len;
+  revLookup[45] = 62;
+  revLookup[95] = 63;
+  function getLens(b64) {
+    var len = b64.length;
+    if (len % 4 > 0) {
+      throw new Error("Invalid string. Length must be a multiple of 4");
+    }
+    var validLen = b64.indexOf("=");
+    if (validLen === -1)
+      validLen = len;
+    var placeHoldersLen = validLen === len ? 0 : 4 - validLen % 4;
+    return [validLen, placeHoldersLen];
+  }
+  function byteLength(b64) {
+    var lens = getLens(b64);
+    var validLen = lens[0];
+    var placeHoldersLen = lens[1];
+    return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
+  }
+  function _byteLength(b64, validLen, placeHoldersLen) {
+    return (validLen + placeHoldersLen) * 3 / 4 - placeHoldersLen;
+  }
+  function toByteArray(b64) {
+    var tmp;
+    var lens = getLens(b64);
+    var validLen = lens[0];
+    var placeHoldersLen = lens[1];
+    var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen));
+    var curByte = 0;
+    var len = placeHoldersLen > 0 ? validLen - 4 : validLen;
+    var i;
+    for (i = 0;i < len; i += 4) {
+      tmp = revLookup[b64.charCodeAt(i)] << 18 | revLookup[b64.charCodeAt(i + 1)] << 12 | revLookup[b64.charCodeAt(i + 2)] << 6 | revLookup[b64.charCodeAt(i + 3)];
+      arr[curByte++] = tmp >> 16 & 255;
+      arr[curByte++] = tmp >> 8 & 255;
+      arr[curByte++] = tmp & 255;
+    }
+    if (placeHoldersLen === 2) {
+      tmp = revLookup[b64.charCodeAt(i)] << 2 | revLookup[b64.charCodeAt(i + 1)] >> 4;
+      arr[curByte++] = tmp & 255;
+    }
+    if (placeHoldersLen === 1) {
+      tmp = revLookup[b64.charCodeAt(i)] << 10 | revLookup[b64.charCodeAt(i + 1)] << 4 | revLookup[b64.charCodeAt(i + 2)] >> 2;
+      arr[curByte++] = tmp >> 8 & 255;
+      arr[curByte++] = tmp & 255;
+    }
+    return arr;
+  }
+  function tripletToBase64(num) {
+    return lookup[num >> 18 & 63] + lookup[num >> 12 & 63] + lookup[num >> 6 & 63] + lookup[num & 63];
+  }
+  function encodeChunk(uint8, start, end) {
+    var tmp;
+    var output = [];
+    for (var i = start;i < end; i += 3) {
+      tmp = (uint8[i] << 16 & 16711680) + (uint8[i + 1] << 8 & 65280) + (uint8[i + 2] & 255);
+      output.push(tripletToBase64(tmp));
+    }
+    return output.join("");
+  }
+  function fromByteArray(uint8) {
+    var tmp;
+    var len = uint8.length;
+    var extraBytes = len % 3;
+    var parts = [];
+    var maxChunkLength = 16383;
+    for (var i = 0, len2 = len - extraBytes;i < len2; i += maxChunkLength) {
+      parts.push(encodeChunk(uint8, i, i + maxChunkLength > len2 ? len2 : i + maxChunkLength));
+    }
+    if (extraBytes === 1) {
+      tmp = uint8[len - 1];
+      parts.push(lookup[tmp >> 2] + lookup[tmp << 4 & 63] + "==");
+    } else if (extraBytes === 2) {
+      tmp = (uint8[len - 2] << 8) + uint8[len - 1];
+      parts.push(lookup[tmp >> 10] + lookup[tmp >> 4 & 63] + lookup[tmp << 2 & 63] + "=");
+    }
+    return parts.join("");
+  }
+});
+
+// node_modules/google-auth-library/build/src/crypto/shared.js
+var require_shared = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.fromArrayBufferToHex = fromArrayBufferToHex;
+  function fromArrayBufferToHex(arrayBuffer) {
+    const byteArray = Array.from(new Uint8Array(arrayBuffer));
+    return byteArray.map((byte) => {
+      return byte.toString(16).padStart(2, "0");
+    }).join("");
+  }
+});
+
+// node_modules/google-auth-library/build/src/crypto/browser/crypto.js
+var require_crypto = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.BrowserCrypto = undefined;
+  var base64js = require_base64_js();
+  var shared_1 = require_shared();
+
+  class BrowserCrypto {
+    constructor() {
+      if (typeof window === "undefined" || window.crypto === undefined || window.crypto.subtle === undefined) {
+        throw new Error("SubtleCrypto not found. Make sure it's an https:// website.");
+      }
+    }
+    async sha256DigestBase64(str) {
+      const inputBuffer = new TextEncoder().encode(str);
+      const outputBuffer = await window.crypto.subtle.digest("SHA-256", inputBuffer);
+      return base64js.fromByteArray(new Uint8Array(outputBuffer));
+    }
+    randomBytesBase64(count) {
+      const array = new Uint8Array(count);
+      window.crypto.getRandomValues(array);
+      return base64js.fromByteArray(array);
+    }
+    static padBase64(base64) {
+      while (base64.length % 4 !== 0) {
+        base64 += "=";
+      }
+      return base64;
+    }
+    async verify(pubkey, data, signature) {
+      const algo = {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: { name: "SHA-256" }
+      };
+      const dataArray = new TextEncoder().encode(data);
+      const signatureArray = base64js.toByteArray(BrowserCrypto.padBase64(signature));
+      const cryptoKey = await window.crypto.subtle.importKey("jwk", pubkey, algo, true, ["verify"]);
+      const result = await window.crypto.subtle.verify(algo, cryptoKey, Buffer.from(signatureArray), dataArray);
+      return result;
+    }
+    async sign(privateKey, data) {
+      const algo = {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: { name: "SHA-256" }
+      };
+      const dataArray = new TextEncoder().encode(data);
+      const cryptoKey = await window.crypto.subtle.importKey("jwk", privateKey, algo, true, ["sign"]);
+      const result = await window.crypto.subtle.sign(algo, cryptoKey, dataArray);
+      return base64js.fromByteArray(new Uint8Array(result));
+    }
+    decodeBase64StringUtf8(base64) {
+      const uint8array = base64js.toByteArray(BrowserCrypto.padBase64(base64));
+      const result = new TextDecoder().decode(uint8array);
+      return result;
+    }
+    encodeBase64StringUtf8(text) {
+      const uint8array = new TextEncoder().encode(text);
+      const result = base64js.fromByteArray(uint8array);
+      return result;
+    }
+    async sha256DigestHex(str) {
+      const inputBuffer = new TextEncoder().encode(str);
+      const outputBuffer = await window.crypto.subtle.digest("SHA-256", inputBuffer);
+      return (0, shared_1.fromArrayBufferToHex)(outputBuffer);
+    }
+    async signWithHmacSha256(key, msg) {
+      const rawKey = typeof key === "string" ? key : String.fromCharCode(...new Uint16Array(key));
+      const enc = new TextEncoder;
+      const cryptoKey = await window.crypto.subtle.importKey("raw", enc.encode(rawKey), {
+        name: "HMAC",
+        hash: {
+          name: "SHA-256"
+        }
+      }, false, ["sign"]);
+      return window.crypto.subtle.sign("HMAC", cryptoKey, enc.encode(msg));
+    }
+  }
+  exports.BrowserCrypto = BrowserCrypto;
+});
+
+// node_modules/google-auth-library/build/src/crypto/node/crypto.js
+var require_crypto2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.NodeCrypto = undefined;
+  var crypto2 = __require("crypto");
+
+  class NodeCrypto {
+    async sha256DigestBase64(str) {
+      return crypto2.createHash("sha256").update(str).digest("base64");
+    }
+    randomBytesBase64(count) {
+      return crypto2.randomBytes(count).toString("base64");
+    }
+    async verify(pubkey, data, signature) {
+      const verifier = crypto2.createVerify("RSA-SHA256");
+      verifier.update(data);
+      verifier.end();
+      return verifier.verify(pubkey, signature, "base64");
+    }
+    async sign(privateKey, data) {
+      const signer = crypto2.createSign("RSA-SHA256");
+      signer.update(data);
+      signer.end();
+      return signer.sign(privateKey, "base64");
+    }
+    decodeBase64StringUtf8(base64) {
+      return Buffer.from(base64, "base64").toString("utf-8");
+    }
+    encodeBase64StringUtf8(text) {
+      return Buffer.from(text, "utf-8").toString("base64");
+    }
+    async sha256DigestHex(str) {
+      return crypto2.createHash("sha256").update(str).digest("hex");
+    }
+    async signWithHmacSha256(key, msg) {
+      const cryptoKey = typeof key === "string" ? key : toBuffer(key);
+      return toArrayBuffer(crypto2.createHmac("sha256", cryptoKey).update(msg).digest());
+    }
+  }
+  exports.NodeCrypto = NodeCrypto;
+  function toArrayBuffer(buffer) {
+    const ab = new ArrayBuffer(buffer.length);
+    const view = new Uint8Array(ab);
+    for (let i = 0;i < buffer.length; ++i) {
+      view[i] = buffer[i];
+    }
+    return ab;
+  }
+  function toBuffer(arrayBuffer) {
+    return Buffer.from(arrayBuffer);
+  }
+});
+
+// node_modules/google-auth-library/build/src/crypto/crypto.js
+var require_crypto3 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+    for (var p in m)
+      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+        __createBinding(exports2, m, p);
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.createCrypto = createCrypto;
+  exports.hasBrowserCrypto = hasBrowserCrypto;
+  var crypto_1 = require_crypto();
+  var crypto_2 = require_crypto2();
+  __exportStar(require_shared(), exports);
+  function createCrypto() {
+    if (hasBrowserCrypto()) {
+      return new crypto_1.BrowserCrypto;
+    }
+    return new crypto_2.NodeCrypto;
+  }
+  function hasBrowserCrypto() {
+    return typeof window !== "undefined" && typeof window.crypto !== "undefined" && typeof window.crypto.subtle !== "undefined";
+  }
+});
+
+// node_modules/safe-buffer/index.js
+var require_safe_buffer = __commonJS(function(exports, module) {
+  /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+  var buffer = __require("buffer");
+  var Buffer2 = buffer.Buffer;
+  function copyProps(src, dst) {
+    for (var key in src) {
+      dst[key] = src[key];
+    }
+  }
+  if (Buffer2.from && Buffer2.alloc && Buffer2.allocUnsafe && Buffer2.allocUnsafeSlow) {
+    module.exports = buffer;
+  } else {
+    copyProps(buffer, exports);
+    exports.Buffer = SafeBuffer;
+  }
+  function SafeBuffer(arg, encodingOrOffset, length) {
+    return Buffer2(arg, encodingOrOffset, length);
+  }
+  SafeBuffer.prototype = Object.create(Buffer2.prototype);
+  copyProps(Buffer2, SafeBuffer);
+  SafeBuffer.from = function(arg, encodingOrOffset, length) {
+    if (typeof arg === "number") {
+      throw new TypeError("Argument must not be a number");
+    }
+    return Buffer2(arg, encodingOrOffset, length);
+  };
+  SafeBuffer.alloc = function(size, fill, encoding) {
+    if (typeof size !== "number") {
+      throw new TypeError("Argument must be a number");
+    }
+    var buf = Buffer2(size);
+    if (fill !== undefined) {
+      if (typeof encoding === "string") {
+        buf.fill(fill, encoding);
+      } else {
+        buf.fill(fill);
+      }
+    } else {
+      buf.fill(0);
+    }
+    return buf;
+  };
+  SafeBuffer.allocUnsafe = function(size) {
+    if (typeof size !== "number") {
+      throw new TypeError("Argument must be a number");
+    }
+    return Buffer2(size);
+  };
+  SafeBuffer.allocUnsafeSlow = function(size) {
+    if (typeof size !== "number") {
+      throw new TypeError("Argument must be a number");
+    }
+    return buffer.SlowBuffer(size);
+  };
+});
+
+// node_modules/ecdsa-sig-formatter/src/param-bytes-for-alg.js
+var require_param_bytes_for_alg = __commonJS(function(exports, module) {
+  function getParamSize(keySize) {
+    var result = (keySize / 8 | 0) + (keySize % 8 === 0 ? 0 : 1);
+    return result;
+  }
+  var paramBytesForAlg = {
+    ES256: getParamSize(256),
+    ES384: getParamSize(384),
+    ES512: getParamSize(521)
+  };
+  function getParamBytesForAlg(alg) {
+    var paramBytes = paramBytesForAlg[alg];
+    if (paramBytes) {
+      return paramBytes;
+    }
+    throw new Error('Unknown algorithm "' + alg + '"');
+  }
+  module.exports = getParamBytesForAlg;
+});
+
+// node_modules/ecdsa-sig-formatter/src/ecdsa-sig-formatter.js
+var require_ecdsa_sig_formatter = __commonJS(function(exports, module) {
+  var Buffer2 = require_safe_buffer().Buffer;
+  var getParamBytesForAlg = require_param_bytes_for_alg();
+  var MAX_OCTET = 128;
+  var CLASS_UNIVERSAL = 0;
+  var PRIMITIVE_BIT = 32;
+  var TAG_SEQ = 16;
+  var TAG_INT = 2;
+  var ENCODED_TAG_SEQ = TAG_SEQ | PRIMITIVE_BIT | CLASS_UNIVERSAL << 6;
+  var ENCODED_TAG_INT = TAG_INT | CLASS_UNIVERSAL << 6;
+  function base64Url(base64) {
+    return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  }
+  function signatureAsBuffer(signature) {
+    if (Buffer2.isBuffer(signature)) {
+      return signature;
+    } else if (typeof signature === "string") {
+      return Buffer2.from(signature, "base64");
+    }
+    throw new TypeError("ECDSA signature must be a Base64 string or a Buffer");
+  }
+  function derToJose(signature, alg) {
+    signature = signatureAsBuffer(signature);
+    var paramBytes = getParamBytesForAlg(alg);
+    var maxEncodedParamLength = paramBytes + 1;
+    var inputLength = signature.length;
+    var offset = 0;
+    if (signature[offset++] !== ENCODED_TAG_SEQ) {
+      throw new Error('Could not find expected "seq"');
+    }
+    var seqLength = signature[offset++];
+    if (seqLength === (MAX_OCTET | 1)) {
+      seqLength = signature[offset++];
+    }
+    if (inputLength - offset < seqLength) {
+      throw new Error('"seq" specified length of "' + seqLength + '", only "' + (inputLength - offset) + '" remaining');
+    }
+    if (signature[offset++] !== ENCODED_TAG_INT) {
+      throw new Error('Could not find expected "int" for "r"');
+    }
+    var rLength = signature[offset++];
+    if (inputLength - offset - 2 < rLength) {
+      throw new Error('"r" specified length of "' + rLength + '", only "' + (inputLength - offset - 2) + '" available');
+    }
+    if (maxEncodedParamLength < rLength) {
+      throw new Error('"r" specified length of "' + rLength + '", max of "' + maxEncodedParamLength + '" is acceptable');
+    }
+    var rOffset = offset;
+    offset += rLength;
+    if (signature[offset++] !== ENCODED_TAG_INT) {
+      throw new Error('Could not find expected "int" for "s"');
+    }
+    var sLength = signature[offset++];
+    if (inputLength - offset !== sLength) {
+      throw new Error('"s" specified length of "' + sLength + '", expected "' + (inputLength - offset) + '"');
+    }
+    if (maxEncodedParamLength < sLength) {
+      throw new Error('"s" specified length of "' + sLength + '", max of "' + maxEncodedParamLength + '" is acceptable');
+    }
+    var sOffset = offset;
+    offset += sLength;
+    if (offset !== inputLength) {
+      throw new Error('Expected to consume entire buffer, but "' + (inputLength - offset) + '" bytes remain');
+    }
+    var rPadding = paramBytes - rLength, sPadding = paramBytes - sLength;
+    var dst = Buffer2.allocUnsafe(rPadding + rLength + sPadding + sLength);
+    for (offset = 0;offset < rPadding; ++offset) {
+      dst[offset] = 0;
+    }
+    signature.copy(dst, offset, rOffset + Math.max(-rPadding, 0), rOffset + rLength);
+    offset = paramBytes;
+    for (var o = offset;offset < o + sPadding; ++offset) {
+      dst[offset] = 0;
+    }
+    signature.copy(dst, offset, sOffset + Math.max(-sPadding, 0), sOffset + sLength);
+    dst = dst.toString("base64");
+    dst = base64Url(dst);
+    return dst;
+  }
+  function countPadding(buf, start, stop) {
+    var padding = 0;
+    while (start + padding < stop && buf[start + padding] === 0) {
+      ++padding;
+    }
+    var needsSign = buf[start + padding] >= MAX_OCTET;
+    if (needsSign) {
+      --padding;
+    }
+    return padding;
+  }
+  function joseToDer(signature, alg) {
+    signature = signatureAsBuffer(signature);
+    var paramBytes = getParamBytesForAlg(alg);
+    var signatureBytes = signature.length;
+    if (signatureBytes !== paramBytes * 2) {
+      throw new TypeError('"' + alg + '" signatures must be "' + paramBytes * 2 + '" bytes, saw "' + signatureBytes + '"');
+    }
+    var rPadding = countPadding(signature, 0, paramBytes);
+    var sPadding = countPadding(signature, paramBytes, signature.length);
+    var rLength = paramBytes - rPadding;
+    var sLength = paramBytes - sPadding;
+    var rsBytes = 1 + 1 + rLength + 1 + 1 + sLength;
+    var shortLength = rsBytes < MAX_OCTET;
+    var dst = Buffer2.allocUnsafe((shortLength ? 2 : 3) + rsBytes);
+    var offset = 0;
+    dst[offset++] = ENCODED_TAG_SEQ;
+    if (shortLength) {
+      dst[offset++] = rsBytes;
+    } else {
+      dst[offset++] = MAX_OCTET | 1;
+      dst[offset++] = rsBytes & 255;
+    }
+    dst[offset++] = ENCODED_TAG_INT;
+    dst[offset++] = rLength;
+    if (rPadding < 0) {
+      dst[offset++] = 0;
+      offset += signature.copy(dst, offset, 0, paramBytes);
+    } else {
+      offset += signature.copy(dst, offset, rPadding, paramBytes);
+    }
+    dst[offset++] = ENCODED_TAG_INT;
+    dst[offset++] = sLength;
+    if (sPadding < 0) {
+      dst[offset++] = 0;
+      signature.copy(dst, offset, paramBytes);
+    } else {
+      signature.copy(dst, offset, paramBytes + sPadding);
+    }
+    return dst;
+  }
+  module.exports = {
+    derToJose,
+    joseToDer
+  };
+});
+
+// node_modules/google-auth-library/build/src/util.js
+var require_util3 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.LRUCache = undefined;
+  exports.snakeToCamel = snakeToCamel;
+  exports.originalOrCamelOptions = originalOrCamelOptions;
+  exports.removeUndefinedValuesInObject = removeUndefinedValuesInObject;
+  exports.isValidFile = isValidFile;
+  exports.getWellKnownCertificateConfigFileLocation = getWellKnownCertificateConfigFileLocation;
+  var fs = __require("fs");
+  var os = __require("os");
+  var path = __require("path");
+  var WELL_KNOWN_CERTIFICATE_CONFIG_FILE = "certificate_config.json";
+  var CLOUDSDK_CONFIG_DIRECTORY = "gcloud";
+  function snakeToCamel(str) {
+    return str.replace(/([_][^_])/g, (match) => match.slice(1).toUpperCase());
+  }
+  function originalOrCamelOptions(obj) {
+    function get(key) {
+      const o = obj || {};
+      return o[key] ?? o[snakeToCamel(key)];
+    }
+    return { get };
+  }
+
+  class LRUCache {
+    capacity;
+    #cache = new Map;
+    maxAge;
+    constructor(options) {
+      this.capacity = options.capacity;
+      this.maxAge = options.maxAge;
+    }
+    #moveToEnd(key, value) {
+      this.#cache.delete(key);
+      this.#cache.set(key, {
+        value,
+        lastAccessed: Date.now()
+      });
+    }
+    set(key, value) {
+      this.#moveToEnd(key, value);
+      this.#evict();
+    }
+    get(key) {
+      const item = this.#cache.get(key);
+      if (!item)
+        return;
+      this.#moveToEnd(key, item.value);
+      this.#evict();
+      return item.value;
+    }
+    #evict() {
+      const cutoffDate = this.maxAge ? Date.now() - this.maxAge : 0;
+      let oldestItem = this.#cache.entries().next();
+      while (!oldestItem.done && (this.#cache.size > this.capacity || oldestItem.value[1].lastAccessed < cutoffDate)) {
+        this.#cache.delete(oldestItem.value[0]);
+        oldestItem = this.#cache.entries().next();
+      }
+    }
+  }
+  exports.LRUCache = LRUCache;
+  function removeUndefinedValuesInObject(object) {
+    Object.entries(object).forEach(([key, value]) => {
+      if (value === undefined || value === "undefined") {
+        delete object[key];
+      }
+    });
+    return object;
+  }
+  async function isValidFile(filePath) {
+    try {
+      const stats = await fs.promises.lstat(filePath);
+      return stats.isFile();
+    } catch (e) {
+      return false;
+    }
+  }
+  function getWellKnownCertificateConfigFileLocation() {
+    const configDir = process.env.CLOUDSDK_CONFIG || (_isWindows() ? path.join(process.env.APPDATA || "", CLOUDSDK_CONFIG_DIRECTORY) : path.join(process.env.HOME || "", ".config", CLOUDSDK_CONFIG_DIRECTORY));
+    return path.join(configDir, WELL_KNOWN_CERTIFICATE_CONFIG_FILE);
+  }
+  function _isWindows() {
+    return os.platform().startsWith("win");
+  }
+});
+
+// node_modules/google-auth-library/package.json
+var require_package2 = __commonJS(function(exports, module) {
+  module.exports = {
+    name: "google-auth-library",
+    version: "11.2.0",
+    author: "Google Inc.",
+    description: "Google APIs Authentication Client Library for Node.js",
+    engines: {
+      node: ">=22"
+    },
+    main: "./build/src/index.js",
+    types: "./build/src/index.d.ts",
+    repository: {
+      type: "git",
+      directory: "core/packages/google-auth-library-nodejs",
+      url: "https://github.com/googleapis/google-cloud-node.git"
+    },
+    keywords: [
+      "google",
+      "api",
+      "google apis",
+      "client",
+      "client library"
+    ],
+    dependencies: {
+      "base64-js": "^1.3.0",
+      "ecdsa-sig-formatter": "^1.0.11",
+      gaxios: "^7.1.4",
+      "gcp-metadata": "^9.0.0",
+      "google-logging-utils": "^2.0.0",
+      jws: "^4.0.0"
+    },
+    devDependencies: {
+      "@types/base64-js": "^1.2.5",
+      "@types/jws": "^3.1.0",
+      "@types/mocha": "^10.0.10",
+      "@types/mv": "^2.1.0",
+      "@types/ncp": "^2.0.8",
+      "@types/node": "^24.0.0",
+      "@types/sinon": "^21.0.0",
+      "assert-rejects": "^1.0.0",
+      c8: "^10.1.3",
+      codecov: "^3.8.3",
+      gts: "^6.0.2",
+      "is-docker": "^3.0.0",
+      jsdoc: "^4.0.4",
+      "jsdoc-fresh": "^6.0.0",
+      "jsdoc-region-tag": "^5.0.0",
+      karma: "^6.0.0",
+      "karma-chrome-launcher": "^3.0.0",
+      "karma-coverage": "^2.0.0",
+      "karma-firefox-launcher": "^2.0.0",
+      "karma-mocha": "^2.0.0",
+      "karma-sourcemap-loader": "^0.4.0",
+      "karma-webpack": "^5.0.0",
+      keypair: "^1.0.4",
+      mocha: "^11.1.0",
+      mv: "^2.1.1",
+      ncp: "^2.0.0",
+      nock: "^14.0.5",
+      "null-loader": "^4.0.1",
+      puppeteer: "^24.0.0",
+      sinon: "21.0.3",
+      "ts-loader": "^9.5.2",
+      typescript: "5.8.3",
+      webpack: "^5.97.1",
+      "webpack-cli": "^6.0.1"
+    },
+    files: [
+      "build/src",
+      "!build/src/**/*.map"
+    ],
+    scripts: {
+      test: "node ../../../bin/run-test.cjs --fetch-shim --gaxios-shim --assert-deep-equal-shim --crypto-verify-shim --keypair-shim build/test",
+      clean: "gts clean",
+      prepare: "npm run compile",
+      lint: "gts check --no-inline-config",
+      compile: "tsc -p .",
+      fix: "gts fix",
+      pretest: "pnpm run compile --sourceMap",
+      docs: "jsdoc -c .jsdoc.js",
+      "samples-setup": "cd samples/ && pnpm link ../ && pnpm run setup && cd ../",
+      "samples-test": "cd samples/ && pnpm link ../ && pnpm test && cd ../",
+      "system-test": "mocha build/system-test --timeout 60000",
+      "presystem-test": "pnpm run compile --sourceMap",
+      webpack: "webpack",
+      "browser-test": "karma start",
+      prelint: "cd samples; pnpm link ../; pnpm install"
+    },
+    license: "Apache-2.0",
+    homepage: "https://github.com/googleapis/google-cloud-node/tree/main/core/packages/google-auth-library-nodejs"
+  };
+});
+
+// node_modules/google-auth-library/build/src/shared.cjs
+var require_shared2 = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.USER_AGENT = exports.PRODUCT_NAME = exports.pkg = undefined;
+  var pkg = require_package2();
+  exports.pkg = pkg;
+  var PRODUCT_NAME = "google-api-nodejs-client";
+  exports.PRODUCT_NAME = PRODUCT_NAME;
+  var USER_AGENT = `${PRODUCT_NAME}/${pkg.version}`;
+  exports.USER_AGENT = USER_AGENT;
+});
+
+// node_modules/google-auth-library/build/src/auth/authclient.js
+var require_authclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.AuthClient = exports.DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS = exports.DEFAULT_UNIVERSE = undefined;
+  var events_1 = __require("events");
+  var gaxios_1 = require_src4();
+  var util_1 = require_util3();
+  var google_logging_utils_1 = require_src5();
+  var shared_cjs_1 = require_shared2();
+  exports.DEFAULT_UNIVERSE = "googleapis.com";
+  exports.DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
+
+  class AuthClient extends events_1.EventEmitter {
+    apiKey;
+    projectId;
+    quotaProjectId;
+    transporter;
+    credentials = {};
+    eagerRefreshThresholdMillis = exports.DEFAULT_EAGER_REFRESH_THRESHOLD_MILLIS;
+    forceRefreshOnFailure = false;
+    universeDomain = exports.DEFAULT_UNIVERSE;
+    static RequestMethodNameSymbol = Symbol("request method name");
+    static RequestLogIdSymbol = Symbol("request log id");
+    constructor(opts = {}) {
+      super();
+      const options = (0, util_1.originalOrCamelOptions)(opts);
+      this.apiKey = opts.apiKey;
+      this.projectId = options.get("project_id") ?? null;
+      this.quotaProjectId = options.get("quota_project_id");
+      this.credentials = options.get("credentials") ?? {};
+      this.universeDomain = options.get("universe_domain") ?? exports.DEFAULT_UNIVERSE;
+      this.transporter = opts.transporter ?? new gaxios_1.Gaxios(opts.transporterOptions);
+      if (options.get("useAuthRequestParameters") !== false) {
+        this.transporter.interceptors.request.add(AuthClient.DEFAULT_REQUEST_INTERCEPTOR);
+        this.transporter.interceptors.response.add(AuthClient.DEFAULT_RESPONSE_INTERCEPTOR);
+      }
+      if (opts.eagerRefreshThresholdMillis) {
+        this.eagerRefreshThresholdMillis = opts.eagerRefreshThresholdMillis;
+      }
+      this.forceRefreshOnFailure = opts.forceRefreshOnFailure ?? false;
+    }
+    fetch(...args) {
+      const input = args[0];
+      const init = args[1];
+      let url = undefined;
+      const headers = new Headers;
+      if (typeof input === "string") {
+        url = new URL(input);
+      } else if (input instanceof URL) {
+        url = input;
+      } else if (input && input.url) {
+        url = new URL(input.url);
+      }
+      if (input && typeof input === "object" && "headers" in input) {
+        gaxios_1.Gaxios.mergeHeaders(headers, input.headers);
+      }
+      if (init) {
+        gaxios_1.Gaxios.mergeHeaders(headers, new Headers(init.headers));
+      }
+      if (typeof input === "object" && !(input instanceof URL)) {
+        return this.request({ ...init, ...input, headers, url });
+      } else {
+        return this.request({ ...init, headers, url });
+      }
+    }
+    setCredentials(credentials) {
+      this.credentials = credentials;
+    }
+    addSharedMetadataHeaders(headers) {
+      if (!headers.has("x-goog-user-project") && this.quotaProjectId) {
+        headers.set("x-goog-user-project", this.quotaProjectId);
+      }
+      return headers;
+    }
+    addUserProjectAndAuthHeaders(target, source) {
+      const xGoogUserProject = source.get("x-goog-user-project");
+      const authorizationHeader = source.get("authorization");
+      if (xGoogUserProject) {
+        target.set("x-goog-user-project", xGoogUserProject);
+      }
+      if (authorizationHeader) {
+        target.set("authorization", authorizationHeader);
+      }
+      return target;
+    }
+    static log = (0, google_logging_utils_1.log)("auth");
+    static DEFAULT_REQUEST_INTERCEPTOR = {
+      resolved: async (config) => {
+        if (!config.headers.has("x-goog-api-client")) {
+          const nodeVersion = process.version.replace(/^v/, "");
+          config.headers.set("x-goog-api-client", `gl-node/${nodeVersion}`);
+        }
+        const userAgent = config.headers.get("User-Agent");
+        if (!userAgent) {
+          config.headers.set("User-Agent", shared_cjs_1.USER_AGENT);
+        } else if (!userAgent.includes(`${shared_cjs_1.PRODUCT_NAME}/`)) {
+          config.headers.set("User-Agent", `${userAgent} ${shared_cjs_1.USER_AGENT}`);
+        }
+        try {
+          const symbols = config;
+          const methodName = symbols[AuthClient.RequestMethodNameSymbol];
+          const logId = `${Math.floor(Math.random() * 1000)}`;
+          symbols[AuthClient.RequestLogIdSymbol] = logId;
+          const logObject = {
+            url: config.url,
+            headers: config.headers
+          };
+          if (methodName) {
+            AuthClient.log.info("%s [%s] request %j", methodName, logId, logObject);
+          } else {
+            AuthClient.log.info("[%s] request %j", logId, logObject);
+          }
+        } catch (e) {}
+        return config;
+      }
+    };
+    static DEFAULT_RESPONSE_INTERCEPTOR = {
+      resolved: async (response) => {
+        try {
+          const symbols = response.config;
+          const methodName = symbols[AuthClient.RequestMethodNameSymbol];
+          const logId = symbols[AuthClient.RequestLogIdSymbol];
+          if (methodName) {
+            AuthClient.log.info("%s [%s] response %j", methodName, logId, response.data);
+          } else {
+            AuthClient.log.info("[%s] response %j", logId, response.data);
+          }
+        } catch (e) {}
+        return response;
+      },
+      rejected: async (error) => {
+        try {
+          const symbols = error.config;
+          const methodName = symbols[AuthClient.RequestMethodNameSymbol];
+          const logId = symbols[AuthClient.RequestLogIdSymbol];
+          if (methodName) {
+            AuthClient.log.info("%s [%s] error %j", methodName, logId, error.response?.data);
+          } else {
+            AuthClient.log.error("[%s] error %j", logId, error.response?.data);
+          }
+        } catch (e) {}
+        throw error;
+      }
+    };
+    static setMethodName(config, methodName) {
+      try {
+        const symbols = config;
+        symbols[AuthClient.RequestMethodNameSymbol] = methodName;
+      } catch (e) {}
+    }
+    static get RETRY_CONFIG() {
+      return {
+        retry: true,
+        retryConfig: {
+          httpMethodsToRetry: ["GET", "PUT", "POST", "HEAD", "OPTIONS", "DELETE"]
+        }
+      };
+    }
+  }
+  exports.AuthClient = AuthClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/loginticket.js
+var require_loginticket = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.LoginTicket = undefined;
+
+  class LoginTicket {
+    envelope;
+    payload;
+    constructor(env, pay) {
+      this.envelope = env;
+      this.payload = pay;
+    }
+    getEnvelope() {
+      return this.envelope;
+    }
+    getPayload() {
+      return this.payload;
+    }
+    getUserId() {
+      const payload = this.getPayload();
+      if (payload && payload.sub) {
+        return payload.sub;
+      }
+      return null;
+    }
+    getAttributes() {
+      return { envelope: this.getEnvelope(), payload: this.getPayload() };
+    }
+  }
+  exports.LoginTicket = LoginTicket;
+});
+
+// node_modules/google-auth-library/build/src/auth/oauth2client.js
+var require_oauth2client = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.OAuth2Client = exports.ClientAuthentication = exports.CertificateFormat = exports.CodeChallengeMethod = undefined;
+  var gaxios_1 = require_src4();
+  var querystring = __require("querystring");
+  var stream = __require("stream");
+  var formatEcdsa = require_ecdsa_sig_formatter();
+  var util_1 = require_util3();
+  var crypto_1 = require_crypto3();
+  var authclient_1 = require_authclient();
+  var loginticket_1 = require_loginticket();
+  var CodeChallengeMethod;
+  (function(CodeChallengeMethod) {
+    CodeChallengeMethod["Plain"] = "plain";
+    CodeChallengeMethod["S256"] = "S256";
+  })(CodeChallengeMethod || (exports.CodeChallengeMethod = CodeChallengeMethod = {}));
+  var CertificateFormat;
+  (function(CertificateFormat) {
+    CertificateFormat["PEM"] = "PEM";
+    CertificateFormat["JWK"] = "JWK";
+  })(CertificateFormat || (exports.CertificateFormat = CertificateFormat = {}));
+  var ClientAuthentication;
+  (function(ClientAuthentication) {
+    ClientAuthentication["ClientSecretPost"] = "ClientSecretPost";
+    ClientAuthentication["ClientSecretBasic"] = "ClientSecretBasic";
+    ClientAuthentication["None"] = "None";
+  })(ClientAuthentication || (exports.ClientAuthentication = ClientAuthentication = {}));
+
+  class OAuth2Client extends authclient_1.AuthClient {
+    redirectUri;
+    certificateCache = {};
+    certificateExpiry = null;
+    certificateCacheFormat = CertificateFormat.PEM;
+    refreshTokenPromises = new Map;
+    endpoints;
+    issuers;
+    clientAuthentication;
+    _clientId;
+    _clientSecret;
+    refreshHandler;
+    constructor(options = {}, clientSecret, redirectUri) {
+      super(typeof options === "object" ? options : {});
+      if (typeof options !== "object") {
+        options = {
+          clientId: options,
+          clientSecret,
+          redirectUri
+        };
+      }
+      this._clientId = options.clientId || options.client_id;
+      this._clientSecret = options.clientSecret || options.client_secret;
+      this.redirectUri = options.redirectUri || options.redirect_uris?.[0];
+      this.endpoints = {
+        tokenInfoUrl: "https://oauth2.googleapis.com/tokeninfo",
+        oauth2AuthBaseUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+        oauth2TokenUrl: "https://oauth2.googleapis.com/token",
+        oauth2RevokeUrl: "https://oauth2.googleapis.com/revoke",
+        oauth2FederatedSignonPemCertsUrl: "https://www.googleapis.com/oauth2/v1/certs",
+        oauth2FederatedSignonJwkCertsUrl: "https://www.googleapis.com/oauth2/v3/certs",
+        oauth2IapPublicKeyUrl: "https://www.gstatic.com/iap/verify/public_key",
+        ...options.endpoints
+      };
+      this.clientAuthentication = options.clientAuthentication || ClientAuthentication.ClientSecretPost;
+      this.issuers = options.issuers || [
+        "accounts.google.com",
+        "https://accounts.google.com",
+        this.universeDomain
+      ];
+    }
+    static GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo";
+    static CLOCK_SKEW_SECS_ = 300;
+    static DEFAULT_MAX_TOKEN_LIFETIME_SECS_ = 86400;
+    generateAuthUrl(opts = {}) {
+      if (opts.code_challenge_method && !opts.code_challenge) {
+        throw new Error("If a code_challenge_method is provided, code_challenge must be included.");
+      }
+      opts.response_type = opts.response_type || "code";
+      opts.client_id = opts.client_id || this._clientId;
+      opts.redirect_uri = opts.redirect_uri || this.redirectUri;
+      if (Array.isArray(opts.scope)) {
+        opts.scope = opts.scope.join(" ");
+      }
+      const rootUrl = this.endpoints.oauth2AuthBaseUrl.toString();
+      return rootUrl + "?" + querystring.stringify(opts);
+    }
+    generateCodeVerifier() {
+      throw new Error("generateCodeVerifier is removed, please use generateCodeVerifierAsync instead.");
+    }
+    async generateCodeVerifierAsync() {
+      const crypto2 = (0, crypto_1.createCrypto)();
+      const randomString = crypto2.randomBytesBase64(96);
+      const codeVerifier = randomString.replace(/\+/g, "~").replace(/=/g, "_").replace(/\//g, "-");
+      const unencodedCodeChallenge = await crypto2.sha256DigestBase64(codeVerifier);
+      const codeChallenge = unencodedCodeChallenge.split("=")[0].replace(/\+/g, "-").replace(/\//g, "_");
+      return { codeVerifier, codeChallenge };
+    }
+    getToken(codeOrOptions, callback) {
+      const options = typeof codeOrOptions === "string" ? { code: codeOrOptions } : codeOrOptions;
+      if (callback) {
+        this.getTokenAsync(options).then((r) => callback(null, r.tokens, r.res), (e) => callback(e, null, e.response));
+      } else {
+        return this.getTokenAsync(options);
+      }
+    }
+    async getTokenAsync(options) {
+      const url = this.endpoints.oauth2TokenUrl.toString();
+      const headers = new Headers;
+      const values = {
+        client_id: options.client_id || this._clientId,
+        code_verifier: options.codeVerifier,
+        code: options.code,
+        grant_type: "authorization_code",
+        redirect_uri: options.redirect_uri || this.redirectUri
+      };
+      if (this.clientAuthentication === ClientAuthentication.ClientSecretBasic) {
+        const basic = Buffer.from(`${this._clientId}:${this._clientSecret}`);
+        headers.set("authorization", `Basic ${basic.toString("base64")}`);
+      }
+      if (this.clientAuthentication === ClientAuthentication.ClientSecretPost) {
+        values.client_secret = this._clientSecret;
+      }
+      const opts = {
+        ...OAuth2Client.RETRY_CONFIG,
+        method: "POST",
+        url,
+        data: new URLSearchParams((0, util_1.removeUndefinedValuesInObject)(values)),
+        headers
+      };
+      authclient_1.AuthClient.setMethodName(opts, "getTokenAsync");
+      const res = await this.transporter.request(opts);
+      const tokens = res.data;
+      if (res.data && res.data.expires_in) {
+        tokens.expiry_date = new Date().getTime() + res.data.expires_in * 1000;
+        delete tokens.expires_in;
+      }
+      this.emit("tokens", tokens);
+      return { tokens, res };
+    }
+    async refreshToken(refreshToken) {
+      if (!refreshToken) {
+        return this.refreshTokenNoCache(refreshToken);
+      }
+      if (this.refreshTokenPromises.has(refreshToken)) {
+        return this.refreshTokenPromises.get(refreshToken);
+      }
+      const p = this.refreshTokenNoCache(refreshToken).then((r) => {
+        this.refreshTokenPromises.delete(refreshToken);
+        return r;
+      }, (e) => {
+        this.refreshTokenPromises.delete(refreshToken);
+        throw e;
+      });
+      this.refreshTokenPromises.set(refreshToken, p);
+      return p;
+    }
+    async refreshTokenNoCache(refreshToken) {
+      if (!refreshToken) {
+        throw new Error("No refresh token is set.");
+      }
+      const url = this.endpoints.oauth2TokenUrl.toString();
+      const data = {
+        refresh_token: refreshToken,
+        client_id: this._clientId,
+        client_secret: this._clientSecret,
+        grant_type: "refresh_token"
+      };
+      let res;
+      try {
+        const opts = {
+          ...OAuth2Client.RETRY_CONFIG,
+          method: "POST",
+          url,
+          data: new URLSearchParams((0, util_1.removeUndefinedValuesInObject)(data))
+        };
+        authclient_1.AuthClient.setMethodName(opts, "refreshTokenNoCache");
+        res = await this.transporter.request(opts);
+      } catch (e) {
+        if (e instanceof gaxios_1.GaxiosError && e.message === "invalid_grant" && e.response?.data && /ReAuth/i.test(e.response.data.error_description)) {
+          e.message = JSON.stringify(e.response.data);
+        }
+        throw e;
+      }
+      const tokens = res.data;
+      if (res.data && res.data.expires_in) {
+        tokens.expiry_date = new Date().getTime() + res.data.expires_in * 1000;
+        delete tokens.expires_in;
+      }
+      this.emit("tokens", tokens);
+      return { tokens, res };
+    }
+    refreshAccessToken(callback) {
+      if (callback) {
+        this.refreshAccessTokenAsync().then((r) => callback(null, r.credentials, r.res), callback);
+      } else {
+        return this.refreshAccessTokenAsync();
+      }
+    }
+    async refreshAccessTokenAsync() {
+      const r = await this.refreshToken(this.credentials.refresh_token);
+      const tokens = r.tokens;
+      tokens.refresh_token = this.credentials.refresh_token;
+      this.credentials = tokens;
+      return { credentials: this.credentials, res: r.res };
+    }
+    getAccessToken(callback) {
+      if (callback) {
+        this.getAccessTokenAsync().then((r) => callback(null, r.token, r.res), callback);
+      } else {
+        return this.getAccessTokenAsync();
+      }
+    }
+    async getAccessTokenAsync() {
+      const shouldRefresh = !this.credentials.access_token || this.isTokenExpiring();
+      if (shouldRefresh) {
+        if (!this.credentials.refresh_token) {
+          if (this.refreshHandler) {
+            const refreshedAccessToken = await this.processAndValidateRefreshHandler();
+            if (refreshedAccessToken?.access_token) {
+              this.setCredentials(refreshedAccessToken);
+              return { token: this.credentials.access_token };
+            }
+          } else {
+            throw new Error("No refresh token or refresh handler callback is set.");
+          }
+        }
+        const r = await this.refreshAccessTokenAsync();
+        if (!r.credentials || r.credentials && !r.credentials.access_token) {
+          throw new Error("Could not refresh access token.");
+        }
+        return { token: r.credentials.access_token, res: r.res };
+      } else {
+        return { token: this.credentials.access_token };
+      }
+    }
+    async getRequestHeaders(url) {
+      const headers = (await this.getRequestMetadataAsync(url)).headers;
+      return headers;
+    }
+    async getRequestMetadataAsync(url) {
+      const thisCreds = this.credentials;
+      if (!thisCreds.access_token && !thisCreds.refresh_token && !this.apiKey && !this.refreshHandler) {
+        throw new Error("No access, refresh token, API key or refresh handler callback is set.");
+      }
+      if (thisCreds.access_token && !this.isTokenExpiring()) {
+        thisCreds.token_type = thisCreds.token_type || "Bearer";
+        const headers = new Headers({
+          authorization: thisCreds.token_type + " " + thisCreds.access_token
+        });
+        return { headers: this.addSharedMetadataHeaders(headers) };
+      }
+      if (this.refreshHandler) {
+        const refreshedAccessToken = await this.processAndValidateRefreshHandler();
+        if (refreshedAccessToken?.access_token) {
+          this.setCredentials(refreshedAccessToken);
+          const headers = new Headers({
+            authorization: "Bearer " + this.credentials.access_token
+          });
+          return { headers: this.addSharedMetadataHeaders(headers) };
+        }
+      }
+      if (this.apiKey) {
+        return { headers: new Headers({ "X-Goog-Api-Key": this.apiKey }) };
+      }
+      let r = null;
+      let tokens = null;
+      try {
+        r = await this.refreshToken(thisCreds.refresh_token);
+        tokens = r.tokens;
+      } catch (err) {
+        const e = err;
+        if (e.response && (e.response.status === 403 || e.response.status === 404)) {
+          e.message = `Could not refresh access token: ${e.message}`;
+        }
+        throw e;
+      }
+      const credentials = this.credentials;
+      credentials.token_type = credentials.token_type || "Bearer";
+      tokens.refresh_token = credentials.refresh_token;
+      this.credentials = tokens;
+      const headers = new Headers({
+        authorization: credentials.token_type + " " + tokens.access_token
+      });
+      return { headers: this.addSharedMetadataHeaders(headers), res: r.res };
+    }
+    static getRevokeTokenUrl(token) {
+      return new OAuth2Client().getRevokeTokenURL(token).toString();
+    }
+    getRevokeTokenURL(token) {
+      const url = new URL(this.endpoints.oauth2RevokeUrl);
+      url.searchParams.append("token", token);
+      return url;
+    }
+    revokeToken(token, callback) {
+      const opts = {
+        ...OAuth2Client.RETRY_CONFIG,
+        url: this.getRevokeTokenURL(token).toString(),
+        method: "POST"
+      };
+      authclient_1.AuthClient.setMethodName(opts, "revokeToken");
+      if (callback) {
+        this.transporter.request(opts).then((r) => callback(null, r), callback);
+      } else {
+        return this.transporter.request(opts);
+      }
+    }
+    revokeCredentials(callback) {
+      if (callback) {
+        this.revokeCredentialsAsync().then((res) => callback(null, res), callback);
+      } else {
+        return this.revokeCredentialsAsync();
+      }
+    }
+    async revokeCredentialsAsync() {
+      const token = this.credentials.access_token;
+      this.credentials = {};
+      if (token) {
+        return this.revokeToken(token);
+      } else {
+        throw new Error("No access token to revoke.");
+      }
+    }
+    request(opts, callback) {
+      if (callback) {
+        this.requestAsync(opts).then((r) => callback(null, r), (e) => {
+          return callback(e, e.response);
+        });
+      } else {
+        return this.requestAsync(opts);
+      }
+    }
+    async requestAsync(opts, reAuthRetried = false) {
+      try {
+        const r = await this.getRequestMetadataAsync();
+        opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers);
+        this.addUserProjectAndAuthHeaders(opts.headers, r.headers);
+        if (this.apiKey) {
+          opts.headers.set("X-Goog-Api-Key", this.apiKey);
+        }
+        return await this.transporter.request(opts);
+      } catch (e) {
+        const res = e.response;
+        if (res) {
+          const statusCode = res.status;
+          const mayRequireRefresh = this.credentials && this.credentials.access_token && this.credentials.refresh_token && (!this.credentials.expiry_date || this.forceRefreshOnFailure);
+          const mayRequireRefreshWithNoRefreshToken = this.credentials && this.credentials.access_token && !this.credentials.refresh_token && (!this.credentials.expiry_date || this.forceRefreshOnFailure) && this.refreshHandler;
+          const isReadableStream = res.config.data instanceof stream.Readable;
+          const isAuthErr = statusCode === 401 || statusCode === 403;
+          if (!reAuthRetried && isAuthErr && !isReadableStream && mayRequireRefresh) {
+            await this.refreshAccessTokenAsync();
+            return this.requestAsync(opts, true);
+          } else if (!reAuthRetried && isAuthErr && !isReadableStream && mayRequireRefreshWithNoRefreshToken) {
+            const refreshedAccessToken = await this.processAndValidateRefreshHandler();
+            if (refreshedAccessToken?.access_token) {
+              this.setCredentials(refreshedAccessToken);
+            }
+            return this.requestAsync(opts, true);
+          }
+        }
+        throw e;
+      }
+    }
+    verifyIdToken(options, callback) {
+      if (callback && typeof callback !== "function") {
+        throw new Error("This method accepts an options object as the first parameter, which includes the idToken, audience, and maxExpiry.");
+      }
+      if (callback) {
+        this.verifyIdTokenAsync(options).then((r) => callback(null, r), callback);
+      } else {
+        return this.verifyIdTokenAsync(options);
+      }
+    }
+    async verifyIdTokenAsync(options) {
+      if (!options.idToken) {
+        throw new Error("The verifyIdToken method requires an ID Token");
+      }
+      const response = await this.getFederatedSignonCertsAsync();
+      const login = await this.verifySignedJwtWithCertsAsync(options.idToken, response.certs, options.audience, this.issuers, options.maxExpiry);
+      return login;
+    }
+    async getTokenInfo(accessToken) {
+      const { data } = await this.transporter.request({
+        ...OAuth2Client.RETRY_CONFIG,
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+          authorization: `Bearer ${accessToken}`
+        },
+        url: this.endpoints.tokenInfoUrl.toString()
+      });
+      const info = Object.assign({
+        expiry_date: new Date().getTime() + data.expires_in * 1000,
+        scopes: data.scope.split(" ")
+      }, data);
+      delete info.expires_in;
+      delete info.scope;
+      return info;
+    }
+    getFederatedSignonCerts(callback) {
+      if (callback) {
+        this.getFederatedSignonCertsAsync().then((r) => callback(null, r.certs, r.res), callback);
+      } else {
+        return this.getFederatedSignonCertsAsync();
+      }
+    }
+    async getFederatedSignonCertsAsync() {
+      const nowTime = new Date().getTime();
+      const format = (0, crypto_1.hasBrowserCrypto)() ? CertificateFormat.JWK : CertificateFormat.PEM;
+      if (this.certificateExpiry && nowTime < this.certificateExpiry.getTime() && this.certificateCacheFormat === format) {
+        return { certs: this.certificateCache, format };
+      }
+      let res;
+      let url;
+      switch (format) {
+        case CertificateFormat.PEM:
+          url = this.endpoints.oauth2FederatedSignonPemCertsUrl.toString();
+          break;
+        case CertificateFormat.JWK:
+          url = this.endpoints.oauth2FederatedSignonJwkCertsUrl.toString();
+          break;
+        default:
+          throw new Error(`Unsupported certificate format ${format}`);
+      }
+      try {
+        const opts = {
+          ...OAuth2Client.RETRY_CONFIG,
+          url
+        };
+        authclient_1.AuthClient.setMethodName(opts, "getFederatedSignonCertsAsync");
+        res = await this.transporter.request(opts);
+      } catch (e) {
+        if (e instanceof Error) {
+          e.message = `Failed to retrieve verification certificates: ${e.message}`;
+        }
+        throw e;
+      }
+      const cacheControl = res?.headers.get("cache-control");
+      let cacheAge = -1;
+      if (cacheControl) {
+        const maxAge = /max-age=(?<maxAge>[0-9]+)/.exec(cacheControl)?.groups?.maxAge;
+        if (maxAge) {
+          cacheAge = Number(maxAge) * 1000;
+        }
+      }
+      let certificates = {};
+      switch (format) {
+        case CertificateFormat.PEM:
+          certificates = res.data;
+          break;
+        case CertificateFormat.JWK:
+          for (const key of res.data.keys) {
+            certificates[key.kid] = key;
+          }
+          break;
+        default:
+          throw new Error(`Unsupported certificate format ${format}`);
+      }
+      const now = new Date;
+      this.certificateExpiry = cacheAge === -1 ? null : new Date(now.getTime() + cacheAge);
+      this.certificateCache = certificates;
+      this.certificateCacheFormat = format;
+      return { certs: certificates, format, res };
+    }
+    getIapPublicKeys(callback) {
+      if (callback) {
+        this.getIapPublicKeysAsync().then((r) => callback(null, r.pubkeys, r.res), callback);
+      } else {
+        return this.getIapPublicKeysAsync();
+      }
+    }
+    async getIapPublicKeysAsync() {
+      let res;
+      const url = this.endpoints.oauth2IapPublicKeyUrl.toString();
+      try {
+        const opts = {
+          ...OAuth2Client.RETRY_CONFIG,
+          url
+        };
+        authclient_1.AuthClient.setMethodName(opts, "getIapPublicKeysAsync");
+        res = await this.transporter.request(opts);
+      } catch (e) {
+        if (e instanceof Error) {
+          e.message = `Failed to retrieve verification certificates: ${e.message}`;
+        }
+        throw e;
+      }
+      return { pubkeys: res.data, res };
+    }
+    verifySignedJwtWithCerts() {
+      throw new Error("verifySignedJwtWithCerts is removed, please use verifySignedJwtWithCertsAsync instead.");
+    }
+    async verifySignedJwtWithCertsAsync(jwt, certs, requiredAudience, issuers, maxExpiry) {
+      const crypto2 = (0, crypto_1.createCrypto)();
+      if (!maxExpiry) {
+        maxExpiry = OAuth2Client.DEFAULT_MAX_TOKEN_LIFETIME_SECS_;
+      }
+      const segments = jwt.split(".");
+      if (segments.length !== 3) {
+        throw new Error("Wrong number of segments in token: " + jwt);
+      }
+      const signed = segments[0] + "." + segments[1];
+      let signature = segments[2];
+      let envelope;
+      let payload;
+      try {
+        envelope = JSON.parse(crypto2.decodeBase64StringUtf8(segments[0]));
+      } catch (err) {
+        if (err instanceof Error) {
+          err.message = `Can't parse token envelope: ${segments[0]}': ${err.message}`;
+        }
+        throw err;
+      }
+      if (!envelope) {
+        throw new Error("Can't parse token envelope: " + segments[0]);
+      }
+      try {
+        payload = JSON.parse(crypto2.decodeBase64StringUtf8(segments[1]));
+      } catch (err) {
+        if (err instanceof Error) {
+          err.message = `Can't parse token payload '${segments[0]}`;
+        }
+        throw err;
+      }
+      if (!payload) {
+        throw new Error("Can't parse token payload: " + segments[1]);
+      }
+      if (!Object.prototype.hasOwnProperty.call(certs, envelope.kid)) {
+        throw new Error("No pem found for envelope: " + JSON.stringify(envelope));
+      }
+      const cert = certs[envelope.kid];
+      if (envelope.alg === "ES256") {
+        signature = formatEcdsa.joseToDer(signature, "ES256").toString("base64");
+      }
+      const verified = await crypto2.verify(cert, signed, signature);
+      if (!verified) {
+        throw new Error("Invalid token signature: " + jwt);
+      }
+      if (!payload.iat) {
+        throw new Error("No issue time in token: " + JSON.stringify(payload));
+      }
+      if (!payload.exp) {
+        throw new Error("No expiration time in token: " + JSON.stringify(payload));
+      }
+      const iat = Number(payload.iat);
+      if (isNaN(iat))
+        throw new Error("iat field using invalid format");
+      const exp = Number(payload.exp);
+      if (isNaN(exp))
+        throw new Error("exp field using invalid format");
+      const now = new Date().getTime() / 1000;
+      if (exp >= now + maxExpiry) {
+        throw new Error("Expiration time too far in future: " + JSON.stringify(payload));
+      }
+      const earliest = iat - OAuth2Client.CLOCK_SKEW_SECS_;
+      const latest = exp + OAuth2Client.CLOCK_SKEW_SECS_;
+      if (now < earliest) {
+        throw new Error("Token used too early, " + now + " < " + earliest + ": " + JSON.stringify(payload));
+      }
+      if (now > latest) {
+        throw new Error("Token used too late, " + now + " > " + latest + ": " + JSON.stringify(payload));
+      }
+      if (issuers && issuers.indexOf(payload.iss) < 0) {
+        throw new Error("Invalid issuer, expected one of [" + issuers + "], but got " + payload.iss);
+      }
+      if (typeof requiredAudience !== "undefined" && requiredAudience !== null) {
+        const aud = payload.aud;
+        let audVerified = false;
+        if (requiredAudience.constructor === Array) {
+          audVerified = requiredAudience.indexOf(aud) > -1;
+        } else {
+          audVerified = aud === requiredAudience;
+        }
+        if (!audVerified) {
+          throw new Error("Wrong recipient, payload audience != requiredAudience");
+        }
+      }
+      return new loginticket_1.LoginTicket(envelope, payload);
+    }
+    async processAndValidateRefreshHandler() {
+      if (this.refreshHandler) {
+        const accessTokenResponse = await this.refreshHandler();
+        if (!accessTokenResponse.access_token) {
+          throw new Error("No access token is returned by the refreshHandler callback.");
+        }
+        return accessTokenResponse;
+      }
+      return;
+    }
+    isTokenExpiring() {
+      const expiryDate = this.credentials.expiry_date;
+      return expiryDate ? expiryDate <= new Date().getTime() + this.eagerRefreshThresholdMillis : false;
+    }
+  }
+  exports.OAuth2Client = OAuth2Client;
+});
+
+// node_modules/google-auth-library/build/src/auth/computeclient.js
+var require_computeclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Compute = undefined;
+  var gaxios_1 = require_src4();
+  var gcpMetadata = require_src6();
+  var oauth2client_1 = require_oauth2client();
+
+  class Compute extends oauth2client_1.OAuth2Client {
+    serviceAccountEmail;
+    scopes;
+    constructor(options = {}) {
+      super(options);
+      this.credentials = { expiry_date: 1, refresh_token: "compute-placeholder" };
+      this.serviceAccountEmail = options.serviceAccountEmail || "default";
+      this.scopes = Array.isArray(options.scopes) ? options.scopes : options.scopes ? [options.scopes] : [];
+    }
+    async refreshTokenNoCache() {
+      const tokenPath = `service-accounts/${this.serviceAccountEmail}/token`;
+      let data;
+      try {
+        const instanceOptions = {
+          property: tokenPath
+        };
+        if (this.scopes.length > 0) {
+          instanceOptions.params = {
+            scopes: this.scopes.join(",")
+          };
+        }
+        data = await gcpMetadata.instance(instanceOptions);
+      } catch (e) {
+        if (e instanceof gaxios_1.GaxiosError) {
+          e.message = `Could not refresh access token: ${e.message}`;
+          this.wrapError(e);
+        }
+        throw e;
+      }
+      const tokens = data;
+      if (data && data.expires_in) {
+        tokens.expiry_date = new Date().getTime() + data.expires_in * 1000;
+        delete tokens.expires_in;
+      }
+      this.emit("tokens", tokens);
+      return { tokens, res: null };
+    }
+    async fetchIdToken(targetAudience) {
+      const idTokenPath = `service-accounts/${this.serviceAccountEmail}/identity` + `?format=full&audience=${targetAudience}`;
+      let idToken;
+      try {
+        const instanceOptions = {
+          property: idTokenPath
+        };
+        idToken = await gcpMetadata.instance(instanceOptions);
+      } catch (e) {
+        if (e instanceof Error) {
+          e.message = `Could not fetch ID token: ${e.message}`;
+        }
+        throw e;
+      }
+      return idToken;
+    }
+    wrapError(e) {
+      const res = e.response;
+      if (res && res.status) {
+        e.status = res.status;
+        if (res.status === 403) {
+          e.message = "A Forbidden error was returned while attempting to retrieve an access " + "token for the Compute Engine built-in service account. This may be because the Compute " + "Engine instance does not have the correct permission scopes specified: " + e.message;
+        } else if (res.status === 404) {
+          e.message = "A Not Found error was returned while attempting to retrieve an access" + "token for the Compute Engine built-in service account. This may be because the Compute " + "Engine instance does not have any permission scopes specified: " + e.message;
+        }
+      }
+    }
+  }
+  exports.Compute = Compute;
+});
+
+// node_modules/google-auth-library/build/src/auth/idtokenclient.js
+var require_idtokenclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.IdTokenClient = undefined;
+  var oauth2client_1 = require_oauth2client();
+
+  class IdTokenClient extends oauth2client_1.OAuth2Client {
+    targetAudience;
+    idTokenProvider;
+    constructor(options) {
+      super(options);
+      this.targetAudience = options.targetAudience;
+      this.idTokenProvider = options.idTokenProvider;
+    }
+    async getRequestMetadataAsync() {
+      if (!this.credentials.id_token || !this.credentials.expiry_date || this.isTokenExpiring()) {
+        const idToken = await this.idTokenProvider.fetchIdToken(this.targetAudience);
+        this.credentials = {
+          id_token: idToken,
+          expiry_date: this.getIdTokenExpiryDate(idToken)
+        };
+      }
+      const headers = new Headers({
+        authorization: "Bearer " + this.credentials.id_token
+      });
+      return { headers };
+    }
+    getIdTokenExpiryDate(idToken) {
+      const payloadB64 = idToken.split(".")[1];
+      if (payloadB64) {
+        const payload = JSON.parse(Buffer.from(payloadB64, "base64").toString("ascii"));
+        return payload.exp * 1000;
+      }
+    }
+  }
+  exports.IdTokenClient = IdTokenClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/envDetect.js
+var require_envDetect = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GCPEnv = undefined;
+  exports.clear = clear;
+  exports.getEnv = getEnv;
+  var gcpMetadata = require_src6();
+  var GCPEnv;
+  (function(GCPEnv) {
+    GCPEnv["APP_ENGINE"] = "APP_ENGINE";
+    GCPEnv["KUBERNETES_ENGINE"] = "KUBERNETES_ENGINE";
+    GCPEnv["CLOUD_FUNCTIONS"] = "CLOUD_FUNCTIONS";
+    GCPEnv["COMPUTE_ENGINE"] = "COMPUTE_ENGINE";
+    GCPEnv["CLOUD_RUN"] = "CLOUD_RUN";
+    GCPEnv["CLOUD_RUN_JOBS"] = "CLOUD_RUN_JOBS";
+    GCPEnv["NONE"] = "NONE";
+  })(GCPEnv || (exports.GCPEnv = GCPEnv = {}));
+  var envPromise;
+  function clear() {
+    envPromise = undefined;
+  }
+  async function getEnv() {
+    if (envPromise) {
+      return envPromise;
+    }
+    envPromise = getEnvMemoized();
+    return envPromise;
+  }
+  async function getEnvMemoized() {
+    let env = GCPEnv.NONE;
+    if (isAppEngine()) {
+      env = GCPEnv.APP_ENGINE;
+    } else if (isCloudFunction()) {
+      env = GCPEnv.CLOUD_FUNCTIONS;
+    } else if (await isComputeEngine()) {
+      if (await isKubernetesEngine()) {
+        env = GCPEnv.KUBERNETES_ENGINE;
+      } else if (isCloudRun()) {
+        env = GCPEnv.CLOUD_RUN;
+      } else if (isCloudRunJob()) {
+        env = GCPEnv.CLOUD_RUN_JOBS;
+      } else {
+        env = GCPEnv.COMPUTE_ENGINE;
+      }
+    } else {
+      env = GCPEnv.NONE;
+    }
+    return env;
+  }
+  function isAppEngine() {
+    return !!(process.env.GAE_SERVICE || process.env.GAE_MODULE_NAME);
+  }
+  function isCloudFunction() {
+    return !!(process.env.FUNCTION_NAME || process.env.FUNCTION_TARGET);
+  }
+  function isCloudRun() {
+    return !!process.env.K_CONFIGURATION;
+  }
+  function isCloudRunJob() {
+    return !!process.env.CLOUD_RUN_JOB;
+  }
+  async function isKubernetesEngine() {
+    try {
+      await gcpMetadata.instance("attributes/cluster-name");
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  async function isComputeEngine() {
+    return gcpMetadata.isAvailable();
+  }
+});
+
+// node_modules/jws/lib/data-stream.js
+var require_data_stream = __commonJS(function(exports, module) {
+  var Buffer2 = require_safe_buffer().Buffer;
+  var Stream = __require("stream");
+  var util = __require("util");
+  function DataStream(data) {
+    this.buffer = null;
+    this.writable = true;
+    this.readable = true;
+    if (!data) {
+      this.buffer = Buffer2.alloc(0);
+      return this;
+    }
+    if (typeof data.pipe === "function") {
+      this.buffer = Buffer2.alloc(0);
+      data.pipe(this);
+      return this;
+    }
+    if (data.length || typeof data === "object") {
+      this.buffer = data;
+      this.writable = false;
+      process.nextTick(function() {
+        this.emit("end", data);
+        this.readable = false;
+        this.emit("close");
+      }.bind(this));
+      return this;
+    }
+    throw new TypeError("Unexpected data type (" + typeof data + ")");
+  }
+  util.inherits(DataStream, Stream);
+  DataStream.prototype.write = function write(data) {
+    this.buffer = Buffer2.concat([this.buffer, Buffer2.from(data)]);
+    this.emit("data", data);
+  };
+  DataStream.prototype.end = function end(data) {
+    if (data)
+      this.write(data);
+    this.emit("end", data);
+    this.emit("close");
+    this.writable = false;
+    this.readable = false;
+  };
+  module.exports = DataStream;
+});
+
+// node_modules/buffer-equal-constant-time/index.js
+var require_buffer_equal_constant_time = __commonJS(function(exports, module) {
+  var Buffer2 = __require("buffer").Buffer;
+  var SlowBuffer = __require("buffer").SlowBuffer;
+  module.exports = bufferEq;
+  function bufferEq(a, b) {
+    if (!Buffer2.isBuffer(a) || !Buffer2.isBuffer(b)) {
+      return false;
+    }
+    if (a.length !== b.length) {
+      return false;
+    }
+    var c = 0;
+    for (var i = 0;i < a.length; i++) {
+      c |= a[i] ^ b[i];
+    }
+    return c === 0;
+  }
+  bufferEq.install = function() {
+    Buffer2.prototype.equal = SlowBuffer.prototype.equal = function equal(that) {
+      return bufferEq(this, that);
+    };
+  };
+  var origBufEqual = Buffer2.prototype.equal;
+  var origSlowBufEqual = SlowBuffer.prototype.equal;
+  bufferEq.restore = function() {
+    Buffer2.prototype.equal = origBufEqual;
+    SlowBuffer.prototype.equal = origSlowBufEqual;
+  };
+});
+
+// node_modules/jwa/index.js
+var require_jwa = __commonJS(function(exports, module) {
+  var Buffer2 = require_safe_buffer().Buffer;
+  var crypto2 = __require("crypto");
+  var formatEcdsa = require_ecdsa_sig_formatter();
+  var util = __require("util");
+  var MSG_INVALID_ALGORITHM = `"%s" is not a valid algorithm.
+  Supported algorithms are:
+  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".`;
+  var MSG_INVALID_SECRET = "secret must be a string or buffer";
+  var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
+  var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
+  var supportsKeyObjects = typeof crypto2.createPublicKey === "function";
+  if (supportsKeyObjects) {
+    MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
+    MSG_INVALID_SECRET += "or a KeyObject";
+  }
+  function checkIsPublicKey(key) {
+    if (Buffer2.isBuffer(key)) {
+      return;
+    }
+    if (typeof key === "string") {
+      return;
+    }
+    if (!supportsKeyObjects) {
+      throw typeError(MSG_INVALID_VERIFIER_KEY);
+    }
+    if (typeof key !== "object") {
+      throw typeError(MSG_INVALID_VERIFIER_KEY);
+    }
+    if (typeof key.type !== "string") {
+      throw typeError(MSG_INVALID_VERIFIER_KEY);
+    }
+    if (typeof key.asymmetricKeyType !== "string") {
+      throw typeError(MSG_INVALID_VERIFIER_KEY);
+    }
+    if (typeof key.export !== "function") {
+      throw typeError(MSG_INVALID_VERIFIER_KEY);
+    }
+  }
+  function checkIsPrivateKey(key) {
+    if (Buffer2.isBuffer(key)) {
+      return;
+    }
+    if (typeof key === "string") {
+      return;
+    }
+    if (typeof key === "object") {
+      return;
+    }
+    throw typeError(MSG_INVALID_SIGNER_KEY);
+  }
+  function checkIsSecretKey(key) {
+    if (Buffer2.isBuffer(key)) {
+      return;
+    }
+    if (typeof key === "string") {
+      return key;
+    }
+    if (!supportsKeyObjects) {
+      throw typeError(MSG_INVALID_SECRET);
+    }
+    if (typeof key !== "object") {
+      throw typeError(MSG_INVALID_SECRET);
+    }
+    if (key.type !== "secret") {
+      throw typeError(MSG_INVALID_SECRET);
+    }
+    if (typeof key.export !== "function") {
+      throw typeError(MSG_INVALID_SECRET);
+    }
+  }
+  function fromBase64(base64) {
+    return base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  }
+  function toBase64(base64url) {
+    base64url = base64url.toString();
+    var padding = 4 - base64url.length % 4;
+    if (padding !== 4) {
+      for (var i = 0;i < padding; ++i) {
+        base64url += "=";
+      }
+    }
+    return base64url.replace(/\-/g, "+").replace(/_/g, "/");
+  }
+  function typeError(template) {
+    var args = [].slice.call(arguments, 1);
+    var errMsg = util.format.bind(util, template).apply(null, args);
+    return new TypeError(errMsg);
+  }
+  function bufferOrString(obj) {
+    return Buffer2.isBuffer(obj) || typeof obj === "string";
+  }
+  function normalizeInput(thing) {
+    if (!bufferOrString(thing))
+      thing = JSON.stringify(thing);
+    return thing;
+  }
+  function createHmacSigner(bits) {
+    return function sign(thing, secret) {
+      checkIsSecretKey(secret);
+      thing = normalizeInput(thing);
+      var hmac = crypto2.createHmac("sha" + bits, secret);
+      var sig = (hmac.update(thing), hmac.digest("base64"));
+      return fromBase64(sig);
+    };
+  }
+  var bufferEqual;
+  var timingSafeEqual = "timingSafeEqual" in crypto2 ? function timingSafeEqual(a, b) {
+    if (a.byteLength !== b.byteLength) {
+      return false;
+    }
+    return crypto2.timingSafeEqual(a, b);
+  } : function timingSafeEqual(a, b) {
+    if (!bufferEqual) {
+      bufferEqual = require_buffer_equal_constant_time();
+    }
+    return bufferEqual(a, b);
+  };
+  function createHmacVerifier(bits) {
+    return function verify(thing, signature, secret) {
+      var computedSig = createHmacSigner(bits)(thing, secret);
+      return timingSafeEqual(Buffer2.from(signature), Buffer2.from(computedSig));
+    };
+  }
+  function createKeySigner(bits) {
+    return function sign(thing, privateKey) {
+      checkIsPrivateKey(privateKey);
+      thing = normalizeInput(thing);
+      var signer = crypto2.createSign("RSA-SHA" + bits);
+      var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
+      return fromBase64(sig);
+    };
+  }
+  function createKeyVerifier(bits) {
+    return function verify(thing, signature, publicKey) {
+      checkIsPublicKey(publicKey);
+      thing = normalizeInput(thing);
+      signature = toBase64(signature);
+      var verifier = crypto2.createVerify("RSA-SHA" + bits);
+      verifier.update(thing);
+      return verifier.verify(publicKey, signature, "base64");
+    };
+  }
+  function createPSSKeySigner(bits) {
+    return function sign(thing, privateKey) {
+      checkIsPrivateKey(privateKey);
+      thing = normalizeInput(thing);
+      var signer = crypto2.createSign("RSA-SHA" + bits);
+      var sig = (signer.update(thing), signer.sign({
+        key: privateKey,
+        padding: crypto2.constants.RSA_PKCS1_PSS_PADDING,
+        saltLength: crypto2.constants.RSA_PSS_SALTLEN_DIGEST
+      }, "base64"));
+      return fromBase64(sig);
+    };
+  }
+  function createPSSKeyVerifier(bits) {
+    return function verify(thing, signature, publicKey) {
+      checkIsPublicKey(publicKey);
+      thing = normalizeInput(thing);
+      signature = toBase64(signature);
+      var verifier = crypto2.createVerify("RSA-SHA" + bits);
+      verifier.update(thing);
+      return verifier.verify({
+        key: publicKey,
+        padding: crypto2.constants.RSA_PKCS1_PSS_PADDING,
+        saltLength: crypto2.constants.RSA_PSS_SALTLEN_DIGEST
+      }, signature, "base64");
+    };
+  }
+  function createECDSASigner(bits) {
+    var inner = createKeySigner(bits);
+    return function sign() {
+      var signature = inner.apply(null, arguments);
+      signature = formatEcdsa.derToJose(signature, "ES" + bits);
+      return signature;
+    };
+  }
+  function createECDSAVerifer(bits) {
+    var inner = createKeyVerifier(bits);
+    return function verify(thing, signature, publicKey) {
+      signature = formatEcdsa.joseToDer(signature, "ES" + bits).toString("base64");
+      var result = inner(thing, signature, publicKey);
+      return result;
+    };
+  }
+  function createNoneSigner() {
+    return function sign() {
+      return "";
+    };
+  }
+  function createNoneVerifier() {
+    return function verify(thing, signature) {
+      return signature === "";
+    };
+  }
+  module.exports = function jwa(algorithm) {
+    var signerFactories = {
+      hs: createHmacSigner,
+      rs: createKeySigner,
+      ps: createPSSKeySigner,
+      es: createECDSASigner,
+      none: createNoneSigner
+    };
+    var verifierFactories = {
+      hs: createHmacVerifier,
+      rs: createKeyVerifier,
+      ps: createPSSKeyVerifier,
+      es: createECDSAVerifer,
+      none: createNoneVerifier
+    };
+    var match = algorithm.match(/^(RS|PS|ES|HS)(256|384|512)$|^(none)$/);
+    if (!match)
+      throw typeError(MSG_INVALID_ALGORITHM, algorithm);
+    var algo = (match[1] || match[3]).toLowerCase();
+    var bits = match[2];
+    return {
+      sign: signerFactories[algo](bits),
+      verify: verifierFactories[algo](bits)
+    };
+  };
+});
+
+// node_modules/jws/lib/tostring.js
+var require_tostring = __commonJS(function(exports, module) {
+  var Buffer2 = __require("buffer").Buffer;
+  module.exports = function toString(obj) {
+    if (typeof obj === "string")
+      return obj;
+    if (typeof obj === "number" || Buffer2.isBuffer(obj))
+      return obj.toString();
+    return JSON.stringify(obj);
+  };
+});
+
+// node_modules/jws/lib/sign-stream.js
+var require_sign_stream = __commonJS(function(exports, module) {
+  var Buffer2 = require_safe_buffer().Buffer;
+  var DataStream = require_data_stream();
+  var jwa = require_jwa();
+  var Stream = __require("stream");
+  var toString = require_tostring();
+  var util = __require("util");
+  function base64url(string, encoding) {
+    return Buffer2.from(string, encoding).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+  }
+  function jwsSecuredInput(header, payload, encoding) {
+    encoding = encoding || "utf8";
+    var encodedHeader = base64url(toString(header), "binary");
+    var encodedPayload = base64url(toString(payload), encoding);
+    return util.format("%s.%s", encodedHeader, encodedPayload);
+  }
+  function jwsSign(opts) {
+    var header = opts.header;
+    var payload = opts.payload;
+    var secretOrKey = opts.secret || opts.privateKey;
+    var encoding = opts.encoding;
+    var algo = jwa(header.alg);
+    var securedInput = jwsSecuredInput(header, payload, encoding);
+    var signature = algo.sign(securedInput, secretOrKey);
+    return util.format("%s.%s", securedInput, signature);
+  }
+  function SignStream(opts) {
+    var secret = opts.secret;
+    secret = secret == null ? opts.privateKey : secret;
+    secret = secret == null ? opts.key : secret;
+    if (/^hs/i.test(opts.header.alg) === true && secret == null) {
+      throw new TypeError("secret must be a string or buffer or a KeyObject");
+    }
+    var secretStream = new DataStream(secret);
+    this.readable = true;
+    this.header = opts.header;
+    this.encoding = opts.encoding;
+    this.secret = this.privateKey = this.key = secretStream;
+    this.payload = new DataStream(opts.payload);
+    this.secret.once("close", function() {
+      if (!this.payload.writable && this.readable)
+        this.sign();
+    }.bind(this));
+    this.payload.once("close", function() {
+      if (!this.secret.writable && this.readable)
+        this.sign();
+    }.bind(this));
+  }
+  util.inherits(SignStream, Stream);
+  SignStream.prototype.sign = function sign() {
+    try {
+      var signature = jwsSign({
+        header: this.header,
+        payload: this.payload.buffer,
+        secret: this.secret.buffer,
+        encoding: this.encoding
+      });
+      this.emit("done", signature);
+      this.emit("data", signature);
+      this.emit("end");
+      this.readable = false;
+      return signature;
+    } catch (e) {
+      this.readable = false;
+      this.emit("error", e);
+      this.emit("close");
+    }
+  };
+  SignStream.sign = jwsSign;
+  module.exports = SignStream;
+});
+
+// node_modules/jws/lib/verify-stream.js
+var require_verify_stream = __commonJS(function(exports, module) {
+  var Buffer2 = require_safe_buffer().Buffer;
+  var DataStream = require_data_stream();
+  var jwa = require_jwa();
+  var Stream = __require("stream");
+  var toString = require_tostring();
+  var util = __require("util");
+  var JWS_REGEX = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
+  function isObject(thing) {
+    return Object.prototype.toString.call(thing) === "[object Object]";
+  }
+  function safeJsonParse(thing) {
+    if (isObject(thing))
+      return thing;
+    try {
+      return JSON.parse(thing);
+    } catch (e) {
+      return;
+    }
+  }
+  function headerFromJWS(jwsSig) {
+    var encodedHeader = jwsSig.split(".", 1)[0];
+    return safeJsonParse(Buffer2.from(encodedHeader, "base64").toString("binary"));
+  }
+  function securedInputFromJWS(jwsSig) {
+    return jwsSig.split(".", 2).join(".");
+  }
+  function signatureFromJWS(jwsSig) {
+    return jwsSig.split(".")[2];
+  }
+  function payloadFromJWS(jwsSig, encoding) {
+    encoding = encoding || "utf8";
+    var payload = jwsSig.split(".")[1];
+    return Buffer2.from(payload, "base64").toString(encoding);
+  }
+  function isValidJws(string) {
+    return JWS_REGEX.test(string) && !!headerFromJWS(string);
+  }
+  function jwsVerify(jwsSig, algorithm, secretOrKey) {
+    if (!algorithm) {
+      var err = new Error("Missing algorithm parameter for jws.verify");
+      err.code = "MISSING_ALGORITHM";
+      throw err;
+    }
+    jwsSig = toString(jwsSig);
+    var signature = signatureFromJWS(jwsSig);
+    var securedInput = securedInputFromJWS(jwsSig);
+    var algo = jwa(algorithm);
+    return algo.verify(securedInput, signature, secretOrKey);
+  }
+  function jwsDecode(jwsSig, opts) {
+    opts = opts || {};
+    jwsSig = toString(jwsSig);
+    if (!isValidJws(jwsSig))
+      return null;
+    var header = headerFromJWS(jwsSig);
+    if (!header)
+      return null;
+    var payload = payloadFromJWS(jwsSig);
+    if (header.typ === "JWT" || opts.json)
+      payload = JSON.parse(payload, opts.encoding);
+    return {
+      header,
+      payload,
+      signature: signatureFromJWS(jwsSig)
+    };
+  }
+  function VerifyStream(opts) {
+    opts = opts || {};
+    var secretOrKey = opts.secret;
+    secretOrKey = secretOrKey == null ? opts.publicKey : secretOrKey;
+    secretOrKey = secretOrKey == null ? opts.key : secretOrKey;
+    if (/^hs/i.test(opts.algorithm) === true && secretOrKey == null) {
+      throw new TypeError("secret must be a string or buffer or a KeyObject");
+    }
+    var secretStream = new DataStream(secretOrKey);
+    this.readable = true;
+    this.algorithm = opts.algorithm;
+    this.encoding = opts.encoding;
+    this.secret = this.publicKey = this.key = secretStream;
+    this.signature = new DataStream(opts.signature);
+    this.secret.once("close", function() {
+      if (!this.signature.writable && this.readable)
+        this.verify();
+    }.bind(this));
+    this.signature.once("close", function() {
+      if (!this.secret.writable && this.readable)
+        this.verify();
+    }.bind(this));
+  }
+  util.inherits(VerifyStream, Stream);
+  VerifyStream.prototype.verify = function verify() {
+    try {
+      var valid = jwsVerify(this.signature.buffer, this.algorithm, this.key.buffer);
+      var obj = jwsDecode(this.signature.buffer, this.encoding);
+      this.emit("done", valid, obj);
+      this.emit("data", valid);
+      this.emit("end");
+      this.readable = false;
+      return valid;
+    } catch (e) {
+      this.readable = false;
+      this.emit("error", e);
+      this.emit("close");
+    }
+  };
+  VerifyStream.decode = jwsDecode;
+  VerifyStream.isValid = isValidJws;
+  VerifyStream.verify = jwsVerify;
+  module.exports = VerifyStream;
+});
+
+// node_modules/jws/index.js
+var require_jws = __commonJS(function(exports) {
+  var SignStream = require_sign_stream();
+  var VerifyStream = require_verify_stream();
+  var ALGORITHMS = [
+    "HS256",
+    "HS384",
+    "HS512",
+    "RS256",
+    "RS384",
+    "RS512",
+    "PS256",
+    "PS384",
+    "PS512",
+    "ES256",
+    "ES384",
+    "ES512"
+  ];
+  exports.ALGORITHMS = ALGORITHMS;
+  exports.sign = SignStream.sign;
+  exports.verify = VerifyStream.verify;
+  exports.decode = VerifyStream.decode;
+  exports.isValid = VerifyStream.isValid;
+  exports.createSign = function createSign(opts) {
+    return new SignStream(opts);
+  };
+  exports.createVerify = function createVerify(opts) {
+    return new VerifyStream(opts);
+  };
+});
+
+// node_modules/google-auth-library/build/src/gtoken/jwsSign.js
+var require_jwsSign = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.buildPayloadForJwsSign = buildPayloadForJwsSign;
+  exports.getJwsSign = getJwsSign;
+  var jws_1 = require_jws();
+  var ALG_RS256 = "RS256";
+  var GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+  function buildPayloadForJwsSign(tokenOptions) {
+    const iat = Math.floor(new Date().getTime() / 1000);
+    const payload = {
+      iss: tokenOptions.iss,
+      scope: tokenOptions.scope,
+      aud: GOOGLE_TOKEN_URL,
+      exp: iat + 3600,
+      iat,
+      sub: tokenOptions.sub,
+      ...tokenOptions.additionalClaims
+    };
+    return payload;
+  }
+  function getJwsSign(tokenOptions) {
+    const payload = buildPayloadForJwsSign(tokenOptions);
+    return (0, jws_1.sign)({
+      header: { alg: ALG_RS256 },
+      payload,
+      secret: tokenOptions.key
+    });
+  }
+});
+
+// node_modules/google-auth-library/build/src/gtoken/getToken.js
+var require_getToken = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.getToken = getToken;
+  var jwsSign_1 = require_jwsSign();
+  var GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+  var GOOGLE_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+  var generateRequestOptions = (tokenOptions) => {
+    return {
+      method: "POST",
+      url: GOOGLE_TOKEN_URL,
+      data: new URLSearchParams({
+        grant_type: GOOGLE_GRANT_TYPE,
+        assertion: (0, jwsSign_1.getJwsSign)(tokenOptions)
+      }),
+      responseType: "json",
+      retryConfig: {
+        httpMethodsToRetry: ["POST"]
+      }
+    };
+  };
+  async function getToken(tokenOptions) {
+    if (!tokenOptions.transporter) {
+      throw new Error("No transporter set.");
+    }
+    try {
+      const gaxiosOptions = generateRequestOptions(tokenOptions);
+      const response = await tokenOptions.transporter.request(gaxiosOptions);
+      return response.data;
+    } catch (e) {
+      const err = e;
+      const errorData = err.response?.data;
+      if (errorData?.error) {
+        err.message = `${errorData.error}: ${errorData.error_description}`;
+      }
+      throw err;
+    }
+  }
+});
+
+// node_modules/google-auth-library/build/src/gtoken/errorWithCode.js
+var require_errorWithCode = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ErrorWithCode = undefined;
+
+  class ErrorWithCode extends Error {
+    code;
+    constructor(message, code) {
+      super(message);
+      this.code = code;
+    }
+  }
+  exports.ErrorWithCode = ErrorWithCode;
+});
+
+// node_modules/google-auth-library/build/src/gtoken/getCredentials.js
+var require_getCredentials = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.getCredentials = getCredentials;
+  var path = __require("path");
+  var fs = __require("fs");
+  var util_1 = __require("util");
+  var errorWithCode_1 = require_errorWithCode();
+  var readFile = fs.readFile ? (0, util_1.promisify)(fs.readFile) : async () => {
+    throw new errorWithCode_1.ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
+  };
+  var ExtensionFiles;
+  (function(ExtensionFiles) {
+    ExtensionFiles["JSON"] = ".json";
+    ExtensionFiles["DER"] = ".der";
+    ExtensionFiles["CRT"] = ".crt";
+    ExtensionFiles["PEM"] = ".pem";
+    ExtensionFiles["P12"] = ".p12";
+    ExtensionFiles["PFX"] = ".pfx";
+  })(ExtensionFiles || (ExtensionFiles = {}));
+
+  class JsonCredentialsProvider {
+    keyFilePath;
+    constructor(keyFilePath) {
+      this.keyFilePath = keyFilePath;
+    }
+    async getCredentials() {
+      const key = await readFile(this.keyFilePath, "utf8");
+      let body;
+      try {
+        body = JSON.parse(key);
+      } catch (error) {
+        const err = error;
+        throw new Error(`Invalid JSON key file: ${err.message}`);
+      }
+      const privateKey = body.private_key;
+      const clientEmail = body.client_email;
+      if (!privateKey || !clientEmail) {
+        throw new errorWithCode_1.ErrorWithCode("private_key and client_email are required.", "MISSING_CREDENTIALS");
+      }
+      return { privateKey, clientEmail };
+    }
+  }
+
+  class PemCredentialsProvider {
+    keyFilePath;
+    constructor(keyFilePath) {
+      this.keyFilePath = keyFilePath;
+    }
+    async getCredentials() {
+      const privateKey = await readFile(this.keyFilePath, "utf8");
+      return { privateKey };
+    }
+  }
+
+  class P12CredentialsProvider {
+    async getCredentials() {
+      throw new errorWithCode_1.ErrorWithCode("*.p12 certificates are not supported after v6.1.2. " + "Consider utilizing *.json format or converting *.p12 to *.pem using the OpenSSL CLI.", "UNKNOWN_CERTIFICATE_TYPE");
+    }
+  }
+
+  class CredentialsProviderFactory {
+    static create(keyFilePath) {
+      const keyFileExtension = path.extname(keyFilePath);
+      switch (keyFileExtension) {
+        case ExtensionFiles.JSON:
+          return new JsonCredentialsProvider(keyFilePath);
+        case ExtensionFiles.DER:
+        case ExtensionFiles.CRT:
+        case ExtensionFiles.PEM:
+          return new PemCredentialsProvider(keyFilePath);
+        case ExtensionFiles.P12:
+        case ExtensionFiles.PFX:
+          return new P12CredentialsProvider;
+        default:
+          throw new errorWithCode_1.ErrorWithCode("Unknown certificate type. Type is determined based on file extension. " + "Current supported extensions are *.json, and *.pem.", "UNKNOWN_CERTIFICATE_TYPE");
+      }
+    }
+  }
+  async function getCredentials(keyFilePath) {
+    const provider = CredentialsProviderFactory.create(keyFilePath);
+    return provider.getCredentials();
+  }
+});
+
+// node_modules/google-auth-library/build/src/gtoken/tokenHandler.js
+var require_tokenHandler = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.TokenHandler = undefined;
+  var getToken_1 = require_getToken();
+  var getCredentials_1 = require_getCredentials();
+
+  class TokenHandler {
+    token;
+    tokenExpiresAt;
+    inFlightRequest;
+    tokenOptions;
+    constructor(tokenOptions) {
+      this.tokenOptions = tokenOptions;
+    }
+    async processCredentials() {
+      if (!this.tokenOptions.key && !this.tokenOptions.keyFile) {
+        throw new Error("No key or keyFile set.");
+      }
+      if (!this.tokenOptions.key && this.tokenOptions.keyFile) {
+        const credentials = await (0, getCredentials_1.getCredentials)(this.tokenOptions.keyFile);
+        this.tokenOptions.key = credentials.privateKey;
+        this.tokenOptions.email = credentials.clientEmail;
+      }
+    }
+    isTokenExpiring() {
+      if (!this.token || !this.tokenExpiresAt) {
+        return true;
+      }
+      const now = new Date().getTime();
+      const eagerRefreshThresholdMillis = this.tokenOptions.eagerRefreshThresholdMillis ?? 0;
+      return this.tokenExpiresAt <= now + eagerRefreshThresholdMillis;
+    }
+    hasExpired() {
+      const now = new Date().getTime();
+      if (this.token && this.tokenExpiresAt) {
+        const now = new Date().getTime();
+        return now >= this.tokenExpiresAt;
+      }
+      return true;
+    }
+    async getToken(forceRefresh) {
+      await this.processCredentials();
+      if (this.inFlightRequest && !forceRefresh) {
+        return this.inFlightRequest;
+      }
+      if (this.token && !this.isTokenExpiring() && !forceRefresh) {
+        return this.token;
+      }
+      try {
+        this.inFlightRequest = (0, getToken_1.getToken)(this.tokenOptions);
+        const token = await this.inFlightRequest;
+        this.token = token;
+        this.tokenExpiresAt = new Date().getTime() + (token.expires_in ?? 0) * 1000;
+        return token;
+      } finally {
+        this.inFlightRequest = undefined;
+      }
+    }
+  }
+  exports.TokenHandler = TokenHandler;
+});
+
+// node_modules/google-auth-library/build/src/gtoken/revokeToken.js
+var require_revokeToken = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.revokeToken = revokeToken;
+  var GOOGLE_REVOKE_TOKEN_URL = "https://oauth2.googleapis.com/revoke?token=";
+  var DEFAULT_RETRY_VALUE = true;
+  async function revokeToken(accessToken, transporter) {
+    const url = GOOGLE_REVOKE_TOKEN_URL + accessToken;
+    return await transporter.request({
+      url,
+      retry: DEFAULT_RETRY_VALUE
+    });
+  }
+});
+
+// node_modules/google-auth-library/build/src/gtoken/googleToken.js
+var require_googleToken = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GoogleToken = undefined;
+  var gaxios_1 = require_src4();
+  var tokenHandler_1 = require_tokenHandler();
+  var revokeToken_1 = require_revokeToken();
+
+  class GoogleToken {
+    tokenOptions;
+    tokenHandler;
+    constructor(options) {
+      this.tokenOptions = options || {};
+      this.tokenOptions.transporter = this.tokenOptions.transporter || {
+        request: (opts) => (0, gaxios_1.request)(opts)
+      };
+      if (!this.tokenOptions.iss) {
+        this.tokenOptions.iss = this.tokenOptions.email;
+      }
+      if (typeof this.tokenOptions.scope === "object") {
+        this.tokenOptions.scope = this.tokenOptions.scope.join(" ");
+      }
+      this.tokenHandler = new tokenHandler_1.TokenHandler(this.tokenOptions);
+    }
+    get expiresAt() {
+      return this.tokenHandler.tokenExpiresAt;
+    }
+    get accessToken() {
+      return this.tokenHandler.token?.access_token;
+    }
+    get idToken() {
+      return this.tokenHandler.token?.id_token;
+    }
+    get tokenType() {
+      return this.tokenHandler.token?.token_type;
+    }
+    get refreshToken() {
+      return this.tokenHandler.token?.refresh_token;
+    }
+    hasExpired() {
+      return this.tokenHandler.hasExpired();
+    }
+    isTokenExpiring() {
+      return this.tokenHandler.isTokenExpiring();
+    }
+    getToken(callbackOrOptions, opts = { forceRefresh: false }) {
+      let callback;
+      if (typeof callbackOrOptions === "function") {
+        callback = callbackOrOptions;
+      } else if (typeof callbackOrOptions === "object") {
+        opts = callbackOrOptions;
+      }
+      const promise = this.tokenHandler.getToken(opts.forceRefresh ?? false);
+      if (callback) {
+        promise.then((token) => callback(null, token), callback);
+      }
+      return promise;
+    }
+    revokeToken(callback) {
+      if (!this.accessToken) {
+        return Promise.reject(new Error("No token to revoke."));
+      }
+      const promise = (0, revokeToken_1.revokeToken)(this.accessToken, this.tokenOptions.transporter);
+      if (callback) {
+        promise.then(() => callback(), callback);
+      }
+      this.tokenHandler = new tokenHandler_1.TokenHandler(this.tokenOptions);
+    }
+    get googleTokenOptions() {
+      return this.tokenOptions;
+    }
+  }
+  exports.GoogleToken = GoogleToken;
+});
+
+// node_modules/google-auth-library/build/src/auth/jwtaccess.js
+var require_jwtaccess = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.JWTAccess = undefined;
+  var jws = require_jws();
+  var util_1 = require_util3();
+  var DEFAULT_HEADER = {
+    alg: "RS256",
+    typ: "JWT"
+  };
+
+  class JWTAccess {
+    email;
+    key;
+    keyId;
+    projectId;
+    eagerRefreshThresholdMillis;
+    cache = new util_1.LRUCache({
+      capacity: 500,
+      maxAge: 60 * 60 * 1000
+    });
+    constructor(email, key, keyId, eagerRefreshThresholdMillis) {
+      this.email = email;
+      this.key = key;
+      this.keyId = keyId;
+      this.eagerRefreshThresholdMillis = eagerRefreshThresholdMillis ?? 5 * 60 * 1000;
+    }
+    getCachedKey(url, scopes) {
+      let cacheKey = url;
+      if (scopes && Array.isArray(scopes) && scopes.length) {
+        cacheKey = url ? `${url}_${scopes.join("_")}` : `${scopes.join("_")}`;
+      } else if (typeof scopes === "string") {
+        cacheKey = url ? `${url}_${scopes}` : scopes;
+      }
+      if (!cacheKey) {
+        throw Error("Scopes or url must be provided");
+      }
+      return cacheKey;
+    }
+    getRequestHeaders(url, additionalClaims, scopes) {
+      const key = this.getCachedKey(url, scopes);
+      const cachedToken = this.cache.get(key);
+      const now = Date.now();
+      if (cachedToken && cachedToken.expiration - now > this.eagerRefreshThresholdMillis) {
+        return new Headers(cachedToken.headers);
+      }
+      const iat = Math.floor(Date.now() / 1000);
+      const exp = JWTAccess.getExpirationTime(iat);
+      let defaultClaims;
+      if (Array.isArray(scopes)) {
+        scopes = scopes.join(" ");
+      }
+      if (scopes) {
+        defaultClaims = {
+          iss: this.email,
+          sub: this.email,
+          scope: scopes,
+          exp,
+          iat
+        };
+      } else {
+        defaultClaims = {
+          iss: this.email,
+          sub: this.email,
+          aud: url,
+          exp,
+          iat
+        };
+      }
+      if (additionalClaims) {
+        for (const claim in defaultClaims) {
+          if (additionalClaims[claim]) {
+            throw new Error(`The '${claim}' property is not allowed when passing additionalClaims. This claim is included in the JWT by default.`);
+          }
+        }
+      }
+      const header = this.keyId ? { ...DEFAULT_HEADER, kid: this.keyId } : DEFAULT_HEADER;
+      const payload = Object.assign(defaultClaims, additionalClaims);
+      const signedJWT = jws.sign({ header, payload, secret: this.key });
+      const headers = new Headers({ authorization: `Bearer ${signedJWT}` });
+      this.cache.set(key, {
+        expiration: exp * 1000,
+        headers
+      });
+      return headers;
+    }
+    static getExpirationTime(iat) {
+      const exp = iat + 3600;
+      return exp;
+    }
+    fromJSON(json) {
+      if (!json) {
+        throw new Error("Must pass in a JSON object containing the service account auth settings.");
+      }
+      if (!json.client_email) {
+        throw new Error("The incoming JSON object does not contain a client_email field");
+      }
+      if (!json.private_key) {
+        throw new Error("The incoming JSON object does not contain a private_key field");
+      }
+      this.email = json.client_email;
+      this.key = json.private_key;
+      this.keyId = json.private_key_id;
+      this.projectId = json.project_id;
+    }
+    fromStream(inputStream, callback) {
+      if (callback) {
+        this.fromStreamAsync(inputStream).then(() => callback(), callback);
+      } else {
+        return this.fromStreamAsync(inputStream);
+      }
+    }
+    fromStreamAsync(inputStream) {
+      return new Promise((resolve, reject) => {
+        if (!inputStream) {
+          reject(new Error("Must pass in a stream containing the service account auth settings."));
+        }
+        let s = "";
+        inputStream.setEncoding("utf8").on("data", (chunk) => s += chunk).on("error", reject).on("end", () => {
+          try {
+            const data = JSON.parse(s);
+            this.fromJSON(data);
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+    }
+  }
+  exports.JWTAccess = JWTAccess;
+});
+
+// node_modules/google-auth-library/build/src/auth/jwtclient.js
+var require_jwtclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.JWT = undefined;
+  var googleToken_1 = require_googleToken();
+  var getCredentials_1 = require_getCredentials();
+  var jwtaccess_1 = require_jwtaccess();
+  var oauth2client_1 = require_oauth2client();
+  var authclient_1 = require_authclient();
+
+  class JWT extends oauth2client_1.OAuth2Client {
+    email;
+    keyFile;
+    key;
+    keyId;
+    defaultScopes;
+    scopes;
+    scope;
+    subject;
+    gtoken;
+    additionalClaims;
+    useJWTAccessWithScope;
+    defaultServicePath;
+    access;
+    constructor(options = {}) {
+      super(options);
+      this.email = options.email;
+      this.keyFile = options.keyFile;
+      this.key = options.key;
+      this.keyId = options.keyId;
+      this.scopes = options.scopes;
+      this.subject = options.subject;
+      this.additionalClaims = options.additionalClaims;
+      this.credentials = { refresh_token: "jwt-placeholder", expiry_date: 1 };
+    }
+    createScoped(scopes) {
+      const jwt = new JWT(this);
+      jwt.scopes = scopes;
+      return jwt;
+    }
+    async getRequestMetadataAsync(url) {
+      url = this.defaultServicePath ? `https://${this.defaultServicePath}/` : url;
+      const useSelfSignedJWT = !this.hasUserScopes() && url || this.useJWTAccessWithScope && this.hasAnyScopes() || this.universeDomain !== authclient_1.DEFAULT_UNIVERSE;
+      if (this.subject && this.universeDomain !== authclient_1.DEFAULT_UNIVERSE) {
+        throw new RangeError(`Service Account user is configured for the credential. Domain-wide delegation is not supported in universes other than ${authclient_1.DEFAULT_UNIVERSE}`);
+      }
+      if (!this.apiKey && useSelfSignedJWT) {
+        if (this.additionalClaims && this.additionalClaims.target_audience) {
+          const { tokens } = await this.refreshToken();
+          return {
+            headers: this.addSharedMetadataHeaders(new Headers({
+              authorization: `Bearer ${tokens.id_token}`
+            }))
+          };
+        } else {
+          if (!this.access) {
+            this.access = new jwtaccess_1.JWTAccess(this.email, this.key, this.keyId, this.eagerRefreshThresholdMillis);
+          }
+          let scopes;
+          if (this.hasUserScopes()) {
+            scopes = this.scopes;
+          } else if (!url) {
+            scopes = this.defaultScopes;
+          }
+          const useScopes = this.useJWTAccessWithScope || this.universeDomain !== authclient_1.DEFAULT_UNIVERSE;
+          const headers = await this.access.getRequestHeaders(url ?? undefined, this.additionalClaims, useScopes ? scopes : undefined);
+          return { headers: this.addSharedMetadataHeaders(headers) };
+        }
+      } else if (this.hasAnyScopes() || this.apiKey) {
+        return super.getRequestMetadataAsync(url);
+      } else {
+        return { headers: new Headers };
+      }
+    }
+    async fetchIdToken(targetAudience) {
+      const gtoken = new googleToken_1.GoogleToken({
+        iss: this.email,
+        sub: this.subject,
+        scope: this.scopes || this.defaultScopes,
+        keyFile: this.keyFile,
+        key: this.key,
+        additionalClaims: { target_audience: targetAudience },
+        transporter: this.transporter
+      });
+      await gtoken.getToken({
+        forceRefresh: true
+      });
+      if (!gtoken.idToken) {
+        throw new Error("Unknown error: Failed to fetch ID token");
+      }
+      return gtoken.idToken;
+    }
+    hasUserScopes() {
+      if (!this.scopes) {
+        return false;
+      }
+      return this.scopes.length > 0;
+    }
+    hasAnyScopes() {
+      if (this.scopes && this.scopes.length > 0)
+        return true;
+      if (this.defaultScopes && this.defaultScopes.length > 0)
+        return true;
+      return false;
+    }
+    authorize(callback) {
+      if (callback) {
+        this.authorizeAsync().then((r) => callback(null, r), callback);
+      } else {
+        return this.authorizeAsync();
+      }
+    }
+    async authorizeAsync() {
+      const result = await this.refreshToken();
+      if (!result) {
+        throw new Error("No result returned");
+      }
+      this.credentials = result.tokens;
+      this.credentials.refresh_token = "jwt-placeholder";
+      this.key = this.gtoken.googleTokenOptions?.key;
+      this.email = this.gtoken.googleTokenOptions?.iss;
+      return result.tokens;
+    }
+    async refreshTokenNoCache() {
+      const gtoken = this.createGToken();
+      const token = await gtoken.getToken({
+        forceRefresh: this.isTokenExpiring()
+      });
+      const tokens = {
+        access_token: token.access_token,
+        token_type: "Bearer",
+        expiry_date: gtoken.expiresAt,
+        id_token: gtoken.idToken
+      };
+      this.emit("tokens", tokens);
+      return { res: null, tokens };
+    }
+    createGToken() {
+      if (!this.gtoken) {
+        this.gtoken = new googleToken_1.GoogleToken({
+          iss: this.email,
+          sub: this.subject,
+          scope: this.scopes || this.defaultScopes,
+          keyFile: this.keyFile,
+          key: this.key,
+          additionalClaims: this.additionalClaims,
+          transporter: this.transporter
+        });
+      }
+      return this.gtoken;
+    }
+    fromJSON(json) {
+      if (!json) {
+        throw new Error("Must pass in a JSON object containing the service account auth settings.");
+      }
+      if (!json.client_email) {
+        throw new Error("The incoming JSON object does not contain a client_email field");
+      }
+      if (!json.private_key) {
+        throw new Error("The incoming JSON object does not contain a private_key field");
+      }
+      this.email = json.client_email;
+      this.key = json.private_key;
+      this.keyId = json.private_key_id;
+      this.projectId = json.project_id;
+      this.quotaProjectId = json.quota_project_id;
+      this.universeDomain = json.universe_domain || this.universeDomain;
+    }
+    fromStream(inputStream, callback) {
+      if (callback) {
+        this.fromStreamAsync(inputStream).then(() => callback(), callback);
+      } else {
+        return this.fromStreamAsync(inputStream);
+      }
+    }
+    fromStreamAsync(inputStream) {
+      return new Promise((resolve, reject) => {
+        if (!inputStream) {
+          throw new Error("Must pass in a stream containing the service account auth settings.");
+        }
+        let s = "";
+        inputStream.setEncoding("utf8").on("error", reject).on("data", (chunk) => s += chunk).on("end", () => {
+          try {
+            const data = JSON.parse(s);
+            this.fromJSON(data);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+    }
+    fromAPIKey(apiKey) {
+      if (typeof apiKey !== "string") {
+        throw new Error("Must provide an API Key string.");
+      }
+      this.apiKey = apiKey;
+    }
+    async getCredentials() {
+      if (this.key) {
+        return { private_key: this.key, client_email: this.email };
+      } else if (this.keyFile) {
+        const gtoken = this.createGToken();
+        const creds = await (0, getCredentials_1.getCredentials)(this.keyFile);
+        return { private_key: creds.privateKey, client_email: creds.clientEmail };
+      }
+      throw new Error("A key or a keyFile must be provided to getCredentials.");
+    }
+  }
+  exports.JWT = JWT;
+});
+
+// node_modules/google-auth-library/build/src/auth/refreshclient.js
+var require_refreshclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.UserRefreshClient = exports.USER_REFRESH_ACCOUNT_TYPE = undefined;
+  var oauth2client_1 = require_oauth2client();
+  var authclient_1 = require_authclient();
+  exports.USER_REFRESH_ACCOUNT_TYPE = "authorized_user";
+
+  class UserRefreshClient extends oauth2client_1.OAuth2Client {
+    _refreshToken;
+    constructor(optionsOrClientId, clientSecret, refreshToken, eagerRefreshThresholdMillis, forceRefreshOnFailure) {
+      const opts = optionsOrClientId && typeof optionsOrClientId === "object" ? optionsOrClientId : {
+        clientId: optionsOrClientId,
+        clientSecret,
+        refreshToken,
+        eagerRefreshThresholdMillis,
+        forceRefreshOnFailure
+      };
+      super(opts);
+      this._refreshToken = opts.refreshToken;
+      this.credentials.refresh_token = opts.refreshToken;
+    }
+    async refreshTokenNoCache() {
+      return super.refreshTokenNoCache(this._refreshToken);
+    }
+    async fetchIdToken(targetAudience) {
+      const opts = {
+        ...UserRefreshClient.RETRY_CONFIG,
+        url: this.endpoints.oauth2TokenUrl,
+        method: "POST",
+        data: new URLSearchParams({
+          client_id: this._clientId,
+          client_secret: this._clientSecret,
+          grant_type: "refresh_token",
+          refresh_token: this._refreshToken,
+          target_audience: targetAudience
+        }),
+        responseType: "json"
+      };
+      authclient_1.AuthClient.setMethodName(opts, "fetchIdToken");
+      const res = await this.transporter.request(opts);
+      return res.data.id_token;
+    }
+    fromJSON(json) {
+      if (!json) {
+        throw new Error("Must pass in a JSON object containing the user refresh token");
+      }
+      if (json.type !== "authorized_user") {
+        throw new Error('The incoming JSON object does not have the "authorized_user" type');
+      }
+      if (!json.client_id) {
+        throw new Error("The incoming JSON object does not contain a client_id field");
+      }
+      if (!json.client_secret) {
+        throw new Error("The incoming JSON object does not contain a client_secret field");
+      }
+      if (!json.refresh_token) {
+        throw new Error("The incoming JSON object does not contain a refresh_token field");
+      }
+      this._clientId = json.client_id;
+      this._clientSecret = json.client_secret;
+      this._refreshToken = json.refresh_token;
+      this.credentials.refresh_token = json.refresh_token;
+      this.quotaProjectId = json.quota_project_id;
+      this.universeDomain = json.universe_domain || this.universeDomain;
+    }
+    fromStream(inputStream, callback) {
+      if (callback) {
+        this.fromStreamAsync(inputStream).then(() => callback(), callback);
+      } else {
+        return this.fromStreamAsync(inputStream);
+      }
+    }
+    async fromStreamAsync(inputStream) {
+      return new Promise((resolve, reject) => {
+        if (!inputStream) {
+          return reject(new Error("Must pass in a stream containing the user refresh token."));
+        }
+        let s = "";
+        inputStream.setEncoding("utf8").on("error", reject).on("data", (chunk) => s += chunk).on("end", () => {
+          try {
+            const data = JSON.parse(s);
+            this.fromJSON(data);
+            return resolve();
+          } catch (err) {
+            return reject(err);
+          }
+        });
+      });
+    }
+    static fromJSON(json) {
+      const client = new UserRefreshClient;
+      client.fromJSON(json);
+      return client;
+    }
+  }
+  exports.UserRefreshClient = UserRefreshClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/impersonated.js
+var require_impersonated = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Impersonated = exports.IMPERSONATED_ACCOUNT_TYPE = undefined;
+  var oauth2client_1 = require_oauth2client();
+  var gaxios_1 = require_src4();
+  var util_1 = require_util3();
+  exports.IMPERSONATED_ACCOUNT_TYPE = "impersonated_service_account";
+
+  class Impersonated extends oauth2client_1.OAuth2Client {
+    sourceClient;
+    targetPrincipal;
+    targetScopes;
+    delegates;
+    lifetime;
+    endpoint;
+    constructor(options = {}) {
+      super(options);
+      this.credentials = {
+        expiry_date: 1,
+        refresh_token: "impersonated-placeholder"
+      };
+      this.sourceClient = options.sourceClient ?? new oauth2client_1.OAuth2Client;
+      this.targetPrincipal = options.targetPrincipal ?? "";
+      this.delegates = options.delegates ?? [];
+      this.targetScopes = options.targetScopes ?? [];
+      this.lifetime = options.lifetime ?? 3600;
+      const usingExplicitUniverseDomain = !!(0, util_1.originalOrCamelOptions)(options).get("universe_domain");
+      if (!usingExplicitUniverseDomain) {
+        this.universeDomain = this.sourceClient.universeDomain;
+      } else if (this.sourceClient.universeDomain !== this.universeDomain) {
+        throw new RangeError(`Universe domain ${this.sourceClient.universeDomain} in source credentials does not match ${this.universeDomain} universe domain set for impersonated credentials.`);
+      }
+      this.endpoint = options.endpoint ?? `https://iamcredentials.${this.universeDomain}`;
+    }
+    async sign(blobToSign) {
+      await this.sourceClient.getAccessToken();
+      const name = `projects/-/serviceAccounts/${this.targetPrincipal}`;
+      const u = `${this.endpoint}/v1/${name}:signBlob`;
+      const body = {
+        delegates: this.delegates,
+        payload: Buffer.from(blobToSign).toString("base64")
+      };
+      const res = await this.sourceClient.request({
+        ...Impersonated.RETRY_CONFIG,
+        url: u,
+        data: body,
+        method: "POST"
+      });
+      return res.data;
+    }
+    getTargetPrincipal() {
+      return this.targetPrincipal;
+    }
+    async refreshToken() {
+      try {
+        await this.sourceClient.getAccessToken();
+        const name = "projects/-/serviceAccounts/" + this.targetPrincipal;
+        const u = `${this.endpoint}/v1/${name}:generateAccessToken`;
+        const body = {
+          delegates: this.delegates,
+          scope: this.targetScopes,
+          lifetime: this.lifetime + "s"
+        };
+        const res = await this.sourceClient.request({
+          ...Impersonated.RETRY_CONFIG,
+          url: u,
+          data: body,
+          method: "POST"
+        });
+        const tokenResponse = res.data;
+        this.credentials.access_token = tokenResponse.accessToken;
+        this.credentials.expiry_date = Date.parse(tokenResponse.expireTime);
+        return {
+          tokens: this.credentials,
+          res
+        };
+      } catch (error) {
+        if (!(error instanceof Error))
+          throw error;
+        let status = 0;
+        let message = "";
+        if (error instanceof gaxios_1.GaxiosError) {
+          status = error?.response?.data?.error?.status;
+          message = error?.response?.data?.error?.message;
+        }
+        if (status && message) {
+          error.message = `${status}: unable to impersonate: ${message}`;
+          throw error;
+        } else {
+          error.message = `unable to impersonate: ${error}`;
+          throw error;
+        }
+      }
+    }
+    async fetchIdToken(targetAudience, options) {
+      await this.sourceClient.getAccessToken();
+      const name = `projects/-/serviceAccounts/${this.targetPrincipal}`;
+      const u = `${this.endpoint}/v1/${name}:generateIdToken`;
+      const body = {
+        delegates: this.delegates,
+        audience: targetAudience,
+        includeEmail: options?.includeEmail ?? true,
+        useEmailAzp: options?.includeEmail ?? true
+      };
+      const res = await this.sourceClient.request({
+        ...Impersonated.RETRY_CONFIG,
+        url: u,
+        data: body,
+        method: "POST"
+      });
+      return res.data.token;
+    }
+  }
+  exports.Impersonated = Impersonated;
+});
+
+// node_modules/google-auth-library/build/src/auth/oauth2common.js
+var require_oauth2common = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.OAuthClientAuthHandler = undefined;
+  exports.getErrorFromOAuthErrorResponse = getErrorFromOAuthErrorResponse;
+  var gaxios_1 = require_src4();
+  var crypto_1 = require_crypto3();
+  var METHODS_SUPPORTING_REQUEST_BODY = ["PUT", "POST", "PATCH"];
+
+  class OAuthClientAuthHandler {
+    #crypto = (0, crypto_1.createCrypto)();
+    #clientAuthentication;
+    transporter;
+    constructor(options) {
+      if (options && "clientId" in options) {
+        this.#clientAuthentication = options;
+        this.transporter = new gaxios_1.Gaxios;
+      } else {
+        this.#clientAuthentication = options?.clientAuthentication;
+        this.transporter = options?.transporter || new gaxios_1.Gaxios;
+      }
+    }
+    applyClientAuthenticationOptions(opts, bearerToken) {
+      opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers);
+      this.injectAuthenticatedHeaders(opts, bearerToken);
+      if (!bearerToken) {
+        this.injectAuthenticatedRequestBody(opts);
+      }
+    }
+    injectAuthenticatedHeaders(opts, bearerToken) {
+      if (bearerToken) {
+        opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers, {
+          authorization: `Bearer ${bearerToken}`
+        });
+      } else if (this.#clientAuthentication?.confidentialClientType === "basic") {
+        opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers);
+        const clientId = this.#clientAuthentication.clientId;
+        const clientSecret = this.#clientAuthentication.clientSecret || "";
+        const base64EncodedCreds = this.#crypto.encodeBase64StringUtf8(`${clientId}:${clientSecret}`);
+        gaxios_1.Gaxios.mergeHeaders(opts.headers, {
+          authorization: `Basic ${base64EncodedCreds}`
+        });
+      }
+    }
+    injectAuthenticatedRequestBody(opts) {
+      if (this.#clientAuthentication?.confidentialClientType === "request-body") {
+        const method = (opts.method || "GET").toUpperCase();
+        if (!METHODS_SUPPORTING_REQUEST_BODY.includes(method)) {
+          throw new Error(`${method} HTTP method does not support ` + `${this.#clientAuthentication.confidentialClientType} ` + "client authentication");
+        }
+        const headers = new Headers(opts.headers);
+        const contentType = headers.get("content-type");
+        if (contentType?.startsWith("application/x-www-form-urlencoded") || opts.data instanceof URLSearchParams) {
+          const data = new URLSearchParams(opts.data ?? "");
+          data.append("client_id", this.#clientAuthentication.clientId);
+          data.append("client_secret", this.#clientAuthentication.clientSecret || "");
+          opts.data = data;
+        } else if (contentType?.startsWith("application/json")) {
+          opts.data = opts.data || {};
+          Object.assign(opts.data, {
+            client_id: this.#clientAuthentication.clientId,
+            client_secret: this.#clientAuthentication.clientSecret || ""
+          });
+        } else {
+          throw new Error(`${contentType} content-types are not supported with ` + `${this.#clientAuthentication.confidentialClientType} ` + "client authentication");
+        }
+      }
+    }
+    static get RETRY_CONFIG() {
+      return {
+        retry: true,
+        retryConfig: {
+          httpMethodsToRetry: ["GET", "PUT", "POST", "HEAD", "OPTIONS", "DELETE"]
+        }
+      };
+    }
+  }
+  exports.OAuthClientAuthHandler = OAuthClientAuthHandler;
+  function getErrorFromOAuthErrorResponse(resp, err) {
+    const errorCode = resp.error;
+    const errorDescription = resp.error_description;
+    const errorUri = resp.error_uri;
+    let message = `Error code ${errorCode}`;
+    if (typeof errorDescription !== "undefined") {
+      message += `: ${errorDescription}`;
+    }
+    if (typeof errorUri !== "undefined") {
+      message += ` - ${errorUri}`;
+    }
+    const newError = new Error(message);
+    if (err) {
+      const keys = Object.keys(err);
+      if (err.stack) {
+        keys.push("stack");
+      }
+      keys.forEach((key) => {
+        if (key !== "message") {
+          Object.defineProperty(newError, key, {
+            value: err[key],
+            writable: false,
+            enumerable: true
+          });
+        }
+      });
+    }
+    return newError;
+  }
+});
+
+// node_modules/google-auth-library/build/src/auth/stscredentials.js
+var require_stscredentials = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.StsCredentials = undefined;
+  var gaxios_1 = require_src4();
+  var authclient_1 = require_authclient();
+  var oauth2common_1 = require_oauth2common();
+  var util_1 = require_util3();
+
+  class StsCredentials extends oauth2common_1.OAuthClientAuthHandler {
+    #tokenExchangeEndpoint;
+    constructor(options = {
+      tokenExchangeEndpoint: ""
+    }, clientAuthentication) {
+      if (typeof options !== "object" || options instanceof URL) {
+        options = {
+          tokenExchangeEndpoint: options,
+          clientAuthentication
+        };
+      }
+      super(options);
+      this.#tokenExchangeEndpoint = options.tokenExchangeEndpoint;
+    }
+    async exchangeToken(stsCredentialsOptions, headers, options) {
+      const values = {
+        grant_type: stsCredentialsOptions.grantType,
+        resource: stsCredentialsOptions.resource,
+        audience: stsCredentialsOptions.audience,
+        scope: stsCredentialsOptions.scope?.join(" "),
+        requested_token_type: stsCredentialsOptions.requestedTokenType,
+        subject_token: stsCredentialsOptions.subjectToken,
+        subject_token_type: stsCredentialsOptions.subjectTokenType,
+        actor_token: stsCredentialsOptions.actingParty?.actorToken,
+        actor_token_type: stsCredentialsOptions.actingParty?.actorTokenType,
+        options: options && JSON.stringify(options)
+      };
+      const opts = {
+        ...StsCredentials.RETRY_CONFIG,
+        url: this.#tokenExchangeEndpoint.toString(),
+        method: "POST",
+        headers,
+        data: new URLSearchParams((0, util_1.removeUndefinedValuesInObject)(values)),
+        responseType: "json"
+      };
+      authclient_1.AuthClient.setMethodName(opts, "exchangeToken");
+      this.applyClientAuthenticationOptions(opts);
+      try {
+        const response = await this.transporter.request(opts);
+        const stsSuccessfulResponse = response.data;
+        stsSuccessfulResponse.res = response;
+        return stsSuccessfulResponse;
+      } catch (error) {
+        if (error instanceof gaxios_1.GaxiosError && error.response) {
+          throw (0, oauth2common_1.getErrorFromOAuthErrorResponse)(error.response.data, error);
+        }
+        throw error;
+      }
+    }
+  }
+  exports.StsCredentials = StsCredentials;
+});
+
+// node_modules/google-auth-library/build/src/auth/baseexternalclient.js
+var require_baseexternalclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.BaseExternalAccountClient = exports.CLOUD_RESOURCE_MANAGER = exports.EXTERNAL_ACCOUNT_TYPE = exports.EXPIRATION_TIME_OFFSET = undefined;
+  var gaxios_1 = require_src4();
+  var stream = __require("stream");
+  var authclient_1 = require_authclient();
+  var sts = require_stscredentials();
+  var util_1 = require_util3();
+  var shared_cjs_1 = require_shared2();
+  var STS_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
+  var STS_REQUEST_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
+  var DEFAULT_OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+  var DEFAULT_TOKEN_LIFESPAN = 3600;
+  exports.EXPIRATION_TIME_OFFSET = 5 * 60 * 1000;
+  exports.EXTERNAL_ACCOUNT_TYPE = "external_account";
+  exports.CLOUD_RESOURCE_MANAGER = "https://cloudresourcemanager.googleapis.com/v1/projects/";
+  var WORKFORCE_AUDIENCE_PATTERN = "//iam\\.googleapis\\.com/locations/[^/]+/workforcePools/[^/]+/providers/.+";
+  var DEFAULT_TOKEN_URL = "https://sts.{universeDomain}/v1/token";
+
+  class BaseExternalAccountClient extends authclient_1.AuthClient {
+    scopes;
+    projectNumber;
+    audience;
+    subjectTokenType;
+    stsCredential;
+    clientAuth;
+    credentialSourceType;
+    cachedAccessToken;
+    serviceAccountImpersonationUrl;
+    serviceAccountImpersonationLifetime;
+    workforcePoolUserProject;
+    configLifetimeRequested;
+    tokenUrl;
+    cloudResourceManagerURL;
+    supplierContext;
+    #pendingAccessToken = null;
+    constructor(options) {
+      super(options);
+      const opts = (0, util_1.originalOrCamelOptions)(options);
+      const type = opts.get("type");
+      if (type && type !== exports.EXTERNAL_ACCOUNT_TYPE) {
+        throw new Error(`Expected "${exports.EXTERNAL_ACCOUNT_TYPE}" type but ` + `received "${options.type}"`);
+      }
+      const clientId = opts.get("client_id");
+      const clientSecret = opts.get("client_secret");
+      this.tokenUrl = opts.get("token_url") ?? DEFAULT_TOKEN_URL.replace("{universeDomain}", this.universeDomain);
+      const subjectTokenType = opts.get("subject_token_type");
+      const workforcePoolUserProject = opts.get("workforce_pool_user_project");
+      const serviceAccountImpersonationUrl = opts.get("service_account_impersonation_url");
+      const serviceAccountImpersonation = opts.get("service_account_impersonation");
+      const serviceAccountImpersonationLifetime = (0, util_1.originalOrCamelOptions)(serviceAccountImpersonation).get("token_lifetime_seconds");
+      this.cloudResourceManagerURL = new URL(opts.get("cloud_resource_manager_url") || `https://cloudresourcemanager.${this.universeDomain}/v1/projects/`);
+      if (clientId) {
+        this.clientAuth = {
+          confidentialClientType: "basic",
+          clientId,
+          clientSecret
+        };
+      }
+      this.stsCredential = new sts.StsCredentials({
+        tokenExchangeEndpoint: this.tokenUrl,
+        clientAuthentication: this.clientAuth
+      });
+      this.scopes = opts.get("scopes") || [DEFAULT_OAUTH_SCOPE];
+      this.cachedAccessToken = null;
+      this.audience = opts.get("audience");
+      this.subjectTokenType = subjectTokenType;
+      this.workforcePoolUserProject = workforcePoolUserProject;
+      const workforceAudiencePattern = new RegExp(WORKFORCE_AUDIENCE_PATTERN);
+      if (this.workforcePoolUserProject && !this.audience.match(workforceAudiencePattern)) {
+        throw new Error("workforcePoolUserProject should not be set for non-workforce pool " + "credentials.");
+      }
+      this.serviceAccountImpersonationUrl = serviceAccountImpersonationUrl;
+      this.serviceAccountImpersonationLifetime = serviceAccountImpersonationLifetime;
+      if (this.serviceAccountImpersonationLifetime) {
+        this.configLifetimeRequested = true;
+      } else {
+        this.configLifetimeRequested = false;
+        this.serviceAccountImpersonationLifetime = DEFAULT_TOKEN_LIFESPAN;
+      }
+      this.projectNumber = this.getProjectNumber(this.audience);
+      this.supplierContext = {
+        audience: this.audience,
+        subjectTokenType: this.subjectTokenType,
+        transporter: this.transporter
+      };
+    }
+    getServiceAccountEmail() {
+      if (this.serviceAccountImpersonationUrl) {
+        if (this.serviceAccountImpersonationUrl.length > 256) {
+          throw new RangeError(`URL is too long: ${this.serviceAccountImpersonationUrl}`);
+        }
+        const re = /serviceAccounts\/(?<email>[^:]+):generateAccessToken$/;
+        const result = re.exec(this.serviceAccountImpersonationUrl);
+        return result?.groups?.email || null;
+      }
+      return null;
+    }
+    setCredentials(credentials) {
+      super.setCredentials(credentials);
+      this.cachedAccessToken = credentials;
+    }
+    async getAccessToken() {
+      if (!this.cachedAccessToken || this.isExpired(this.cachedAccessToken)) {
+        await this.refreshAccessTokenAsync();
+      }
+      return {
+        token: this.cachedAccessToken.access_token,
+        res: this.cachedAccessToken.res
+      };
+    }
+    async getRequestHeaders() {
+      const accessTokenResponse = await this.getAccessToken();
+      const headers = new Headers({
+        authorization: `Bearer ${accessTokenResponse.token}`
+      });
+      return this.addSharedMetadataHeaders(headers);
+    }
+    request(opts, callback) {
+      if (callback) {
+        this.requestAsync(opts).then((r) => callback(null, r), (e) => {
+          return callback(e, e.response);
+        });
+      } else {
+        return this.requestAsync(opts);
+      }
+    }
+    async getProjectId() {
+      const projectNumber = this.projectNumber || this.workforcePoolUserProject;
+      if (this.projectId) {
+        return this.projectId;
+      } else if (projectNumber) {
+        const headers = await this.getRequestHeaders();
+        const opts = {
+          ...BaseExternalAccountClient.RETRY_CONFIG,
+          headers,
+          url: `${this.cloudResourceManagerURL.toString()}${projectNumber}`,
+          responseType: "json"
+        };
+        authclient_1.AuthClient.setMethodName(opts, "getProjectId");
+        const response = await this.transporter.request(opts);
+        this.projectId = response.data.projectId;
+        return this.projectId;
+      }
+      return null;
+    }
+    async requestAsync(opts, reAuthRetried = false) {
+      let response;
+      try {
+        const requestHeaders = await this.getRequestHeaders();
+        opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers);
+        this.addUserProjectAndAuthHeaders(opts.headers, requestHeaders);
+        response = await this.transporter.request(opts);
+      } catch (e) {
+        const res = e.response;
+        if (res) {
+          const statusCode = res.status;
+          const isReadableStream = res.config.data instanceof stream.Readable;
+          const isAuthErr = statusCode === 401 || statusCode === 403;
+          if (!reAuthRetried && isAuthErr && !isReadableStream && this.forceRefreshOnFailure) {
+            await this.refreshAccessTokenAsync();
+            return await this.requestAsync(opts, true);
+          }
+        }
+        throw e;
+      }
+      return response;
+    }
+    async refreshAccessTokenAsync() {
+      this.#pendingAccessToken = this.#pendingAccessToken || this.#internalRefreshAccessTokenAsync();
+      try {
+        return await this.#pendingAccessToken;
+      } finally {
+        this.#pendingAccessToken = null;
+      }
+    }
+    async#internalRefreshAccessTokenAsync() {
+      const subjectToken = await this.retrieveSubjectToken();
+      const stsCredentialsOptions = {
+        grantType: STS_GRANT_TYPE,
+        audience: this.audience,
+        requestedTokenType: STS_REQUEST_TOKEN_TYPE,
+        subjectToken,
+        subjectTokenType: this.subjectTokenType,
+        scope: this.serviceAccountImpersonationUrl ? [DEFAULT_OAUTH_SCOPE] : this.getScopesArray()
+      };
+      const additionalOptions = !this.clientAuth && this.workforcePoolUserProject ? { userProject: this.workforcePoolUserProject } : undefined;
+      const additionalHeaders = new Headers({
+        "x-goog-api-client": this.getMetricsHeaderValue()
+      });
+      const stsResponse = await this.stsCredential.exchangeToken(stsCredentialsOptions, additionalHeaders, additionalOptions);
+      if (this.serviceAccountImpersonationUrl) {
+        this.cachedAccessToken = await this.getImpersonatedAccessToken(stsResponse.access_token);
+      } else if (stsResponse.expires_in) {
+        this.cachedAccessToken = {
+          access_token: stsResponse.access_token,
+          expiry_date: new Date().getTime() + stsResponse.expires_in * 1000,
+          res: stsResponse.res
+        };
+      } else {
+        this.cachedAccessToken = {
+          access_token: stsResponse.access_token,
+          res: stsResponse.res
+        };
+      }
+      this.credentials = {};
+      Object.assign(this.credentials, this.cachedAccessToken);
+      delete this.credentials.res;
+      this.emit("tokens", {
+        refresh_token: null,
+        expiry_date: this.cachedAccessToken.expiry_date,
+        access_token: this.cachedAccessToken.access_token,
+        token_type: "Bearer",
+        id_token: null
+      });
+      return this.cachedAccessToken;
+    }
+    getProjectNumber(audience) {
+      const match = audience.match(/\/projects\/([^/]+)/);
+      if (!match) {
+        return null;
+      }
+      return match[1];
+    }
+    async getImpersonatedAccessToken(token) {
+      const opts = {
+        ...BaseExternalAccountClient.RETRY_CONFIG,
+        url: this.serviceAccountImpersonationUrl,
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${token}`
+        },
+        data: {
+          scope: this.getScopesArray(),
+          lifetime: this.serviceAccountImpersonationLifetime + "s"
+        },
+        responseType: "json"
+      };
+      authclient_1.AuthClient.setMethodName(opts, "getImpersonatedAccessToken");
+      const response = await this.transporter.request(opts);
+      const successResponse = response.data;
+      return {
+        access_token: successResponse.accessToken,
+        expiry_date: new Date(successResponse.expireTime).getTime(),
+        res: response
+      };
+    }
+    isExpired(accessToken) {
+      const now = new Date().getTime();
+      return accessToken.expiry_date ? now >= accessToken.expiry_date - this.eagerRefreshThresholdMillis : false;
+    }
+    getScopesArray() {
+      if (typeof this.scopes === "string") {
+        return [this.scopes];
+      }
+      return this.scopes || [DEFAULT_OAUTH_SCOPE];
+    }
+    getMetricsHeaderValue() {
+      const nodeVersion = process.version.replace(/^v/, "");
+      const saImpersonation = this.serviceAccountImpersonationUrl !== undefined;
+      const credentialSourceType = this.credentialSourceType ? this.credentialSourceType : "unknown";
+      return `gl-node/${nodeVersion} auth/${shared_cjs_1.pkg.version} google-byoid-sdk source/${credentialSourceType} sa-impersonation/${saImpersonation} config-lifetime/${this.configLifetimeRequested}`;
+    }
+    getTokenUrl() {
+      return this.tokenUrl;
+    }
+  }
+  exports.BaseExternalAccountClient = BaseExternalAccountClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/filesubjecttokensupplier.js
+var require_filesubjecttokensupplier = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.FileSubjectTokenSupplier = undefined;
+  var util_1 = __require("util");
+  var fs = __require("fs");
+  var readFile = (0, util_1.promisify)(fs.readFile ?? (() => {}));
+  var realpath = (0, util_1.promisify)(fs.realpath ?? (() => {}));
+  var lstat = (0, util_1.promisify)(fs.lstat ?? (() => {}));
+
+  class FileSubjectTokenSupplier {
+    filePath;
+    formatType;
+    subjectTokenFieldName;
+    constructor(opts) {
+      this.filePath = opts.filePath;
+      this.formatType = opts.formatType;
+      this.subjectTokenFieldName = opts.subjectTokenFieldName;
+    }
+    async getSubjectToken() {
+      let parsedFilePath = this.filePath;
+      try {
+        parsedFilePath = await realpath(parsedFilePath);
+        if (!(await lstat(parsedFilePath)).isFile()) {
+          throw new Error;
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          err.message = `The file at ${parsedFilePath} does not exist, or it is not a file. ${err.message}`;
+        }
+        throw err;
+      }
+      let subjectToken;
+      const rawText = await readFile(parsedFilePath, { encoding: "utf8" });
+      if (this.formatType === "text") {
+        subjectToken = rawText;
+      } else if (this.formatType === "json" && this.subjectTokenFieldName) {
+        const json = JSON.parse(rawText);
+        subjectToken = json[this.subjectTokenFieldName];
+      }
+      if (!subjectToken) {
+        throw new Error("Unable to parse the subject_token from the credential_source file");
+      }
+      return subjectToken;
+    }
+  }
+  exports.FileSubjectTokenSupplier = FileSubjectTokenSupplier;
+});
+
+// node_modules/google-auth-library/build/src/auth/urlsubjecttokensupplier.js
+var require_urlsubjecttokensupplier = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.UrlSubjectTokenSupplier = undefined;
+  var authclient_1 = require_authclient();
+
+  class UrlSubjectTokenSupplier {
+    url;
+    headers;
+    formatType;
+    subjectTokenFieldName;
+    additionalGaxiosOptions;
+    constructor(opts) {
+      this.url = opts.url;
+      this.formatType = opts.formatType;
+      this.subjectTokenFieldName = opts.subjectTokenFieldName;
+      this.headers = opts.headers;
+      this.additionalGaxiosOptions = opts.additionalGaxiosOptions;
+    }
+    async getSubjectToken(context) {
+      const opts = {
+        ...this.additionalGaxiosOptions,
+        url: this.url,
+        method: "GET",
+        headers: this.headers,
+        responseType: this.formatType
+      };
+      authclient_1.AuthClient.setMethodName(opts, "getSubjectToken");
+      let subjectToken;
+      if (this.formatType === "text") {
+        const response = await context.transporter.request(opts);
+        subjectToken = response.data;
+      } else if (this.formatType === "json" && this.subjectTokenFieldName) {
+        const response = await context.transporter.request(opts);
+        subjectToken = response.data[this.subjectTokenFieldName];
+      }
+      if (!subjectToken) {
+        throw new Error("Unable to parse the subject_token from the credential_source URL");
+      }
+      return subjectToken;
+    }
+  }
+  exports.UrlSubjectTokenSupplier = UrlSubjectTokenSupplier;
+});
+
+// node_modules/google-auth-library/build/src/auth/certificatesubjecttokensupplier.js
+var require_certificatesubjecttokensupplier = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.CertificateSubjectTokenSupplier = exports.InvalidConfigurationError = exports.CertificateSourceUnavailableError = exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE = undefined;
+  var util_1 = require_util3();
+  var fs = __require("fs");
+  var crypto_1 = __require("crypto");
+  var https = __require("https");
+  exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE = "GOOGLE_API_CERTIFICATE_CONFIG";
+
+  class CertificateSourceUnavailableError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "CertificateSourceUnavailableError";
+    }
+  }
+  exports.CertificateSourceUnavailableError = CertificateSourceUnavailableError;
+
+  class InvalidConfigurationError extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "InvalidConfigurationError";
+    }
+  }
+  exports.InvalidConfigurationError = InvalidConfigurationError;
+
+  class CertificateSubjectTokenSupplier {
+    certificateConfigPath;
+    trustChainPath;
+    cert;
+    key;
+    constructor(opts) {
+      if (!opts.useDefaultCertificateConfig && !opts.certificateConfigLocation) {
+        throw new InvalidConfigurationError("Either `useDefaultCertificateConfig` must be true or a `certificateConfigLocation` must be provided.");
+      }
+      if (opts.useDefaultCertificateConfig && opts.certificateConfigLocation) {
+        throw new InvalidConfigurationError("Both `useDefaultCertificateConfig` and `certificateConfigLocation` cannot be provided.");
+      }
+      this.trustChainPath = opts.trustChainPath;
+      this.certificateConfigPath = opts.certificateConfigLocation ?? "";
+    }
+    async createMtlsHttpsAgent() {
+      if (!this.key || !this.cert) {
+        throw new InvalidConfigurationError("Cannot create mTLS Agent with missing certificate or key");
+      }
+      return new https.Agent({ key: this.key, cert: this.cert });
+    }
+    async getSubjectToken() {
+      this.certificateConfigPath = await this.#resolveCertificateConfigFilePath();
+      const { certPath, keyPath } = await this.#getCertAndKeyPaths();
+      ({ cert: this.cert, key: this.key } = await this.#getKeyAndCert(certPath, keyPath));
+      return await this.#processChainFromPaths(this.cert);
+    }
+    async#resolveCertificateConfigFilePath() {
+      const overridePath = this.certificateConfigPath;
+      if (overridePath) {
+        if (await (0, util_1.isValidFile)(overridePath)) {
+          return overridePath;
+        }
+        throw new CertificateSourceUnavailableError(`Provided certificate config path is invalid: ${overridePath}`);
+      }
+      const envPath = process.env[exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE];
+      if (envPath) {
+        if (await (0, util_1.isValidFile)(envPath)) {
+          return envPath;
+        }
+        throw new CertificateSourceUnavailableError(`Path from environment variable "${exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE}" is invalid: ${envPath}`);
+      }
+      const wellKnownPath = (0, util_1.getWellKnownCertificateConfigFileLocation)();
+      if (await (0, util_1.isValidFile)(wellKnownPath)) {
+        return wellKnownPath;
+      }
+      throw new CertificateSourceUnavailableError("Could not find certificate configuration file. Searched override path, " + `the "${exports.CERTIFICATE_CONFIGURATION_ENV_VARIABLE}" env var, and the gcloud path (${wellKnownPath}).`);
+    }
+    async#getCertAndKeyPaths() {
+      const configPath = this.certificateConfigPath;
+      let fileContents;
+      try {
+        fileContents = await fs.promises.readFile(configPath, "utf8");
+      } catch (err) {
+        throw new CertificateSourceUnavailableError(`Failed to read certificate config file at: ${configPath}`);
+      }
+      try {
+        const config = JSON.parse(fileContents);
+        const certPath = config?.cert_configs?.workload?.cert_path;
+        const keyPath = config?.cert_configs?.workload?.key_path;
+        if (!certPath || !keyPath) {
+          throw new InvalidConfigurationError(`Certificate config file (${configPath}) is missing required "cert_path" or "key_path" in the workload config.`);
+        }
+        return { certPath, keyPath };
+      } catch (e) {
+        if (e instanceof InvalidConfigurationError)
+          throw e;
+        throw new InvalidConfigurationError(`Failed to parse certificate config from ${configPath}: ${e.message}`);
+      }
+    }
+    async#getKeyAndCert(certPath, keyPath) {
+      let cert, key;
+      try {
+        cert = await fs.promises.readFile(certPath);
+        new crypto_1.X509Certificate(cert);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new CertificateSourceUnavailableError(`Failed to read certificate file at ${certPath}: ${message}`);
+      }
+      try {
+        key = await fs.promises.readFile(keyPath);
+        (0, crypto_1.createPrivateKey)(key);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        throw new CertificateSourceUnavailableError(`Failed to read private key file at ${keyPath}: ${message}`);
+      }
+      return { cert, key };
+    }
+    async#processChainFromPaths(leafCertBuffer) {
+      const leafCert = new crypto_1.X509Certificate(leafCertBuffer);
+      if (!this.trustChainPath) {
+        return JSON.stringify([leafCert.raw.toString("base64")]);
+      }
+      try {
+        const chainPems = await fs.promises.readFile(this.trustChainPath, "utf8");
+        const pemBlocks = chainPems.match(/-----BEGIN CERTIFICATE-----[^-]+-----END CERTIFICATE-----/g) ?? [];
+        const chainCerts = pemBlocks.map((pem, index) => {
+          try {
+            return new crypto_1.X509Certificate(pem);
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            throw new InvalidConfigurationError(`Failed to parse certificate at index ${index} in trust chain file ${this.trustChainPath}: ${message}`);
+          }
+        });
+        const leafIndex = chainCerts.findIndex((chainCert) => leafCert.raw.equals(chainCert.raw));
+        let finalChain;
+        if (leafIndex === -1) {
+          finalChain = [leafCert, ...chainCerts];
+        } else if (leafIndex === 0) {
+          finalChain = chainCerts;
+        } else {
+          throw new InvalidConfigurationError(`Leaf certificate exists in the trust chain but is not the first entry (found at index ${leafIndex}).`);
+        }
+        return JSON.stringify(finalChain.map((cert) => cert.raw.toString("base64")));
+      } catch (err) {
+        if (err instanceof InvalidConfigurationError)
+          throw err;
+        const message = err instanceof Error ? err.message : String(err);
+        throw new CertificateSourceUnavailableError(`Failed to process certificate chain from ${this.trustChainPath}: ${message}`);
+      }
+    }
+  }
+  exports.CertificateSubjectTokenSupplier = CertificateSubjectTokenSupplier;
+});
+
+// node_modules/google-auth-library/build/src/auth/identitypoolclient.js
+var require_identitypoolclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.IdentityPoolClient = undefined;
+  var baseexternalclient_1 = require_baseexternalclient();
+  var util_1 = require_util3();
+  var filesubjecttokensupplier_1 = require_filesubjecttokensupplier();
+  var urlsubjecttokensupplier_1 = require_urlsubjecttokensupplier();
+  var certificatesubjecttokensupplier_1 = require_certificatesubjecttokensupplier();
+  var stscredentials_1 = require_stscredentials();
+  var gaxios_1 = require_src4();
+
+  class IdentityPoolClient extends baseexternalclient_1.BaseExternalAccountClient {
+    subjectTokenSupplier;
+    constructor(options) {
+      super(options);
+      const opts = (0, util_1.originalOrCamelOptions)(options);
+      const credentialSource = opts.get("credential_source");
+      const subjectTokenSupplier = opts.get("subject_token_supplier");
+      if (!credentialSource && !subjectTokenSupplier) {
+        throw new Error("A credential source or subject token supplier must be specified.");
+      }
+      if (credentialSource && subjectTokenSupplier) {
+        throw new Error("Only one of credential source or subject token supplier can be specified.");
+      }
+      if (subjectTokenSupplier) {
+        this.subjectTokenSupplier = subjectTokenSupplier;
+        this.credentialSourceType = "programmatic";
+      } else {
+        const credentialSourceOpts = (0, util_1.originalOrCamelOptions)(credentialSource);
+        const formatOpts = (0, util_1.originalOrCamelOptions)(credentialSourceOpts.get("format"));
+        const formatType = formatOpts.get("type") || "text";
+        const formatSubjectTokenFieldName = formatOpts.get("subject_token_field_name");
+        if (formatType !== "json" && formatType !== "text") {
+          throw new Error(`Invalid credential_source format "${formatType}"`);
+        }
+        if (formatType === "json" && !formatSubjectTokenFieldName) {
+          throw new Error("Missing subject_token_field_name for JSON credential_source format");
+        }
+        const file = credentialSourceOpts.get("file");
+        const url = credentialSourceOpts.get("url");
+        const certificate = credentialSourceOpts.get("certificate");
+        const headers = credentialSourceOpts.get("headers");
+        if (file && url || url && certificate || file && certificate) {
+          throw new Error('No valid Identity Pool "credential_source" provided, must be either file, url, or certificate.');
+        } else if (file) {
+          this.credentialSourceType = "file";
+          this.subjectTokenSupplier = new filesubjecttokensupplier_1.FileSubjectTokenSupplier({
+            filePath: file,
+            formatType,
+            subjectTokenFieldName: formatSubjectTokenFieldName
+          });
+        } else if (url) {
+          this.credentialSourceType = "url";
+          this.subjectTokenSupplier = new urlsubjecttokensupplier_1.UrlSubjectTokenSupplier({
+            url,
+            formatType,
+            subjectTokenFieldName: formatSubjectTokenFieldName,
+            headers,
+            additionalGaxiosOptions: IdentityPoolClient.RETRY_CONFIG
+          });
+        } else if (certificate) {
+          this.credentialSourceType = "certificate";
+          const certificateSubjecttokensupplier = new certificatesubjecttokensupplier_1.CertificateSubjectTokenSupplier({
+            useDefaultCertificateConfig: certificate.use_default_certificate_config,
+            certificateConfigLocation: certificate.certificate_config_location,
+            trustChainPath: certificate.trust_chain_path
+          });
+          this.subjectTokenSupplier = certificateSubjecttokensupplier;
+        } else {
+          throw new Error('No valid Identity Pool "credential_source" provided, must be either file, url, or certificate.');
+        }
+      }
+    }
+    async retrieveSubjectToken() {
+      const subjectToken = await this.subjectTokenSupplier.getSubjectToken(this.supplierContext);
+      if (this.subjectTokenSupplier instanceof certificatesubjecttokensupplier_1.CertificateSubjectTokenSupplier) {
+        const mtlsAgent = await this.subjectTokenSupplier.createMtlsHttpsAgent();
+        this.stsCredential = new stscredentials_1.StsCredentials({
+          tokenExchangeEndpoint: this.getTokenUrl(),
+          clientAuthentication: this.clientAuth,
+          transporter: new gaxios_1.Gaxios({ agent: mtlsAgent })
+        });
+        this.transporter = new gaxios_1.Gaxios({
+          ...this.transporter.defaults || {},
+          agent: mtlsAgent
+        });
+      }
+      return subjectToken;
+    }
+  }
+  exports.IdentityPoolClient = IdentityPoolClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/awsrequestsigner.js
+var require_awsrequestsigner = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.AwsRequestSigner = undefined;
+  var gaxios_1 = require_src4();
+  var crypto_1 = require_crypto3();
+  var AWS_ALGORITHM = "AWS4-HMAC-SHA256";
+  var AWS_REQUEST_TYPE = "aws4_request";
+
+  class AwsRequestSigner {
+    getCredentials;
+    region;
+    crypto;
+    constructor(getCredentials, region) {
+      this.getCredentials = getCredentials;
+      this.region = region;
+      this.crypto = (0, crypto_1.createCrypto)();
+    }
+    async getRequestOptions(amzOptions) {
+      if (!amzOptions.url) {
+        throw new RangeError('"url" is required in "amzOptions"');
+      }
+      const requestPayloadData = typeof amzOptions.data === "object" ? JSON.stringify(amzOptions.data) : amzOptions.data;
+      const url = amzOptions.url;
+      const method = amzOptions.method || "GET";
+      const requestPayload = amzOptions.body || requestPayloadData;
+      const additionalAmzHeaders = amzOptions.headers;
+      const awsSecurityCredentials = await this.getCredentials();
+      const uri = new URL(url);
+      if (typeof requestPayload !== "string" && requestPayload !== undefined) {
+        throw new TypeError(`'requestPayload' is expected to be a string if provided. Got: ${requestPayload}`);
+      }
+      const headerMap = await generateAuthenticationHeaderMap({
+        crypto: this.crypto,
+        host: uri.host,
+        canonicalUri: uri.pathname,
+        canonicalQuerystring: uri.search.slice(1),
+        method,
+        region: this.region,
+        securityCredentials: awsSecurityCredentials,
+        requestPayload,
+        additionalAmzHeaders
+      });
+      const headers = gaxios_1.Gaxios.mergeHeaders(headerMap.amzDate ? { "x-amz-date": headerMap.amzDate } : {}, {
+        authorization: headerMap.authorizationHeader,
+        host: uri.host
+      }, additionalAmzHeaders || {});
+      if (awsSecurityCredentials.token) {
+        gaxios_1.Gaxios.mergeHeaders(headers, {
+          "x-amz-security-token": awsSecurityCredentials.token
+        });
+      }
+      const awsSignedReq = {
+        url,
+        method,
+        headers
+      };
+      if (requestPayload !== undefined) {
+        awsSignedReq.body = requestPayload;
+      }
+      return awsSignedReq;
+    }
+  }
+  exports.AwsRequestSigner = AwsRequestSigner;
+  async function sign(crypto2, key, msg) {
+    return await crypto2.signWithHmacSha256(key, msg);
+  }
+  async function getSigningKey(crypto2, key, dateStamp, region, serviceName) {
+    const kDate = await sign(crypto2, `AWS4${key}`, dateStamp);
+    const kRegion = await sign(crypto2, kDate, region);
+    const kService = await sign(crypto2, kRegion, serviceName);
+    const kSigning = await sign(crypto2, kService, "aws4_request");
+    return kSigning;
+  }
+  async function generateAuthenticationHeaderMap(options) {
+    const additionalAmzHeaders = gaxios_1.Gaxios.mergeHeaders(options.additionalAmzHeaders);
+    const requestPayload = options.requestPayload || "";
+    const serviceName = options.host.split(".")[0];
+    const now = new Date;
+    const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.[0-9]+/, "");
+    const dateStamp = now.toISOString().replace(/[-]/g, "").replace(/T.*/, "");
+    if (options.securityCredentials.token) {
+      additionalAmzHeaders.set("x-amz-security-token", options.securityCredentials.token);
+    }
+    const amzHeaders = gaxios_1.Gaxios.mergeHeaders({
+      host: options.host
+    }, additionalAmzHeaders.has("date") ? {} : { "x-amz-date": amzDate }, additionalAmzHeaders);
+    let canonicalHeaders = "";
+    const signedHeadersList = [
+      ...amzHeaders.keys()
+    ].sort();
+    signedHeadersList.forEach((key) => {
+      canonicalHeaders += `${key}:${amzHeaders.get(key)}
+`;
+    });
+    const signedHeaders = signedHeadersList.join(";");
+    const payloadHash = await options.crypto.sha256DigestHex(requestPayload);
+    const canonicalRequest = `${options.method.toUpperCase()}
+` + `${options.canonicalUri}
+` + `${options.canonicalQuerystring}
+` + `${canonicalHeaders}
+` + `${signedHeaders}
+` + `${payloadHash}`;
+    const credentialScope = `${dateStamp}/${options.region}/${serviceName}/${AWS_REQUEST_TYPE}`;
+    const stringToSign = `${AWS_ALGORITHM}
+` + `${amzDate}
+` + `${credentialScope}
+` + await options.crypto.sha256DigestHex(canonicalRequest);
+    const signingKey = await getSigningKey(options.crypto, options.securityCredentials.secretAccessKey, dateStamp, options.region, serviceName);
+    const signature = await sign(options.crypto, signingKey, stringToSign);
+    const authorizationHeader = `${AWS_ALGORITHM} Credential=${options.securityCredentials.accessKeyId}/` + `${credentialScope}, SignedHeaders=${signedHeaders}, ` + `Signature=${(0, crypto_1.fromArrayBufferToHex)(signature)}`;
+    return {
+      amzDate: additionalAmzHeaders.has("date") ? undefined : amzDate,
+      authorizationHeader,
+      canonicalQuerystring: options.canonicalQuerystring
+    };
+  }
+});
+
+// node_modules/google-auth-library/build/src/auth/defaultawssecuritycredentialssupplier.js
+var require_defaultawssecuritycredentialssupplier = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.DefaultAwsSecurityCredentialsSupplier = undefined;
+  var authclient_1 = require_authclient();
+
+  class DefaultAwsSecurityCredentialsSupplier {
+    regionUrl;
+    securityCredentialsUrl;
+    imdsV2SessionTokenUrl;
+    additionalGaxiosOptions;
+    constructor(opts) {
+      this.regionUrl = opts.regionUrl;
+      this.securityCredentialsUrl = opts.securityCredentialsUrl;
+      this.imdsV2SessionTokenUrl = opts.imdsV2SessionTokenUrl;
+      this.additionalGaxiosOptions = opts.additionalGaxiosOptions;
+    }
+    async getAwsRegion(context) {
+      if (this.#regionFromEnv) {
+        return this.#regionFromEnv;
+      }
+      const metadataHeaders = new Headers;
+      if (!this.#regionFromEnv && this.imdsV2SessionTokenUrl) {
+        metadataHeaders.set("x-aws-ec2-metadata-token", await this.#getImdsV2SessionToken(context.transporter));
+      }
+      if (!this.regionUrl) {
+        throw new RangeError("Unable to determine AWS region due to missing " + '"options.credential_source.region_url"');
+      }
+      const opts = {
+        ...this.additionalGaxiosOptions,
+        url: this.regionUrl,
+        method: "GET",
+        responseType: "text",
+        headers: metadataHeaders
+      };
+      authclient_1.AuthClient.setMethodName(opts, "getAwsRegion");
+      const response = await context.transporter.request(opts);
+      return response.data.substr(0, response.data.length - 1);
+    }
+    async getAwsSecurityCredentials(context) {
+      if (this.#securityCredentialsFromEnv) {
+        return this.#securityCredentialsFromEnv;
+      }
+      const metadataHeaders = new Headers;
+      if (this.imdsV2SessionTokenUrl) {
+        metadataHeaders.set("x-aws-ec2-metadata-token", await this.#getImdsV2SessionToken(context.transporter));
+      }
+      const roleName = await this.#getAwsRoleName(metadataHeaders, context.transporter);
+      const awsCreds = await this.#retrieveAwsSecurityCredentials(roleName, metadataHeaders, context.transporter);
+      return {
+        accessKeyId: awsCreds.AccessKeyId,
+        secretAccessKey: awsCreds.SecretAccessKey,
+        token: awsCreds.Token
+      };
+    }
+    async#getImdsV2SessionToken(transporter) {
+      const opts = {
+        ...this.additionalGaxiosOptions,
+        url: this.imdsV2SessionTokenUrl,
+        method: "PUT",
+        responseType: "text",
+        headers: { "x-aws-ec2-metadata-token-ttl-seconds": "300" }
+      };
+      authclient_1.AuthClient.setMethodName(opts, "#getImdsV2SessionToken");
+      const response = await transporter.request(opts);
+      return response.data;
+    }
+    async#getAwsRoleName(headers, transporter) {
+      if (!this.securityCredentialsUrl) {
+        throw new Error("Unable to determine AWS role name due to missing " + '"options.credential_source.url"');
+      }
+      const opts = {
+        ...this.additionalGaxiosOptions,
+        url: this.securityCredentialsUrl,
+        method: "GET",
+        responseType: "text",
+        headers
+      };
+      authclient_1.AuthClient.setMethodName(opts, "#getAwsRoleName");
+      const response = await transporter.request(opts);
+      return response.data;
+    }
+    async#retrieveAwsSecurityCredentials(roleName, headers, transporter) {
+      const opts = {
+        ...this.additionalGaxiosOptions,
+        url: `${this.securityCredentialsUrl}/${roleName}`,
+        headers,
+        responseType: "json"
+      };
+      authclient_1.AuthClient.setMethodName(opts, "#retrieveAwsSecurityCredentials");
+      const response = await transporter.request(opts);
+      return response.data;
+    }
+    get #regionFromEnv() {
+      return process.env["AWS_REGION"] || process.env["AWS_DEFAULT_REGION"] || null;
+    }
+    get #securityCredentialsFromEnv() {
+      if (process.env["AWS_ACCESS_KEY_ID"] && process.env["AWS_SECRET_ACCESS_KEY"]) {
+        return {
+          accessKeyId: process.env["AWS_ACCESS_KEY_ID"],
+          secretAccessKey: process.env["AWS_SECRET_ACCESS_KEY"],
+          token: process.env["AWS_SESSION_TOKEN"]
+        };
+      }
+      return null;
+    }
+  }
+  exports.DefaultAwsSecurityCredentialsSupplier = DefaultAwsSecurityCredentialsSupplier;
+});
+
+// node_modules/google-auth-library/build/src/auth/awsclient.js
+var require_awsclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.AwsClient = undefined;
+  var awsrequestsigner_1 = require_awsrequestsigner();
+  var baseexternalclient_1 = require_baseexternalclient();
+  var defaultawssecuritycredentialssupplier_1 = require_defaultawssecuritycredentialssupplier();
+  var util_1 = require_util3();
+  var gaxios_1 = require_src4();
+
+  class AwsClient extends baseexternalclient_1.BaseExternalAccountClient {
+    environmentId;
+    awsSecurityCredentialsSupplier;
+    regionalCredVerificationUrl;
+    awsRequestSigner;
+    region;
+    static #DEFAULT_AWS_REGIONAL_CREDENTIAL_VERIFICATION_URL = "https://sts.{region}.amazonaws.com?Action=GetCallerIdentity&Version=2011-06-15";
+    static AWS_EC2_METADATA_IPV4_ADDRESS = "169.254.169.254";
+    static AWS_EC2_METADATA_IPV6_ADDRESS = "fd00:ec2::254";
+    constructor(options) {
+      super(options);
+      const opts = (0, util_1.originalOrCamelOptions)(options);
+      const credentialSource = opts.get("credential_source");
+      const awsSecurityCredentialsSupplier = opts.get("aws_security_credentials_supplier");
+      if (!credentialSource && !awsSecurityCredentialsSupplier) {
+        throw new Error("A credential source or AWS security credentials supplier must be specified.");
+      }
+      if (credentialSource && awsSecurityCredentialsSupplier) {
+        throw new Error("Only one of credential source or AWS security credentials supplier can be specified.");
+      }
+      if (awsSecurityCredentialsSupplier) {
+        this.awsSecurityCredentialsSupplier = awsSecurityCredentialsSupplier;
+        this.regionalCredVerificationUrl = AwsClient.#DEFAULT_AWS_REGIONAL_CREDENTIAL_VERIFICATION_URL;
+        this.credentialSourceType = "programmatic";
+      } else {
+        const credentialSourceOpts = (0, util_1.originalOrCamelOptions)(credentialSource);
+        this.environmentId = credentialSourceOpts.get("environment_id");
+        const regionUrl = credentialSourceOpts.get("region_url");
+        const securityCredentialsUrl = credentialSourceOpts.get("url");
+        const imdsV2SessionTokenUrl = credentialSourceOpts.get("imdsv2_session_token_url");
+        this.awsSecurityCredentialsSupplier = new defaultawssecuritycredentialssupplier_1.DefaultAwsSecurityCredentialsSupplier({
+          regionUrl,
+          securityCredentialsUrl,
+          imdsV2SessionTokenUrl
+        });
+        this.regionalCredVerificationUrl = credentialSourceOpts.get("regional_cred_verification_url");
+        this.credentialSourceType = "aws";
+        this.validateEnvironmentId();
+      }
+      this.awsRequestSigner = null;
+      this.region = "";
+    }
+    validateEnvironmentId() {
+      const match = this.environmentId?.match(/^(aws)(\d+)$/);
+      if (!match || !this.regionalCredVerificationUrl) {
+        throw new Error('No valid AWS "credential_source" provided');
+      } else if (parseInt(match[2], 10) !== 1) {
+        throw new Error(`aws version "${match[2]}" is not supported in the current build.`);
+      }
+    }
+    async retrieveSubjectToken() {
+      if (!this.awsRequestSigner) {
+        this.region = await this.awsSecurityCredentialsSupplier.getAwsRegion(this.supplierContext);
+        this.awsRequestSigner = new awsrequestsigner_1.AwsRequestSigner(async () => {
+          return this.awsSecurityCredentialsSupplier.getAwsSecurityCredentials(this.supplierContext);
+        }, this.region);
+      }
+      const options = await this.awsRequestSigner.getRequestOptions({
+        ...AwsClient.RETRY_CONFIG,
+        url: this.regionalCredVerificationUrl.replace("{region}", this.region),
+        method: "POST"
+      });
+      const reformattedHeader = [];
+      const extendedHeaders = gaxios_1.Gaxios.mergeHeaders({
+        "x-goog-cloud-target-resource": this.audience
+      }, options.headers);
+      extendedHeaders.forEach((value, key) => reformattedHeader.push({ key, value }));
+      return encodeURIComponent(JSON.stringify({
+        url: options.url,
+        method: options.method,
+        headers: reformattedHeader
+      }));
+    }
+  }
+  exports.AwsClient = AwsClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/executable-response.js
+var require_executable_response = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.InvalidSubjectTokenError = exports.InvalidMessageFieldError = exports.InvalidCodeFieldError = exports.InvalidTokenTypeFieldError = exports.InvalidExpirationTimeFieldError = exports.InvalidSuccessFieldError = exports.InvalidVersionFieldError = exports.ExecutableResponseError = exports.ExecutableResponse = undefined;
+  var SAML_SUBJECT_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:saml2";
+  var OIDC_SUBJECT_TOKEN_TYPE1 = "urn:ietf:params:oauth:token-type:id_token";
+  var OIDC_SUBJECT_TOKEN_TYPE2 = "urn:ietf:params:oauth:token-type:jwt";
+
+  class ExecutableResponse {
+    version;
+    success;
+    expirationTime;
+    tokenType;
+    errorCode;
+    errorMessage;
+    subjectToken;
+    constructor(responseJson) {
+      if (!responseJson.version) {
+        throw new InvalidVersionFieldError("Executable response must contain a 'version' field.");
+      }
+      if (responseJson.success === undefined) {
+        throw new InvalidSuccessFieldError("Executable response must contain a 'success' field.");
+      }
+      this.version = responseJson.version;
+      this.success = responseJson.success;
+      if (this.success) {
+        this.expirationTime = responseJson.expiration_time;
+        this.tokenType = responseJson.token_type;
+        if (this.tokenType !== SAML_SUBJECT_TOKEN_TYPE && this.tokenType !== OIDC_SUBJECT_TOKEN_TYPE1 && this.tokenType !== OIDC_SUBJECT_TOKEN_TYPE2) {
+          throw new InvalidTokenTypeFieldError("Executable response must contain a 'token_type' field when successful " + `and it must be one of ${OIDC_SUBJECT_TOKEN_TYPE1}, ${OIDC_SUBJECT_TOKEN_TYPE2}, or ${SAML_SUBJECT_TOKEN_TYPE}.`);
+        }
+        if (this.tokenType === SAML_SUBJECT_TOKEN_TYPE) {
+          if (!responseJson.saml_response) {
+            throw new InvalidSubjectTokenError(`Executable response must contain a 'saml_response' field when token_type=${SAML_SUBJECT_TOKEN_TYPE}.`);
+          }
+          this.subjectToken = responseJson.saml_response;
+        } else {
+          if (!responseJson.id_token) {
+            throw new InvalidSubjectTokenError("Executable response must contain a 'id_token' field when " + `token_type=${OIDC_SUBJECT_TOKEN_TYPE1} or ${OIDC_SUBJECT_TOKEN_TYPE2}.`);
+          }
+          this.subjectToken = responseJson.id_token;
+        }
+      } else {
+        if (!responseJson.code) {
+          throw new InvalidCodeFieldError("Executable response must contain a 'code' field when unsuccessful.");
+        }
+        if (!responseJson.message) {
+          throw new InvalidMessageFieldError("Executable response must contain a 'message' field when unsuccessful.");
+        }
+        this.errorCode = responseJson.code;
+        this.errorMessage = responseJson.message;
+      }
+    }
+    isValid() {
+      return !this.isExpired() && this.success;
+    }
+    isExpired() {
+      return this.expirationTime !== undefined && this.expirationTime < Math.round(Date.now() / 1000);
+    }
+  }
+  exports.ExecutableResponse = ExecutableResponse;
+
+  class ExecutableResponseError extends Error {
+    constructor(message) {
+      super(message);
+      Object.setPrototypeOf(this, new.target.prototype);
+    }
+  }
+  exports.ExecutableResponseError = ExecutableResponseError;
+
+  class InvalidVersionFieldError extends ExecutableResponseError {
+  }
+  exports.InvalidVersionFieldError = InvalidVersionFieldError;
+
+  class InvalidSuccessFieldError extends ExecutableResponseError {
+  }
+  exports.InvalidSuccessFieldError = InvalidSuccessFieldError;
+
+  class InvalidExpirationTimeFieldError extends ExecutableResponseError {
+  }
+  exports.InvalidExpirationTimeFieldError = InvalidExpirationTimeFieldError;
+
+  class InvalidTokenTypeFieldError extends ExecutableResponseError {
+  }
+  exports.InvalidTokenTypeFieldError = InvalidTokenTypeFieldError;
+
+  class InvalidCodeFieldError extends ExecutableResponseError {
+  }
+  exports.InvalidCodeFieldError = InvalidCodeFieldError;
+
+  class InvalidMessageFieldError extends ExecutableResponseError {
+  }
+  exports.InvalidMessageFieldError = InvalidMessageFieldError;
+
+  class InvalidSubjectTokenError extends ExecutableResponseError {
+  }
+  exports.InvalidSubjectTokenError = InvalidSubjectTokenError;
+});
+
+// node_modules/google-auth-library/build/src/auth/pluggable-auth-handler.js
+var require_pluggable_auth_handler = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.PluggableAuthHandler = exports.ExecutableError = undefined;
+  var executable_response_1 = require_executable_response();
+  var childProcess = __require("child_process");
+  var fs = __require("fs");
+
+  class ExecutableError extends Error {
+    code;
+    constructor(message, code) {
+      super(`The executable failed with exit code: ${code} and error message: ${message}.`);
+      this.code = code;
+      Object.setPrototypeOf(this, new.target.prototype);
+    }
+  }
+  exports.ExecutableError = ExecutableError;
+
+  class PluggableAuthHandler {
+    commandComponents;
+    timeoutMillis;
+    outputFile;
+    constructor(options) {
+      if (!options.command) {
+        throw new Error("No command provided.");
+      }
+      this.commandComponents = PluggableAuthHandler.parseCommand(options.command);
+      this.timeoutMillis = options.timeoutMillis;
+      if (!this.timeoutMillis) {
+        throw new Error("No timeoutMillis provided.");
+      }
+      this.outputFile = options.outputFile;
+    }
+    retrieveResponseFromExecutable(envMap) {
+      return new Promise((resolve, reject) => {
+        const child = childProcess.spawn(this.commandComponents[0], this.commandComponents.slice(1), {
+          env: { ...process.env, ...Object.fromEntries(envMap) }
+        });
+        let output = "";
+        child.stdout.on("data", (data) => {
+          output += data;
+        });
+        child.stderr.on("data", (err) => {
+          output += err;
+        });
+        const timeout = setTimeout(() => {
+          child.removeAllListeners();
+          child.kill();
+          return reject(new Error("The executable failed to finish within the timeout specified."));
+        }, this.timeoutMillis);
+        child.on("close", (code) => {
+          clearTimeout(timeout);
+          if (code === 0) {
+            try {
+              const responseJson = JSON.parse(output);
+              const response = new executable_response_1.ExecutableResponse(responseJson);
+              return resolve(response);
+            } catch (error) {
+              if (error instanceof executable_response_1.ExecutableResponseError) {
+                return reject(error);
+              }
+              return reject(new executable_response_1.ExecutableResponseError(`The executable returned an invalid response: ${output}`));
+            }
+          } else {
+            return reject(new ExecutableError(output, code.toString()));
+          }
+        });
+      });
+    }
+    async retrieveCachedResponse() {
+      if (!this.outputFile || this.outputFile.length === 0) {
+        return;
+      }
+      let filePath;
+      try {
+        filePath = await fs.promises.realpath(this.outputFile);
+      } catch {
+        return;
+      }
+      if (!(await fs.promises.lstat(filePath)).isFile()) {
+        return;
+      }
+      const responseString = await fs.promises.readFile(filePath, {
+        encoding: "utf8"
+      });
+      if (responseString === "") {
+        return;
+      }
+      try {
+        const responseJson = JSON.parse(responseString);
+        const response = new executable_response_1.ExecutableResponse(responseJson);
+        if (response.isValid()) {
+          return new executable_response_1.ExecutableResponse(responseJson);
+        }
+        return;
+      } catch (error) {
+        if (error instanceof executable_response_1.ExecutableResponseError) {
+          throw error;
+        }
+        throw new executable_response_1.ExecutableResponseError(`The output file contained an invalid response: ${responseString}`);
+      }
+    }
+    static parseCommand(command) {
+      const components = command.match(/(?:[^\s"]+|"[^"]*")+/g);
+      if (!components) {
+        throw new Error(`Provided command: "${command}" could not be parsed.`);
+      }
+      for (let i = 0;i < components.length; i++) {
+        if (components[i][0] === '"' && components[i].slice(-1) === '"') {
+          components[i] = components[i].slice(1, -1);
+        }
+      }
+      return components;
+    }
+  }
+  exports.PluggableAuthHandler = PluggableAuthHandler;
+});
+
+// node_modules/google-auth-library/build/src/auth/pluggable-auth-client.js
+var require_pluggable_auth_client = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.PluggableAuthClient = exports.ExecutableError = undefined;
+  var baseexternalclient_1 = require_baseexternalclient();
+  var executable_response_1 = require_executable_response();
+  var pluggable_auth_handler_1 = require_pluggable_auth_handler();
+  var pluggable_auth_handler_2 = require_pluggable_auth_handler();
+  Object.defineProperty(exports, "ExecutableError", { enumerable: true, get: function() {
+    return pluggable_auth_handler_2.ExecutableError;
+  } });
+  var DEFAULT_EXECUTABLE_TIMEOUT_MILLIS = 30 * 1000;
+  var MINIMUM_EXECUTABLE_TIMEOUT_MILLIS = 5 * 1000;
+  var MAXIMUM_EXECUTABLE_TIMEOUT_MILLIS = 120 * 1000;
+  var GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES = "GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES";
+  var MAXIMUM_EXECUTABLE_VERSION = 1;
+
+  class PluggableAuthClient extends baseexternalclient_1.BaseExternalAccountClient {
+    command;
+    timeoutMillis;
+    outputFile;
+    handler;
+    constructor(options) {
+      super(options);
+      if (!options.credential_source.executable) {
+        throw new Error('No valid Pluggable Auth "credential_source" provided.');
+      }
+      this.command = options.credential_source.executable.command;
+      if (!this.command) {
+        throw new Error('No valid Pluggable Auth "credential_source" provided.');
+      }
+      if (options.credential_source.executable.timeout_millis === undefined) {
+        this.timeoutMillis = DEFAULT_EXECUTABLE_TIMEOUT_MILLIS;
+      } else {
+        this.timeoutMillis = options.credential_source.executable.timeout_millis;
+        if (this.timeoutMillis < MINIMUM_EXECUTABLE_TIMEOUT_MILLIS || this.timeoutMillis > MAXIMUM_EXECUTABLE_TIMEOUT_MILLIS) {
+          throw new Error(`Timeout must be between ${MINIMUM_EXECUTABLE_TIMEOUT_MILLIS} and ` + `${MAXIMUM_EXECUTABLE_TIMEOUT_MILLIS} milliseconds.`);
+        }
+      }
+      this.outputFile = options.credential_source.executable.output_file;
+      this.handler = new pluggable_auth_handler_1.PluggableAuthHandler({
+        command: this.command,
+        timeoutMillis: this.timeoutMillis,
+        outputFile: this.outputFile
+      });
+      this.credentialSourceType = "executable";
+    }
+    async retrieveSubjectToken() {
+      if (process.env[GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES] !== "1") {
+        throw new Error("Pluggable Auth executables need to be explicitly allowed to run by " + "setting the GOOGLE_EXTERNAL_ACCOUNT_ALLOW_EXECUTABLES environment " + "Variable to 1.");
+      }
+      let executableResponse = undefined;
+      if (this.outputFile) {
+        executableResponse = await this.handler.retrieveCachedResponse();
+      }
+      if (!executableResponse) {
+        const envMap = new Map;
+        envMap.set("GOOGLE_EXTERNAL_ACCOUNT_AUDIENCE", this.audience);
+        envMap.set("GOOGLE_EXTERNAL_ACCOUNT_TOKEN_TYPE", this.subjectTokenType);
+        envMap.set("GOOGLE_EXTERNAL_ACCOUNT_INTERACTIVE", "0");
+        if (this.outputFile) {
+          envMap.set("GOOGLE_EXTERNAL_ACCOUNT_OUTPUT_FILE", this.outputFile);
+        }
+        const serviceAccountEmail = this.getServiceAccountEmail();
+        if (serviceAccountEmail) {
+          envMap.set("GOOGLE_EXTERNAL_ACCOUNT_IMPERSONATED_EMAIL", serviceAccountEmail);
+        }
+        executableResponse = await this.handler.retrieveResponseFromExecutable(envMap);
+      }
+      if (executableResponse.version > MAXIMUM_EXECUTABLE_VERSION) {
+        throw new Error(`Version of executable is not currently supported, maximum supported version is ${MAXIMUM_EXECUTABLE_VERSION}.`);
+      }
+      if (!executableResponse.success) {
+        throw new pluggable_auth_handler_1.ExecutableError(executableResponse.errorMessage, executableResponse.errorCode);
+      }
+      if (this.outputFile) {
+        if (!executableResponse.expirationTime) {
+          throw new executable_response_1.InvalidExpirationTimeFieldError("The executable response must contain the `expiration_time` field for successful responses when an output_file has been specified in the configuration.");
+        }
+      }
+      if (executableResponse.isExpired()) {
+        throw new Error("Executable response is expired.");
+      }
+      return executableResponse.subjectToken;
+    }
+  }
+  exports.PluggableAuthClient = PluggableAuthClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/externalclient.js
+var require_externalclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ExternalAccountClient = undefined;
+  var baseexternalclient_1 = require_baseexternalclient();
+  var identitypoolclient_1 = require_identitypoolclient();
+  var awsclient_1 = require_awsclient();
+  var pluggable_auth_client_1 = require_pluggable_auth_client();
+
+  class ExternalAccountClient {
+    constructor() {
+      throw new Error("ExternalAccountClients should be initialized via: " + "ExternalAccountClient.fromJSON(), " + "directly via explicit constructors, eg. " + "new AwsClient(options), new IdentityPoolClient(options), new" + "PluggableAuthClientOptions, or via " + "new GoogleAuth(options).getClient()");
+    }
+    static fromJSON(options) {
+      if (options && options.type === baseexternalclient_1.EXTERNAL_ACCOUNT_TYPE) {
+        if (options.credential_source?.environment_id) {
+          return new awsclient_1.AwsClient(options);
+        } else if (options.credential_source?.executable) {
+          return new pluggable_auth_client_1.PluggableAuthClient(options);
+        } else {
+          return new identitypoolclient_1.IdentityPoolClient(options);
+        }
+      } else {
+        return null;
+      }
+    }
+  }
+  exports.ExternalAccountClient = ExternalAccountClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/externalAccountAuthorizedUserClient.js
+var require_externalAccountAuthorizedUserClient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ExternalAccountAuthorizedUserClient = exports.EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE = undefined;
+  var authclient_1 = require_authclient();
+  var oauth2common_1 = require_oauth2common();
+  var gaxios_1 = require_src4();
+  var stream = __require("stream");
+  var baseexternalclient_1 = require_baseexternalclient();
+  exports.EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE = "external_account_authorized_user";
+  var DEFAULT_TOKEN_URL = "https://sts.{universeDomain}/v1/oauthtoken";
+
+  class ExternalAccountAuthorizedUserHandler extends oauth2common_1.OAuthClientAuthHandler {
+    #tokenRefreshEndpoint;
+    constructor(options) {
+      super(options);
+      this.#tokenRefreshEndpoint = options.tokenRefreshEndpoint;
+    }
+    async refreshToken(refreshToken, headers) {
+      const opts = {
+        ...ExternalAccountAuthorizedUserHandler.RETRY_CONFIG,
+        url: this.#tokenRefreshEndpoint,
+        method: "POST",
+        headers,
+        data: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken
+        }),
+        responseType: "json"
+      };
+      authclient_1.AuthClient.setMethodName(opts, "refreshToken");
+      this.applyClientAuthenticationOptions(opts);
+      try {
+        const response = await this.transporter.request(opts);
+        const tokenRefreshResponse = response.data;
+        tokenRefreshResponse.res = response;
+        return tokenRefreshResponse;
+      } catch (error) {
+        if (error instanceof gaxios_1.GaxiosError && error.response) {
+          throw (0, oauth2common_1.getErrorFromOAuthErrorResponse)(error.response.data, error);
+        }
+        throw error;
+      }
+    }
+  }
+
+  class ExternalAccountAuthorizedUserClient extends authclient_1.AuthClient {
+    cachedAccessToken;
+    externalAccountAuthorizedUserHandler;
+    refreshToken;
+    constructor(options) {
+      super(options);
+      if (options.universe_domain) {
+        this.universeDomain = options.universe_domain;
+      }
+      this.refreshToken = options.refresh_token;
+      const clientAuthentication = {
+        confidentialClientType: "basic",
+        clientId: options.client_id,
+        clientSecret: options.client_secret
+      };
+      this.externalAccountAuthorizedUserHandler = new ExternalAccountAuthorizedUserHandler({
+        tokenRefreshEndpoint: options.token_url ?? DEFAULT_TOKEN_URL.replace("{universeDomain}", this.universeDomain),
+        transporter: this.transporter,
+        clientAuthentication
+      });
+      this.cachedAccessToken = null;
+      this.quotaProjectId = options.quota_project_id;
+      if (typeof options?.eagerRefreshThresholdMillis !== "number") {
+        this.eagerRefreshThresholdMillis = baseexternalclient_1.EXPIRATION_TIME_OFFSET;
+      } else {
+        this.eagerRefreshThresholdMillis = options.eagerRefreshThresholdMillis;
+      }
+      this.forceRefreshOnFailure = !!options?.forceRefreshOnFailure;
+    }
+    async getAccessToken() {
+      if (!this.cachedAccessToken || this.isExpired(this.cachedAccessToken)) {
+        await this.refreshAccessTokenAsync();
+      }
+      return {
+        token: this.cachedAccessToken.access_token,
+        res: this.cachedAccessToken.res
+      };
+    }
+    async getRequestHeaders() {
+      const accessTokenResponse = await this.getAccessToken();
+      const headers = new Headers({
+        authorization: `Bearer ${accessTokenResponse.token}`
+      });
+      return this.addSharedMetadataHeaders(headers);
+    }
+    request(opts, callback) {
+      if (callback) {
+        this.requestAsync(opts).then((r) => callback(null, r), (e) => {
+          return callback(e, e.response);
+        });
+      } else {
+        return this.requestAsync(opts);
+      }
+    }
+    async requestAsync(opts, reAuthRetried = false) {
+      let response;
+      try {
+        const requestHeaders = await this.getRequestHeaders();
+        opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers);
+        this.addUserProjectAndAuthHeaders(opts.headers, requestHeaders);
+        response = await this.transporter.request(opts);
+      } catch (e) {
+        const res = e.response;
+        if (res) {
+          const statusCode = res.status;
+          const isReadableStream = res.config.data instanceof stream.Readable;
+          const isAuthErr = statusCode === 401 || statusCode === 403;
+          if (!reAuthRetried && isAuthErr && !isReadableStream && this.forceRefreshOnFailure) {
+            await this.refreshAccessTokenAsync();
+            return await this.requestAsync(opts, true);
+          }
+        }
+        throw e;
+      }
+      return response;
+    }
+    async refreshAccessTokenAsync() {
+      const refreshResponse = await this.externalAccountAuthorizedUserHandler.refreshToken(this.refreshToken);
+      this.cachedAccessToken = {
+        access_token: refreshResponse.access_token,
+        expiry_date: new Date().getTime() + refreshResponse.expires_in * 1000,
+        res: refreshResponse.res
+      };
+      if (refreshResponse.refresh_token !== undefined) {
+        this.refreshToken = refreshResponse.refresh_token;
+      }
+      return this.cachedAccessToken;
+    }
+    isExpired(credentials) {
+      const now = new Date().getTime();
+      return credentials.expiry_date ? now >= credentials.expiry_date - this.eagerRefreshThresholdMillis : false;
+    }
+  }
+  exports.ExternalAccountAuthorizedUserClient = ExternalAccountAuthorizedUserClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/gdchclient.js
+var require_gdchclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GdchClient = exports.GDCH_SERVICE_ACCOUNT_TYPE = undefined;
+  var crypto2 = __require("crypto");
+  var fs = __require("fs");
+  var https = __require("https");
+  var oauth2client_1 = require_oauth2client();
+  var DEFAULT_LIFETIME_IN_SECONDS = 3600;
+  exports.GDCH_SERVICE_ACCOUNT_TYPE = "gdch_service_account";
+
+  class GdchClient extends oauth2client_1.OAuth2Client {
+    projectId;
+    privateKeyId;
+    privateKey;
+    serviceIdentityName;
+    tokenServerUri;
+    caCertPath;
+    apiAudience;
+    lifetime;
+    gdchOptions;
+    caAgentPromise;
+    cachedCaCertPath;
+    lastCaCertReadTime = 0;
+    CA_CERT_TTL_MS = 5 * 60 * 1000;
+    constructor(options = {}) {
+      super(options);
+      this.gdchOptions = options;
+      this.projectId = options.projectId || undefined;
+      this.privateKeyId = options.privateKeyId;
+      this.privateKey = options.privateKey;
+      this.serviceIdentityName = options.serviceIdentityName;
+      this.tokenServerUri = options.tokenServerUri;
+      this.caCertPath = options.caCertPath;
+      this.apiAudience = options.apiAudience;
+      this.lifetime = options.lifetime || DEFAULT_LIFETIME_IN_SECONDS;
+      this.credentials = { refresh_token: "gdch-placeholder", expiry_date: 1 };
+    }
+    createWithGdchAudience(apiAudience) {
+      if (!apiAudience) {
+        throw new Error("Audience cannot be null or empty for GDCH service account credentials.");
+      }
+      return new GdchClient({
+        ...this.gdchOptions,
+        projectId: this.projectId,
+        privateKeyId: this.privateKeyId,
+        privateKey: this.privateKey,
+        serviceIdentityName: this.serviceIdentityName,
+        tokenServerUri: this.tokenServerUri,
+        caCertPath: this.caCertPath,
+        lifetime: this.lifetime,
+        apiAudience
+      });
+    }
+    fromJSON(json) {
+      if (!json) {
+        throw new Error("Must pass in a JSON object containing the GDCH credentials settings.");
+      }
+      if (json.type !== exports.GDCH_SERVICE_ACCOUNT_TYPE) {
+        throw new Error(`The incoming JSON object does not have the "${exports.GDCH_SERVICE_ACCOUNT_TYPE}" type`);
+      }
+      if (json.format_version !== "1") {
+        throw new Error("Only format version 1 is supported.");
+      }
+      if (!json.project) {
+        throw new Error("The incoming JSON object does not contain a project field");
+      }
+      if (!json.private_key_id) {
+        throw new Error("The incoming JSON object does not contain a private_key_id field");
+      }
+      if (!json.private_key) {
+        throw new Error("The incoming JSON object does not contain a private_key field");
+      }
+      if (!json.name) {
+        throw new Error("The incoming JSON object does not contain a name field");
+      }
+      if (!json.token_uri) {
+        throw new Error("The incoming JSON object does not contain a token_uri field");
+      }
+      this.projectId = json.project;
+      this.privateKeyId = json.private_key_id;
+      this.privateKey = json.private_key;
+      this.serviceIdentityName = json.name;
+      this.tokenServerUri = json.token_uri;
+      this.caCertPath = json.ca_cert_path;
+      this.gdchOptions = {
+        ...this.gdchOptions,
+        projectId: json.project,
+        privateKeyId: json.private_key_id,
+        privateKey: json.private_key,
+        serviceIdentityName: json.name,
+        tokenServerUri: json.token_uri,
+        caCertPath: json.ca_cert_path
+      };
+    }
+    async refreshTokenNoCache() {
+      if (!this.apiAudience) {
+        throw new Error("Audience cannot be null or empty for GDCH service account credentials. " + "Specify the audience by calling createWithGdchAudience.");
+      }
+      if (!this.privateKey) {
+        throw new Error("Private key is not configured for GDCH credentials.");
+      }
+      if (!this.privateKeyId) {
+        throw new Error("Private key ID is not configured for GDCH credentials.");
+      }
+      if (!this.projectId) {
+        throw new Error("Project is not configured for GDCH credentials.");
+      }
+      if (!this.serviceIdentityName) {
+        throw new Error("Service identity name is not configured for GDCH credentials.");
+      }
+      if (!this.tokenServerUri) {
+        throw new Error("Token server URI is not configured for GDCH credentials.");
+      }
+      const assertion = this.createAssertion();
+      const data = {
+        audience: this.apiAudience,
+        grant_type: "urn:ietf:params:oauth:token-type:token-exchange",
+        requested_token_type: "urn:ietf:params:oauth:token-type:access_token",
+        subject_token: assertion,
+        subject_token_type: "urn:k8s:params:oauth:token-type:serviceaccount"
+      };
+      const requestOpts = {
+        url: this.tokenServerUri,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        data,
+        responseType: "json",
+        timeout: 1e4,
+        retry: true,
+        retryConfig: {
+          httpMethodsToRetry: ["POST"],
+          statusCodesToRetry: [[500, 599]],
+          noResponseRetries: 3
+        }
+      };
+      if (this.caCertPath) {
+        requestOpts.agent = await this.getCaAgent();
+      }
+      try {
+        const res = await this.transporter.request(requestOpts);
+        const tokenResponse = res.data;
+        if (!tokenResponse.access_token) {
+          throw new Error("Token response did not contain an access_token.");
+        }
+        if (!tokenResponse.expires_in) {
+          throw new Error("Token response did not contain an expires_in field.");
+        }
+        const tokens = {
+          access_token: tokenResponse.access_token,
+          token_type: "STS-Bearer",
+          expiry_date: Date.now() + tokenResponse.expires_in * 1000
+        };
+        this.emit("tokens", tokens);
+        return { res, tokens };
+      } catch (e) {
+        if (e && e.config && e.config.data) {
+          try {
+            if (typeof e.config.data === "string") {
+              const parsedData = JSON.parse(e.config.data);
+              if (parsedData.subject_token) {
+                parsedData.subject_token = "***REDACTED***";
+                e.config.data = JSON.stringify(parsedData);
+              }
+            } else if (typeof e.config.data === "object" && e.config.data.subject_token) {
+              e.config.data.subject_token = "***REDACTED***";
+            }
+          } catch {}
+        }
+        if (e instanceof Error) {
+          e.message = `Error getting access token for GDCH service account: ${e.message}, iss: ${this.serviceIdentityName}`;
+        }
+        throw e;
+      }
+    }
+    createAssertion() {
+      const header = {
+        alg: "ES256",
+        typ: "JWT",
+        kid: this.privateKeyId
+      };
+      const issSub = `system:serviceaccount:${this.projectId}:${this.serviceIdentityName}`;
+      const currentTime = Math.floor(Date.now() / 1000);
+      const payload = {
+        iss: issSub,
+        sub: issSub,
+        iat: currentTime,
+        exp: currentTime + this.lifetime,
+        aud: this.tokenServerUri
+      };
+      const encodedHeader = this.base64UrlEncode(JSON.stringify(header));
+      const encodedPayload = this.base64UrlEncode(JSON.stringify(payload));
+      const signingInput = `${encodedHeader}.${encodedPayload}`;
+      const signature = crypto2.sign("sha256", Buffer.from(signingInput), {
+        key: this.privateKey,
+        dsaEncoding: "ieee-p1363"
+      });
+      const encodedSignature = this.base64UrlEncode(signature);
+      return `${signingInput}.${encodedSignature}`;
+    }
+    async requestAsync(opts, retry = false) {
+      if (this.caCertPath && !opts.agent) {
+        const url = (opts.url || "").toString();
+        if (!url.includes("googleapis.com") && !url.includes("google.com")) {
+          opts.agent = await this.getCaAgent();
+        }
+      }
+      return super.requestAsync(opts, retry);
+    }
+    getCaAgent() {
+      if (!this.caCertPath) {
+        this.caAgentPromise = undefined;
+        this.cachedCaCertPath = undefined;
+        this.lastCaCertReadTime = 0;
+        return;
+      }
+      const now = Date.now();
+      const isCacheExpired = now - this.lastCaCertReadTime > this.CA_CERT_TTL_MS;
+      if (this.caAgentPromise && this.caCertPath === this.cachedCaCertPath && !isCacheExpired) {
+        return this.caAgentPromise;
+      }
+      this.cachedCaCertPath = this.caCertPath;
+      this.lastCaCertReadTime = now;
+      const currentPath = this.caCertPath;
+      this.caAgentPromise = (async () => {
+        try {
+          const ca = await fs.promises.readFile(currentPath);
+          return new https.Agent({ ca });
+        } catch (err) {
+          if (this.cachedCaCertPath === currentPath) {
+            this.caAgentPromise = undefined;
+            this.cachedCaCertPath = undefined;
+            this.lastCaCertReadTime = 0;
+          }
+          if (err instanceof Error) {
+            err.message = `Error reading certificate file from CA cert path, value '${currentPath}': ${err.message}`;
+          }
+          throw err;
+        }
+      })();
+      return this.caAgentPromise;
+    }
+    toJSON() {
+      return {
+        ...this,
+        privateKey: this.privateKey ? "***REDACTED***" : undefined,
+        _clientSecret: this._clientSecret ? "***REDACTED***" : undefined,
+        apiKey: this.apiKey ? "***REDACTED***" : undefined,
+        gdchOptions: this.gdchOptions ? {
+          ...this.gdchOptions,
+          privateKey: this.gdchOptions.privateKey ? "***REDACTED***" : undefined,
+          clientSecret: this.gdchOptions.clientSecret ? "***REDACTED***" : undefined,
+          client_secret: this.gdchOptions.client_secret ? "***REDACTED***" : undefined,
+          apiKey: this.gdchOptions.apiKey ? "***REDACTED***" : undefined,
+          credentials: this.gdchOptions.credentials ? {
+            ...this.gdchOptions.credentials,
+            access_token: this.gdchOptions.credentials.access_token ? "***REDACTED***" : undefined,
+            refresh_token: this.gdchOptions.credentials.refresh_token ? "***REDACTED***" : undefined
+          } : undefined
+        } : undefined,
+        credentials: {
+          ...this.credentials,
+          access_token: this.credentials?.access_token ? "***REDACTED***" : undefined,
+          refresh_token: this.credentials?.refresh_token ? "***REDACTED***" : undefined
+        }
+      };
+    }
+    [Symbol.for("nodejs.util.inspect.custom")]() {
+      return this.toJSON();
+    }
+    base64UrlEncode(str) {
+      const buffer = typeof str === "string" ? Buffer.from(str) : str;
+      return buffer.toString("base64url");
+    }
+  }
+  exports.GdchClient = GdchClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/googleauth.js
+var require_googleauth = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GoogleAuth = exports.GoogleAuthExceptionMessages = undefined;
+  var child_process_1 = __require("child_process");
+  var fs = __require("fs");
+  var gaxios_1 = require_src4();
+  var gcpMetadata = require_src6();
+  var os = __require("os");
+  var path = __require("path");
+  var crypto_1 = require_crypto3();
+  var computeclient_1 = require_computeclient();
+  var idtokenclient_1 = require_idtokenclient();
+  var envDetect_1 = require_envDetect();
+  var jwtclient_1 = require_jwtclient();
+  var refreshclient_1 = require_refreshclient();
+  var impersonated_1 = require_impersonated();
+  var externalclient_1 = require_externalclient();
+  var baseexternalclient_1 = require_baseexternalclient();
+  var authclient_1 = require_authclient();
+  var externalAccountAuthorizedUserClient_1 = require_externalAccountAuthorizedUserClient();
+  var gdchclient_1 = require_gdchclient();
+  var util_1 = require_util3();
+  exports.GoogleAuthExceptionMessages = {
+    API_KEY_WITH_CREDENTIALS: "API Keys and Credentials are mutually exclusive authentication methods and cannot be used together.",
+    NO_PROJECT_ID_FOUND: `Unable to detect a Project Id in the current environment. 
+` + `To learn more about authentication and Google APIs, visit: 
+` + "https://cloud.google.com/docs/authentication/getting-started",
+    NO_CREDENTIALS_FOUND: `Unable to find credentials in current environment. 
+` + `To learn more about authentication and Google APIs, visit: 
+` + "https://cloud.google.com/docs/authentication/getting-started",
+    NO_ADC_FOUND: "Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.",
+    NO_UNIVERSE_DOMAIN_FOUND: `Unable to detect a Universe Domain in the current environment.
+` + `To learn more about Universe Domain retrieval, visit: 
+` + "https://cloud.google.com/compute/docs/metadata/predefined-metadata-keys"
+  };
+
+  class GoogleAuth {
+    checkIsGCE = undefined;
+    useJWTAccessWithScope;
+    defaultServicePath;
+    get isGCE() {
+      return this.checkIsGCE;
+    }
+    _findProjectIdPromise;
+    _cachedProjectId;
+    jsonContent = null;
+    apiKey;
+    cachedCredential = null;
+    #pendingAuthClient = null;
+    defaultScopes;
+    keyFilename;
+    scopes;
+    clientOptions = {};
+    constructor(opts = {}) {
+      this._cachedProjectId = opts.projectId || null;
+      this.cachedCredential = opts.authClient || null;
+      this.keyFilename = opts.keyFilename || opts.keyFile;
+      this.scopes = opts.scopes;
+      this.clientOptions = opts.clientOptions || {};
+      this.jsonContent = opts.credentials || null;
+      this.apiKey = opts.apiKey || this.clientOptions.apiKey || null;
+      if (this.apiKey && (this.jsonContent || this.clientOptions.credentials)) {
+        throw new RangeError(exports.GoogleAuthExceptionMessages.API_KEY_WITH_CREDENTIALS);
+      }
+      if (opts.universeDomain) {
+        this.clientOptions.universeDomain = opts.universeDomain;
+      }
+    }
+    setGapicJWTValues(client) {
+      client.defaultServicePath = this.defaultServicePath;
+      client.useJWTAccessWithScope = this.useJWTAccessWithScope;
+      client.defaultScopes = this.defaultScopes;
+    }
+    getProjectId(callback) {
+      if (callback) {
+        this.getProjectIdAsync().then((r) => callback(null, r), callback);
+      } else {
+        return this.getProjectIdAsync();
+      }
+    }
+    async getProjectIdOptional() {
+      try {
+        return await this.getProjectId();
+      } catch (e) {
+        if (e instanceof Error && e.message === exports.GoogleAuthExceptionMessages.NO_PROJECT_ID_FOUND) {
+          return null;
+        } else {
+          throw e;
+        }
+      }
+    }
+    async findAndCacheProjectId() {
+      let projectId = null;
+      projectId ||= await this.getProductionProjectId();
+      projectId ||= await this.getFileProjectId();
+      projectId ||= await this.getDefaultServiceProjectId();
+      projectId ||= await this.getGCEProjectId();
+      projectId ||= await this.getExternalAccountClientProjectId();
+      if (projectId) {
+        this._cachedProjectId = projectId;
+        return projectId;
+      } else {
+        throw new Error(exports.GoogleAuthExceptionMessages.NO_PROJECT_ID_FOUND);
+      }
+    }
+    async getProjectIdAsync() {
+      if (this._cachedProjectId) {
+        return this._cachedProjectId;
+      }
+      if (!this._findProjectIdPromise) {
+        this._findProjectIdPromise = this.findAndCacheProjectId();
+      }
+      return this._findProjectIdPromise;
+    }
+    async getUniverseDomainFromMetadataServer() {
+      let universeDomain;
+      try {
+        universeDomain = await gcpMetadata.universe("universe-domain");
+        universeDomain ||= authclient_1.DEFAULT_UNIVERSE;
+      } catch (e) {
+        if (e && e?.response?.status === 404) {
+          universeDomain = authclient_1.DEFAULT_UNIVERSE;
+        } else {
+          throw e;
+        }
+      }
+      return universeDomain;
+    }
+    async getUniverseDomain() {
+      let universeDomain = (0, util_1.originalOrCamelOptions)(this.clientOptions).get("universe_domain");
+      try {
+        universeDomain ??= (await this.getClient()).universeDomain;
+      } catch {
+        universeDomain ??= authclient_1.DEFAULT_UNIVERSE;
+      }
+      return universeDomain;
+    }
+    getAnyScopes() {
+      return this.scopes || this.defaultScopes;
+    }
+    getApplicationDefault(optionsOrCallback = {}, callback) {
+      let options;
+      if (typeof optionsOrCallback === "function") {
+        callback = optionsOrCallback;
+      } else {
+        options = optionsOrCallback;
+      }
+      if (callback) {
+        this.getApplicationDefaultAsync(options).then((r) => callback(null, r.credential, r.projectId), callback);
+      } else {
+        return this.getApplicationDefaultAsync(options);
+      }
+    }
+    async getApplicationDefaultAsync(options = {}) {
+      if (this.cachedCredential) {
+        return await this.#prepareAndCacheClient(this.cachedCredential, null);
+      }
+      let credential;
+      credential = await this._tryGetApplicationCredentialsFromEnvironmentVariable(options);
+      if (credential) {
+        if (credential instanceof jwtclient_1.JWT) {
+          credential.scopes = this.scopes;
+        } else if (credential instanceof baseexternalclient_1.BaseExternalAccountClient) {
+          credential.scopes = this.getAnyScopes();
+        }
+        return await this.#prepareAndCacheClient(credential);
+      }
+      credential = await this._tryGetApplicationCredentialsFromWellKnownFile(options);
+      if (credential) {
+        if (credential instanceof jwtclient_1.JWT) {
+          credential.scopes = this.scopes;
+        } else if (credential instanceof baseexternalclient_1.BaseExternalAccountClient) {
+          credential.scopes = this.getAnyScopes();
+        }
+        return await this.#prepareAndCacheClient(credential);
+      }
+      if (await this._checkIsGCE()) {
+        options.scopes = this.getAnyScopes();
+        return await this.#prepareAndCacheClient(new computeclient_1.Compute(options));
+      }
+      throw new Error(exports.GoogleAuthExceptionMessages.NO_ADC_FOUND);
+    }
+    async#prepareAndCacheClient(credential, quotaProjectIdOverride = process.env["GOOGLE_CLOUD_QUOTA_PROJECT"] || null) {
+      const projectId = await this.getProjectIdOptional();
+      if (quotaProjectIdOverride) {
+        credential.quotaProjectId = quotaProjectIdOverride;
+      }
+      this.cachedCredential = credential;
+      return { credential, projectId };
+    }
+    async _checkIsGCE() {
+      if (this.checkIsGCE === undefined) {
+        this.checkIsGCE = gcpMetadata.getGCPResidency() || await gcpMetadata.isAvailable();
+      }
+      return this.checkIsGCE;
+    }
+    async _tryGetApplicationCredentialsFromEnvironmentVariable(options) {
+      const credentialsPath = process.env["GOOGLE_APPLICATION_CREDENTIALS"] || process.env["google_application_credentials"];
+      if (!credentialsPath || credentialsPath.length === 0) {
+        return null;
+      }
+      try {
+        return await this._getApplicationCredentialsFromFilePath(credentialsPath, options);
+      } catch (e) {
+        if (e instanceof Error) {
+          e.message = `Unable to read the credential file specified by the GOOGLE_APPLICATION_CREDENTIALS environment variable: ${e.message}`;
+        }
+        throw e;
+      }
+    }
+    async _tryGetApplicationCredentialsFromWellKnownFile(options) {
+      let configDir = process.env["CLOUDSDK_CONFIG"];
+      if (!configDir) {
+        if (this._isWindows()) {
+          if (process.env["APPDATA"]) {
+            configDir = path.join(process.env["APPDATA"], "gcloud");
+          }
+        } else {
+          const home = process.env["HOME"];
+          if (home) {
+            configDir = path.join(home, ".config", "gcloud");
+          }
+        }
+      }
+      if (!configDir) {
+        return null;
+      }
+      const location = path.join(configDir, "application_default_credentials.json");
+      if (!fs.existsSync(location)) {
+        return null;
+      }
+      const client = await this._getApplicationCredentialsFromFilePath(location, options);
+      return client;
+    }
+    async _getApplicationCredentialsFromFilePath(filePath, options = {}) {
+      if (!filePath || filePath.length === 0) {
+        throw new Error("The file path is invalid.");
+      }
+      try {
+        filePath = fs.realpathSync(filePath);
+        if (!fs.lstatSync(filePath).isFile()) {
+          throw new Error;
+        }
+      } catch (err) {
+        if (err instanceof Error) {
+          err.message = `The file at ${filePath} does not exist, or it is not a file. ${err.message}`;
+        }
+        throw err;
+      }
+      const readStream = fs.createReadStream(filePath);
+      return this.fromStream(readStream, options);
+    }
+    fromImpersonatedJSON(json) {
+      if (!json) {
+        throw new Error("Must pass in a JSON object containing an  impersonated refresh token");
+      }
+      if (json.type !== impersonated_1.IMPERSONATED_ACCOUNT_TYPE) {
+        throw new Error(`The incoming JSON object does not have the "${impersonated_1.IMPERSONATED_ACCOUNT_TYPE}" type`);
+      }
+      if (!json.source_credentials) {
+        throw new Error("The incoming JSON object does not contain a source_credentials field");
+      }
+      if (!json.service_account_impersonation_url) {
+        throw new Error("The incoming JSON object does not contain a service_account_impersonation_url field");
+      }
+      const sourceClient = this.fromJSON(json.source_credentials);
+      if (json.service_account_impersonation_url?.length > 256) {
+        throw new RangeError(`Target principal is too long: ${json.service_account_impersonation_url}`);
+      }
+      const targetPrincipal = /(?<target>[^/]+):(generateAccessToken|generateIdToken)$/.exec(json.service_account_impersonation_url)?.groups?.target;
+      if (!targetPrincipal) {
+        throw new RangeError(`Cannot extract target principal from ${json.service_account_impersonation_url}`);
+      }
+      const targetScopes = (this.scopes || json.scopes || this.defaultScopes) ?? [];
+      return new impersonated_1.Impersonated({
+        ...json,
+        sourceClient,
+        targetPrincipal,
+        targetScopes: Array.isArray(targetScopes) ? targetScopes : [targetScopes]
+      });
+    }
+    fromJSON(json, options = {}) {
+      let client;
+      const preferredUniverseDomain = (0, util_1.originalOrCamelOptions)(options).get("universe_domain");
+      if (json.type === refreshclient_1.USER_REFRESH_ACCOUNT_TYPE) {
+        client = new refreshclient_1.UserRefreshClient(options);
+        client.fromJSON(json);
+      } else if (json.type === impersonated_1.IMPERSONATED_ACCOUNT_TYPE) {
+        client = this.fromImpersonatedJSON(json);
+      } else if (json.type === baseexternalclient_1.EXTERNAL_ACCOUNT_TYPE) {
+        client = externalclient_1.ExternalAccountClient.fromJSON({
+          ...json,
+          ...options
+        });
+        client.scopes = this.getAnyScopes();
+      } else if (json.type === externalAccountAuthorizedUserClient_1.EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE) {
+        client = new externalAccountAuthorizedUserClient_1.ExternalAccountAuthorizedUserClient({
+          ...json,
+          ...options
+        });
+      } else if (json.type === gdchclient_1.GDCH_SERVICE_ACCOUNT_TYPE) {
+        client = new gdchclient_1.GdchClient(options);
+        client.fromJSON(json);
+      } else {
+        options.scopes = this.scopes;
+        client = new jwtclient_1.JWT(options);
+        this.setGapicJWTValues(client);
+        client.fromJSON(json);
+      }
+      if (preferredUniverseDomain) {
+        client.universeDomain = preferredUniverseDomain;
+      }
+      return client;
+    }
+    _cacheClientFromJSON(json, options) {
+      const client = this.fromJSON(json, options);
+      this.jsonContent = json;
+      this.cachedCredential = client;
+      return client;
+    }
+    fromStream(inputStream, optionsOrCallback = {}, callback) {
+      let options = {};
+      if (typeof optionsOrCallback === "function") {
+        callback = optionsOrCallback;
+      } else {
+        options = optionsOrCallback;
+      }
+      if (callback) {
+        this.fromStreamAsync(inputStream, options).then((r) => callback(null, r), callback);
+      } else {
+        return this.fromStreamAsync(inputStream, options);
+      }
+    }
+    fromStreamAsync(inputStream, options) {
+      return new Promise((resolve, reject) => {
+        if (!inputStream) {
+          throw new Error("Must pass in a stream containing the Google auth settings.");
+        }
+        const chunks = [];
+        inputStream.setEncoding("utf8").on("error", reject).on("data", (chunk) => chunks.push(chunk)).on("end", () => {
+          try {
+            try {
+              const data = JSON.parse(chunks.join(""));
+              const r = this._cacheClientFromJSON(data, options);
+              return resolve(r);
+            } catch (err) {
+              if (!this.keyFilename)
+                throw err;
+              const client = new jwtclient_1.JWT({
+                ...this.clientOptions,
+                keyFile: this.keyFilename
+              });
+              this.cachedCredential = client;
+              this.setGapicJWTValues(client);
+              return resolve(client);
+            }
+          } catch (err) {
+            return reject(err);
+          }
+        });
+      });
+    }
+    fromAPIKey(apiKey, options = {}) {
+      return new jwtclient_1.JWT({ ...options, apiKey });
+    }
+    _isWindows() {
+      const sys = os.platform();
+      if (sys && sys.length >= 3) {
+        if (sys.substring(0, 3).toLowerCase() === "win") {
+          return true;
+        }
+      }
+      return false;
+    }
+    async getDefaultServiceProjectId() {
+      return new Promise((resolve) => {
+        (0, child_process_1.exec)("gcloud config config-helper --format json", (err, stdout) => {
+          if (!err && stdout) {
+            try {
+              const projectId = JSON.parse(stdout).configuration.properties.core.project;
+              resolve(projectId);
+              return;
+            } catch (e) {}
+          }
+          resolve(null);
+        });
+      });
+    }
+    getProductionProjectId() {
+      return process.env["GCLOUD_PROJECT"] || process.env["GOOGLE_CLOUD_PROJECT"] || process.env["gcloud_project"] || process.env["google_cloud_project"];
+    }
+    async getFileProjectId() {
+      if (this.cachedCredential) {
+        return this.cachedCredential.projectId;
+      }
+      if (this.keyFilename) {
+        const creds = await this.getClient();
+        if (creds && creds.projectId) {
+          return creds.projectId;
+        }
+      }
+      const r = await this._tryGetApplicationCredentialsFromEnvironmentVariable();
+      if (r) {
+        return r.projectId;
+      } else {
+        return null;
+      }
+    }
+    async getExternalAccountClientProjectId() {
+      if (!this.jsonContent || this.jsonContent.type !== baseexternalclient_1.EXTERNAL_ACCOUNT_TYPE) {
+        return null;
+      }
+      const creds = await this.getClient();
+      return await creds.getProjectId();
+    }
+    async getGCEProjectId() {
+      try {
+        const r = await gcpMetadata.project("project-id");
+        return r;
+      } catch (e) {
+        return null;
+      }
+    }
+    getCredentials(callback) {
+      if (callback) {
+        this.getCredentialsAsync().then((r) => callback(null, r), callback);
+      } else {
+        return this.getCredentialsAsync();
+      }
+    }
+    async getCredentialsAsync() {
+      const client = await this.getClient();
+      if (client instanceof impersonated_1.Impersonated) {
+        return { client_email: client.getTargetPrincipal() };
+      }
+      if (client instanceof baseexternalclient_1.BaseExternalAccountClient) {
+        const serviceAccountEmail = client.getServiceAccountEmail();
+        if (serviceAccountEmail) {
+          return {
+            client_email: serviceAccountEmail,
+            universe_domain: client.universeDomain
+          };
+        }
+      }
+      if (this.jsonContent) {
+        return {
+          client_email: this.jsonContent.client_email,
+          private_key: this.jsonContent.private_key,
+          universe_domain: this.jsonContent.universe_domain
+        };
+      }
+      if (await this._checkIsGCE()) {
+        const [client_email, universe_domain] = await Promise.all([
+          gcpMetadata.instance("service-accounts/default/email"),
+          this.getUniverseDomain()
+        ]);
+        return { client_email, universe_domain };
+      }
+      throw new Error(exports.GoogleAuthExceptionMessages.NO_CREDENTIALS_FOUND);
+    }
+    async getClient() {
+      if (this.cachedCredential) {
+        return this.cachedCredential;
+      }
+      this.#pendingAuthClient = this.#pendingAuthClient || this.#determineClient();
+      try {
+        const client = await this.#pendingAuthClient;
+        if (client instanceof gdchclient_1.GdchClient && !client.apiAudience) {
+          const opts = this.clientOptions;
+          const endpoint = opts.apiEndpoint || opts.servicePath;
+          if (endpoint) {
+            const scheme = endpoint.startsWith("http") ? "" : "https://";
+            const formattedAudience = `${scheme}${endpoint}`.replace(/\/+$/, "");
+            const newClient = client.createWithGdchAudience(formattedAudience);
+            this.cachedCredential = newClient;
+            return newClient;
+          }
+        }
+        return client;
+      } finally {
+        this.#pendingAuthClient = null;
+      }
+    }
+    async#determineClient() {
+      if (this.jsonContent) {
+        return this._cacheClientFromJSON(this.jsonContent, this.clientOptions);
+      } else if (this.keyFilename) {
+        const filePath = path.resolve(this.keyFilename);
+        const stream = fs.createReadStream(filePath);
+        return await this.fromStreamAsync(stream, this.clientOptions);
+      } else if (this.apiKey) {
+        const client = await this.fromAPIKey(this.apiKey, this.clientOptions);
+        client.scopes = this.scopes;
+        const { credential } = await this.#prepareAndCacheClient(client);
+        return credential;
+      } else {
+        const { credential } = await this.getApplicationDefaultAsync(this.clientOptions);
+        return credential;
+      }
+    }
+    async getIdTokenClient(targetAudience) {
+      const client = await this.getClient();
+      if (!("fetchIdToken" in client)) {
+        throw new Error("Cannot fetch ID token in this environment, use GCE or set the GOOGLE_APPLICATION_CREDENTIALS environment variable to a service account credentials JSON file.");
+      }
+      return new idtokenclient_1.IdTokenClient({ targetAudience, idTokenProvider: client });
+    }
+    async getAccessToken() {
+      const client = await this.getClient();
+      return (await client.getAccessToken()).token;
+    }
+    async getRequestHeaders(url) {
+      const client = await this.getClient();
+      return client.getRequestHeaders(url);
+    }
+    async authorizeRequest(opts = {}) {
+      const url = opts.url;
+      const client = await this.getClient();
+      const headers = await client.getRequestHeaders(url);
+      opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers, headers);
+      return opts;
+    }
+    async fetch(...args) {
+      const client = await this.getClient();
+      return client.fetch(...args);
+    }
+    async request(opts) {
+      const client = await this.getClient();
+      return client.request(opts);
+    }
+    getEnv() {
+      return (0, envDetect_1.getEnv)();
+    }
+    async sign(data, endpoint) {
+      const client = await this.getClient();
+      const universe = await this.getUniverseDomain();
+      endpoint = endpoint || `https://iamcredentials.${universe}/v1/projects/-/serviceAccounts/`;
+      if (client instanceof impersonated_1.Impersonated) {
+        const signed = await client.sign(data);
+        return signed.signedBlob;
+      }
+      const crypto2 = (0, crypto_1.createCrypto)();
+      if (client instanceof jwtclient_1.JWT && client.key) {
+        const sign = await crypto2.sign(client.key, data);
+        return sign;
+      }
+      const creds = await this.getCredentials();
+      if (!creds.client_email) {
+        throw new Error("Cannot sign data without `client_email`.");
+      }
+      return this.signBlob(crypto2, creds.client_email, data, endpoint);
+    }
+    async signBlob(crypto2, emailOrUniqueId, data, endpoint) {
+      const url = new URL(endpoint + `${emailOrUniqueId}:signBlob`);
+      const res = await this.request({
+        method: "POST",
+        url: url.href,
+        data: {
+          payload: crypto2.encodeBase64StringUtf8(data)
+        },
+        retry: true,
+        retryConfig: {
+          httpMethodsToRetry: ["POST"]
+        }
+      });
+      return res.data.signedBlob;
+    }
+  }
+  exports.GoogleAuth = GoogleAuth;
+});
+
+// node_modules/google-auth-library/build/src/auth/iam.js
+var require_iam = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.IAMAuth = undefined;
+
+  class IAMAuth {
+    selector;
+    token;
+    constructor(selector, token) {
+      this.selector = selector;
+      this.token = token;
+      this.selector = selector;
+      this.token = token;
+    }
+    getRequestHeaders() {
+      return {
+        "x-goog-iam-authority-selector": this.selector,
+        "x-goog-iam-authorization-token": this.token
+      };
+    }
+  }
+  exports.IAMAuth = IAMAuth;
+});
+
+// node_modules/google-auth-library/build/src/auth/downscopedclient.js
+var require_downscopedclient = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.DownscopedClient = exports.EXPIRATION_TIME_OFFSET = exports.MAX_ACCESS_BOUNDARY_RULES_COUNT = undefined;
+  var gaxios_1 = require_src4();
+  var stream = __require("stream");
+  var authclient_1 = require_authclient();
+  var sts = require_stscredentials();
+  var STS_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange";
+  var STS_REQUEST_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
+  var STS_SUBJECT_TOKEN_TYPE = "urn:ietf:params:oauth:token-type:access_token";
+  exports.MAX_ACCESS_BOUNDARY_RULES_COUNT = 10;
+  exports.EXPIRATION_TIME_OFFSET = 5 * 60 * 1000;
+
+  class DownscopedClient extends authclient_1.AuthClient {
+    authClient;
+    credentialAccessBoundary;
+    cachedDownscopedAccessToken;
+    stsCredential;
+    constructor(options, credentialAccessBoundary = {
+      accessBoundary: {
+        accessBoundaryRules: []
+      }
+    }) {
+      super(options instanceof authclient_1.AuthClient ? {} : options);
+      if (options instanceof authclient_1.AuthClient) {
+        this.authClient = options;
+        this.credentialAccessBoundary = credentialAccessBoundary;
+      } else {
+        this.authClient = options.authClient;
+        this.credentialAccessBoundary = options.credentialAccessBoundary;
+      }
+      if (this.credentialAccessBoundary.accessBoundary.accessBoundaryRules.length === 0) {
+        throw new Error("At least one access boundary rule needs to be defined.");
+      } else if (this.credentialAccessBoundary.accessBoundary.accessBoundaryRules.length > exports.MAX_ACCESS_BOUNDARY_RULES_COUNT) {
+        throw new Error("The provided access boundary has more than " + `${exports.MAX_ACCESS_BOUNDARY_RULES_COUNT} access boundary rules.`);
+      }
+      for (const rule of this.credentialAccessBoundary.accessBoundary.accessBoundaryRules) {
+        if (rule.availablePermissions.length === 0) {
+          throw new Error("At least one permission should be defined in access boundary rules.");
+        }
+      }
+      this.stsCredential = new sts.StsCredentials({
+        tokenExchangeEndpoint: `https://sts.${this.universeDomain}/v1/token`
+      });
+      this.cachedDownscopedAccessToken = null;
+    }
+    setCredentials(credentials) {
+      if (!credentials.expiry_date) {
+        throw new Error("The access token expiry_date field is missing in the provided " + "credentials.");
+      }
+      super.setCredentials(credentials);
+      this.cachedDownscopedAccessToken = credentials;
+    }
+    async getAccessToken() {
+      if (!this.cachedDownscopedAccessToken || this.isExpired(this.cachedDownscopedAccessToken)) {
+        await this.refreshAccessTokenAsync();
+      }
+      return {
+        token: this.cachedDownscopedAccessToken.access_token,
+        expirationTime: this.cachedDownscopedAccessToken.expiry_date,
+        res: this.cachedDownscopedAccessToken.res
+      };
+    }
+    async getRequestHeaders() {
+      const accessTokenResponse = await this.getAccessToken();
+      const headers = new Headers({
+        authorization: `Bearer ${accessTokenResponse.token}`
+      });
+      return this.addSharedMetadataHeaders(headers);
+    }
+    request(opts, callback) {
+      if (callback) {
+        this.requestAsync(opts).then((r) => callback(null, r), (e) => {
+          return callback(e, e.response);
+        });
+      } else {
+        return this.requestAsync(opts);
+      }
+    }
+    async requestAsync(opts, reAuthRetried = false) {
+      let response;
+      try {
+        const requestHeaders = await this.getRequestHeaders();
+        opts.headers = gaxios_1.Gaxios.mergeHeaders(opts.headers);
+        this.addUserProjectAndAuthHeaders(opts.headers, requestHeaders);
+        response = await this.transporter.request(opts);
+      } catch (e) {
+        const res = e.response;
+        if (res) {
+          const statusCode = res.status;
+          const isReadableStream = res.config.data instanceof stream.Readable;
+          const isAuthErr = statusCode === 401 || statusCode === 403;
+          if (!reAuthRetried && isAuthErr && !isReadableStream && this.forceRefreshOnFailure) {
+            await this.refreshAccessTokenAsync();
+            return await this.requestAsync(opts, true);
+          }
+        }
+        throw e;
+      }
+      return response;
+    }
+    async refreshAccessTokenAsync() {
+      const subjectToken = (await this.authClient.getAccessToken()).token;
+      const stsCredentialsOptions = {
+        grantType: STS_GRANT_TYPE,
+        requestedTokenType: STS_REQUEST_TOKEN_TYPE,
+        subjectToken,
+        subjectTokenType: STS_SUBJECT_TOKEN_TYPE
+      };
+      const stsResponse = await this.stsCredential.exchangeToken(stsCredentialsOptions, undefined, this.credentialAccessBoundary);
+      const sourceCredExpireDate = this.authClient.credentials?.expiry_date || null;
+      const expiryDate = stsResponse.expires_in ? new Date().getTime() + stsResponse.expires_in * 1000 : sourceCredExpireDate;
+      this.cachedDownscopedAccessToken = {
+        access_token: stsResponse.access_token,
+        expiry_date: expiryDate,
+        res: stsResponse.res
+      };
+      this.credentials = {};
+      Object.assign(this.credentials, this.cachedDownscopedAccessToken);
+      delete this.credentials.res;
+      this.emit("tokens", {
+        refresh_token: null,
+        expiry_date: this.cachedDownscopedAccessToken.expiry_date,
+        access_token: this.cachedDownscopedAccessToken.access_token,
+        token_type: "Bearer",
+        id_token: null
+      });
+      return this.cachedDownscopedAccessToken;
+    }
+    isExpired(downscopedAccessToken) {
+      const now = new Date().getTime();
+      return downscopedAccessToken.expiry_date ? now >= downscopedAccessToken.expiry_date - this.eagerRefreshThresholdMillis : false;
+    }
+  }
+  exports.DownscopedClient = DownscopedClient;
+});
+
+// node_modules/google-auth-library/build/src/auth/passthrough.js
+var require_passthrough = __commonJS(function(exports) {
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.PassThroughClient = undefined;
+  var authclient_1 = require_authclient();
+
+  class PassThroughClient extends authclient_1.AuthClient {
+    async request(opts) {
+      return this.transporter.request(opts);
+    }
+    async getAccessToken() {
+      return {};
+    }
+    async getRequestHeaders() {
+      return new Headers;
+    }
+  }
+  exports.PassThroughClient = PassThroughClient;
+});
+
+// node_modules/google-auth-library/build/src/index.js
+var require_src7 = __commonJS(function(exports) {
+  var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() {
+        return m[k];
+      } };
+    }
+    Object.defineProperty(o, k2, desc);
+  } : function(o, m, k, k2) {
+    if (k2 === undefined)
+      k2 = k;
+    o[k2] = m[k];
+  });
+  var __exportStar = exports && exports.__exportStar || function(m, exports2) {
+    for (var p in m)
+      if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p))
+        __createBinding(exports2, m, p);
+  };
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.GoogleAuth = exports.auth = exports.GDCH_SERVICE_ACCOUNT_TYPE = exports.GdchClient = exports.PassThroughClient = exports.ExternalAccountAuthorizedUserClient = exports.EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE = exports.ExecutableError = exports.PluggableAuthClient = exports.DownscopedClient = exports.BaseExternalAccountClient = exports.ExternalAccountClient = exports.IdentityPoolClient = exports.AwsRequestSigner = exports.AwsClient = exports.UserRefreshClient = exports.LoginTicket = exports.ClientAuthentication = exports.OAuth2Client = exports.CodeChallengeMethod = exports.Impersonated = exports.JWT = exports.JWTAccess = exports.IdTokenClient = exports.IAMAuth = exports.GCPEnv = exports.Compute = exports.DEFAULT_UNIVERSE = exports.AuthClient = exports.gaxios = exports.gcpMetadata = undefined;
+  var googleauth_1 = require_googleauth();
+  Object.defineProperty(exports, "GoogleAuth", { enumerable: true, get: function() {
+    return googleauth_1.GoogleAuth;
+  } });
+  exports.gcpMetadata = require_src6();
+  exports.gaxios = require_src4();
+  var authclient_1 = require_authclient();
+  Object.defineProperty(exports, "AuthClient", { enumerable: true, get: function() {
+    return authclient_1.AuthClient;
+  } });
+  Object.defineProperty(exports, "DEFAULT_UNIVERSE", { enumerable: true, get: function() {
+    return authclient_1.DEFAULT_UNIVERSE;
+  } });
+  var computeclient_1 = require_computeclient();
+  Object.defineProperty(exports, "Compute", { enumerable: true, get: function() {
+    return computeclient_1.Compute;
+  } });
+  var envDetect_1 = require_envDetect();
+  Object.defineProperty(exports, "GCPEnv", { enumerable: true, get: function() {
+    return envDetect_1.GCPEnv;
+  } });
+  var iam_1 = require_iam();
+  Object.defineProperty(exports, "IAMAuth", { enumerable: true, get: function() {
+    return iam_1.IAMAuth;
+  } });
+  var idtokenclient_1 = require_idtokenclient();
+  Object.defineProperty(exports, "IdTokenClient", { enumerable: true, get: function() {
+    return idtokenclient_1.IdTokenClient;
+  } });
+  var jwtaccess_1 = require_jwtaccess();
+  Object.defineProperty(exports, "JWTAccess", { enumerable: true, get: function() {
+    return jwtaccess_1.JWTAccess;
+  } });
+  var jwtclient_1 = require_jwtclient();
+  Object.defineProperty(exports, "JWT", { enumerable: true, get: function() {
+    return jwtclient_1.JWT;
+  } });
+  var impersonated_1 = require_impersonated();
+  Object.defineProperty(exports, "Impersonated", { enumerable: true, get: function() {
+    return impersonated_1.Impersonated;
+  } });
+  var oauth2client_1 = require_oauth2client();
+  Object.defineProperty(exports, "CodeChallengeMethod", { enumerable: true, get: function() {
+    return oauth2client_1.CodeChallengeMethod;
+  } });
+  Object.defineProperty(exports, "OAuth2Client", { enumerable: true, get: function() {
+    return oauth2client_1.OAuth2Client;
+  } });
+  Object.defineProperty(exports, "ClientAuthentication", { enumerable: true, get: function() {
+    return oauth2client_1.ClientAuthentication;
+  } });
+  var loginticket_1 = require_loginticket();
+  Object.defineProperty(exports, "LoginTicket", { enumerable: true, get: function() {
+    return loginticket_1.LoginTicket;
+  } });
+  var refreshclient_1 = require_refreshclient();
+  Object.defineProperty(exports, "UserRefreshClient", { enumerable: true, get: function() {
+    return refreshclient_1.UserRefreshClient;
+  } });
+  var awsclient_1 = require_awsclient();
+  Object.defineProperty(exports, "AwsClient", { enumerable: true, get: function() {
+    return awsclient_1.AwsClient;
+  } });
+  var awsrequestsigner_1 = require_awsrequestsigner();
+  Object.defineProperty(exports, "AwsRequestSigner", { enumerable: true, get: function() {
+    return awsrequestsigner_1.AwsRequestSigner;
+  } });
+  var identitypoolclient_1 = require_identitypoolclient();
+  Object.defineProperty(exports, "IdentityPoolClient", { enumerable: true, get: function() {
+    return identitypoolclient_1.IdentityPoolClient;
+  } });
+  var externalclient_1 = require_externalclient();
+  Object.defineProperty(exports, "ExternalAccountClient", { enumerable: true, get: function() {
+    return externalclient_1.ExternalAccountClient;
+  } });
+  var baseexternalclient_1 = require_baseexternalclient();
+  Object.defineProperty(exports, "BaseExternalAccountClient", { enumerable: true, get: function() {
+    return baseexternalclient_1.BaseExternalAccountClient;
+  } });
+  var downscopedclient_1 = require_downscopedclient();
+  Object.defineProperty(exports, "DownscopedClient", { enumerable: true, get: function() {
+    return downscopedclient_1.DownscopedClient;
+  } });
+  var pluggable_auth_client_1 = require_pluggable_auth_client();
+  Object.defineProperty(exports, "PluggableAuthClient", { enumerable: true, get: function() {
+    return pluggable_auth_client_1.PluggableAuthClient;
+  } });
+  Object.defineProperty(exports, "ExecutableError", { enumerable: true, get: function() {
+    return pluggable_auth_client_1.ExecutableError;
+  } });
+  var externalAccountAuthorizedUserClient_1 = require_externalAccountAuthorizedUserClient();
+  Object.defineProperty(exports, "EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE", { enumerable: true, get: function() {
+    return externalAccountAuthorizedUserClient_1.EXTERNAL_ACCOUNT_AUTHORIZED_USER_TYPE;
+  } });
+  Object.defineProperty(exports, "ExternalAccountAuthorizedUserClient", { enumerable: true, get: function() {
+    return externalAccountAuthorizedUserClient_1.ExternalAccountAuthorizedUserClient;
+  } });
+  var passthrough_1 = require_passthrough();
+  Object.defineProperty(exports, "PassThroughClient", { enumerable: true, get: function() {
+    return passthrough_1.PassThroughClient;
+  } });
+  var gdchclient_1 = require_gdchclient();
+  Object.defineProperty(exports, "GdchClient", { enumerable: true, get: function() {
+    return gdchclient_1.GdchClient;
+  } });
+  Object.defineProperty(exports, "GDCH_SERVICE_ACCOUNT_TYPE", { enumerable: true, get: function() {
+    return gdchclient_1.GDCH_SERVICE_ACCOUNT_TYPE;
+  } });
+  __exportStar(require_googleToken(), exports);
+  var auth = new googleauth_1.GoogleAuth;
+  exports.auth = auth;
+});
+
+// node_modules/firebase-admin/lib/utils/error.js
+var require_error = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.FirebaseError = undefined;
+  exports.toHttpResponse = toHttpResponse;
+  function toHttpResponse(resp) {
+    return {
+      status: resp.status,
+      headers: resp.headers,
+      data: resp.isJson() ? resp.data : resp.text
+    };
+  }
+
+  class FirebaseError extends Error {
+    constructor(errorInfo) {
+      super(errorInfo.message);
+      this.code = errorInfo.code;
+      if (errorInfo.cause !== undefined) {
+        this.cause = errorInfo.cause;
+      }
+      if (errorInfo.httpResponse !== undefined) {
+        this.httpResponse = errorInfo.httpResponse;
+      }
+    }
+    hasCode(code) {
+      if (this.code === code) {
+        return true;
+      }
+      return this.codePrefix != null && this.code === `${this.codePrefix}/${code}`;
+    }
+    toJSON() {
+      const json = {
+        code: this.code,
+        message: this.message
+      };
+      if (this.httpResponse) {
+        json.httpResponse = {
+          status: this.httpResponse.status,
+          headers: this.httpResponse.headers,
+          data: this.httpResponse.data
+        };
+      }
+      if (this.cause) {
+        json.cause = {
+          name: this.cause.name || "Error",
+          message: this.cause.message || String(this.cause),
+          stack: this.cause.stack
+        };
+        if ("errors" in this.cause && Array.isArray(this.cause.errors)) {
+          json.cause.errors = this.cause.errors.map((e) => {
+            if (e instanceof Error) {
+              return { name: e.name, message: e.message, stack: e.stack };
+            }
+            return String(e);
+          });
+        }
+      }
+      return json;
+    }
+  }
+  exports.FirebaseError = FirebaseError;
+});
+
+// node_modules/firebase-admin/lib/app/error.js
+var require_error2 = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * Copyright 2026 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.AppErrorCode = exports.FirebaseAppError = undefined;
+  var error_1 = require_error();
+
+  class FirebaseAppError extends error_1.FirebaseError {
+    constructor(info, message) {
+      super({
+        code: `app/${info.code}`,
+        message: message || info.message,
+        httpResponse: info.httpResponse,
+        cause: info.cause
+      });
+      this.codePrefix = "app";
+    }
+  }
+  exports.FirebaseAppError = FirebaseAppError;
+  exports.AppErrorCode = {
+    APP_DELETED: "app-deleted",
+    DUPLICATE_APP: "duplicate-app",
+    INVALID_ARGUMENT: "invalid-argument",
+    INTERNAL_ERROR: "internal-error",
+    INVALID_APP_NAME: "invalid-app-name",
+    INVALID_APP_OPTIONS: "invalid-app-options",
+    INVALID_CREDENTIAL: "invalid-credential",
+    NETWORK_ERROR: "network-error",
+    NETWORK_TIMEOUT: "network-timeout",
+    NO_APP: "no-app",
+    UNABLE_TO_PARSE_RESPONSE: "unable-to-parse-response"
+  };
+});
+
+// node_modules/firebase-admin/lib/utils/validator.js
+var require_validator = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.isBuffer = isBuffer;
+  exports.isArray = isArray;
+  exports.isNonEmptyArray = isNonEmptyArray;
+  exports.isBoolean = isBoolean;
+  exports.isNumber = isNumber;
+  exports.isString = isString;
+  exports.isBase64String = isBase64String;
+  exports.isNonEmptyString = isNonEmptyString;
+  exports.isObject = isObject;
+  exports.isNonNullObject = isNonNullObject;
+  exports.isUid = isUid;
+  exports.isPassword = isPassword;
+  exports.isEmail = isEmail;
+  exports.isPhoneNumber = isPhoneNumber;
+  exports.isISODateString = isISODateString;
+  exports.isUTCDateString = isUTCDateString;
+  exports.isURL = isURL;
+  exports.isTopic = isTopic;
+  exports.isTaskId = isTaskId;
+  function isBuffer(value) {
+    return value instanceof Buffer;
+  }
+  function isArray(value) {
+    return Array.isArray(value);
+  }
+  function isNonEmptyArray(value) {
+    return isArray(value) && value.length !== 0;
+  }
+  function isBoolean(value) {
+    return typeof value === "boolean";
+  }
+  function isNumber(value) {
+    return typeof value === "number" && !isNaN(value);
+  }
+  function isString(value) {
+    return typeof value === "string";
+  }
+  function isBase64String(value) {
+    if (!isString(value)) {
+      return false;
+    }
+    return /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value);
+  }
+  function isNonEmptyString(value) {
+    return isString(value) && value !== "";
+  }
+  function isObject(value) {
+    return typeof value === "object" && !isArray(value);
+  }
+  function isNonNullObject(value) {
+    return isObject(value) && value !== null;
+  }
+  function isUid(uid) {
+    return typeof uid === "string" && uid.length > 0 && uid.length <= 128;
+  }
+  function isPassword(password) {
+    return typeof password === "string" && password.length >= 6;
+  }
+  function isEmail(email) {
+    if (typeof email !== "string") {
+      return false;
+    }
+    const re = /^[^@]+@[^@]+$/;
+    return re.test(email);
+  }
+  function isPhoneNumber(phoneNumber) {
+    if (typeof phoneNumber !== "string") {
+      return false;
+    }
+    const re1 = /^\+/;
+    const re2 = /[\da-zA-Z]+/;
+    return re1.test(phoneNumber) && re2.test(phoneNumber);
+  }
+  function isISODateString(dateString) {
+    try {
+      return isNonEmptyString(dateString) && new Date(dateString).toISOString() === dateString;
+    } catch (e) {
+      return false;
+    }
+  }
+  function isUTCDateString(dateString) {
+    try {
+      return isNonEmptyString(dateString) && new Date(dateString).toUTCString() === dateString;
+    } catch (e) {
+      return false;
+    }
+  }
+  function isURL(urlStr) {
+    if (typeof urlStr !== "string") {
+      return false;
+    }
+    const re = /[^a-z0-9:/?#[\]@!$&'()*+,;=.\-_~%]/i;
+    if (re.test(urlStr)) {
+      return false;
+    }
+    try {
+      const uri = new URL(urlStr);
+      const scheme = uri.protocol;
+      if (scheme !== "http:" && scheme !== "https:") {
+        return false;
+      }
+      const hostname = uri.hostname;
+      if (!/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/.test(hostname)) {
+        if (!/^\[[a-fA-F0-9:.]+\]$/.test(hostname)) {
+          return false;
+        }
+      }
+      const pathnameRe = /^(\/[\w\-.~!$'()*+,;=:@%]+)*\/?$/;
+      const pathname = uri.pathname;
+      if (pathname && pathname !== "/" && !pathnameRe.test(pathname)) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function isTopic(topic) {
+    if (typeof topic !== "string") {
+      return false;
+    }
+    const VALID_TOPIC_REGEX = /^(\/topics\/)?(private\/)?[a-zA-Z0-9-_.~%]+$/;
+    return VALID_TOPIC_REGEX.test(topic);
+  }
+  function isTaskId(taskId) {
+    if (typeof taskId !== "string") {
+      return false;
+    }
+    const VALID_TASK_ID_REGEX = /^[A-Za-z0-9_-]+$/;
+    return VALID_TASK_ID_REGEX.test(taskId);
+  }
+});
+
+// node_modules/firebase-admin/lib/app/credential-internal.js
+var require_credential_internal = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.ImpersonatedServiceAccountCredential = exports.RefreshTokenCredential = exports.ServiceAccountCredential = exports.ApplicationDefaultCredential = undefined;
+  exports.isApplicationDefault = isApplicationDefault;
+  exports.getApplicationDefault = getApplicationDefault;
+  var fs = __require("fs");
+  var node_crypto_1 = __require("crypto");
+  var google_auth_library_1 = require_src7();
+  var error_1 = require_error2();
+  var util = require_validator();
+  var SCOPES = [
+    "https://www.googleapis.com/auth/cloud-platform",
+    "https://www.googleapis.com/auth/firebase.database",
+    "https://www.googleapis.com/auth/firebase.messaging",
+    "https://www.googleapis.com/auth/identitytoolkit",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ];
+
+  class ApplicationDefaultCredential {
+    constructor(httpAgent) {
+      this.googleAuth = new google_auth_library_1.GoogleAuth({
+        scopes: SCOPES,
+        clientOptions: {
+          transporterOptions: {
+            agent: httpAgent
+          }
+        }
+      });
+    }
+    async getAccessToken() {
+      if (!this.authClient) {
+        this.authClient = await this.googleAuth.getClient();
+      }
+      await this.authClient.getAccessToken();
+      const credentials = this.authClient.credentials;
+      this.quotaProjectId = this.authClient.quotaProjectId;
+      return populateCredential(credentials);
+    }
+    async getProjectId() {
+      if (!this.projectId) {
+        this.projectId = await this.googleAuth.getProjectId();
+      }
+      return Promise.resolve(this.projectId);
+    }
+    getQuotaProjectId() {
+      if (!this.quotaProjectId) {
+        this.quotaProjectId = this.authClient?.quotaProjectId;
+      }
+      return this.quotaProjectId;
+    }
+    async isComputeEngineCredential() {
+      if (!this.authClient) {
+        this.authClient = await this.googleAuth.getClient();
+      }
+      return Promise.resolve(this.authClient instanceof google_auth_library_1.Compute);
+    }
+    async getIDToken(audience) {
+      if (await this.isComputeEngineCredential()) {
+        return this.authClient.fetchIdToken(audience);
+      } else {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: "Credentials type should be Compute Engine Credentials."
+        });
+      }
+    }
+    async getServiceAccountEmail() {
+      if (this.accountId) {
+        return Promise.resolve(this.accountId);
+      }
+      const { client_email: clientEmail } = await this.googleAuth.getCredentials();
+      this.accountId = clientEmail ?? "";
+      return Promise.resolve(this.accountId);
+    }
+  }
+  exports.ApplicationDefaultCredential = ApplicationDefaultCredential;
+
+  class ServiceAccountCredential {
+    constructor(serviceAccountPathOrObject, httpAgent, implicit = false) {
+      this.serviceAccountPathOrObject = serviceAccountPathOrObject;
+      this.httpAgent = httpAgent;
+      this.implicit = implicit;
+      const serviceAccount = typeof serviceAccountPathOrObject === "string" ? ServiceAccount.fromPath(serviceAccountPathOrObject) : new ServiceAccount(serviceAccountPathOrObject);
+      this.projectId = serviceAccount.projectId;
+      this.privateKey = serviceAccount.privateKey;
+      this.clientEmail = serviceAccount.clientEmail;
+    }
+    getGoogleAuth() {
+      if (this.googleAuth) {
+        return this.googleAuth;
+      }
+      const { auth, client } = populateGoogleAuth(this.serviceAccountPathOrObject, this.httpAgent);
+      this.googleAuth = auth;
+      this.authClient = client;
+      return this.googleAuth;
+    }
+    async getAccessToken() {
+      const googleAuth = this.getGoogleAuth();
+      if (this.authClient === undefined) {
+        this.authClient = await googleAuth.getClient();
+      }
+      await this.authClient.getAccessToken();
+      const credentials = this.authClient.credentials;
+      return populateCredential(credentials);
+    }
+  }
+  exports.ServiceAccountCredential = ServiceAccountCredential;
+
+  class ServiceAccount {
+    static fromPath(filePath) {
+      try {
+        return new ServiceAccount(JSON.parse(fs.readFileSync(filePath, "utf8")));
+      } catch (error) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: `Failed to parse service account json file: ${error.message}`,
+          cause: error
+        });
+      }
+    }
+    constructor(json) {
+      if (!util.isNonNullObject(json)) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: "Service account must be an object."
+        });
+      }
+      copyAttr(this, json, "projectId", "project_id");
+      copyAttr(this, json, "privateKey", "private_key");
+      copyAttr(this, json, "clientEmail", "client_email");
+      let errorMessage;
+      if (!util.isNonEmptyString(this.projectId)) {
+        errorMessage = 'Service account object must contain a string "project_id" property.';
+      } else if (!util.isNonEmptyString(this.privateKey)) {
+        errorMessage = 'Service account object must contain a string "private_key" property.';
+      } else if (!util.isNonEmptyString(this.clientEmail)) {
+        errorMessage = 'Service account object must contain a string "client_email" property.';
+      }
+      if (typeof errorMessage !== "undefined") {
+        throw new error_1.FirebaseAppError({ code: error_1.AppErrorCode.INVALID_CREDENTIAL, message: errorMessage });
+      }
+      try {
+        (0, node_crypto_1.createPrivateKey)(this.privateKey);
+      } catch (error) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: "Failed to parse private key.",
+          cause: error
+        });
+      }
+    }
+  }
+
+  class RefreshTokenCredential {
+    constructor(refreshTokenPathOrObject, httpAgent, implicit = false) {
+      this.refreshTokenPathOrObject = refreshTokenPathOrObject;
+      this.httpAgent = httpAgent;
+      this.implicit = implicit;
+      typeof refreshTokenPathOrObject === "string" ? RefreshToken.validateFromPath(refreshTokenPathOrObject) : RefreshToken.validateFromJSON(refreshTokenPathOrObject);
+    }
+    getGoogleAuth() {
+      if (this.googleAuth) {
+        return this.googleAuth;
+      }
+      const { auth, client } = populateGoogleAuth(this.refreshTokenPathOrObject, this.httpAgent);
+      this.googleAuth = auth;
+      this.authClient = client;
+      return this.googleAuth;
+    }
+    async getAccessToken() {
+      const googleAuth = this.getGoogleAuth();
+      if (this.authClient === undefined) {
+        this.authClient = await googleAuth.getClient();
+      }
+      await this.authClient.getAccessToken();
+      const credentials = this.authClient.credentials;
+      return populateCredential(credentials);
+    }
+  }
+  exports.RefreshTokenCredential = RefreshTokenCredential;
+
+  class RefreshToken {
+    static validateFromPath(filePath) {
+      try {
+        RefreshToken.validateFromJSON(JSON.parse(fs.readFileSync(filePath, "utf8")));
+      } catch (error) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: "Failed to parse refresh token file.",
+          cause: error
+        });
+      }
+    }
+    static validateFromJSON(json) {
+      const creds = { clientId: "", clientSecret: "", refreshToken: "", type: "" };
+      copyAttr(creds, json, "clientId", "client_id");
+      copyAttr(creds, json, "clientSecret", "client_secret");
+      copyAttr(creds, json, "refreshToken", "refresh_token");
+      copyAttr(creds, json, "type", "type");
+      let errorMessage;
+      if (!util.isNonEmptyString(creds.clientId)) {
+        errorMessage = 'Refresh token must contain a "client_id" property.';
+      } else if (!util.isNonEmptyString(creds.clientSecret)) {
+        errorMessage = 'Refresh token must contain a "client_secret" property.';
+      } else if (!util.isNonEmptyString(creds.refreshToken)) {
+        errorMessage = 'Refresh token must contain a "refresh_token" property.';
+      } else if (!util.isNonEmptyString(creds.type)) {
+        errorMessage = 'Refresh token must contain a "type" property.';
+      }
+      if (typeof errorMessage !== "undefined") {
+        throw new error_1.FirebaseAppError({ code: error_1.AppErrorCode.INVALID_CREDENTIAL, message: errorMessage });
+      }
+    }
+  }
+
+  class ImpersonatedServiceAccountCredential {
+    constructor(impersonatedServiceAccountPathOrObject, httpAgent, implicit = false) {
+      this.impersonatedServiceAccountPathOrObject = impersonatedServiceAccountPathOrObject;
+      this.httpAgent = httpAgent;
+      this.implicit = implicit;
+      typeof impersonatedServiceAccountPathOrObject === "string" ? ImpersonatedServiceAccount.validateFromPath(impersonatedServiceAccountPathOrObject) : ImpersonatedServiceAccount.validateFromJSON(impersonatedServiceAccountPathOrObject);
+    }
+    getGoogleAuth() {
+      if (this.googleAuth) {
+        return this.googleAuth;
+      }
+      const { auth, client } = populateGoogleAuth(this.impersonatedServiceAccountPathOrObject, this.httpAgent);
+      this.googleAuth = auth;
+      this.authClient = client;
+      return this.googleAuth;
+    }
+    async getAccessToken() {
+      const googleAuth = this.getGoogleAuth();
+      if (this.authClient === undefined) {
+        this.authClient = await googleAuth.getClient();
+      }
+      await this.authClient.getAccessToken();
+      const credentials = this.authClient.credentials;
+      return populateCredential(credentials);
+    }
+  }
+  exports.ImpersonatedServiceAccountCredential = ImpersonatedServiceAccountCredential;
+
+  class ImpersonatedServiceAccount {
+    static validateFromPath(filePath) {
+      try {
+        ImpersonatedServiceAccount.validateFromJSON(JSON.parse(fs.readFileSync(filePath, "utf8")));
+      } catch (error) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: "Failed to parse impersonated service account file.",
+          cause: error
+        });
+      }
+    }
+    static validateFromJSON(json) {
+      const { client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, type } = json["source_credentials"];
+      let errorMessage;
+      if (!util.isNonEmptyString(clientId)) {
+        errorMessage = 'Impersonated Service Account must contain a "source_credentials.client_id" property.';
+      } else if (!util.isNonEmptyString(clientSecret)) {
+        errorMessage = 'Impersonated Service Account must contain a "source_credentials.client_secret" property.';
+      } else if (!util.isNonEmptyString(refreshToken)) {
+        errorMessage = 'Impersonated Service Account must contain a "source_credentials.refresh_token" property.';
+      } else if (!util.isNonEmptyString(type)) {
+        errorMessage = 'Impersonated Service Account must contain a "source_credentials.type" property.';
+      }
+      if (typeof errorMessage !== "undefined") {
+        throw new error_1.FirebaseAppError({ code: error_1.AppErrorCode.INVALID_CREDENTIAL, message: errorMessage });
+      }
+    }
+  }
+  function isApplicationDefault(credential) {
+    return credential instanceof ApplicationDefaultCredential || credential instanceof RefreshTokenCredential && credential.implicit;
+  }
+  function getApplicationDefault(httpAgent) {
+    return new ApplicationDefaultCredential(httpAgent);
+  }
+  function copyAttr(to, from, key, alt) {
+    const tmp = from[key] || from[alt];
+    if (typeof tmp !== "undefined") {
+      to[key] = tmp;
+    }
+  }
+  function populateGoogleAuth(keyFile, httpAgent) {
+    let client;
+    const auth = new google_auth_library_1.GoogleAuth({
+      scopes: SCOPES,
+      clientOptions: {
+        transporterOptions: {
+          agent: httpAgent
+        }
+      },
+      keyFile: typeof keyFile === "string" ? keyFile : undefined
+    });
+    if (typeof keyFile === "object") {
+      if (!util.isNonNullObject(keyFile)) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: "Service account must be an object."
+        });
+      }
+      copyAttr(keyFile, keyFile, "project_id", "projectId");
+      copyAttr(keyFile, keyFile, "private_key", "privateKey");
+      copyAttr(keyFile, keyFile, "client_email", "clientEmail");
+      client = auth.fromJSON(keyFile);
+    }
+    return { auth, client };
+  }
+  function populateCredential(credentials) {
+    const accessToken = credentials?.access_token;
+    const expiryDate = credentials?.expiry_date;
+    if (typeof accessToken !== "string")
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+        message: "Failed to parse Google auth credential: access_token must be a non empty string."
+      });
+    if (typeof expiryDate !== "number")
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+        message: "Failed to parse Google auth credential: Invalid expiry_date."
+      });
+    return {
+      ...credentials,
+      access_token: accessToken,
+      expires_in: Math.floor((expiryDate - new Date().getTime()) / 1000)
+    };
+  }
+});
+
+// node_modules/firebase-admin/package.json
+var require_package3 = __commonJS(function(exports, module) {
+  module.exports = {
+    name: "firebase-admin",
+    version: "14.5.0",
+    description: "Firebase admin SDK for Node.js",
+    author: "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
+    license: "Apache-2.0",
+    homepage: "https://firebase.google.com/",
+    engines: {
+      node: ">=22"
+    },
+    scripts: {
+      build: "gulp build",
+      "build:tests": "gulp compile_test",
+      prepare: "npm run build && npm run esm-wrap",
+      lint: "run-p lint:src lint:test",
+      test: "run-s lint test:unit",
+      integration: "run-s build test:integration",
+      "test:unit": "mocha test/unit/*.spec.ts --require ts-node/register",
+      "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register",
+      "test:coverage": "nyc npm run test:unit",
+      "lint:src": "eslint src/",
+      "lint:src:fix": "eslint src/ --fix",
+      "lint:test": "eslint test/",
+      "lint:test:fix": "eslint test/ --fix",
+      apidocs: "run-s api-extractor:local api-documenter",
+      "api-extractor": "node generate-reports.js",
+      "api-extractor:local": "npm run build && node generate-reports.js --local",
+      "esm-wrap": "node generate-esm-wrapper.js",
+      "api-documenter": "run-s api-documenter:markdown api-documenter:toc api-documenter:post",
+      "api-documenter:markdown": "api-documenter-fire markdown --input temp --output docgen/markdown -s --project admin",
+      "api-documenter:toc": "api-documenter-fire toc --input temp --output docgen/markdown -p /docs/reference/admin/node -s",
+      "api-documenter:post": "node docgen/post-process.js"
+    },
+    nyc: {
+      extension: [
+        ".ts"
+      ],
+      include: [
+        "src"
+      ],
+      exclude: [
+        "**/*.d.ts"
+      ],
+      all: true
+    },
+    keywords: [
+      "admin",
+      "database",
+      "Firebase",
+      "realtime",
+      "authentication"
+    ],
+    repository: {
+      type: "git",
+      url: "https://github.com/firebase/firebase-admin-node"
+    },
+    main: "lib/index.js",
+    files: [
+      "lib/",
+      "LICENSE",
+      "README.md",
+      "package.json"
+    ],
+    types: "./lib/index.d.ts",
+    typesVersions: {
+      "*": {
+        app: [
+          "lib/app"
+        ],
+        "app-check": [
+          "lib/app-check"
+        ],
+        auth: [
+          "lib/auth"
+        ],
+        "phone-number-verification": [
+          "lib/phone-number-verification"
+        ],
+        eventarc: [
+          "lib/eventarc"
+        ],
+        extensions: [
+          "lib/extensions"
+        ],
+        database: [
+          "lib/database"
+        ],
+        "data-connect": [
+          "lib/data-connect"
+        ],
+        firestore: [
+          "lib/firestore"
+        ],
+        functions: [
+          "lib/functions"
+        ],
+        installations: [
+          "lib/installations"
+        ],
+        "machine-learning": [
+          "lib/machine-learning"
+        ],
+        messaging: [
+          "lib/messaging"
+        ],
+        "project-management": [
+          "lib/project-management"
+        ],
+        "remote-config": [
+          "lib/remote-config"
+        ],
+        "security-rules": [
+          "lib/security-rules"
+        ],
+        storage: [
+          "lib/storage"
+        ]
+      }
+    },
+    exports: {
+      ".": "./lib/index.js",
+      "./app": {
+        types: "./lib/app/index.d.ts",
+        require: "./lib/app/index.js",
+        import: "./lib/esm/app/index.js"
+      },
+      "./app-check": {
+        types: "./lib/app-check/index.d.ts",
+        require: "./lib/app-check/index.js",
+        import: "./lib/esm/app-check/index.js"
+      },
+      "./auth": {
+        types: "./lib/auth/index.d.ts",
+        require: "./lib/auth/index.js",
+        import: "./lib/esm/auth/index.js"
+      },
+      "./phone-number-verification": {
+        types: "./lib/phone-number-verification/index.d.ts",
+        require: "./lib/phone-number-verification/index.js",
+        import: "./lib/esm/phone-number-verification/index.js"
+      },
+      "./database": {
+        types: "./lib/database/index.d.ts",
+        require: "./lib/database/index.js",
+        import: "./lib/esm/database/index.js"
+      },
+      "./data-connect": {
+        types: "./lib/data-connect/index.d.ts",
+        require: "./lib/data-connect/index.js",
+        import: "./lib/esm/data-connect/index.js"
+      },
+      "./eventarc": {
+        types: "./lib/eventarc/index.d.ts",
+        require: "./lib/eventarc/index.js",
+        import: "./lib/esm/eventarc/index.js"
+      },
+      "./extensions": {
+        types: "./lib/extensions/index.d.ts",
+        require: "./lib/extensions/index.js",
+        import: "./lib/esm/extensions/index.js"
+      },
+      "./firestore": {
+        types: "./lib/firestore/index.d.ts",
+        require: "./lib/firestore/index.js",
+        import: "./lib/esm/firestore/index.js"
+      },
+      "./functions": {
+        types: "./lib/functions/index.d.ts",
+        require: "./lib/functions/index.js",
+        import: "./lib/esm/functions/index.js"
+      },
+      "./installations": {
+        types: "./lib/installations/index.d.ts",
+        require: "./lib/installations/index.js",
+        import: "./lib/esm/installations/index.js"
+      },
+      "./machine-learning": {
+        types: "./lib/machine-learning/index.d.ts",
+        require: "./lib/machine-learning/index.js",
+        import: "./lib/esm/machine-learning/index.js"
+      },
+      "./messaging": {
+        types: "./lib/messaging/index.d.ts",
+        require: "./lib/messaging/index.js",
+        import: "./lib/esm/messaging/index.js"
+      },
+      "./project-management": {
+        types: "./lib/project-management/index.d.ts",
+        require: "./lib/project-management/index.js",
+        import: "./lib/esm/project-management/index.js"
+      },
+      "./remote-config": {
+        types: "./lib/remote-config/index.d.ts",
+        require: "./lib/remote-config/index.js",
+        import: "./lib/esm/remote-config/index.js"
+      },
+      "./security-rules": {
+        types: "./lib/security-rules/index.d.ts",
+        require: "./lib/security-rules/index.js",
+        import: "./lib/esm/security-rules/index.js"
+      },
+      "./storage": {
+        types: "./lib/storage/index.d.ts",
+        require: "./lib/storage/index.js",
+        import: "./lib/esm/storage/index.js"
+      }
+    },
+    dependencies: {
+      "@fastify/busboy": "^3.0.0",
+      "@firebase/database-compat": "^2.1.4",
+      "@firebase/database-types": "^1.0.20",
+      "fast-deep-equal": "^3.1.1",
+      "google-auth-library": "^11.1.0",
+      jsonwebtoken: "^9.0.0",
+      "jwks-rsa": "^4.0.1"
+    },
+    optionalDependencies: {
+      "@google-cloud/firestore": "^9.1.0",
+      "@google-cloud/storage": "^8.1.0"
+    },
+    devDependencies: {
+      "@eslint/js": "^10.0.1",
+      "@firebase/api-documenter": "^0.5.0",
+      "@firebase/app-compat": "^0.5.12",
+      "@firebase/auth-compat": "^0.6.6",
+      "@firebase/auth-types": "^0.13.1",
+      "@microsoft/api-extractor": "^7.11.2",
+      "@types/bcrypt": "^6.0.0",
+      "@types/chai": "^4.0.0",
+      "@types/chai-as-promised": "^7.1.0",
+      "@types/firebase-token-generator": "^2.0.28",
+      "@types/jsonwebtoken": "8.5.9",
+      "@types/lodash": "^4.14.104",
+      "@types/minimist": "^1.2.2",
+      "@types/mocha": "^10.0.0",
+      "@types/nock": "^11.1.0",
+      "@types/node": "^26.0.0",
+      "@types/sinon": "^22.0.0",
+      "@types/sinon-chai": "^3.0.0",
+      "@typescript-eslint/eslint-plugin": "^8.67.0",
+      "@typescript-eslint/parser": "^8.67.0",
+      bcrypt: "^6.0.0",
+      chai: "^4.2.0",
+      "chai-as-promised": "^7.0.0",
+      "chai-exclude": "^2.1.0",
+      chalk: "^4.1.1",
+      "child-process-promise": "^2.2.1",
+      del: "^6.0.0",
+      eslint: "^10.3.0",
+      "firebase-token-generator": "^2.0.0",
+      globals: "^17.6.0",
+      gulp: "^5.0.0",
+      "gulp-filter": "^7.0.0",
+      "gulp-header": "^2.0.9",
+      "gulp-typescript": "^5.0.1",
+      "http-message-parser": "^0.0.34",
+      lodash: "^4.17.15",
+      minimist: "^1.2.6",
+      mocha: "^11.0.0",
+      mz: "^2.7.0",
+      nock: "^14.0.15",
+      "npm-run-all": "^4.1.5",
+      nyc: "^18.0.0",
+      "run-sequence": "^2.2.1",
+      sinon: "^22.0.0",
+      "sinon-chai": "^3.0.0",
+      "ts-node": "^10.2.0",
+      typescript: "^5.7.3",
+      "typescript-eslint": "^8.67.0",
+      yargs: "^17.0.1"
+    }
+  };
+});
+
+// node_modules/firebase-admin/lib/utils/index.js
+var require_utils6 = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.getSdkVersion = getSdkVersion;
+  exports.getMetricsHeader = getMetricsHeader;
+  exports.renameProperties = renameProperties;
+  exports.addReadonlyGetter = addReadonlyGetter;
+  exports.getExplicitProjectId = getExplicitProjectId;
+  exports.findProjectId = findProjectId;
+  exports.getExplicitServiceAccountEmail = getExplicitServiceAccountEmail;
+  exports.findServiceAccountEmail = findServiceAccountEmail;
+  exports.toWebSafeBase64 = toWebSafeBase64;
+  exports.formatString = formatString;
+  exports.generateUpdateMask = generateUpdateMask;
+  exports.transformMillisecondsToSecondsString = transformMillisecondsToSecondsString;
+  exports.parseResourceName = parseResourceName;
+  var credential_internal_1 = require_credential_internal();
+  var validator = require_validator();
+  var sdkVersion;
+  function getSdkVersion() {
+    if (!sdkVersion) {
+      const { version } = require_package3();
+      sdkVersion = version;
+    }
+    return sdkVersion;
+  }
+  function getMetricsHeader() {
+    return `gl-node/${process.versions.node} fire-admin/${getSdkVersion()}`;
+  }
+  function renameProperties(obj, keyMap) {
+    Object.keys(keyMap).forEach((oldKey) => {
+      if (oldKey in obj) {
+        const newKey = keyMap[oldKey];
+        obj[newKey] = obj[oldKey];
+        delete obj[oldKey];
+      }
+    });
+  }
+  function addReadonlyGetter(obj, prop, value) {
+    Object.defineProperty(obj, prop, {
+      value,
+      writable: false,
+      enumerable: true
+    });
+  }
+  function getExplicitProjectId(app) {
+    const options = app.options;
+    if (validator.isNonEmptyString(options.projectId)) {
+      return options.projectId;
+    }
+    const credential = app.options.credential;
+    if (credential instanceof credential_internal_1.ServiceAccountCredential) {
+      return credential.projectId;
+    }
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+    if (validator.isNonEmptyString(projectId)) {
+      return projectId;
+    }
+    return null;
+  }
+  function findProjectId(app) {
+    const projectId = getExplicitProjectId(app);
+    if (projectId) {
+      return Promise.resolve(projectId);
+    }
+    const credential = app.options.credential;
+    if (credential instanceof credential_internal_1.ApplicationDefaultCredential) {
+      return credential.getProjectId();
+    }
+    return Promise.resolve(null);
+  }
+  function getExplicitServiceAccountEmail(app) {
+    const options = app.options;
+    if (validator.isNonEmptyString(options.serviceAccountId)) {
+      return options.serviceAccountId;
+    }
+    const credential = app.options.credential;
+    if (credential instanceof credential_internal_1.ServiceAccountCredential) {
+      return credential.clientEmail;
+    }
+    return null;
+  }
+  function findServiceAccountEmail(app) {
+    const accountId = getExplicitServiceAccountEmail(app);
+    if (accountId) {
+      return Promise.resolve(accountId);
+    }
+    const credential = app.options.credential;
+    if (credential instanceof credential_internal_1.ApplicationDefaultCredential) {
+      return credential.getServiceAccountEmail();
+    }
+    return Promise.resolve(null);
+  }
+  function toWebSafeBase64(data) {
+    return data.toString("base64").replace(/\//g, "_").replace(/\+/g, "-");
+  }
+  function formatString(str, params) {
+    let formatted = str;
+    Object.keys(params || {}).forEach((key) => {
+      formatted = formatted.replace(new RegExp("{" + key + "}", "g"), params[key]);
+    });
+    return formatted;
+  }
+  function generateUpdateMask(obj, terminalPaths = [], root = "") {
+    const updateMask = [];
+    if (!validator.isNonNullObject(obj)) {
+      return updateMask;
+    }
+    for (const key in obj) {
+      if (typeof obj[key] !== "undefined") {
+        const nextPath = root ? `${root}.${key}` : key;
+        if (terminalPaths.indexOf(nextPath) !== -1) {
+          updateMask.push(key);
+        } else {
+          const maskList = generateUpdateMask(obj[key], terminalPaths, nextPath);
+          if (maskList.length > 0) {
+            maskList.forEach((mask) => {
+              updateMask.push(`${key}.${mask}`);
+            });
+          } else {
+            updateMask.push(key);
+          }
+        }
+      }
+    }
+    return updateMask;
+  }
+  function transformMillisecondsToSecondsString(milliseconds) {
+    let duration;
+    const seconds = Math.floor(milliseconds / 1000);
+    const nanos = Math.floor((milliseconds - seconds * 1000) * 1e6);
+    if (nanos > 0) {
+      let nanoString = nanos.toString();
+      while (nanoString.length < 9) {
+        nanoString = "0" + nanoString;
+      }
+      duration = `${seconds}.${nanoString}s`;
+    } else {
+      duration = `${seconds}s`;
+    }
+    return duration;
+  }
+  function parseResourceName(resourceName, resourceIdKey) {
+    if (!resourceName.includes("/")) {
+      return { resourceId: resourceName };
+    }
+    const CHANNEL_NAME_REGEX = new RegExp(`^(projects/([^/]+)/)?locations/([^/]+)/${resourceIdKey}/([^/]+)$`);
+    const match = CHANNEL_NAME_REGEX.exec(resourceName);
+    if (match === null) {
+      throw new Error("Invalid resource name format.");
+    }
+    const projectId = match[2];
+    const locationId = match[3];
+    const resourceId = match[4];
+    return { projectId, locationId, resourceId };
+  }
+});
+
+// node_modules/firebase-admin/lib/utils/deep-copy.js
+var require_deep_copy = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.deepCopy = deepCopy;
+  exports.deepExtend = deepExtend;
+  function deepCopy(value) {
+    return deepExtend(undefined, value);
+  }
+  function deepExtend(target, source) {
+    if (!(source instanceof Object)) {
+      return source;
+    }
+    switch (source.constructor) {
+      case Date: {
+        const dateValue = source;
+        return new Date(dateValue.getTime());
+      }
+      case Object:
+        if (target === undefined) {
+          target = {};
+        }
+        break;
+      case Array:
+        target = [];
+        break;
+      default:
+        return source;
+    }
+    for (const prop in source) {
+      if (!Object.prototype.hasOwnProperty.call(source, prop)) {
+        continue;
+      }
+      target[prop] = deepExtend(target[prop], source[prop]);
+    }
+    return target;
+  }
+});
+
+// node_modules/firebase-admin/lib/app/firebase-app.js
+var require_firebase_app = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.FirebaseApp = exports.FirebaseAppInternals = undefined;
+  var credential_internal_1 = require_credential_internal();
+  var validator = require_validator();
+  var deep_copy_1 = require_deep_copy();
+  var error_1 = require_error2();
+  var TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
+
+  class FirebaseAppInternals {
+    constructor(credential_) {
+      this.credential_ = credential_;
+      this.tokenListeners_ = [];
+      this.isRefreshing = false;
+    }
+    getToken(forceRefresh = false) {
+      if (forceRefresh || this.shouldRefresh()) {
+        this.promiseToCachedToken_ = this.refreshToken();
+      }
+      return this.promiseToCachedToken_;
+    }
+    getCachedToken() {
+      return this.cachedToken_ || null;
+    }
+    refreshToken() {
+      this.isRefreshing = true;
+      return Promise.resolve(this.credential_.getAccessToken()).then((result) => {
+        if (!validator.isNonNullObject(result) || typeof result.expires_in !== "number" || typeof result.access_token !== "string") {
+          throw new error_1.FirebaseAppError({
+            code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+            message: `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` + 'tokens must be an object with the "expires_in" (number) and "access_token" ' + "(string) properties."
+          });
+        }
+        const token = {
+          accessToken: result.access_token,
+          expirationTime: Date.now() + result.expires_in * 1000
+        };
+        if (!this.cachedToken_ || this.cachedToken_.accessToken !== token.accessToken || this.cachedToken_.expirationTime !== token.expirationTime) {
+          this.cachedToken_ = token;
+          this.tokenListeners_.forEach((listener) => {
+            listener(token.accessToken);
+          });
+        }
+        return token;
+      }).catch((error) => {
+        let errorMessage = typeof error === "string" ? error : error.message;
+        errorMessage = "Credential implementation provided to initializeApp() via the " + '"credential" property failed to fetch a valid Google OAuth2 access token with the ' + `following error: "${errorMessage}".`;
+        if (errorMessage.indexOf("invalid_grant") !== -1) {
+          errorMessage += " There are two likely causes: (1) your server time is not properly " + "synced or (2) your certificate key file has been revoked. To solve (1), re-sync the " + "time on your server. To solve (2), make sure the key ID for your key file is still " + "present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If " + "not, generate a new key file at " + "https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.";
+        }
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_CREDENTIAL,
+          message: errorMessage,
+          cause: error
+        });
+      }).finally(() => {
+        this.isRefreshing = false;
+      });
+    }
+    shouldRefresh() {
+      return (!this.cachedToken_ || this.cachedToken_.expirationTime - Date.now() <= TOKEN_EXPIRY_THRESHOLD_MILLIS) && !this.isRefreshing;
+    }
+    addAuthTokenListener(listener) {
+      this.tokenListeners_.push(listener);
+      if (this.cachedToken_) {
+        listener(this.cachedToken_.accessToken);
+      }
+    }
+    removeAuthTokenListener(listener) {
+      this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
+    }
+  }
+  exports.FirebaseAppInternals = FirebaseAppInternals;
+
+  class FirebaseApp {
+    constructor(options, name, autoInit = false, appStore) {
+      this.appStore = appStore;
+      this.services_ = {};
+      this.isDeleted_ = false;
+      this.autoInit_ = false;
+      this.customCredential_ = true;
+      this.name_ = name;
+      this.options_ = (0, deep_copy_1.deepCopy)(options);
+      this.autoInit_ = autoInit;
+      if (!validator.isNonNullObject(this.options_)) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+          message: "Invalid Firebase app options passed as the first argument to initializeApp() for the " + `app named "${this.name_}". Options must be a non-null object.`
+        });
+      }
+      const hasCredential = "credential" in this.options_;
+      if (!hasCredential) {
+        this.customCredential_ = false;
+        this.options_.credential = (0, credential_internal_1.getApplicationDefault)(this.options_.httpAgent);
+      }
+      const credential = this.options_.credential;
+      if (typeof credential !== "object" || credential === null || typeof credential.getAccessToken !== "function") {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+          message: "Invalid Firebase app options passed as the first argument to initializeApp() for the " + `app named "${this.name_}". The "credential" property must be an object which implements ` + "the Credential interface."
+        });
+      }
+      this.INTERNAL = new FirebaseAppInternals(credential);
+    }
+    get name() {
+      this.checkDestroyed_();
+      return this.name_;
+    }
+    get options() {
+      this.checkDestroyed_();
+      return (0, deep_copy_1.deepCopy)(this.options_);
+    }
+    getOrInitService(name, init) {
+      return this.ensureService_(name, () => init(this));
+    }
+    autoInit() {
+      return this.autoInit_;
+    }
+    customCredential() {
+      return this.customCredential_;
+    }
+    delete() {
+      this.checkDestroyed_();
+      this.appStore?.removeApp(this.name);
+      return Promise.all(Object.keys(this.services_).map((serviceName) => {
+        const service = this.services_[serviceName];
+        if (isStateful(service)) {
+          return service.delete();
+        }
+        return Promise.resolve();
+      })).then(() => {
+        this.services_ = {};
+        this.isDeleted_ = true;
+      });
+    }
+    ensureService_(serviceName, initializer) {
+      this.checkDestroyed_();
+      if (!(serviceName in this.services_)) {
+        this.services_[serviceName] = initializer();
+      }
+      return this.services_[serviceName];
+    }
+    checkDestroyed_() {
+      if (this.isDeleted_) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.APP_DELETED,
+          message: `Firebase app named "${this.name_}" has already been deleted.`
+        });
+      }
+    }
+  }
+  exports.FirebaseApp = FirebaseApp;
+  function isStateful(service) {
+    return typeof service.delete === "function";
+  }
+});
+
+// node_modules/fast-deep-equal/index.js
+var require_fast_deep_equal = __commonJS(function(exports, module) {
+  module.exports = function equal(a, b) {
+    if (a === b)
+      return true;
+    if (a && b && typeof a == "object" && typeof b == "object") {
+      if (a.constructor !== b.constructor)
+        return false;
+      var length, i, keys;
+      if (Array.isArray(a)) {
+        length = a.length;
+        if (length != b.length)
+          return false;
+        for (i = length;i-- !== 0; )
+          if (!equal(a[i], b[i]))
+            return false;
+        return true;
+      }
+      if (a.constructor === RegExp)
+        return a.source === b.source && a.flags === b.flags;
+      if (a.valueOf !== Object.prototype.valueOf)
+        return a.valueOf() === b.valueOf();
+      if (a.toString !== Object.prototype.toString)
+        return a.toString() === b.toString();
+      keys = Object.keys(a);
+      length = keys.length;
+      if (length !== Object.keys(b).length)
+        return false;
+      for (i = length;i-- !== 0; )
+        if (!Object.prototype.hasOwnProperty.call(b, keys[i]))
+          return false;
+      for (i = length;i-- !== 0; ) {
+        var key = keys[i];
+        if (!equal(a[key], b[key]))
+          return false;
+      }
+      return true;
+    }
+    return a !== a && b !== b;
+  };
+});
+
+// node_modules/firebase-admin/lib/app/lifecycle.js
+var require_lifecycle = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2021 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.FIREBASE_CONFIG_VAR = exports.defaultAppStore = exports.AppStore = undefined;
+  exports.initializeApp = initializeApp;
+  exports.getApp = getApp;
+  exports.getApps = getApps;
+  exports.deleteApp = deleteApp;
+  var fs = __require("fs");
+  var validator = require_validator();
+  var error_1 = require_error2();
+  var credential_internal_1 = require_credential_internal();
+  var firebase_app_1 = require_firebase_app();
+  var fastDeepEqual = require_fast_deep_equal();
+  var DEFAULT_APP_NAME = "[DEFAULT]";
+
+  class AppStore {
+    constructor() {
+      this.appStore = new Map;
+    }
+    initializeApp(options, appName = DEFAULT_APP_NAME) {
+      validateAppNameFormat(appName);
+      let autoInit = false;
+      if (typeof options === "undefined") {
+        autoInit = true;
+        options = loadOptionsFromEnvVar();
+        options.credential = (0, credential_internal_1.getApplicationDefault)();
+      }
+      if (!this.appStore.has(appName)) {
+        const app = new firebase_app_1.FirebaseApp(options, appName, autoInit, this);
+        this.appStore.set(app.name, app);
+        return app;
+      }
+      const currentApp = this.appStore.get(appName);
+      if (currentApp.autoInit() !== autoInit) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+          message: `A Firebase app named "${appName}" already exists with a different configuration.`
+        });
+      }
+      if (autoInit) {
+        return currentApp;
+      }
+      validateAppOptionsSupportDeepEquals(options, currentApp);
+      const currentAppOptions = { ...currentApp.options };
+      delete currentAppOptions.credential;
+      if (!fastDeepEqual(options, currentAppOptions)) {
+        throw new error_1.FirebaseAppError({
+          code: error_1.AppErrorCode.DUPLICATE_APP,
+          message: `A Firebase app named "${appName}" already exists with a different configuration.`
+        });
+      }
+      return currentApp;
+    }
+    getApp(appName = DEFAULT_APP_NAME) {
+      validateAppNameFormat(appName);
+      if (!this.appStore.has(appName)) {
+        let errorMessage = appName === DEFAULT_APP_NAME ? "The default Firebase app does not exist. " : `Firebase app named "${appName}" does not exist. `;
+        errorMessage += "Make sure you call initializeApp() before using any of the Firebase services.";
+        throw new error_1.FirebaseAppError({ code: error_1.AppErrorCode.NO_APP, message: errorMessage });
+      }
+      return this.appStore.get(appName);
+    }
+    getApps() {
+      return Array.from(this.appStore.values());
+    }
+    deleteApp(app) {
+      if (typeof app !== "object" || app === null || !("options" in app)) {
+        throw new error_1.FirebaseAppError({ code: error_1.AppErrorCode.INVALID_ARGUMENT, message: "Invalid app argument." });
+      }
+      const existingApp = getApp(app.name);
+      return existingApp.delete();
+    }
+    clearAllApps() {
+      const promises = [];
+      this.getApps().forEach((app) => {
+        promises.push(this.deleteApp(app));
+      });
+      return Promise.all(promises).then();
+    }
+    removeApp(appName) {
+      this.appStore.delete(appName);
+    }
+  }
+  exports.AppStore = AppStore;
+  function validateAppOptionsSupportDeepEquals(requestedOptions, existingApp) {
+    if (typeof requestedOptions.httpAgent !== "undefined") {
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+        message: `Firebase app named "${existingApp.name}" already exists and initializeApp was` + " invoked with an optional http.Agent. The SDK cannot confirm the equality" + " of http.Agent objects with the existing app. Please use getApp or getApps to reuse" + " the existing app instead."
+      });
+    } else if (typeof existingApp.options.httpAgent !== "undefined") {
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+        message: `An existing app named "${existingApp.name}" already exists with a different` + " options configuration: httpAgent."
+      });
+    }
+    if (typeof requestedOptions.credential !== "undefined") {
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+        message: `Firebase app named "${existingApp.name}" already exists and initializeApp was` + " invoked with an optional Credential. The SDK cannot confirm the equality" + " of Credential objects with the existing app. Please use getApp or getApps" + " to reuse the existing app instead."
+      });
+    }
+    if (existingApp.customCredential()) {
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+        message: `An existing app named "${existingApp.name}" already exists with a different` + " options configuration: Credential."
+      });
+    }
+  }
+  function validateAppNameFormat(appName) {
+    if (!validator.isNonEmptyString(appName)) {
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_APP_NAME,
+        message: `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`
+      });
+    }
+  }
+  exports.defaultAppStore = new AppStore;
+  function initializeApp(options, appName = DEFAULT_APP_NAME) {
+    return exports.defaultAppStore.initializeApp(options, appName);
+  }
+  function getApp(appName = DEFAULT_APP_NAME) {
+    return exports.defaultAppStore.getApp(appName);
+  }
+  function getApps() {
+    return exports.defaultAppStore.getApps();
+  }
+  function deleteApp(app) {
+    return exports.defaultAppStore.deleteApp(app);
+  }
+  exports.FIREBASE_CONFIG_VAR = "FIREBASE_CONFIG";
+  function loadOptionsFromEnvVar() {
+    const config = process.env[exports.FIREBASE_CONFIG_VAR];
+    if (!validator.isNonEmptyString(config)) {
+      return {};
+    }
+    try {
+      const contents = config.startsWith("{") ? config : fs.readFileSync(config, "utf8");
+      return JSON.parse(contents);
+    } catch (error) {
+      throw new error_1.FirebaseAppError({
+        code: error_1.AppErrorCode.INVALID_APP_OPTIONS,
+        message: `Failed to parse app options file: ${error.message}`,
+        cause: error
+      });
+    }
+  }
+});
+
+// node_modules/firebase-admin/lib/app/credential-factory.js
+var require_credential_factory = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2021 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.applicationDefault = applicationDefault;
+  exports.cert = cert;
+  exports.refreshToken = refreshToken;
+  exports.clearGlobalAppDefaultCred = clearGlobalAppDefaultCred;
+  var credential_internal_1 = require_credential_internal();
+  var globalAppDefaultCred;
+  var globalCertCreds = {};
+  var globalRefreshTokenCreds = {};
+  function applicationDefault(httpAgent) {
+    if (typeof globalAppDefaultCred === "undefined") {
+      globalAppDefaultCred = (0, credential_internal_1.getApplicationDefault)(httpAgent);
+    }
+    return globalAppDefaultCred;
+  }
+  function cert(serviceAccountPathOrObject, httpAgent) {
+    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
+    if (!(stringifiedServiceAccount in globalCertCreds)) {
+      globalCertCreds[stringifiedServiceAccount] = new credential_internal_1.ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
+    }
+    return globalCertCreds[stringifiedServiceAccount];
+  }
+  function refreshToken(refreshTokenPathOrObject, httpAgent) {
+    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
+    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
+      globalRefreshTokenCreds[stringifiedRefreshToken] = new credential_internal_1.RefreshTokenCredential(refreshTokenPathOrObject, httpAgent);
+    }
+    return globalRefreshTokenCreds[stringifiedRefreshToken];
+  }
+  function clearGlobalAppDefaultCred() {
+    globalAppDefaultCred = undefined;
+  }
+});
+
+// node_modules/firebase-admin/lib/app/index.js
+var require_app = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2021 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.SDK_VERSION = exports.AppErrorCode = exports.FirebaseAppError = exports.FirebaseError = exports.refreshToken = exports.cert = exports.applicationDefault = exports.deleteApp = exports.getApps = exports.getApp = exports.initializeApp = undefined;
+  var utils_1 = require_utils6();
+  var lifecycle_1 = require_lifecycle();
+  Object.defineProperty(exports, "initializeApp", { enumerable: true, get: function() {
+    return lifecycle_1.initializeApp;
+  } });
+  Object.defineProperty(exports, "getApp", { enumerable: true, get: function() {
+    return lifecycle_1.getApp;
+  } });
+  Object.defineProperty(exports, "getApps", { enumerable: true, get: function() {
+    return lifecycle_1.getApps;
+  } });
+  Object.defineProperty(exports, "deleteApp", { enumerable: true, get: function() {
+    return lifecycle_1.deleteApp;
+  } });
+  var credential_factory_1 = require_credential_factory();
+  Object.defineProperty(exports, "applicationDefault", { enumerable: true, get: function() {
+    return credential_factory_1.applicationDefault;
+  } });
+  Object.defineProperty(exports, "cert", { enumerable: true, get: function() {
+    return credential_factory_1.cert;
+  } });
+  Object.defineProperty(exports, "refreshToken", { enumerable: true, get: function() {
+    return credential_factory_1.refreshToken;
+  } });
+  var error_1 = require_error();
+  Object.defineProperty(exports, "FirebaseError", { enumerable: true, get: function() {
+    return error_1.FirebaseError;
+  } });
+  var error_2 = require_error2();
+  Object.defineProperty(exports, "FirebaseAppError", { enumerable: true, get: function() {
+    return error_2.FirebaseAppError;
+  } });
+  Object.defineProperty(exports, "AppErrorCode", { enumerable: true, get: function() {
+    return error_2.AppErrorCode;
+  } });
+  exports.SDK_VERSION = (0, utils_1.getSdkVersion)();
+});
+
+// node_modules/firebase-admin/lib/messaging/error.js
+var require_error3 = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * Copyright 2026 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.FirebaseMessagingError = exports.messagingClientErrorCode = exports.MessagingErrorCode = undefined;
+  var error_1 = require_error();
+  var deep_copy_1 = require_deep_copy();
+  exports.MessagingErrorCode = {
+    INVALID_ARGUMENT: "invalid-argument",
+    INVALID_RECIPIENT: "invalid-recipient",
+    INVALID_PAYLOAD: "invalid-payload",
+    INVALID_DATA_PAYLOAD_KEY: "invalid-data-payload-key",
+    PAYLOAD_SIZE_LIMIT_EXCEEDED: "payload-size-limit-exceeded",
+    INVALID_OPTIONS: "invalid-options",
+    INVALID_REGISTRATION_TOKEN: "invalid-registration-token",
+    REGISTRATION_TOKEN_NOT_REGISTERED: "registration-token-not-registered",
+    INSTALLATION_ID_NOT_REGISTERED: "installation-id-not-registered",
+    MISMATCHED_CREDENTIAL: "mismatched-credential",
+    INVALID_PACKAGE_NAME: "invalid-package-name",
+    DEVICE_MESSAGE_RATE_EXCEEDED: "device-message-rate-exceeded",
+    TOPICS_MESSAGE_RATE_EXCEEDED: "topics-message-rate-exceeded",
+    TOPICS_SUBSCRIPTION_RATE_EXCEEDED: "topics-subscription-rate-exceeded",
+    MESSAGE_RATE_EXCEEDED: "message-rate-exceeded",
+    THIRD_PARTY_AUTH_ERROR: "third-party-auth-error",
+    TOO_MANY_TOPICS: "too-many-topics",
+    AUTHENTICATION_ERROR: "authentication-error",
+    SERVER_UNAVAILABLE: "server-unavailable",
+    INTERNAL_ERROR: "internal-error",
+    UNKNOWN_ERROR: "unknown-error"
+  };
+  exports.messagingClientErrorCode = {
+    INVALID_ARGUMENT: {
+      code: exports.MessagingErrorCode.INVALID_ARGUMENT,
+      message: "Invalid argument provided."
+    },
+    INVALID_RECIPIENT: {
+      code: exports.MessagingErrorCode.INVALID_RECIPIENT,
+      message: "Invalid message recipient provided."
+    },
+    INVALID_PAYLOAD: {
+      code: exports.MessagingErrorCode.INVALID_PAYLOAD,
+      message: "Invalid message payload provided."
+    },
+    INVALID_DATA_PAYLOAD_KEY: {
+      code: exports.MessagingErrorCode.INVALID_DATA_PAYLOAD_KEY,
+      message: "The data message payload contains an invalid key. See the reference " + "documentation for the DataMessagePayload type for restricted keys."
+    },
+    PAYLOAD_SIZE_LIMIT_EXCEEDED: {
+      code: exports.MessagingErrorCode.PAYLOAD_SIZE_LIMIT_EXCEEDED,
+      message: "The provided message payload exceeds the FCM size limits. See the " + "error documentation for more details."
+    },
+    INVALID_OPTIONS: {
+      code: exports.MessagingErrorCode.INVALID_OPTIONS,
+      message: "Invalid message options provided."
+    },
+    INVALID_REGISTRATION_TOKEN: {
+      code: exports.MessagingErrorCode.INVALID_REGISTRATION_TOKEN,
+      message: "Invalid registration token provided. Make sure it matches the " + "registration token the client app receives from registering with FCM."
+    },
+    REGISTRATION_TOKEN_NOT_REGISTERED: {
+      code: exports.MessagingErrorCode.REGISTRATION_TOKEN_NOT_REGISTERED,
+      message: "The provided registration token is not registered. A " + "previously valid registration token can be unregistered for a variety of reasons. See the " + "error documentation for more details. Remove this registration token and stop using it to " + "send messages."
+    },
+    INSTALLATION_ID_NOT_REGISTERED: {
+      code: exports.MessagingErrorCode.INSTALLATION_ID_NOT_REGISTERED,
+      message: "The provided installation ID is not registered. A previously valid installation " + "ID can be unregistered for a variety of reasons. See the error documentation for more " + "details. Remove this installation ID and stop using it to send messages."
+    },
+    MISMATCHED_CREDENTIAL: {
+      code: exports.MessagingErrorCode.MISMATCHED_CREDENTIAL,
+      message: "The credential used to authenticate this SDK does not have permission " + "to send messages to the device corresponding to the provided registration token. Make sure the " + "credential and registration token both belong to the same Firebase project."
+    },
+    INVALID_PACKAGE_NAME: {
+      code: exports.MessagingErrorCode.INVALID_PACKAGE_NAME,
+      message: "The message was addressed to a registration token whose package name does " + 'not match the provided "restrictedPackageName" option.'
+    },
+    DEVICE_MESSAGE_RATE_EXCEEDED: {
+      code: exports.MessagingErrorCode.DEVICE_MESSAGE_RATE_EXCEEDED,
+      message: "The rate of messages to a particular device is too high. Reduce " + "the number of messages sent to this device and do not immediately retry sending to this device."
+    },
+    TOPICS_MESSAGE_RATE_EXCEEDED: {
+      code: exports.MessagingErrorCode.TOPICS_MESSAGE_RATE_EXCEEDED,
+      message: "The rate of messages to subscribers to a particular topic is too " + "high. Reduce the number of messages sent for this topic, and do not immediately retry sending " + "to this topic."
+    },
+    TOPICS_SUBSCRIPTION_RATE_EXCEEDED: {
+      code: exports.MessagingErrorCode.TOPICS_SUBSCRIPTION_RATE_EXCEEDED,
+      message: "The rate of subscription management requests to a particular topic is too " + "high. Reduce the number of requests sent for this topic, and do not immediately retry the " + "request."
+    },
+    MESSAGE_RATE_EXCEEDED: {
+      code: exports.MessagingErrorCode.MESSAGE_RATE_EXCEEDED,
+      message: "Sending limit exceeded for the message target."
+    },
+    THIRD_PARTY_AUTH_ERROR: {
+      code: exports.MessagingErrorCode.THIRD_PARTY_AUTH_ERROR,
+      message: "A message targeted to an iOS device could not be sent because the " + "required APNs SSL certificate was not uploaded or has expired. Check the validity of your " + "development and production certificates."
+    },
+    TOO_MANY_TOPICS: {
+      code: exports.MessagingErrorCode.TOO_MANY_TOPICS,
+      message: "The maximum number of topics the provided registration token can be " + "subscribed to has been exceeded."
+    },
+    AUTHENTICATION_ERROR: {
+      code: exports.MessagingErrorCode.AUTHENTICATION_ERROR,
+      message: "An error occurred when trying to authenticate to the FCM servers. Make " + "sure the credential used to authenticate this SDK has the proper permissions. See " + "https://firebase.google.com/docs/admin/setup for setup instructions."
+    },
+    SERVER_UNAVAILABLE: {
+      code: exports.MessagingErrorCode.SERVER_UNAVAILABLE,
+      message: "The FCM server could not process the request in time. See the error " + "documentation for more details."
+    },
+    INTERNAL_ERROR: {
+      code: exports.MessagingErrorCode.INTERNAL_ERROR,
+      message: "An internal error has occurred. Please retry the request."
+    },
+    UNKNOWN_ERROR: {
+      code: exports.MessagingErrorCode.UNKNOWN_ERROR,
+      message: "An unknown server error was returned."
+    }
+  };
+  var MESSAGING_SERVER_TO_CLIENT_CODE = {
+    InvalidParameters: "INVALID_ARGUMENT",
+    MismatchSenderId: "MISMATCHED_CREDENTIAL",
+    Unavailable: "SERVER_UNAVAILABLE",
+    InternalServerError: "INTERNAL_ERROR",
+    InvalidRegistration: "INVALID_REGISTRATION_TOKEN",
+    NotRegistered: "REGISTRATION_TOKEN_NOT_REGISTERED",
+    InvalidPackageName: "INVALID_PACKAGE_NAME",
+    MessageTooBig: "PAYLOAD_SIZE_LIMIT_EXCEEDED",
+    InvalidDataKey: "INVALID_DATA_PAYLOAD_KEY",
+    InvalidTtl: "INVALID_OPTIONS",
+    DeviceMessageRateExceeded: "DEVICE_MESSAGE_RATE_EXCEEDED",
+    TopicsMessageRateExceeded: "TOPICS_MESSAGE_RATE_EXCEEDED",
+    InvalidApnsCredential: "THIRD_PARTY_AUTH_ERROR",
+    NOT_FOUND: "REGISTRATION_TOKEN_NOT_REGISTERED",
+    PERMISSION_DENIED: "MISMATCHED_CREDENTIAL",
+    RESOURCE_EXHAUSTED: "MESSAGE_RATE_EXCEEDED",
+    UNAUTHENTICATED: "THIRD_PARTY_AUTH_ERROR",
+    APNS_AUTH_ERROR: "THIRD_PARTY_AUTH_ERROR",
+    INTERNAL: "INTERNAL_ERROR",
+    INVALID_ARGUMENT: "INVALID_ARGUMENT",
+    QUOTA_EXCEEDED: "MESSAGE_RATE_EXCEEDED",
+    SENDER_ID_MISMATCH: "MISMATCHED_CREDENTIAL",
+    THIRD_PARTY_AUTH_ERROR: "THIRD_PARTY_AUTH_ERROR",
+    UNAVAILABLE: "SERVER_UNAVAILABLE",
+    UNREGISTERED: "REGISTRATION_TOKEN_NOT_REGISTERED",
+    UNREGISTERED_FID: "INSTALLATION_ID_NOT_REGISTERED",
+    UNSPECIFIED_ERROR: "UNKNOWN_ERROR"
+  };
+  var TOPIC_MGT_SERVER_TO_CLIENT_CODE = {
+    NOT_FOUND: "REGISTRATION_TOKEN_NOT_REGISTERED",
+    UNREGISTERED: "REGISTRATION_TOKEN_NOT_REGISTERED",
+    INVALID_ARGUMENT: "INVALID_REGISTRATION_TOKEN",
+    TOO_MANY_TOPICS: "TOO_MANY_TOPICS",
+    RESOURCE_EXHAUSTED: "TOPICS_SUBSCRIPTION_RATE_EXCEEDED",
+    PERMISSION_DENIED: "AUTHENTICATION_ERROR",
+    DEADLINE_EXCEEDED: "SERVER_UNAVAILABLE",
+    INTERNAL: "INTERNAL_ERROR",
+    UNKNOWN: "UNKNOWN_ERROR"
+  };
+
+  class FirebaseMessagingError extends error_1.FirebaseError {
+    static fromServerError(serverErrorCode, message, serverError) {
+      let clientCodeKey = "UNKNOWN_ERROR";
+      if (serverErrorCode && serverErrorCode in MESSAGING_SERVER_TO_CLIENT_CODE) {
+        clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode];
+      }
+      const error = (0, deep_copy_1.deepCopy)(exports.messagingClientErrorCode[clientCodeKey]);
+      error.message = message || error.message;
+      const rawData = serverError?.response?.data;
+      if (clientCodeKey === "UNKNOWN_ERROR" && typeof rawData !== "undefined") {
+        try {
+          error.message += ` Raw server response: "${typeof rawData === "string" ? rawData : JSON.stringify(rawData)}"`;
+        } catch (e) {}
+      }
+      error.cause = serverError;
+      error.httpResponse = serverError?.response ? (0, error_1.toHttpResponse)(serverError.response) : undefined;
+      return new FirebaseMessagingError(error);
+    }
+    static fromTopicManagementServerError(serverErrorCode, message, serverError) {
+      const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || "UNKNOWN_ERROR";
+      const error = (0, deep_copy_1.deepCopy)(exports.messagingClientErrorCode[clientCodeKey]);
+      error.message = message || error.message;
+      const rawData = serverError?.response?.data;
+      if (clientCodeKey === "UNKNOWN_ERROR" && typeof rawData !== "undefined") {
+        try {
+          error.message += ` Raw server response: "${typeof rawData === "string" ? rawData : JSON.stringify(rawData)}"`;
+        } catch (e) {}
+      }
+      error.cause = serverError;
+      error.httpResponse = serverError?.response ? (0, error_1.toHttpResponse)(serverError.response) : undefined;
+      return new FirebaseMessagingError(error);
+    }
+    constructor(info, message) {
+      super({
+        code: `messaging/${info.code}`,
+        message: message || info.message,
+        httpResponse: info.httpResponse,
+        cause: info.cause
+      });
+      this.codePrefix = "messaging";
+    }
+  }
+  exports.FirebaseMessagingError = FirebaseMessagingError;
+});
+
+// node_modules/firebase-admin/lib/messaging/messaging-internal.js
+var require_messaging_internal = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.BLACKLISTED_OPTIONS_KEYS = exports.BLACKLISTED_DATA_PAYLOAD_KEYS = undefined;
+  exports.validateMessage = validateMessage;
+  var index_1 = require_utils6();
+  var error_1 = require_error3();
+  var validator = require_validator();
+  exports.BLACKLISTED_DATA_PAYLOAD_KEYS = ["from"];
+  exports.BLACKLISTED_OPTIONS_KEYS = [
+    "condition",
+    "data",
+    "notification",
+    "registrationIds",
+    "registration_ids",
+    "to"
+  ];
+  function validateMessage(message) {
+    if (!validator.isNonNullObject(message)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "Message must be a non-null object");
+    }
+    const anyMessage = message;
+    if (anyMessage.topic) {
+      if (anyMessage.topic.startsWith("/topics/")) {
+        anyMessage.topic = anyMessage.topic.replace(/^\/topics\//, "");
+      }
+      if (!/^[a-zA-Z0-9-_.~%]+$/.test(anyMessage.topic)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "Malformed topic name");
+      }
+    }
+    const targets = [anyMessage.fid, anyMessage.token, anyMessage.topic, anyMessage.condition];
+    if (targets.filter((v) => validator.isNonEmptyString(v)).length !== 1) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "Exactly one of fid, topic, token or condition is required");
+    }
+    validateStringMap(message.data, "data");
+    validateAndroidConfig(message.android);
+    validateWebpushConfig(message.webpush);
+    validateApnsConfig(message.apns);
+    validateFcmOptions(message.fcmOptions);
+    validateNotification(message.notification);
+  }
+  function validateStringMap(map, label) {
+    if (typeof map === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(map)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, `${label} must be a non-null object`);
+    }
+    Object.keys(map).forEach((key) => {
+      if (!validator.isString(map[key])) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, `${label} must only contain string values`);
+      }
+    });
+  }
+  function validateWebpushConfig(config) {
+    if (typeof config === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(config)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "webpush must be a non-null object");
+    }
+    validateStringMap(config.headers, "webpush.headers");
+    validateStringMap(config.data, "webpush.data");
+  }
+  function validateApnsConfig(config) {
+    if (typeof config === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(config)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns must be a non-null object");
+    }
+    validateApnsLiveActivityToken(config.liveActivityToken);
+    validateStringMap(config.headers, "apns.headers");
+    validateApnsPayload(config.payload);
+    validateApnsFcmOptions(config.fcmOptions);
+    const propertyMappings = {
+      liveActivityToken: "live_activity_token"
+    };
+    (0, index_1.renameProperties)(config, propertyMappings);
+  }
+  function validateApnsLiveActivityToken(liveActivityToken) {
+    if (typeof liveActivityToken === "undefined") {
+      return;
+    } else if (!validator.isString(liveActivityToken)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.liveActivityToken must be a string value");
+    } else if (!validator.isNonEmptyString(liveActivityToken)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.liveActivityToken must be a non-empty string");
+    }
+  }
+  function validateApnsFcmOptions(fcmOptions) {
+    if (typeof fcmOptions === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(fcmOptions)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "fcmOptions must be a non-null object");
+    }
+    if (typeof fcmOptions.imageUrl !== "undefined" && !validator.isURL(fcmOptions.imageUrl)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "imageUrl must be a valid URL string");
+    }
+    if (typeof fcmOptions.analyticsLabel !== "undefined" && !validator.isString(fcmOptions.analyticsLabel)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "analyticsLabel must be a string value");
+    }
+    const propertyMappings = {
+      imageUrl: "image"
+    };
+    Object.keys(propertyMappings).forEach((key) => {
+      if (key in fcmOptions && propertyMappings[key] in fcmOptions) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, `Multiple specifications for ${key} in ApnsFcmOptions`);
+      }
+    });
+    (0, index_1.renameProperties)(fcmOptions, propertyMappings);
+  }
+  function validateFcmOptions(fcmOptions) {
+    if (typeof fcmOptions === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(fcmOptions)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "fcmOptions must be a non-null object");
+    }
+    if (typeof fcmOptions.analyticsLabel !== "undefined" && !validator.isString(fcmOptions.analyticsLabel)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "analyticsLabel must be a string value");
+    }
+  }
+  function validateNotification(notification) {
+    if (typeof notification === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(notification)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "notification must be a non-null object");
+    }
+    if (typeof notification.imageUrl !== "undefined" && !validator.isURL(notification.imageUrl)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "notification.imageUrl must be a valid URL string");
+    }
+    const propertyMappings = {
+      imageUrl: "image"
+    };
+    Object.keys(propertyMappings).forEach((key) => {
+      if (key in notification && propertyMappings[key] in notification) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, `Multiple specifications for ${key} in Notification`);
+      }
+    });
+    (0, index_1.renameProperties)(notification, propertyMappings);
+  }
+  function validateApnsPayload(payload) {
+    if (typeof payload === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(payload)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload must be a non-null object");
+    }
+    validateAps(payload.aps);
+  }
+  function validateAps(aps) {
+    if (typeof aps === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(aps)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps must be a non-null object");
+    }
+    validateApsAlert(aps.alert);
+    validateApsSound(aps.sound);
+    const propertyMappings = {
+      contentAvailable: "content-available",
+      mutableContent: "mutable-content",
+      threadId: "thread-id"
+    };
+    Object.keys(propertyMappings).forEach((key) => {
+      if (key in aps && propertyMappings[key] in aps) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, `Multiple specifications for ${key} in Aps`);
+      }
+    });
+    (0, index_1.renameProperties)(aps, propertyMappings);
+    const contentAvailable = aps["content-available"];
+    if (typeof contentAvailable !== "undefined" && contentAvailable !== 1) {
+      if (contentAvailable === true) {
+        aps["content-available"] = 1;
+      } else {
+        delete aps["content-available"];
+      }
+    }
+    const mutableContent = aps["mutable-content"];
+    if (typeof mutableContent !== "undefined" && mutableContent !== 1) {
+      if (mutableContent === true) {
+        aps["mutable-content"] = 1;
+      } else {
+        delete aps["mutable-content"];
+      }
+    }
+  }
+  function validateApsSound(sound) {
+    if (typeof sound === "undefined" || validator.isNonEmptyString(sound)) {
+      return;
+    } else if (!validator.isNonNullObject(sound)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.sound must be a non-empty string or a non-null object");
+    }
+    if (!validator.isNonEmptyString(sound.name)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.sound.name must be a non-empty string");
+    }
+    const volume = sound.volume;
+    if (typeof volume !== "undefined") {
+      if (!validator.isNumber(volume)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.sound.volume must be a number");
+      }
+      if (volume < 0 || volume > 1) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.sound.volume must be in the interval [0, 1]");
+      }
+    }
+    const soundObject = sound;
+    const key = "critical";
+    const critical = soundObject[key];
+    if (typeof critical !== "undefined" && critical !== 1) {
+      if (critical === true) {
+        soundObject[key] = 1;
+      } else {
+        delete soundObject[key];
+      }
+    }
+  }
+  function validateApsAlert(alert) {
+    if (typeof alert === "undefined" || validator.isString(alert)) {
+      return;
+    } else if (!validator.isNonNullObject(alert)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.alert must be a string or a non-null object");
+    }
+    const apsAlert = alert;
+    if (validator.isNonEmptyArray(apsAlert.locArgs) && !validator.isNonEmptyString(apsAlert.locKey)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.alert.locKey is required when specifying locArgs");
+    }
+    if (validator.isNonEmptyArray(apsAlert.titleLocArgs) && !validator.isNonEmptyString(apsAlert.titleLocKey)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs");
+    }
+    if (validator.isNonEmptyArray(apsAlert.subtitleLocArgs) && !validator.isNonEmptyString(apsAlert.subtitleLocKey)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "apns.payload.aps.alert.subtitleLocKey is required when specifying subtitleLocArgs");
+    }
+    const propertyMappings = {
+      locKey: "loc-key",
+      locArgs: "loc-args",
+      titleLocKey: "title-loc-key",
+      titleLocArgs: "title-loc-args",
+      subtitleLocKey: "subtitle-loc-key",
+      subtitleLocArgs: "subtitle-loc-args",
+      actionLocKey: "action-loc-key",
+      launchImage: "launch-image"
+    };
+    (0, index_1.renameProperties)(apsAlert, propertyMappings);
+  }
+  function validateAndroidConfig(config) {
+    if (typeof config === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(config)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android must be a non-null object");
+    }
+    if (typeof config.ttl !== "undefined") {
+      if (!validator.isNumber(config.ttl) || config.ttl < 0) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "TTL must be a non-negative duration in milliseconds");
+      }
+      const duration = (0, index_1.transformMillisecondsToSecondsString)(config.ttl);
+      config.ttl = duration;
+    }
+    validateStringMap(config.data, "android.data");
+    validateAndroidNotification(config.notification);
+    validateAndroidFcmOptions(config.fcmOptions);
+    const propertyMappings = {
+      collapseKey: "collapse_key",
+      restrictedPackageName: "restricted_package_name",
+      directBootOk: "direct_boot_ok",
+      bandwidthConstrainedOk: "bandwidth_constrained_ok",
+      restrictedSatelliteOk: "restricted_satellite_ok"
+    };
+    (0, index_1.renameProperties)(config, propertyMappings);
+  }
+  function validateAndroidNotification(notification) {
+    if (typeof notification === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(notification)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification must be a non-null object");
+    }
+    if (typeof notification.color !== "undefined" && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.color must be in the form #RRGGBB");
+    }
+    if (validator.isNonEmptyArray(notification.bodyLocArgs) && !validator.isNonEmptyString(notification.bodyLocKey)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.bodyLocKey is required when specifying bodyLocArgs");
+    }
+    if (validator.isNonEmptyArray(notification.titleLocArgs) && !validator.isNonEmptyString(notification.titleLocKey)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.titleLocKey is required when specifying titleLocArgs");
+    }
+    if (typeof notification.imageUrl !== "undefined" && !validator.isURL(notification.imageUrl)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.imageUrl must be a valid URL string");
+    }
+    if (typeof notification.eventTimestamp !== "undefined") {
+      if (!(notification.eventTimestamp instanceof Date)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.eventTimestamp must be a valid `Date` object");
+      }
+      const zuluTimestamp = notification.eventTimestamp.toISOString();
+      notification.eventTimestamp = zuluTimestamp;
+    }
+    if (typeof notification.vibrateTimingsMillis !== "undefined") {
+      if (!validator.isNonEmptyArray(notification.vibrateTimingsMillis)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.vibrateTimingsMillis must be a non-empty array of numbers");
+      }
+      const vibrateTimings = [];
+      notification.vibrateTimingsMillis.forEach((value) => {
+        if (!validator.isNumber(value) || value < 0) {
+          throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds");
+        }
+        const duration = (0, index_1.transformMillisecondsToSecondsString)(value);
+        vibrateTimings.push(duration);
+      });
+      notification.vibrateTimingsMillis = vibrateTimings;
+    }
+    if (typeof notification.priority !== "undefined") {
+      const priority = "PRIORITY_" + notification.priority.toUpperCase();
+      notification.priority = priority;
+    }
+    if (typeof notification.proxy !== "undefined") {
+      const proxy = notification.proxy.toUpperCase();
+      notification.proxy = proxy;
+    }
+    if (typeof notification.visibility !== "undefined") {
+      const visibility = notification.visibility.toUpperCase();
+      notification.visibility = visibility;
+    }
+    validateLightSettings(notification.lightSettings);
+    const propertyMappings = {
+      clickAction: "click_action",
+      bodyLocKey: "body_loc_key",
+      bodyLocArgs: "body_loc_args",
+      titleLocKey: "title_loc_key",
+      titleLocArgs: "title_loc_args",
+      channelId: "channel_id",
+      imageUrl: "image",
+      eventTimestamp: "event_time",
+      localOnly: "local_only",
+      priority: "notification_priority",
+      vibrateTimingsMillis: "vibrate_timings",
+      defaultVibrateTimings: "default_vibrate_timings",
+      defaultSound: "default_sound",
+      lightSettings: "light_settings",
+      defaultLightSettings: "default_light_settings",
+      notificationCount: "notification_count"
+    };
+    (0, index_1.renameProperties)(notification, propertyMappings);
+  }
+  function validateLightSettings(lightSettings) {
+    if (typeof lightSettings === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(lightSettings)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.lightSettings must be a non-null object");
+    }
+    if (!validator.isNumber(lightSettings.lightOnDurationMillis) || lightSettings.lightOnDurationMillis < 0) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds");
+    }
+    const durationOn = (0, index_1.transformMillisecondsToSecondsString)(lightSettings.lightOnDurationMillis);
+    lightSettings.lightOnDurationMillis = durationOn;
+    if (!validator.isNumber(lightSettings.lightOffDurationMillis) || lightSettings.lightOffDurationMillis < 0) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds");
+    }
+    const durationOff = (0, index_1.transformMillisecondsToSecondsString)(lightSettings.lightOffDurationMillis);
+    lightSettings.lightOffDurationMillis = durationOff;
+    if (!validator.isString(lightSettings.color) || !/^#[0-9a-fA-F]{6}$/.test(lightSettings.color) && !/^#[0-9a-fA-F]{8}$/.test(lightSettings.color)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format");
+    }
+    const colorString = lightSettings.color.length === 7 ? lightSettings.color + "FF" : lightSettings.color;
+    const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
+    if (!rgb || rgb.length < 4) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INTERNAL_ERROR, "regex to extract rgba values from " + colorString + " failed.");
+    }
+    const color = {
+      red: parseInt(rgb[1], 16) / 255,
+      green: parseInt(rgb[2], 16) / 255,
+      blue: parseInt(rgb[3], 16) / 255,
+      alpha: parseInt(rgb[4], 16) / 255
+    };
+    lightSettings.color = color;
+    const propertyMappings = {
+      lightOnDurationMillis: "light_on_duration",
+      lightOffDurationMillis: "light_off_duration"
+    };
+    (0, index_1.renameProperties)(lightSettings, propertyMappings);
+  }
+  function validateAndroidFcmOptions(fcmOptions) {
+    if (typeof fcmOptions === "undefined") {
+      return;
+    } else if (!validator.isNonNullObject(fcmOptions)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "fcmOptions must be a non-null object");
+    }
+    if (typeof fcmOptions.analyticsLabel !== "undefined" && !validator.isString(fcmOptions.analyticsLabel)) {
+      throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_PAYLOAD, "analyticsLabel must be a string value");
+    }
+  }
+});
+
+// node_modules/@fastify/busboy/deps/streamsearch/sbmh.js
+var require_sbmh = __commonJS(function(exports, module) {
+  var { EventEmitter } = __require("events");
+  var { inherits } = __require("util");
+  function SBMH(needle) {
+    if (typeof needle === "string") {
+      needle = Buffer.from(needle);
+    }
+    if (!Buffer.isBuffer(needle)) {
+      throw new TypeError("The needle has to be a String or a Buffer.");
+    }
+    const needleLength = needle.length;
+    const needleLastCharIndex = needleLength - 1;
+    if (needleLength === 0) {
+      throw new Error("The needle cannot be an empty String/Buffer.");
+    }
+    if (needleLength > 256) {
+      throw new Error("The needle cannot have a length bigger than 256.");
+    }
+    this.maxMatches = Infinity;
+    this.matches = 0;
+    this._occ = new Uint16Array(256).fill(needleLength);
+    this._lookbehind_size = 0;
+    this._needle = needle;
+    this._bufpos = 0;
+    this._lookbehind = Buffer.alloc(needleLastCharIndex);
+    for (var i = 0;i < needleLastCharIndex; ++i) {
+      this._occ[needle[i]] = needleLastCharIndex - i;
+    }
+  }
+  inherits(SBMH, EventEmitter);
+  SBMH.prototype.reset = function() {
+    this._lookbehind_size = 0;
+    this.matches = 0;
+    this._bufpos = 0;
+  };
+  SBMH.prototype.push = function(chunk, pos) {
+    if (!Buffer.isBuffer(chunk)) {
+      chunk = Buffer.from(chunk, "binary");
+    }
+    const chlen = chunk.length;
+    this._bufpos = pos || 0;
+    let r;
+    while (r !== chlen && this.matches < this.maxMatches) {
+      r = this._sbmh_feed(chunk);
+    }
+    return r;
+  };
+  SBMH.prototype._sbmh_feed = function(data) {
+    const len = data.length;
+    const needle = this._needle;
+    const needleLength = needle.length;
+    const needleLastCharIndex = needleLength - 1;
+    const needleLastChar = needle[needleLastCharIndex];
+    let pos = -this._lookbehind_size;
+    let ch;
+    if (pos < 0) {
+      while (pos < 0 && pos <= len - needleLength) {
+        ch = data[pos + needleLastCharIndex];
+        if (ch === needleLastChar && this._sbmh_memcmp(data, pos, needleLastCharIndex)) {
+          this._lookbehind_size = 0;
+          ++this.matches;
+          this.emit("info", true);
+          return this._bufpos = pos + needleLength;
+        }
+        pos += this._occ[ch];
+      }
+      while (pos < 0 && !this._sbmh_memcmp(data, pos, len - pos)) {
+        ++pos;
+      }
+      if (pos >= 0) {
+        this.emit("info", false, this._lookbehind, 0, this._lookbehind_size);
+        this._lookbehind_size = 0;
+      } else {
+        const bytesToCutOff = this._lookbehind_size + pos;
+        if (bytesToCutOff > 0) {
+          this.emit("info", false, this._lookbehind, 0, bytesToCutOff);
+        }
+        this._lookbehind_size -= bytesToCutOff;
+        this._lookbehind.copy(this._lookbehind, 0, bytesToCutOff, this._lookbehind_size);
+        data.copy(this._lookbehind, this._lookbehind_size);
+        this._lookbehind_size += len;
+        this._bufpos = len;
+        return len;
+      }
+    }
+    pos = data.indexOf(needle, pos + this._bufpos);
+    if (pos !== -1) {
+      ++this.matches;
+      if (pos === 0) {
+        this.emit("info", true);
+      } else {
+        this.emit("info", true, data, this._bufpos, pos);
+      }
+      return this._bufpos = pos + needleLength;
+    }
+    pos = len - needleLastCharIndex;
+    if (pos < 0) {
+      pos = 0;
+    }
+    while (pos !== len && (data[pos] !== needle[0] || Buffer.compare(data.subarray(pos + 1, len), needle.subarray(1, len - pos)) !== 0)) {
+      ++pos;
+    }
+    if (pos !== len) {
+      data.copy(this._lookbehind, 0, pos, len);
+      this._lookbehind_size = len - pos;
+    }
+    if (pos !== 0) {
+      this.emit("info", false, data, this._bufpos, pos);
+    }
+    this._bufpos = len;
+    return len;
+  };
+  SBMH.prototype._sbmh_lookup_char = function(data, pos) {
+    return pos < 0 ? this._lookbehind[this._lookbehind_size + pos] : data[pos];
+  };
+  SBMH.prototype._sbmh_memcmp = function(data, pos, len) {
+    for (var i = 0;i < len; ++i) {
+      if (this._sbmh_lookup_char(data, pos + i) !== this._needle[i]) {
+        return false;
+      }
+    }
+    return true;
+  };
+  module.exports = SBMH;
+});
+
+// node_modules/@fastify/busboy/deps/dicer/lib/PartStream.js
+var require_PartStream = __commonJS(function(exports, module) {
+  var inherits = __require("util").inherits;
+  var ReadableStream2 = __require("stream").Readable;
+  function PartStream(opts) {
+    ReadableStream2.call(this, opts);
+  }
+  inherits(PartStream, ReadableStream2);
+  PartStream.prototype._read = function(n) {};
+  module.exports = PartStream;
+});
+
+// node_modules/@fastify/busboy/lib/utils/getLimit.js
+var require_getLimit = __commonJS(function(exports, module) {
+  module.exports = function getLimit(limits, name, defaultLimit) {
+    if (!limits || limits[name] === undefined || limits[name] === null) {
+      return defaultLimit;
+    }
+    if (typeof limits[name] !== "number" || isNaN(limits[name])) {
+      throw new TypeError("Limit " + name + " is not a valid number");
+    }
+    return limits[name];
+  };
+});
+
+// node_modules/@fastify/busboy/deps/dicer/lib/HeaderParser.js
+var require_HeaderParser = __commonJS(function(exports, module) {
+  var EventEmitter = __require("events").EventEmitter;
+  var inherits = __require("util").inherits;
+  var getLimit = require_getLimit();
+  var B_DCRLF = Buffer.from(`\r
+\r
+`);
+  var S_DCRLF = `\r
+\r
+`;
+  function HeaderParser(cfg) {
+    EventEmitter.call(this);
+    cfg = cfg || {};
+    this.nread = 0;
+    this.maxed = false;
+    this.npairs = 0;
+    this.maxHeaderPairs = getLimit(cfg, "maxHeaderPairs", 2000);
+    this.maxHeaderSize = getLimit(cfg, "maxHeaderSize", 80 * 1024);
+    this.buffer = "";
+    this.header = Object.create(null);
+    this.finished = false;
+    this.tail = "";
+  }
+  inherits(HeaderParser, EventEmitter);
+  HeaderParser.prototype.push = function(data) {
+    if (!Buffer.isBuffer(data)) {
+      data = Buffer.from(data, "binary");
+    }
+    let end = data.length;
+    let appendEnd = data.length;
+    let found = false;
+    const tail = this.tail;
+    for (let i = tail.length;i > 0; --i) {
+      if (tail.endsWith(S_DCRLF.slice(0, i))) {
+        let matched = data.length >= S_DCRLF.length - i;
+        for (let j = i;matched && j < S_DCRLF.length; ++j) {
+          matched = data[j - i] === S_DCRLF.charCodeAt(j);
+        }
+        if (matched) {
+          end = S_DCRLF.length - i;
+          appendEnd = 0;
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      const pos = data.indexOf(B_DCRLF);
+      if (pos !== -1) {
+        end = pos + B_DCRLF.length;
+        appendEnd = pos;
+        found = true;
+      }
+    }
+    if (!found) {
+      this.tail = data.length >= 3 ? data.toString("binary", data.length - 3) : (tail + data.toString("binary")).slice(-3);
+    } else {
+      this.tail = "";
+    }
+    if (appendEnd !== 0 && !this.maxed) {
+      const remaining = this.maxHeaderSize - this.nread;
+      if (appendEnd >= remaining) {
+        this.buffer += data.toString("binary", 0, remaining);
+        this.nread = this.maxHeaderSize;
+        this.maxed = true;
+      } else {
+        this.buffer += data.toString("binary", 0, appendEnd);
+        this.nread += appendEnd;
+      }
+    }
+    if (found) {
+      this._finish();
+      return end;
+    }
+  };
+  HeaderParser.prototype.reset = function() {
+    this.finished = false;
+    this.buffer = "";
+    this.header = Object.create(null);
+    this.tail = "";
+  };
+  HeaderParser.prototype._finish = function() {
+    if (this.buffer) {
+      this._parseHeader();
+    }
+    const header = this.header;
+    this.header = Object.create(null);
+    this.buffer = "";
+    this.tail = "";
+    this.finished = true;
+    this.nread = this.npairs = 0;
+    this.maxed = false;
+    this.emit("header", header);
+  };
+  HeaderParser.prototype._parseHeader = function() {
+    if (this.npairs === this.maxHeaderPairs) {
+      return;
+    }
+    const buffer = this.buffer;
+    let h;
+    let lineStart = 0;
+    while (lineStart < buffer.length) {
+      let lineEnd = buffer.indexOf(`\r
+`, lineStart);
+      if (lineEnd === -1) {
+        lineEnd = buffer.length;
+      }
+      if (lineEnd === lineStart) {
+        lineStart = lineEnd + 2;
+        continue;
+      }
+      const line = buffer.slice(lineStart, lineEnd);
+      if (line.includes("\r") || line.includes(`
+`)) {
+        return;
+      }
+      if ((buffer[lineStart] === "\t" || buffer[lineStart] === " ") && h) {
+        this.header[h][this.header[h].length - 1] += buffer.slice(lineStart, lineEnd);
+        lineStart = lineEnd + 2;
+        continue;
+      }
+      const posColon = buffer.indexOf(":", lineStart);
+      if (posColon === -1 || posColon === lineStart || posColon > lineEnd) {
+        return;
+      }
+      h = buffer.slice(lineStart, posColon).toLowerCase();
+      let valueStart = posColon + 1;
+      if (buffer[valueStart] === " " || buffer[valueStart] === "\t") {
+        ++valueStart;
+      }
+      const values = this.header[h] || (this.header[h] = []);
+      values.push(buffer.slice(valueStart, lineEnd));
+      if (++this.npairs === this.maxHeaderPairs) {
+        break;
+      }
+      lineStart = lineEnd + 2;
+    }
+  };
+  module.exports = HeaderParser;
+});
+
+// node_modules/@fastify/busboy/deps/dicer/lib/Dicer.js
+var require_Dicer = __commonJS(function(exports, module) {
+  var WritableStream = __require("stream").Writable;
+  var inherits = __require("util").inherits;
+  var StreamSearch = require_sbmh();
+  var PartStream = require_PartStream();
+  var HeaderParser = require_HeaderParser();
+  var DASH = 45;
+  var B_ONEDASH = Buffer.from("-");
+  var B_CRLF = Buffer.from(`\r
+`);
+  var EMPTY_FN = function() {};
+  function Dicer(cfg) {
+    if (!(this instanceof Dicer)) {
+      return new Dicer(cfg);
+    }
+    WritableStream.call(this, cfg);
+    if (!cfg || !cfg.headerFirst && typeof cfg.boundary !== "string") {
+      throw new TypeError("Boundary required");
+    }
+    if (typeof cfg.boundary === "string") {
+      this.setBoundary(cfg.boundary);
+    } else {
+      this._bparser = undefined;
+    }
+    this._headerFirst = cfg.headerFirst;
+    this._dashes = 0;
+    this._parts = 0;
+    this._finished = false;
+    this._realFinish = false;
+    this._isPreamble = true;
+    this._justMatched = false;
+    this._firstWrite = true;
+    this._inHeader = true;
+    this._part = undefined;
+    this._cb = undefined;
+    this._ignoreData = false;
+    this._partOpts = { highWaterMark: cfg.partHwm };
+    this._pause = false;
+    const self2 = this;
+    this._hparser = new HeaderParser(cfg);
+    this._hparser.on("header", function(header) {
+      self2._inHeader = false;
+      self2._part.emit("header", header);
+    });
+  }
+  inherits(Dicer, WritableStream);
+  Dicer.prototype.emit = function(ev) {
+    if (ev === "finish" && !this._realFinish) {
+      if (!this._finished) {
+        const self2 = this;
+        process.nextTick(function() {
+          self2.emit("error", new Error("Unexpected end of multipart data"));
+          if (self2._part && !self2._ignoreData) {
+            const type = self2._isPreamble ? "Preamble" : "Part";
+            self2._part.emit("error", new Error(type + " terminated early due to unexpected end of multipart data"));
+            self2._part.push(null);
+            process.nextTick(function() {
+              self2._realFinish = true;
+              self2.emit("finish");
+              self2._realFinish = false;
+            });
+            return;
+          }
+          self2._realFinish = true;
+          self2.emit("finish");
+          self2._realFinish = false;
+        });
+      }
+    } else {
+      WritableStream.prototype.emit.apply(this, arguments);
+    }
+  };
+  Dicer.prototype._write = function(data, encoding, cb) {
+    if (!this._hparser && !this._bparser) {
+      return cb();
+    }
+    if (this._headerFirst && this._isPreamble) {
+      if (!this._part) {
+        this._part = new PartStream(this._partOpts);
+        if (this.listenerCount("preamble") !== 0) {
+          this.emit("preamble", this._part);
+        } else {
+          this._ignore();
+        }
+      }
+      const r = this._hparser.push(data);
+      if (!this._inHeader && r !== undefined && r < data.length) {
+        data = data.slice(r);
+      } else {
+        return cb();
+      }
+    }
+    if (this._firstWrite) {
+      this._bparser.push(B_CRLF);
+      this._firstWrite = false;
+    }
+    this._bparser.push(data);
+    if (this._pause) {
+      this._cb = cb;
+    } else {
+      cb();
+    }
+  };
+  Dicer.prototype.reset = function() {
+    this._part = undefined;
+    this._bparser = undefined;
+    this._hparser = undefined;
+  };
+  Dicer.prototype.setBoundary = function(boundary) {
+    const self2 = this;
+    this._bparser = new StreamSearch(`\r
+--` + boundary);
+    this._bparser.on("info", function(isMatch, data, start, end) {
+      self2._oninfo(isMatch, data, start, end);
+    });
+  };
+  Dicer.prototype._ignore = function() {
+    if (this._part && !this._ignoreData) {
+      this._ignoreData = true;
+      this._part.on("error", EMPTY_FN);
+      this._part.resume();
+    }
+  };
+  Dicer.prototype._oninfo = function(isMatch, data, start, end) {
+    let buf;
+    const self2 = this;
+    let i = 0;
+    let r;
+    let shouldWriteMore = true;
+    if (!this._part && this._justMatched && data) {
+      while (this._dashes < 2 && start + i < end) {
+        if (data[start + i] === DASH) {
+          ++i;
+          ++this._dashes;
+        } else {
+          if (this._dashes) {
+            buf = B_ONEDASH;
+          }
+          this._dashes = 0;
+          break;
+        }
+      }
+      if (this._dashes === 2) {
+        if (start + i < end && this.listenerCount("trailer") !== 0) {
+          this.emit("trailer", data.slice(start + i, end));
+        }
+        this.reset();
+        this._finished = true;
+        if (self2._parts === 0) {
+          self2._realFinish = true;
+          self2.emit("finish");
+          self2._realFinish = false;
+        }
+      }
+      if (this._dashes) {
+        return;
+      }
+    }
+    if (this._justMatched) {
+      this._justMatched = false;
+    }
+    if (!this._part) {
+      this._part = new PartStream(this._partOpts);
+      this._part._read = function(n) {
+        self2._unpause();
+      };
+      if (this._isPreamble && this.listenerCount("preamble") !== 0) {
+        this.emit("preamble", this._part);
+      } else if (this._isPreamble !== true && this.listenerCount("part") !== 0) {
+        this.emit("part", this._part);
+      } else {
+        this._ignore();
+      }
+      if (!this._isPreamble) {
+        this._inHeader = true;
+      }
+    }
+    if (data && start < end && !this._ignoreData) {
+      if (this._isPreamble || !this._inHeader) {
+        if (buf) {
+          shouldWriteMore = this._part.push(buf);
+        }
+        shouldWriteMore = this._part.push(data.slice(start, end));
+        if (!shouldWriteMore) {
+          this._pause = true;
+        }
+      } else if (!this._isPreamble && this._inHeader) {
+        if (buf) {
+          this._hparser.push(buf);
+        }
+        r = this._hparser.push(data.slice(start, end));
+        if (!this._inHeader && r !== undefined && r < end) {
+          this._oninfo(false, data, start + r, end);
+        }
+      }
+    }
+    if (isMatch) {
+      this._hparser.reset();
+      if (this._isPreamble) {
+        this._isPreamble = false;
+      } else {
+        if (start !== end) {
+          ++this._parts;
+          this._part.on("end", function() {
+            if (--self2._parts === 0) {
+              if (self2._finished) {
+                self2._realFinish = true;
+                self2.emit("finish");
+                self2._realFinish = false;
+              } else {
+                self2._unpause();
+              }
+            }
+          });
+        }
+      }
+      this._part.push(null);
+      this._part = undefined;
+      this._ignoreData = false;
+      this._justMatched = true;
+      this._dashes = 0;
+    }
+  };
+  Dicer.prototype._unpause = function() {
+    if (!this._pause) {
+      return;
+    }
+    this._pause = false;
+    if (this._cb) {
+      const cb = this._cb;
+      this._cb = undefined;
+      cb();
+    }
+  };
+  module.exports = Dicer;
+});
+
+// node_modules/@fastify/busboy/lib/utils/decodeText.js
+var require_decodeText = __commonJS(function(exports, module) {
+  var utf8Decoder = new TextDecoder("utf-8");
+  var textDecoders = new Map([
+    ["utf-8", utf8Decoder],
+    ["utf8", utf8Decoder]
+  ]);
+  function getDecoder(charset) {
+    let lc;
+    while (true) {
+      switch (charset) {
+        case "utf-8":
+        case "utf8":
+          return decoders.utf8;
+        case "latin1":
+        case "ascii":
+        case "us-ascii":
+        case "iso-8859-1":
+        case "iso8859-1":
+        case "iso88591":
+        case "iso_8859-1":
+        case "windows-1252":
+        case "iso_8859-1:1987":
+        case "cp1252":
+        case "x-cp1252":
+          return decoders.latin1;
+        case "utf16le":
+        case "utf-16le":
+        case "ucs2":
+        case "ucs-2":
+          return decoders.utf16le;
+        case "base64":
+          return decoders.base64;
+        default:
+          if (lc === undefined) {
+            lc = true;
+            charset = charset.toLowerCase();
+            continue;
+          }
+          return decoders.other.bind(charset);
+      }
+    }
+  }
+  function isAscii(data) {
+    for (var i = 0, len = data.length;i < len; ++i) {
+      if (data.charCodeAt(i) > 127) {
+        return false;
+      }
+    }
+    return true;
+  }
+  var decoders = {
+    utf8: (data, sourceEncoding) => {
+      if (data.length === 0) {
+        return "";
+      }
+      if (typeof data === "string") {
+        if (isAscii(data)) {
+          return data;
+        }
+        data = Buffer.from(data, sourceEncoding);
+      }
+      return data.utf8Slice(0, data.length);
+    },
+    latin1: (data, sourceEncoding) => {
+      if (data.length === 0) {
+        return "";
+      }
+      if (typeof data === "string") {
+        return data;
+      }
+      return data.latin1Slice(0, data.length);
+    },
+    utf16le: (data, sourceEncoding) => {
+      if (data.length === 0) {
+        return "";
+      }
+      if (typeof data === "string") {
+        data = Buffer.from(data, sourceEncoding);
+      }
+      return data.ucs2Slice(0, data.length);
+    },
+    base64: (data, sourceEncoding) => {
+      if (data.length === 0) {
+        return "";
+      }
+      if (typeof data === "string") {
+        data = Buffer.from(data, sourceEncoding);
+      }
+      return data.base64Slice(0, data.length);
+    },
+    other: (data, sourceEncoding) => {
+      if (data.length === 0) {
+        return "";
+      }
+      if (typeof data === "string") {
+        data = Buffer.from(data, sourceEncoding);
+      }
+      if (textDecoders.has(exports.toString())) {
+        try {
+          return textDecoders.get(exports).decode(data);
+        } catch {}
+      }
+      return typeof data === "string" ? data : data.toString();
+    }
+  };
+  function decodeText(text, sourceEncoding, destEncoding) {
+    if (text) {
+      return getDecoder(destEncoding)(text, sourceEncoding);
+    }
+    return text;
+  }
+  module.exports = decodeText;
+});
+
+// node_modules/@fastify/busboy/lib/utils/parseParams.js
+var require_parseParams = __commonJS(function(exports, module) {
+  var decodeText = require_decodeText();
+  var RE_ENCODED = /%[a-fA-F0-9][a-fA-F0-9]/g;
+  var EncodedLookup = {
+    "%00": "\x00",
+    "%01": "\x01",
+    "%02": "\x02",
+    "%03": "\x03",
+    "%04": "\x04",
+    "%05": "\x05",
+    "%06": "\x06",
+    "%07": "\x07",
+    "%08": "\b",
+    "%09": "\t",
+    "%0a": `
+`,
+    "%0A": `
+`,
+    "%0b": "\v",
+    "%0B": "\v",
+    "%0c": "\f",
+    "%0C": "\f",
+    "%0d": "\r",
+    "%0D": "\r",
+    "%0e": "\x0E",
+    "%0E": "\x0E",
+    "%0f": "\x0F",
+    "%0F": "\x0F",
+    "%10": "\x10",
+    "%11": "\x11",
+    "%12": "\x12",
+    "%13": "\x13",
+    "%14": "\x14",
+    "%15": "\x15",
+    "%16": "\x16",
+    "%17": "\x17",
+    "%18": "\x18",
+    "%19": "\x19",
+    "%1a": "\x1A",
+    "%1A": "\x1A",
+    "%1b": "\x1B",
+    "%1B": "\x1B",
+    "%1c": "\x1C",
+    "%1C": "\x1C",
+    "%1d": "\x1D",
+    "%1D": "\x1D",
+    "%1e": "\x1E",
+    "%1E": "\x1E",
+    "%1f": "\x1F",
+    "%1F": "\x1F",
+    "%20": " ",
+    "%21": "!",
+    "%22": '"',
+    "%23": "#",
+    "%24": "$",
+    "%25": "%",
+    "%26": "&",
+    "%27": "'",
+    "%28": "(",
+    "%29": ")",
+    "%2a": "*",
+    "%2A": "*",
+    "%2b": "+",
+    "%2B": "+",
+    "%2c": ",",
+    "%2C": ",",
+    "%2d": "-",
+    "%2D": "-",
+    "%2e": ".",
+    "%2E": ".",
+    "%2f": "/",
+    "%2F": "/",
+    "%30": "0",
+    "%31": "1",
+    "%32": "2",
+    "%33": "3",
+    "%34": "4",
+    "%35": "5",
+    "%36": "6",
+    "%37": "7",
+    "%38": "8",
+    "%39": "9",
+    "%3a": ":",
+    "%3A": ":",
+    "%3b": ";",
+    "%3B": ";",
+    "%3c": "<",
+    "%3C": "<",
+    "%3d": "=",
+    "%3D": "=",
+    "%3e": ">",
+    "%3E": ">",
+    "%3f": "?",
+    "%3F": "?",
+    "%40": "@",
+    "%41": "A",
+    "%42": "B",
+    "%43": "C",
+    "%44": "D",
+    "%45": "E",
+    "%46": "F",
+    "%47": "G",
+    "%48": "H",
+    "%49": "I",
+    "%4a": "J",
+    "%4A": "J",
+    "%4b": "K",
+    "%4B": "K",
+    "%4c": "L",
+    "%4C": "L",
+    "%4d": "M",
+    "%4D": "M",
+    "%4e": "N",
+    "%4E": "N",
+    "%4f": "O",
+    "%4F": "O",
+    "%50": "P",
+    "%51": "Q",
+    "%52": "R",
+    "%53": "S",
+    "%54": "T",
+    "%55": "U",
+    "%56": "V",
+    "%57": "W",
+    "%58": "X",
+    "%59": "Y",
+    "%5a": "Z",
+    "%5A": "Z",
+    "%5b": "[",
+    "%5B": "[",
+    "%5c": "\\",
+    "%5C": "\\",
+    "%5d": "]",
+    "%5D": "]",
+    "%5e": "^",
+    "%5E": "^",
+    "%5f": "_",
+    "%5F": "_",
+    "%60": "`",
+    "%61": "a",
+    "%62": "b",
+    "%63": "c",
+    "%64": "d",
+    "%65": "e",
+    "%66": "f",
+    "%67": "g",
+    "%68": "h",
+    "%69": "i",
+    "%6a": "j",
+    "%6A": "j",
+    "%6b": "k",
+    "%6B": "k",
+    "%6c": "l",
+    "%6C": "l",
+    "%6d": "m",
+    "%6D": "m",
+    "%6e": "n",
+    "%6E": "n",
+    "%6f": "o",
+    "%6F": "o",
+    "%70": "p",
+    "%71": "q",
+    "%72": "r",
+    "%73": "s",
+    "%74": "t",
+    "%75": "u",
+    "%76": "v",
+    "%77": "w",
+    "%78": "x",
+    "%79": "y",
+    "%7a": "z",
+    "%7A": "z",
+    "%7b": "{",
+    "%7B": "{",
+    "%7c": "|",
+    "%7C": "|",
+    "%7d": "}",
+    "%7D": "}",
+    "%7e": "~",
+    "%7E": "~",
+    "%7f": "\x7F",
+    "%7F": "\x7F",
+    "%80": "\x80",
+    "%81": "\x81",
+    "%82": "\x82",
+    "%83": "\x83",
+    "%84": "\x84",
+    "%85": "\x85",
+    "%86": "\x86",
+    "%87": "\x87",
+    "%88": "\x88",
+    "%89": "\x89",
+    "%8a": "\x8A",
+    "%8A": "\x8A",
+    "%8b": "\x8B",
+    "%8B": "\x8B",
+    "%8c": "\x8C",
+    "%8C": "\x8C",
+    "%8d": "\x8D",
+    "%8D": "\x8D",
+    "%8e": "\x8E",
+    "%8E": "\x8E",
+    "%8f": "\x8F",
+    "%8F": "\x8F",
+    "%90": "\x90",
+    "%91": "\x91",
+    "%92": "\x92",
+    "%93": "\x93",
+    "%94": "\x94",
+    "%95": "\x95",
+    "%96": "\x96",
+    "%97": "\x97",
+    "%98": "\x98",
+    "%99": "\x99",
+    "%9a": "\x9A",
+    "%9A": "\x9A",
+    "%9b": "\x9B",
+    "%9B": "\x9B",
+    "%9c": "\x9C",
+    "%9C": "\x9C",
+    "%9d": "\x9D",
+    "%9D": "\x9D",
+    "%9e": "\x9E",
+    "%9E": "\x9E",
+    "%9f": "\x9F",
+    "%9F": "\x9F",
+    "%a0": "\xA0",
+    "%A0": "\xA0",
+    "%a1": "\xA1",
+    "%A1": "\xA1",
+    "%a2": "\xA2",
+    "%A2": "\xA2",
+    "%a3": "\xA3",
+    "%A3": "\xA3",
+    "%a4": "\xA4",
+    "%A4": "\xA4",
+    "%a5": "\xA5",
+    "%A5": "\xA5",
+    "%a6": "\xA6",
+    "%A6": "\xA6",
+    "%a7": "\xA7",
+    "%A7": "\xA7",
+    "%a8": "\xA8",
+    "%A8": "\xA8",
+    "%a9": "\xA9",
+    "%A9": "\xA9",
+    "%aa": "\xAA",
+    "%Aa": "\xAA",
+    "%aA": "\xAA",
+    "%AA": "\xAA",
+    "%ab": "\xAB",
+    "%Ab": "\xAB",
+    "%aB": "\xAB",
+    "%AB": "\xAB",
+    "%ac": "\xAC",
+    "%Ac": "\xAC",
+    "%aC": "\xAC",
+    "%AC": "\xAC",
+    "%ad": "\xAD",
+    "%Ad": "\xAD",
+    "%aD": "\xAD",
+    "%AD": "\xAD",
+    "%ae": "\xAE",
+    "%Ae": "\xAE",
+    "%aE": "\xAE",
+    "%AE": "\xAE",
+    "%af": "\xAF",
+    "%Af": "\xAF",
+    "%aF": "\xAF",
+    "%AF": "\xAF",
+    "%b0": "\xB0",
+    "%B0": "\xB0",
+    "%b1": "\xB1",
+    "%B1": "\xB1",
+    "%b2": "\xB2",
+    "%B2": "\xB2",
+    "%b3": "\xB3",
+    "%B3": "\xB3",
+    "%b4": "\xB4",
+    "%B4": "\xB4",
+    "%b5": "\xB5",
+    "%B5": "\xB5",
+    "%b6": "\xB6",
+    "%B6": "\xB6",
+    "%b7": "\xB7",
+    "%B7": "\xB7",
+    "%b8": "\xB8",
+    "%B8": "\xB8",
+    "%b9": "\xB9",
+    "%B9": "\xB9",
+    "%ba": "\xBA",
+    "%Ba": "\xBA",
+    "%bA": "\xBA",
+    "%BA": "\xBA",
+    "%bb": "\xBB",
+    "%Bb": "\xBB",
+    "%bB": "\xBB",
+    "%BB": "\xBB",
+    "%bc": "\xBC",
+    "%Bc": "\xBC",
+    "%bC": "\xBC",
+    "%BC": "\xBC",
+    "%bd": "\xBD",
+    "%Bd": "\xBD",
+    "%bD": "\xBD",
+    "%BD": "\xBD",
+    "%be": "\xBE",
+    "%Be": "\xBE",
+    "%bE": "\xBE",
+    "%BE": "\xBE",
+    "%bf": "\xBF",
+    "%Bf": "\xBF",
+    "%bF": "\xBF",
+    "%BF": "\xBF",
+    "%c0": "\xC0",
+    "%C0": "\xC0",
+    "%c1": "\xC1",
+    "%C1": "\xC1",
+    "%c2": "\xC2",
+    "%C2": "\xC2",
+    "%c3": "\xC3",
+    "%C3": "\xC3",
+    "%c4": "\xC4",
+    "%C4": "\xC4",
+    "%c5": "\xC5",
+    "%C5": "\xC5",
+    "%c6": "\xC6",
+    "%C6": "\xC6",
+    "%c7": "\xC7",
+    "%C7": "\xC7",
+    "%c8": "\xC8",
+    "%C8": "\xC8",
+    "%c9": "\xC9",
+    "%C9": "\xC9",
+    "%ca": "\xCA",
+    "%Ca": "\xCA",
+    "%cA": "\xCA",
+    "%CA": "\xCA",
+    "%cb": "\xCB",
+    "%Cb": "\xCB",
+    "%cB": "\xCB",
+    "%CB": "\xCB",
+    "%cc": "\xCC",
+    "%Cc": "\xCC",
+    "%cC": "\xCC",
+    "%CC": "\xCC",
+    "%cd": "\xCD",
+    "%Cd": "\xCD",
+    "%cD": "\xCD",
+    "%CD": "\xCD",
+    "%ce": "\xCE",
+    "%Ce": "\xCE",
+    "%cE": "\xCE",
+    "%CE": "\xCE",
+    "%cf": "\xCF",
+    "%Cf": "\xCF",
+    "%cF": "\xCF",
+    "%CF": "\xCF",
+    "%d0": "\xD0",
+    "%D0": "\xD0",
+    "%d1": "\xD1",
+    "%D1": "\xD1",
+    "%d2": "\xD2",
+    "%D2": "\xD2",
+    "%d3": "\xD3",
+    "%D3": "\xD3",
+    "%d4": "\xD4",
+    "%D4": "\xD4",
+    "%d5": "\xD5",
+    "%D5": "\xD5",
+    "%d6": "\xD6",
+    "%D6": "\xD6",
+    "%d7": "\xD7",
+    "%D7": "\xD7",
+    "%d8": "\xD8",
+    "%D8": "\xD8",
+    "%d9": "\xD9",
+    "%D9": "\xD9",
+    "%da": "\xDA",
+    "%Da": "\xDA",
+    "%dA": "\xDA",
+    "%DA": "\xDA",
+    "%db": "\xDB",
+    "%Db": "\xDB",
+    "%dB": "\xDB",
+    "%DB": "\xDB",
+    "%dc": "\xDC",
+    "%Dc": "\xDC",
+    "%dC": "\xDC",
+    "%DC": "\xDC",
+    "%dd": "\xDD",
+    "%Dd": "\xDD",
+    "%dD": "\xDD",
+    "%DD": "\xDD",
+    "%de": "\xDE",
+    "%De": "\xDE",
+    "%dE": "\xDE",
+    "%DE": "\xDE",
+    "%df": "\xDF",
+    "%Df": "\xDF",
+    "%dF": "\xDF",
+    "%DF": "\xDF",
+    "%e0": "\xE0",
+    "%E0": "\xE0",
+    "%e1": "\xE1",
+    "%E1": "\xE1",
+    "%e2": "\xE2",
+    "%E2": "\xE2",
+    "%e3": "\xE3",
+    "%E3": "\xE3",
+    "%e4": "\xE4",
+    "%E4": "\xE4",
+    "%e5": "\xE5",
+    "%E5": "\xE5",
+    "%e6": "\xE6",
+    "%E6": "\xE6",
+    "%e7": "\xE7",
+    "%E7": "\xE7",
+    "%e8": "\xE8",
+    "%E8": "\xE8",
+    "%e9": "\xE9",
+    "%E9": "\xE9",
+    "%ea": "\xEA",
+    "%Ea": "\xEA",
+    "%eA": "\xEA",
+    "%EA": "\xEA",
+    "%eb": "\xEB",
+    "%Eb": "\xEB",
+    "%eB": "\xEB",
+    "%EB": "\xEB",
+    "%ec": "\xEC",
+    "%Ec": "\xEC",
+    "%eC": "\xEC",
+    "%EC": "\xEC",
+    "%ed": "\xED",
+    "%Ed": "\xED",
+    "%eD": "\xED",
+    "%ED": "\xED",
+    "%ee": "\xEE",
+    "%Ee": "\xEE",
+    "%eE": "\xEE",
+    "%EE": "\xEE",
+    "%ef": "\xEF",
+    "%Ef": "\xEF",
+    "%eF": "\xEF",
+    "%EF": "\xEF",
+    "%f0": "\xF0",
+    "%F0": "\xF0",
+    "%f1": "\xF1",
+    "%F1": "\xF1",
+    "%f2": "\xF2",
+    "%F2": "\xF2",
+    "%f3": "\xF3",
+    "%F3": "\xF3",
+    "%f4": "\xF4",
+    "%F4": "\xF4",
+    "%f5": "\xF5",
+    "%F5": "\xF5",
+    "%f6": "\xF6",
+    "%F6": "\xF6",
+    "%f7": "\xF7",
+    "%F7": "\xF7",
+    "%f8": "\xF8",
+    "%F8": "\xF8",
+    "%f9": "\xF9",
+    "%F9": "\xF9",
+    "%fa": "\xFA",
+    "%Fa": "\xFA",
+    "%fA": "\xFA",
+    "%FA": "\xFA",
+    "%fb": "\xFB",
+    "%Fb": "\xFB",
+    "%fB": "\xFB",
+    "%FB": "\xFB",
+    "%fc": "\xFC",
+    "%Fc": "\xFC",
+    "%fC": "\xFC",
+    "%FC": "\xFC",
+    "%fd": "\xFD",
+    "%Fd": "\xFD",
+    "%fD": "\xFD",
+    "%FD": "\xFD",
+    "%fe": "\xFE",
+    "%Fe": "\xFE",
+    "%fE": "\xFE",
+    "%FE": "\xFE",
+    "%ff": "\xFF",
+    "%Ff": "\xFF",
+    "%fF": "\xFF",
+    "%FF": "\xFF"
+  };
+  function encodedReplacer(match) {
+    return EncodedLookup[match];
+  }
+  function decodeUtf8Text(text) {
+    for (var i = 0, len = text.length;i < len; ++i) {
+      if (text.charCodeAt(i) > 127) {
+        return decodeText(text, "binary", "utf8");
+      }
+    }
+    return text;
+  }
+  var STATE_KEY = 0;
+  var STATE_VALUE = 1;
+  var STATE_CHARSET = 2;
+  var STATE_LANG = 3;
+  function parseFormDataDisposition(str) {
+    if (!str.startsWith('form-data; name="')) {
+      return;
+    }
+    let valueStart = 17;
+    let valueEnd = str.indexOf('"', valueStart);
+    if (valueEnd === -1 || str.indexOf("\\", valueStart) !== -1) {
+      return;
+    }
+    const res = ["form-data", ["name", decodeUtf8Text(str.slice(valueStart, valueEnd))]];
+    let pos = valueEnd + 1;
+    while (pos < str.length && str[pos] !== ";") {
+      ++pos;
+    }
+    if (pos === str.length) {
+      return res;
+    }
+    ++pos;
+    while (str[pos] === " " || str[pos] === "\t") {
+      ++pos;
+    }
+    if (!str.startsWith('filename="', pos)) {
+      return;
+    }
+    valueStart = pos + 10;
+    valueEnd = str.indexOf('"', valueStart);
+    if (valueEnd === -1 || str.indexOf("\\", valueStart) !== -1) {
+      return;
+    }
+    res.push(["filename", decodeUtf8Text(str.slice(valueStart, valueEnd))]);
+    return res;
+  }
+  function parseParams(str) {
+    if (str.indexOf(";") === -1) {
+      return [decodeUtf8Text(str)];
+    }
+    const fastFormData = parseFormDataDisposition(str);
+    if (fastFormData !== undefined) {
+      return fastFormData;
+    }
+    const res = [];
+    let state = STATE_KEY;
+    let charset = "";
+    let inquote = false;
+    let escaping = false;
+    let p = 0;
+    let tmp = "";
+    const len = str.length;
+    for (var i = 0;i < len; ++i) {
+      const char = str[i];
+      if (char === "\\" && inquote) {
+        if (escaping) {
+          escaping = false;
+        } else {
+          escaping = true;
+          continue;
+        }
+      } else if (char === '"') {
+        if (!escaping) {
+          if (inquote) {
+            inquote = false;
+            state = STATE_KEY;
+            while (i + 1 < len && str[i + 1] !== ";") {
+              ++i;
+            }
+          } else {
+            inquote = true;
+          }
+          continue;
+        } else {
+          escaping = false;
+        }
+      } else {
+        if (escaping && inquote) {
+          tmp += "\\";
+        }
+        escaping = false;
+        if ((state === STATE_CHARSET || state === STATE_LANG) && char === "'") {
+          if (state === STATE_CHARSET) {
+            state = STATE_LANG;
+            charset = tmp.substring(1);
+          } else {
+            state = STATE_VALUE;
+          }
+          tmp = "";
+          continue;
+        } else if (state === STATE_KEY && (char === "*" || char === "=") && res.length) {
+          state = char === "*" ? STATE_CHARSET : STATE_VALUE;
+          res[p] = [tmp, undefined];
+          tmp = "";
+          continue;
+        } else if (!inquote && char === ";") {
+          state = STATE_KEY;
+          if (charset) {
+            if (tmp.length) {
+              tmp = decodeText(tmp.replace(RE_ENCODED, encodedReplacer), "binary", charset);
+            }
+            charset = "";
+          } else if (tmp.length) {
+            tmp = decodeUtf8Text(tmp);
+          }
+          if (res[p] === undefined) {
+            res[p] = tmp;
+          } else {
+            res[p][1] = tmp;
+          }
+          tmp = "";
+          ++p;
+          continue;
+        } else if (!inquote && (char === " " || char === "\t")) {
+          continue;
+        }
+      }
+      tmp += char;
+    }
+    if (charset && tmp.length) {
+      tmp = decodeText(tmp.replace(RE_ENCODED, encodedReplacer), "binary", charset);
+    } else if (tmp) {
+      tmp = decodeUtf8Text(tmp);
+    }
+    if (res[p] === undefined) {
+      if (tmp) {
+        res[p] = tmp;
+      }
+    } else {
+      res[p][1] = tmp;
+    }
+    return res;
+  }
+  module.exports = parseParams;
+});
+
+// node_modules/@fastify/busboy/lib/utils/basename.js
+var require_basename = __commonJS(function(exports, module) {
+  module.exports = function basename(path) {
+    if (typeof path !== "string") {
+      return "";
+    }
+    for (var i = path.length - 1;i >= 0; --i) {
+      switch (path.charCodeAt(i)) {
+        case 47:
+        case 92:
+          path = path.slice(i + 1);
+          return path === ".." || path === "." ? "" : path;
+      }
+    }
+    return path === ".." || path === "." ? "" : path;
+  };
+});
+
+// node_modules/@fastify/busboy/lib/types/multipart.js
+var require_multipart = __commonJS(function(exports, module) {
+  var { Readable } = __require("stream");
+  var { inherits } = __require("util");
+  var Dicer = require_Dicer();
+  var parseParams = require_parseParams();
+  var decodeText = require_decodeText();
+  var basename = require_basename();
+  var getLimit = require_getLimit();
+  var RE_BOUNDARY = /^boundary$/i;
+  var RE_FIELD = /^form-data$/i;
+  var RE_CHARSET = /^charset$/i;
+  var RE_FILENAME = /^filename$/i;
+  var RE_NAME = /^name$/i;
+  Multipart.detect = /^multipart\/form-data/i;
+  function Multipart(boy, cfg) {
+    let i;
+    let len;
+    const self2 = this;
+    let boundary;
+    const limits = cfg.limits;
+    const isPartAFile = cfg.isPartAFile || ((fieldName, contentType, fileName) => contentType === "application/octet-stream" || fileName !== undefined);
+    const parsedConType = cfg.parsedConType || [];
+    const defCharset = cfg.defCharset || "utf8";
+    const preservePath = cfg.preservePath;
+    const fileOpts = { highWaterMark: cfg.fileHwm };
+    for (i = 0, len = parsedConType.length;i < len; ++i) {
+      if (Array.isArray(parsedConType[i]) && RE_BOUNDARY.test(parsedConType[i][0])) {
+        boundary = parsedConType[i][1];
+        break;
+      }
+    }
+    function checkFinished() {
+      if (nends === 0 && finished && !boy._done) {
+        finished = false;
+        self2.end();
+      }
+    }
+    if (typeof boundary !== "string") {
+      throw new Error("Multipart: Boundary not found");
+    }
+    const fieldSizeLimit = getLimit(limits, "fieldSize", 1 * 1024 * 1024);
+    const fileSizeLimit = getLimit(limits, "fileSize", Infinity);
+    const filesLimit = getLimit(limits, "files", Infinity);
+    const fieldsLimit = getLimit(limits, "fields", Infinity);
+    const partsLimit = getLimit(limits, "parts", Infinity);
+    const headerPairsLimit = getLimit(limits, "headerPairs", 2000);
+    const headerSizeLimit = getLimit(limits, "headerSize", 80 * 1024);
+    let nfiles = 0;
+    let nfields = 0;
+    let nends = 0;
+    let curFile;
+    let curField;
+    let finished = false;
+    this._needDrain = false;
+    this._pause = false;
+    this._cb = undefined;
+    this._nparts = 0;
+    this._boy = boy;
+    const parserCfg = {
+      boundary,
+      maxHeaderPairs: headerPairsLimit,
+      maxHeaderSize: headerSizeLimit,
+      partHwm: fileOpts.highWaterMark,
+      highWaterMark: cfg.highWaterMark
+    };
+    this.parser = new Dicer(parserCfg);
+    this.parser.on("drain", function() {
+      self2._needDrain = false;
+      if (self2._cb && !self2._pause) {
+        const cb = self2._cb;
+        self2._cb = undefined;
+        cb();
+      }
+    }).on("part", function onPart(part) {
+      if (++self2._nparts > partsLimit) {
+        self2.parser.removeListener("part", onPart);
+        self2.parser.on("part", skipPart);
+        boy.hitPartsLimit = true;
+        boy.emit("partsLimit");
+        return skipPart(part);
+      }
+      if (curField) {
+        const field = curField;
+        field.emit("end");
+        field.removeAllListeners("end");
+      }
+      part.on("header", function(header) {
+        let contype;
+        let fieldname;
+        let parsed;
+        let charset;
+        let encoding;
+        let filename;
+        let nsize = 0;
+        if (header["content-type"]) {
+          const contentType = header["content-type"][0];
+          if (contentType.length !== 0 && contentType.indexOf(";") === -1 && contentType.indexOf(" ") === -1 && contentType.indexOf("\t") === -1) {
+            contype = contentType.toLowerCase();
+          } else {
+            parsed = parseParams(contentType);
+            if (parsed[0]) {
+              contype = parsed[0].toLowerCase();
+              for (i = 0, len = parsed.length;i < len; ++i) {
+                if (RE_CHARSET.test(parsed[i][0])) {
+                  charset = parsed[i][1].toLowerCase();
+                  break;
+                }
+              }
+            }
+          }
+        }
+        if (contype === undefined) {
+          contype = "text/plain";
+        }
+        if (charset === undefined) {
+          charset = defCharset;
+        }
+        if (header["content-disposition"]) {
+          parsed = parseParams(header["content-disposition"][0]);
+          if (!RE_FIELD.test(parsed[0])) {
+            return skipPart(part);
+          }
+          for (i = 0, len = parsed.length;i < len; ++i) {
+            if (RE_NAME.test(parsed[i][0])) {
+              fieldname = parsed[i][1];
+              if (hasBareLineBreak(fieldname)) {
+                return skipPart(part);
+              }
+            } else if (RE_FILENAME.test(parsed[i][0])) {
+              filename = parsed[i][1];
+              if (hasBareLineBreak(filename)) {
+                return skipPart(part);
+              }
+              if (!preservePath) {
+                filename = basename(filename);
+              }
+            }
+          }
+        } else {
+          return skipPart(part);
+        }
+        if (header["content-transfer-encoding"]) {
+          encoding = header["content-transfer-encoding"][0].toLowerCase();
+        } else {
+          encoding = "7bit";
+        }
+        let onData, onEnd;
+        if (isPartAFile(fieldname, contype, filename)) {
+          if (nfiles === filesLimit) {
+            if (!boy.hitFilesLimit) {
+              boy.hitFilesLimit = true;
+              boy.emit("filesLimit");
+            }
+            return skipPart(part);
+          }
+          ++nfiles;
+          if (boy.listenerCount("file") === 0) {
+            self2.parser._ignore();
+            return;
+          }
+          ++nends;
+          const file = new FileStream(fileOpts);
+          curFile = file;
+          file.on("end", function() {
+            --nends;
+            self2._pause = false;
+            checkFinished();
+            if (self2._cb && !self2._needDrain) {
+              const cb = self2._cb;
+              self2._cb = undefined;
+              cb();
+            }
+          });
+          file._read = function(n) {
+            if (!self2._pause) {
+              return;
+            }
+            self2._pause = false;
+            if (self2._cb && !self2._needDrain) {
+              const cb = self2._cb;
+              self2._cb = undefined;
+              cb();
+            }
+          };
+          boy.emit("file", fieldname, file, filename, encoding, contype);
+          onData = function(data) {
+            if ((nsize += data.length) > fileSizeLimit) {
+              const extralen = fileSizeLimit - nsize + data.length;
+              if (extralen > 0) {
+                file.push(data.slice(0, extralen));
+              }
+              file.truncated = true;
+              file.bytesRead = fileSizeLimit;
+              part.removeAllListeners("data");
+              file.emit("limit");
+              return;
+            } else if (!file.push(data)) {
+              self2._pause = true;
+            }
+            file.bytesRead = nsize;
+          };
+          onEnd = function() {
+            curFile = undefined;
+            file.push(null);
+          };
+        } else {
+          if (nfields === fieldsLimit) {
+            if (!boy.hitFieldsLimit) {
+              boy.hitFieldsLimit = true;
+              boy.emit("fieldsLimit");
+            }
+            return skipPart(part);
+          }
+          ++nfields;
+          ++nends;
+          let buffer = "";
+          let truncated = false;
+          curField = part;
+          onData = function(data) {
+            if ((nsize += data.length) > fieldSizeLimit) {
+              const extralen = fieldSizeLimit - (nsize - data.length);
+              buffer += data.toString("binary", 0, extralen);
+              truncated = true;
+              part.removeAllListeners("data");
+            } else {
+              buffer += data.toString("binary");
+            }
+          };
+          onEnd = function() {
+            curField = undefined;
+            if (buffer.length) {
+              buffer = decodeText(buffer, "binary", charset);
+            }
+            boy.emit("field", fieldname, buffer, false, truncated, encoding, contype);
+            --nends;
+            checkFinished();
+          };
+        }
+        part._readableState.sync = false;
+        part.on("data", onData);
+        part.on("end", onEnd);
+      }).on("error", function(err) {
+        if (curFile) {
+          curFile.emit("error", err);
+        }
+      });
+    }).on("error", function(err) {
+      boy.emit("error", err);
+    }).on("finish", function() {
+      finished = true;
+      checkFinished();
+    });
+  }
+  Multipart.prototype.write = function(chunk, cb) {
+    if (!this.parser.writable) {
+      cb();
+      return;
+    }
+    const r = this.parser.write(chunk);
+    if (r && !this._pause) {
+      cb();
+    } else {
+      this._needDrain = !r;
+      this._cb = cb;
+    }
+  };
+  Multipart.prototype.end = function() {
+    const self2 = this;
+    if (self2.parser.writable) {
+      self2.parser.end();
+    } else if (!self2._boy._done) {
+      process.nextTick(function() {
+        self2._boy._done = true;
+        self2._boy.emit("finish");
+      });
+    }
+  };
+  function skipPart(part) {
+    part.resume();
+  }
+  function hasBareLineBreak(value) {
+    return typeof value === "string" && (value.includes("\r") || value.includes(`
+`));
+  }
+  function FileStream(opts) {
+    Readable.call(this, opts);
+    this.bytesRead = 0;
+    this.truncated = false;
+  }
+  inherits(FileStream, Readable);
+  FileStream.prototype._read = function(n) {};
+  module.exports = Multipart;
+});
+
+// node_modules/@fastify/busboy/lib/utils/Decoder.js
+var require_Decoder = __commonJS(function(exports, module) {
+  var RE_PLUS = /\+/g;
+  var HEX = [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ];
+  function Decoder() {
+    this.buffer = undefined;
+  }
+  Decoder.prototype.write = function(str) {
+    str = str.replace(RE_PLUS, " ");
+    let res = "";
+    let i = 0;
+    let p = 0;
+    const len = str.length;
+    for (;i < len; ++i) {
+      if (this.buffer !== undefined) {
+        if (!HEX[str.charCodeAt(i)]) {
+          res += "%" + this.buffer;
+          this.buffer = undefined;
+          --i;
+        } else {
+          this.buffer += str[i];
+          ++p;
+          if (this.buffer.length === 2) {
+            res += String.fromCharCode(parseInt(this.buffer, 16));
+            this.buffer = undefined;
+          }
+        }
+      } else if (str[i] === "%") {
+        if (i > p) {
+          res += str.substring(p, i);
+          p = i;
+        }
+        this.buffer = "";
+        ++p;
+      }
+    }
+    if (p < len && this.buffer === undefined) {
+      res += str.substring(p);
+    }
+    return res;
+  };
+  Decoder.prototype.reset = function() {
+    this.buffer = undefined;
+  };
+  module.exports = Decoder;
+});
+
+// node_modules/@fastify/busboy/lib/types/urlencoded.js
+var require_urlencoded = __commonJS(function(exports, module) {
+  var Decoder = require_Decoder();
+  var decodeText = require_decodeText();
+  var getLimit = require_getLimit();
+  var RE_CHARSET = /^charset$/i;
+  UrlEncoded.detect = /^application\/x-www-form-urlencoded/i;
+  function UrlEncoded(boy, cfg) {
+    const limits = cfg.limits;
+    const parsedConType = cfg.parsedConType;
+    this.boy = boy;
+    this.fieldSizeLimit = getLimit(limits, "fieldSize", 1 * 1024 * 1024);
+    this.fieldNameSizeLimit = getLimit(limits, "fieldNameSize", 100);
+    this.fieldsLimit = getLimit(limits, "fields", Infinity);
+    let charset;
+    for (var i = 0, len = parsedConType.length;i < len; ++i) {
+      if (Array.isArray(parsedConType[i]) && RE_CHARSET.test(parsedConType[i][0])) {
+        charset = parsedConType[i][1].toLowerCase();
+        break;
+      }
+    }
+    if (charset === undefined) {
+      charset = cfg.defCharset || "utf8";
+    }
+    this.decoder = new Decoder;
+    this.charset = charset;
+    this._fields = 0;
+    this._state = "key";
+    this._checkingBytes = true;
+    this._bytesKey = 0;
+    this._bytesVal = 0;
+    this._key = "";
+    this._val = "";
+    this._keyTrunc = false;
+    this._valTrunc = false;
+    this._hitLimit = false;
+  }
+  UrlEncoded.prototype.write = function(data, cb) {
+    if (this._fields === this.fieldsLimit) {
+      if (!this.boy.hitFieldsLimit) {
+        this.boy.hitFieldsLimit = true;
+        this.boy.emit("fieldsLimit");
+      }
+      return cb();
+    }
+    let idxeq;
+    let idxamp;
+    let i;
+    let p = 0;
+    const len = data.length;
+    while (p < len) {
+      if (this._state === "key") {
+        idxeq = idxamp = undefined;
+        for (i = p;i < len; ++i) {
+          if (!this._checkingBytes) {
+            ++p;
+          }
+          if (data[i] === 61) {
+            idxeq = i;
+            break;
+          } else if (data[i] === 38) {
+            idxamp = i;
+            break;
+          }
+          if (this._checkingBytes && this._bytesKey === this.fieldNameSizeLimit) {
+            this._hitLimit = true;
+            break;
+          } else if (this._checkingBytes) {
+            ++this._bytesKey;
+          }
+        }
+        if (idxeq !== undefined) {
+          if (idxeq > p) {
+            this._key += this.decoder.write(data.toString("binary", p, idxeq));
+          }
+          this._state = "val";
+          this._hitLimit = false;
+          this._checkingBytes = true;
+          this._val = "";
+          this._bytesVal = 0;
+          this._valTrunc = false;
+          this.decoder.reset();
+          p = idxeq + 1;
+        } else if (idxamp !== undefined) {
+          ++this._fields;
+          let key;
+          const keyTrunc = this._keyTrunc;
+          if (idxamp > p) {
+            key = this._key += this.decoder.write(data.toString("binary", p, idxamp));
+          } else {
+            key = this._key;
+          }
+          this._hitLimit = false;
+          this._checkingBytes = true;
+          this._key = "";
+          this._bytesKey = 0;
+          this._keyTrunc = false;
+          this.decoder.reset();
+          if (key.length) {
+            this.boy.emit("field", decodeText(key, "binary", this.charset), "", keyTrunc, false);
+          }
+          p = idxamp + 1;
+          if (this._fields === this.fieldsLimit) {
+            return cb();
+          }
+        } else if (this._hitLimit) {
+          if (i > p) {
+            this._key += this.decoder.write(data.toString("binary", p, i));
+          }
+          p = i;
+          if ((this._bytesKey = this._key.length) === this.fieldNameSizeLimit) {
+            this._checkingBytes = false;
+            this._keyTrunc = true;
+          }
+        } else {
+          if (p < len) {
+            this._key += this.decoder.write(data.toString("binary", p));
+          }
+          p = len;
+        }
+      } else {
+        idxamp = undefined;
+        for (i = p;i < len; ++i) {
+          if (!this._checkingBytes) {
+            ++p;
+          }
+          if (data[i] === 38) {
+            idxamp = i;
+            break;
+          }
+          if (this._checkingBytes && this._bytesVal === this.fieldSizeLimit) {
+            this._hitLimit = true;
+            break;
+          } else if (this._checkingBytes) {
+            ++this._bytesVal;
+          }
+        }
+        if (idxamp !== undefined) {
+          ++this._fields;
+          if (idxamp > p) {
+            this._val += this.decoder.write(data.toString("binary", p, idxamp));
+          }
+          this.boy.emit("field", decodeText(this._key, "binary", this.charset), decodeText(this._val, "binary", this.charset), this._keyTrunc, this._valTrunc);
+          this._state = "key";
+          this._hitLimit = false;
+          this._checkingBytes = true;
+          this._key = "";
+          this._bytesKey = 0;
+          this._keyTrunc = false;
+          this.decoder.reset();
+          p = idxamp + 1;
+          if (this._fields === this.fieldsLimit) {
+            return cb();
+          }
+        } else if (this._hitLimit) {
+          if (i > p) {
+            this._val += this.decoder.write(data.toString("binary", p, i));
+          }
+          p = i;
+          if (this._val === "" && this.fieldSizeLimit === 0 || (this._bytesVal = this._val.length) === this.fieldSizeLimit) {
+            this._checkingBytes = false;
+            this._valTrunc = true;
+          }
+        } else {
+          if (p < len) {
+            this._val += this.decoder.write(data.toString("binary", p));
+          }
+          p = len;
+        }
+      }
+    }
+    cb();
+  };
+  UrlEncoded.prototype.end = function() {
+    if (this.boy._done) {
+      return;
+    }
+    if (this._state === "key" && this._key.length > 0) {
+      this.boy.emit("field", decodeText(this._key, "binary", this.charset), "", this._keyTrunc, false);
+    } else if (this._state === "val") {
+      this.boy.emit("field", decodeText(this._key, "binary", this.charset), decodeText(this._val, "binary", this.charset), this._keyTrunc, this._valTrunc);
+    }
+    this.boy._done = true;
+    this.boy.emit("finish");
+  };
+  module.exports = UrlEncoded;
+});
+
+// node_modules/@fastify/busboy/index.js
+var require_busboy = __commonJS(function(exports, module) {
+  var WritableStream = __require("stream").Writable;
+  var { inherits } = __require("util");
+  var Dicer = require_Dicer();
+  var MultipartParser = require_multipart();
+  var UrlencodedParser = require_urlencoded();
+  var parseParams = require_parseParams();
+  function Busboy(opts) {
+    if (!(this instanceof Busboy)) {
+      return new Busboy(opts);
+    }
+    if (typeof opts !== "object") {
+      throw new TypeError("Busboy expected an options-Object.");
+    }
+    if (typeof opts.headers !== "object") {
+      throw new TypeError("Busboy expected an options-Object with headers-attribute.");
+    }
+    if (typeof opts.headers["content-type"] !== "string") {
+      throw new TypeError("Missing Content-Type-header.");
+    }
+    const {
+      headers,
+      ...streamOptions
+    } = opts;
+    this.opts = {
+      autoDestroy: false,
+      ...streamOptions
+    };
+    WritableStream.call(this, this.opts);
+    this._done = false;
+    this._parser = this.getParserByHeaders(headers);
+    this._finished = false;
+  }
+  inherits(Busboy, WritableStream);
+  Busboy.prototype.emit = function(ev) {
+    if (ev === "finish") {
+      if (!this._done) {
+        this._parser?.end();
+        return;
+      } else if (this._finished) {
+        return;
+      }
+      this._finished = true;
+    }
+    WritableStream.prototype.emit.apply(this, arguments);
+  };
+  Busboy.prototype.getParserByHeaders = function(headers) {
+    const parsed = parseParams(headers["content-type"]);
+    const cfg = {
+      defCharset: this.opts.defCharset,
+      fileHwm: this.opts.fileHwm,
+      headers,
+      highWaterMark: this.opts.highWaterMark,
+      isPartAFile: this.opts.isPartAFile,
+      limits: this.opts.limits,
+      parsedConType: parsed,
+      preservePath: this.opts.preservePath
+    };
+    if (MultipartParser.detect.test(parsed[0])) {
+      return new MultipartParser(this, cfg);
+    }
+    if (UrlencodedParser.detect.test(parsed[0])) {
+      return new UrlencodedParser(this, cfg);
+    }
+    throw new Error("Unsupported Content-Type.");
+  };
+  Busboy.prototype._write = function(chunk, encoding, cb) {
+    this._parser.write(chunk, cb);
+  };
+  module.exports = Busboy;
+  module.exports.default = Busboy;
+  module.exports.Busboy = Busboy;
+  module.exports.Dicer = Dicer;
+});
+
+// node_modules/firebase-admin/lib/utils/api-request.js
+var require_api_request = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Http2SessionHandler = exports.ExponentialBackoffPoller = exports.ApiSettings = exports.AuthorizedHttp2Client = exports.AuthorizedHttpClient = exports.Http2Client = exports.HttpClient = exports.RequestClient = exports.RequestResponseError = undefined;
+  exports.defaultRetryConfig = defaultRetryConfig;
+  exports.parseHttpResponse = parseHttpResponse;
+  var error_1 = require_error();
+  var error_2 = require_error2();
+  var validator = require_validator();
+  var http = __require("http");
+  var https = __require("https");
+  var http2 = __require("http2");
+  var events_1 = __require("events");
+  var credential_internal_1 = require_credential_internal();
+  var index_1 = require_utils6();
+
+  class DefaultRequestResponse {
+    constructor(resp) {
+      this.status = resp.status;
+      this.headers = resp.headers;
+      this.text = resp.data;
+      this.config = resp.config;
+      try {
+        if (!resp.data) {
+          throw new error_2.FirebaseAppError({ code: error_2.AppErrorCode.INTERNAL_ERROR, message: "HTTP response missing data." });
+        }
+        this.parsedData = JSON.parse(resp.data);
+      } catch (err) {
+        this.parsedData = undefined;
+        this.parseError = err;
+      }
+    }
+    get data() {
+      if (this.isJson()) {
+        return this.parsedData;
+      }
+      throw new error_2.FirebaseAppError({
+        code: error_2.AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
+        message: "Error while parsing response data",
+        cause: this.parseError,
+        httpResponse: (0, error_1.toHttpResponse)(this)
+      });
+    }
+    isJson() {
+      return typeof this.parsedData !== "undefined";
+    }
+  }
+
+  class MultipartRequestResponse {
+    constructor(resp) {
+      this.status = resp.status;
+      this.headers = resp.headers;
+      this.multipart = resp.multipart;
+      this.config = resp.config;
+    }
+    get text() {
+      throw new error_2.FirebaseAppError({
+        code: error_2.AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
+        message: "Unable to parse multipart payload as text"
+      });
+    }
+    get data() {
+      throw new error_2.FirebaseAppError({
+        code: error_2.AppErrorCode.UNABLE_TO_PARSE_RESPONSE,
+        message: "Unable to parse multipart payload as JSON"
+      });
+    }
+    isJson() {
+      return false;
+    }
+  }
+
+  class RequestResponseError extends Error {
+    constructor(response) {
+      super(`Server responded with status ${response.status}.`);
+      this.response = response;
+      Object.setPrototypeOf(this, RequestResponseError.prototype);
+    }
+  }
+  exports.RequestResponseError = RequestResponseError;
+  function defaultRetryConfig() {
+    return {
+      maxRetries: 4,
+      statusCodes: [503],
+      ioErrorCodes: ["ECONNRESET", "ETIMEDOUT"],
+      backOffFactor: 0.5,
+      maxDelayInMillis: 60 * 1000
+    };
+  }
+  function validateRetryConfig(retry) {
+    if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
+      throw new error_2.FirebaseAppError({
+        code: error_2.AppErrorCode.INVALID_ARGUMENT,
+        message: "maxRetries must be a non-negative integer"
+      });
+    }
+    if (typeof retry.backOffFactor !== "undefined") {
+      if (!validator.isNumber(retry.backOffFactor) || retry.backOffFactor < 0) {
+        throw new error_2.FirebaseAppError({
+          code: error_2.AppErrorCode.INVALID_ARGUMENT,
+          message: "backOffFactor must be a non-negative number"
+        });
+      }
+    }
+    if (!validator.isNumber(retry.maxDelayInMillis) || retry.maxDelayInMillis < 0) {
+      throw new error_2.FirebaseAppError({
+        code: error_2.AppErrorCode.INVALID_ARGUMENT,
+        message: "maxDelayInMillis must be a non-negative integer"
+      });
+    }
+    if (typeof retry.statusCodes !== "undefined" && !validator.isArray(retry.statusCodes)) {
+      throw new error_2.FirebaseAppError({ code: error_2.AppErrorCode.INVALID_ARGUMENT, message: "statusCodes must be an array" });
+    }
+    if (typeof retry.ioErrorCodes !== "undefined" && !validator.isArray(retry.ioErrorCodes)) {
+      throw new error_2.FirebaseAppError({ code: error_2.AppErrorCode.INVALID_ARGUMENT, message: "ioErrorCodes must be an array" });
+    }
+  }
+
+  class RequestClient {
+    constructor(retry = defaultRetryConfig()) {
+      if (retry) {
+        this.retry = retry;
+        validateRetryConfig(this.retry);
+      }
+    }
+    createRequestResponse(resp) {
+      if (resp.multipart) {
+        return new MultipartRequestResponse(resp);
+      }
+      return new DefaultRequestResponse(resp);
+    }
+    waitForRetry(delayMillis) {
+      if (delayMillis > 0) {
+        return new Promise((resolve) => {
+          setTimeout(resolve, delayMillis);
+        });
+      }
+      return Promise.resolve();
+    }
+    getRetryDelayMillis(retryAttempts, err) {
+      if (!this.isRetryEligible(retryAttempts, err)) {
+        return [0, false];
+      }
+      const response = err.response;
+      if (response && response.headers["retry-after"]) {
+        const delayMillis = this.parseRetryAfterIntoMillis(response.headers["retry-after"]);
+        if (delayMillis > 0) {
+          return [delayMillis, true];
+        }
+      }
+      return [this.backOffDelayMillis(retryAttempts), true];
+    }
+    isRetryEligible(retryAttempts, err) {
+      if (!this.retry) {
+        return false;
+      }
+      if (retryAttempts >= this.retry.maxRetries) {
+        return false;
+      }
+      if (err.response) {
+        const statusCodes = this.retry.statusCodes || [];
+        return statusCodes.indexOf(err.response.status) !== -1;
+      }
+      if (err.code) {
+        const retryCodes = this.retry.ioErrorCodes || [];
+        return retryCodes.indexOf(err.code) !== -1;
+      }
+      return false;
+    }
+    parseRetryAfterIntoMillis(retryAfter) {
+      const delaySeconds = parseInt(retryAfter, 10);
+      if (!isNaN(delaySeconds)) {
+        return delaySeconds * 1000;
+      }
+      const date = new Date(retryAfter);
+      if (!isNaN(date.getTime())) {
+        return date.getTime() - Date.now();
+      }
+      return -1;
+    }
+    backOffDelayMillis(retryAttempts) {
+      if (retryAttempts === 0) {
+        return 0;
+      }
+      if (!this.retry) {
+        throw new error_2.FirebaseAppError({ code: error_2.AppErrorCode.INTERNAL_ERROR, message: "Expected this.retry to exist." });
+      }
+      const backOffFactor = this.retry.backOffFactor || 0;
+      const delayInSeconds = 2 ** retryAttempts * backOffFactor;
+      return Math.min(delayInSeconds * 1000, this.retry.maxDelayInMillis);
+    }
+  }
+  exports.RequestClient = RequestClient;
+
+  class HttpClient extends RequestClient {
+    constructor(retry) {
+      super(retry);
+    }
+    send(config) {
+      return this.sendWithRetry(config);
+    }
+    sendWithRetry(config, retryAttempts = 0) {
+      return AsyncHttpCall.invoke(config).then((resp) => {
+        return this.createRequestResponse(resp);
+      }).catch((err) => {
+        const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
+        if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
+          return this.waitForRetry(delayMillis).then(() => {
+            return this.sendWithRetry(config, retryAttempts + 1);
+          });
+        }
+        if (err.response) {
+          throw new RequestResponseError(this.createRequestResponse(err.response));
+        }
+        if (err.code === "ETIMEDOUT") {
+          throw new error_2.FirebaseAppError({
+            code: error_2.AppErrorCode.NETWORK_TIMEOUT,
+            message: `Error while making request: ${err.message}.`,
+            cause: err
+          });
+        }
+        throw new error_2.FirebaseAppError({
+          code: error_2.AppErrorCode.NETWORK_ERROR,
+          message: `Error while making request: ${err.message}. Error code: ${err.code}`,
+          cause: err
+        });
+      });
+    }
+  }
+  exports.HttpClient = HttpClient;
+
+  class Http2Client extends RequestClient {
+    constructor(retry = defaultRetryConfig()) {
+      super(retry);
+    }
+    send(config) {
+      return this.sendWithRetry(config);
+    }
+    sendWithRetry(config, retryAttempts = 0) {
+      return AsyncHttp2Call.invoke(config).then((resp) => {
+        return this.createRequestResponse(resp);
+      }).catch((err) => {
+        const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
+        if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
+          return this.waitForRetry(delayMillis).then(() => {
+            return this.sendWithRetry(config, retryAttempts + 1);
+          });
+        }
+        if (err.response) {
+          throw new RequestResponseError(this.createRequestResponse(err.response));
+        }
+        if (err.code === "ETIMEDOUT") {
+          throw new error_2.FirebaseAppError({
+            code: error_2.AppErrorCode.NETWORK_TIMEOUT,
+            message: `Error while making request: ${err.message}.`,
+            cause: err
+          });
+        }
+        throw new error_2.FirebaseAppError({
+          code: error_2.AppErrorCode.NETWORK_ERROR,
+          message: `Error while making request: ${err.message}. Error code: ${err.code}`,
+          cause: err
+        });
+      });
+    }
+  }
+  exports.Http2Client = Http2Client;
+  function parseHttpResponse(response, config) {
+    const responseText = validator.isBuffer(response) ? response.toString("utf-8") : response;
+    const endOfHeaderPos = responseText.indexOf(`\r
+\r
+`);
+    const headerLines = responseText.substring(0, endOfHeaderPos).split(`\r
+`);
+    const statusLine = headerLines[0];
+    const status = statusLine.trim().split(/\s/)[1];
+    const headers = {};
+    headerLines.slice(1).forEach((line) => {
+      const colonPos = line.indexOf(":");
+      const name = line.substring(0, colonPos).trim().toLowerCase();
+      const value = line.substring(colonPos + 1).trim();
+      headers[name] = value;
+    });
+    let data = responseText.substring(endOfHeaderPos + 4);
+    if (data.endsWith(`
+`)) {
+      data = data.slice(0, -1);
+    }
+    if (data.endsWith("\r")) {
+      data = data.slice(0, -1);
+    }
+    const lowLevelResponse = {
+      status: parseInt(status, 10),
+      headers,
+      data,
+      config,
+      request: null
+    };
+    if (!validator.isNumber(lowLevelResponse.status)) {
+      throw new error_2.FirebaseAppError({ code: error_2.AppErrorCode.INTERNAL_ERROR, message: "Malformed HTTP status line." });
+    }
+    return new DefaultRequestResponse(lowLevelResponse);
+  }
+
+  class AsyncRequestCall {
+    constructor(configImpl) {
+      this.configImpl = configImpl;
+    }
+    getMultipartBoundary(headers) {
+      const contentType = headers["content-type"];
+      if (!contentType || !contentType.startsWith("multipart/")) {
+        return null;
+      }
+      const segments = contentType.split(";");
+      const emptyObject = {};
+      const headerParams = segments.slice(1).map((segment) => segment.trim().split("=")).reduce((curr, params) => {
+        if (params.length === 2) {
+          const keyValuePair = {};
+          keyValuePair[params[0]] = params[1];
+          return Object.assign(curr, keyValuePair);
+        }
+        return curr;
+      }, emptyObject);
+      return headerParams.boundary;
+    }
+    handleMultipartResponse(response, respStream, boundary) {
+      const busboy = require_busboy();
+      const multipartParser = new busboy.Dicer({ boundary });
+      const responseBuffer = [];
+      multipartParser.on("part", (part) => {
+        const tempBuffers = [];
+        part.on("data", (partData) => {
+          tempBuffers.push(partData);
+        });
+        part.on("end", () => {
+          responseBuffer.push(Buffer.concat(tempBuffers));
+        });
+      });
+      multipartParser.on("finish", () => {
+        response.data = undefined;
+        response.multipart = responseBuffer;
+        this.finalizeResponse(response);
+      });
+      respStream.pipe(multipartParser);
+    }
+    handleRegularResponse(response, respStream) {
+      const responseBuffer = [];
+      respStream.on("data", (chunk) => {
+        responseBuffer.push(chunk);
+      });
+      respStream.on("error", (err) => {
+        const req = response.request;
+        if (req && req.destroyed) {
+          return;
+        }
+        this.enhanceAndReject(err, null, req);
+      });
+      respStream.on("end", () => {
+        response.data = Buffer.concat(responseBuffer).toString();
+        this.finalizeResponse(response);
+      });
+    }
+    finalizeResponse(response) {
+      if (response.status >= 200 && response.status < 300) {
+        this.resolve(response);
+      } else {
+        this.rejectWithError("Request failed with status code " + response.status, null, response.request, response);
+      }
+    }
+    rejectWithError(message, code, request, response) {
+      const error = new Error(message);
+      this.enhanceAndReject(error, code, request, response);
+    }
+    enhanceAndReject(error, code, request, response) {
+      this.reject(this.enhanceError(error, code, request, response));
+    }
+    enhanceError(error, code, request, response) {
+      error.config = this.configImpl;
+      if (code) {
+        error.code = code;
+      }
+      error.request = request;
+      error.response = response;
+      return error;
+    }
+  }
+
+  class AsyncHttpCall extends AsyncRequestCall {
+    static invoke(config) {
+      return new AsyncHttpCall(config).promise;
+    }
+    constructor(config) {
+      const httpConfigImpl = new HttpRequestConfigImpl(config);
+      super(httpConfigImpl);
+      try {
+        this.httpConfigImpl = httpConfigImpl;
+        this.options = this.httpConfigImpl.buildRequestOptions();
+        if (!validator.isNonNullObject(this.options.headers)) {
+          this.options.headers = {};
+        }
+        this.entity = this.httpConfigImpl.buildEntity(this.options.headers);
+        this.promise = new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+          this.execute();
+        });
+      } catch (err) {
+        this.promise = Promise.reject(this.enhanceError(err, null));
+      }
+    }
+    execute() {
+      const transport = this.options.protocol === "https:" ? https : http;
+      const req = transport.request(this.options, (res) => {
+        this.handleResponse(res, req);
+      });
+      req.on("error", (err) => {
+        if (req.aborted) {
+          return;
+        }
+        this.enhanceAndReject(err, null, req);
+      });
+      const timeout = this.httpConfigImpl.timeout;
+      const timeoutCallback = () => {
+        req.destroy();
+        this.rejectWithError(`timeout of ${timeout}ms exceeded`, "ETIMEDOUT", req);
+      };
+      if (timeout) {
+        req.setTimeout(timeout, timeoutCallback);
+      }
+      req.end(this.entity);
+    }
+    handleResponse(res, req) {
+      if (req.aborted) {
+        return;
+      }
+      if (!res.statusCode) {
+        throw new error_2.FirebaseAppError({
+          code: error_2.AppErrorCode.INTERNAL_ERROR,
+          message: "Expected a statusCode on the response from a ClientRequest"
+        });
+      }
+      const response = {
+        status: res.statusCode,
+        headers: res.headers,
+        request: req,
+        data: undefined,
+        config: this.httpConfigImpl
+      };
+      const boundary = this.getMultipartBoundary(res.headers);
+      const respStream = this.uncompressResponse(res);
+      if (boundary) {
+        this.handleMultipartResponse(response, respStream, boundary);
+      } else {
+        this.handleRegularResponse(response, respStream);
+      }
+    }
+    uncompressResponse(res) {
+      let respStream = res;
+      const encodings = ["gzip", "compress", "deflate"];
+      if (res.headers["content-encoding"] && encodings.indexOf(res.headers["content-encoding"]) !== -1) {
+        const zlib = __require("zlib");
+        respStream = respStream.pipe(zlib.createUnzip());
+        delete res.headers["content-encoding"];
+      }
+      return respStream;
+    }
+  }
+
+  class AsyncHttp2Call extends AsyncRequestCall {
+    static invoke(config) {
+      return new AsyncHttp2Call(config).promise;
+    }
+    constructor(config) {
+      const http2ConfigImpl = new Http2RequestConfigImpl(config);
+      super(http2ConfigImpl);
+      try {
+        this.http2ConfigImpl = http2ConfigImpl;
+        this.options = this.http2ConfigImpl.buildRequestOptions();
+        if (!validator.isNonNullObject(this.options.headers)) {
+          this.options.headers = {};
+        }
+        this.entity = this.http2ConfigImpl.buildEntity(this.options.headers);
+        this.promise = new Promise((resolve, reject) => {
+          this.resolve = resolve;
+          this.reject = reject;
+          this.execute();
+        });
+      } catch (err) {
+        this.promise = Promise.reject(this.enhanceError(err, null));
+      }
+    }
+    execute() {
+      const req = this.http2ConfigImpl.http2SessionHandler.session.request({
+        ":method": this.options.method,
+        ":scheme": this.options.protocol,
+        ":path": this.options.path,
+        ...this.options.headers
+      });
+      req.on("response", (headers) => {
+        this.handleHttp2Response(headers, req);
+      });
+      req.on("error", (err) => {
+        if (req.aborted) {
+          return;
+        }
+        this.enhanceAndReject(err, null, req);
+      });
+      const timeout = this.http2ConfigImpl.timeout;
+      const timeoutCallback = () => {
+        req.destroy();
+        this.rejectWithError(`timeout of ${timeout}ms exceeded`, "ETIMEDOUT", req);
+      };
+      if (timeout) {
+        req.setTimeout(timeout, timeoutCallback);
+      }
+      req.end(this.entity);
+    }
+    handleHttp2Response(headers, stream) {
+      if (stream.aborted) {
+        return;
+      }
+      if (!headers[":status"]) {
+        throw new error_2.FirebaseAppError({
+          code: error_2.AppErrorCode.INTERNAL_ERROR,
+          message: "Expected a statusCode on the response from a ClientRequest"
+        });
+      }
+      const response = {
+        status: headers[":status"],
+        headers,
+        request: stream,
+        data: undefined,
+        config: this.http2ConfigImpl
+      };
+      const boundary = this.getMultipartBoundary(headers);
+      const respStream = this.uncompressResponse(headers, stream);
+      if (boundary) {
+        this.handleMultipartResponse(response, respStream, boundary);
+      } else {
+        this.handleRegularResponse(response, respStream);
+      }
+    }
+    uncompressResponse(headers, stream) {
+      let respStream = stream;
+      const encodings = ["gzip", "compress", "deflate"];
+      if (headers["content-encoding"] && encodings.indexOf(headers["content-encoding"]) !== -1) {
+        const zlib = __require("zlib");
+        respStream = respStream.pipe(zlib.createUnzip());
+        delete headers["content-encoding"];
+      }
+      return respStream;
+    }
+  }
+
+  class BaseRequestConfigImpl {
+    constructor(config) {
+      this.config = config;
+      this.config = config;
+    }
+    get method() {
+      return this.config.method;
+    }
+    get url() {
+      return this.config.url;
+    }
+    get headers() {
+      return this.config.headers;
+    }
+    get data() {
+      return this.config.data;
+    }
+    get timeout() {
+      return this.config.timeout;
+    }
+    buildEntity(headers) {
+      let data;
+      if (!this.hasEntity() || !this.isEntityEnclosingRequest()) {
+        return data;
+      }
+      if (validator.isBuffer(this.data)) {
+        data = this.data;
+      } else if (validator.isObject(this.data)) {
+        data = Buffer.from(JSON.stringify(this.data), "utf-8");
+        if (typeof headers["content-type"] === "undefined") {
+          headers["content-type"] = "application/json;charset=utf-8";
+        }
+      } else if (validator.isString(this.data)) {
+        data = Buffer.from(this.data, "utf-8");
+      } else {
+        throw new Error("Request data must be a string, a Buffer or a json serializable object");
+      }
+      headers["Content-Length"] = data.length.toString();
+      return data;
+    }
+    buildUrl() {
+      const fullUrl = this.urlWithProtocol();
+      const parsedUrl = new URL(fullUrl);
+      if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
+        return parsedUrl;
+      }
+      if (!validator.isObject(this.data)) {
+        throw new Error(`${this.method} requests cannot have a body`);
+      }
+      const dataObj = this.data;
+      for (const key in dataObj) {
+        if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
+          parsedUrl.searchParams.append(key, dataObj[key]);
+        }
+      }
+      return parsedUrl;
+    }
+    urlWithProtocol() {
+      const fullUrl = this.url;
+      if (fullUrl.startsWith("http://") || fullUrl.startsWith("https://")) {
+        return fullUrl;
+      }
+      return `https://${fullUrl}`;
+    }
+    hasEntity() {
+      return !!this.data;
+    }
+    isEntityEnclosingRequest() {
+      return this.method !== "GET" && this.method !== "HEAD";
+    }
+  }
+
+  class HttpRequestConfigImpl extends BaseRequestConfigImpl {
+    constructor(httpConfig) {
+      super(httpConfig);
+      this.httpConfig = httpConfig;
+    }
+    get httpAgent() {
+      return this.httpConfig.httpAgent;
+    }
+    buildRequestOptions() {
+      const parsed = this.buildUrl();
+      const protocol = parsed.protocol;
+      let port = parsed.port;
+      if (!port) {
+        const isHttps = protocol === "https:";
+        port = isHttps ? "443" : "80";
+      }
+      return {
+        protocol,
+        hostname: parsed.hostname,
+        port,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: this.method,
+        agent: this.httpAgent,
+        headers: Object.assign({}, this.headers)
+      };
+    }
+  }
+
+  class Http2RequestConfigImpl extends BaseRequestConfigImpl {
+    constructor(http2Config) {
+      super(http2Config);
+      this.http2Config = http2Config;
+    }
+    get http2SessionHandler() {
+      return this.http2Config.http2SessionHandler;
+    }
+    buildRequestOptions() {
+      const parsed = this.buildUrl();
+      const protocol = parsed.protocol;
+      return {
+        protocol,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: this.method,
+        headers: Object.assign({}, this.headers)
+      };
+    }
+  }
+
+  class AuthorizedHttpClient extends HttpClient {
+    constructor(app) {
+      super();
+      this.app = app;
+    }
+    send(request) {
+      return this.getToken().then((token) => {
+        const requestCopy = Object.assign({}, request);
+        requestCopy.headers = Object.assign({}, request.headers);
+        const authHeader = "Authorization";
+        requestCopy.headers[authHeader] = `Bearer ${token}`;
+        let quotaProjectId;
+        if (this.app.options.credential instanceof credential_internal_1.ApplicationDefaultCredential) {
+          quotaProjectId = this.app.options.credential.getQuotaProjectId();
+        }
+        quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || quotaProjectId;
+        if (!requestCopy.headers["x-goog-user-project"] && validator.isNonEmptyString(quotaProjectId)) {
+          requestCopy.headers["x-goog-user-project"] = quotaProjectId;
+        }
+        if (!requestCopy.httpAgent && this.app.options.httpAgent) {
+          requestCopy.httpAgent = this.app.options.httpAgent;
+        }
+        if (!requestCopy.headers["X-Goog-Api-Client"]) {
+          requestCopy.headers["X-Goog-Api-Client"] = (0, index_1.getMetricsHeader)();
+        }
+        return super.send(requestCopy);
+      });
+    }
+    getToken() {
+      return this.app.INTERNAL.getToken().then((accessTokenObj) => accessTokenObj.accessToken);
+    }
+  }
+  exports.AuthorizedHttpClient = AuthorizedHttpClient;
+
+  class AuthorizedHttp2Client extends Http2Client {
+    constructor(app) {
+      super();
+      this.app = app;
+    }
+    send(request) {
+      return this.getToken().then((token) => {
+        const requestCopy = Object.assign({}, request);
+        requestCopy.headers = Object.assign({}, request.headers);
+        const authHeader = "Authorization";
+        requestCopy.headers[authHeader] = `Bearer ${token}`;
+        let quotaProjectId;
+        if (this.app.options.credential instanceof credential_internal_1.ApplicationDefaultCredential) {
+          quotaProjectId = this.app.options.credential.getQuotaProjectId();
+        }
+        quotaProjectId = process.env.GOOGLE_CLOUD_QUOTA_PROJECT || quotaProjectId;
+        if (!requestCopy.headers["x-goog-user-project"] && validator.isNonEmptyString(quotaProjectId)) {
+          requestCopy.headers["x-goog-user-project"] = quotaProjectId;
+        }
+        if (!requestCopy.headers["X-Goog-Api-Client"]) {
+          requestCopy.headers["X-Goog-Api-Client"] = (0, index_1.getMetricsHeader)();
+        }
+        return super.send(requestCopy);
+      });
+    }
+    getToken() {
+      return this.app.INTERNAL.getToken().then((accessTokenObj) => accessTokenObj.accessToken);
+    }
+  }
+  exports.AuthorizedHttp2Client = AuthorizedHttp2Client;
+
+  class ApiSettings {
+    constructor(endpoint, httpMethod = "POST") {
+      this.endpoint = endpoint;
+      this.httpMethod = httpMethod;
+      this.setRequestValidator(null).setResponseValidator(null);
+    }
+    getEndpoint() {
+      return this.endpoint;
+    }
+    getHttpMethod() {
+      return this.httpMethod;
+    }
+    setRequestValidator(requestValidator) {
+      const nullFunction = () => {
+        return;
+      };
+      this.requestValidator = requestValidator || nullFunction;
+      return this;
+    }
+    getRequestValidator() {
+      return this.requestValidator;
+    }
+    setResponseValidator(responseValidator) {
+      const nullFunction = () => {
+        return;
+      };
+      this.responseValidator = responseValidator || nullFunction;
+      return this;
+    }
+    getResponseValidator() {
+      return this.responseValidator;
+    }
+  }
+  exports.ApiSettings = ApiSettings;
+
+  class ExponentialBackoffPoller extends events_1.EventEmitter {
+    constructor(initialPollingDelayMillis = 1000, maxPollingDelayMillis = 1e4, masterTimeoutMillis = 60000) {
+      super();
+      this.initialPollingDelayMillis = initialPollingDelayMillis;
+      this.maxPollingDelayMillis = maxPollingDelayMillis;
+      this.masterTimeoutMillis = masterTimeoutMillis;
+      this.numTries = 0;
+      this.completed = false;
+    }
+    poll(callback) {
+      if (this.pollCallback) {
+        throw new Error("poll() can only be called once per instance of ExponentialBackoffPoller");
+      }
+      this.pollCallback = callback;
+      this.on("poll", this.repoll);
+      this.masterTimer = setTimeout(() => {
+        if (this.completed) {
+          return;
+        }
+        this.markCompleted();
+        this.reject(new Error("ExponentialBackoffPoller deadline exceeded - Master timeout reached"));
+      }, this.masterTimeoutMillis);
+      return new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+        this.repoll();
+      });
+    }
+    repoll() {
+      this.pollCallback().then((result) => {
+        if (this.completed) {
+          return;
+        }
+        if (!result) {
+          this.repollTimer = setTimeout(() => this.emit("poll"), this.getPollingDelayMillis());
+          this.numTries++;
+          return;
+        }
+        this.markCompleted();
+        this.resolve(result);
+      }).catch((err) => {
+        if (this.completed) {
+          return;
+        }
+        this.markCompleted();
+        this.reject(err);
+      });
+    }
+    getPollingDelayMillis() {
+      const increasedPollingDelay = Math.pow(2, this.numTries) * this.initialPollingDelayMillis;
+      return Math.min(increasedPollingDelay, this.maxPollingDelayMillis);
+    }
+    markCompleted() {
+      this.completed = true;
+      if (this.masterTimer) {
+        clearTimeout(this.masterTimer);
+      }
+      if (this.repollTimer) {
+        clearTimeout(this.repollTimer);
+      }
+    }
+  }
+  exports.ExponentialBackoffPoller = ExponentialBackoffPoller;
+
+  class Http2SessionHandler {
+    constructor(url) {
+      this.sessionErrors = [];
+      this.createSession(url);
+    }
+    createSession(url) {
+      if (!this.http2Session || this.isCurrentSessionClosed) {
+        this.sessionErrors = [];
+        const opts = {
+          peerMaxConcurrentStreams: 100,
+          ALPNProtocols: ["h2"]
+        };
+        this.http2Session = http2.connect(url, opts);
+        this.http2Session.on("goaway", (errorCode, _, opaqueData) => {
+          const error = new error_2.FirebaseAppError({
+            code: error_2.AppErrorCode.NETWORK_ERROR,
+            message: `Error while making requests: GOAWAY - ${opaqueData?.toString()}, Error code: ${errorCode}`
+          });
+          this.sessionErrors.push(error);
+        });
+        this.http2Session.on("error", (error) => {
+          const codePart = error?.code ? `${error.code} - ` : "";
+          let errorMessage;
+          if ((error instanceof AggregateError || error?.name === "AggregateError") && Array.isArray(error.errors)) {
+            errorMessage = `Session error while making requests: ${codePart}${error.name}: ` + `[${error.errors.map((e) => e.message).join(", ")}]`;
+          } else {
+            errorMessage = `Session error while making requests: ${codePart}${error?.message || "Unknown error"}`;
+          }
+          const appError = new error_2.FirebaseAppError({
+            code: error_2.AppErrorCode.NETWORK_ERROR,
+            message: errorMessage,
+            cause: error
+          });
+          this.sessionErrors.push(appError);
+        });
+      }
+      return this.http2Session;
+    }
+    getErrors() {
+      return this.sessionErrors;
+    }
+    get session() {
+      return this.http2Session;
+    }
+    get isCurrentSessionClosed() {
+      return !!this.http2Session?.closed;
+    }
+    close() {
+      this.http2Session?.close();
+    }
+  }
+  exports.Http2SessionHandler = Http2SessionHandler;
+});
+
+// node_modules/firebase-admin/lib/messaging/messaging-errors-internal.js
+var require_messaging_errors_internal = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * Copyright 2019 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.createFirebaseError = createFirebaseError;
+  exports.getErrorCode = getErrorCode;
+  exports.getErrorMessage = getErrorMessage;
+  var error_1 = require_error3();
+  var error_2 = require_error();
+  var validator = require_validator();
+  function createFirebaseError(err) {
+    if (err.response.isJson()) {
+      const json = err.response.data;
+      let errorCode = getErrorCode(json);
+      const errorMessage = getErrorMessage(json);
+      if (errorCode === "UNREGISTERED" || errorCode === "NOT_FOUND") {
+        let requestData = err.response.config && err.response.config.data;
+        if (requestData && (typeof requestData === "string" || Buffer.isBuffer(requestData))) {
+          try {
+            const strData = typeof requestData === "string" ? requestData : requestData.toString("utf-8");
+            requestData = JSON.parse(strData);
+          } catch (e) {}
+        }
+        const messageObj = requestData && requestData.message;
+        if (messageObj && typeof messageObj.fid === "string") {
+          errorCode = "UNREGISTERED_FID";
+        }
+      }
+      return error_1.FirebaseMessagingError.fromServerError(errorCode, errorMessage, err);
+    }
+    let error;
+    switch (err.response.status) {
+      case 400:
+        error = error_1.messagingClientErrorCode.INVALID_ARGUMENT;
+        break;
+      case 401:
+      case 403:
+        error = error_1.messagingClientErrorCode.AUTHENTICATION_ERROR;
+        break;
+      case 500:
+        error = error_1.messagingClientErrorCode.INTERNAL_ERROR;
+        break;
+      case 503:
+        error = error_1.messagingClientErrorCode.SERVER_UNAVAILABLE;
+        break;
+      default:
+        error = error_1.messagingClientErrorCode.UNKNOWN_ERROR;
+    }
+    return new error_1.FirebaseMessagingError({
+      code: error.code,
+      message: `${error.message} Raw server response: "${err.response.text}". Status code: ` + `${err.response.status}.`,
+      httpResponse: (0, error_2.toHttpResponse)(err.response),
+      cause: err
+    });
+  }
+  function getErrorCode(response) {
+    if (validator.isNonNullObject(response) && "error" in response) {
+      const error = response.error;
+      if (validator.isString(error)) {
+        return error;
+      }
+      if (validator.isArray(error.details)) {
+        const fcmErrorType = "type.googleapis.com/google.firebase.fcm.v1.FcmError";
+        for (const element of error.details) {
+          if (element["@type"] === fcmErrorType) {
+            return element.errorCode;
+          }
+        }
+      }
+      if ("status" in error) {
+        return error.status;
+      } else {
+        return error.message;
+      }
+    }
+    return null;
+  }
+  function getErrorMessage(response) {
+    if (validator.isNonNullObject(response) && "error" in response && validator.isNonEmptyString(response.error.message)) {
+      return response.error.message;
+    }
+    return null;
+  }
+});
+
+// node_modules/firebase-admin/lib/messaging/messaging-api-request-internal.js
+var require_messaging_api_request_internal = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.FirebaseMessagingRequestHandler = undefined;
+  var api_request_1 = require_api_request();
+  var messaging_errors_internal_1 = require_messaging_errors_internal();
+  var index_1 = require_utils6();
+  var error_1 = require_error3();
+  var error_2 = require_error();
+  var FIREBASE_MESSAGING_TIMEOUT = 15000;
+  var FIREBASE_MESSAGING_HTTP_METHOD = "POST";
+  var FIREBASE_MESSAGING_HEADERS = {
+    "X-Firebase-Client": `fire-admin-node/${(0, index_1.getSdkVersion)()}`,
+    access_token_auth: "true"
+  };
+
+  class FirebaseMessagingRequestHandler {
+    constructor(app) {
+      this.httpClient = new api_request_1.AuthorizedHttpClient(app);
+      this.http2Client = new api_request_1.AuthorizedHttp2Client(app);
+    }
+    invokeRequestHandler(host, path, requestData) {
+      const request = {
+        method: FIREBASE_MESSAGING_HTTP_METHOD,
+        url: `https://${host}${path}`,
+        data: requestData,
+        headers: FIREBASE_MESSAGING_HEADERS,
+        timeout: FIREBASE_MESSAGING_TIMEOUT
+      };
+      return this.httpClient.send(request).then((response) => {
+        if (!response.isJson()) {
+          throw new api_request_1.RequestResponseError(response);
+        }
+        const errorCode = (0, messaging_errors_internal_1.getErrorCode)(response.data);
+        if (errorCode) {
+          throw new api_request_1.RequestResponseError(response);
+        }
+        return response.data;
+      }).catch((err) => {
+        if (err instanceof api_request_1.RequestResponseError) {
+          throw (0, messaging_errors_internal_1.createFirebaseError)(err);
+        }
+        throw err;
+      });
+    }
+    invokeHttpRequestHandlerForSendResponse(host, path, requestData) {
+      const request = {
+        method: FIREBASE_MESSAGING_HTTP_METHOD,
+        url: `https://${host}${path}`,
+        data: requestData,
+        headers: FIREBASE_MESSAGING_HEADERS,
+        timeout: FIREBASE_MESSAGING_TIMEOUT
+      };
+      return this.httpClient.send(request).then((response) => {
+        return this.buildSendResponse(response);
+      }).catch((err) => {
+        if (err instanceof api_request_1.RequestResponseError) {
+          return this.buildSendResponseFromError(err);
+        }
+        throw err;
+      });
+    }
+    invokeHttp2RequestHandlerForSendResponse(host, path, requestData, http2SessionHandler) {
+      const request = {
+        method: FIREBASE_MESSAGING_HTTP_METHOD,
+        url: `https://${host}${path}`,
+        data: requestData,
+        headers: FIREBASE_MESSAGING_HEADERS,
+        timeout: FIREBASE_MESSAGING_TIMEOUT,
+        http2SessionHandler
+      };
+      return this.http2Client.send(request).then((response) => {
+        return this.buildSendResponse(response);
+      }).catch((err) => {
+        if (err instanceof api_request_1.RequestResponseError) {
+          return this.buildSendResponseFromError(err);
+        }
+        throw err;
+      });
+    }
+    buildSendResponse(response) {
+      const result = {
+        success: response.status === 200
+      };
+      if (result.success) {
+        result.messageId = response.data.name;
+      } else {
+        result.error = (0, messaging_errors_internal_1.createFirebaseError)(new api_request_1.RequestResponseError(response));
+      }
+      return result;
+    }
+    buildSendResponseFromError(err) {
+      return {
+        success: false,
+        error: (0, messaging_errors_internal_1.createFirebaseError)(err)
+      };
+    }
+    invokeHttpRequestHandlerForTopicSubscriptionResponse(host, path, methodName, requestData) {
+      const request = {
+        method: methodName === "subscribeToTopic" ? "POST" : "DELETE",
+        url: `https://${host}${path}`,
+        data: requestData,
+        headers: FIREBASE_MESSAGING_HEADERS,
+        timeout: FIREBASE_MESSAGING_TIMEOUT
+      };
+      return this.httpClient.send(request).then((response) => {
+        return this.buildTopicSubscriptionResponse(response, methodName);
+      }).catch((err) => {
+        if (err instanceof api_request_1.RequestResponseError) {
+          return this.buildTopicSubscriptionResponseFromError(err, methodName);
+        }
+        throw err;
+      });
+    }
+    invokeHttp2RequestHandlerForTopicSubscriptionResponse(host, path, methodName, requestData, http2SessionHandler) {
+      const request = {
+        method: methodName === "subscribeToTopic" ? "POST" : "DELETE",
+        url: `https://${host}${path}`,
+        data: requestData,
+        headers: FIREBASE_MESSAGING_HEADERS,
+        timeout: FIREBASE_MESSAGING_TIMEOUT,
+        http2SessionHandler
+      };
+      return this.http2Client.send(request).then((response) => {
+        return this.buildTopicSubscriptionResponse(response, methodName);
+      }).catch((err) => {
+        if (err instanceof api_request_1.RequestResponseError) {
+          return this.buildTopicSubscriptionResponseFromError(err, methodName);
+        }
+        throw err;
+      });
+    }
+    buildTopicSubscriptionResponse(response, methodName) {
+      if (response.status === 200) {
+        return { success: true };
+      }
+      return this.buildTopicSubscriptionResponseFromError(new api_request_1.RequestResponseError(response), methodName);
+    }
+    buildTopicSubscriptionResponseFromError(err, methodName) {
+      if (err.response.isJson()) {
+        const json = err.response.data;
+        const errorCode = (0, messaging_errors_internal_1.getErrorCode)(json);
+        if (methodName === "subscribeToTopic" && (errorCode === "ALREADY_EXISTS" || err.response.status === 409)) {
+          return { success: true };
+        }
+        const errorMessage = (0, messaging_errors_internal_1.getErrorMessage)(json);
+        return {
+          success: false,
+          error: error_1.FirebaseMessagingError.fromTopicManagementServerError(errorCode || "UNKNOWN_ERROR", errorMessage, err)
+        };
+      }
+      if (methodName === "subscribeToTopic" && err.response.status === 409) {
+        return { success: true };
+      }
+      let errorCode;
+      switch (err.response.status) {
+        case 400:
+          errorCode = error_1.MessagingErrorCode.INVALID_REGISTRATION_TOKEN;
+          break;
+        case 401:
+        case 403:
+          errorCode = error_1.MessagingErrorCode.AUTHENTICATION_ERROR;
+          break;
+        case 404:
+          errorCode = error_1.MessagingErrorCode.REGISTRATION_TOKEN_NOT_REGISTERED;
+          break;
+        case 429:
+          errorCode = error_1.MessagingErrorCode.TOPICS_SUBSCRIPTION_RATE_EXCEEDED;
+          break;
+        case 500:
+          errorCode = error_1.MessagingErrorCode.INTERNAL_ERROR;
+          break;
+        case 503:
+          errorCode = error_1.MessagingErrorCode.SERVER_UNAVAILABLE;
+          break;
+        default:
+          errorCode = error_1.MessagingErrorCode.UNKNOWN_ERROR;
+      }
+      return {
+        success: false,
+        error: new error_1.FirebaseMessagingError({
+          code: errorCode,
+          message: `Server responded with status ${err.response.status}.`,
+          httpResponse: (0, error_2.toHttpResponse)(err.response),
+          cause: err
+        })
+      };
+    }
+  }
+  exports.FirebaseMessagingRequestHandler = FirebaseMessagingRequestHandler;
+});
+
+// node_modules/firebase-admin/lib/messaging/messaging.js
+var require_messaging = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * @license
+   * Copyright 2017 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.Messaging = undefined;
+  var deep_copy_1 = require_deep_copy();
+  var error_1 = require_error3();
+  var utils = require_utils6();
+  var validator = require_validator();
+  var messaging_internal_1 = require_messaging_internal();
+  var messaging_api_request_internal_1 = require_messaging_api_request_internal();
+  var api_request_1 = require_api_request();
+  var FCM_SEND_HOST = "fcm.googleapis.com";
+  var FCM_TOPIC_MANAGEMENT_HOST = "iid.googleapis.com";
+  var FCM_TOPIC_MANAGEMENT_ADD_PATH = "/iid/v1:batchAdd";
+  var FCM_TOPIC_MANAGEMENT_REMOVE_PATH = "/iid/v1:batchRemove";
+  var FCM_MAX_BATCH_SIZE = 500;
+  function mapRawResponseToTopicManagementResponse(response) {
+    const result = {
+      successCount: 0,
+      failureCount: 0,
+      errors: []
+    };
+    if ("results" in response) {
+      response.results.forEach((tokenManagementResult, index) => {
+        if ("error" in tokenManagementResult) {
+          result.failureCount += 1;
+          const newError = error_1.FirebaseMessagingError.fromTopicManagementServerError(tokenManagementResult.error, undefined, tokenManagementResult.error);
+          result.errors.push({
+            index,
+            error: newError
+          });
+        } else {
+          result.successCount += 1;
+        }
+      });
+    }
+    return result;
+  }
+  async function runWithConcurrencyLimit(tasks, limit = 100) {
+    const results = new Array(tasks.length);
+    let currentIndex = 0;
+    const worker = async () => {
+      while (currentIndex < tasks.length) {
+        const index = currentIndex++;
+        try {
+          const value = await tasks[index]();
+          results[index] = { status: "fulfilled", value };
+        } catch (reason) {
+          results[index] = { status: "rejected", reason };
+        }
+      }
+    };
+    const workers = [];
+    const workerCount = Math.min(limit, tasks.length);
+    for (let i = 0;i < workerCount; i++) {
+      workers.push(worker());
+    }
+    await Promise.all(workers);
+    return results;
+  }
+
+  class Messaging {
+    constructor(app) {
+      this.useLegacyTransport = false;
+      if (!validator.isNonNullObject(app) || !("options" in app)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "First argument passed to admin.messaging() must be a valid Firebase app instance.");
+      }
+      this.appInternal = app;
+      this.messagingRequestHandler = new messaging_api_request_internal_1.FirebaseMessagingRequestHandler(app);
+    }
+    get app() {
+      return this.appInternal;
+    }
+    enableLegacyHttpTransport() {
+      this.useLegacyTransport = true;
+    }
+    send(message, dryRun) {
+      const copy = (0, deep_copy_1.deepCopy)(message);
+      (0, messaging_internal_1.validateMessage)(copy);
+      if (typeof dryRun !== "undefined" && !validator.isBoolean(dryRun)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "dryRun must be a boolean");
+      }
+      return this.getUrlPath().then((urlPath) => {
+        const request = { message: copy };
+        if (dryRun) {
+          request.validate_only = true;
+        }
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, urlPath, request);
+      }).then((response) => {
+        return response.name;
+      });
+    }
+    sendEach(messages, dryRun) {
+      if (validator.isArray(messages) && messages.constructor !== Array) {
+        messages = Array.from(messages);
+      }
+      const copy = (0, deep_copy_1.deepCopy)(messages);
+      if (!validator.isNonEmptyArray(copy)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "messages must be a non-empty array");
+      }
+      if (copy.length > FCM_MAX_BATCH_SIZE) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+      }
+      if (typeof dryRun !== "undefined" && !validator.isBoolean(dryRun)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "dryRun must be a boolean");
+      }
+      const http2SessionHandler = this.useLegacyTransport ? undefined : new api_request_1.Http2SessionHandler(`https://${FCM_SEND_HOST}`);
+      return this.getUrlPath().then((urlPath) => {
+        const requests = copy.map(async (message) => {
+          (0, messaging_internal_1.validateMessage)(message);
+          const request = { message };
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          if (http2SessionHandler) {
+            return this.messagingRequestHandler.invokeHttp2RequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request, http2SessionHandler);
+          } else {
+            return this.messagingRequestHandler.invokeHttpRequestHandlerForSendResponse(FCM_SEND_HOST, urlPath, request);
+          }
+        });
+        return Promise.allSettled(requests);
+      }).then((results) => {
+        const sessionErrors = http2SessionHandler ? http2SessionHandler.getErrors() : [];
+        return this.parseSendResponses(results, sessionErrors);
+      }).finally(() => {
+        http2SessionHandler?.close();
+      });
+    }
+    parseSendResponses(results, sessionErrors = []) {
+      const responses = [];
+      results.forEach((result) => {
+        if (result.status === "fulfilled") {
+          responses.push(result.value);
+        } else {
+          const error = sessionErrors.length > 0 ? this.createSessionError(result.reason, sessionErrors) : result.reason;
+          responses.push({ success: false, error });
+        }
+      });
+      const successCount = responses.filter((resp) => resp.success).length;
+      return {
+        responses,
+        successCount,
+        failureCount: responses.length - successCount
+      };
+    }
+    createSessionError(streamReason, sessionErrors) {
+      const allErrors = [streamReason, ...sessionErrors];
+      const cause = new AggregateError(allErrors, "Stream failure and session failures occurred");
+      const streamMessage = streamReason?.message || "Unknown stream error";
+      const sessionMessage = `. Session failures: ${sessionErrors.map((e) => e.message).join(", ")}`;
+      return new error_1.FirebaseMessagingError({
+        code: error_1.messagingClientErrorCode.UNKNOWN_ERROR.code,
+        message: `${streamMessage}${sessionMessage}`,
+        cause
+      });
+    }
+    sendEachForMulticast(message, dryRun) {
+      const copy = (0, deep_copy_1.deepCopy)(message);
+      if (!validator.isNonNullObject(copy)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "MulticastMessage must be a non-null object");
+      }
+      const { tokens, fids, ...baseMessage } = copy;
+      if (tokens !== undefined && !validator.isArray(tokens)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "tokens must be a valid array");
+      }
+      if (fids !== undefined && !validator.isArray(fids)) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "fids must be a valid array");
+      }
+      const tokenList = tokens || [];
+      const fidList = fids || [];
+      if (tokenList.length === 0 && fidList.length === 0) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "Either tokens or fids must be a non-empty array");
+      }
+      const totalLength = tokenList.length + fidList.length;
+      if (totalLength > FCM_MAX_BATCH_SIZE) {
+        throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, `The total number of tokens and fids must not exceed ${FCM_MAX_BATCH_SIZE}.`);
+      }
+      const messages = [
+        ...tokenList.map((token) => ({ ...baseMessage, token })),
+        ...fidList.map((fid) => ({ ...baseMessage, fid }))
+      ];
+      return this.sendEach(messages, dryRun);
+    }
+    subscribeToTopic(registrationTokenOrTokens, topic) {
+      return this.sendTopicManagementRequestV1(registrationTokenOrTokens, topic, "subscribeToTopic");
+    }
+    subscribeToTopicLegacy(registrationTokenOrTokens, topic) {
+      return this.sendTopicManagementRequest(registrationTokenOrTokens, topic, "subscribeToTopicLegacy", FCM_TOPIC_MANAGEMENT_ADD_PATH);
+    }
+    unsubscribeFromTopic(registrationTokenOrTokens, topic) {
+      return this.sendTopicManagementRequestV1(registrationTokenOrTokens, topic, "unsubscribeFromTopic");
+    }
+    unsubscribeFromTopicLegacy(registrationTokenOrTokens, topic) {
+      return this.sendTopicManagementRequest(registrationTokenOrTokens, topic, "unsubscribeFromTopicLegacy", FCM_TOPIC_MANAGEMENT_REMOVE_PATH);
+    }
+    getProjectId() {
+      if (this.projectId) {
+        return Promise.resolve(this.projectId);
+      }
+      return utils.findProjectId(this.app).then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new error_1.FirebaseMessagingError(error_1.messagingClientErrorCode.INVALID_ARGUMENT, "Failed to determine project ID for Messaging. Initialize the " + "SDK with service account credentials or set project ID as an app option. " + "Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.");
+        }
+        this.projectId = projectId;
+        return this.projectId;
+      });
+    }
+    getUrlPath() {
+      if (this.urlPath) {
+        return Promise.resolve(this.urlPath);
+      }
+      return this.getProjectId().then((projectId) => {
+        this.urlPath = `/v1/projects/${projectId}/messages:send`;
+        return this.urlPath;
+      });
+    }
+    sendTopicManagementRequestV1(registrationTokenOrTokens, topic, methodName) {
+      this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
+      this.validateTopicType(topic, methodName);
+      const normalizedTopic = this.normalizeTopic(topic);
+      return Promise.resolve().then(() => {
+        this.validateRegistrationTokens(registrationTokenOrTokens, methodName);
+        this.validateTopic(normalizedTopic, methodName);
+        let registrationTokensArray = registrationTokenOrTokens;
+        if (validator.isString(registrationTokenOrTokens)) {
+          registrationTokensArray = [registrationTokenOrTokens];
+        }
+        const topicName = normalizedTopic.replace(/^\/topics\//, "");
+        const http2SessionHandler = this.useLegacyTransport ? undefined : new api_request_1.Http2SessionHandler(`https://${FCM_SEND_HOST}`);
+        return this.getProjectId().then((projectId) => {
+          const tasks = registrationTokensArray.map((token) => async () => {
+            const encodedToken = encodeURIComponent(token);
+            const encodedTopic = encodeURIComponent(topicName);
+            const basePath = `/v1/projects/${projectId}/registrations/${encodedToken}/topicSubscriptions`;
+            const path = methodName === "subscribeToTopic" ? `${basePath}?topic_name=${encodedTopic}` : `${basePath}/${encodedTopic}?allow_missing=true`;
+            const requestData = methodName === "subscribeToTopic" ? {} : undefined;
+            if (http2SessionHandler) {
+              return this.messagingRequestHandler.invokeHttp2RequestHandlerForTopicSubscriptionResponse(FCM_SEND_HOST, path, methodName, requestData, http2SessionHandler);
+            }
+            return this.messagingRequestHandler.invokeHttpRequestHandlerForTopicSubscriptionResponse(FCM_SEND_HOST, path, methodName, requestData);
+          });
+          return runWithConcurrencyLimit(tasks, 100);
+        }).then((results) => {
+          const sessionErrors = http2SessionHandler ? http2SessionHandler.getErrors() : [];
+          return this.parseTopicManagementResponses(results, sessionErrors);
+        }).finally(() => {
+          http2SessionHandler?.close();
+        });
+      });
+    }
+    parseTopicManagementResponses(results, sessionErrors = []) {
+      const response = {
+        successCount: 0,
+        failureCount: 0,
+        errors: []
+      };
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          const tokenResponse = result.value;
+          if (tokenResponse.success) {
+            response.successCount += 1;
+          } else {
+            response.failureCount += 1;
+            const error = tokenResponse.error || error_1.FirebaseMessagingError.fromTopicManagementServerError("UNKNOWN_ERROR", "Unknown error during topic management.");
+            response.errors.push({
+              index,
+              error
+            });
+          }
+        } else {
+          response.failureCount += 1;
+          let error;
+          if (sessionErrors.length > 0) {
+            error = this.createSessionError(result.reason, sessionErrors);
+          } else if (result.reason instanceof error_1.FirebaseMessagingError) {
+            error = result.reason;
+          } else {
+            error = error_1.FirebaseMessagingError.fromTopicManagementServerError("UNKNOWN_ERROR", result.reason?.message || result.reason?.toString() || "Unknown error during topic management.");
+          }
+          response.errors.push({
+            index,
+            error
+          });
+        }
+      });
+      return response;
+    }
+    sendTopicManagementRequest(registrationTokenOrTokens, topic, methodName, path) {
+      this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
+      this.validateTopicType(topic, methodName);
+      topic = this.normalizeTopic(topic);
+      return Promise.resolve().then(() => {
+        this.validateRegistrationTokens(registrationTokenOrTokens, methodName);
+        this.validateTopic(topic, methodName);
+        let registrationTokensArray = registrationTokenOrTokens;
+        if (validator.isString(registrationTokenOrTokens)) {
+          registrationTokensArray = [registrationTokenOrTokens];
+        }
+        const request = {
+          to: topic,
+          registration_tokens: registrationTokensArray
+        };
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_TOPIC_MANAGEMENT_HOST, path, request);
+      }).then((response) => {
+        return mapRawResponseToTopicManagementResponse(response);
+      });
+    }
+    validateRegistrationTokensType(registrationTokenOrTokens, methodName, errorInfo = error_1.messagingClientErrorCode.INVALID_ARGUMENT) {
+      if (!validator.isNonEmptyArray(registrationTokenOrTokens) && !validator.isNonEmptyString(registrationTokenOrTokens)) {
+        throw new error_1.FirebaseMessagingError(errorInfo, `Registration token(s) provided to ${methodName}() must be a non-empty string or a ` + "non-empty array.");
+      }
+    }
+    validateRegistrationTokens(registrationTokenOrTokens, methodName, errorInfo = error_1.messagingClientErrorCode.INVALID_ARGUMENT) {
+      if (validator.isArray(registrationTokenOrTokens)) {
+        if (registrationTokenOrTokens.length > 1000) {
+          throw new error_1.FirebaseMessagingError(errorInfo, `Too many registration tokens provided in a single request to ${methodName}(). Batch ` + "your requests to contain no more than 1,000 registration tokens per request.");
+        }
+        registrationTokenOrTokens.forEach((registrationToken, index) => {
+          if (!validator.isNonEmptyString(registrationToken)) {
+            throw new error_1.FirebaseMessagingError(errorInfo, `Registration token provided to ${methodName}() at index ${index} must be a ` + "non-empty string.");
+          }
+        });
+      }
+    }
+    validateTopicType(topic, methodName, errorInfo = error_1.messagingClientErrorCode.INVALID_ARGUMENT) {
+      if (!validator.isNonEmptyString(topic)) {
+        throw new error_1.FirebaseMessagingError(errorInfo, `Topic provided to ${methodName}() must be a string which matches the format ` + '"/topics/[a-zA-Z0-9-_.~%]+".');
+      }
+    }
+    validateTopic(topic, methodName, errorInfo = error_1.messagingClientErrorCode.INVALID_ARGUMENT) {
+      if (!validator.isTopic(topic)) {
+        throw new error_1.FirebaseMessagingError(errorInfo, `Topic provided to ${methodName}() must be a string which matches the format ` + '"/topics/[a-zA-Z0-9-_.~%]+".');
+      }
+    }
+    normalizeTopic(topic) {
+      if (!/^\/topics\//.test(topic)) {
+        topic = `/topics/${topic}`;
+      }
+      return topic;
+    }
+  }
+  exports.Messaging = Messaging;
+});
+
+// node_modules/firebase-admin/lib/messaging/index.js
+var require_messaging2 = __commonJS(function(exports) {
+  /*! firebase-admin v14.5.0 */
+  /*!
+   * Copyright 2020 Google LLC
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *   http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  Object.defineProperty(exports, "__esModule", { value: true });
+  exports.MessagingErrorCode = exports.FirebaseMessagingError = exports.Messaging = undefined;
+  exports.getMessaging = getMessaging;
+  var app_1 = require_app();
+  var messaging_1 = require_messaging();
+  var messaging_2 = require_messaging();
+  Object.defineProperty(exports, "Messaging", { enumerable: true, get: function() {
+    return messaging_2.Messaging;
+  } });
+  function getMessaging(app) {
+    if (typeof app === "undefined") {
+      app = (0, app_1.getApp)();
+    }
+    const firebaseApp = app;
+    return firebaseApp.getOrInitService("messaging", (app) => new messaging_1.Messaging(app));
+  }
+  var error_1 = require_error3();
+  Object.defineProperty(exports, "FirebaseMessagingError", { enumerable: true, get: function() {
+    return error_1.FirebaseMessagingError;
+  } });
+  Object.defineProperty(exports, "MessagingErrorCode", { enumerable: true, get: function() {
+    return error_1.MessagingErrorCode;
+  } });
+});
+
 // node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
 var exports_type3 = {};
 __export(exports_type3, {
@@ -122729,43 +138375,56 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
     cycleId: listing_cycles.id,
     productId: sellers_product.id,
     sellerId: sellers_product.userId,
-    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(eq(listing_cycles.id, listingCycleId)).limit(1);
+    productName: sellers_product.productName,
+    productType: sellers_product.productType,
+    unit: sellers_product.scalingType,
+    price: sellers_product.productPrice,
+    quantity: sellers_product.productQty,
+    originalQuantity: listing_cycles.originalQty,
+    isActive: sellers_product.isActive,
+    isMarketable: sellers_product.isMarketable,
+    publishedAt: sellers_product.publishedAt,
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
+    shopName: sellers_profile.shopName,
+    sellerName: user.name
+  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(eq(listing_cycles.id, listingCycleId)).limit(1);
   if (!target)
     return null;
+  if (!target.isActive || !target.isMarketable || Number(target.quantity ?? 0) <= 0 || Number(target.price ?? 0) <= 0) {
+    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
+  }
   const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
   const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
   const ranking = rankVisibilityCandidates(candidates);
   const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
   const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
-  if (!candidate || !result) {
-    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
-  }
-  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup" || options?.allowActiveListing === true;
-  const isPriorityScore = result.score >= 0.6;
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
+  const isPriorityScore = result ? result.score >= 0.6 : false;
   const shared = {
-    ...target,
     cycleId: activeCycleId,
-    visibilityScore: Number(result.score.toFixed(4)),
-    visibilityTier: result.tier,
-    visibilityRank: result.rank,
+    sellerId: target.sellerId,
+    productId: target.productId,
+    visibilityScore: result ? Number(result.score.toFixed(4)) : 0.5,
+    visibilityTier: result?.tier ?? "Priority Boost",
+    visibilityRank: result?.rank ?? 1,
     policyVersion: ranking.policyVersion,
     evaluatedAt,
-    productName: candidate.productName,
-    productType: candidate.productType,
-    unit: candidate.unit,
-    price: candidate.price,
-    quantity: candidate.quantity,
-    originalQuantity: candidate.originalQuantity,
-    availability: Number(candidate.quantity) > 0 ? "available" : "sold_out",
-    shopName: candidate.shopName,
-    sellerName: candidate.sellerName,
-    listingUrl: marketplaceUrl(candidate.productId),
-    criteria: result.criteria,
+    productName: candidate?.productName ?? target.productName,
+    productType: candidate?.productType ?? target.productType,
+    unit: candidate?.unit ?? target.unit,
+    price: candidate?.price ?? target.price,
+    quantity: candidate?.quantity ?? target.quantity,
+    originalQuantity: candidate?.originalQuantity ?? target.originalQuantity ?? target.quantity,
+    availability: Number(target.quantity) > 0 ? "available" : "sold_out",
+    shopName: candidate?.shopName ?? target.shopName ?? "Agrivive Shop",
+    sellerName: candidate?.sellerName ?? target.sellerName ?? "Seller",
+    listingUrl: marketplaceUrl(target.productId),
+    criteria: result?.criteria ?? null,
     priceReductionPeriodsApplied: target.priceReductionPeriodsApplied ?? 0
   };
-  if (!isPriorityScore && !isPriceReduced) {
+  if (!isPriorityScore && !isPriceReduced && !isInitialEligible) {
     return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
   }
   return {
@@ -122808,7 +138467,7 @@ async function getSellerPromotionShare(sellerId, promotionId) {
       throw new OrderError(404, "Promotion draft not found");
     return row;
   });
-  const listing = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
+  const listing = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage, allowActiveListing: true });
   if (!listing?.eligible) {
     throw new OrderError(409, "This listing is no longer eligible to share");
   }
@@ -123026,9 +138685,11 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
     id: seller_social_campaigns.id,
     status: seller_social_campaigns.status
   }).from(seller_social_campaigns).where(and(eq(seller_social_campaigns.productId, productId), eq(seller_social_campaigns.listingCycleId, cycle.id), inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"]))).orderBy(desc(seller_social_campaigns.createdAt));
-  const maxAllowedPosts = (product.priceReductionPeriodsApplied ?? 0) + 1;
+  const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
+  const maxAllowedPosts = periodsApplied + 1;
   if (existingPublished.length >= maxAllowedPosts) {
     const latest = existingPublished[0];
+    const message = periodsApplied === 0 ? "Initial post already sent (1 of 1 used). You can boost again when the 12-hour price reduction occurs." : `Already boosted for Price Drop #${periodsApplied}. You can boost again on the next price reduction.`;
     return {
       alreadyPublished: true,
       campaignId: latest.id,
@@ -123038,10 +138699,13 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
       productUrl: "",
       imageUrl: await getProductImageDisplayUrl(product.imageUrl, sellerId),
       posts: {},
-      message: "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction."
+      message
     };
   }
-  const eligibility = await getPriorityPromotionEligibility(cycle.id);
+  const eligibility = await getPriorityPromotionEligibility(cycle.id, {
+    stage: periodsApplied > 0 ? "followup" : "initial",
+    allowActiveListing: true
+  });
   if (!eligibility || eligibility.sellerId !== sellerId) {
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
   }
@@ -123065,7 +138729,7 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
     productType: eligibility.productType,
     shopName: eligibility.shopName,
     listingUrl: eligibility.listingUrl,
-    price: eligibility.price,
+    price: eligibility.price ?? "0",
     unit: eligibility.unit
   });
   if (existingDraft) {
@@ -123084,7 +138748,11 @@ async function createSellerSocialCampaignDraft(sellerId, productId) {
     sellerId,
     productId: eligibility.productId,
     listingCycleId: cycle.id,
-    posts
+    status: "draft",
+    posts,
+    selectedPlatforms: [],
+    retryCount: 0,
+    nextCheckAt: new Date
   }).returning({ id: seller_social_campaigns.id, status: seller_social_campaigns.status });
   return {
     campaignId: campaign.id,
@@ -123128,9 +138796,11 @@ async function publishSellerSocialCampaign(sellerId, campaignId, input) {
     priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
   }).from(sellers_product).where(and(eq(sellers_product.id, draft.productId), eq(sellers_product.userId, sellerId))).limit(1);
   const existingPublished = await db2.select({ id: seller_social_campaigns.id }).from(seller_social_campaigns).where(and(eq(seller_social_campaigns.productId, draft.productId), eq(seller_social_campaigns.listingCycleId, draft.listingCycleId), inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"])));
-  const maxAllowedPosts = (product?.priceReductionPeriodsApplied ?? 0) + 1;
+  const periodsApplied = product?.priceReductionPeriodsApplied ?? 0;
+  const maxAllowedPosts = periodsApplied + 1;
   if (existingPublished.length >= maxAllowedPosts) {
-    throw new OrderError(409, "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction.");
+    const message = periodsApplied === 0 ? "Initial post already sent (1 of 1 used). You can boost again when the 12-hour price reduction occurs." : `Already boosted for Price Drop #${periodsApplied}. You can boost again on the next price reduction.`;
+    throw new OrderError(409, message);
   }
   const channelMap = new Map(getSocialChannelAvailability().map((channel) => [channel.platform, channel]));
   const posts = {};
@@ -123144,7 +138814,10 @@ async function publishSellerSocialCampaign(sellerId, campaignId, input) {
     }
     posts[platform] = text;
   }
-  const eligibility = await getPriorityPromotionEligibility(draft.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(draft.listingCycleId, {
+    stage: periodsApplied > 0 ? "followup" : "initial",
+    allowActiveListing: true
+  });
   if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
     throw new OrderError(409, eligibility?.reason ?? "This listing is no longer ready for Boost Visibility");
   }
@@ -123404,13 +139077,15 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
         throw new OrderError(409, "This boost prompt was already handled");
       return { boostId: queued.id, status: queued.status, reason: prompt.reason, productId };
     }
-    const boostKey = `${cycle.id}:initial`;
+    const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
+    const boostKey = currentPeriod === 0 ? `${cycle.id}:initial` : `${cycle.id}:reduction:${currentPeriod}`;
+    const boostReason = currentPeriod === 0 ? "initial" : "price_reduction";
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
       productId,
       sellerId,
-      reason,
-      reductionPeriod: 0,
+      reason: boostReason,
+      reductionPeriod: currentPeriod,
       boostKey,
       status: "queued",
       nextAttemptAt: now,
@@ -123420,7 +139095,7 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
       status: seller_visibility_boosts.status
     });
     if (created)
-      return { boostId: created.id, status: created.status, reason, productId };
+      return { boostId: created.id, status: created.status, reason: boostReason, productId };
     const [existing] = await tx.select({
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status
@@ -123437,9 +139112,21 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
         updatedAt: now
       }).where(and(eq(seller_visibility_boosts.id, existing.id), eq(seller_visibility_boosts.status, "failed"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
       if (retried)
-        return { boostId: retried.id, status: retried.status, reason, productId };
+        return { boostId: retried.id, status: retried.status, reason: boostReason, productId };
     }
-    return { boostId: existing.id, status: existing.status, reason, productId };
+    if (existing.status === "prompt") {
+      const [accepted] = await tx.update(seller_visibility_boosts).set({
+        status: "queued",
+        readAt: now,
+        nextAttemptAt: now,
+        leaseUntil: null,
+        lastError: null,
+        updatedAt: now
+      }).where(eq(seller_visibility_boosts.id, existing.id)).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (accepted)
+        return { boostId: accepted.id, status: accepted.status, reason: boostReason, productId };
+    }
+    return { boostId: existing.id, status: existing.status, reason: boostReason, productId };
   });
 }
 
@@ -123450,13 +139137,19 @@ function errorMessage(status) {
 async function readSellerVisibilityBoost(sellerId, productId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
+    const now = new Date;
     const [product] = await tx.select({
       id: sellers_product.id,
       productName: sellers_product.productName,
-      imageUrl: sellers_product.imagUrl
+      imageUrl: sellers_product.imagUrl,
+      currentPrice: sellers_product.productPrice,
+      basePrice: sellers_product.basePrice,
+      priceReductionPercent: sellers_product.priceReductionPercent,
+      priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
     }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
     if (!product)
       throw new OrderError(404, "Product not found");
+    const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, productId), lte(listing_cycles.startedAt, now))).orderBy(desc(listing_cycles.startedAt)).limit(1);
     const [boost] = await tx.select({
       id: seller_visibility_boosts.id,
       productId: seller_visibility_boosts.productId,
@@ -123470,8 +139163,44 @@ async function readSellerVisibilityBoost(sellerId, productId) {
       createdAt: seller_visibility_boosts.createdAt,
       sentAt: seller_visibility_boosts.sentAt
     }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
+    const publishedCampaigns = cycle ? await tx.select({ id: seller_social_campaigns.id }).from(seller_social_campaigns).where(and(eq(seller_social_campaigns.productId, productId), eq(seller_social_campaigns.listingCycleId, cycle.id), inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"]))) : [];
+    const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
+    const maxAllowed = periodsApplied + 1;
+    const usedPosts = publishedCampaigns.length;
+    const canBoost = usedPosts < maxAllowed;
+    const currentPriceNum = Number(product.currentPrice ?? 0);
+    const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
+    const hasDiscount = currentPriceNum < basePriceNum;
+    const headline = periodsApplied === 0 ? canBoost ? "Initial Post Available" : "Initial Post Already Sent" : canBoost ? "12-Hour Price Drop Ready to Boost" : "Price Drop Boost Sent";
+    const message = periodsApplied === 0 ? canBoost ? "Post this new listing 1 time to Agrivive official pages." : "Initial post already sent (1 of 1 used). Next boost unlocks when price drops after 12 hours." : canBoost ? `12-Hour price drop applied (\u20B1${basePriceNum.toFixed(2)} \u2192 \u20B1${currentPriceNum.toFixed(2)})! Ready to boost (1 time for this price drop).` : `Already boosted for Price Drop #${periodsApplied}. Next boost unlocks on the next price reduction.`;
     return {
-      product,
+      product: {
+        id: product.id,
+        productName: product.productName,
+        imageUrl: product.imageUrl,
+        currentPrice: currentPriceNum,
+        basePrice: basePriceNum,
+        priceReductionPercent: Number(product.priceReductionPercent ?? 0),
+        priceReductionPeriodsApplied: periodsApplied
+      },
+      pricing: {
+        currentPrice: currentPriceNum,
+        basePrice: basePriceNum,
+        priceBefore: boost?.priceBefore ? Number(boost.priceBefore) : basePriceNum,
+        priceAfter: boost?.priceAfter ? Number(boost.priceAfter) : currentPriceNum,
+        hasDiscount,
+        reductionPeriodsApplied: periodsApplied
+      },
+      eligibility: {
+        canBoost,
+        hasInitialBoost: usedPosts >= 1,
+        usedPosts,
+        maxAllowedPosts: maxAllowed,
+        stage: periodsApplied > 0 ? "price_reduction" : "initial",
+        headline,
+        message,
+        badge: canBoost ? "available" : "boosted"
+      },
       boost: boost ? { ...boost, errorMessage: errorMessage(boost.status) } : null
     };
   });
@@ -123740,6 +139469,23 @@ async function reserveOrderItem(tx, buyerId, productId, quantity) {
   };
 }
 
+// src/modules/notifications/services/notifications.outbox.enqueue-order.ts
+async function enqueueOrderNotification(tx, sellerId, orderId, summary, createdAt = new Date) {
+  const dedupeKey = `${sellerId}:order:${orderId}`;
+  await tx.insert(notification_outbox).values({
+    recipientUserId: sellerId,
+    type: "seller_message",
+    aggregationKey: `seller_order:${sellerId}`,
+    dedupeKey,
+    referenceId: orderId,
+    itemCount: 1,
+    payload: { orderId, summary },
+    availableAt: createdAt,
+    createdAt,
+    updatedAt: createdAt
+  }).onConflictDoNothing({ target: notification_outbox.dedupeKey });
+}
+
 // src/modules/buyer/services/buyer.order.create.ts
 function requestFingerprint(productId, quantity) {
   return createHash5("sha256").update(`${productId.toLowerCase()}:${quantity}`).digest("hex");
@@ -123780,6 +139526,7 @@ async function createDirectOrder(buyerId, body, rawKey) {
       requestFingerprint: fingerprint
     }).returning({ id: checkouts.id });
     const orderId = await createSellerOrder(tx, checkout.id, buyerId, item.sellerId, [item], new Date(Date.now() + 24 * 60 * 60 * 1000));
+    await enqueueOrderNotification(tx, item.sellerId, orderId, `RSV-${orderId.slice(0, 4).toUpperCase()} \xB7 ${item.quantity} ${item.scalingType} ${item.productName}`);
     return { orderId, replayed: false };
   });
   return {
@@ -124434,7 +140181,10 @@ async function createCartCheckout(buyerId, body, rawKey) {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const orderIds = [];
     for (const [sellerId, sellerItems] of bySeller) {
-      orderIds.push(await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, expiresAt));
+      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, expiresAt);
+      orderIds.push(orderId);
+      const summary = sellerItems.map((i) => `${i.quantity} ${i.scalingType} ${i.productName}`).join(", ");
+      await enqueueOrderNotification(tx, sellerId, orderId, `RSV-${orderId.slice(0, 4).toUpperCase()} \xB7 ${summary}`);
     }
     return { checkoutId: checkout.id, orderIds, replayed: false };
   });
@@ -126933,6 +142683,252 @@ function createRateLimitPlugin(options = {}) {
 }
 var rateLimitPlugin = createRateLimitPlugin();
 
+// node_modules/firebase-admin/lib/esm/app/index.js
+var import_app = __toESM(require_app(), 1);
+var AppErrorCode = import_app.default.AppErrorCode;
+var FirebaseAppError = import_app.default.FirebaseAppError;
+var FirebaseError = import_app.default.FirebaseError;
+var SDK_VERSION = import_app.default.SDK_VERSION;
+var applicationDefault = import_app.default.applicationDefault;
+var cert = import_app.default.cert;
+var deleteApp = import_app.default.deleteApp;
+var getApp = import_app.default.getApp;
+var getApps = import_app.default.getApps;
+var initializeApp = import_app.default.initializeApp;
+var refreshToken2 = import_app.default.refreshToken;
+
+// node_modules/firebase-admin/lib/esm/messaging/index.js
+var import_messaging = __toESM(require_messaging2(), 1);
+var FirebaseMessagingError = import_messaging.default.FirebaseMessagingError;
+var Messaging = import_messaging.default.Messaging;
+var MessagingErrorCode = import_messaging.default.MessagingErrorCode;
+var getMessaging = import_messaging.default.getMessaging;
+
+// src/utils/push-notifications/index.ts
+function isConfigured() {
+  return process.env.PUSH_NOTIFICATIONS_ENABLED === "true" && Boolean(process.env.FCM_PROJECT_ID) && Boolean(process.env.FCM_CLIENT_EMAIL) && Boolean(process.env.FCM_PRIVATE_KEY);
+}
+function getFirebaseMessaging() {
+  const app = getApps()[0] ?? initializeApp({
+    credential: cert({
+      projectId: process.env.FCM_PROJECT_ID,
+      clientEmail: process.env.FCM_CLIENT_EMAIL,
+      privateKey: process.env.FCM_PRIVATE_KEY?.replace(/\\n/g, `
+`)
+    })
+  });
+  return getMessaging(app);
+}
+function isInvalidTokenError(error) {
+  const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+  return code.includes("registration-token-not-registered") || code.includes("invalid-registration-token") || code.includes("invalid-argument");
+}
+async function sendPushNotificationBatch(messages) {
+  if (!messages.length) {
+    return { configured: true, successCount: 0, invalidTokens: [], retryable: false };
+  }
+  if (!isConfigured()) {
+    return {
+      configured: false,
+      successCount: 0,
+      invalidTokens: [],
+      retryable: false,
+      error: "Push notifications are not configured"
+    };
+  }
+  try {
+    const first = messages[0];
+    const multicast = {
+      tokens: messages.map((message) => message.token),
+      notification: { title: first.title, body: first.body },
+      data: first.data,
+      android: {
+        priority: "high",
+        collapseKey: first.data.collapseKey,
+        notification: { channelId: "default" }
+      },
+      apns: {
+        headers: first.data.collapseKey ? { "apns-collapse-id": first.data.collapseKey } : undefined
+      }
+    };
+    const response = await getFirebaseMessaging().sendEachForMulticast(multicast);
+    const invalidTokens = response.responses.map((result, index) => result.success || !isInvalidTokenError(result.error) ? null : messages[index].token).filter((token) => Boolean(token));
+    const retryable = response.failureCount > 0 && response.successCount === 0 && invalidTokens.length !== response.failureCount;
+    return {
+      configured: true,
+      successCount: response.successCount,
+      invalidTokens,
+      retryable
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      successCount: 0,
+      invalidTokens: [],
+      retryable: true,
+      error: error instanceof Error ? error.message : "Push provider request failed"
+    };
+  }
+}
+
+// src/jobs/deliver-push-notifications.ts
+var batchLimit = 50;
+var deviceBatchSize = 500;
+var maxAttempts = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
+function notificationContent(job) {
+  const payload = job.payload ?? {};
+  if (job.type === "seller_listing") {
+    const productName = typeof payload.productName === "string" ? payload.productName : "A new listing";
+    return {
+      title: "New listing from a seller you follow",
+      body: `${productName} is now available`,
+      path: `/products/${String(payload.productId ?? "")}`
+    };
+  }
+  if (job.type === "buyer_message") {
+    return {
+      title: "New reply from a seller",
+      body: job.itemCount === 1 ? "You have a new message" : `You have ${job.itemCount} new messages`,
+      path: `/conversations/${job.referenceId ?? ""}`
+    };
+  }
+  if (job.type === "seller_boost") {
+    const productName = typeof payload.productName === "string" ? payload.productName : "Your listing";
+    return {
+      title: "Boost your listing",
+      body: `${productName} has a new price. Boost its visibility now?`,
+      path: "/(app)/notifications"
+    };
+  }
+  if (payload.orderId) {
+    return {
+      title: "New Reservation Received",
+      body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
+      path: `/(app)/orders/${String(payload.orderId)}`
+    };
+  }
+  return {
+    title: "New buyer messages",
+    body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,
+    path: "/messages"
+  };
+}
+function retryDelay(attempt) {
+  return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
+}
+async function claimJobs() {
+  return db2.transaction(async (tx) => {
+    const jobs = await tx.select().from(notification_outbox).where(and(or(eq(notification_outbox.status, "pending"), and(eq(notification_outbox.status, "processing"), lte(notification_outbox.lockedAt, new Date(Date.now() - 5 * 60000)))), lte(notification_outbox.availableAt, new Date))).orderBy(asc(notification_outbox.createdAt)).limit(batchLimit).for("update", { skipLocked: true });
+    if (!jobs.length)
+      return [];
+    const now = new Date;
+    const claimed = [];
+    for (const job of jobs) {
+      const [updated] = await tx.update(notification_outbox).set({
+        status: "processing",
+        lockedAt: now,
+        attemptCount: sql3`${notification_outbox.attemptCount} + 1`,
+        updatedAt: now
+      }).where(eq(notification_outbox.id, job.id)).returning();
+      if (updated)
+        claimed.push(updated);
+    }
+    return claimed;
+  });
+}
+async function finishJob(job, status, message) {
+  const now = new Date;
+  await db2.update(notification_outbox).set({
+    status,
+    sentAt: status === "sent" ? now : null,
+    failedAt: status === "failed" ? now : null,
+    lockedAt: null,
+    lastError: message ?? null,
+    updatedAt: now
+  }).where(eq(notification_outbox.id, job.id));
+}
+async function rescheduleJob(job, message) {
+  const now = new Date;
+  if (job.attemptCount >= maxAttempts()) {
+    await finishJob(job, "failed", message);
+    return;
+  }
+  await db2.update(notification_outbox).set({
+    status: "pending",
+    availableAt: new Date(now.getTime() + retryDelay(job.attemptCount)),
+    lockedAt: null,
+    lastError: message,
+    updatedAt: now
+  }).where(eq(notification_outbox.id, job.id));
+}
+async function disableInvalidTokens(tokens) {
+  if (!tokens.length)
+    return;
+  await db2.update(notification_devices).set({
+    isEnabled: false,
+    invalidatedAt: new Date,
+    updatedAt: new Date
+  }).where(inArray(notification_devices.pushToken, tokens));
+}
+async function deliverJob(job) {
+  const devices = await db2.select({
+    token: notification_devices.pushToken
+  }).from(notification_devices).where(and(eq(notification_devices.userId, job.recipientUserId), eq(notification_devices.isEnabled, true), isNull2(notification_devices.invalidatedAt)));
+  if (!devices.length) {
+    await finishJob(job, "sent", "No enabled notification devices");
+    return;
+  }
+  const content = notificationContent(job);
+  const messages = devices.map(({ token }) => ({
+    token,
+    title: content.title,
+    body: content.body,
+    data: {
+      type: job.type,
+      notificationId: job.id,
+      referenceId: job.referenceId ?? "",
+      path: content.path,
+      collapseKey: job.aggregationKey
+    }
+  }));
+  let lastError;
+  let successCount = 0;
+  let invalidTokens = [];
+  let retryable = false;
+  for (let index = 0;index < messages.length; index += deviceBatchSize) {
+    const result = await sendPushNotificationBatch(messages.slice(index, index + deviceBatchSize));
+    if (!result.configured) {
+      await finishJob(job, "failed", result.error);
+      return;
+    }
+    successCount += result.successCount;
+    invalidTokens = [...invalidTokens, ...result.invalidTokens];
+    retryable ||= result.retryable;
+    lastError = result.error ?? lastError;
+  }
+  await disableInvalidTokens(invalidTokens);
+  if (retryable && successCount === 0) {
+    await rescheduleJob(job, lastError ?? "Push provider request failed");
+    return;
+  }
+  await finishJob(job, "sent", lastError);
+}
+async function deliverPushNotifications() {
+  const jobs = await claimJobs();
+  let delivered = 0;
+  let failed = 0;
+  for (const job of jobs) {
+    try {
+      await deliverJob(job);
+      delivered++;
+    } catch (error) {
+      failed++;
+      await rescheduleJob(job, error instanceof Error ? error.message : "Push delivery failed");
+    }
+  }
+  return { claimed: jobs.length, delivered, failed };
+}
+
 // src/index.ts
 var isDev = true;
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
@@ -126948,4 +142944,11 @@ var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors(
     return status(503, { status: "not_ready" });
   }
 }).use(validationPlugin).listen(3000);
+setInterval(async () => {
+  try {
+    await deliverPushNotifications();
+  } catch (error) {
+    console.error("[Push] Auto-delivery error:", error);
+  }
+}, 30000);
 console.log(`\uD83E\uDD8A Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

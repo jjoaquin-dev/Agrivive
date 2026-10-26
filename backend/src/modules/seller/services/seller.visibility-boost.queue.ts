@@ -54,13 +54,16 @@ export async function queueSellerVisibilityBoost(
       return { boostId: queued.id, status: queued.status, reason: prompt.reason, productId };
     }
 
-    const boostKey = `${cycle.id}:initial`;
+    const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
+    const boostKey = currentPeriod === 0 ? `${cycle.id}:initial` : `${cycle.id}:reduction:${currentPeriod}`;
+    const boostReason = currentPeriod === 0 ? "initial" : "price_reduction";
+
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
       productId,
       sellerId,
-      reason,
-      reductionPeriod: 0,
+      reason: boostReason,
+      reductionPeriod: currentPeriod,
       boostKey,
       status: "queued",
       nextAttemptAt: now,
@@ -69,13 +72,14 @@ export async function queueSellerVisibilityBoost(
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status,
     });
-    if (created) return { boostId: created.id, status: created.status, reason, productId };
+    if (created) return { boostId: created.id, status: created.status, reason: boostReason, productId };
 
     const [existing] = await tx.select({
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status,
     }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.boostKey, boostKey)).limit(1);
     if (!existing) throw new Error("Boost request could not be saved");
+
     if (existing.status === "failed") {
       const [retried] = await tx.update(seller_visibility_boosts).set({
         status: "queued",
@@ -88,8 +92,21 @@ export async function queueSellerVisibilityBoost(
         eq(seller_visibility_boosts.id, existing.id),
         eq(seller_visibility_boosts.status, "failed"),
       )).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
-      if (retried) return { boostId: retried.id, status: retried.status, reason, productId };
+      if (retried) return { boostId: retried.id, status: retried.status, reason: boostReason, productId };
     }
-    return { boostId: existing.id, status: existing.status, reason, productId };
+
+    if (existing.status === "prompt") {
+      const [accepted] = await tx.update(seller_visibility_boosts).set({
+        status: "queued",
+        readAt: now,
+        nextAttemptAt: now,
+        leaseUntil: null,
+        lastError: null,
+        updatedAt: now,
+      }).where(eq(seller_visibility_boosts.id, existing.id)).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (accepted) return { boostId: accepted.id, status: accepted.status, reason: boostReason, productId };
+    }
+
+    return { boostId: existing.id, status: existing.status, reason: boostReason, productId };
   });
 }

@@ -4,35 +4,43 @@ import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
 import { registerNotificationDevice } from "../api/notification-devices";
-import { useUnreadReminder } from "../hooks/useUnreadReminder";
-
-const canUseNotifications =
-  Platform.OS !== "web" &&
-  Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+import { useNotificationWatcher } from "../hooks/useNotificationWatcher";
 
 export function NotificationRegistration() {
   const router = useRouter();
   const { session } = useAuth();
-  useUnreadReminder();
+  useNotificationWatcher();
 
   useEffect(() => {
-    if (!canUseNotifications) return;
+    if (Platform.OS === "web") return;
 
     let cancelled = false;
     let removeListener: (() => void) | undefined;
 
-    async function subscribe() {
+    async function setupLocalNotifications() {
       const Notifications = await import("expo-notifications");
       if (cancelled) return;
 
       Notifications.setNotificationHandler({
         handleNotification: async () => ({
-          shouldPlaySound: false,
+          shouldPlaySound: true,
           shouldSetBadge: true,
           shouldShowBanner: true,
           shouldShowList: true,
         }),
       });
+
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "Agrivive Alerts",
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#1F4D3A",
+          sound: "default",
+        });
+      }
+
+      await Notifications.requestPermissionsAsync();
 
       const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data as { path?: unknown };
@@ -44,7 +52,7 @@ export function NotificationRegistration() {
       removeListener = () => responseSubscription.remove();
     }
 
-    void subscribe();
+    void setupLocalNotifications();
 
     return () => {
       cancelled = true;
@@ -53,63 +61,34 @@ export function NotificationRegistration() {
   }, [router]);
 
   useEffect(() => {
-    // Expo Go cannot use Android remote push notifications. A development build
-    // is required for the native Firebase token flow below.
-    if (!canUseNotifications) {
-      if (Platform.OS !== "web") {
-        console.log("[Push] Expo Go detected. Remote FCM push notifications require a standalone APK build.");
-      }
-      return;
-    }
-
-    if (!session?.user?.id || Platform.OS !== "android") {
+    if (!session?.user?.id || Platform.OS !== "android") return;
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+      console.log("[Push] Expo Go: Local notifications active. Standalone build required for remote FCM tokens.");
       return;
     }
 
     let cancelled = false;
 
-    async function register() {
+    async function registerDeviceToken() {
       try {
         const Notifications = await import("expo-notifications");
         if (cancelled) return;
 
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "Default",
-          importance: Notifications.AndroidImportance.DEFAULT,
-        });
-
-        const current = await Notifications.getPermissionsAsync();
-        const permission = current.granted
-          ? current
-          : await Notifications.requestPermissionsAsync();
-
-        if (!permission.granted || cancelled) {
-          console.warn("[Push] Android notification permission was not granted:", permission.status);
-          return;
-        }
-
         const token = await Notifications.getDevicePushTokenAsync();
-        if (cancelled || !token.data) {
-          console.warn("[Push] No device push token returned by system.");
-          return;
-        }
+        if (cancelled || !token.data) return;
 
-        console.log("[Push] Got device push token. Registering with backend...");
-        const res = await registerNotificationDevice({
+        await registerNotificationDevice({
           platform: "android",
           pushToken: String(token.data),
           notificationsEnabled: true,
         });
-        console.log("[Push] Device registered successfully in database. ID:", res.id);
       } catch (error) {
-        console.error("[Push] Could not register push notifications:", error);
+        console.warn("[Push] Remote device registration skipped:", error);
       }
     }
 
-    void register();
-    return () => {
-      cancelled = true;
-    };
+    void registerDeviceToken();
+    return () => { cancelled = true; };
   }, [session?.user?.id]);
 
   return null;

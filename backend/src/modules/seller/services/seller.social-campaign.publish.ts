@@ -30,9 +30,13 @@ export async function publishSellerSocialCampaign(sellerId: string, campaignId: 
       inArray(seller_social_campaigns.status, ["published", "queued", "publishing", "processing"]),
     ));
 
-  const maxAllowedPosts = (product?.priceReductionPeriodsApplied ?? 0) + 1;
+  const periodsApplied = product?.priceReductionPeriodsApplied ?? 0;
+  const maxAllowedPosts = periodsApplied + 1;
   if (existingPublished.length >= maxAllowedPosts) {
-    throw new OrderError(409, "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction.");
+    const message = periodsApplied === 0
+      ? "Initial post already sent (1 of 1 used). You can boost again when the 12-hour price reduction occurs."
+      : `Already boosted for Price Drop #${periodsApplied}. You can boost again on the next price reduction.`;
+    throw new OrderError(409, message);
   }
 
   const channelMap = new Map(getSocialChannelAvailability().map((channel) => [channel.platform, channel]));
@@ -47,7 +51,10 @@ export async function publishSellerSocialCampaign(sellerId: string, campaignId: 
     posts[platform] = text;
   }
 
-  const eligibility = await getPriorityPromotionEligibility(draft.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(draft.listingCycleId, {
+    stage: periodsApplied > 0 ? "followup" : "initial",
+    allowActiveListing: true,
+  });
   if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
     throw new OrderError(409, eligibility?.reason ?? "This listing is no longer ready for Boost Visibility");
   }

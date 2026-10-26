@@ -21,6 +21,28 @@ export interface SellerProductBoostResponse {
     id: string;
     productName: string;
     imageUrl: string | null;
+    currentPrice: number;
+    basePrice: number;
+    priceReductionPercent: number;
+    priceReductionPeriodsApplied: number;
+  };
+  pricing: {
+    currentPrice: number;
+    basePrice: number;
+    priceBefore: number;
+    priceAfter: number;
+    hasDiscount: boolean;
+    reductionPeriodsApplied: number;
+  };
+  eligibility: {
+    canBoost: boolean;
+    hasInitialBoost: boolean;
+    usedPosts: number;
+    maxAllowedPosts: number;
+    stage: "initial" | "price_reduction";
+    headline: string;
+    message: string;
+    badge: "available" | "boosted";
   };
   boost: SellerVisibilityBoost | null;
 }

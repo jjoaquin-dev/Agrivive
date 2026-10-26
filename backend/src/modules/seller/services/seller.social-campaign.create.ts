@@ -33,9 +33,13 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     ))
     .orderBy(desc(seller_social_campaigns.createdAt));
 
-  const maxAllowedPosts = (product.priceReductionPeriodsApplied ?? 0) + 1;
+  const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
+  const maxAllowedPosts = periodsApplied + 1;
   if (existingPublished.length >= maxAllowedPosts) {
     const latest = existingPublished[0];
+    const message = periodsApplied === 0
+      ? "Initial post already sent (1 of 1 used). You can boost again when the 12-hour price reduction occurs."
+      : `Already boosted for Price Drop #${periodsApplied}. You can boost again on the next price reduction.`;
     return {
       alreadyPublished: true,
       campaignId: latest.id,
@@ -45,11 +49,14 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
       productUrl: "",
       imageUrl: await getProductImageDisplayUrl(product.imageUrl, sellerId),
       posts: {},
-      message: "This listing has already been posted. It can be posted again after its scheduled 12-hour price reduction.",
+      message,
     };
   }
 
-  const eligibility = await getPriorityPromotionEligibility(cycle.id);
+  const eligibility = await getPriorityPromotionEligibility(cycle.id, {
+    stage: periodsApplied > 0 ? "followup" : "initial",
+    allowActiveListing: true,
+  });
   if (!eligibility || eligibility.sellerId !== sellerId) {
     throw new OrderError(404, "This listing is not ready for Boost Visibility");
   }
@@ -77,7 +84,7 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     productType: eligibility.productType,
     shopName: eligibility.shopName,
     listingUrl: eligibility.listingUrl,
-    price: eligibility.price,
+    price: eligibility.price ?? "0",
     unit: eligibility.unit,
   });
 
@@ -99,8 +106,13 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     sellerId,
     productId: eligibility.productId,
     listingCycleId: cycle.id,
+    status: "draft",
     posts,
+    selectedPlatforms: [],
+    retryCount: 0,
+    nextCheckAt: new Date(),
   }).returning({ id: seller_social_campaigns.id, status: seller_social_campaigns.status });
+
   return {
     campaignId: campaign.id,
     status: campaign.status,

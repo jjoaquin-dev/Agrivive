@@ -9,6 +9,7 @@ import type { OrderInput } from "../model/buyer.order.create";
 import { getBuyerOrder } from "./buyer.order.get";
 import { createSellerOrder } from "./buyer.order.persist";
 import { reserveOrderItem } from "./buyer.order.reserve";
+import { enqueueOrderNotification } from "../../notifications/services/notifications.outbox.enqueue-order";
 
 function requestFingerprint(productId: string, quantity: number) {
   return createHash("sha256")
@@ -79,6 +80,12 @@ export async function createDirectOrder(
       item.sellerId,
       [item],
       new Date(Date.now() + 24 * 60 * 60 * 1000),
+    );
+    await enqueueOrderNotification(
+      tx,
+      item.sellerId,
+      orderId,
+      `RSV-${orderId.slice(0, 4).toUpperCase()} · ${item.quantity} ${item.scalingType} ${item.productName}`,
     );
     return { orderId, replayed: false };
   });

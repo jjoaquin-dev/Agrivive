@@ -10,6 +10,7 @@ import { NotificationCategoryTabs } from "../../src/features/notifications/compo
 import { NotificationSearchBar } from "../../src/features/notifications/components/NotificationSearchBar";
 import { NotificationTimelineCard } from "../../src/features/notifications/components/NotificationTimelineCard";
 import { NotificationFilterModal, NotificationFilterState } from "../../src/features/notifications/components/NotificationFilterModal";
+import { sendLocalTestNotification } from "../../src/features/notifications/utils/testPhoneAlert";
 import type { NotificationCategory, UnifiedNotificationItem } from "../../src/features/notifications/types";
 
 interface SectionedItem {
@@ -33,10 +34,11 @@ export default function NotificationsScreen() {
   const handleOpenMenu = () => {
     if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
-        { options: ["Cancel", "Mark all as read", "Refresh notifications"], cancelButtonIndex: 0 },
-        (idx) => {
+        { options: ["Cancel", "Mark all as read", "Refresh notifications", "Test Phone Alert 🔔"], cancelButtonIndex: 0 },
+        async (idx) => {
           if (idx === 1) void markAllRead();
           if (idx === 2) refresh();
+          if (idx === 3) await sendLocalTestNotification();
         },
       );
     } else {
@@ -44,6 +46,7 @@ export default function NotificationsScreen() {
         { text: "Cancel", style: "cancel" },
         { text: "Mark all as read", onPress: () => void markAllRead() },
         { text: "Refresh", onPress: refresh },
+        { text: "Test Phone Alert 🔔", onPress: () => void sendLocalTestNotification() },
       ]);
     }
   };
