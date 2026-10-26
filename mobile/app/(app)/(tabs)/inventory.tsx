@@ -95,48 +95,6 @@ export default function InventoryScreen() {
         </View>
       </View>
 
-      {/* Metric / Summary Cards Carousel */}
-      <View style={styles.metricsContainer}>
-        <Pressable
-          onPress={() => setFilterTab("all")}
-          style={[styles.metricCard, styles.metricCardActive]}
-        >
-          <Text style={[styles.metricNumber, { color: "#059669" }]}>
-            {summary.activeCount}
-          </Text>
-          <Text style={[styles.metricTitle, { color: "#065F46" }]}>Active</Text>
-          <Text style={[styles.metricSubtitle, { color: "#059669" }]}>
-            Visible to buyers
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setFilterTab("low_stock")}
-          style={[styles.metricCard, styles.metricCardLowStock]}
-        >
-          <Text style={[styles.metricNumber, { color: "#D97706" }]}>
-            {summary.lowStockCount}
-          </Text>
-          <Text style={[styles.metricTitle, { color: "#92400E" }]}>Low Stock</Text>
-          <Text style={[styles.metricSubtitle, { color: "#B45309" }]}>
-            Needs attention
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setFilterTab("out_of_stock")}
-          style={[styles.metricCard, styles.metricCardOutOfStock]}
-        >
-          <Text style={[styles.metricNumber, { color: "#DC2626" }]}>
-            {summary.outOfStockCount}
-          </Text>
-          <Text style={[styles.metricTitle, { color: "#991B1B" }]}>Out of Stock</Text>
-          <Text style={[styles.metricSubtitle, { color: "#B91C1C" }]}>
-            Restock or archive
-          </Text>
-        </Pressable>
-      </View>
-
       {/* Search Input Bar */}
       <View style={styles.searchBar}>
         <Search size={18} color="#9CA3AF" style={styles.searchIcon} />

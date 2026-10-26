@@ -15,7 +15,6 @@ import { AnalyticsMovementChart } from "../../src/features/analytics/components/
 import { AnalyticsUnitDistribution } from "../../src/features/analytics/components/AnalyticsUnitDistribution";
 import { AnalyticsOrderOutcomes } from "../../src/features/analytics/components/AnalyticsOrderOutcomes";
 import { AnalyticsProductPerformance } from "../../src/features/analytics/components/AnalyticsProductPerformance";
-import { AnalyticsPeriodComparison } from "../../src/features/analytics/components/AnalyticsPeriodComparison";
 import { VisibilityBreakdownCard } from "../../src/features/analytics/components/VisibilityBreakdownCard";
 import { AnalyticsDescriptiveSummary } from "../../src/features/analytics/components/AnalyticsDescriptiveSummary";
 import { PaginationControl } from "../../src/components/PaginationControl";
@@ -122,8 +121,6 @@ export default function SellerAnalyticsScreen() {
             <AnalyticsOrderOutcomes metrics={analytics.metrics} unit={unit} />
 
             <AnalyticsProductPerformance products={products} />
-
-            <AnalyticsPeriodComparison analytics={analytics} unit={unit} />
 
             <View style={styles.visibilitySection}>
               <View style={styles.visibilityHeader}>

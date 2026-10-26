@@ -6,7 +6,6 @@ import {
   Banknote,
   CheckCircle2,
   Clock,
-  Layers,
   Leaf,
   PackageCheck,
   RefreshCw,
@@ -117,17 +116,7 @@ export function AnalyticsMetricsGrid({
           <Text style={styles.metricSubtext}>Pending pickup pass</Text>
         </View>
 
-        {/* 7. Remaining Balance */}
-        <View style={styles.card}>
-          <View style={[styles.iconCircle, { backgroundColor: "rgba(124, 58, 237, 0.12)" }]}>
-            <Layers size={18} color="#7C3AED" />
-          </View>
-          <Text style={styles.metricValue}>{metrics.remainingQuantity} {unitSuffix}</Text>
-          <Text style={styles.metricLabel}>Remaining Balance</Text>
-          <Text style={styles.metricSubtext}>Available + pending</Text>
-        </View>
-
-        {/* 8. Repeat Listings */}
+        {/* 7. Repeat Listings */}
         <View style={styles.card}>
           <View style={[styles.iconCircle, { backgroundColor: "rgba(13, 148, 136, 0.12)" }]}>
             <RefreshCw size={18} color="#0D9488" />

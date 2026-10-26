@@ -127,7 +127,9 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.primary]} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
-            <NotificationSummaryBanner unreadCount={unreadCount} urgentCount={urgentCount} onMarkAllRead={markAllRead} />
+            {unreadCount > 0 || urgentCount > 0 ? (
+              <NotificationSummaryBanner unreadCount={unreadCount} urgentCount={urgentCount} onMarkAllRead={markAllRead} />
+            ) : null}
             <NotificationCategoryTabs selected={selectedCategory} onSelect={setSelectedCategory} counts={counts} />
             <NotificationSearchBar value={searchQuery} onChangeText={setSearchQuery} onFilterPress={() => setFilterModalVisible(true)} activeFilterCount={activeFilterCount} />
           </View>
