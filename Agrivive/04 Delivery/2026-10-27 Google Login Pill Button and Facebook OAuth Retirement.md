@@ -2,6 +2,7 @@
 
 **Date:** 2026-10-27  
 **Type:** Feature / UX Polish  
+**Commit:** `525edaa` (`remove facebook oauth and make google login a pill button`)  
 **Scope:** Mobile (`mobile/src/features/auth/components/`, `mobile/app/(auth)/login.tsx`, `mobile/app/(auth)/register.tsx`)
 
 ---
