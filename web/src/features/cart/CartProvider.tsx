@@ -37,14 +37,28 @@ function isCartItem(value: unknown): value is CartItem {
     && typeof seller.detailAddress === "string";
 }
 
-function readCart() {
+function readCart(): CartItem[] {
   try {
+    if (typeof window === "undefined") return [];
     const stored = window.localStorage.getItem(CART_STORAGE_KEY);
     if (!stored) return [];
     const parsed: unknown = JSON.parse(stored);
     return Array.isArray(parsed) ? parsed.filter(isCartItem) : [];
   } catch {
     return [];
+  }
+}
+
+function writeCart(items: CartItem[]) {
+  try {
+    if (typeof window === "undefined") return;
+    if (items.length === 0) {
+      window.localStorage.removeItem(CART_STORAGE_KEY);
+    } else {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    }
+  } catch {
+    // Ignore storage quota or access issues
   }
 }
 
@@ -58,11 +72,6 @@ export function CartProvider({ children }: Readonly<{ children: React.ReactNode 
     setIsReady(true);
   }, []);
 
-  useEffect(() => {
-    if (!isReady) return;
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  }, [items, isReady]);
-
   const value = useMemo<CartContextValue>(() => ({
     items,
     itemCount: items.length,
@@ -75,33 +84,47 @@ export function CartProvider({ children }: Readonly<{ children: React.ReactNode 
         const existing = current.find((item) => item.id === product.id);
         const nextQuantity = (existing?.quantity ?? 0) + quantity;
         const cappedQuantity = Number.isFinite(maxQuantity) ? Math.min(nextQuantity, maxQuantity) : nextQuantity;
-        if (existing) {
-          return current.map((item) => item.id === product.id ? { ...product, quantity: cappedQuantity } : item);
-        }
-        return [...current, { ...product, quantity: cappedQuantity }];
+        const next = existing
+          ? current.map((item) => item.id === product.id ? { ...product, quantity: cappedQuantity } : item)
+          : [...current, { ...product, quantity: cappedQuantity }];
+        writeCart(next);
+        return next;
       });
     },
     refreshItem(product) {
-      setItems((current) => current.flatMap((item) => {
-        if (item.id !== product.id) return [item];
-        const maxQuantity = Number(product.productQty);
-        const nextQuantity = Number.isFinite(maxQuantity) ? Math.min(item.quantity, maxQuantity) : item.quantity;
-        return nextQuantity > 0 ? [{ ...product, quantity: nextQuantity }] : [];
-      }));
+      setItems((current) => {
+        const next = current.flatMap((item) => {
+          if (item.id !== product.id) return [item];
+          const maxQuantity = Number(product.productQty);
+          const nextQuantity = Number.isFinite(maxQuantity) ? Math.min(item.quantity, maxQuantity) : item.quantity;
+          return nextQuantity > 0 ? [{ ...product, quantity: nextQuantity }] : [];
+        });
+        writeCart(next);
+        return next;
+      });
     },
     updateQuantity(productId, quantity) {
-      setItems((current) => current.flatMap((item) => {
-        if (item.id !== productId) return [item];
-        if (!Number.isFinite(quantity) || quantity <= 0) return [];
-        const maxQuantity = Number(item.productQty);
-        return [{ ...item, quantity: Number.isFinite(maxQuantity) ? Math.min(quantity, maxQuantity) : quantity }];
-      }));
+      setItems((current) => {
+        const next = current.flatMap((item) => {
+          if (item.id !== productId) return [item];
+          if (!Number.isFinite(quantity) || quantity <= 0) return [];
+          const maxQuantity = Number(item.productQty);
+          return [{ ...item, quantity: Number.isFinite(maxQuantity) ? Math.min(quantity, maxQuantity) : quantity }];
+        });
+        writeCart(next);
+        return next;
+      });
     },
     removeItem(productId) {
-      setItems((current) => current.filter((item) => item.id !== productId));
+      setItems((current) => {
+        const next = current.filter((item) => item.id !== productId);
+        writeCart(next);
+        return next;
+      });
     },
     clear() {
-      setItems([]);
+      writeCart([]);
+      setItems((current) => (current.length === 0 ? current : []));
     },
   }), [items, isReady, drawerOpen]);
 

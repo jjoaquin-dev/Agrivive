@@ -2,30 +2,19 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, MapPin, ShoppingBasket, ShoppingCart } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { sellerTypeLabel } from "../marketplace-labels";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { ApiError, isAbortError, isTrustAccessMessage } from "@/src/lib/api";
+import { ApiError, isAbortError } from "@/src/lib/api";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { createBuyerOrder } from "@/src/features/orders/api/orders";
-import { PageContainer } from "@/src/components/PageContainer";
 import { getMarketplaceProduct } from "../api/marketplace";
 import type { MarketplaceProduct } from "../types";
+import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
 import { ProductImage } from "./ProductImage";
-import { MarketplacePrice } from "./MarketplacePrice";
+import { ProductInfoCard } from "./ProductInfoCard";
 import { SellerReviewsSection } from "./SellerReviewsSection";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductQuestionsSection } from "./ProductQuestionsSection";
-import { SimilarProduceSection } from "./SimilarProduceSection";
-import { MessageSellerButton } from "./MessageSellerButton";
-import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 
 export function ProductDetail() {
   const params = useParams<{ id: string }>();
@@ -38,7 +27,8 @@ export function ProductDetail() {
   const [ordering, setOrdering] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [cartMessage, setCartMessage] = useState("");
-  const { addItem } = useCart();
+  const [showReserveModal, setShowReserveModal] = useState(false);
+  const { addItem, removeItem } = useCart();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,19 +50,29 @@ export function ProductDetail() {
     return () => { active = false; controller.abort(); };
   }, [productId]);
 
-  async function handleBuyNow() {
+  function promptBuyNow() {
     if (!product) return;
     const parsedQuantity = Number(quantity);
     if (!Number.isFinite(parsedQuantity) || parsedQuantity < 0.01 || parsedQuantity > Number(product.productQty)) {
       setOrderError("Enter a quantity that is available for this listing.");
       return;
     }
+    setOrderError("");
+    setShowReserveModal(true);
+  }
+
+  async function executeBuyNow() {
+    if (!product) return;
+    const parsedQuantity = Number(quantity);
     setOrdering(true);
     setOrderError("");
     try {
       const order = await createBuyerOrder(product.id, parsedQuantity, crypto.randomUUID());
+      removeItem(product.id);
+      setShowReserveModal(false);
       router.push(`/orders/${order.id}`);
     } catch (reason) {
+      setShowReserveModal(false);
       if (reason instanceof ApiError && reason.status === 401) {
         const returnPath = `/marketplace/${product.id}?quantity=${encodeURIComponent(quantity)}`;
         router.push(`/login?next=${encodeURIComponent(returnPath)}`);
@@ -93,59 +93,91 @@ export function ProductDetail() {
     setCartMessage(`${product.productName} was added to your cart.`);
   }
 
-  if (loading) return <main className="min-h-[calc(100dvh-72px)] bg-background px-4 py-6 sm:px-6 sm:py-8"><PageContainer className="max-w-[1600px]"><div className="h-[min(72dvh,620px)] min-h-[420px] animate-pulse rounded-[24px] bg-card sm:h-[560px] lg:h-[calc(100dvh-9rem)]" /></PageContainer></main>;
-  if (error || !product) return <main className="min-h-[calc(100vh-72px)] bg-background p-6"><PageContainer><Card className="mx-auto max-w-xl items-center rounded-[20px] border-border/80 bg-white p-8 text-center shadow-[0_14px_32px_rgba(31,77,58,0.08)]"><h1 className="font-heading text-2xl font-bold">We could not find that listing.</h1><p className="text-muted-foreground">{error || "It may have been removed or is no longer visible."}</p><Link href="/marketplace" className={cn(buttonVariants(), "mt-2")}><ArrowLeft className="size-4" />Back to marketplace</Link></Card></PageContainer></main>;
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#FDFDFD] px-6 py-6 text-foreground">
+        <div className="mx-auto max-w-7xl">
+          <div className="h-[540px] animate-pulse rounded-[16px] border border-[#E8E8E8] bg-white" />
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <main className="min-h-screen bg-[#FDFDFD] px-6 py-6 text-foreground">
+        <div className="mx-auto max-w-xl rounded-[16px] border border-[#E8E8E8] bg-white p-8 text-center shadow-sm">
+          <h1 className="font-heading text-2xl font-bold">We could not find that listing.</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error || "It may have been removed or is no longer visible."}</p>
+          <Link href="/marketplace" className="mt-4 inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-[#457D00] px-4 text-sm font-semibold text-white hover:bg-[#386600]">
+            <ArrowLeft className="size-4" />Back to Marketplace
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const soldOut = product.availability === "sold_out" || Number(product.productQty) <= 0;
 
   return (
-    <main className="min-h-[calc(100dvh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
-      <PageContainer className="max-w-[1600px]">
-        <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary transition-colors hover:text-agrivive-primary hover:underline"><ArrowLeft aria-hidden="true" className="size-4" />Back to marketplace</Link>
-        <div className="mt-5 grid min-h-[calc(100dvh-9rem)] gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)] lg:items-start">
-          <Card className="overflow-hidden rounded-[24px] border-border/80 bg-white p-0 shadow-[0_18px_45px_rgba(31,77,58,0.10)] lg:sticky lg:top-6 lg:h-[calc(100dvh-9rem)]">
-            <div className="h-[min(72dvh,620px)] min-h-[420px] bg-agrivive-background sm:h-[560px] lg:h-full"><ProductImage src={product.imageUrl} alt={product.productName} category={product.productType} /></div>
-          </Card>
-          <Card className="gap-5 self-start rounded-[24px] border-border/80 bg-white p-5 shadow-[0_18px_45px_rgba(31,77,58,0.08)] sm:p-7 lg:sticky lg:top-6">
-            <CardHeader className="gap-3 p-0">
-              <Badge variant="secondary" className="gap-2"><ShoppingBasket aria-hidden="true" className="size-4" />{product.productType}</Badge>
-              <h1 className="font-heading text-3xl font-bold leading-tight">{product.productName}</h1>
-              <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-5">
-                <MarketplacePrice basePrice={product.basePrice} currentPrice={product.productPrice} unit={product.scalingType} size="detail" />
-                <Badge variant={soldOut ? "destructive" : "success"}>{soldOut ? "Sold out" : `${Number(product.productQty).toLocaleString()} ${product.scalingType} available`}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="gap-5 p-0">
-              <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                <div className="sm:col-span-2"><dt className="text-muted-foreground">Seller</dt><dd className="mt-1 flex flex-wrap items-center justify-between gap-3 font-semibold"><Link href={`/sellers/${product.seller.id}`} className="text-primary hover:underline">{product.seller.shopName}</Link><MessageSellerButton context="product" id={product.id} compact /></dd></div>
-                <div><dt className="text-muted-foreground">Seller type</dt><dd className="mt-1 font-semibold">{sellerTypeLabel(product.seller.sellerType)}</dd></div>
-                <div><dt className="text-muted-foreground">Condition</dt><dd className="mt-1 font-semibold capitalize">{product.condition?.replaceAll("_", " ") || "No condition note"}</dd></div>
-              </dl>
-              <div className="border-t border-border/70 pt-5 text-sm">
-                <h2 className="font-semibold">Pickup details</h2>
-                <p className="mt-2 flex items-start gap-2 leading-6 text-muted-foreground"><MapPin aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />{product.seller.detailAddress}</p>
-                <p className="mt-2 leading-6 text-muted-foreground">{product.seller.pickupInstructions || "Ask the seller for the best pickup time after reserving."}</p>
-              </div>
-              {orderError ? isTrustAccessMessage(orderError)
-                ? <TrustAccessNotice message={orderError} />
-                : <Alert variant="destructive"><AlertDescription>{orderError}</AlertDescription></Alert>
-                : null}
-              {cartMessage ? <Alert role="status"><AlertDescription>{cartMessage}</AlertDescription></Alert> : null}
-              <Field><FieldLabel htmlFor="reservation-quantity">Quantity to reserve</FieldLabel><Input id="reservation-quantity" type="number" min="0.01" max={Number(product.productQty)} step="0.01" value={quantity} onChange={(event) => setQuantity(event.target.value)} disabled={soldOut || ordering} /></Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Button type="button" variant="outline" onClick={handleAddToCart} disabled={soldOut || ordering} className="h-11"><ShoppingCart aria-hidden="true" data-icon="inline-start" />Add to cart</Button>
-                <Button type="button" onClick={handleBuyNow} disabled={soldOut || ordering} className="h-12">{ordering ? "Reserving…" : "Buy now"}</Button>
-              </div>
-              <p className="text-xs leading-5 text-muted-foreground">Payment happens directly at pickup. Reservations expire after 24 hours.</p>
-            </CardContent>
-          </Card>
+    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-4 py-6 sm:px-6 text-foreground">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Top Back Navigation Link */}
+        <div>
+          <Link
+            href="/marketplace"
+            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
+            <span>Back to Marketplace</span>
+          </Link>
         </div>
 
+        {/* Main Product Section: 2:1 Responsive Layout */}
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+          {/* Left: Product Image Card (2 parts) */}
+          <div className="flex h-full flex-col overflow-hidden rounded-[24px] border border-[#E5E2DA] bg-white p-3.5 shadow-xs sm:p-4 lg:col-span-2">
+            <div className="relative flex-1 w-full min-h-[380px] sm:min-h-[460px] lg:min-h-0 overflow-hidden rounded-[18px] bg-[#FAFAF8]">
+              <ProductImage
+                src={product.imageUrl}
+                alt={product.productName}
+                category={product.productType}
+                className="absolute inset-0 size-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Right: Product Information Card (1 part) */}
+          <ProductInfoCard
+            product={product}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            soldOut={soldOut}
+            ordering={ordering}
+            orderError={orderError}
+            cartMessage={cartMessage}
+            onAddToCart={handleAddToCart}
+            onBuyNow={promptBuyNow}
+          />
+        </div>
+
+        {/* Reviews, Ratings, and Questions Sections (SimilarProduceSection removed) */}
         <SellerReviewsSection sellerId={product.seller.id} shopName={product.seller.shopName} />
         <ProductReviewsSection productId={product.id} />
         <ProductQuestionsSection productId={product.id} productName={product.productName} />
-        <SimilarProduceSection currentProductId={product.id} productType={product.productType} />
-      </PageContainer>
+      </div>
+
+      <ConfirmationModalComponent
+        open={showReserveModal}
+        onClose={() => setShowReserveModal(false)}
+        onConfirm={executeBuyNow}
+        loading={ordering}
+        variant="positive"
+        title="Confirm Reservation"
+        description={`Are you sure you want to reserve ${quantity} ${product?.scalingType || "kilo"} of ${product?.productName}? You will pay directly to the stall at pickup.`}
+        confirmLabel="Reserve"
+        cancelLabel="No"
+      />
     </main>
   );
 }

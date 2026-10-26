@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowRight, Minus, Plus, RefreshCw, ShoppingCart, Store, Trash2 } from "lucide-react";
+import { ArrowRight, RefreshCw, ShoppingCart } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -12,7 +12,9 @@ import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNo
 import { useCart } from "../CartProvider";
 import { createCartCheckout } from "../api/cart";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
-import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
+import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
+import { CartSellerHeaderComponent } from "./CartSellerHeaderComponent";
+import { CartItemComponent } from "./CartItemComponent";
 
 function money(value: number) {
   return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value);
@@ -24,6 +26,7 @@ export function CartDrawer() {
   const { items, itemCount, isReady, drawerOpen, setDrawerOpen, updateQuantity, refreshItem, removeItem, clear } = useCart();
   const [checkoutError, setCheckoutError] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
+  const [showReserveModal, setShowReserveModal] = useState(false);
 
   const total = useMemo(() => items.reduce((sum, item) => sum + Number(item.productPrice) * item.quantity, 0), [items]);
 
@@ -46,9 +49,11 @@ export function CartDrawer() {
     try {
       const result = await createCartCheckout(items.map((item) => ({ productId: item.id, quantity: item.quantity })), crypto.randomUUID());
       clear();
+      setShowReserveModal(false);
       setDrawerOpen(false);
       router.push(`/orders?checkout=${encodeURIComponent(result.checkoutId)}`);
     } catch (reason) {
+      setShowReserveModal(false);
       if (reason instanceof ApiError && reason.status === 401) {
         setDrawerOpen(false);
         router.push("/login?next=%2Fcart");
@@ -79,42 +84,19 @@ export function CartDrawer() {
         {!isReady ? (
           <div className="m-6 h-40 animate-pulse rounded-[20px] bg-white" aria-label="Loading cart" />
         ) : items.length > 0 ? (
-          <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+          <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-5">
             {itemsBySeller.map(([shopName, sellerItems]) => (
-              <div key={shopName} className="overflow-hidden rounded-[20px] border border-border/80 bg-white shadow-[0_6px_20px_rgba(31,77,58,0.04)]">
-                <div className="flex items-center gap-2 border-b border-border/60 bg-agrivive-background/60 px-4 py-3">
-                  <Store className="size-4 text-agrivive-primary" aria-hidden="true" />
-                  <span className="font-heading text-xs font-bold text-foreground">{shopName}</span>
-                </div>
-                <div className="divide-y divide-border/60">
+              <div key={shopName} className="space-y-2.5">
+                <CartSellerHeaderComponent shopName={shopName} />
+                <div className="space-y-3">
                   {sellerItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3.5 p-4">
-                      <Link href={`/marketplace/${item.id}`} onClick={() => setDrawerOpen(false)} className="size-16 shrink-0 overflow-hidden rounded-xl border border-border/80 bg-agrivive-background">
-                        <ProductImage src={item.imageUrl} alt={item.productName} category={item.productType} />
-                      </Link>
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/marketplace/${item.id}`} onClick={() => setDrawerOpen(false)} className="line-clamp-1 text-sm font-semibold text-foreground transition-colors hover:text-agrivive-primary">
-                          {item.productName}
-                        </Link>
-                        <p className="font-heading text-xs font-bold text-agrivive-primary">
-                          {money(Number(item.productPrice))}<span className="font-normal text-muted-foreground"> / {item.scalingType}</span>
-                        </p>
-                        <div className="mt-2.5 flex items-center justify-between">
-                          <div className="flex items-center gap-1">
-                            <Button type="button" size="icon" variant="outline" className="min-h-11 min-w-11 size-11 rounded-xl transition-transform active:translate-y-px" aria-label={`Reduce ${item.productName}`} onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}>
-                              <Minus className="size-4" />
-                            </Button>
-                            <span className="w-8 text-center text-xs font-bold">{item.quantity}</span>
-                            <Button type="button" size="icon" variant="outline" className="min-h-11 min-w-11 size-11 rounded-xl transition-transform active:translate-y-px" aria-label={`Increase ${item.productName}`} onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                              <Plus className="size-4" />
-                            </Button>
-                          </div>
-                          <Button type="button" size="icon" variant="ghost" className="min-h-11 min-w-11 size-11 rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove ${item.productName}`} onClick={() => removeItem(item.id)}>
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <CartItemComponent
+                      key={item.id}
+                      item={item}
+                      onUpdateQuantity={(quantity) => updateQuantity(item.id, quantity)}
+                      onRemove={() => removeItem(item.id)}
+                      onNavigate={() => setDrawerOpen(false)}
+                    />
                   ))}
                 </div>
               </div>
@@ -149,7 +131,12 @@ export function CartDrawer() {
               <span className="text-sm font-medium text-muted-foreground">Total to pay at pickup</span>
               <span className="font-heading text-2xl font-bold text-agrivive-primary">{money(total)}</span>
             </div>
-            <Button type="button" onClick={() => void handleCheckout()} disabled={checkingOut || !isReady} className="min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px">
+            <Button
+              type="button"
+              onClick={() => setShowReserveModal(true)}
+              disabled={checkingOut || !isReady}
+              className="min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
+            >
               {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" />
             </Button>
             <p className="pt-2 text-center text-[11px] text-muted-foreground">
@@ -157,6 +144,18 @@ export function CartDrawer() {
             </p>
           </SheetFooter>
         ) : null}
+
+        <ConfirmationModalComponent
+          open={showReserveModal}
+          onClose={() => setShowReserveModal(false)}
+          onConfirm={handleCheckout}
+          loading={checkingOut}
+          variant="positive"
+          title="Confirm Reservation"
+          description={`Are you sure you want to reserve ${itemCount} item${itemCount > 1 ? "s" : ""} for ${money(total)}? You will pay directly to the stall at pickup.`}
+          confirmLabel="Reserve"
+          cancelLabel="No"
+        />
       </SheetContent>
     </Sheet>
   );

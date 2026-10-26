@@ -14,6 +14,9 @@ export type Conversation = {
   createdAt: string;
   productName: string | null;
   productImageUrl: string | null;
+  productPrice?: string | number | null;
+  scalingType?: string | null;
+  productQty?: string | number | null;
   sellerName: string;
   sellerImage: string | null;
   sellerShopName: string | null;
@@ -54,10 +57,10 @@ export function listConversationMessages(conversationId: string, signal?: AbortS
   return apiRequest<ConversationMessage[]>(`/conversations/${encodeURIComponent(conversationId)}/messages`, { signal });
 }
 
-export function sendConversationMessage(conversationId: string, message: string, clientMessageId: string) {
+export function sendConversationMessage(conversationId: string, message: string, clientMessageId: string, productId?: string) {
   return apiRequest<ConversationMessage>(`/conversations/${encodeURIComponent(conversationId)}/messages`, {
     method: "POST",
-    body: JSON.stringify({ message, clientMessageId }),
+    body: JSON.stringify({ message, clientMessageId, ...(productId ? { productId } : {}) }),
   });
 }
 

@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Shield, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ChangePasswordForm } from "@/src/features/auth/components/ChangePasswordForm";
 import { SetPasswordForm } from "@/src/features/auth/components/SetPasswordForm";
@@ -13,7 +11,7 @@ type ProfileSecurityCardProps = {
   twoFactorEnabled?: boolean;
 };
 
-export function ProfileSecurityCard({ twoFactorEnabled }: ProfileSecurityCardProps) {
+export function ProfileSecurityCard({}: ProfileSecurityCardProps = {}) {
   const [hasPassword, setHasPassword] = useState<boolean | null>(null);
   const [passwordSetupRequired, setPasswordSetupRequired] = useState<boolean | null>(null);
   const [statusError, setStatusError] = useState("");
@@ -40,19 +38,9 @@ export function ProfileSecurityCard({ twoFactorEnabled }: ProfileSecurityCardPro
 
   return (
     <Card className="rounded-[20px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
-      <div className="flex items-center justify-between border-b border-border/70 pb-4">
-        <div>
-          <h2 className="font-heading text-lg font-bold">Password & Security</h2>
-          <p className="text-sm text-muted-foreground">Manage your credentials and login safety.</p>
-        </div>
-        <Badge variant={twoFactorEnabled ? "default" : "outline"} className="gap-1.5 text-xs font-normal">
-          {twoFactorEnabled ? (
-            <ShieldCheck className="size-3.5 text-emerald-400" />
-          ) : (
-            <Shield className="size-3.5 text-muted-foreground" />
-          )}
-          {twoFactorEnabled ? "2FA Active" : "2FA Off"}
-        </Badge>
+      <div className="border-b border-border/70 pb-4">
+        <h2 className="font-heading text-lg font-bold">Account Password</h2>
+        <p className="text-sm text-muted-foreground">Update your password to keep your account secure.</p>
       </div>
 
       {statusError ? (

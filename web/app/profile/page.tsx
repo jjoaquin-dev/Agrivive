@@ -6,7 +6,7 @@ export default function ProfilePage() {
   return (
     <>
       <BuyerSiteHeader />
-      <Suspense fallback={<main className="min-h-[calc(100vh-72px)] bg-background py-10" />}>
+      <Suspense fallback={<main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] py-10" />}>
         <BuyerProfile />
       </Suspense>
     </>

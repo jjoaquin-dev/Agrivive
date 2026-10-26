@@ -25,8 +25,8 @@ export const colors = {
 
 export const fonts = {
   heading: {
-    semiBold: "Manrope_600SemiBold",
-    bold: "Manrope_700Bold",
+    semiBold: "Inter_600SemiBold",
+    bold: "Inter_700Bold",
   },
   body: {
     regular: "Inter_400Regular",

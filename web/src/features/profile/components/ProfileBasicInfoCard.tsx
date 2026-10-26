@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Mail, MapPin, Phone, ShieldCheck, User } from "lucide-react";
+import { CheckCircle2, Mail, Phone } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/src/lib/auth-client";
+import { ProfileDistrictDropdown } from "./ProfileDistrictDropdown";
 
 interface ProfileBasicInfoCardProps {
   user: {
@@ -30,7 +30,6 @@ const davaoDistricts = [
 ];
 
 export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
-  // Split full name into first and last name for editing
   const nameParts = (user.name || "").trim().split(" ");
   const [firstName, setFirstName] = useState(nameParts[0] || "");
   const [lastName, setLastName] = useState(nameParts.slice(1).join(" ") || "");
@@ -68,41 +67,43 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
   }
 
   return (
-    <Card className="rounded-[24px] border border-border/80 bg-white p-6 shadow-[0_8px_24px_rgba(31,77,58,0.04)] sm:p-8">
-      <div className="border-b border-border/70 pb-4">
-        <h2 className="font-heading text-lg font-bold text-foreground">
+    <Card className="rounded-[24px] border border-neutral-200/80 bg-white p-6 shadow-2xs sm:p-7">
+      <div className="border-b border-neutral-100 pb-4">
+        <h2 className="font-heading text-lg font-bold text-neutral-900">
           Basic Information
         </h2>
-        <p className="text-xs text-muted-foreground">
+        <p className="mt-0.5 text-xs text-neutral-500">
           Update your contact details for reservation pickup notifications.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="mt-6 space-y-4">
-        {/* First Name & Last Name (2-column row) */}
+        {/* First Name & Last Name (2-column pill inputs) */}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field>
-            <FieldLabel htmlFor="firstName" className="text-xs font-semibold text-foreground">
+            <FieldLabel htmlFor="firstName" className="text-xs font-semibold text-neutral-700">
               First name
             </FieldLabel>
-            <Input
+            <input
               id="firstName"
+              type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="e.g. Maria"
-              className="h-11 rounded-xl text-sm"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="lastName" className="text-xs font-semibold text-foreground">
+            <FieldLabel htmlFor="lastName" className="text-xs font-semibold text-neutral-700">
               Last name
             </FieldLabel>
-            <Input
+            <input
               id="lastName"
+              type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="e.g. Santos"
-              className="h-11 rounded-xl text-sm"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </Field>
         </div>
@@ -110,59 +111,54 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
         {/* Email with Verified Badge */}
         <Field>
           <div className="flex items-center justify-between">
-            <FieldLabel htmlFor="email" className="text-xs font-semibold text-foreground">
+            <FieldLabel htmlFor="email" className="text-xs font-semibold text-neutral-700">
               E-mail
             </FieldLabel>
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-              <CheckCircle2 className="size-3 text-emerald-600" />
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#16A34A]">
+              <CheckCircle2 className="size-3 text-[#16A34A]" />
               Verified
             </span>
           </div>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
+            <Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+            <input
               id="email"
               type="email"
               value={user.email}
               readOnly
-              className="h-11 rounded-xl bg-muted/40 pl-10 text-sm text-muted-foreground"
+              className="h-11 w-full rounded-full border border-neutral-200/80 bg-neutral-50 pl-11 pr-5 text-sm text-neutral-500 cursor-not-allowed"
             />
           </div>
         </Field>
 
         {/* Phone Number */}
         <Field>
-          <FieldLabel htmlFor="phone" className="text-xs font-semibold text-foreground">
+          <FieldLabel htmlFor="phone" className="text-xs font-semibold text-neutral-700">
             Phone number (SMS pickup alerts)
           </FieldLabel>
           <div className="relative">
-            <Phone className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
+            <Phone className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+            <input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+63 9XX XXX XXXX"
-              className="h-11 rounded-xl pl-10 text-sm"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </div>
         </Field>
 
-        {/* Preferred Market / District */}
+        {/* Preferred Market / District with Category Dropdown Design */}
         <Field>
-          <FieldLabel htmlFor="district" className="text-xs font-semibold text-foreground">
+          <FieldLabel htmlFor="district" className="text-xs font-semibold text-neutral-700">
             Preferred Market / District
           </FieldLabel>
-          <select
-            id="district"
-            value={district}
-            onChange={(e) => setDistrict(e.target.value)}
-            className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary"
-          >
-            {davaoDistricts.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
+          <ProfileDistrictDropdown
+            districts={davaoDistricts}
+            selectedDistrict={district}
+            onSelectDistrict={setDistrict}
+          />
         </Field>
 
         {error ? (
@@ -172,13 +168,17 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
         ) : null}
 
         {success ? (
-          <p className="text-xs font-semibold text-emerald-700">
+          <p className="text-xs font-semibold text-[#16A34A]">
             Account information saved successfully!
           </p>
         ) : null}
 
-        <div className="flex justify-end pt-2">
-          <Button type="submit" disabled={loading} className="min-h-11 px-6 font-semibold">
+        <div className="flex justify-end pt-3">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-11 rounded-full px-7 font-bold bg-[#386600] hover:bg-[#2F5400] text-white shadow-2xs transition active:translate-y-px text-xs flex items-center gap-2 cursor-pointer"
+          >
             {loading ? <Spinner data-icon="inline-start" /> : null}
             Save changes
           </Button>

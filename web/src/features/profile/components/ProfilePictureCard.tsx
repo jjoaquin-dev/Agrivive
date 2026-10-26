@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useRef, useState } from "react";
 import Image from "next/image";
-import { Camera, Trash2, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -65,16 +65,16 @@ export function ProfilePictureCard({
   }
 
   return (
-    <Card className="flex flex-col items-center rounded-[24px] border border-border/80 bg-white p-6 text-center shadow-[0_8px_24px_rgba(31,77,58,0.04)] sm:p-8">
-      <h2 className="self-start font-heading text-lg font-bold text-foreground">
+    <Card className="flex flex-col items-center rounded-[24px] border border-neutral-200/80 bg-white p-6 text-center shadow-2xs sm:p-7">
+      <h2 className="self-start font-heading text-lg font-bold text-neutral-900">
         Profile Picture
       </h2>
-      <p className="mb-6 self-start text-xs text-muted-foreground">
+      <p className="mb-6 self-start text-xs text-neutral-500">
         Your picture helps market stall vendors recognize you during pickup.
       </p>
 
       {/* Circular Avatar */}
-      <div className="relative mb-6 size-32 overflow-hidden rounded-full border-2 border-border/80 bg-gradient-to-br from-agrivive-primary/10 to-agrivive-sage/20 ring-4 ring-agrivive-primary/10 sm:size-36">
+      <div className="relative mb-6 size-32 overflow-hidden rounded-full border-2 border-neutral-200/80 bg-[#F4F6EE] shadow-inner sm:size-36">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -84,7 +84,7 @@ export function ProfilePictureCard({
             unoptimized
           />
         ) : (
-          <div className="flex size-full items-center justify-center font-heading text-3xl font-bold text-agrivive-primary">
+          <div className="flex size-full items-center justify-center font-heading text-3xl font-bold text-[#386600]">
             {initials}
           </div>
         )}
@@ -99,17 +99,17 @@ export function ProfilePictureCard({
       />
 
       {/* Action Buttons */}
-      <div className="flex w-full flex-col items-center gap-2.5">
+      <div className="flex w-full flex-col items-center gap-2">
         <Button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="min-h-11 w-full max-w-[200px] rounded-full font-semibold"
+          className="h-11 w-full max-w-[200px] rounded-full text-xs font-bold bg-[#386600] hover:bg-[#2F5400] text-white shadow-2xs transition active:translate-y-px flex items-center justify-center gap-2 cursor-pointer"
         >
           {uploading ? (
             <><Spinner data-icon="inline-start" />Uploading…</>
           ) : (
-            <><Upload data-icon="inline-start" className="size-4" />Upload a new one</>
+            <><Upload className="size-4 stroke-[2.5]" />Upload a new one</>
           )}
         </Button>
 
@@ -117,7 +117,7 @@ export function ProfilePictureCard({
           <button
             type="button"
             onClick={() => onAvatarUploaded(null)}
-            className="text-xs font-semibold text-destructive hover:underline"
+            className="py-1 text-xs font-semibold text-red-600 hover:underline cursor-pointer"
           >
             Remove photo
           </button>
@@ -130,7 +130,7 @@ export function ProfilePictureCard({
         </Alert>
       ) : null}
       {success ? (
-        <p className="mt-3 text-xs font-semibold text-emerald-700">Photo updated successfully!</p>
+        <p className="mt-3 text-xs font-semibold text-[#16A34A]">Photo updated successfully!</p>
       ) : null}
     </Card>
   );

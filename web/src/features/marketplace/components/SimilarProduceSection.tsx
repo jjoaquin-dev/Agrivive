@@ -30,12 +30,12 @@ export function SimilarProduceSection({ currentProductId, productType }: Similar
   if (items.length === 0) return null;
 
   return (
-    <section className="mt-12 border-t pt-8">
+    <section className="space-y-4">
       <div className="flex items-center gap-2">
-        <Sparkles className="size-5 text-primary" />
-        <h2 className="font-heading text-xl font-bold">Similar produce</h2>
+        <Sparkles className="size-5 text-[#457D00]" />
+        <h2 className="font-heading text-[18px] font-semibold text-[#14231A]">Similar produce</h2>
       </div>
-      <div className="mt-5 grid max-w-[1120px] gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid max-w-[1120px] gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((product) => (
           <div key={product.id} className="w-full max-w-[360px]">
             <ProductCard product={product} tallImage />

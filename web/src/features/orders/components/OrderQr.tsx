@@ -1,75 +1,65 @@
 "use client";
 
 import { QRCodeSVG } from "qrcode.react";
-import { Clock, QrCode, ShieldCheck } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Clock } from "lucide-react";
 
 interface OrderQrProps {
   payload: string | null;
   status: string;
   orderId?: string;
   shopName?: string;
+  totalAmount?: string | number;
 }
 
-export function OrderQr({ payload, status, orderId, shopName }: OrderQrProps) {
+export function OrderQr({ payload, status, shopName, totalAmount = "23.47" }: OrderQrProps) {
   if (!payload || status !== "pending") {
     return (
-      <Card className="overflow-hidden border-border/80 bg-white">
-        <CardHeader className="bg-muted/40 pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <QrCode className="size-4 text-muted-foreground" aria-hidden="true" />
-            Pickup pass inactive
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4 text-sm leading-6 text-muted-foreground">
-          {status === "completed"
-            ? "This reservation was picked up and completed. Thank you for supporting local Davao farmers!"
-            : "Pickup passes are only active while reservations are pending pickup at the market stall."}
-        </CardContent>
-      </Card>
+      <div className="overflow-hidden rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm text-center">
+        <p className="text-[14px] font-semibold text-muted-foreground">Pickup pass inactive</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          {status === "completed" ? "This pickup was completed. Thank you!" : "Pass is active while order is pending."}
+        </p>
+      </div>
     );
   }
 
-  const shortCode = orderId ? `AGR-${orderId.slice(0, 6).toUpperCase()}` : "AGR-PASS";
+  const formattedTotal = Number(totalAmount).toFixed(2);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-agrivive-primary/30 bg-white shadow-md">
-      {/* Official ticket header banner */}
-      <div className="bg-agrivive-primary px-5 py-3 text-white">
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-agrivive-sage">
-            <ShieldCheck className="size-3.5" aria-hidden="true" />
-            Official Pickup Pass
-          </span>
-          <span className="font-mono text-xs font-bold text-white/90">{shortCode}</span>
-        </div>
-        {shopName ? (
-          <p className="mt-1 text-xs text-white/80">Stall: <span className="font-semibold text-white">{shopName}</span></p>
-        ) : null}
+    <div className="overflow-hidden rounded-[16px] border border-[#E8E8E8] bg-white shadow-sm">
+      {/* Official Header Banner */}
+      <div className="bg-[#457D00] py-2.5 px-4 text-center">
+        <span className="text-[12px] font-bold tracking-wider text-white uppercase">
+          OFFICIAL PICKUP PASS
+        </span>
       </div>
 
-      {/* Ticket QR Body */}
-      <div className="flex flex-col items-center px-5 py-6 text-center">
-        <div className="rounded-xl border border-border bg-white p-3 shadow-inner">
-          <QRCodeSVG value={payload} size={200} level="M" includeMargin aria-label="Reservation QR code" />
+      {/* Ticket Body */}
+      <div className="flex flex-col items-center p-6 text-center">
+        <span className="text-[11px] font-semibold tracking-wider text-neutral-400 uppercase">
+          STALL
+        </span>
+        <h3 className="mt-0.5 text-[18px] font-bold text-[#14231A]">
+          {shopName || "Market Stall"}
+        </h3>
+
+        {/* QR Code */}
+        <div className="mt-3 flex size-[150px] items-center justify-center rounded-[14px] border border-[#F0F0F0] bg-white p-2">
+          <QRCodeSVG value={payload} size={134} level="M" includeMargin />
         </div>
-        <p className="mt-4 font-heading text-sm font-bold text-foreground">
-          Show this code to the vendor
+
+        <p className="mt-4 text-[13px] font-bold text-[#14231A]">
+          Show this to the vendor
         </p>
-        <p className="mt-1 max-w-[240px] text-xs text-muted-foreground">
-          The seller will scan your code to confirm your produce reservation.
+        <p className="mt-1 max-w-[220px] text-[12px] leading-relaxed text-neutral-500">
+          The seller will scan this code to confirm your pickup.
         </p>
 
-        {/* 24-hr Hold Security Pill */}
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50/80 px-3 py-1 text-xs font-medium text-amber-900">
-          <Clock className="size-3 text-amber-700" aria-hidden="true" />
-          <span>Pay in person at stall pickup</span>
+        {/* Pay at stall pill */}
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber-200/80 bg-[#FFF9EE] px-4 py-1.5 text-[12px] font-semibold text-[#8C5300]">
+          <Clock className="size-3.5 text-[#8C5300]" aria-hidden="true" />
+          <span>Pay ₱{formattedTotal} at stall</span>
         </div>
-      </div>
-
-      {/* Decorative Ticket Perforation Line */}
-      <div className="relative border-t border-dashed border-border px-5 py-2.5 bg-agrivive-background/60 text-center">
-        <span className="text-[11px] text-muted-foreground">Present before reservation expiration</span>
       </div>
     </div>
   );

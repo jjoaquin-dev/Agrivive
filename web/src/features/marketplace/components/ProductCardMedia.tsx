@@ -36,11 +36,13 @@ export function ProductCardMedia({
 
   return (
     <div
-      className={`relative w-full shrink-0 overflow-hidden rounded-[14px] bg-agrivive-background ${tall ? "h-72" : "h-52"}`}
+      className={`relative w-full shrink-0 overflow-hidden rounded-[20px] bg-neutral-100 ${
+        tall ? "h-64" : "h-[196px]"
+      }`}
     >
-        <Link
-          href={`/marketplace/${product.id}`}
-        className="relative block h-full w-full"
+      <Link
+        href={`/marketplace/${product.id}`}
+        className="relative flex h-full w-full items-center justify-center"
         aria-label={`View ${product.productName}`}
       >
         <div className="h-full w-full transition-transform duration-300 ease-out group-hover:scale-105">
@@ -48,37 +50,33 @@ export function ProductCardMedia({
             src={product.imageUrl}
             alt={product.productName}
             category={product.productType}
+            className="h-full w-full object-cover"
           />
         </div>
       </Link>
 
-      <div className="pointer-events-none absolute left-2.5 top-2.5">
+      {/* Top-Left: Warm Peach Discount Pill */}
+      <div className="pointer-events-none absolute left-3 top-3 z-10">
         {soldOut ? (
           <Badge
             variant="destructive"
-            className="px-2 py-0.5 text-[10px] font-bold uppercase shadow-xs"
+            className="flex h-[28px] items-center rounded-full px-3 text-[11px] font-bold uppercase shadow-2xs"
           >
             Sold out
           </Badge>
         ) : isReduced ? (
-          <Badge className="border-none bg-agrivive-terracotta px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+          <span className="inline-flex h-[28px] items-center rounded-full bg-[#FEC878] px-3 text-[11px] font-bold text-white shadow-2xs">
             {discountPct}% OFF
-          </Badge>
-        ) : (
-          <Badge
-            variant="secondary"
-            className="border-none bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-foreground shadow-xs backdrop-blur-xs"
-          >
-            {product.productType}
-          </Badge>
-        )}
+          </span>
+        ) : null}
       </div>
 
+      {/* Top-Right: Circular White Heart Button */}
       <button
         type="button"
         onClick={handleToggleSave}
         disabled={!ready || saving}
-        title={error || (isSaved ? "Remove from saved" : "Save produce")}
+        title={error || (isSaved ? "Remove from saved" : "Save item")}
         aria-label={
           error ||
           (isSaved
@@ -87,17 +85,19 @@ export function ProductCardMedia({
         }
         aria-pressed={isSaved}
         aria-busy={saving}
-        className={`absolute right-2.5 top-2.5 flex size-11 items-center justify-center rounded-full border shadow-xs backdrop-blur-xs transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
+        className={`absolute right-3 top-3 z-10 flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-2xs transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
           isSaved
-            ? "border-agrivive-terracotta bg-agrivive-terracotta text-white"
-            : "border-border/60 bg-white/90 text-agrivive-terracotta hover:bg-white"
+            ? "text-[#FEA938]"
+            : "text-[#14231A] hover:bg-neutral-50"
         }`}
       >
         {saving ? (
           <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
         ) : (
           <Heart
-            className={`size-4 ${isSaved ? "fill-white" : "fill-agrivive-terracotta/20"}`}
+            className={`size-5 stroke-[1.75] ${
+              isSaved ? "fill-[#FEA938] text-[#FEA938]" : "fill-transparent text-[#14231A]"
+            }`}
             aria-hidden="true"
           />
         )}

@@ -126213,9 +126213,40 @@ async function createConversation(buyerId, input) {
       sellerId = seller.id;
       contextKey = `seller:${seller.id}:${buyerId}`;
     }
-    const [existing] = await tx.select().from(conversations).where(eq(conversations.contextKey, contextKey)).limit(1);
-    if (existing)
-      throw new ConversationError(409, "Conversation already exists");
+    const [existing] = await tx.select().from(conversations).where(input.contextType === "order" ? eq(conversations.contextKey, contextKey) : or(eq(conversations.contextKey, contextKey), and(eq(conversations.buyerId, buyerId), eq(conversations.sellerId, sellerId)))).limit(1);
+    if (existing) {
+      const now = new Date;
+      const [message] = await tx.insert(conversation_messages).values({
+        conversationId: existing.id,
+        senderId: buyerId,
+        clientMessageId: input.clientMessageId,
+        body,
+        createdAt: now
+      }).returning();
+      await tx.update(conversations).set({
+        productId: input.productId ?? existing.productId,
+        lastMessageAt: now,
+        updatedAt: now
+      }).where(eq(conversations.id, existing.id));
+      await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(eq(conversation_participants.conversationId, existing.id), eq(conversation_participants.userId, buyerId)));
+      if (input.contextType === "product" && input.productId) {
+        await tx.insert(product_inquiries).values({
+          productId: input.productId,
+          buyerId,
+          sellerId,
+          question: body
+        }).onConflictDoNothing();
+      } else if (input.contextType === "order" && input.orderId) {
+        await tx.insert(order_inquiries).values({
+          orderId: input.orderId,
+          buyerId,
+          sellerId,
+          question: body
+        }).onConflictDoNothing();
+      }
+      const [updated] = await tx.select().from(conversations).where(eq(conversations.id, existing.id)).limit(1);
+      return { conversation: updated ?? existing, message };
+    }
     if (input.contextType === "product") {
       await tx.insert(product_inquiries).values({
         productId: input.productId,
@@ -126376,8 +126407,20 @@ async function createConversationMessage(userId, conversationId, input) {
       body,
       createdAt: now
     }).returning();
-    await tx.update(conversations).set({ lastMessageAt: now, updatedAt: now }).where(eq(conversations.id, conversationId));
+    await tx.update(conversations).set({
+      productId: input.productId ?? conversation.productId,
+      lastMessageAt: now,
+      updatedAt: now
+    }).where(eq(conversations.id, conversationId));
     await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(eq(conversation_participants.conversationId, conversationId), eq(conversation_participants.userId, userId)));
+    if (input.productId && userId === conversation.buyerId) {
+      await tx.insert(product_inquiries).values({
+        productId: input.productId,
+        buyerId: userId,
+        sellerId: conversation.sellerId,
+        question: body
+      }).onConflictDoNothing();
+    }
     const recipientUserId = userId === conversation.sellerId ? conversation.buyerId : conversation.sellerId;
     const notificationType = userId === conversation.sellerId ? "buyer_message" : "seller_message";
     await enqueueConversationNotification(tx, recipientUserId, conversationId, notificationType, now);
@@ -126432,6 +126475,9 @@ async function listConversations(userId, limit = 50) {
     createdAt: conversations.createdAt,
     productName: sellers_product.productName,
     productImageUrl: sellers_product.imagUrl,
+    productPrice: sellers_product.productPrice,
+    scalingType: sellers_product.scalingType,
+    productQty: sellers_product.productQty,
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,
@@ -126515,7 +126561,8 @@ var createConversationBody = t.Object({
 });
 var sendConversationMessageBody = t.Object({
   message: t.String({ minLength: 1, maxLength: 2000 }),
-  clientMessageId: t.String({ minLength: 1, maxLength: 100 })
+  clientMessageId: t.String({ minLength: 1, maxLength: 100 }),
+  productId: t.Optional(t.String({ format: "uuid" }))
 });
 
 // src/modules/conversations/index/conversation.routes.ts

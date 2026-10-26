@@ -12,7 +12,7 @@ export function HomeWhyAgrivive() {
       <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20 lg:px-8">
         <div>
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-agrivive-terracotta">Why Agrivive</span>
-          <h2 className="mt-4 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.05em] text-agrivive-primary sm:text-5xl">A calmer way to shop what your market has today.</h2>
+          <h2 className="mt-4 max-w-xl font-heading text-4xl font-bold leading-[1.02] tracking-[-0.05em] text-agrivive-primary sm:text-5xl">A calmer way to shop what your market has today.</h2>
           <p className="mt-5 max-w-lg text-base leading-7 text-agrivive-muted">Local produce can be great and still be hard to find at the right moment. Agrivive brings the stall, the seller, and the pickup plan into one clear place.</p>
           <a href="#how-it-works" className="mt-7 inline-flex min-h-11 items-center gap-2 font-semibold text-agrivive-primary underline decoration-agrivive-sage decoration-2 underline-offset-4 hover:text-agrivive-primaryPressed">See how it works <ArrowUpRight aria-hidden="true" size={17} /></a>
         </div>

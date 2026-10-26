@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { Info, MapPin, Store } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
+import { Compass, MapPin, Store, User } from "lucide-react";
 import type { BuyerOrder, MarketplaceProduct } from "@/src/features/marketplace/types";
 import { getDirectionsUrl } from "@/src/lib/maps";
 
@@ -10,62 +8,70 @@ interface OrderSellerCardProps {
   product: MarketplaceProduct | null;
 }
 
-export function OrderSellerCard({ order, product }: OrderSellerCardProps) {
+export function OrderSellerCard({ product }: OrderSellerCardProps) {
+  const directionsUrl = product ? getDirectionsUrl(product.seller.latitude, product.seller.longitude) : null;
+
   return (
-    <Card className="overflow-hidden rounded-[20px] border-border/80 bg-white shadow-[0_10px_24px_rgba(31,77,58,0.05)]">
-      <CardHeader className="border-b border-border/60 pb-3">
-        <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
-          <Store className="size-4 text-agrivive-primary" aria-hidden="true" />
-          Market stall & pickup location
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Store className="size-5 text-[#457D00]" aria-hidden="true" />
+          <h2 className="text-[18px] font-semibold text-[#14231A]">
+            Market stall & pickup location
+          </h2>
+        </div>
         {product ? (
-          <div className="space-y-3">
-            <div>
-              <Link
-                href={`/sellers/${product.seller.id}`}
-                className="font-heading text-lg font-bold text-agrivive-primary hover:underline"
-              >
-                {product.seller.shopName}
-              </Link>
-              <p className="text-xs capitalize text-muted-foreground">
-                {product.seller.sellerType.replaceAll("_", " ")}
-              </p>
+          <Link
+            href={`/sellers/${product.seller.id}`}
+            className="text-sm font-semibold text-[#457D00] hover:text-[#386600] hover:underline"
+          >
+            View Stall
+          </Link>
+        ) : null}
+      </div>
+
+      <div className="mt-4">
+        {product ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="size-11 shrink-0 overflow-hidden rounded-full border border-[#E8E8E8] bg-neutral-100 flex items-center justify-center">
+                {product.seller.image ? (
+                  <img src={product.seller.image} alt={product.seller.shopName} className="size-full object-cover" />
+                ) : (
+                  <User className="size-5 text-neutral-400" />
+                )}
+              </div>
+              <div>
+                <p className="text-[15px] font-bold text-[#14231A]">{product.seller.shopName}</p>
+                <p className="text-[12px] capitalize text-neutral-500">{product.seller.sellerType.replaceAll("_", " ")}</p>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-agrivive-background/60 p-3.5 text-sm">
-              <p className="flex items-start gap-2 font-medium text-foreground">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-agrivive-primary" aria-hidden="true" />
-                <span>{product.seller.detailAddress}</span>
-              </p>
-              {product.seller.pickupInstructions ? (
-                <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-                  <Info className="mt-0.5 size-3.5 shrink-0 text-agrivive-sage" aria-hidden="true" />
-                  <span>{product.seller.pickupInstructions}</span>
-                </p>
-              ) : null}
-              {getDirectionsUrl(product.seller.latitude, product.seller.longitude) ? <a href={getDirectionsUrl(product.seller.latitude, product.seller.longitude) ?? undefined} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-agrivive-primary hover:underline">Get directions</a> : null}
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {order.items.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/marketplace/${item.productId}`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
-                >
-                  View {item.productName}
-                </Link>
-              ))}
+            <div className="flex items-start gap-3.5 rounded-[14px] bg-[#F9FAFB] border border-[#F0F2F5] p-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EBF5E3] text-[#457D00]">
+                <MapPin className="size-4.5" aria-hidden="true" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[13px] font-semibold text-[#14231A]">{product.seller.detailAddress || "Stall #___, Bankerohan Public Market"}</p>
+                <p className="text-[12px] text-neutral-500">Davao City, Philippines</p>
+                {directionsUrl ? (
+                  <a
+                    href={directionsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#457D00] hover:underline"
+                  >
+                    <Compass className="size-3.5" />
+                    <span>Get directions</span>
+                  </a>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : (
-          <p className="text-sm leading-6 text-muted-foreground">
-            Stall pickup details are no longer available for this listing.
-          </p>
+          <p className="text-[14px] text-muted-foreground">Market stall information is unavailable.</p>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

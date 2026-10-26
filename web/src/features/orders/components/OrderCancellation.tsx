@@ -1,51 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { XCircle } from "lucide-react";
 import { ApiError } from "@/src/lib/api";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
+import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
 import { cancelBuyerOrder } from "../api/orders";
 
-export function OrderCancellation({ order, onCancelled, onAuthorizationFailure }: {
+interface OrderCancellationProps {
   order: BuyerOrder;
   onCancelled: (order: BuyerOrder) => void;
   onAuthorizationFailure: (status: number) => void;
-}) {
+}
+
+export function OrderCancellation({
+  order,
+  onCancelled,
+  onAuthorizationFailure,
+}: OrderCancellationProps) {
   const [confirming, setConfirming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
+
   if (order.status !== "pending") return null;
 
   async function cancel() {
     setCancelling(true);
     setError("");
     try {
-      onCancelled(await cancelBuyerOrder(order.id));
+      const updated = await cancelBuyerOrder(order.id);
       setConfirming(false);
+      onCancelled(updated);
     } catch (reason) {
-      if (reason instanceof ApiError && [401, 403].includes(reason.status)) onAuthorizationFailure(reason.status);
-      setError(reason instanceof ApiError ? reason.message : "We could not cancel this reservation. Try again.");
+      if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
+        onAuthorizationFailure(reason.status);
+      }
+      setError(
+        reason instanceof ApiError
+          ? reason.message
+          : "We could not cancel this reservation. Please try again.",
+      );
     } finally {
       setCancelling(false);
     }
   }
 
-  return <div className="pt-2">
-    {!confirming ? <Button type="button" variant="outline" className="min-h-11 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setConfirming(true)}>Cancel reservation</Button> :
-      <div className="rounded-[20px] border border-destructive/20 bg-destructive/5 p-5">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden="true" />
-          <div>
-            <h3 className="font-heading font-bold text-destructive">Cancel this reservation?</h3>
-            <p className="mt-1 text-sm text-muted-foreground">If you cancel, your reserved produce will go back to the store so someone else can buy it. You cannot undo this.</p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Button type="button" variant="destructive" className="min-h-11" onClick={() => void cancel()} disabled={cancelling}>{cancelling ? "Cancelling…" : "Yes, cancel reservation"}</Button>
-              <Button type="button" variant="outline" className="min-h-11" onClick={() => setConfirming(false)} disabled={cancelling}>Keep reservation</Button>
-            </div>
-            {error ? <p role="alert" className="mt-3 text-sm text-destructive">{error}</p> : null}
-          </div>
-        </div>
-      </div>}
-  </div>;
+  return (
+    <div>
+      <button
+        type="button"
+        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200/80 bg-rose-50/60 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100/70 transition-colors cursor-pointer"
+        onClick={() => {
+          setError("");
+          setConfirming(true);
+        }}
+      >
+        <XCircle className="size-3.5 text-rose-500" aria-hidden="true" />
+        <span>Cancel reservation</span>
+      </button>
+
+      {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
+
+      <ConfirmationModalComponent
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={cancel}
+        loading={cancelling}
+        variant="neutral"
+        title="Cancel Reservation"
+        description="Are you sure you want to cancel this reservation? The reserved produce will return to store inventory."
+        confirmLabel="Cancel"
+        cancelLabel="No"
+      />
+    </div>
+  );
 }

@@ -1,28 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
+import { ArrowLeft, CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/src/components/PageContainer";
 import { isTrustAccessMessage } from "@/src/lib/api";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
+import { useCart } from "@/src/features/cart/CartProvider";
 import { useBuyerOrders } from "../hooks/useBuyerOrders";
 import { OrderCard } from "./OrderCard";
 import { OrderFilterTabs, type OrderTab } from "./OrderFilterTabs";
+import { OrderSortDropdown, type OrderSortOption } from "./OrderSortDropdown";
 
-type SortOption = "newest" | "oldest" | "highest" | "lowest";
+type SortOption = OrderSortOption;
 
 export function BuyerOrders() {
   const checkoutId = useSearchParams()?.get("checkout");
+  const { clear: clearCart } = useCart();
   const { orders, nextCursor, loading, loadingMore, error, load } = useBuyerOrders();
   const [activeTab, setActiveTab] = useState<OrderTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+
+  const clearedCheckoutRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (checkoutId && clearedCheckoutRef.current !== checkoutId) {
+      clearedCheckoutRef.current = checkoutId;
+      clearCart();
+    }
+  }, [checkoutId, clearCart]);
 
   const counts = useMemo(() => ({
     all: orders.length,
@@ -55,108 +67,92 @@ export function BuyerOrders() {
   }, [orders, activeTab, searchQuery, sortBy]);
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-6 text-foreground sm:py-8 lg:py-10">
-      <PageContainer>
-        {/* Header matching reference */}
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-              All Orders
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Check all orders and reservations at a single place. It&apos;s easy to manage.
-            </p>
-          </div>
-          <Link href="/marketplace" className={buttonVariants({ className: "min-h-11 rounded-xl px-5 font-semibold" })}>
-            Browse marketplace<ArrowRight aria-hidden="true" className="size-4" />
+    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-6 py-6 text-foreground">
+      <PageContainer className="space-y-6">
+        {/* Top Back Navigation Link */}
+        <div>
+          <Link
+            href="/marketplace"
+            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
+            <span>Back to Marketplace</span>
           </Link>
+        </div>
+
+        {/* Header: 28px bold heading, 16px gap to 12px text */}
+        <header>
+          <h1 className="font-heading text-[28px] font-bold tracking-tight text-[#14231A] leading-tight">
+            All Orders
+          </h1>
+          <p className="mt-4 text-xs text-[#5F7367]">
+            Check all orders and reservations at a single place. It&apos;s easy to manage.
+          </p>
         </header>
 
+        {/* Success Banner: 16px separation */}
         {checkoutId ? (
-          <Alert className="mb-6 border-emerald-200 bg-emerald-50 text-emerald-950">
-            <CheckCircle2 className="size-4 text-emerald-700" />
-            <AlertTitle>Cart reserved successfully!</AlertTitle>
-            <AlertDescription>Your pickup pass and QR code are ready below.</AlertDescription>
-          </Alert>
+          <div className="mb-4">
+            <Alert className="border border-[#E8E8E8] bg-emerald-50/70 text-emerald-950 p-4 rounded-xl shadow-2xs">
+              <CheckCircle2 className="size-4 text-emerald-700" />
+              <AlertTitle className="text-sm font-semibold">Cart reserved successfully!</AlertTitle>
+              <AlertDescription className="text-xs text-emerald-800">Your pickup pass and QR code are ready below.</AlertDescription>
+            </Alert>
+          </div>
         ) : null}
 
-        {error && isTrustAccessMessage(error) ? <div className="mb-6"><TrustAccessNotice message={error} /></div> : null}
+        {error && isTrustAccessMessage(error) ? <div className="mb-4"><TrustAccessNotice message={error} /></div> : null}
         {error && !isTrustAccessMessage(error) ? (
-          <Alert variant="destructive" className="mb-6">
+          <Alert variant="destructive" className="mb-4 border border-rose-200 p-4 rounded-xl">
             <RefreshCw className="size-4" />
-            <AlertTitle>Orders could not refresh</AlertTitle>
-            <AlertDescription>{error}{orders.length ? " Previous reservations are shown below; their status may have changed." : ""}</AlertDescription>
-            <Button type="button" variant="outline" className="mt-2 min-h-11" onClick={() => void load()}>Try again</Button>
+            <AlertTitle className="text-sm font-semibold">Orders could not refresh</AlertTitle>
+            <AlertDescription className="text-xs">{error}{orders.length ? " Previous reservations are shown below." : ""}</AlertDescription>
+            <Button type="button" variant="outline" className="mt-2 h-10 min-h-[40px] text-xs font-semibold" onClick={() => void load()}>Try again</Button>
           </Alert>
         ) : null}
 
-        {/* Tab Navigation with Underline Indicator */}
+        {/* Tab Navigation: 14px text, 44px height, 16px horizontal padding, 2px active underline */}
         <OrderFilterTabs activeTab={activeTab} onTabChange={setActiveTab} counts={counts} />
 
-        {/* Search & Sort Toolbar */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative max-w-md flex-1">
-            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        {/* Search & Sort: 340px search width, 40px height, 16px gap, responsive wrapping */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative w-full sm:w-[340px]">
+            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#5F7367]" aria-hidden="true" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by ID, produce name, status…"
-              className="h-11 w-full rounded-xl border border-input bg-white pl-10 pr-4 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-sage"
+              className="h-10 min-h-[40px] w-full rounded-full border border-[#E8E8E8] bg-white pl-10 pr-4 text-xs sm:text-sm text-[#14231A] shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <label htmlFor="order-sort-select" className="text-xs font-semibold text-muted-foreground">
-              Sort By:
-            </label>
-            <select
-              id="order-sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="h-11 rounded-xl border border-input bg-white px-3 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-sage"
-            >
-              <option value="newest">New Order</option>
-              <option value="oldest">Oldest Order</option>
-              <option value="highest">Highest Amount</option>
-              <option value="lowest">Lowest Amount</option>
-            </select>
-          </div>
+          <OrderSortDropdown value={sortBy} onChange={setSortBy} />
         </div>
 
-        {/* Table Column Headers (Desktop) */}
-        <div className="mb-2 hidden grid-cols-[1.5fr_0.8fr_1fr_1.2fr_1fr] items-center px-5 py-2.5 text-xs font-semibold text-muted-foreground md:grid">
-          <div className="flex items-center gap-2">
-            <span className="size-4 rounded border border-border/80 bg-muted/30" aria-hidden="true" />
-            <span>Product</span>
-          </div>
-          <div>Price</div>
-          <div>Payment</div>
-          <div>Status</div>
-          <div>Action</div>
-        </div>
-
-        {/* Order Cards List */}
+        {/* Order Cards List: 12px vertical spacing between cards */}
         {loading ? (
-          <div className="flex flex-col gap-3">
-            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-44 rounded-2xl bg-white" />)}
+          <div className="space-y-3">
+            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-40 rounded-[16px] bg-white border border-[#E8E8E8]" />)}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <Empty className="rounded-[20px] border border-border/80 bg-white p-8 shadow-xs">
+          <Empty className="rounded-[16px] border border-[#E8E8E8] bg-white p-8 shadow-xs">
             <EmptyHeader>
-              <EmptyMedia variant="icon"><ShoppingBag className="text-agrivive-primary" /></EmptyMedia>
-              <EmptyTitle>No orders match</EmptyTitle>
-              <EmptyDescription>
+              <EmptyMedia variant="icon"><ShoppingBag className="text-[#457D00]" /></EmptyMedia>
+              <EmptyTitle className="text-base font-bold text-[#14231A]">No orders match</EmptyTitle>
+              <EmptyDescription className="text-xs text-[#5F7367]">
                 {searchQuery ? "Try a different search query or clear your search." : "No orders found in this category."}
               </EmptyDescription>
             </EmptyHeader>
-            <Link href="/marketplace" className={buttonVariants()}>Browse marketplace</Link>
+            <Link href="/marketplace" className="h-10 min-h-[40px] px-5 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#386600] text-white inline-flex items-center gap-2 shadow-xs transition active:scale-95">
+              Browse marketplace
+            </Link>
           </Empty>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="space-y-3">
             {filteredOrders.map((order) => <OrderCard key={order.id} order={order} />)}
             {nextCursor && !error && activeTab === "all" ? (
-              <div className="flex justify-center pt-4">
-                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="min-h-11 rounded-xl px-6 font-semibold">
+              <div className="flex justify-center pt-3">
+                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="h-10 min-h-[40px] rounded-xl px-6 font-semibold text-xs border border-[#E8E8E8] bg-white hover:bg-neutral-50">
                   {loadingMore ? "Loading orders…" : "Load more orders"}
                 </Button>
               </div>

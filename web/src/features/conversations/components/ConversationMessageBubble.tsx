@@ -22,72 +22,96 @@ export function ConversationMessageBubble({
   item,
   isMine,
   sellerImage,
+  sellerName,
 }: {
   item: ConversationMessage;
   isMine: boolean;
   sellerImage: string | null;
+  sellerName?: string;
 }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const { text, imageUrl } = parseMessageContent(item.body);
 
+  // Special card style if message contains stall gallery
+  const isGalleryCard = item.body.includes("STALL PRODUCT GALLERY");
+
   return (
-    <div className={`mb-4 flex gap-2.5 ${isMine ? "justify-end" : "justify-start"}`}>
-      {!isMine && (
-        <div className="mt-1 size-7 shrink-0 overflow-hidden rounded-full bg-muted">
-          {sellerImage && !avatarFailed ? (
-            <img
-              src={sellerImage}
-              alt=""
-              className="size-full object-cover"
-              onError={() => setAvatarFailed(true)}
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center text-[10px] font-bold text-primary">
-              <Store className="size-3" />
+    <div className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}>
+      <div className={`flex max-w-[min(85%,500px)] gap-2.5 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
+        {!isMine && (
+          <div className="mt-1 size-7 shrink-0 overflow-hidden rounded-full ring-1 ring-neutral-200">
+            {sellerImage && !avatarFailed ? (
+              <img
+                src={sellerImage}
+                alt=""
+                className="size-full object-cover"
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-[10px] font-bold text-[#386600]">
+                <Store className="size-3.5" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {isGalleryCard ? (
+          <div className="w-full rounded-2xl bg-[#386018] p-3 text-white shadow-xs">
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/90">
+              <span>Stall Product Gallery</span>
+              <span className="text-[10px] text-white/75">3 Items</span>
             </div>
-          )}
-        </div>
-      )}
-      <div className={`flex max-w-[min(85%,520px)] flex-col ${isMine ? "items-end" : "items-start"}`}>
-        <div
-          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-xs ${
-            isMine
-              ? "rounded-br-sm bg-agrivive-primary text-white"
-              : "rounded-bl-sm border border-border/80 bg-white text-foreground"
-          }`}
-        >
-          {imageUrl && (
-            <div className="mb-2 min-h-[140px] min-w-[200px] overflow-hidden rounded-xl bg-black/5">
-              {!imageFailed ? (
-                <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="group relative block">
-                  <img
-                    src={imageUrl}
-                    alt="Produce attachment"
-                    className="max-h-64 w-full rounded-xl object-cover transition-opacity hover:opacity-90"
-                    onError={() => setImageFailed(true)}
-                  />
-                  <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-xs">
-                    <ExternalLink className="size-2.5" /> Full size
-                  </span>
-                </a>
-              ) : (
-                <div className="flex h-32 flex-col items-center justify-center gap-1.5 p-3 text-xs text-muted-foreground">
-                  <ImageOff className="size-5" />
-                  <span>Could not load image</span>
-                  <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-                    Open link directly
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="h-20 overflow-hidden rounded-xl bg-black/20">
+                {imageUrl && <img src={imageUrl} alt="" className="size-full object-cover" />}
+              </div>
+              <div className="h-20 overflow-hidden rounded-xl bg-black/20">
+                {imageUrl && <img src={imageUrl} alt="" className="size-full object-cover" />}
+              </div>
+              <div className="relative flex h-20 items-center justify-center overflow-hidden rounded-xl bg-black/40 text-sm font-bold text-white">
+                <span>+1</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-2xs ${
+              isMine
+                ? "rounded-br-xs bg-[#386600] text-white"
+                : "rounded-bl-xs border border-[#ECEEE4] bg-white text-[#202E1B]"
+            }`}
+          >
+            {imageUrl && (
+              <div className="mb-2 min-h-[140px] min-w-[200px] overflow-hidden rounded-xl bg-black/5">
+                {!imageFailed ? (
+                  <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="group relative block">
+                    <img
+                      src={imageUrl}
+                      alt="Produce attachment"
+                      className="max-h-60 w-full rounded-xl object-cover transition-opacity hover:opacity-90"
+                      onError={() => setImageFailed(true)}
+                    />
+                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-xs">
+                      <ExternalLink className="size-2.5" /> Full size
+                    </span>
                   </a>
-                </div>
-              )}
-            </div>
-          )}
-          {text ? <p className="whitespace-pre-wrap break-words">{text}</p> : null}
-        </div>
-        <span className="mt-1 flex items-center gap-1 px-1 text-[10px] text-muted-foreground">
-          {formatMessageTime(item.createdAt)}
-          {isMine ? <CheckCheck className="size-3 text-agrivive-primary" aria-label="Sent" /> : null}
-        </span>
+                ) : (
+                  <div className="flex h-28 flex-col items-center justify-center gap-1 text-[11px] text-neutral-400">
+                    <ImageOff className="size-4" />
+                    <span>Could not load image</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {text ? <p className="whitespace-pre-wrap break-words">{text}</p> : null}
+          </div>
+        )}
+      </div>
+
+      <div className={`mt-1 flex items-center gap-1 px-1 text-[10px] text-[#9EA899] ${isMine ? "justify-end" : "justify-start ml-9"}`}>
+        <span>{formatMessageTime(item.createdAt)}</span>
+        {isMine ? <CheckCheck className="size-3 text-[#386600]" aria-label="Delivered" /> : null}
       </div>
     </div>
   );

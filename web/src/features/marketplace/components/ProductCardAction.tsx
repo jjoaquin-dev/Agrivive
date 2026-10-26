@@ -1,6 +1,7 @@
 "use client";
 
-import { MapPin, Minus, Plus, ShoppingBag } from "lucide-react";
+import { useState } from "react";
+import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { MarketplaceProduct } from "../types";
 
@@ -8,10 +9,9 @@ interface ProductCardActionProps {
   product: MarketplaceProduct;
   soldOut: boolean;
   quantityInCart: number;
-  onAddToCart: (e: React.MouseEvent) => void;
-  onIncrement: (e: React.MouseEvent) => void;
-  onDecrement: (e: React.MouseEvent) => void;
-  onSelectSeller?: (sellerId: string) => void;
+  onAddToCart: (qty: number) => void;
+  onIncrement: () => void;
+  onDecrement: () => void;
 }
 
 export function ProductCardAction({
@@ -21,14 +21,16 @@ export function ProductCardAction({
   onAddToCart,
   onIncrement,
   onDecrement,
-  onSelectSeller,
 }: ProductCardActionProps) {
+  const [selectedQty, setSelectedQty] = useState(1);
+  const maxStock = Math.max(1, Number(product.productQty) || 1);
+
   if (soldOut) {
     return (
       <Button
         type="button"
         disabled
-        className="h-11 min-h-11 w-full rounded-xl text-xs font-bold uppercase tracking-wider"
+        className="h-[42px] w-full rounded-full px-6 py-2.5 text-xs font-semibold uppercase tracking-wider opacity-60"
       >
         Sold out
       </Button>
@@ -37,59 +39,76 @@ export function ProductCardAction({
 
   if (quantityInCart > 0) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="flex h-11 min-h-11 flex-1 items-center justify-between rounded-xl border border-agrivive-primary/30 bg-agrivive-background px-2 shadow-xs">
-          <button
-            type="button"
-            onClick={onDecrement}
-            aria-label="Decrease quantity"
-            className="flex size-8 items-center justify-center rounded-lg bg-white text-foreground shadow-2xs hover:bg-agrivive-sage/20 active:translate-y-px"
-          >
-            <Minus className="size-3.5" />
-          </button>
-          <span className="text-xs font-bold text-agrivive-primary">
-            {quantityInCart} in cart
-          </span>
-          <button
-            type="button"
-            onClick={onIncrement}
-            aria-label="Increase quantity"
-            className="flex size-8 items-center justify-center rounded-lg bg-white text-foreground shadow-2xs hover:bg-agrivive-sage/20 active:translate-y-px"
-          >
-            <Plus className="size-3.5" />
-          </button>
-        </div>
+      <div className="flex h-[42px] w-full items-center justify-between rounded-full border border-agrivive-primary/20 bg-agrivive-background px-2 py-1 shadow-2xs">
         <button
           type="button"
-          onClick={() => onSelectSeller?.(product.seller.id)}
-          title="Highlight stall on map"
-          aria-label="Highlight stall on map"
-          className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-xl border border-border/80 bg-white text-agrivive-primary shadow-xs transition hover:bg-agrivive-background hover:border-agrivive-primary active:translate-y-px"
+          onClick={onDecrement}
+          aria-label="Decrease quantity"
+          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50"
         >
-          <MapPin className="size-4" />
+          <Minus className="size-3" />
+        </button>
+        <span className="text-xs font-semibold text-agrivive-primary">
+          {quantityInCart} in cart
+        </span>
+        <button
+          type="button"
+          onClick={onIncrement}
+          disabled={quantityInCart >= maxStock}
+          aria-label="Increase quantity"
+          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-40"
+        >
+          <Plus className="size-3" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        onClick={onAddToCart}
-        className="h-11 min-h-11 flex-1 gap-2 rounded-xl bg-agrivive-primary text-xs font-bold uppercase tracking-wider text-white shadow-xs transition hover:bg-agrivive-primaryPressed active:translate-y-px"
-      >
-        <ShoppingBag className="size-4" />
-        <span>Add to cart</span>
-      </Button>
+    <div className="flex w-full items-center gap-2">
+      <div className="flex h-[42px] w-[84px] shrink-0 items-center justify-between rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-2xs">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSelectedQty((prev) => Math.max(1, prev - 1));
+          }}
+          disabled={selectedQty <= 1}
+          aria-label="Decrease quantity"
+          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
+        >
+          <Minus className="size-3" />
+        </button>
+        <span className="text-center text-xs font-semibold tabular-nums text-neutral-900">
+          {selectedQty}
+        </span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSelectedQty((prev) => Math.min(maxStock, prev + 1));
+          }}
+          disabled={selectedQty >= maxStock}
+          aria-label="Increase quantity"
+          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
+        >
+          <Plus className="size-3" />
+        </button>
+      </div>
+
       <button
         type="button"
-        onClick={() => onSelectSeller?.(product.seller.id)}
-        title="Highlight stall on map"
-        aria-label="Highlight stall on map"
-        className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-xl border border-border/80 bg-white text-agrivive-primary shadow-xs transition hover:bg-agrivive-background hover:border-agrivive-primary active:translate-y-px"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onAddToCart(selectedQty);
+        }}
+        className="flex min-h-[42px] flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#B4EB4A] hover:bg-[#9DE038] px-6 py-2.5 text-xs font-semibold tracking-wide text-[#14231A] shadow-2xs transition-all active:scale-95"
       >
-        <MapPin className="size-4" />
+        <ShoppingCart className="size-4 stroke-[2] shrink-0 text-[#14231A]" />
+        <span className="truncate font-semibold">Add to Cart</span>
       </button>
     </div>
   );

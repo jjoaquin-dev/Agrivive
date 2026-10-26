@@ -7,12 +7,26 @@ export function MessageSellerButton({
   context,
   id,
   compact = false,
+  iconOnly = false,
 }: {
   context: "product" | "seller";
   id: string;
   compact?: boolean;
+  iconOnly?: boolean;
 }) {
   const query = context === "product" ? `productId=${encodeURIComponent(id)}` : `sellerId=${encodeURIComponent(id)}`;
+
+  if (iconOnly) {
+    return (
+      <Link
+        href={`/messages?${query}`}
+        title="Message seller"
+        className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white text-[#16A34A] hover:border-[#16A34A]/50 hover:bg-neutral-50 shadow-2xs transition-colors cursor-pointer"
+      >
+        <MessageCircle className="size-4.5" aria-hidden="true" />
+      </Link>
+    );
+  }
 
   return (
     <Link

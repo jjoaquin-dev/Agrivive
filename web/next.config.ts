@@ -5,6 +5,7 @@ const s3Region = process.env.NEXT_PUBLIC_AWS_REGION || process.env.AWS_REGION ||
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   images: {
     remotePatterns: [
       ...(s3Bucket

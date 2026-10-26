@@ -10,6 +10,9 @@ export type ConversationLaunchContext = {
   productId: string | null;
   productName: string | null;
   productImageUrl: string | null;
+  productPrice?: string | number | null;
+  scalingType?: string | null;
+  productQty?: string | number | null;
 };
 
 export function conversationContextId(item: Conversation) {
@@ -29,5 +32,8 @@ export function launchContextFromConversation(item: Conversation): ConversationL
     productId: item.productId,
     productName: item.productName,
     productImageUrl: item.productImageUrl,
+    productPrice: item.productPrice,
+    scalingType: item.scalingType,
+    productQty: item.productQty,
   };
 }

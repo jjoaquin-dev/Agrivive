@@ -10,13 +10,13 @@ type ProductImageProps = {
   className?: string;
 };
 
-export function ProductImage({ src, alt, category, className = "" }: ProductImageProps) {
+export function ProductImage({ src, alt, category, className = "size-full object-cover" }: ProductImageProps) {
   const [failed, setFailed] = useState(false);
 
   if (!src || failed) {
     return (
-      <div className={`flex h-full min-h-0 items-center justify-center bg-agrivive-background p-3 text-center ${className}`}>
-        <span className="flex max-w-[10rem] flex-col items-center gap-1.5 text-xs font-semibold text-agrivive-muted">
+      <div className={`flex size-full items-center justify-center bg-[#FAFAF8] p-3 text-center ${className}`}>
+        <span className="flex max-w-[10rem] flex-col items-center gap-1.5 text-xs font-semibold text-[#8A9685]">
           <ImageOff aria-hidden="true" size={18} strokeWidth={1.7} />
           {category}
         </span>
@@ -24,5 +24,5 @@ export function ProductImage({ src, alt, category, className = "" }: ProductImag
     );
   }
 
-  return <img src={src} alt={alt} className={`h-full w-full object-contain ${className}`} onError={() => setFailed(true)} />;
+  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
 }

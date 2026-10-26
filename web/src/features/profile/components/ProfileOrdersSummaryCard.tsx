@@ -17,14 +17,14 @@ interface ProfileOrdersSummaryCardProps {
 
 export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: ProfileOrdersSummaryCardProps) {
   return (
-    <Card className="rounded-[20px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+    <Card className="rounded-[22px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)] sm:p-7">
       <div className="flex items-center justify-between border-b border-border/70 pb-4">
         <div className="flex items-center gap-2.5">
-          <ClipboardList className="size-5 text-primary" />
-          <h2 className="font-heading text-lg font-bold">Your Reservations</h2>
+          <ClipboardList className="size-5 text-agrivive-primary" />
+          <h2 className="font-heading text-lg font-bold text-foreground">Your Reservations</h2>
         </div>
         {!loading && pendingCount > 0 ? (
-          <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+          <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700">
             <Clock className="size-3" />
             {pendingCount} ready for pickup
           </Badge>
@@ -50,20 +50,21 @@ export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: Prof
           </Link>
         </div>
       ) : (
-        <div className="divide-y divide-border/60 py-2">
-          {orders.slice(0, 4).map((order) => {
+        <div className="divide-y divide-border/60 py-1">
+          {orders.slice(0, 5).map((order) => {
             const firstItem = order.items?.[0];
             const extraCount = (order.items?.length || 0) - 1;
             const title = firstItem
               ? `${firstItem.productName}${extraCount > 0 ? ` +${extraCount} more` : ""}`
               : `Order #${order.id.slice(0, 6)}`;
             const price = Number(order.totalAmount || 0);
+            const isPending = order.status === "pending";
 
             return (
-              <div key={order.id} className="flex flex-col gap-2 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate font-semibold text-sm text-foreground">{title}</p>
+              <div key={order.id} className="flex flex-col gap-2.5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="truncate font-heading text-sm font-bold text-foreground">{title}</p>
                     <OrderStatusBadge status={order.status} />
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
@@ -72,10 +73,15 @@ export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: Prof
                 </div>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-xl px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-agrivive-background sm:self-center"
+                  className={`inline-flex min-h-9 items-center gap-1.5 self-start rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors sm:self-center ${
+                    isPending
+                      ? "bg-agrivive-primary text-white hover:bg-agrivive-primaryPressed"
+                      : "text-agrivive-primary hover:bg-agrivive-background"
+                  }`}
                 >
-                  <QrCode className="size-3.5" />
-                  <span>Show QR Pass</span>
+                  {isPending ? <QrCode className="size-3.5" /> : null}
+                  <span>{isPending ? "Show QR Pass" : "View details"}</span>
+                  {!isPending ? <ArrowRight className="size-3.5" /> : null}
                 </Link>
               </div>
             );

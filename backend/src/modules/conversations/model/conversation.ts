@@ -20,6 +20,7 @@ export const createConversationBody = t.Object({
 export const sendConversationMessageBody = t.Object({
   message: t.String({ minLength: 1, maxLength: 2000 }),
   clientMessageId: t.String({ minLength: 1, maxLength: 100 }),
+  productId: t.Optional(t.String({ format: "uuid" })),
 });
 
 export type CreateConversationBody = typeof createConversationBody.static;

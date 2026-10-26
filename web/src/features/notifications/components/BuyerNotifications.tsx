@@ -1,175 +1,170 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Bell, CheckCheck, ChevronRight, Clock } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Bell, CheckCheck, Clock, ShoppingBasket, Triangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ApiError, isAbortError } from "@/src/lib/api";
 import { PageContainer } from "@/src/components/PageContainer";
-import { authClient } from "@/src/lib/auth-client";
-import { listBuyerNotices, markAllBuyerNoticesRead, markBuyerNoticeRead } from "../api/notices";
-import type { BuyerNotice } from "../types";
-
-const noticeTitles: Record<string, string> = {
-  seller_cancellation_buyer: "Your reservation was cancelled",
-  inquiry_24h_buyer_notice: "Your question is still waiting",
-  trust_event_corrected: "A trust record was corrected",
-};
-
-const noticeDescriptions: Record<string, string> = {
-  seller_cancellation_buyer: "The seller cancelled this reservation and the produce was returned to stock.",
-  inquiry_24h_buyer_notice: "The seller has not replied to your order question after 24 hours.",
-  trust_event_corrected: "A trust record was corrected after its source information was checked.",
-};
-
-function noticeTitle(notice: BuyerNotice) {
-  if (notice.kind === "seller_new_listing") return `New from ${notice.shopName || "a seller you follow"}`;
-  return noticeTitles[notice.kind] ?? "Agrivive account update";
-}
-
-function noticeDescription(notice: BuyerNotice) {
-  if (notice.kind === "seller_new_listing") return notice.productAvailable
-    ? `${notice.productName || "Produce"} is now available for pickup.`
-    : `${notice.productName || "This product"} is no longer available. Browse the seller's current listings.`;
-  return noticeDescriptions[notice.kind] ?? "Open the related reservation for more information.";
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("en-PH", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
+import { useBuyerNotifications, type NoticeFilterTab } from "../hooks/useBuyerNotifications";
+import { NotificationCardComponent } from "./NotificationCardComponent";
+import { NotificationEmptyStateComponent } from "./NotificationEmptyStateComponent";
+import { NotificationToastPreviewComponent } from "./NotificationToastPreviewComponent";
 
 export function BuyerNotifications() {
-  const router = useRouter();
-  const { data: session, isPending: sessionPending } = authClient.useSession();
-  const [notices, setNotices] = useState<BuyerNotice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [loadedFor, setLoadedFor] = useState<string | null>(null);
-  const currentRecipient = useRef(session?.user?.id);
-  currentRecipient.current = session?.user?.id;
-  const visibleNotices = loadedFor === session?.user?.id ? notices : [];
+  const {
+    notices,
+    allNoticesCount,
+    unreadCount,
+    counts,
+    loading,
+    saving,
+    activeTab,
+    setActiveTab,
+    markAsRead,
+    markAllRead,
+  } = useBuyerNotifications();
 
-  const load = useCallback(async (signal?: AbortSignal) => {
-    const recipient = currentRecipient.current;
-    setLoading(true);
-    setError("");
-    try {
-      const result = await listBuyerNotices(signal);
-      if (currentRecipient.current === recipient && !signal?.aborted) {
-        setNotices(result);
-        setLoadedFor(recipient ?? null);
-      }
-    } catch (reason) {
-      if (!isAbortError(reason)) {
-        if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
-          setNotices([]);
-          setLoadedFor(null);
-          if (reason.status === 401) router.replace("/login?next=%2Fnotifications");
-          else setError("You no longer have access to notifications.");
-          return;
-        }
-        setError(reason instanceof ApiError ? reason.message : "We could not load your notices.");
-      }
-    } finally {
-      if (!signal?.aborted) setLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    if (sessionPending) return;
-    if (!session?.user) {
-      setNotices([]);
-      setLoadedFor(null);
-      setLoading(false);
-      router.replace("/login?next=%2Fnotifications");
-      return;
-    }
-    const controller = new AbortController();
-    void load(controller.signal);
-    return () => controller.abort();
-  }, [load, router, session?.user?.id, sessionPending]);
-
-  const unreadCount = useMemo(() => visibleNotices.filter((notice) => !notice.readAt).length, [visibleNotices]);
-
-  async function handleRead(notice: BuyerNotice) {
-    if (notice.readAt) return;
-    try {
-      const updated = await markBuyerNoticeRead(notice.id);
-      setNotices((current) => current.map((item) => item.id === updated.id ? { ...item, readAt: updated.readAt } : item));
-    } catch (reason) {
-      if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
-        setNotices([]);
-        setLoadedFor(null);
-      }
-      setError(reason instanceof ApiError ? reason.message : "We could not update this notice.");
-    }
-  }
-
-  async function handleReadAll() {
-    if (!unreadCount) return;
-    setSaving(true);
-    setError("");
-    try {
-      await markAllBuyerNoticesRead();
-      setNotices((current) => current.map((notice) => ({ ...notice, readAt: notice.readAt ?? new Date().toISOString() })));
-    } catch (reason) {
-      if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
-        setNotices([]);
-        setLoadedFor(null);
-      }
-      setError(reason instanceof ApiError ? reason.message : "We could not mark notices as read.");
-    } finally {
-      setSaving(false);
-    }
-  }
+  const tabs: { key: NoticeFilterTab; label: string; count: number }[] = [
+    { key: "all", label: "All Updates", count: counts.all },
+    { key: "reservations", label: "Reservations", count: counts.reservations },
+    { key: "produce", label: "Produce Drops", count: counts.produce },
+    { key: "updates", label: "System Alerts", count: counts.updates },
+  ];
 
   return (
-    <main className="min-h-[calc(100vh-73px)] bg-agrivive-background py-8 text-foreground lg:py-12">
-      <PageContainer>
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border/80 pb-6">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-semibold text-agrivive-primary"><Bell className="size-4" aria-hidden="true" />Your updates</p>
-            <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight sm:text-4xl">Notifications</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Reservation updates and new produce from sellers you follow appear here.</p>
+    <main className="min-h-[calc(100vh-73px)] bg-[#FDFDFD] py-8 text-foreground lg:py-10">
+      <PageContainer className="max-w-4xl">
+        {/* Header Section: Left Metadata + Right Floating Toasts */}
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+          <div className="flex-1">
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900 cursor-pointer"
+            >
+              <ArrowLeft className="size-4 shrink-0" />
+              <span>Back to Marketplace</span>
+            </Link>
+
+            <div className="mt-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF5EA] px-3 py-1 text-xs font-semibold text-[#1B4D36]">
+                <Triangle className="size-3 fill-[#1B4D36]" />
+                Notifications Hub
+              </span>
+              <h1 className="mt-2.5 font-heading text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
+                Your Notifications
+              </h1>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-500">
+                Real-time produce drop alerts, reservation hold updates, and stall pickup reminders.
+              </p>
+            </div>
           </div>
-          <Button type="button" variant="outline" onClick={() => void handleReadAll()} disabled={!unreadCount || saving} className="min-h-11 gap-2 rounded-xl">
-            <CheckCheck className="size-4" aria-hidden="true" />{saving ? "Saving…" : "Mark all as read"}
-          </Button>
+
+          {/* Right Floating Toast Stack matching photo */}
+          <NotificationToastPreviewComponent />
         </div>
 
-        {error ? <Alert variant="destructive" className="mt-5"><AlertCircle className="size-4" /><AlertDescription>{visibleNotices.length ? `${error} Showing the last notices we loaded.` : error}</AlertDescription><Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => void load()}>Try again</Button></Alert> : null}
+        {/* Filter Pills Matching Photo: Independent Pill Capsules */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-[#1B4D36] text-white shadow-2xs"
+                      : "border border-neutral-200/80 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 shadow-2xs"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {isActive && tab.count > 0 && (
+                    <span className="inline-flex items-center justify-center rounded-full bg-black/20 px-2 py-0.5 text-xs font-bold leading-none text-white">
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="mt-6 space-y-3" aria-live="polite">
-          {loading && !visibleNotices.length ? [1, 2, 3].map((item) => <div key={item} className="h-28 animate-pulse rounded-2xl border border-border bg-white" />) : null}
-          {!loading && !error && visibleNotices.length === 0 ? <Card className="rounded-[20px] border-border/80 bg-white shadow-[0_14px_32px_rgba(31,77,58,0.08)]"><CardContent className="flex flex-col items-center gap-2 p-10 text-center"><Bell className="size-8 text-agrivive-sage" /><h2 className="font-heading text-lg font-bold">No notifications yet</h2><p className="max-w-sm text-sm leading-6 text-muted-foreground">Updates from your reservations and followed sellers will appear here.</p></CardContent></Card> : null}
-          {visibleNotices.map((notice) => (
-            <Card key={notice.id} className={notice.readAt ? "rounded-[20px] border-border/80 bg-white shadow-[0_10px_24px_rgba(31,77,58,0.05)]" : "rounded-[20px] border-agrivive-primary/30 bg-agrivive-primary/5 shadow-[0_10px_24px_rgba(31,77,58,0.08)]"}>
-              <CardHeader className="flex-row items-start justify-between gap-4 pb-2">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-agrivive-primary/10 text-agrivive-primary"><Bell className="size-4" aria-hidden="true" /></span>
-                  <div className="min-w-0"><CardTitle className="text-base">{noticeTitle(notice)}</CardTitle><p className="mt-1 text-sm leading-6 text-muted-foreground">{noticeDescription(notice)}</p></div>
-                </div>
-                {!notice.readAt ? <span className="mt-1 size-2 shrink-0 rounded-full bg-agrivive-terracotta" aria-label="Unread" /> : null}
-              </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-1 pl-16">
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Clock className="size-3.5" aria-hidden="true" />{formatDate(notice.createdAt)}</p>
-                <Link href={notice.kind === "seller_new_listing"
-                  ? notice.productAvailable && notice.productId ? `/marketplace/${notice.productId}` : notice.sellerId ? `/sellers/${notice.sellerId}` : "/marketplace"
-                  : `/orders/${notice.orderId}`}
-                  onClick={() => void handleRead(notice)} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-agrivive-primary hover:underline">
-                  {notice.kind === "seller_new_listing" ? notice.productAvailable ? "View product" : "View seller" : "Open reservation"}
-                  <ChevronRight className="size-4" aria-hidden="true" />
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
+          {unreadCount > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => void markAllRead()}
+              disabled={saving}
+              className="text-xs font-semibold text-[#1B4D36] hover:bg-[#EAF5EA]"
+            >
+              <CheckCheck className="size-3.5 mr-1" />
+              {saving ? "Saving…" : "Mark all as read"}
+            </Button>
+          )}
+        </div>
+
+        {/* Feed Content */}
+        <div className="mt-6 space-y-3.5" aria-live="polite">
+          {loading && !notices.length ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="h-24 animate-pulse rounded-2xl border border-neutral-200/60 bg-white" />
+              ))}
+            </div>
+          ) : notices.length === 0 ? (
+            <NotificationEmptyStateComponent
+              filterActive={activeTab !== "all" && allNoticesCount > 0}
+              onClearFilter={() => setActiveTab("all")}
+            />
+          ) : (
+            notices.map((notice) => (
+              <NotificationCardComponent
+                key={notice.id}
+                notice={notice}
+                onRead={(n) => void markAsRead(n)}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Bottom Feature Cards Matching Photo */}
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#16A34A] shadow-2xs">
+              <ShoppingBasket className="size-4.5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900">Morning Drops</h3>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                Follow stalls to get alerted when fresh crates are listed.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#EA580C] shadow-2xs">
+              <Clock className="size-4.5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900">Hold Expirations</h3>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                Timely reminders before your 24h pickup window closes.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#2563EB] shadow-2xs">
+              <Bell className="size-4.5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900">Stall Alerts</h3>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                Instant confirmations when market sellers verify your digital pass.
+              </p>
+            </div>
+          </div>
         </div>
       </PageContainer>
     </main>

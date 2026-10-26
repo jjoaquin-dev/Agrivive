@@ -1,4 +1,4 @@
-import { and, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   conversation_messages,
@@ -80,8 +80,44 @@ export async function createConversation(buyerId: string, input: CreateConversat
     }
 
     const [existing] = await tx.select().from(conversations)
-      .where(eq(conversations.contextKey, contextKey)).limit(1);
-    if (existing) throw new ConversationError(409, "Conversation already exists");
+      .where(
+        input.contextType === "order"
+          ? eq(conversations.contextKey, contextKey)
+          : or(
+            eq(conversations.contextKey, contextKey),
+            and(eq(conversations.buyerId, buyerId), eq(conversations.sellerId, sellerId)),
+          ),
+      ).limit(1);
+    if (existing) {
+      const now = new Date();
+      const [message] = await tx.insert(conversation_messages).values({
+        conversationId: existing.id,
+        senderId: buyerId,
+        clientMessageId: input.clientMessageId,
+        body,
+        createdAt: now,
+      }).returning();
+      await tx.update(conversations).set({
+        productId: input.productId ?? existing.productId,
+        lastMessageAt: now,
+        updatedAt: now,
+      }).where(eq(conversations.id, existing.id));
+      await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(
+        eq(conversation_participants.conversationId, existing.id),
+        eq(conversation_participants.userId, buyerId),
+      ));
+      if (input.contextType === "product" && input.productId) {
+        await tx.insert(product_inquiries).values({
+          productId: input.productId, buyerId, sellerId, question: body,
+        }).onConflictDoNothing();
+      } else if (input.contextType === "order" && input.orderId) {
+        await tx.insert(order_inquiries).values({
+          orderId: input.orderId, buyerId, sellerId, question: body,
+        }).onConflictDoNothing();
+      }
+      const [updated] = await tx.select().from(conversations).where(eq(conversations.id, existing.id)).limit(1);
+      return { conversation: updated ?? existing, message };
+    }
 
     if (input.contextType === "product") {
       await tx.insert(product_inquiries).values({
