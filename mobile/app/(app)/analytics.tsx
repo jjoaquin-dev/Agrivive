@@ -1,12 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useInventory } from "../../src/features/inventory/hooks/useInventory";
@@ -25,6 +18,7 @@ import { AnalyticsProductPerformance } from "../../src/features/analytics/compon
 import { AnalyticsPeriodComparison } from "../../src/features/analytics/components/AnalyticsPeriodComparison";
 import { VisibilityBreakdownCard } from "../../src/features/analytics/components/VisibilityBreakdownCard";
 import { AnalyticsDescriptiveSummary } from "../../src/features/analytics/components/AnalyticsDescriptiveSummary";
+import { PaginationControl } from "../../src/components/PaginationControl";
 import type { AnalyticsUnit } from "../../src/features/analytics/types";
 import { colors, fonts, spacing } from "../../src/theme";
 
@@ -37,6 +31,10 @@ export default function SellerAnalyticsScreen() {
 
   const { analytics, loading, refreshing, error, refresh } = useSellerAnalytics(days, productId, unit);
   const [visibilityList, setVisibilityList] = useState<SellerVisibilityItem[]>([]);
+  const [guidePageSize, setGuidePageSize] = useState(3);
+  const [guidePage, setGuidePage] = useState(1);
+
+  useEffect(() => { setGuidePage(1); }, [productId]);
 
   useEffect(() => {
     fetchSellerWeightedVisibility()
@@ -59,6 +57,11 @@ export default function SellerAnalyticsScreen() {
       return (a.rank ?? 999) - (b.rank ?? 999);
     });
   }, [visibilityList, productId]);
+
+  const paginatedVisibility = useMemo(() => {
+    const start = (guidePage - 1) * guidePageSize;
+    return filteredVisibility.slice(start, start + guidePageSize);
+  }, [filteredVisibility, guidePage, guidePageSize]);
 
   if (loading && !refreshing && !analytics) {
     return (
@@ -133,18 +136,26 @@ export default function SellerAnalyticsScreen() {
                   <Text style={styles.emptyText}>No visibility ranking data recorded yet.</Text>
                 </View>
               ) : (
-                filteredVisibility.slice(0, 3).map((item) => {
-                  const prod = products.find((p) => p.id === item.productId);
-                  return (
+                <>
+                  {paginatedVisibility.map((item) => (
                     <VisibilityBreakdownCard
                       key={item.productId}
                       item={item}
-                      product={prod}
-                      productName={prod?.productName}
+                      product={products.find((p) => p.id === item.productId)}
+                      productName={products.find((p) => p.id === item.productId)?.productName}
                       onBoost={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: item.productId } })}
                     />
-                  );
-                })
+                  ))}
+                  <PaginationControl
+                    currentPage={guidePage}
+                    totalItems={filteredVisibility.length}
+                    pageSize={guidePageSize}
+                    pageSizeOptions={[3, 5, 10]}
+                    onPageChange={setGuidePage}
+                    onPageSizeChange={setGuidePageSize}
+                    itemLabel="items"
+                  />
+                </>
               )}
             </View>
 

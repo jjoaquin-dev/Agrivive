@@ -26,6 +26,7 @@ import {
 } from "lucide-react-native";
 import { useInventory, type InventoryFilterTab } from "../../../src/features/inventory/hooks/useInventory";
 import { ProductCard } from "../../../src/features/inventory/components/ProductCard";
+import { PaginationControl } from "../../../src/components/PaginationControl";
 import { PRODUCT_CATEGORIES, type ProductCategory } from "../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../src/theme";
 
@@ -49,6 +50,15 @@ export default function InventoryScreen() {
   } = useInventory();
 
   const [menuVisible, setMenuVisible] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, selectedCategory, filterTab]);
+
+  const paginatedProducts = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
 
   const handleClearSearch = () => setSearchQuery("");
 
@@ -349,7 +359,7 @@ export default function InventoryScreen() {
   return (
     <View style={styles.screen}>
       <FlatList
-        data={filteredProducts}
+        data={paginatedProducts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ProductCard
@@ -365,7 +375,22 @@ export default function InventoryScreen() {
         showsVerticalScrollIndicator={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loadingMore ? <ActivityIndicator color="#0F920F" style={{ marginVertical: 16 }} /> : null}
+        ListFooterComponent={
+          <View>
+            {loadingMore ? <ActivityIndicator color="#0F920F" style={{ marginVertical: 16 }} /> : null}
+            {filteredProducts.length > 0 ? (
+              <PaginationControl
+                currentPage={currentPage}
+                totalItems={filteredProducts.length}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20]}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="listings"
+              />
+            ) : null}
+          </View>
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
