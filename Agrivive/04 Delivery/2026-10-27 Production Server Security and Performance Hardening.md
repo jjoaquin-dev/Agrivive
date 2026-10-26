@@ -30,3 +30,7 @@ Hardened the production server configuration against external penetration, DDoS,
 ## Verification Performed
 - Validated `docker-compose.yml` schema and syntax using `docker compose --env-file .env.example config --quiet`.
 - Confirmed file line counts: `docker-compose.yml` (105 lines $\le 200$), `deploy/Caddyfile` (52 lines $\le 200$).
+
+## Commit
+- **Hash:** `d45cba7`
+- **Message:** `chore: harden production server caddy reverse proxy and docker resource limits`
