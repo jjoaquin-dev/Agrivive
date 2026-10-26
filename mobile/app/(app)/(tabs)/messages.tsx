@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ChevronLeft, MessageCircle, Search, SlidersHorizontal, X } from "lucide-react-native";
@@ -73,7 +73,12 @@ export default function SellerMessagesScreen() {
           </View>
         </View>
 
-        <View style={styles.filterRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScrollView}
+          contentContainerStyle={styles.filterScrollContent}
+        >
           {[
             { key: "all", label: "All" },
             { key: "unread", label: totalDirectUnread > 0 ? `Unread ${totalDirectUnread}` : "Unread" },
@@ -84,12 +89,14 @@ export default function SellerMessagesScreen() {
             <Pressable
               key={tab.key}
               onPress={() => setFilterTab(tab.key as FilterTab)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: filterTab === tab.key }}
               style={[styles.filterChip, filterTab === tab.key && styles.filterChipActive]}
             >
               <Text style={[styles.filterChipText, filterTab === tab.key && styles.filterChipTextActive]}>{tab.label}</Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
 
         {searchOpen && (
           <View style={styles.searchBar}>
