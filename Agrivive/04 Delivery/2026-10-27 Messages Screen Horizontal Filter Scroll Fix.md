@@ -19,3 +19,8 @@ Fixed an issue in the mobile seller app's **Messages** screen (`mobile/app/(app)
 ## Verification
 - `mobile`: `bun run typecheck` passed cleanly with 0 errors.
 - `messages.tsx` line count is 184 lines (strictly adhering to the $\le 200$ line limit).
+
+## Commit
+- **Hash:** `54f1758`
+- **Message:** `fix messages filter pill horizontal scrolling`
+

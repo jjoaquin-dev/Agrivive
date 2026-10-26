@@ -52,3 +52,10 @@ The user requested:
   - `orders.tsx`: 142 lines ($\le 200$)
   - `notifications.tsx`: 163 lines ($\le 200$)
   - `analytics.tsx`: 197 lines ($\le 200$)
+
+---
+
+## 4. Commit Reference
+- **Commit Hash:** `a9309c0`
+- **Commit Message:** `add pagination and page size filter across inventory, orders, notifications, and visibility guide`
+
