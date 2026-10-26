@@ -25,3 +25,9 @@ Resolved the root causes preventing Android push notifications from functioning 
 - **Hash**: `d8055e4`
 - **Message**: `fix(mobile): add POST_NOTIFICATIONS permission and enhance push registration logging`
 
+## EAS Build Execution
+- **Profile**: `preview` (`buildType: "apk"`)
+- **Build ID**: `e0ae9871-e00e-46f9-a8aa-33138817add2`
+- **Build URL**: https://expo.dev/accounts/j.joaquin.dev/projects/mobile/builds/e0ae9871-e00e-46f9-a8aa-33138817add2
+
+
