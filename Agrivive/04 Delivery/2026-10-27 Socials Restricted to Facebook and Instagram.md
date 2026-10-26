@@ -39,3 +39,10 @@ The user requested:
 - `cd mobile && npx -y expo-doctor`: 21/21 checks passed.
 - `cd backend && bunx tsc --noEmit && bun build src/index.ts --outdir dist --target bun`: 0 errors.
 - All code files strictly adhere to the $\le 200$ line limit.
+
+---
+
+## 5. Commit Reference
+- **Commit Hash:** `4fab701`
+- **Commit Message:** `remove x from socials and restrict channels strictly to facebook and instagram`
+
