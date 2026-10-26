@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Sparkles } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { Product } from "../../inventory/types";
 
@@ -21,6 +23,7 @@ function getProduceEmoji(name: string) {
 }
 
 export function AnalyticsProductPerformance({ products }: AnalyticsProductPerformanceProps) {
+  const router = useRouter();
   const [filter, setFilter] = useState<"all" | "low" | "out">("all");
 
   const filteredProducts = useMemo(() => {
@@ -88,9 +91,21 @@ export function AnalyticsProductPerformance({ products }: AnalyticsProductPerfor
                     <Text style={styles.itemName} numberOfLines={1}>{p.productName}</Text>
                     <View style={styles.badgeGroup}>
                       {isDiscounted && (
-                        <View style={styles.discountBadge}>
-                          <Text style={styles.discountBadgeText}>12h Drop</Text>
-                        </View>
+                        <>
+                          <View style={styles.discountBadge}>
+                            <Text style={styles.discountBadgeText}>12h Drop</Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: p.id } })}
+                            style={styles.previewPostBtn}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Preview post for ${p.productName}`}
+                            hitSlop={6}
+                          >
+                            <Sparkles size={11} color="#FFFFFF" />
+                            <Text style={styles.previewPostBtnText}>Preview Post</Text>
+                          </TouchableOpacity>
+                        </>
                       )}
                       <View style={[styles.statusBadge, { backgroundColor: badgeBg }]}>
                         <Text style={[styles.statusText, { color: badgeColor }]}>{badgeLabel}</Text>
@@ -140,6 +155,8 @@ const styles = StyleSheet.create({
   badgeGroup: { flexDirection: "row", alignItems: "center", gap: 4 },
   discountBadge: { backgroundColor: "rgba(217, 119, 6, 0.15)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: radii.full, borderWidth: 0.5, borderColor: colors.warning },
   discountBadgeText: { fontFamily: fonts.body.semiBold, fontSize: 10, color: colors.warning },
+  previewPostBtn: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: colors.primary, paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: radii.full },
+  previewPostBtnText: { fontFamily: fonts.body.semiBold, fontSize: 10, color: colors.white },
   statusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: radii.full },
   statusText: { fontFamily: fonts.body.semiBold, fontSize: 10 },
   itemMetaRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 2 },

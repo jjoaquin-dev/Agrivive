@@ -49,10 +49,11 @@ export default function BoostVisibilityScreen() {
       const result = await fetchSocialChannels();
       setChannels(result.channels);
       if (!initializedSelection.current) {
-        setSelected(result.channels.filter((c) => c.configured).map((c) => c.platform));
+        const available = result.channels.filter((c) => c.configured);
+        setSelected(available.length > 0 ? available.map((c) => c.platform) : result.channels.map((c) => c.platform));
         initializedSelection.current = true;
       } else {
-        setSelected((cur) => cur.filter((p) => result.channels.some((c) => c.platform === p && c.configured)));
+        setSelected((cur) => cur.filter((p) => result.channels.some((c) => c.platform === p)));
       }
     } catch (reason: any) { setError(reason?.message || "Could not load Agrivive channels."); }
     finally { setChannelsLoading(false); }
@@ -61,7 +62,7 @@ export default function BoostVisibilityScreen() {
   useEffect(() => { void loadChannels(); }, [loadChannels]);
 
   useEffect(() => {
-    if (!productId || channelsLoading || !channels.some((c) => c.configured) || draft || campaign || requestInFlight.current) return;
+    if (!productId || channelsLoading || draft || campaign || requestInFlight.current) return;
     let active = true;
     requestInFlight.current = true;
     setDraftLoading(true);

@@ -61,7 +61,8 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
   const channel = getSocialChannelAvailability().find((item) => item.platform === platform);
   if (!channel?.configured) throw new OrderError(503, `${channel?.label ?? "This channel"} is not configured`);
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");
-  if (!apiBase?.startsWith("https://")) throw new OrderError(503, "Social posting needs a public HTTPS API address");
+  const isDev = process.env.NODE_ENV !== "production" || apiBase?.includes("localhost") || apiBase?.includes("127.0.0.1");
+  if (!apiBase?.startsWith("https://") && !isDev) throw new OrderError(503, "Social posting needs a public HTTPS API address");
   const text = campaign.posts[platform]?.trim();
   if (!text || [...text].length > channel.captionLimit) throw new OrderError(409, "The post text needs to be updated before publishing");
 

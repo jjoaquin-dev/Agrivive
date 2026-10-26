@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Text, Image, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import {
   Package,
   ChevronDown,
@@ -7,6 +8,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Edit3,
+  Sparkles,
 } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import type { Product } from "../types";
@@ -22,6 +24,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
   onEdit,
 }) => {
+  const router = useRouter();
   const [expanded, setExpanded] = useState(false);
 
   const qty = parseFloat(product.productQty as string) || 0;
@@ -195,6 +198,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <ChevronDown size={16} color="#374151" />
           )}
         </Pressable>
+
+        {reductionPercent > 0 || (basePrice != null && basePrice > price) ? (
+          <Pressable
+            onPress={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: product.id } })}
+            style={styles.boostButton}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel={`Preview post for ${product.productName}`}
+          >
+            <Sparkles size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
+            <Text style={styles.boostButtonText}>Preview Post</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           onPress={onEdit || onPress}
@@ -441,6 +457,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#374151",
+  },
+  boostButton: {
+    flex: 1.3,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: "#16A34A",
+  },
+  boostButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   editButton: {
     flex: 1.4,

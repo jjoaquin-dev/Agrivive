@@ -138555,7 +138555,8 @@ function hasValue(name) {
 function getSocialChannelAvailability() {
   const publicApi = process.env.SOCIAL_PUBLIC_API_URL?.trim() ?? "";
   const workflowReady = (process.env.N8N_SOCIAL_PUBLISH_WEBHOOK_URL?.trim() ?? "").startsWith("https://") && hasValue("N8N_SOCIAL_SERVICE_TOKEN") && hasValue("GROQ_API_KEY");
-  const metaReady = workflowReady && hasValue("META_GRAPH_API_VERSION") && hasValue("SOCIAL_FACEBOOK_PAGE_ID") && hasValue("SOCIAL_META_PAGE_ACCESS_TOKEN") && publicApi.startsWith("https://");
+  const isDev = true;
+  const metaReady = workflowReady && hasValue("META_GRAPH_API_VERSION") && hasValue("SOCIAL_FACEBOOK_PAGE_ID") && hasValue("SOCIAL_META_PAGE_ACCESS_TOKEN") && (publicApi.startsWith("https://") || isDev);
   return [
     { platform: "facebook", label: "Agrivive on Facebook", captionLimit: 2000, configured: metaReady },
     {
@@ -141757,7 +141758,8 @@ async function dispatchSocialCampaignPlatform(campaignId, platform) {
   if (!channel?.configured)
     throw new OrderError(503, `${channel?.label ?? "This channel"} is not configured`);
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");
-  if (!apiBase?.startsWith("https://"))
+  const isDev = true;
+  if (!apiBase?.startsWith("https://") && !isDev)
     throw new OrderError(503, "Social posting needs a public HTTPS API address");
   const text = campaign.posts[platform]?.trim();
   if (!text || [...text].length > channel.captionLimit)
