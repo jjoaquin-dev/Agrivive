@@ -55,7 +55,17 @@ export function NotificationRegistration() {
   useEffect(() => {
     // Expo Go cannot use Android remote push notifications. A development build
     // is required for the native Firebase token flow below.
-    if (!session?.user?.id || Platform.OS !== "android" || !canUseNotifications) return;
+    if (!canUseNotifications) {
+      if (Platform.OS !== "web") {
+        console.log("[Push] Expo Go detected. Remote FCM push notifications require a standalone APK build.");
+      }
+      return;
+    }
+
+    if (!session?.user?.id || Platform.OS !== "android") {
+      return;
+    }
+
     let cancelled = false;
 
     async function register() {
@@ -67,21 +77,32 @@ export function NotificationRegistration() {
           name: "Default",
           importance: Notifications.AndroidImportance.DEFAULT,
         });
+
         const current = await Notifications.getPermissionsAsync();
         const permission = current.granted
           ? current
           : await Notifications.requestPermissionsAsync();
-        if (!permission.granted || cancelled) return;
+
+        if (!permission.granted || cancelled) {
+          console.warn("[Push] Android notification permission was not granted:", permission.status);
+          return;
+        }
 
         const token = await Notifications.getDevicePushTokenAsync();
-        if (cancelled || !token.data) return;
-        await registerNotificationDevice({
+        if (cancelled || !token.data) {
+          console.warn("[Push] No device push token returned by system.");
+          return;
+        }
+
+        console.log("[Push] Got device push token. Registering with backend...");
+        const res = await registerNotificationDevice({
           platform: "android",
           pushToken: String(token.data),
           notificationsEnabled: true,
         });
+        console.log("[Push] Device registered successfully in database. ID:", res.id);
       } catch (error) {
-        console.warn("Could not register push notifications", error);
+        console.error("[Push] Could not register push notifications:", error);
       }
     }
 
