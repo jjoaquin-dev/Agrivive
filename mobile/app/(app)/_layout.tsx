@@ -28,123 +28,50 @@ export default function AppLayout() {
         },
       }}
     >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+      {/* Ephemeral Modals */}
       <Stack.Screen
-        name="(tabs)"
+        name="orders/scan"
         options={{
+          presentation: "fullScreenModal",
+          animation: "slide_from_bottom",
           headerShown: false,
         }}
       />
       <Stack.Screen
         name="inventory/create"
         options={{
-          title: "Add Product",
-        }}
-      />
-      <Stack.Screen
-        name="inventory/[id]/index"
-        options={{
-          title: "Product Details",
-        }}
-      />
-      <Stack.Screen
-        name="inventory/[id]/edit"
-        options={{
-          title: "Edit Product",
+          presentation: "modal",
+          animation: "slide_from_bottom",
+          title: "Add Produce",
         }}
       />
       <Stack.Screen
         name="inventory/[id]/stock"
         options={{
+          presentation: "formSheet",
+          animation: "slide_from_bottom",
           title: "Change Amount",
         }}
       />
-      <Stack.Screen
-        name="orders/[id]"
-        options={{
-          title: "Order Details",
-        }}
-      />
-      <Stack.Screen
-        name="orders/scan"
-        options={{
-          title: "Scan Buyer QR",
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="notifications"
-        options={{
-          title: "Notifications",
-        }}
-      />
-      <Stack.Screen
-        name="messages"
-        options={{
-          title: "Messages",
-        }}
-      />
-      <Stack.Screen
-        name="conversations/[id]"
-        options={{
-          title: "Conversation",
-        }}
-      />
-      <Stack.Screen
-        name="activity"
-        options={{
-          title: "Change History",
-        }}
-      />
-      <Stack.Screen
-        name="analytics"
-        options={{
-          title: "Analytics",
-        }}
-      />
-      <Stack.Screen
-        name="boost/[productId]"
-        options={{ title: "Boost Visibility" }}
-      />
-      <Stack.Screen
-        name="boosts"
-        options={{ title: "Boost history" }}
-      />
-      <Stack.Screen
-        name="advisories"
-        options={{
-          title: "Advisories",
-        }}
-      />
-      <Stack.Screen
-        name="trust"
-        options={{
-          title: "Trust history",
-        }}
-      />
-      <Stack.Screen
-        name="profile/index"
-        options={{
-          title: "Seller Profile",
-        }}
-      />
-      <Stack.Screen
-        name="profile/setup"
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="profile/edit"
-        options={{
-          title: "Edit Profile",
-        }}
-      />
-      <Stack.Screen
-        name="profile/security"
-        options={{
-          title: "Security & 2FA",
-        }}
-      />
+
+      {/* Hierarchical Detail Pages */}
+      <Stack.Screen name="inventory/[id]/index" options={{ title: "Product Details" }} />
+      <Stack.Screen name="inventory/[id]/edit" options={{ title: "Edit Product" }} />
+      <Stack.Screen name="orders/[id]" options={{ title: "Order Details" }} />
+      <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
+      <Stack.Screen name="conversations/[id]" options={{ title: "Conversation" }} />
+      <Stack.Screen name="activity" options={{ title: "Change History" }} />
+      <Stack.Screen name="analytics" options={{ title: "Analytics" }} />
+      <Stack.Screen name="boost/[productId]" options={{ title: "Boost Visibility" }} />
+      <Stack.Screen name="boosts" options={{ title: "Boost History" }} />
+      <Stack.Screen name="advisories" options={{ title: "Advisories" }} />
+      <Stack.Screen name="trust" options={{ title: "Trust History" }} />
+      <Stack.Screen name="profile/index" options={{ title: "Seller Profile" }} />
+      <Stack.Screen name="profile/setup" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/edit" options={{ title: "Edit Profile" }} />
+      <Stack.Screen name="profile/security" options={{ title: "Security & 2FA" }} />
     </Stack>
   );
 }

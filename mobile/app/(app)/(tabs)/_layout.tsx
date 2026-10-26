@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Platform } from "react-native";
-import { Tabs, useRouter } from "expo-router";
+import { Platform } from "react-native";
+import { Tabs } from "expo-router";
 import {
   Home,
   LayoutGrid,
-  Plus,
   MessageCircle,
   MessageCircleMore,
   CalendarDays,
+  User,
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
 import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
 
 export default function TabsLayout() {
-  const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export default function TabsLayout() {
           height: Platform.OS === "ios" ? 84 : 64,
           paddingBottom: Platform.OS === "ios" ? 22 : 8,
           paddingTop: 8,
-          overflow: "visible",
         },
         tabBarLabelStyle: {
           fontFamily: fonts.body.medium,
@@ -78,7 +76,18 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 2. Listings (Inventory) */}
+      {/* 2. Reservations (Orders) */}
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "Reservations",
+          tabBarIcon: ({ color, size }) => (
+            <CalendarDays color={color} size={size || 22} />
+          ),
+        }}
+      />
+
+      {/* 3. Listings (Inventory) */}
       <Tabs.Screen
         name="inventory"
         options={{
@@ -86,26 +95,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <LayoutGrid color={color} size={size || 22} />
           ),
-        }}
-      />
-
-      {/* 3. Center Elevated Floating Add Button */}
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: "Add",
-          tabBarLabel: () => <Text style={styles.addLabel}>Add</Text>,
-          tabBarIcon: () => (
-            <View style={styles.floatingButton}>
-              <Plus size={24} color="#FFFFFF" strokeWidth={2.8} />
-            </View>
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            router.push("/(app)/inventory/create");
-          },
         }}
       />
 
@@ -131,47 +120,16 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 5. Reservations (Orders) */}
-      <Tabs.Screen
-        name="orders"
-        options={{
-          title: "Reservations",
-          tabBarIcon: ({ color, size }) => (
-            <CalendarDays color={color} size={size || 22} />
-          ),
-        }}
-      />
-
-      {/* Profile: Hidden from dock, accessed via top header avatar */}
+      {/* 5. Stall Profile */}
       <Tabs.Screen
         name="profile"
         options={{
-          href: null,
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <User color={color} size={size || 22} />
+          ),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  floatingButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#16A34A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -22,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 5,
-    elevation: 6,
-  },
-  addLabel: {
-    fontFamily: fonts.body.medium,
-    fontSize: 11,
-    color: "#16A34A",
-    marginTop: 2,
-  },
-});
