@@ -24,3 +24,8 @@ Added pagination to the seller **Boost History** page (`mobile/app/(app)/boosts.
 ## Verification
 - `mobile`: `bun run typecheck` passed cleanly with 0 errors.
 - Both modified and created files strictly satisfy the $\le 200$ line constraint.
+
+## Commit
+- **Hash:** `65cac67`
+- **Message:** `add pagination to boost history screen`
+

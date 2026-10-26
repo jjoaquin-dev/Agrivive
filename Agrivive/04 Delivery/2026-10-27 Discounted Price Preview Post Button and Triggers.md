@@ -53,3 +53,10 @@ The user reported:
 - `cd mobile && npx -y expo-doctor`: 21/21 checks passed.
 - `cd backend && bunx tsc --noEmit && bun build src/index.ts --outdir dist --target bun`: 0 errors.
 - File length check: All modified files strictly adhere to the $\le 200$ line limit.
+
+---
+
+## 6. Commit Reference
+- **Commit Hash:** `bc03558`
+- **Commit Message:** `add preview post buttons for discounted surplus and ungate boost draft loading`
+
