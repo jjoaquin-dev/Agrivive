@@ -16,7 +16,6 @@ import { Mail, Lock } from "lucide-react-native";
 import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
-import { FacebookSignInButton } from "../../src/features/auth/components/FacebookSignInButton";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -254,8 +253,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.socialRow}>
-            <GoogleSignInButton variant="circle" />
-            <FacebookSignInButton />
+            <GoogleSignInButton title="Log In with Google" />
           </View>
 
           <Pressable
@@ -394,10 +392,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   socialRow: {
-    flexDirection: "row",
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
   },
   emailOtpLink: {
     alignItems: "center",

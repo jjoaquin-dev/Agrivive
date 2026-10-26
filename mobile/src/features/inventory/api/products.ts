@@ -6,8 +6,35 @@ export async function fetchVegetableCatalog(search = ""): Promise<VegetableCatal
   return apiFetch<VegetableCatalogItem[]>(`/seller/vegetable-catalog${query}`);
 }
 
-export async function fetchSellerProducts(): Promise<Product[]> {
-  return apiFetch<Product[]>("/seller/products");
+export interface FetchSellerProductsParams {
+  limit?: number;
+  cursor?: string;
+}
+
+export interface SellerProductsResponse {
+  items: Product[];
+  nextCursor: string | null;
+  summary?: {
+    totalProducts: number;
+    activeCount: number;
+    archivedCount: number;
+    lowStockCount: number;
+    outOfStockCount: number;
+  };
+}
+
+export async function fetchSellerProducts(
+  params: FetchSellerProductsParams = {},
+): Promise<SellerProductsResponse> {
+  const query = new URLSearchParams();
+  if (params.limit) query.append("limit", params.limit.toString());
+  if (params.cursor) query.append("cursor", params.cursor);
+  const qs = query.toString();
+  const res = await apiFetch<Product[] | SellerProductsResponse>(`/seller/products${qs ? `?${qs}` : ""}`);
+  if (Array.isArray(res)) {
+    return { items: res, nextCursor: null };
+  }
+  return res;
 }
 
 export async function fetchSellerProduct(productId: string): Promise<Product> {

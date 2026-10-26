@@ -2,8 +2,26 @@ import { File } from "expo-file-system";
 import { apiFetch, authClient, getApiBaseUrl } from "../../api/client";
 import type { Conversation, ConversationContext, ConversationCreateResult, ConversationMessage } from "./types";
 
-export function fetchConversations() {
-  return apiFetch<Conversation[]>("/conversations?limit=100");
+export interface FetchConversationsParams {
+  limit?: number;
+  cursor?: string;
+}
+
+export interface FetchConversationsResponse {
+  items: Conversation[];
+  nextCursor: string | null;
+}
+
+export async function fetchConversations(params: FetchConversationsParams = {}): Promise<FetchConversationsResponse> {
+  const qs = new URLSearchParams();
+  if (params.limit) qs.append("limit", params.limit.toString());
+  if (params.cursor) qs.append("cursor", params.cursor);
+  const query = qs.toString();
+  const res = await apiFetch<Conversation[] | FetchConversationsResponse>(`/conversations${query ? `?${query}` : ""}`);
+  if (Array.isArray(res)) {
+    return { items: res, nextCursor: null };
+  }
+  return res;
 }
 
 export function fetchConversationMessages(conversationId: string) {

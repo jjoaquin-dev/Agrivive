@@ -27,10 +27,11 @@ export async function getSocialPublishContext(campaignId: string) {
   }
 
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");
-  if (!apiBase?.startsWith("https://")) throw new OrderError(503, "Social posting needs a public HTTPS API address");
+  const isDev = process.env.NODE_ENV !== "production" || apiBase?.includes("localhost") || apiBase?.includes("127.0.0.1");
+  if (!apiBase?.startsWith("https://") && !isDev) throw new OrderError(503, "Social posting needs a public HTTPS API address");
   const posts = await db.select({ platform: seller_social_campaign_posts.platform, status: seller_social_campaign_posts.status })
     .from(seller_social_campaign_posts).where(eq(seller_social_campaign_posts.campaignId, campaignId));
-  const targets = posts.filter((post) => post.status === "queued" && post.platform !== "tiktok")
+  const targets = posts.filter((post) => post.status === "queued" && (post.platform === "facebook" || post.platform === "instagram"))
     .map((post) => ({ platform: post.platform, text: campaign.posts[post.platform] ?? "" }));
 
   return {

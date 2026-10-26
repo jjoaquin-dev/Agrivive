@@ -26,6 +26,7 @@ import {
 } from "lucide-react-native";
 import { useInventory, type InventoryFilterTab } from "../../../src/features/inventory/hooks/useInventory";
 import { ProductCard } from "../../../src/features/inventory/components/ProductCard";
+import { PaginationControl } from "../../../src/components/PaginationControl";
 import { PRODUCT_CATEGORIES, type ProductCategory } from "../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../src/theme";
 
@@ -36,6 +37,7 @@ export default function InventoryScreen() {
     summary,
     loading,
     refreshing,
+    loadingMore,
     error,
     searchQuery,
     setSearchQuery,
@@ -44,9 +46,19 @@ export default function InventoryScreen() {
     filterTab,
     setFilterTab,
     refresh,
+    loadMore,
   } = useInventory();
 
   const [menuVisible, setMenuVisible] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, selectedCategory, filterTab]);
+
+  const paginatedProducts = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
 
   const handleClearSearch = () => setSearchQuery("");
 
@@ -81,48 +93,6 @@ export default function InventoryScreen() {
             <MoreVertical size={20} color="#374151" />
           </Pressable>
         </View>
-      </View>
-
-      {/* Metric / Summary Cards Carousel */}
-      <View style={styles.metricsContainer}>
-        <Pressable
-          onPress={() => setFilterTab("all")}
-          style={[styles.metricCard, styles.metricCardActive]}
-        >
-          <Text style={[styles.metricNumber, { color: "#059669" }]}>
-            {summary.activeCount}
-          </Text>
-          <Text style={[styles.metricTitle, { color: "#065F46" }]}>Active</Text>
-          <Text style={[styles.metricSubtitle, { color: "#059669" }]}>
-            Visible to buyers
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setFilterTab("low_stock")}
-          style={[styles.metricCard, styles.metricCardLowStock]}
-        >
-          <Text style={[styles.metricNumber, { color: "#D97706" }]}>
-            {summary.lowStockCount}
-          </Text>
-          <Text style={[styles.metricTitle, { color: "#92400E" }]}>Low Stock</Text>
-          <Text style={[styles.metricSubtitle, { color: "#B45309" }]}>
-            Needs attention
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setFilterTab("out_of_stock")}
-          style={[styles.metricCard, styles.metricCardOutOfStock]}
-        >
-          <Text style={[styles.metricNumber, { color: "#DC2626" }]}>
-            {summary.outOfStockCount}
-          </Text>
-          <Text style={[styles.metricTitle, { color: "#991B1B" }]}>Out of Stock</Text>
-          <Text style={[styles.metricSubtitle, { color: "#B91C1C" }]}>
-            Restock or archive
-          </Text>
-        </Pressable>
       </View>
 
       {/* Search Input Bar */}
@@ -347,7 +317,7 @@ export default function InventoryScreen() {
   return (
     <View style={styles.screen}>
       <FlatList
-        data={filteredProducts}
+        data={paginatedProducts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ProductCard
@@ -361,6 +331,24 @@ export default function InventoryScreen() {
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <View>
+            {loadingMore ? <ActivityIndicator color="#0F920F" style={{ marginVertical: 16 }} /> : null}
+            {filteredProducts.length > 0 ? (
+              <PaginationControl
+                currentPage={currentPage}
+                totalItems={filteredProducts.length}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20]}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="listings"
+              />
+            ) : null}
+          </View>
+        }
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

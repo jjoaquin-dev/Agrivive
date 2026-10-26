@@ -18,6 +18,7 @@ export type Conversation = {
   buyerName?: string | null;
   buyerImage?: string | null;
   lastMessageBody: string | null;
+  lastMessageSenderId?: string | null;
   unreadCount: number;
 };
 

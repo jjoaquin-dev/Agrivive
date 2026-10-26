@@ -1,14 +1,14 @@
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { ChevronLeft, MessageCircle, Search, SlidersHorizontal, X } from "lucide-react-native";
-import { fonts, radii, spacing } from "../../../src/theme";
 import { useSellerConversations } from "../../../src/features/conversations/hooks/useSellerConversations";
 import { useSellerProductInquiries } from "../../../src/features/messages/hooks/useSellerProductInquiries";
 import { ConversationListItem } from "../../../src/features/conversations/components/ConversationListItem";
 import { ProductInquiryCard } from "../../../src/features/messages/components/ProductInquiryCard";
 import { ConversationFilterModal, type FilterTab, type SortOption } from "../../../src/features/conversations/components/ConversationFilterModal";
+import { styles } from "../../../src/features/conversations/components/SellerMessagesStyles";
 
 export default function SellerMessagesScreen() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function SellerMessagesScreen() {
 
   const totalDirectUnread = useMemo(
     () => direct.conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0),
-    [direct.conversations]
+    [direct.conversations],
   );
 
   const filteredConversations = useMemo(() => {
@@ -73,7 +73,12 @@ export default function SellerMessagesScreen() {
           </View>
         </View>
 
-        <View style={styles.filterRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScrollView}
+          contentContainerStyle={styles.filterScrollContent}
+        >
           {[
             { key: "all", label: "All" },
             { key: "unread", label: totalDirectUnread > 0 ? `Unread ${totalDirectUnread}` : "Unread" },
@@ -84,12 +89,14 @@ export default function SellerMessagesScreen() {
             <Pressable
               key={tab.key}
               onPress={() => setFilterTab(tab.key as FilterTab)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: filterTab === tab.key }}
               style={[styles.filterChip, filterTab === tab.key && styles.filterChipActive]}
             >
               <Text style={[styles.filterChipText, filterTab === tab.key && styles.filterChipTextActive]}>{tab.label}</Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
 
         {searchOpen && (
           <View style={styles.searchBar}>
@@ -128,6 +135,9 @@ export default function SellerMessagesScreen() {
         <FlatList
           data={web.inquiries}
           keyExtractor={(item) => item.id}
+          onEndReached={web.loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={web.loadingMore ? <ActivityIndicator color="#16A34A" style={styles.loader} /> : null}
           refreshControl={<RefreshControl refreshing={web.refreshing} onRefresh={web.refresh} colors={["#16A34A"]} />}
           renderItem={({ item }) => <ProductInquiryCard inquiry={item} onReply={web.reply} isReplying={web.replyingId === item.id} />}
           ListEmptyComponent={
@@ -146,6 +156,9 @@ export default function SellerMessagesScreen() {
         <FlatList
           data={filteredConversations}
           keyExtractor={(item) => item.id}
+          onEndReached={direct.loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={direct.loadingMore ? <ActivityIndicator color="#16A34A" style={styles.loader} /> : null}
           refreshControl={<RefreshControl refreshing={direct.refreshing} onRefresh={direct.refresh} colors={["#16A34A"]} />}
           renderItem={({ item }) => (
             <ConversationListItem
@@ -169,27 +182,3 @@ export default function SellerMessagesScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFFFFF" },
-  header: { paddingHorizontal: spacing.base, paddingTop: spacing.xs, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
-  iconButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center", position: "relative" },
-  iconButtonActive: { backgroundColor: "#DCFCE7" },
-  filterDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#16A34A" },
-  titleColumn: { flex: 1, marginLeft: spacing.sm },
-  title: { fontFamily: fonts.heading.bold, fontSize: 24, color: "#111827" },
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: "#6B7280" },
-  actionRow: { flexDirection: "row", gap: spacing.sm },
-  filterRow: { flexDirection: "row", gap: spacing.xs, overflow: "scroll" },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: radii.full, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E5E7EB" },
-  filterChipActive: { backgroundColor: "#16A34A", borderColor: "#16A34A" },
-  filterChipText: { fontFamily: fonts.body.medium, fontSize: 13, color: "#4B5563" },
-  filterChipTextActive: { color: "#FFFFFF", fontFamily: fonts.body.semiBold },
-  searchBar: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, paddingHorizontal: spacing.md, height: 42, marginTop: spacing.sm },
-  searchInput: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, color: "#111827" },
-  loader: { marginVertical: spacing.xl },
-  empty: { alignItems: "center", paddingVertical: spacing.xxxl },
-  emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: "#111827", marginTop: spacing.md },
-  muted: { fontFamily: fonts.body.regular, fontSize: 13, color: "#6B7280", textAlign: "center", marginTop: spacing.xs, paddingHorizontal: spacing.xl },
-});

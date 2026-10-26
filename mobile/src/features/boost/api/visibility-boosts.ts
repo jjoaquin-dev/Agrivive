@@ -6,8 +6,12 @@ export function fetchSellerProductBoost(productId: string) {
   return apiFetch<SellerProductBoostResponse>(`/seller/products/${productId}/boost`);
 }
 
-export function fetchSellerBoostHistory() {
-  return apiFetch<SellerBoostHistoryResponse>("/seller/boosts");
+export function fetchSellerBoostHistory(params: { limit?: number; cursor?: string } = {}) {
+  const qs = new URLSearchParams();
+  if (params.limit) qs.append("limit", params.limit.toString());
+  if (params.cursor) qs.append("cursor", params.cursor);
+  const query = qs.toString();
+  return apiFetch<SellerBoostHistoryResponse>(`/seller/boosts${query ? `?${query}` : ""}`);
 }
 
 export function requestSellerVisibilityBoost(productId: string) {
@@ -17,8 +21,12 @@ export function requestSellerVisibilityBoost(productId: string) {
   );
 }
 
-export function fetchSellerBoostPrompts() {
-  return apiFetch<SellerBoostPromptsResponse>("/seller/boost-prompts");
+export function fetchSellerBoostPrompts(params: { limit?: number; cursor?: string } = {}) {
+  const qs = new URLSearchParams();
+  if (params.limit) qs.append("limit", params.limit.toString());
+  if (params.cursor) qs.append("cursor", params.cursor);
+  const query = qs.toString();
+  return apiFetch<SellerBoostPromptsResponse>(`/seller/boost-prompts${query ? `?${query}` : ""}`);
 }
 
 export function acceptSellerBoostPrompt(promptId: string) {

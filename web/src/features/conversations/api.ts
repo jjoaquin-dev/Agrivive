@@ -32,8 +32,9 @@ export type ConversationMessage = {
 
 type ConversationResult = { conversation: Conversation; message: ConversationMessage };
 
-export function listConversations(signal?: AbortSignal) {
-  return apiRequest<Conversation[]>("/conversations?limit=100", { signal });
+export async function listConversations(signal?: AbortSignal): Promise<Conversation[]> {
+  const res = await apiRequest<Conversation[] | { items: Conversation[]; nextCursor: string | null }>("/conversations?limit=100", { signal });
+  return Array.isArray(res) ? res : res.items;
 }
 
 export function createConversation(input: {

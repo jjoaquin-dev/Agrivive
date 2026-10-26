@@ -302,7 +302,7 @@ export default function RegisterScreen() {
             style={styles.submitButton}
           />
 
-          <GoogleSignInButton />
+          <GoogleSignInButton title="Sign Up with Google" showDivider />
         </View>
 
         <View style={styles.footer}>

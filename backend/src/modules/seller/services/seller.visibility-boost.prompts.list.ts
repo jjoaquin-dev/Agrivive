@@ -1,12 +1,25 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 
-export async function listSellerVisibilityBoostPrompts(sellerId: string) {
+export async function listSellerVisibilityBoostPrompts(sellerId: string, limit = 20, cursor?: string) {
   return db.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
-    const items = await tx.select({
+    let before;
+    if (cursor) {
+      const cursorDate = new Date(cursor);
+      if (!isNaN(cursorDate.getTime())) {
+        before = lt(seller_visibility_boosts.createdAt, cursorDate);
+      }
+    }
+    const conditions = [
+      eq(seller_visibility_boosts.sellerId, sellerId),
+      eq(seller_visibility_boosts.status, "prompt"),
+    ];
+    if (before) conditions.push(before);
+
+    const rows = await tx.select({
       id: seller_visibility_boosts.id,
       productId: seller_visibility_boosts.productId,
       productName: sellers_product.productName,
@@ -18,16 +31,21 @@ export async function listSellerVisibilityBoostPrompts(sellerId: string) {
       readAt: seller_visibility_boosts.readAt,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
-      .where(and(
-        eq(seller_visibility_boosts.sellerId, sellerId),
-        eq(seller_visibility_boosts.status, "prompt"),
-      )).orderBy(desc(seller_visibility_boosts.createdAt)).limit(20);
+      .where(and(...conditions))
+      .orderBy(desc(seller_visibility_boosts.createdAt))
+      .limit(limit + 1);
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
+
     const [unread] = await tx.select({ count: sql<number>`count(*)::int` })
       .from(seller_visibility_boosts).where(and(
         eq(seller_visibility_boosts.sellerId, sellerId),
         eq(seller_visibility_boosts.status, "prompt"),
         isNull(seller_visibility_boosts.readAt),
       ));
-    return { items, unreadCount: Number(unread?.count ?? 0) };
+
+    return { items, unreadCount: Number(unread?.count ?? 0), nextCursor };
   });
 }

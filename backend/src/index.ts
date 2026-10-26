@@ -21,6 +21,7 @@ import { securityHeadersPlugin } from "./plugins/security-headers.plugin";
 import { rateLimitPlugin } from "./plugins/rate-limit.plugin";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
+import { deliverPushNotifications } from "./jobs/deliver-push-notifications";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -78,6 +79,15 @@ const app = new Elysia()
   //plugins
   .use(validationPlugin)
   .listen(3000);
+
+// Process and deliver queued push notifications every 30 seconds
+setInterval(async () => {
+  try {
+    await deliverPushNotifications();
+  } catch (error) {
+    console.error("[Push] Auto-delivery error:", error);
+  }
+}, 30_000);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`,

@@ -60,6 +60,7 @@ export interface SellerBoostPrompt {
 export interface SellerBoostPromptsResponse {
   items: SellerBoostPrompt[];
   unreadCount: number;
+  nextCursor?: string | null;
 }
 
 export type NotificationCategory = "all" | "reservations" | "messages" | "listings" | "trust";

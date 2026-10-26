@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Platform, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
@@ -10,6 +10,7 @@ import { NotificationCategoryTabs } from "../../src/features/notifications/compo
 import { NotificationSearchBar } from "../../src/features/notifications/components/NotificationSearchBar";
 import { NotificationTimelineCard } from "../../src/features/notifications/components/NotificationTimelineCard";
 import { NotificationFilterModal, NotificationFilterState } from "../../src/features/notifications/components/NotificationFilterModal";
+import { PaginationControl } from "../../src/components/PaginationControl";
 import type { NotificationCategory, UnifiedNotificationItem } from "../../src/features/notifications/types";
 
 interface SectionedItem {
@@ -20,15 +21,19 @@ interface SectionedItem {
 }
 
 export default function NotificationsScreen() {
-  const { items, counts, unreadCount, urgentCount, loading, refreshing, refresh, markAllRead } = useUnifiedNotifications();
+  const { items, counts, unreadCount, urgentCount, loading, refreshing, loadingMore, refresh, loadMore, markAllRead } = useUnifiedNotifications();
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<NotificationFilterState>({
     unreadOnly: false,
     urgentOnly: false,
     sortBy: "newest",
   });
+
+  useEffect(() => { setCurrentPage(1); }, [selectedCategory, searchQuery, filters]);
 
   const handleOpenMenu = () => {
     if (Platform.OS === "ios") {
@@ -48,7 +53,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const sectionedData = useMemo(() => {
+  const { sectionedData, totalCount } = useMemo(() => {
     let list = items.filter((item) => {
       if (selectedCategory !== "all" && item.category !== selectedCategory) return false;
       if (filters.unreadOnly && item.read) return false;
@@ -60,24 +65,18 @@ export default function NotificationsScreen() {
       return true;
     });
 
-    if (filters.sortBy === "oldest") {
-      list = [...list].sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime());
-    } else {
-      list = [...list].sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
-    }
+    list.sort((a, b) => filters.sortBy === "oldest" ? a.rawDate.getTime() - b.rawDate.getTime() : b.rawDate.getTime() - a.rawDate.getTime());
+    const totalCount = list.length;
+    const paginated = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     const today: UnifiedNotificationItem[] = [];
     const yesterday: UnifiedNotificationItem[] = [];
     const earlier: UnifiedNotificationItem[] = [];
 
-    for (const item of list) {
-      if (item.timestamp.includes("min") || item.timestamp.includes("hr") || item.timestamp === "Just now") {
-        today.push(item);
-      } else if (item.timestamp === "Yesterday") {
-        yesterday.push(item);
-      } else {
-        earlier.push(item);
-      }
+    for (const item of paginated) {
+      if (item.timestamp.includes("min") || item.timestamp.includes("hr") || item.timestamp === "Just now") today.push(item);
+      else if (item.timestamp === "Yesterday") yesterday.push(item);
+      else earlier.push(item);
     }
 
     const result: SectionedItem[] = [];
@@ -93,8 +92,8 @@ export default function NotificationsScreen() {
       result.push({ type: "header", sectionTitle: "EARLIER", id: "header-earlier" });
       earlier.forEach((c) => result.push({ type: "card", card: c, id: c.id }));
     }
-    return result;
-  }, [items, selectedCategory, searchQuery, filters]);
+    return { sectionedData: result, totalCount };
+  }, [items, selectedCategory, searchQuery, filters, currentPage, pageSize]);
 
   const activeFilterCount = (filters.unreadOnly ? 1 : 0) + (filters.urgentOnly ? 1 : 0) + (filters.sortBy !== "newest" ? 1 : 0);
 
@@ -107,36 +106,40 @@ export default function NotificationsScreen() {
         data={sectionedData}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          <View>
+            {loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 8 }} /> : null}
+            {totalCount > 0 ? (
+              <PaginationControl
+                currentPage={currentPage}
+                totalItems={totalCount}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20]}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="notifications"
+              />
+            ) : null}
+          </View>
+        }
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.primary]} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
-            <NotificationSummaryBanner unreadCount={unreadCount} urgentCount={urgentCount} onMarkAllRead={markAllRead} />
+            {unreadCount > 0 || urgentCount > 0 ? (
+              <NotificationSummaryBanner unreadCount={unreadCount} urgentCount={urgentCount} onMarkAllRead={markAllRead} />
+            ) : null}
             <NotificationCategoryTabs selected={selectedCategory} onSelect={setSelectedCategory} counts={counts} />
-            <NotificationSearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFilterPress={() => setFilterModalVisible(true)}
-              activeFilterCount={activeFilterCount}
-            />
+            <NotificationSearchBar value={searchQuery} onChangeText={setSearchQuery} onFilterPress={() => setFilterModalVisible(true)} activeFilterCount={activeFilterCount} />
           </View>
         }
-        renderItem={({ item }) => {
-          if (item.type === "header") {
-            return <Text style={styles.sectionHeader}>{item.sectionTitle}</Text>;
-          }
-          return item.card ? <NotificationTimelineCard item={item.card} /> : null;
-        }}
+        renderItem={({ item }) => item.type === "header" ? <Text style={styles.sectionHeader}>{item.sectionTitle}</Text> : item.card ? <NotificationTimelineCard item={item.card} /> : null}
         ListEmptyComponent={
           loading ? (
-            <View style={styles.emptyContainer}>
-              <ActivityIndicator color={colors.primary} />
-              <Text style={styles.emptyText}>Loading notifications...</Text>
-            </View>
+            <View style={styles.emptyContainer}><ActivityIndicator color={colors.primary} /><Text style={styles.emptyText}>Loading notifications...</Text></View>
           ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyTitle}>No notifications found</Text>
-              <Text style={styles.emptyText}>Updates matching your filter will appear here.</Text>
-            </View>
+            <View style={styles.emptyContainer}><Text style={styles.emptyTitle}>No notifications found</Text><Text style={styles.emptyText}>Updates matching your filter will appear here.</Text></View>
           )
         }
       />
@@ -155,15 +158,8 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing.xxxl },
-  sectionHeader: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 12,
-    color: "#6B7280",
-    letterSpacing: 0.8,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-  },
+  sectionHeader: { fontFamily: fonts.body.semiBold, fontSize: 12, color: "#6B7280", letterSpacing: 0.8, marginTop: spacing.sm, marginBottom: spacing.xs },
   emptyContainer: { alignItems: "center", paddingVertical: spacing.xxl },
-  emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text, marginBottom: 4 },
-  emptyText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
+  emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text },
+  emptyText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 4 },
 });

@@ -33,20 +33,20 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
       return failure(error, status);
     }
   }, { role: ["seller"], params })
-  .get("/boosts", async ({ session, status }) => {
+  .get("/boosts", async ({ session, query, status }) => {
     try {
-      return await listSellerVisibilityBoostHistory(session.userId);
+      return await listSellerVisibilityBoostHistory(session.userId, query?.limit, query?.cursor);
     } catch (error) {
       return failure(error, status);
     }
-  }, { role: ["seller"] })
-  .get("/boost-prompts", async ({ session, status }) => {
+  }, { role: ["seller"], query: t.Optional(t.Object({ limit: t.Optional(t.Integer({ minimum: 1, maximum: 100 })), cursor: t.Optional(t.String()) })) })
+  .get("/boost-prompts", async ({ session, query, status }) => {
     try {
-      return await listSellerVisibilityBoostPrompts(session.userId);
+      return await listSellerVisibilityBoostPrompts(session.userId, query?.limit, query?.cursor);
     } catch (error) {
       return failure(error, status);
     }
-  }, { role: ["seller"] })
+  }, { role: ["seller"], query: t.Optional(t.Object({ limit: t.Optional(t.Integer({ minimum: 1, maximum: 100 })), cursor: t.Optional(t.String()) })) })
   .post("/boost-prompts/read-all", async ({ session, status }) => {
     try {
       return await readAllSellerVisibilityBoostPrompts(session.userId);

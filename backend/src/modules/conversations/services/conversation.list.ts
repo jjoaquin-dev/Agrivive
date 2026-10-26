@@ -1,4 +1,4 @@
-import { aliasedTable, and, desc, eq, or, sql } from "drizzle-orm";
+import { aliasedTable, and, desc, eq, lt, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   conversation_messages,
@@ -10,8 +10,23 @@ import {
 } from "../../../db/schema";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 
-export async function listConversations(userId: string, limit = 50) {
+export async function listConversations(userId: string, limit = 50, cursor?: string) {
   const buyerUser = aliasedTable(user, "buyer_user");
+
+  let before;
+  if (cursor) {
+    const [anchor] = await db
+      .select({ id: conversations.id, lastMessageAt: conversations.lastMessageAt })
+      .from(conversations)
+      .where(and(eq(conversations.id, cursor), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId))))
+      .limit(1);
+    if (anchor) {
+      before = or(
+        lt(conversations.lastMessageAt, anchor.lastMessageAt),
+        and(eq(conversations.lastMessageAt, anchor.lastMessageAt), lt(conversations.id, anchor.id)),
+      );
+    }
+  }
 
   const rows = await db.select({
     id: conversations.id,
@@ -56,6 +71,13 @@ export async function listConversations(userId: string, limit = 50) {
       order by latest_message.created_at desc, latest_message.id desc
       limit 1
     )`,
+    lastMessageSenderId: sql<string | null>`(
+      select latest_message.sender_id
+      from conversation_messages as latest_message
+      where latest_message.conversation_id = ${conversations.id}
+      order by latest_message.created_at desc, latest_message.id desc
+      limit 1
+    )`,
     unreadCount: sql<number>`(
       select count(*)::int from conversation_messages as unread_message
       where unread_message.conversation_id = ${conversations.id}
@@ -74,15 +96,23 @@ export async function listConversations(userId: string, limit = 50) {
       eq(sellers_profile.isCurrent, true),
     ))
     .leftJoin(sellers_product, eq(sellers_product.id, conversations.productId))
-    .where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))
+    .where(and(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)), before))
     .orderBy(desc(conversations.lastMessageAt), desc(conversations.id))
-    .limit(limit);
+    .limit(limit + 1);
 
-  return Promise.all(
-    rows.map(async (row) => ({
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+
+  const items = await Promise.all(
+    page.map(async (row) => ({
       ...row,
       sellerImage: await getAvatarDisplayUrl(row.sellerImage),
       buyerImage: await getAvatarDisplayUrl(row.buyerImage),
     })),
   );
+
+  return {
+    items,
+    nextCursor: hasMore && page.length > 0 ? page[page.length - 1].id : null,
+  };
 }

@@ -1,13 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Platform } from "react-native";
-import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useAuth } from "../../../context/AuthContext";
 import { fetchSellerNotifications } from "../api/seller-notifications";
 import { fetchConversations } from "../../conversations/api";
-
-const canScheduleNotifications =
-  Platform.OS !== "web" &&
-  Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+import { getNotificationsModule } from "../utils/notificationsModule";
 
 const REMINDER_INTERVAL_MS = 60_000; // 60 seconds
 
@@ -24,15 +19,16 @@ export function useUnreadReminder() {
       if (!active) return;
 
       try {
-        const [notifRes, convos] = await Promise.all([
+        const [notifRes, convosRes] = await Promise.all([
           fetchSellerNotifications({ unreadOnly: true, limit: 1 }).catch(() => null),
-          fetchConversations().catch(() => []),
+          fetchConversations().catch(() => ({ items: [], nextCursor: null })),
         ]);
 
         if (!active) return;
 
         const unreadNotifs = notifRes?.unreadCount ?? 0;
-        const unreadConvos = (convos || []).reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        const convoList = Array.isArray(convosRes) ? convosRes : (convosRes?.items || []);
+        const unreadConvos = convoList.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
         const totalUnread = unreadNotifs + unreadConvos;
 
         if (totalUnread > 0) {
@@ -41,8 +37,8 @@ export function useUnreadReminder() {
           if (now - lastReminderTime.current >= REMINDER_INTERVAL_MS - 5000) {
             lastReminderTime.current = now;
 
-            if (canScheduleNotifications) {
-              const Notifications = await import("expo-notifications");
+            const Notifications = await getNotificationsModule();
+            if (Notifications) {
               await Notifications.scheduleNotificationAsync({
                 content: {
                   title: "Agrivive Reminder",
