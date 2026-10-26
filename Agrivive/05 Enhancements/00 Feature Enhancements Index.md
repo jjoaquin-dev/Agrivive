@@ -21,7 +21,9 @@ Agrivive/05 Enhancements/
   ├── 03 Order Lifecycle and Smart Reservation Reconciliation.md
   ├── 04 Seller Operations and Multi-Channel Promotion.md
   ├── 05 Mobile and Backend Flow Enhancements.md
-  └── 06 Web Landing Page UI-UX Enhancements.md
+  ├── 06 Web Landing Page UI-UX Enhancements.md
+  ├── 07 Web Buyer Notification Popover Enhancements.md
+  └── 08 Web Production Performance Optimization.md
 ```
 
 ---
@@ -81,6 +83,17 @@ Agrivive/05 Enhancements/
   * Product grid equal-height row alignment: reserved 2-line title height (`min-h-[2.5rem]`) and uniform `h-10` Add to Cart action bar.
   * Responsive mobile filter drawer with Base UI `Sheet` and standardized `h-10` controls.
   * Preserved 100% of existing AgriVive branding, green/cream palette, illustrations, and backend integrations.
+
+### 7. Web Production Performance Optimization
+* **Document Note:** `[[08 Web Production Performance Optimization]]`
+* **Focus:**
+  * Reverse proxy compression (`encode zstd gzip`) and immutable cache headers in Caddy.
+  * Self-hosted Google Fonts via `next/font/google` replacing render-blocking `<link>` tags.
+  * Modern image optimization with `sharp`, responsive `sizes`, and WebP/AVIF conversions.
+  * Removed legacy Pages Router artifacts (`_document.tsx`).
+  * Unlocked instant SSR by removing client-side auth gating on public marketplace browsing.
+  * Isolated Leaflet map bundle and styles to on-demand client chunks.
+  * Debounced price slider input to prevent navigation and network flooding.
 
 ---
 

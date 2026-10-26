@@ -1,5 +1,4 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
 
 const categories = [
@@ -88,10 +87,12 @@ export function HomeCategories() {
 
               {/* Centered Produce Photography (Guaranteed Visible Dimensions) */}
               <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center mt-1">
-                <img
+                <Image
                   src={cat.image}
                   alt={cat.alt}
-                  className="w-full h-full object-contain drop-shadow-sm group-hover:scale-108 transition-transform duration-300 ease-out"
+                  width={128}
+                  height={128}
+                  className="h-full w-full object-contain drop-shadow-sm transition-transform duration-300 ease-out group-hover:scale-108"
                 />
               </div>
 

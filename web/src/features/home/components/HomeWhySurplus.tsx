@@ -1,5 +1,3 @@
-"use client";
-
 import { Coins, ShieldCheck, MapPin, QrCode, SlidersHorizontal, Store } from "lucide-react";
 import { HomeWhySurplusBenefitCard } from "./HomeWhySurplusCard";
 

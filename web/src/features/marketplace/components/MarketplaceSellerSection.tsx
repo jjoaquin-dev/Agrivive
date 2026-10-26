@@ -1,10 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { ChevronRight, Maximize2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { MarketplaceSellerMapResult } from "../types";
-import { InteractiveSellerMap } from "./InteractiveSellerMap";
-import { SellerMapModal } from "./SellerMapModal";
+
+const InteractiveSellerMap = dynamic(
+  () => import("./InteractiveSellerMap").then((m) => m.InteractiveSellerMap),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-72 w-full rounded-2xl sm:h-80" />,
+  }
+);
+
+const SellerMapModal = dynamic(
+  () => import("./SellerMapModal").then((m) => m.SellerMapModal),
+  { ssr: false }
+);
 
 type MarketplaceSellerSectionProps = {
   sellers: MarketplaceSellerMapResult[];

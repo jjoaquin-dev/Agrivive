@@ -1,6 +1,5 @@
-"use client";
-
 import { ReactNode } from "react";
+import Image from "next/image";
 
 interface BenefitCardProps {
   tag: string;
@@ -26,9 +25,11 @@ export function HomeWhySurplusBenefitCard({
       <div
         className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] p-7 text-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${className}`}
       >
-        <img
+        <Image
           src={imageSrc}
           alt={headline}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
