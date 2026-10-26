@@ -60,3 +60,10 @@ Code: NotificationRegistration.tsx
 - `cd mobile && npx -y expo-doctor`: 21/21 checks passed.
 - `cd backend && bunx tsc --noEmit && bun build`: 0 errors.
 - File length check: All modified and new files strictly adhere to the $\le 200$ line limit.
+
+---
+
+## 6. Commit Reference
+- **Commit Hash:** `bdd7a7e`
+- **Commit Message:** `fix: guard expo-notifications against missing native module in expo go`
+
