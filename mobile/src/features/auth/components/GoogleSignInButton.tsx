@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, Pressable, ActivityIndicator } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { authClient } from "../../../api/client";
 import { useAuth } from "../../../context/AuthContext";
-import { ButtonComponent } from "../../../components/ButtonComponent";
-import { colors, spacing } from "../../../theme";
+import { colors, fonts, spacing } from "../../../theme";
 
-function GoogleIcon({ size = 24 }: { size?: number }) {
+function GoogleIcon({ size = 20 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
       <Path
@@ -30,7 +29,15 @@ function GoogleIcon({ size = 24 }: { size?: number }) {
   );
 }
 
-export function GoogleSignInButton({ variant = "full" }: { variant?: "full" | "circle" }) {
+export interface GoogleSignInButtonProps {
+  title?: string;
+  showDivider?: boolean;
+}
+
+export function GoogleSignInButton({
+  title = "Log In with Google",
+  showDivider = false,
+}: GoogleSignInButtonProps) {
   const router = useRouter();
   const { refreshSetup, completeOnboarding } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -38,7 +45,6 @@ export function GoogleSignInButton({ variant = "full" }: { variant?: "full" | "c
 
   const handleGoogleSignIn = async () => {
     if (loading) return;
-
     setLoading(true);
     setError("");
 
@@ -49,10 +55,7 @@ export function GoogleSignInButton({ variant = "full" }: { variant?: "full" | "c
       });
 
       if (response.error) {
-        setError(
-          response.error.message ||
-            "Google sign-in is not available right now.",
-        );
+        setError(response.error.message || "Google sign-in is not available right now.");
         return;
       }
 
@@ -64,12 +67,10 @@ export function GoogleSignInButton({ variant = "full" }: { variant?: "full" | "c
           router.replace("/(app)/profile/setup");
           return;
         }
-
         if (setup.passwordSetupRequired || setup.nextStep === "password-setup") {
           router.replace("/(auth)/password-setup");
           return;
         }
-
         if (setup.sellerVerified || setup.nextStep === "ready") {
           router.replace("/(app)/(tabs)/home");
           return;
@@ -84,76 +85,77 @@ export function GoogleSignInButton({ variant = "full" }: { variant?: "full" | "c
     }
   };
 
-  if (variant === "circle") {
-    return (
-      <View style={styles.circleContainer}>
-        <Pressable
-          onPress={() => void handleGoogleSignIn()}
-          style={({ pressed }) => [
-            styles.circleButton,
-            pressed && styles.circlePressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Sign in with Google"
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#4285F4" />
-          ) : (
-            <GoogleIcon size={24} />
-          )}
-        </Pressable>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <View style={styles.dividerRow}>
-        <View style={styles.divider} />
-        <Text style={styles.dividerText}>or</Text>
-        <View style={styles.divider} />
-      </View>
+      {showDivider ? (
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+      ) : null}
 
-      <ButtonComponent
-        title="Continue with Google"
-        variant="secondary"
-        loading={loading}
+      <Pressable
         onPress={() => void handleGoogleSignIn()}
-        icon={<GoogleIcon size={20} />}
-        style={styles.button}
-      />
+        disabled={loading}
+        style={({ pressed }) => [
+          styles.pillButton,
+          pressed && styles.pillPressed,
+          loading && styles.pillDisabled,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#4285F4" style={styles.spinner} />
+        ) : (
+          <GoogleIcon size={20} />
+        )}
+        <Text style={styles.pillText}>{title}</Text>
+      </Pressable>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: spacing.lg,
+    width: "100%",
   },
-  circleContainer: {
-    alignItems: "center",
-  },
-  circleButton: {
-    width: 50,
+  pillButton: {
+    width: "100%",
     height: 50,
     borderRadius: 25,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
-  circlePressed: {
+  pillPressed: {
     backgroundColor: "#F9FAFB",
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 0.985 }],
+  },
+  pillDisabled: {
+    opacity: 0.7,
+  },
+  spinner: {
+    marginRight: 2,
+  },
+  pillText: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "600",
   },
   dividerRow: {
     flexDirection: "row",
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  divider: {
+  dividerLine: {
     flex: 1,
     height: 1,
     backgroundColor: colors.border,
@@ -170,13 +172,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
   },
-  button: {
-    minHeight: 48,
-  },
   error: {
     color: colors.error,
     fontSize: 13,
     marginTop: spacing.sm,
     textAlign: "center",
+    fontFamily: fonts.body.medium,
   },
 });

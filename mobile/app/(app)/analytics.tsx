@@ -133,14 +133,18 @@ export default function SellerAnalyticsScreen() {
                   <Text style={styles.emptyText}>No visibility ranking data recorded yet.</Text>
                 </View>
               ) : (
-                filteredVisibility.slice(0, 3).map((item) => (
-                  <VisibilityBreakdownCard
-                    key={item.productId}
-                    item={item}
-                    productName={products.find((p) => p.id === item.productId)?.productName}
-                    onBoost={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: item.productId } })}
-                  />
-                ))
+                filteredVisibility.slice(0, 3).map((item) => {
+                  const prod = products.find((p) => p.id === item.productId);
+                  return (
+                    <VisibilityBreakdownCard
+                      key={item.productId}
+                      item={item}
+                      product={prod}
+                      productName={prod?.productName}
+                      onBoost={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: item.productId } })}
+                    />
+                  );
+                })
               )}
             </View>
 

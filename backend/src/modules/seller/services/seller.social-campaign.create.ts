@@ -18,6 +18,8 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
   const [product] = await db.select({
     imageUrl: sellers_product.imagUrl,
     priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
+    basePrice: sellers_product.basePrice,
+    currentPrice: sellers_product.productPrice,
   }).from(sellers_product)
     .where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
   if (!product?.imageUrl) throw new OrderError(409, "Add a product photo before posting");
@@ -84,7 +86,8 @@ export async function createSellerSocialCampaignDraft(sellerId: string, productI
     productType: eligibility.productType,
     shopName: eligibility.shopName,
     listingUrl: eligibility.listingUrl,
-    price: eligibility.price ?? "0",
+    price: eligibility.price ?? product.currentPrice ?? "0",
+    basePrice: (product.basePrice ?? eligibility.price) || undefined,
     unit: eligibility.unit,
   });
 
