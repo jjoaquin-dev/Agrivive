@@ -1,7 +1,7 @@
 import { apiFetch } from "../../../api/client";
 
-export type SocialPlatform = "facebook" | "instagram" | "x";
-export type HistoricalSocialPlatform = SocialPlatform | "tiktok";
+export type SocialPlatform = "facebook" | "instagram";
+export type HistoricalSocialPlatform = SocialPlatform | "tiktok" | "x";
 export type SocialChannel = {
   platform: SocialPlatform;
   label: string;

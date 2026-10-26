@@ -6,9 +6,8 @@ import { getSocialChannelAvailability } from "../../../utils/social-publishing";
 import { OrderError } from "../../../utils/order-types";
 import { publishFacebookPagePhoto } from "./integrations.social-publish-facebook";
 import { publishInstagramPhoto } from "./integrations.social-publish-instagram";
-import { publishXPost } from "./integrations.social-publish-x";
 
-type SupportedPlatform = "facebook" | "instagram" | "x";
+type SupportedPlatform = "facebook" | "instagram";
 
 async function refreshCampaignStatus(campaignId: string) {
   const posts = await db.select({ status: seller_social_campaign_posts.status })
@@ -81,9 +80,7 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
   try {
     const result = platform === "facebook"
       ? await publishFacebookPagePhoto(imageUrl, text)
-      : platform === "instagram"
-        ? await publishInstagramPhoto(imageUrl, text)
-        : await publishXPost(text);
+      : await publishInstagramPhoto(imageUrl, text);
     await db.update(seller_social_campaign_posts).set({
       status: "published", platformPostId: result.postId, postUrl: result.postUrl ?? null,
       lastError: null, completedAt: new Date(), updatedAt: new Date(),

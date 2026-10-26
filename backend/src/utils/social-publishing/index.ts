@@ -28,12 +28,5 @@ export function getSocialChannelAvailability(): SocialChannel[] {
       captionLimit: 2_200,
       configured: metaReady && hasValue("SOCIAL_INSTAGRAM_USER_ID"),
     },
-    {
-      platform: "x",
-      label: "Agrivive on X",
-      captionLimit: 280,
-      configured: workflowReady && hasValue("SOCIAL_X_API_KEY") && hasValue("SOCIAL_X_API_SECRET") &&
-        hasValue("SOCIAL_X_ACCESS_TOKEN") && hasValue("SOCIAL_X_ACCESS_TOKEN_SECRET"),
-    },
   ];
 }

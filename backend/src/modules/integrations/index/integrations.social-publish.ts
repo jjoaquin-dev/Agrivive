@@ -10,7 +10,6 @@ const publishParams = t.Object({
   platform: t.Union([
     t.Literal("facebook"),
     t.Literal("instagram"),
-    t.Literal("x"),
   ]),
 });
 
