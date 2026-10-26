@@ -20,3 +20,8 @@ Resolved the root causes preventing Android push notifications from functioning 
 - Ran `cd mobile && npx -y expo-doctor`: **21/21 checks passed. No issues detected!**
 - Ran `bunx tsc --noEmit` across `backend/`, `mobile/`, and `web/`: **0 errors**.
 - Verified all edited files are $\le 200$ lines.
+
+## Commit Details
+- **Hash**: `d8055e4`
+- **Message**: `fix(mobile): add POST_NOTIFICATIONS permission and enhance push registration logging`
+
