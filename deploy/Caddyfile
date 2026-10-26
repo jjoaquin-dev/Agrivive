@@ -1,16 +1,52 @@
+(security_headers) {
+    header {
+        # HTTP Strict Transport Security (HSTS)
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        # Prevent MIME-type confusion
+        X-Content-Type-Options "nosniff"
+        # Clickjacking defense
+        X-Frame-Options "SAMEORIGIN"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Strip server signatures
+        -Server
+        -X-Powered-By
+    }
+}
+
 {$WEB_DOMAIN} {
+    import security_headers
     encode zstd gzip
+
+    request_body {
+        max_size 15MB
+    }
 
     @static {
         path /_next/static/* /brand/* /categories/* /produce/* /how-it-works/* /avatars/*
     }
     header @static Cache-Control "public, max-age=31536000, immutable"
 
-    reverse_proxy 127.0.0.1:3001
+    reverse_proxy 127.0.0.1:3001 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
 }
 
 {$API_DOMAIN} {
+    import security_headers
     encode zstd gzip
 
-    reverse_proxy 127.0.0.1:3000
+    request_body {
+        max_size 25MB
+    }
+
+    reverse_proxy 127.0.0.1:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
 }
