@@ -55,17 +55,23 @@ export default function NotificationsScreen() {
 
   const { sectionedData, totalCount } = useMemo(() => {
     let list = items.filter((item) => {
+      if (!item) return false;
       if (selectedCategory !== "all" && item.category !== selectedCategory) return false;
       if (filters.unreadOnly && item.read) return false;
       if (filters.urgentOnly && !item.urgent) return false;
       if (searchQuery.trim().length > 0) {
         const query = searchQuery.toLowerCase();
-        return item.title.toLowerCase().includes(query) || item.subtitle.toLowerCase().includes(query);
+        return (item.title || "").toLowerCase().includes(query) || (item.subtitle || "").toLowerCase().includes(query);
       }
       return true;
     });
 
-    list.sort((a, b) => filters.sortBy === "oldest" ? a.rawDate.getTime() - b.rawDate.getTime() : b.rawDate.getTime() - a.rawDate.getTime());
+    list.sort((a, b) => {
+      const timeA = a.rawDate && !isNaN(a.rawDate.getTime()) ? a.rawDate.getTime() : 0;
+      const timeB = b.rawDate && !isNaN(b.rawDate.getTime()) ? b.rawDate.getTime() : 0;
+      return filters.sortBy === "oldest" ? timeA - timeB : timeB - timeA;
+    });
+
     const totalCount = list.length;
     const paginated = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -74,23 +80,31 @@ export default function NotificationsScreen() {
     const earlier: UnifiedNotificationItem[] = [];
 
     for (const item of paginated) {
-      if (item.timestamp.includes("min") || item.timestamp.includes("hr") || item.timestamp === "Just now") today.push(item);
-      else if (item.timestamp === "Yesterday") yesterday.push(item);
+      if (!item) continue;
+      const ts = item.timestamp || "";
+      if (ts.includes("min") || ts.includes("hr") || ts === "Just now") today.push(item);
+      else if (ts === "Yesterday") yesterday.push(item);
       else earlier.push(item);
     }
 
     const result: SectionedItem[] = [];
     if (today.length > 0) {
       result.push({ type: "header", sectionTitle: "TODAY", id: "header-today" });
-      today.forEach((c) => result.push({ type: "card", card: c, id: c.id }));
+      today.forEach((c, i) => {
+        if (c) result.push({ type: "card", card: c, id: c.id ? `${c.id}-today-${i}` : `today-${i}` });
+      });
     }
     if (yesterday.length > 0) {
       result.push({ type: "header", sectionTitle: "YESTERDAY", id: "header-yesterday" });
-      yesterday.forEach((c) => result.push({ type: "card", card: c, id: c.id }));
+      yesterday.forEach((c, i) => {
+        if (c) result.push({ type: "card", card: c, id: c.id ? `${c.id}-yesterday-${i}` : `yesterday-${i}` });
+      });
     }
     if (earlier.length > 0) {
       result.push({ type: "header", sectionTitle: "EARLIER", id: "header-earlier" });
-      earlier.forEach((c) => result.push({ type: "card", card: c, id: c.id }));
+      earlier.forEach((c, i) => {
+        if (c) result.push({ type: "card", card: c, id: c.id ? `${c.id}-earlier-${i}` : `earlier-${i}` });
+      });
     }
     return { sectionedData: result, totalCount };
   }, [items, selectedCategory, searchQuery, filters, currentPage, pageSize]);
@@ -104,7 +118,7 @@ export default function NotificationsScreen() {
 
       <FlatList
         data={sectionedData}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item?.id ?? `notif-${index}`}
         contentContainerStyle={styles.listContent}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
@@ -134,7 +148,14 @@ export default function NotificationsScreen() {
             <NotificationSearchBar value={searchQuery} onChangeText={setSearchQuery} onFilterPress={() => setFilterModalVisible(true)} activeFilterCount={activeFilterCount} />
           </View>
         }
-        renderItem={({ item }) => item.type === "header" ? <Text style={styles.sectionHeader}>{item.sectionTitle}</Text> : item.card ? <NotificationTimelineCard item={item.card} /> : null}
+        renderItem={({ item }) => {
+          if (!item) return null;
+          return item.type === "header" ? (
+            <Text style={styles.sectionHeader}>{item.sectionTitle}</Text>
+          ) : item.card ? (
+            <NotificationTimelineCard item={item.card} />
+          ) : null;
+        }}
         ListEmptyComponent={
           loading ? (
             <View style={styles.emptyContainer}><ActivityIndicator color={colors.primary} /><Text style={styles.emptyText}>Loading notifications...</Text></View>

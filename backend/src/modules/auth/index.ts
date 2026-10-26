@@ -9,6 +9,18 @@ import { expo } from "@better-auth/expo";
 export const auth = betterAuth({
   basePath: "/api/auth",
   baseURL: process.env.BETTER_AUTH_URL || undefined,
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for", "x-real-ip", "cf-connecting-ip"],
+      trustedProxies: [
+        "127.0.0.1",
+        "::1",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+      ],
+    },
+  },
   trustedOrigins: [
     "agrivive://",
     ...(process.env.NODE_ENV !== "production"

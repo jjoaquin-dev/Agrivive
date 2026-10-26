@@ -1,6 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { AlertTriangle, Award, Info, Sparkles, TrendingUp } from "lucide-react-native";
+import {
+  AlertTriangle,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerVisibilityItem } from "../api/seller-visibility";
 import type { Product } from "../../inventory/types";
@@ -13,7 +21,14 @@ interface VisibilityBreakdownCardProps {
   onBoost: () => void;
 }
 
-export function VisibilityBreakdownCard({ item, productName, product, onBoost }: VisibilityBreakdownCardProps) {
+export function VisibilityBreakdownCard({
+  item,
+  productName,
+  product,
+  onBoost,
+}: VisibilityBreakdownCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
   const isPriority = item.tier?.toLowerCase().includes("priority");
   const isStandard = item.tier?.toLowerCase().includes("standard");
   const isDiscounted = Boolean(
@@ -21,7 +36,11 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
   );
 
   const tierColor = isPriority ? colors.primary : isStandard ? colors.success : colors.textMuted;
-  const tierBg = isPriority ? colors.primaryLight : isStandard ? "rgba(63, 125, 88, 0.12)" : "rgba(100, 116, 139, 0.12)";
+  const tierBg = isPriority
+    ? colors.primaryLight
+    : isStandard
+    ? "rgba(63, 125, 88, 0.12)"
+    : "rgba(100, 116, 139, 0.12)";
 
   return (
     <View style={[styles.card, isDiscounted && styles.cardDiscounted]}>
@@ -57,21 +76,22 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
       </View>
 
       {item.score !== null ? (
-        <>
-          <View style={styles.scoreRow}>
-            <View>
-              <Text style={styles.scoreLabel}>Placement Score</Text>
-              <Text style={styles.scoreValue}>{item.score.toFixed(4)}</Text>
-            </View>
-            <View style={styles.scoreGuide}>
-              <TrendingUp size={16} color={colors.primary} />
-              <Text style={styles.scoreGuideText}>
-                {isPriority ? "Featured near top of buyer browse" : isStandard ? "Balanced marketplace search ranking" : "Standard catalog position"}
-              </Text>
-            </View>
+        <View style={styles.scoreRow}>
+          <View>
+            <Text style={styles.scoreLabel}>Placement Score</Text>
+            <Text style={styles.scoreValue}>{item.score.toFixed(4)}</Text>
           </View>
-          <VisibilityFactorsGrid item={item} />
-        </>
+          <View style={styles.scoreGuide}>
+            <TrendingUp size={16} color={colors.primary} />
+            <Text style={styles.scoreGuideText}>
+              {isPriority
+                ? "Featured near top of buyer browse"
+                : isStandard
+                ? "Balanced marketplace search ranking"
+                : "Standard catalog position"}
+            </Text>
+          </View>
+        </View>
       ) : (
         <View style={styles.unrankedNotice}>
           <Info size={16} color={colors.warning} />
@@ -81,13 +101,45 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
         </View>
       )}
 
-      <Text style={styles.disclaimerText}>
-        Visibility is calculated from Freshness (40%), Available Stock (30%), Seller Reliability (20%), and Surplus Recurrence (10%).
-      </Text>
-      <Pressable onPress={onBoost} accessibilityRole="button" style={[styles.boostButton, isDiscounted && styles.boostButtonDiscounted]}>
-        <Sparkles size={17} color={colors.white} />
-        <Text style={styles.boostButtonText}>{isDiscounted ? "Boost Discounted Deal" : "Boost Visibility"}</Text>
-      </Pressable>
+      {expanded && (
+        <View style={styles.expandedContent}>
+          <View style={styles.divider} />
+          {item.score !== null && <VisibilityFactorsGrid item={item} />}
+          <Text style={styles.disclaimerText}>
+            Visibility is calculated from Freshness (40%), Available Stock (30%), Seller Reliability (20%), and Surplus Recurrence (10%).
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.actionRow}>
+        <Pressable
+          onPress={() => setExpanded((prev) => !prev)}
+          style={styles.detailsButton}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={expanded ? "Show less visibility details" : "Show more visibility details"}
+        >
+          <Text style={styles.detailsButtonText}>{expanded ? "Less" : "Details"}</Text>
+          {expanded ? (
+            <ChevronUp size={16} color={colors.text} />
+          ) : (
+            <ChevronDown size={16} color={colors.text} />
+          )}
+        </Pressable>
+
+        <Pressable
+          onPress={onBoost}
+          accessibilityRole="button"
+          style={[styles.boostButton, isDiscounted && styles.boostButtonDiscounted]}
+          hitSlop={6}
+          accessibilityLabel={isDiscounted ? "Boost discounted deal" : "Boost visibility"}
+        >
+          <Sparkles size={15} color={colors.white} />
+          <Text style={styles.boostButtonText} numberOfLines={1}>
+            {isDiscounted ? "Boost Deal" : "Boost Visibility"}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -107,15 +159,20 @@ const styles = StyleSheet.create({
   newPrice: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
   tierBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radii.full },
   tierBadgeText: { fontFamily: fonts.body.semiBold, fontSize: 11, letterSpacing: 0.5 },
-  scoreRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.primarySurface, borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.md },
+  scoreRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.primarySurface, borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.sm },
   scoreLabel: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
   scoreValue: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.primary, marginTop: 2 },
   scoreGuide: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1, marginLeft: spacing.lg },
   scoreGuideText: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 16, color: colors.text, flex: 1 },
   unrankedNotice: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(199, 149, 62, 0.12)", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.sm },
   unrankedText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.text },
+  expandedContent: { marginTop: spacing.xs },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
   disclaimerText: { fontFamily: fonts.body.regular, fontSize: 11, lineHeight: 16, color: colors.textMuted, marginTop: spacing.xs },
-  boostButton: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, backgroundColor: colors.primary, borderRadius: radii.button, marginTop: spacing.md },
+  actionRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md },
+  detailsButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", height: 44, borderRadius: radii.button, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, gap: 4 },
+  detailsButtonText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
+  boostButton: { flex: 1.6, flexDirection: "row", alignItems: "center", justifyContent: "center", height: 44, borderRadius: radii.button, backgroundColor: colors.primary, gap: 6 },
   boostButtonDiscounted: { backgroundColor: colors.warning },
-  boostButtonText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.white },
+  boostButtonText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.white },
 });

@@ -65,7 +65,11 @@ export function useUnifiedNotifications() {
         markedReadIds: markedReadIdsRef.current,
       });
 
-      list.sort((a, b) => b.rawDate.getTime() - a.rawDate.getTime());
+      list.sort((a, b) => {
+        const timeA = a.rawDate && !isNaN(a.rawDate.getTime()) ? a.rawDate.getTime() : 0;
+        const timeB = b.rawDate && !isNaN(b.rawDate.getTime()) ? b.rawDate.getTime() : 0;
+        return timeB - timeA;
+      });
       setItems(list);
     } finally {
       setLoading(false);
