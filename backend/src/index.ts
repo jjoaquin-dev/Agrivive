@@ -1,3 +1,5 @@
+process.env.NODE_ENV = process.env.NODE_ENV || "development";
+
 import { Elysia } from "elysia";
 import { auth } from "./modules/auth";
 import { authPasswordRoute } from "./modules/auth/index/auth.password";
