@@ -2,6 +2,7 @@
 
 **Date:** 2026-10-26  
 **Type:** Feature / Bug Fix  
+**Commit:** `190e311` (`fix boost eligibility for initial post and 12-hour price drop`)  
 **Scope:** Backend (`backend/src/utils/promotion-eligibility/`, `backend/src/modules/seller/services/`), Mobile (`mobile/app/(app)/boost/`, `mobile/src/features/boost/`)
 
 ---
