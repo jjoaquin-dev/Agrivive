@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { fetchSellerOrders } from "../../orders/api/seller-orders";
 import { fetchConversations } from "../../conversations/api";
 import { fetchSellerBoostPrompts } from "../../boost/api/visibility-boosts";
+import { getNotificationsModule } from "../utils/notificationsModule";
 
 export function useNotificationWatcher() {
   const { session } = useAuth();
@@ -20,7 +21,7 @@ export function useNotificationWatcher() {
     async function pollAndNotify() {
       if (!active) return;
       try {
-        const Notifications = await import("expo-notifications");
+        const Notifications = await getNotificationsModule();
 
         const [ordersRes, convosRes, boostsRes] = await Promise.allSettled([
           fetchSellerOrders({ limit: 5 }),
@@ -35,15 +36,17 @@ export function useNotificationWatcher() {
           for (const order of ordersRes.value.orders) {
             if (isInitialized.current && !knownOrderIds.current.has(order.id) && order.status === "pending") {
               const summary = order.items.map((i) => `${i.quantity} ${i.scalingType} ${i.productName}`).join(", ") || "Vegetables";
-              await Notifications.scheduleNotificationAsync({
-                content: {
-                  title: "🔔 New Reservation Received!",
-                  body: `RSV-${order.id.slice(0, 4).toUpperCase()} · ${summary}`,
-                  data: { path: `/(app)/orders/${order.id}` },
-                  sound: true,
-                },
-                trigger: null,
-              });
+              if (Notifications) {
+                await Notifications.scheduleNotificationAsync({
+                  content: {
+                    title: "🔔 New Reservation Received!",
+                    body: `RSV-${order.id.slice(0, 4).toUpperCase()} · ${summary}`,
+                    data: { path: `/(app)/orders/${order.id}` },
+                    sound: true,
+                  },
+                  trigger: null,
+                });
+              }
             }
             knownOrderIds.current.add(order.id);
           }
@@ -56,15 +59,17 @@ export function useNotificationWatcher() {
             if (convo.lastMessageBody) {
               const prev = knownConvoMsgIds.current.get(convo.id);
               if (isInitialized.current && prev && prev !== convo.lastMessageBody && (convo.unreadCount || 0) > 0) {
-                await Notifications.scheduleNotificationAsync({
-                  content: {
-                    title: `💬 New message from ${convo.buyerName || "Buyer"}`,
-                    body: convo.lastMessageBody,
-                    data: { path: `/(app)/conversations/${convo.id}` },
-                    sound: true,
-                  },
-                  trigger: null,
-                });
+                if (Notifications) {
+                  await Notifications.scheduleNotificationAsync({
+                    content: {
+                      title: `💬 New message from ${convo.buyerName || "Buyer"}`,
+                      body: convo.lastMessageBody,
+                      data: { path: `/(app)/conversations/${convo.id}` },
+                      sound: true,
+                    },
+                    trigger: null,
+                  });
+                }
               }
               knownConvoMsgIds.current.set(convo.id, convo.lastMessageBody);
             }
@@ -75,15 +80,17 @@ export function useNotificationWatcher() {
         if (boostsRes.status === "fulfilled") {
           for (const prompt of boostsRes.value.items) {
             if (isInitialized.current && !knownBoostIds.current.has(prompt.id) && !prompt.readAt) {
-              await Notifications.scheduleNotificationAsync({
-                content: {
-                  title: "🚀 Listing Visibility Boost Ready",
-                  body: `${prompt.productName} price was reduced. Tap to boost its visibility!`,
-                  data: { path: "/(app)/notifications" },
-                  sound: true,
-                },
-                trigger: null,
-              });
+              if (Notifications) {
+                await Notifications.scheduleNotificationAsync({
+                  content: {
+                    title: "🚀 Listing Visibility Boost Ready",
+                    body: `${prompt.productName} price was reduced. Tap to boost its visibility!`,
+                    data: { path: "/(app)/notifications" },
+                    sound: true,
+                  },
+                  trigger: null,
+                });
+              }
             }
             knownBoostIds.current.add(prompt.id);
           }

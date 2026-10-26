@@ -1,13 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Platform } from "react-native";
-import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useAuth } from "../../../context/AuthContext";
 import { fetchSellerNotifications } from "../api/seller-notifications";
 import { fetchConversations } from "../../conversations/api";
-
-const canScheduleNotifications =
-  Platform.OS !== "web" &&
-  Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+import { getNotificationsModule } from "../utils/notificationsModule";
 
 const REMINDER_INTERVAL_MS = 60_000; // 60 seconds
 
@@ -42,8 +37,8 @@ export function useUnreadReminder() {
           if (now - lastReminderTime.current >= REMINDER_INTERVAL_MS - 5000) {
             lastReminderTime.current = now;
 
-            if (canScheduleNotifications) {
-              const Notifications = await import("expo-notifications");
+            const Notifications = await getNotificationsModule();
+            if (Notifications) {
               await Notifications.scheduleNotificationAsync({
                 content: {
                   title: "Agrivive Reminder",

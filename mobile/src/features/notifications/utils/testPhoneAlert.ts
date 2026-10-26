@@ -1,4 +1,5 @@
 import { Alert, Platform } from "react-native";
+import { getNotificationsModule, isExpoGo } from "./notificationsModule";
 
 export async function sendLocalTestNotification(): Promise<void> {
   if (Platform.OS === "web") {
@@ -6,8 +7,18 @@ export async function sendLocalTestNotification(): Promise<void> {
     return;
   }
 
+  if (isExpoGo()) {
+    Alert.alert(
+      "Development Build Required",
+      "Phone notifications require a native Development Build (npx expo run:android) and are not supported inside Expo Go.",
+    );
+    return;
+  }
+
   try {
-    const Notifications = await import("expo-notifications");
+    const Notifications = await getNotificationsModule();
+    if (!Notifications) return;
+
     const { granted } = await Notifications.requestPermissionsAsync();
 
     if (!granted) {
