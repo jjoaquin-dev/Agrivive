@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, Heart, MapPin } from "lucide-react";
+import { ArrowDownToLine, ArrowUpRight, Heart, MapPin } from "lucide-react";
 
 export function HomeFooter() {
   return (
@@ -65,6 +65,15 @@ export function HomeFooter() {
               <li><Link href="/login" className="hover:text-white">Sign In</Link></li>
               <li><Link href="/signup" className="hover:text-white">Create Account</Link></li>
               <li><Link href="/marketplace" className="inline-flex items-center gap-1 text-[#FCEC9A] hover:underline">Market Map <ArrowUpRight className="size-3.5" /></Link></li>
+              <li>
+                <a
+                  href="/downloads/agrivive-seller.apk"
+                  download="agrivive-seller.apk"
+                  className="inline-flex items-center gap-1.5 font-medium text-white hover:text-[#FCEC9A]"
+                >
+                  Download Seller App (APK) <ArrowDownToLine className="size-3.5" />
+                </a>
+              </li>
             </ul>
           </div>
         </div>

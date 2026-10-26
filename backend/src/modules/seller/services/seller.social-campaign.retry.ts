@@ -22,9 +22,13 @@ export async function retrySellerSocialCampaign(sellerId: string, campaignId: st
         eq(seller_social_campaign_posts.status, "failed"),
       ));
     if (!failed.length) throw new OrderError(409, "There are no failed channels to retry");
-    const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+    const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
     if (!eligibility?.eligible || eligibility.sellerId !== sellerId) {
       throw new OrderError(409, eligibility?.reason ?? "This listing is no longer ready for Boost Visibility");
+    }
+    if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+      await tx.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId })
+        .where(eq(seller_social_campaigns.id, campaignId));
     }
     await tx.update(seller_social_campaign_posts).set({
       status: "queued", lastError: null, completedAt: null, updatedAt: new Date(),

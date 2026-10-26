@@ -6,6 +6,7 @@ export const conversationParams = t.Object({
 
 export const conversationListQuery = t.Object({
   limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 50 })),
+  cursor: t.Optional(t.String()),
 });
 
 export const createConversationBody = t.Object({

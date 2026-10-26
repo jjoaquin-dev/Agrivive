@@ -5,30 +5,59 @@ import type { Conversation } from "../types";
 
 export function useSellerConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
+  const load = useCallback(async (reset = true) => {
+    if (reset) {
+      setLoading(true);
+      setError(null);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
-      setConversations(await fetchConversations());
+      const response = await fetchConversations({
+        limit: 20,
+        cursor: reset ? undefined : nextCursor ?? undefined,
+      });
+      setConversations((prev) => (reset ? response.items : [...prev, ...response.items]));
+      setNextCursor(response.nextCursor);
     } catch (reason: any) {
       setError(reason?.message || "Could not load conversations. Please try again.");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [nextCursor]);
 
   useFocusEffect(useCallback(() => {
-    void load();
-  }, [load]));
+    void load(true);
+  }, []));
 
   const refresh = useCallback(() => {
     setRefreshing(true);
-    void load();
+    setNextCursor(null);
+    void load(true);
   }, [load]);
 
-  return { conversations, loading, refreshing, error, refresh };
+  const loadMore = useCallback(() => {
+    if (!nextCursor || loadingMore || loading) return;
+    void load(false);
+  }, [load, loading, loadingMore, nextCursor]);
+
+  return {
+    conversations,
+    loading,
+    refreshing,
+    loadingMore,
+    hasMore: Boolean(nextCursor),
+    error,
+    refresh,
+    loadMore,
+  };
 }

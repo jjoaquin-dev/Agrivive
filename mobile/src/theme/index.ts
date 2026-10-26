@@ -4,21 +4,21 @@
  */
 
 export const colors = {
-  primary: "#1F4D3A",
-  primaryPressed: "#17392B",
-  primaryLight: "rgba(31, 77, 58, 0.08)",
-  primarySurface: "rgba(31, 77, 58, 0.04)",
-  background: "#F8F6F1",
+  primary: "#0F920F",
+  primaryPressed: "#0C770C",
+  primaryLight: "rgba(15, 146, 15, 0.10)",
+  primarySurface: "rgba(15, 146, 15, 0.05)",
+  background: "#FFFFFF",
   surface: "#FFFFFF",
-  surfaceMuted: "#F3EFE6",
-  text: "#202622",
-  textMuted: "#6F776F",
+  surfaceMuted: "#F9FAFB",
+  text: "#111827",
+  textMuted: "#6B7280",
   sage: "#A8BFA3",
   terracotta: "#C97850",
-  border: "#E5E2DA",
-  success: "#3F7D58",
-  warning: "#C7953E",
-  error: "#B85450",
+  border: "#E5E7EB",
+  success: "#16A34A",
+  warning: "#D97706",
+  error: "#DC2626",
   white: "#FFFFFF",
   transparent: "transparent",
 } as const;
@@ -61,16 +61,16 @@ export const touchTargets = {
 
 export const shadows = {
   card: {
-    shadowColor: "#1F4D3A",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
   },
   elevated: {
-    shadowColor: "#1F4D3A",
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
   },

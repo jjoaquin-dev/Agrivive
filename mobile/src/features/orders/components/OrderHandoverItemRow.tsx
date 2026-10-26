@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   stepperControl: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: radii.button, overflow: "hidden" },
   stepBtn: { width: 38, height: 38, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
   stepperInput: { minWidth: 50, textAlign: "center", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text, paddingHorizontal: spacing.xs },
-  restoredPill: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(31, 77, 58, 0.08)", paddingVertical: 4, paddingHorizontal: 8, borderRadius: radii.full, marginTop: spacing.sm, gap: 6 },
+  restoredPill: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primaryLight, paddingVertical: 4, paddingHorizontal: 8, borderRadius: radii.full, marginTop: spacing.sm, gap: 6 },
   restoredText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.primary },
   rightQtyPill: { flexDirection: "row", alignItems: "center", backgroundColor: colors.background, paddingVertical: 3, paddingHorizontal: 8, borderRadius: radii.full, marginTop: spacing.sm, alignSelf: "flex-start", gap: 4 },
   rightQtyText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.primary },

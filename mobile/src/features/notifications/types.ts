@@ -60,4 +60,29 @@ export interface SellerBoostPrompt {
 export interface SellerBoostPromptsResponse {
   items: SellerBoostPrompt[];
   unreadCount: number;
+  nextCursor?: string | null;
+}
+
+export type NotificationCategory = "all" | "reservations" | "messages" | "listings" | "trust";
+
+export interface UnifiedNotificationItem {
+  id: string;
+  category: NotificationCategory;
+  kind: string;
+  title: string;
+  subtitle: string;
+  timestamp: string;
+  rawDate: Date;
+  read: boolean;
+  urgent: boolean;
+  iconType: "package" | "clock" | "message" | "thermometer" | "check" | "cross" | "celebration" | "megaphone" | "shield";
+  primaryAction?: {
+    label: string;
+    onPress: () => void;
+    variant?: "primary" | "warning";
+  };
+  secondaryAction?: {
+    label: string;
+    onPress: () => void;
+  };
 }

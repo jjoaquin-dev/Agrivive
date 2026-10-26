@@ -6,9 +6,8 @@ import { getSocialChannelAvailability } from "../../../utils/social-publishing";
 import { OrderError } from "../../../utils/order-types";
 import { publishFacebookPagePhoto } from "./integrations.social-publish-facebook";
 import { publishInstagramPhoto } from "./integrations.social-publish-instagram";
-import { publishXPost } from "./integrations.social-publish-x";
 
-type SupportedPlatform = "facebook" | "instagram" | "x";
+type SupportedPlatform = "facebook" | "instagram";
 
 async function refreshCampaignStatus(campaignId: string) {
   const posts = await db.select({ status: seller_social_campaign_posts.status })
@@ -44,7 +43,7 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
   }
   if (existing[0].status !== "queued") throw new OrderError(409, "This channel is not queued for posting");
 
-  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId);
+  const eligibility = await getPriorityPromotionEligibility(campaign.listingCycleId, { stage: "followup", allowActiveListing: true });
   if (!eligibility?.eligible || eligibility.sellerId !== campaign.sellerId) {
     await db.update(seller_social_campaign_posts).set({
       status: "failed", lastError: "Listing is no longer eligible", completedAt: new Date(), updatedAt: new Date(),
@@ -55,10 +54,15 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
     await refreshCampaignStatus(campaignId);
     throw new OrderError(409, eligibility?.reason ?? "Listing is no longer eligible for Priority Boost");
   }
+  if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
+    await db.update(seller_social_campaigns).set({ listingCycleId: eligibility.cycleId })
+      .where(eq(seller_social_campaigns.id, campaignId));
+  }
   const channel = getSocialChannelAvailability().find((item) => item.platform === platform);
   if (!channel?.configured) throw new OrderError(503, `${channel?.label ?? "This channel"} is not configured`);
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL?.trim().replace(/\/$/, "");
-  if (!apiBase?.startsWith("https://")) throw new OrderError(503, "Social posting needs a public HTTPS API address");
+  const isDev = process.env.NODE_ENV !== "production" || apiBase?.includes("localhost") || apiBase?.includes("127.0.0.1");
+  if (!apiBase?.startsWith("https://") && !isDev) throw new OrderError(503, "Social posting needs a public HTTPS API address");
   const text = campaign.posts[platform]?.trim();
   if (!text || [...text].length > channel.captionLimit) throw new OrderError(409, "The post text needs to be updated before publishing");
 
@@ -77,9 +81,7 @@ export async function dispatchSocialCampaignPlatform(campaignId: string, platfor
   try {
     const result = platform === "facebook"
       ? await publishFacebookPagePhoto(imageUrl, text)
-      : platform === "instagram"
-        ? await publishInstagramPhoto(imageUrl, text)
-        : await publishXPost(text);
+      : await publishInstagramPhoto(imageUrl, text);
     await db.update(seller_social_campaign_posts).set({
       status: "published", platformPostId: result.postId, postUrl: result.postUrl ?? null,
       lastError: null, completedAt: new Date(), updatedAt: new Date(),

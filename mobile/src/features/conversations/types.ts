@@ -11,12 +11,14 @@ export type Conversation = {
   lastMessageAt: string;
   createdAt: string;
   productName: string | null;
+  productImageUrl?: string | null;
   sellerName: string;
   sellerShopName: string | null;
   sellerImage: string | null;
   buyerName?: string | null;
   buyerImage?: string | null;
   lastMessageBody: string | null;
+  lastMessageSenderId?: string | null;
   unreadCount: number;
 };
 

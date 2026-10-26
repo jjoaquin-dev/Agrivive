@@ -210,7 +210,7 @@ The backend checks initial eligibility hourly with the Figure 5 AHP–TOPSIS eng
 
 ## Seller social publishing to official Agrivive pages
 
-These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page, linked Instagram Professional account, and X account; no seller OAuth linking is used. TikTok publishing is not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.
+These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page and linked Instagram Professional account; no seller OAuth linking is used. TikTok and X publishing are not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.
 
 `GET /seller/social-campaigns/channels` returns each channel's label, caption limit, and configured state. `POST /seller/social-campaigns/draft` accepts `{"productId":"<uuid>"}` and returns an editable draft, listing name, and image preview URL. The backend checks seller ownership, current listing cycle, current public/buyable status, Agrivive-hosted listing photo, and `visibility-ahptopsis-v1 >= 0.60`.
 
@@ -218,11 +218,10 @@ These session-protected routes require a signed-in seller. Sellers select Agrivi
 
 ```json
 {
-  "platforms": ["facebook", "instagram", "x"],
+  "platforms": ["facebook", "instagram"],
   "posts": {
     "facebook": "Reviewed Facebook caption",
-    "instagram": "Reviewed Instagram caption",
-    "x": "Reviewed X post"
+    "instagram": "Reviewed Instagram caption"
   }
 }
 ```
@@ -239,7 +238,7 @@ n8n uses `Authorization: Bearer <N8N_SOCIAL_SERVICE_TOKEN>` to coordinate the wo
 
 Import `n8n/workflows/agrivive-social-publishing.json`, replace `YOUR_AGRIVIVE_API_HOST`, and set Header Auth credentials for the webhook and protected API requests. Keep execution payload retention disabled. The exported workflow is inactive; activate it only after backend setup and approved test-channel checks. If an older social-posting or TikTok status workflow was already imported, deactivate it. Do not import or reactivate `agrivive-tiktok-status-polling.json`.
 
-Set the server-only credentials listed in `backend/.env.example`: public HTTPS API URL, n8n webhook URL/token, Groq key, Meta Graph API version, Agrivive Facebook Page ID and Page access token, linked Instagram Professional account ID, and X OAuth 1.0a write credentials. Meta requires the linked Instagram Professional account and approved posting permissions; X requires write access. No seller account tokens or OAuth callback URLs are used. Apply all pending migrations in timestamp order to an approved development/test database before manual acceptance. If the social-campaign migration is pending, apply `20261007165336_social_publishing` before `20261007181343_official_social_pages`; do not apply migrations to production as part of implementation.
+Set the server-only credentials listed in `backend/.env.example`: public HTTPS API URL, n8n webhook URL/token, Groq key, Meta Graph API version, Agrivive Facebook Page ID and Page access token, and linked Instagram Professional account ID. Meta requires the linked Instagram Professional account and approved posting permissions. No seller account tokens or OAuth callback URLs are used. Apply all pending migrations in timestamp order to an approved development/test database before manual acceptance. If the social-campaign migration is pending, apply `20261007165336_social_publishing` before `20261007181343_official_social_pages`; do not apply migrations to production as part of implementation.
 
 ## Admin monitoring
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1072549750542",
+    "project_id": "agrivive-eafb2",
+    "storage_bucket": "agrivive-eafb2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1072549750542:android:9e5372b021863e30f6595f",
+        "android_client_info": {
+          "package_name": "com.agrivive.seller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDVF1c70bKL-6N_qI4DZygEEJMX9nPjr6M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

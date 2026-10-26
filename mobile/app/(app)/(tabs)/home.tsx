@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { StyleSheet, ScrollView, RefreshControl } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useInventory } from "../../../src/features/inventory/hooks/useInventory";
 import { fetchStockAdjustments } from "../../../src/features/inventory/api/stock-adjustments";
@@ -17,6 +18,7 @@ import { colors, spacing } from "../../../src/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session, setup } = useAuth();
   const { summary, lowStockProducts, refreshing, refresh } = useInventory();
   const [recentActivity, setRecentActivity] = useState<StockAdjustment[]>([]);
@@ -37,7 +39,7 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    loadRecentActivity();
+    void loadRecentActivity();
   }, []);
 
   const loadUnreadCounts = useCallback(async () => {
@@ -65,11 +67,12 @@ export default function HomeScreen() {
 
   const sellerName = setup?.account?.name || session?.user?.name || "Seller";
   const shopName = setup?.profile?.shopName;
+  const isVerified = setup?.sellerVerified ?? false;
 
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + spacing.xs }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
@@ -83,10 +86,11 @@ export default function HomeScreen() {
       <DashboardHeader
         sellerName={sellerName}
         shopName={shopName}
+        isVerified={isVerified}
         unreadCount={unreadCount}
         openMessageCount={openMessageCount}
-        onPressMessages={() => router.push("/(app)/(tabs)/messages")}
         onPressNotifications={() => router.push("/(app)/notifications")}
+        onPressProfile={() => router.push("/(app)/(tabs)/profile")}
       />
 
       <DashboardTwinActions
@@ -100,6 +104,10 @@ export default function HomeScreen() {
       />
 
       <DashboardOperationsHub
+        lowStockCount={summary.lowStockCount}
+        openMessageCount={openMessageCount}
+        onPressInventory={() => router.push("/(app)/(tabs)/inventory")}
+        onPressMessages={() => router.push("/(app)/(tabs)/messages")}
         onAnalytics={() => router.push("/(app)/analytics")}
         onBoosts={() => router.push("/(app)/boosts")}
         onActivity={() => router.push("/(app)/activity")}
@@ -129,10 +137,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#FFFFFF",
   },
   container: {
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
+    paddingBottom: spacing.xxl,
   },
 });

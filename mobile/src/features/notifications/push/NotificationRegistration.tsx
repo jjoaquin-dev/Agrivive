@@ -1,50 +1,60 @@
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
 import { registerNotificationDevice } from "../api/notification-devices";
-import { useUnreadReminder } from "../hooks/useUnreadReminder";
-
-const canUseNotifications =
-  Platform.OS !== "web" &&
-  Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+import { useNotificationWatcher } from "../hooks/useNotificationWatcher";
+import { getNotificationsModule, isPushNotificationSupported } from "../utils/notificationsModule";
 
 export function NotificationRegistration() {
   const router = useRouter();
   const { session } = useAuth();
-  useUnreadReminder();
+  useNotificationWatcher();
 
   useEffect(() => {
-    if (!canUseNotifications) return;
-
     let cancelled = false;
     let removeListener: (() => void) | undefined;
 
-    async function subscribe() {
-      const Notifications = await import("expo-notifications");
-      if (cancelled) return;
+    async function setupLocalNotifications() {
+      const Notifications = await getNotificationsModule();
+      if (cancelled || !Notifications) return;
 
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldPlaySound: false,
-          shouldSetBadge: true,
-          shouldShowBanner: true,
-          shouldShowList: true,
-        }),
-      });
+      try {
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
 
-      const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data as { path?: unknown };
-        if (typeof data.path === "string" && data.path.startsWith("/")) {
-          router.push(data.path as never);
+        if (Platform.OS === "android") {
+          await Notifications.setNotificationChannelAsync("default", {
+            name: "Agrivive Alerts",
+            importance: Notifications.AndroidImportance.HIGH,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#1F4D3A",
+            sound: "default",
+          });
         }
-      });
 
-      removeListener = () => responseSubscription.remove();
+        await Notifications.requestPermissionsAsync();
+
+        const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+          const data = response.notification.request.content.data as { path?: unknown };
+          if (typeof data.path === "string" && data.path.startsWith("/")) {
+            router.push(data.path as never);
+          }
+        });
+
+        removeListener = () => responseSubscription.remove();
+      } catch (err) {
+        console.warn("[Push] Error initializing local notification handlers:", err);
+      }
     }
 
-    void subscribe();
+    void setupLocalNotifications();
 
     return () => {
       cancelled = true;
@@ -53,42 +63,34 @@ export function NotificationRegistration() {
   }, [router]);
 
   useEffect(() => {
-    // Expo Go cannot use Android remote push notifications. A development build
-    // is required for the native Firebase token flow below.
-    if (!session?.user?.id || Platform.OS !== "android" || !canUseNotifications) return;
+    if (!session?.user?.id || Platform.OS !== "android") return;
+    if (!isPushNotificationSupported()) {
+      console.log("[Push] Expo Go: Standalone or Development Build required for remote push tokens.");
+      return;
+    }
+
     let cancelled = false;
 
-    async function register() {
+    async function registerDeviceToken() {
       try {
-        const Notifications = await import("expo-notifications");
-        if (cancelled) return;
-
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "Default",
-          importance: Notifications.AndroidImportance.DEFAULT,
-        });
-        const current = await Notifications.getPermissionsAsync();
-        const permission = current.granted
-          ? current
-          : await Notifications.requestPermissionsAsync();
-        if (!permission.granted || cancelled) return;
+        const Notifications = await getNotificationsModule();
+        if (cancelled || !Notifications) return;
 
         const token = await Notifications.getDevicePushTokenAsync();
         if (cancelled || !token.data) return;
+
         await registerNotificationDevice({
           platform: "android",
           pushToken: String(token.data),
           notificationsEnabled: true,
         });
       } catch (error) {
-        console.warn("Could not register push notifications", error);
+        console.warn("[Push] Remote device registration skipped:", error);
       }
     }
 
-    void register();
-    return () => {
-      cancelled = true;
-    };
+    void registerDeviceToken();
+    return () => { cancelled = true; };
   }, [session?.user?.id]);
 
   return null;

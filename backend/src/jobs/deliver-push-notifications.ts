@@ -34,6 +34,13 @@ function notificationContent(job: OutboxJob) {
       path: "/(app)/notifications",
     };
   }
+  if (payload.orderId) {
+    return {
+      title: "New Reservation Received",
+      body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
+      path: `/(app)/orders/${String(payload.orderId)}`,
+    };
+  }
   return {
     title: "New buyer messages",
     body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,

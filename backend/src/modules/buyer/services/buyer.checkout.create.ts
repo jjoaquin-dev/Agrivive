@@ -9,6 +9,7 @@ import type { CheckoutInput } from "../model/buyer.checkout.create";
 import { getBuyerOrder } from "./buyer.order.get";
 import { createSellerOrder } from "./buyer.order.persist";
 import { reserveOrderItem } from "./buyer.order.reserve";
+import { enqueueOrderNotification } from "../../notifications/services/notifications.outbox.enqueue-order";
 
 function normalizeItems(items: CheckoutInput["items"]) {
   const normalized = [...items].sort((left, right) => left.productId.localeCompare(right.productId));
@@ -88,7 +89,15 @@ export async function createCartCheckout(
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const orderIds: string[] = [];
     for (const [sellerId, sellerItems] of bySeller) {
-      orderIds.push(await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, expiresAt));
+      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, expiresAt);
+      orderIds.push(orderId);
+      const summary = sellerItems.map((i) => `${i.quantity} ${i.scalingType} ${i.productName}`).join(", ");
+      await enqueueOrderNotification(
+        tx,
+        sellerId,
+        orderId,
+        `RSV-${orderId.slice(0, 4).toUpperCase()} · ${summary}`,
+      );
     }
     return { checkoutId: checkout.id, orderIds, replayed: false };
   });

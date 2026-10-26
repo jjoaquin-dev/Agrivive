@@ -6,7 +6,7 @@ import {
   AlertCircle,
   AlertTriangle,
 } from "lucide-react-native";
-import { colors, radii, spacing } from "../theme";
+import { colors, fonts, radii, spacing } from "../theme";
 
 export interface BadgeComponentProps {
   label: string;
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   verified: {
-    backgroundColor: "rgba(31, 77, 58, 0.12)",
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
     borderColor: colors.primary,
   },
@@ -101,14 +101,14 @@ const styles = StyleSheet.create({
     color: colors.primaryPressed,
   },
   neutral: {
-    backgroundColor: "#ECEAE4",
+    backgroundColor: "#F3F4F6",
   },
   neutralText: {
     color: colors.text,
   },
   textBase: {
+    fontFamily: fonts.body.medium,
     fontSize: 12,
-    fontWeight: "600",
   },
   explanationText: {
     fontSize: 12,

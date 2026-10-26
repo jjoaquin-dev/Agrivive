@@ -12,30 +12,42 @@ type ActivityFilter = "all" | "in" | "out";
 
 export default function ActivityScreen() {
   const [adjustments, setAdjustments] = useState<StockAdjustment[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState<ActivityFilter>("all");
 
-  const loadActivity = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+  const loadActivity = useCallback(async (reset = true) => {
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
 
     try {
-      const res = await fetchStockAdjustments({ limit: 50 });
-      setAdjustments(res.items);
+      const res = await fetchStockAdjustments({
+        limit: 20,
+        cursor: reset ? undefined : nextCursor ?? undefined,
+      });
+      setAdjustments((prev) => (reset ? res.items : [...prev, ...res.items]));
+      setNextCursor(res.nextCursor);
     } catch (err: any) {
       console.error("Failed to load activity", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [nextCursor]);
 
   useFocusEffect(
     useCallback(() => {
-      void loadActivity();
-    }, [loadActivity]),
+      void loadActivity(true);
+    }, []),
   );
+
+  const loadMore = useCallback(() => {
+    if (!nextCursor || loadingMore || loading) return;
+    void loadActivity(false);
+  }, [loadActivity, loading, loadingMore, nextCursor]);
 
   const filteredAdjustments = useMemo(() => {
     return adjustments.filter((item) => {
@@ -119,6 +131,9 @@ export default function ActivityScreen() {
         keyExtractor={(section) => section.title}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} /> : null}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

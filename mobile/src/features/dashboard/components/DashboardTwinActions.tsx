@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { Plus, QrCode } from "lucide-react-native";
-import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { QrCode, ChevronRight, ArrowRight, Sprout } from "lucide-react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface DashboardTwinActionsProps {
   onAddProduct: () => void;
@@ -14,24 +14,44 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
 }) => {
   return (
     <View style={styles.container}>
+      {/* Primary Card: Add Surplus Product */}
       <Pressable
         onPress={onAddProduct}
         accessibilityRole="button"
-        accessibilityLabel="Add produce product"
-        style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+        accessibilityLabel="Add surplus vegetable listing"
+        style={({ pressed }) => [styles.primaryCard, pressed && styles.cardPressed]}
       >
-        <Plus size={18} color={colors.white} style={styles.buttonIcon} />
-        <Text style={styles.primaryText}>Add Product</Text>
+        <View style={styles.primaryLeft}>
+          <View style={styles.produceIconWrap}>
+            <Sprout size={20} color="#FFFFFF" strokeWidth={2.2} />
+          </View>
+          <View style={styles.textWrap}>
+            <Text style={styles.primaryTitle}>Add Surplus Product</Text>
+            <Text style={styles.primarySubtitle}>
+              Post bulk or smaller marketable surplus vegetables.
+            </Text>
+          </View>
+        </View>
+        <ChevronRight size={20} color="#FFFFFF" />
       </Pressable>
 
+      {/* Secondary Card: Scan Pickup QR */}
       <Pressable
         onPress={onScanQR}
         accessibilityRole="button"
-        accessibilityLabel="Scan buyer QR code pass"
-        style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+        accessibilityLabel="Scan buyer pickup QR pass"
+        style={({ pressed }) => [styles.secondaryCard, pressed && styles.cardPressed]}
       >
-        <QrCode size={18} color={colors.primary} style={styles.buttonIcon} />
-        <Text style={styles.secondaryText}>Scan QR Pass</Text>
+        <View style={styles.secondaryLeft}>
+          <View style={styles.qrIconWrap}>
+            <QrCode size={18} color="#16A34A" />
+          </View>
+          <Text style={styles.secondaryTitle}>Scan Pickup QR</Text>
+        </View>
+        <View style={styles.secondaryRight}>
+          <Text style={styles.secondaryHint}>Confirm buyer arrival</Text>
+          <ArrowRight size={14} color={colors.textMuted} />
+        </View>
       </Pressable>
     </View>
   );
@@ -39,45 +59,90 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
     gap: spacing.sm,
     marginBottom: spacing.base,
   },
-  primaryButton: {
-    flex: 1,
+  primaryCard: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.primary,
-    height: touchTargets.min,
-    borderRadius: radii.button,
+    justifyContent: "space-between",
+    backgroundColor: "#0F920F",
+    borderRadius: radii.card,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  secondaryButton: {
-    flex: 1,
+  primaryLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    marginRight: spacing.sm,
+    gap: 12,
+  },
+  produceIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    height: touchTargets.min,
-    borderRadius: radii.button,
   },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
+  textWrap: {
+    flex: 1,
   },
-  buttonIcon: {
-    marginRight: 6,
+  primaryTitle: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 15,
+    color: "#FFFFFF",
+    letterSpacing: -0.2,
   },
-  primaryText: {
-    color: colors.white,
-    fontFamily: fonts.body.semiBold,
+  primarySubtitle: {
+    fontFamily: fonts.body.regular,
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.88)",
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  secondaryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+    borderRadius: radii.card,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  secondaryLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  qrIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: "#DCFCE7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryTitle: {
+    fontFamily: fonts.heading.bold,
     fontSize: 14,
+    color: colors.text,
   },
-  secondaryText: {
-    color: colors.primary,
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
+  secondaryRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  secondaryHint: {
+    fontFamily: fonts.body.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  cardPressed: {
+    transform: [{ scale: 0.99 }],
+    opacity: 0.92,
   },
 });

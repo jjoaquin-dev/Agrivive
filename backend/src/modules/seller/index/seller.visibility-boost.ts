@@ -6,6 +6,7 @@ import { readSellerVisibilityBoost } from "../services/seller.visibility-boost.r
 import { listSellerVisibilityBoostHistory } from "../services/seller.visibility-boost.history.list";
 import { listSellerVisibilityBoostPrompts } from "../services/seller.visibility-boost.prompts.list";
 import { readSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.read";
+import { readAllSellerVisibilityBoostPrompts } from "../services/seller.visibility-boost.prompts.read-all";
 import { dismissSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.dismiss";
 import { acceptSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.accept";
 
@@ -32,16 +33,23 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
       return failure(error, status);
     }
   }, { role: ["seller"], params })
-  .get("/boosts", async ({ session, status }) => {
+  .get("/boosts", async ({ session, query, status }) => {
     try {
-      return await listSellerVisibilityBoostHistory(session.userId);
+      return await listSellerVisibilityBoostHistory(session.userId, query?.limit, query?.cursor);
     } catch (error) {
       return failure(error, status);
     }
-  }, { role: ["seller"] })
-  .get("/boost-prompts", async ({ session, status }) => {
+  }, { role: ["seller"], query: t.Optional(t.Object({ limit: t.Optional(t.Integer({ minimum: 1, maximum: 100 })), cursor: t.Optional(t.String()) })) })
+  .get("/boost-prompts", async ({ session, query, status }) => {
     try {
-      return await listSellerVisibilityBoostPrompts(session.userId);
+      return await listSellerVisibilityBoostPrompts(session.userId, query?.limit, query?.cursor);
+    } catch (error) {
+      return failure(error, status);
+    }
+  }, { role: ["seller"], query: t.Optional(t.Object({ limit: t.Optional(t.Integer({ minimum: 1, maximum: 100 })), cursor: t.Optional(t.String()) })) })
+  .post("/boost-prompts/read-all", async ({ session, status }) => {
+    try {
+      return await readAllSellerVisibilityBoostPrompts(session.userId);
     } catch (error) {
       return failure(error, status);
     }

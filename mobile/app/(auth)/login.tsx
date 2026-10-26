@@ -6,12 +6,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { authClient } from "../../src/api/client";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, spacing } from "../../src/theme";
-import { Mail, Lock, LogIn } from "lucide-react-native";
+import { Mail, Lock } from "lucide-react-native";
 import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
@@ -73,7 +74,7 @@ export default function LoginScreen() {
               email: cleanEmail,
               type: "email-verification",
             });
-            sent = !sendRes?.error;
+            if (!sendRes?.error) sent = true;
           } catch (otpError) {
             console.warn("Could not send verification OTP after login", otpError);
           }
@@ -95,7 +96,6 @@ export default function LoginScreen() {
         return;
       }
 
-      // Check if user is redirected for two-factor authentication
       if ((response.data as any)?.twoFactorRedirect) {
         router.push({
           pathname: "/(auth)/two-factor",
@@ -104,10 +104,7 @@ export default function LoginScreen() {
         return;
       }
 
-      // Mark onboarding as completed so unauthenticated checks don't loop back to it
       await completeOnboarding();
-
-      // Sync server state
       const setup = await refreshSetup();
 
       if (setup) {
@@ -119,9 +116,7 @@ export default function LoginScreen() {
               email: cleanEmail,
               type: "email-verification",
             });
-            if (!sendRes?.error) {
-              sent = true;
-            }
+            if (!sendRes?.error) sent = true;
           } catch (otpErr) {
             console.warn("Could not automatically send verification OTP on login", otpErr);
           }
@@ -167,11 +162,12 @@ export default function LoginScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.title}>Welcome Back!</Text>
           <Text style={styles.subtitle}>
-            Sign in to manage your surplus produce and reservations.
+            {"Enter Your Credentials To Access Your\nAccount"}
           </Text>
         </View>
 
@@ -183,14 +179,17 @@ export default function LoginScreen() {
 
         <View style={styles.form}>
           <InputComponent
-            label="Email Address"
-            placeholder="seller@example.com"
+            label="Email"
+            placeholder="Email"
+            placeholderTextColor="#9CA3AF"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             value={email}
-            leftIcon={<Mail size={18} color={colors.textMuted} />}
+            leftIcon={<Mail size={20} color="#4B5563" strokeWidth={1.5} />}
             error={errors.email}
+            labelStyle={styles.inputLabel}
+            inputWrapperStyle={styles.inputRounded}
             onChangeText={(text) => {
               setEmail(text);
               if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
@@ -200,12 +199,15 @@ export default function LoginScreen() {
 
           <InputComponent
             label="Password"
-            placeholder="Enter your password"
+            placeholder="Password"
+            placeholderTextColor="#9CA3AF"
             isPassword
             autoCapitalize="none"
             value={password}
-            leftIcon={<Lock size={18} color={colors.textMuted} />}
+            leftIcon={<Lock size={20} color="#4B5563" strokeWidth={1.5} />}
             error={errors.password}
+            labelStyle={styles.inputLabel}
+            inputWrapperStyle={styles.inputRounded}
             onChangeText={(text) => {
               setPassword(text);
               if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
@@ -214,43 +216,55 @@ export default function LoginScreen() {
           />
 
           <View style={styles.forgotPasswordRow}>
-            <ButtonComponent
-              title="Restore account"
-              variant="ghost"
+            <Pressable
               onPress={handleForgotPassword}
-              style={styles.forgotButton}
-              textStyle={styles.forgotText}
-            />
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Forget Password"
+            >
+              <Text style={styles.forgotText}>Forget Password?</Text>
+            </Pressable>
           </View>
 
           <ButtonComponent
-            title="Sign In"
-            icon={<LogIn size={18} color={colors.white} />}
+            title="Login"
             onPress={handleLogin}
             loading={loading}
             style={styles.submitButton}
+            textStyle={styles.submitButtonText}
           />
 
-          <ButtonComponent
-            title="Use email code instead"
-            variant="ghost"
+          <View style={styles.footerRow}>
+            <Text style={styles.footerPrompt}>Don’t Have An Account? </Text>
+            <Pressable
+              onPress={() => router.push("/(auth)/register")}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Sign up"
+            >
+              <Text style={styles.signUpText}>Sign up</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.socialRow}>
+            <GoogleSignInButton title="Log In with Google" />
+          </View>
+
+          <Pressable
             onPress={() => router.push("/(auth)/email-otp-login")}
-            style={styles.emailOtpButton}
-            textStyle={styles.emailOtpButtonText}
-          />
-
-          <GoogleSignInButton />
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerPrompt}>Don't have an account? </Text>
-          <ButtonComponent
-            title="Sign Up"
-            variant="ghost"
-            onPress={() => router.push("/(auth)/register")}
-            style={styles.inlineButton}
-            textStyle={styles.inlineButtonText}
-          />
+            style={styles.emailOtpLink}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with Email Code"
+          >
+            <Text style={styles.emailOtpLinkText}>Sign in with Email Code</Text>
+          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -260,35 +274,39 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#FFFFFF",
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
+    paddingHorizontal: 24,
+    paddingTop: 50,
     paddingBottom: spacing.xxl,
     justifyContent: "center",
   },
   header: {
-    marginBottom: spacing.xl,
+    alignItems: "center",
+    marginBottom: 40,
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
-    color: colors.text,
-    marginBottom: spacing.xs,
+    fontSize: 26,
+    color: "#1E1E1E",
+    marginBottom: 8,
+    textAlign: "center",
   },
   subtitle: {
     fontFamily: fonts.body.regular,
-    fontSize: 15,
-    color: colors.textMuted,
-    lineHeight: 22,
+    fontSize: 14,
+    color: "#4B5563",
+    lineHeight: 20,
+    textAlign: "center",
+    maxWidth: 300,
   },
   errorBox: {
-    backgroundColor: "rgba(184, 84, 80, 0.1)",
+    backgroundColor: "rgba(184, 84, 80, 0.08)",
     borderWidth: 1,
     borderColor: colors.error,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.base,
   },
@@ -296,55 +314,96 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 13,
     fontWeight: "500",
+    textAlign: "center",
   },
   form: {
-    marginBottom: spacing.xl,
+    width: "100%",
+  },
+  inputLabel: {
+    color: "#4B5563",
+    fontSize: 14,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  inputRounded: {
+    borderRadius: 12,
+    borderColor: "#E5E7EB",
+    borderWidth: 1,
+    minHeight: 50,
+    backgroundColor: "#FFFFFF",
   },
   forgotPasswordRow: {
     alignItems: "flex-end",
-    marginBottom: spacing.base,
-    marginTop: -spacing.xs,
-  },
-  forgotButton: {
-    minHeight: 32,
-    paddingHorizontal: 0,
-    paddingVertical: 0,
+    marginTop: 6,
+    marginBottom: 28,
   },
   forgotText: {
+    fontFamily: fonts.body.semiBold,
     fontSize: 13,
-    color: colors.primary,
-    fontWeight: "500",
+    color: "#11A94D",
+    fontWeight: "600",
   },
   submitButton: {
-    marginTop: spacing.xs,
+    backgroundColor: "#0F920F",
+    borderRadius: 999,
+    minHeight: 50,
+    shadowColor: "#0F920F",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  emailOtpButton: {
-    minHeight: 44,
-    marginTop: spacing.sm,
-  },
-  emailOtpButtonText: {
-    color: colors.primary,
-    fontSize: 14,
+  submitButtonText: {
+    fontSize: 16,
     fontWeight: "700",
+    color: "#FFFFFF",
   },
-  footer: {
+  footerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: spacing.base,
+    marginTop: 36,
   },
   footerPrompt: {
     fontSize: 14,
-    color: colors.textMuted,
+    color: "#374151",
+    fontFamily: fonts.body.regular,
   },
-  inlineButton: {
-    minHeight: 36,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 0,
-  },
-  inlineButtonText: {
+  signUpText: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.primary,
+    color: "#11A94D",
+    fontFamily: fonts.body.semiBold,
+  },
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 36,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E5E7EB",
+  },
+  dividerText: {
+    color: "#6B7280",
+    fontSize: 13,
+    fontWeight: "500",
+    paddingHorizontal: 16,
+  },
+  socialRow: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emailOtpLink: {
+    alignItems: "center",
+    marginTop: 20,
+    paddingVertical: 8,
+  },
+  emailOtpLinkText: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500",
   },
 });

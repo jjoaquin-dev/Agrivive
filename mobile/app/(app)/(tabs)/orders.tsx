@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
+import { PaginationControl } from "../../../src/components/PaginationControl";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
 import { OrderCard } from "../../../src/features/orders/components/OrderCard";
 import { useSellerOrders } from "../../../src/features/orders/hooks/useSellerOrders";
@@ -19,6 +20,15 @@ const filters: { id: SellerOrderFilter; label: string }[] = [
 export default function OrdersScreen() {
   const router = useRouter();
   const { filter, setFilter, orders, loading, refreshing, loadingMore, error, refresh, loadMore } = useSellerOrders();
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => { setCurrentPage(1); }, [filter]);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return orders.slice(start, start + pageSize);
+  }, [orders, currentPage, pageSize]);
 
   return (
     <View style={styles.screen}>
@@ -38,7 +48,7 @@ export default function OrdersScreen() {
       </View>
 
       <FlatList
-        data={orders}
+        data={paginatedOrders}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -77,7 +87,22 @@ export default function OrdersScreen() {
         )}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loadingMore ? <ActivityIndicator color={colors.primary} /> : null}
+        ListFooterComponent={
+          <View>
+            {loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 8 }} /> : null}
+            {orders.length > 0 ? (
+              <PaginationControl
+                currentPage={currentPage}
+                totalItems={orders.length}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20]}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="orders"
+              />
+            ) : null}
+          </View>
+        }
         ListEmptyComponent={
           loading ? (
             <View style={styles.empty}>

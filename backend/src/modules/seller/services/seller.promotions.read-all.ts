@@ -10,7 +10,6 @@ export async function readAllSellerPromotions(sellerId: string) {
       .set({ readAt: new Date(), updatedAt: new Date() })
       .where(and(
         eq(seller_promotion_jobs.sellerId, sellerId),
-        eq(seller_promotion_jobs.status, "ready"),
         isNull(seller_promotion_jobs.readAt),
       )).returning({ id: seller_promotion_jobs.id });
     return { updatedCount: rows.length };
