@@ -20,7 +20,8 @@ Agrivive/05 Enhancements/
   ├── 02 Marketplace Visibility and AHP-TOPSIS Refinements.md
   ├── 03 Order Lifecycle and Smart Reservation Reconciliation.md
   ├── 04 Seller Operations and Multi-Channel Promotion.md
-  └── 05 Mobile and Backend Flow Enhancements.md
+  ├── 05 Mobile and Backend Flow Enhancements.md
+  └── 06 Web Landing Page UI-UX Enhancements.md
 ```
 
 ---
@@ -48,6 +49,13 @@ Agrivive/05 Enhancements/
 * **Focus:**
   * Partial pickup handling and immediate surplus replenishment (`[[Open Decisions#D-05]]`).
   * Granular 24-hour expiration countdowns with buyer re-engagement alerts (`[[Open Decisions#D-04]]`).
+
+### 4. Web Landing Page UI/UX Enhancements
+* **Document Note:** `[[06 Web Landing Page UI-UX Enhancements]]`
+* **Focus:**
+  * Center-aligned hero layout with 3D produce basket centerpiece and floating value cards.
+  * Instant grocery search affordances and category quick-filter pills.
+  * Davao City local public market orientation and surplus waste reduction clarity.
   * Offline-capable digital pickup pass with signed QR verification.
 
 ### 4. Seller Operations & Multi-Channel Outreach
@@ -64,6 +72,15 @@ Agrivive/05 Enhancements/
   * Multi-category evidence verification state machine (misleading produce info, QR misuse, abusive chat).
   * Violation score half-life and time-decay algorithms to support seller rehabilitation.
   * Accessible in-app Trust Health Status badges adhering to Jakob Nielsen's Visibility of System Status.
+
+### 6. Web Marketplace UI/UX Enhancements
+* **Document Note:** `[[2026-10-26 Marketplace Visual Refinements and Spacing Harmonization]]`
+* **Focus:**
+  * Elimination of compounding section margins and standardization to 8-point vertical rhythm (`space-y-8 lg:space-y-10`).
+  * Nearby seller map de-emphasis: height reduction from 480px to balanced 310px with inline `Expand/Compact` toggle and full filter sidebar integration.
+  * Product grid equal-height row alignment: reserved 2-line title height (`min-h-[2.5rem]`) and uniform `h-10` Add to Cart action bar.
+  * Responsive mobile filter drawer with Base UI `Sheet` and standardized `h-10` controls.
+  * Preserved 100% of existing AgriVive branding, green/cream palette, illustrations, and backend integrations.
 
 ---
 

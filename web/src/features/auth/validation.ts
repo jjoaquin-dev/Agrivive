@@ -15,9 +15,15 @@ export function validateEmail(email: string): string | undefined {
   return undefined;
 }
 
-export function validatePassword(password: string): string | undefined {
+export function validatePassword(password: string, isSignUp = false): string | undefined {
   if (!password) return "Enter your password.";
   if (password.length < 8) return "Use at least 8 characters.";
+  if (isSignUp) {
+    if (!/[A-Z]/.test(password)) return "Include at least 1 uppercase letter.";
+    if (!/[a-z]/.test(password)) return "Include at least 1 lowercase letter.";
+    if (!/[0-9]/.test(password)) return "Include at least 1 number.";
+    if (!/[^A-Za-z0-9]/.test(password)) return "Include at least 1 special character.";
+  }
   return undefined;
 }
 
@@ -30,7 +36,7 @@ export function validateSignUp(input: {
   const errors: AuthErrors = {};
   if (!input.name.trim()) errors.name = "Enter your name.";
   errors.email = validateEmail(input.email);
-  errors.password = validatePassword(input.password);
+  errors.password = validatePassword(input.password, true);
   if (!input.confirmPassword) errors.confirmPassword = "Confirm your password.";
   else if (input.password !== input.confirmPassword) errors.confirmPassword = "Passwords do not match.";
   return Object.fromEntries(Object.entries(errors).filter(([, value]) => value)) as AuthErrors;

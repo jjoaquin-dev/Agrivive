@@ -20,7 +20,14 @@ function newClientMessageId() {
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-export function useConversationThread(contextType: ConversationContext, contextId: string, refreshKey = 0, conversationId?: string) {
+export function useConversationThread(
+  contextType: ConversationContext,
+  contextId: string,
+  refreshKey = 0,
+  conversationId?: string,
+  productId?: string | null,
+  onConversationCreated?: (conversation: Conversation) => void,
+) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +93,10 @@ export function useConversationThread(contextType: ConversationContext, contextI
         // Ignore malformed socket frames and recover through the REST history request.
       }
     };
-    socket.onerror = () => setError("Live messages are unavailable. You can still refresh the conversation.");
+    socket.onerror = () => {
+      // Avoid surfacing an alarming error modal if live websocket temporarily drops; messages still work over REST.
+      console.warn("Live websocket disconnected; falling back to REST messaging.");
+    };
     return () => {
       socket.close();
       socketRef.current = null;
@@ -113,8 +123,9 @@ export function useConversationThread(contextType: ConversationContext, contextI
         });
         setConversation(result.conversation);
         setMessages([result.message]);
+        onConversationCreated?.(result.conversation);
       } else {
-        const message = await sendConversationMessage(conversation.id, body, newClientMessageId());
+        const message = await sendConversationMessage(conversation.id, body, newClientMessageId(), productId ?? undefined);
         setMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
       }
       setRequiresAuth(false);
@@ -126,7 +137,7 @@ export function useConversationThread(contextType: ConversationContext, contextI
     } finally {
       setSending(false);
     }
-  }, [contextId, contextType, conversation, sending]);
+  }, [contextId, contextType, conversation, sending, productId, onConversationCreated]);
 
   return useMemo(() => ({ conversation, messages, loading, sending, error, requiresAuth, send, reload: load }), [
     conversation, messages, loading, sending, error, requiresAuth, send, load,

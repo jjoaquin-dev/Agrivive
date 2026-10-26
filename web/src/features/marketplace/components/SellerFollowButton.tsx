@@ -58,14 +58,21 @@ export function SellerFollowButton({ sellerId }: { sellerId: string }) {
   }
 
   return (
-    <div className="mt-4">
-      <Button type="button" variant={following ? "outline" : "default"} onClick={() => void toggle()}
-        disabled={sessionPending || loading || saving} aria-pressed={following}
-        className="min-h-12 min-w-36 gap-2 rounded-xl">
-        {following ? <Check className="size-4" aria-hidden="true" /> : <BellPlus className="size-4" aria-hidden="true" />}
+    <div className="inline-flex">
+      <Button
+        type="button"
+        onClick={() => void toggle()}
+        disabled={sessionPending || loading || saving}
+        aria-pressed={following}
+        className={following
+          ? "min-h-9 h-9 px-4 gap-1.5 rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-800 text-xs font-semibold shadow-2xs hover:bg-neutral-200 cursor-pointer"
+          : "min-h-9 h-9 px-4 gap-1.5 rounded-xl bg-[#16A34A] hover:bg-[#137A38] text-white text-xs font-semibold shadow-2xs cursor-pointer"
+        }
+      >
+        {following ? <Check className="size-3.5" aria-hidden="true" /> : <BellPlus className="size-3.5" aria-hidden="true" />}
         {saving ? "Saving…" : loading ? "Loading…" : following ? "Following" : "Follow seller"}
       </Button>
-      {error ? <p role="alert" className="mt-2 text-sm text-destructive">{error}</p> : null}
+      {error ? <p role="alert" className="mt-1 text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

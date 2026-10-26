@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ApiError, isAbortError } from "@/src/lib/api";
-import { PageContainer } from "@/src/components/PageContainer";
 import { authClient } from "@/src/lib/auth-client";
 import { getMarketplaceProduct, getMarketplaceSeller } from "../../marketplace/api/marketplace";
 import { listConversations, type Conversation } from "../api";
@@ -13,10 +14,7 @@ import { ConversationThread } from "./ConversationThread";
 import { ConversationDetailsPanel } from "./ConversationDetailsPanel";
 import { conversationContextId, launchContextFromConversation, type ConversationLaunchContext } from "../types";
 
-function loginReturnPath() {
-  if (typeof window === "undefined") return "/messages";
-  return `${window.location.pathname}${window.location.search}`;
-}
+const loginReturnPath = () => (typeof window === "undefined" ? "/messages" : `${window.location.pathname}${window.location.search}`);
 
 export function BuyerConversations() {
   const router = useRouter();
@@ -71,27 +69,16 @@ export function BuyerConversations() {
     setLaunchLoading(true);
     setError("");
     const request = requestedProductId
-      ? getMarketplaceProduct(requestedProductId, controller.signal).then((product) => ({
-        contextType: "product" as const,
-        contextId: product.id,
-        sellerId: product.seller.id,
-        sellerName: product.seller.name,
-        sellerShopName: product.seller.shopName,
-        sellerImage: product.seller.image ?? null,
-        productId: product.id,
-        productName: product.productName,
-        productImageUrl: product.imageUrl,
+      ? getMarketplaceProduct(requestedProductId, controller.signal).then((p) => ({
+        contextType: "product" as const, contextId: p.id, sellerId: p.seller.id,
+        sellerName: p.seller.name, sellerShopName: p.seller.shopName, sellerImage: p.seller.image ?? null,
+        productId: p.id, productName: p.productName, productImageUrl: p.imageUrl,
+        productPrice: p.productPrice, scalingType: p.scalingType, productQty: p.productQty,
       }))
-      : getMarketplaceSeller(requestedSellerId!, controller.signal).then((seller) => ({
-        contextType: "seller" as const,
-        contextId: seller.id,
-        sellerId: seller.id,
-        sellerName: seller.shopName,
-        sellerShopName: seller.shopName,
-        sellerImage: seller.image,
-        productId: null,
-        productName: null,
-        productImageUrl: null,
+      : getMarketplaceSeller(requestedSellerId!, controller.signal).then((s) => ({
+        contextType: "seller" as const, contextId: s.id, sellerId: s.id,
+        sellerName: s.shopName, sellerShopName: s.shopName, sellerImage: s.image,
+        productId: null, productName: null, productImageUrl: null,
       }));
 
     void request
@@ -104,46 +91,69 @@ export function BuyerConversations() {
   }, [requestedProductId, requestedSellerId]);
 
   const selectedConversation = items.find((item) => item.id === requestedConversationId) ?? null;
-  const launchMatch = launchContext
-    ? items.find((item) => item.contextType === launchContext.contextType && conversationContextId(item) === launchContext.contextId) ?? null
-    : null;
-  const activeConversation = selectedConversation ?? launchMatch;
-  const activeContext = activeConversation ? launchContextFromConversation(activeConversation) : launchContext;
+  const productMatch = requestedProductId ? items.find((i) => i.productId === requestedProductId) ?? null : null;
+  const sellerMatch = launchContext ? items.find((i) => i.sellerId === launchContext.sellerId) ?? null : null;
+  const matched = selectedConversation ?? productMatch ?? sellerMatch;
+  const activeConversation = matched ?? (launchContext ? null : items[0] ?? null);
+  const activeContext = launchContext
+    ? {
+        ...(activeConversation ? launchContextFromConversation(activeConversation) : {}),
+        ...launchContext,
+        productId: launchContext.productId,
+        productName: launchContext.productName,
+        productImageUrl: launchContext.productImageUrl,
+        productPrice: launchContext.productPrice,
+        scalingType: launchContext.scalingType,
+        productQty: launchContext.productQty,
+      }
+    : activeConversation ? launchContextFromConversation(activeConversation) : null;
   const hasSelection = Boolean(activeContext && !launchLoading);
 
-  function handleSelect(item: Conversation) {
-    router.replace(`/messages?conversationId=${encodeURIComponent(item.id)}`, { scroll: false });
-  }
-
-  function handleBack() {
-    router.replace("/messages", { scroll: false });
-  }
-
-  function handleConversationCreated(conversation: Conversation) {
-    router.replace(`/messages?conversationId=${encodeURIComponent(conversation.id)}`, { scroll: false });
+  const handleSelect = (item: Conversation) => router.replace(`/messages?conversationId=${encodeURIComponent(item.id)}`, { scroll: false });
+  const handleBack = () => router.replace("/messages", { scroll: false });
+  const handleConversationCreated = (conv: Conversation) => {
+    const params = new URLSearchParams();
+    params.set("conversationId", conv.id);
+    if (requestedProductId) params.set("productId", requestedProductId);
+    router.replace(`/messages?${params.toString()}`, { scroll: false });
     void load();
-  }
+  };
 
   return (
-    <PageContainer className="py-6 sm:py-8">
-      <div className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Communication</p>
-        <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Messages</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Ask a seller about fresh produce, availability, the latest picture, or pickup details.</p>
-      </div>
+    <main className="min-h-[calc(100vh-70px)] bg-[#FDFDFD] p-3 sm:p-4 lg:p-5">
+      <div className="mx-auto max-w-[1720px]">
+        {/* Navigation Link in Upper Left */}
+        <div className="mb-6">
+          <Link
+            href={activeContext?.productId ? `/marketplace/${activeContext.productId}` : "/marketplace"}
+            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
+            <span>{activeContext?.productId ? "Back to Listing" : "Back to Marketplace"}</span>
+          </Link>
+        </div>
 
-      {error ? <Alert variant="destructive" className="mb-5"><AlertTitle>Messages could not load</AlertTitle><AlertDescription>{error}</AlertDescription></Alert> : null}
+        {error ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Messages could not load</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      <div className="overflow-hidden rounded-[24px] border border-border/80 bg-white shadow-[0_18px_45px_rgba(31,77,58,0.10)]">
-        <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_300px]">
-          <ConversationList
-            items={items}
-            selectedId={activeConversation?.id ?? null}
-            loading={loading}
-            onSelect={handleSelect}
-            className={hasSelection ? "hidden lg:flex" : "flex"}
-          />
-          <div className={hasSelection ? "flex min-w-0" : "hidden lg:flex min-w-0"}>
+        <div className="flex h-[calc(100vh-140px)] min-h-[640px] gap-4">
+          {/* Left Column: Messages List Card */}
+          <div className={`w-full lg:w-[320px] shrink-0 ${hasSelection ? "hidden lg:flex" : "flex"}`}>
+            <ConversationList
+              items={items}
+              selectedId={activeConversation?.id ?? null}
+              loading={loading}
+              onSelect={handleSelect}
+              className="w-full"
+            />
+          </div>
+
+          {/* Center Column: Conversation Thread Card */}
+          <div className={`flex min-w-0 flex-1 ${hasSelection ? "flex" : "hidden lg:flex"}`}>
             {activeContext ? (
               <ConversationThread
                 context={activeContext}
@@ -152,20 +162,26 @@ export function BuyerConversations() {
                 onConversationCreated={handleConversationCreated}
               />
             ) : (
-              <div className="flex min-h-[680px] flex-1 flex-col items-center justify-center bg-[#fbfaf7] px-8 text-center">
-                <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary" aria-hidden="true">✦</span>
-                <h2 className="mt-4 font-heading text-xl font-bold">Choose a conversation</h2>
-                <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">Select a seller message on the left, or open a product or seller page to start a new conversation.</p>
+              <div className="flex flex-1 flex-col items-center justify-center rounded-[26px] border border-[#E9EBE2] bg-white p-8 text-center shadow-xs">
+                <span className="flex size-14 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#386600]" aria-hidden="true">
+                  ✦
+                </span>
+                <h2 className="mt-4 font-heading text-xl font-bold text-neutral-800">Choose a conversation</h2>
+                <p className="mt-2 max-w-sm text-sm text-[#7A8875]">
+                  Select a message on the left or inquire on a marketplace produce to start chatting.
+                </p>
               </div>
             )}
           </div>
+
+          {/* Right Column: Chat Details & Vendor Info Card */}
           {activeContext ? (
-            <div className="hidden xl:flex">
+            <div className="hidden xl:flex w-[330px] shrink-0">
               <ConversationDetailsPanel context={activeContext} />
             </div>
           ) : null}
         </div>
       </div>
-    </PageContainer>
+    </main>
   );
 }

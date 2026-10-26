@@ -59,6 +59,9 @@ export async function listConversations(userId: string, limit = 50, cursor?: str
         limit 1
       )
     )`,
+    productPrice: sellers_product.productPrice,
+    scalingType: sellers_product.scalingType,
+    productQty: sellers_product.productQty,
     sellerName: user.name,
     sellerImage: user.image,
     sellerShopName: sellers_profile.shopName,

@@ -6,26 +6,27 @@
   :root {
     color-scheme: light;
     /* Keep production builds offline-safe; these names use local fonts when available and fall back to system UI fonts. */
-    --font-heading: "Manrope";
-    --font-body: "Inter";
+    --font-heading: "Poppins";
+    --font-subheading: "Lato";
+    --font-body: "Lato";
     --background: 40 28% 95.5%;
     --foreground: 150 6% 14%;
     --card: 0 0% 100%;
     --card-foreground: 150 6% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 150 6% 14%;
-    --primary: 153 42% 21%;
+    --primary: 87 100% 24.5%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 92 18% 93%;
-    --secondary-foreground: 153 42% 21%;
+    --secondary: 72 65% 42%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 40 24% 92.5%;
     --muted-foreground: 115 4% 45%;
-    --accent: 92 18% 93%;
-    --accent-foreground: 153 42% 21%;
+    --accent: 34 99% 61%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 3 39% 53%;
     --border: 40 17% 86%;
     --input: 40 17% 80%;
-    --ring: 105 16% 70%;
+    --ring: 87 100% 25%;
     --radius: 0.875rem;
   }
 
@@ -35,12 +36,34 @@
 
   body {
     @apply bg-background font-body text-base text-foreground antialiased;
-    font-family: var(--font-body), Inter, system-ui, sans-serif;
+    font-family: var(--font-body), "Lato", system-ui, sans-serif;
     text-rendering: optimizeLegibility;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading), Manrope, system-ui, sans-serif;
+  h1 {
+    font-family: var(--font-heading), "Poppins", system-ui, sans-serif;
+    font-weight: 700;
+  }
+
+  h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), "Poppins", system-ui, sans-serif;
+    font-weight: 600;
+  }
+
+  .font-subheading {
+    font-family: var(--font-subheading), "Lato", system-ui, sans-serif;
+  }
+
+  /* Cap header font weights strictly between 500 and 700 (never 800, 900, or 1000) */
+  .font-heading.font-black,
+  .font-heading.font-extrabold,
+  h1.font-black, h1.font-extrabold,
+  h2.font-black, h2.font-extrabold,
+  h3.font-black, h3.font-extrabold,
+  h4.font-black, h4.font-extrabold,
+  h5.font-black, h5.font-extrabold,
+  h6.font-black, h6.font-extrabold {
+    font-weight: 700 !important;
   }
 
   * {
@@ -48,11 +71,17 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-agrivive-sage ring-offset-2 ring-offset-agrivive-background;
+    @apply outline-none ring-2 ring-agrivive-primary ring-offset-2 ring-offset-agrivive-background;
   }
 
   ::selection {
-    @apply bg-agrivive-sage/50 text-agrivive-primary;
+    @apply bg-agrivive-cream/70 text-agrivive-primary;
+  }
+
+  /* Hide browser default password reveal and clear buttons in Edge/IE */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
   }
 }
 
@@ -71,11 +100,28 @@
   z-index: 20 !important;
 }
 
+.leaflet-top.leaflet-left {
+  top: 12px !important;
+  left: 12px !important;
+}
+
+.leaflet-top.leaflet-right {
+  top: 12px !important;
+  right: 12px !important;
+}
+
+.leaflet-control-zoom {
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  border: 1px solid #e5e2da !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
 .leaflet-popup-content-wrapper {
   background: #ffffff !important;
   color: #212523 !important;
-  border-radius: 18px !important;
-  padding: 4px !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
   border: 1px solid #e5e2da !important;
   box-shadow: 0 16px 36px -6px rgba(31, 77, 58, 0.14), 0 4px 12px rgba(0, 0, 0, 0.04) !important;
 }
@@ -87,9 +133,14 @@
 }
 
 .leaflet-popup-content {
-  margin: 12px 14px !important;
+  margin: 0 !important;
   line-height: 1.4 !important;
-  font-family: var(--font-body), Inter, system-ui, sans-serif !important;
+  font-family: var(--font-body), "Lato", system-ui, sans-serif !important;
+}
+
+.leaflet-popup-content p,
+.leaflet-popup-content h3 {
+  margin: 0 !important;
 }
 
 .leaflet-popup-content a {
@@ -98,8 +149,8 @@
 }
 
 .leaflet-popup-close-button {
-  top: 10px !important;
-  right: 10px !important;
+  top: 12px !important;
+  right: 12px !important;
   width: 28px !important;
   height: 28px !important;
   border-radius: 9999px !important;
@@ -112,5 +163,17 @@
 
 .leaflet-popup-close-button:hover {
   background: #edf2eb !important;
-  color: #1f4d3a !important;
+  color: #457d00 !important;
 }
+
+@layer utilities {
+  /* Hide scrollbars across browsers while keeping scrollable capability */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+

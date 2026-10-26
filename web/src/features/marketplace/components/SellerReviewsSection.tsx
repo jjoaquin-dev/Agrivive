@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import { MessageSquare, Star, Store } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isAbortError } from "@/src/lib/api";
 import { RatingStars } from "@/src/components/RatingStars";
@@ -39,11 +36,14 @@ export function SellerReviewsSection({ sellerId, shopName }: { sellerId: string;
 
   if (loading) {
     return (
-      <section className="mt-10">
-        <h2 className="font-heading text-xl font-bold">Seller ratings & reviews</h2>
-        <div className="mt-4 grid gap-6 md:grid-cols-[280px_1fr]">
-          <Skeleton className="h-44 rounded-xl" />
-          <Skeleton className="h-44 rounded-xl" />
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Store className="size-5 text-[#457D00]" />
+          <h2 className="font-heading text-[18px] font-semibold text-[#14231A]">Seller ratings & reviews</h2>
+        </div>
+        <div className="grid gap-6 md:grid-cols-[280px_1fr]">
+          <Skeleton className="h-44 rounded-[16px] border border-[#E8E8E8] bg-white" />
+          <Skeleton className="h-44 rounded-[16px] border border-[#E8E8E8] bg-white" />
         </div>
       </section>
     );
@@ -52,63 +52,67 @@ export function SellerReviewsSection({ sellerId, shopName }: { sellerId: string;
   const hasReviews = data && data.count > 0;
 
   return (
-    <section className="mt-12 border-t pt-8">
-      <div className="flex items-center gap-2">
-        <Store className="size-5 text-primary" />
-        <h2 className="font-heading text-xl font-bold">Seller ratings & reviews</h2>
-        <Badge variant="outline" className="text-xs font-normal">{shopName}</Badge>
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Store className="size-5 text-[#457D00]" />
+        <h2 className="font-heading text-[18px] font-semibold text-[#14231A]">Seller ratings & reviews</h2>
+        <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2.5 py-0.5 text-[11px] font-semibold text-[#386600]">
+          {shopName}
+        </span>
       </div>
 
       {error ? (
-        <Alert variant="destructive" className="mt-5">
+        <Alert variant="destructive" className="rounded-xl">
           <AlertDescription>{error}</AlertDescription>
-          <Button type="button" variant="outline" className="mt-3" onClick={() => setRetryKey((current) => current + 1)}>Try again</Button>
+          <Button type="button" variant="outline" className="mt-3 rounded-xl border-[#E8E8E8]" onClick={() => setRetryKey((c) => c + 1)}>
+            Try again
+          </Button>
         </Alert>
       ) : null}
 
       {!error && !hasReviews ? (
-        <Card className="mt-5">
-          <Empty className="py-8">
-            <EmptyHeader>
-              <EmptyMedia variant="icon"><Star className="size-5" /></EmptyMedia>
-              <EmptyTitle>No seller reviews yet</EmptyTitle>
-              <EmptyDescription>
-                Reviews are posted by verified buyers after completing an in-person pickup.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </Card>
+        <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-6 text-center shadow-sm">
+          <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-[#F0F7EB] text-[#457D00]">
+            <Star className="size-5" />
+          </div>
+          <p className="mt-3 text-[14px] font-semibold text-[#14231A]">No seller reviews yet</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Reviews are posted by verified buyers after completing an in-person pickup.
+          </p>
+        </div>
       ) : !error && data ? (
-        <div className="mt-6 grid gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
           <ReviewSummaryCard average={data.average} count={data.count} breakdown={data.breakdown} singular="review" />
           <div className="space-y-4">
             {data.reviews.map((item) => (
-              <Card key={item.id} className="p-4">
+              <div key={item.id} className="rounded-[16px] border border-[#E8E8E8] bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{item.buyerName}</span>
-                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-normal">Verified pickup</Badge>
+                    <span className="text-[14px] font-semibold text-foreground">{item.buyerName}</span>
+                    <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2 py-0.5 text-[10px] font-semibold text-[#386600]">
+                      Verified pickup
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[12px] text-muted-foreground">
                     {new Date(item.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                   </span>
                 </div>
-                <div className="mt-1.5">
+                <div className="mt-2">
                   <RatingStars rating={item.rating} />
                 </div>
                 {item.review ? (
-                  <p className="mt-2 text-sm text-foreground/90 leading-relaxed">{item.review}</p>
+                  <p className="mt-2 text-[14px] leading-relaxed text-foreground/90">{item.review}</p>
                 ) : null}
                 {item.sellerResponse ? (
-                  <div className="mt-3 rounded-lg bg-muted/50 p-3 text-xs">
-                    <div className="flex items-center gap-1.5 font-semibold text-primary">
+                  <div className="mt-3 rounded-xl bg-[#FAFAFA] border border-[#E8E8E8] p-3 text-[12px]">
+                    <div className="flex items-center gap-1.5 font-semibold text-[#457D00]">
                       <MessageSquare className="size-3" />
                       <span>Seller response</span>
                     </div>
-                    <p className="mt-1 text-muted-foreground leading-relaxed">{item.sellerResponse}</p>
+                    <p className="mt-1 leading-relaxed text-muted-foreground">{item.sellerResponse}</p>
                   </div>
                 ) : null}
-              </Card>
+              </div>
             ))}
           </div>
         </div>

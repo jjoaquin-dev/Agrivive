@@ -113,9 +113,15 @@ export function SellerStorefront() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
-        <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:underline">
-          <ArrowLeft aria-hidden="true" className="size-4" />Marketplace
-        </Link>
+        <div className="mb-6">
+          <Link
+            href="/marketplace"
+            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
+          >
+            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
+            <span>Back to Marketplace</span>
+          </Link>
+        </div>
 
         {!seller ? (
           <Alert variant="destructive" className="mt-6">
@@ -153,7 +159,7 @@ export function SellerStorefront() {
                 </Empty>
               ) : (
                 <>
-                  <div className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-3 ${error || loading ? "pointer-events-none opacity-70" : ""}`} inert={Boolean(error || loading)}>
+                  <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${error || loading ? "pointer-events-none opacity-70" : ""}`} inert={Boolean(error || loading)}>
                     {products.map((product) => <ProductCard key={product.id} product={product} />)}
                   </div>
                   {nextCursor ? (

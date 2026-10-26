@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, MapPin, MoreHorizontal, Phone, ShieldCheck, Store } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Check, ChevronRight, Phone, Store, User } from "lucide-react";
 import type { ConversationLaunchContext } from "../types";
 
 export function ConversationDetailsPanel({
@@ -27,111 +26,130 @@ export function ConversationDetailsPanel({
 
   return (
     <aside
-      className={`flex min-h-[680px] w-full flex-col border-l border-border/80 bg-white p-5 ${className}`}
+      className={`flex h-full w-full flex-col overflow-y-auto rounded-[24px] border border-neutral-200/80 bg-white p-5 shadow-xs ${className}`}
       aria-label="Conversation details"
     >
-      {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-border/70 pb-4">
-        <h3 className="font-heading text-base font-bold text-foreground">Chat Details</h3>
-        <button
-          type="button"
-          aria-label="Options"
-          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-        >
-          <MoreHorizontal className="size-4" />
-        </button>
-      </div>
-
-      {/* Seller Avatar & Identity */}
-      <div className="flex flex-col items-center py-6 text-center">
-        <div className="relative size-20 overflow-hidden rounded-full border-2 border-border/80 bg-gradient-to-br from-agrivive-primary/10 to-agrivive-sage/20 shadow-xs">
-          {context.sellerImage && !avatarFailed ? (
-            <Image
-              src={context.sellerImage}
-              alt={shopName}
-              fill
-              className="object-cover object-center"
-              unoptimized
-              onError={() => setAvatarFailed(true)}
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center font-heading text-xl font-bold text-agrivive-primary">
-              {initials}
-            </div>
-          )}
+      {/* Vendor Profile Hero */}
+      <div className="flex flex-col items-center pt-2 pb-4 text-center">
+        <div className="relative size-20">
+          <div className="size-full overflow-hidden rounded-full border border-neutral-200/80 shadow-2xs">
+            {context.sellerImage && !avatarFailed ? (
+              <Image
+                src={context.sellerImage}
+                alt={shopName}
+                fill
+                className="object-cover"
+                unoptimized
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <div className="flex size-full items-center justify-center bg-[#F3F4F6] font-heading text-lg font-bold text-neutral-700">
+                {initials}
+              </div>
+            )}
+          </div>
+          <span className="absolute bottom-0.5 right-0.5 size-4 rounded-full border-2 border-white bg-[#16A34A]" />
         </div>
-        <h4 className="mt-3 font-heading text-base font-bold text-foreground">{shopName}</h4>
-        <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Phone className="size-3 text-agrivive-primary" />
-          +63 912-345-6789
+
+        <h4 className="mt-3 font-heading text-lg font-bold text-neutral-900">{shopName}</h4>
+        <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#16A34A]">
+          <Check className="size-3.5 stroke-[2.5]" />
+          <span>Verified vendor</span>
         </p>
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
+          <Phone className="size-3.5 text-neutral-400" />
+          <span>+63 912-345-6789</span>
+        </p>
+
+        {/* Quick Action Button */}
+        <div className="mt-4 w-full">
+          <Link
+            href={`/sellers/${context.sellerId}`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white py-2.5 text-xs font-bold text-neutral-900 transition hover:bg-neutral-50 shadow-2xs"
+          >
+            <User className="size-3.5 text-neutral-600" />
+            <span>Profile</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Contact & Stall Information Card */}
-      <Card className="rounded-2xl border-border/70 bg-agrivive-background/50 p-4 shadow-none">
-        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Stall Information
-        </p>
-        <div className="mt-3 space-y-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Stall ID</span>
-            <span className="font-mono font-semibold text-foreground">{stallId}</span>
+      <div className="h-px bg-neutral-100 my-2" />
+
+      {/* Stall Information Section */}
+      <div className="py-2.5">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+            Stall Information
+          </span>
+          <ChevronRight className="size-3.5 text-neutral-400" />
+        </div>
+        <div className="space-y-2.5 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400">Stall ID</span>
+            <span className="font-semibold text-neutral-900">{stallId}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Location</span>
-            <span className="font-medium text-foreground">Bankerohan Market</span>
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400">Location</span>
+            <span className="font-medium text-neutral-700">Bankerohan Market</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">City</span>
-            <span className="font-medium text-foreground">Davao City</span>
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400">City</span>
+            <span className="font-medium text-neutral-700">Davao City</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Status</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">
-              <ShieldCheck className="size-3 text-emerald-600" />
-              Verified Stall
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400">Status</span>
+            <span className="inline-flex items-center gap-1.5 font-bold text-[#16A34A]">
+              <span className="size-2 rounded-full bg-[#16A34A]" />
+              <span>Verified Stall</span>
             </span>
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Active Produce Listing Context */}
+      <div className="h-px bg-neutral-100 my-2" />
+
+      {/* Inquired Produce Section */}
       {context.productId && (
-        <div className="mt-5">
-          <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            <span>Inquired Produce</span>
+        <div className="py-2.5">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+              Inquired Produce
+            </span>
             <Link
               href={`/marketplace/${context.productId}`}
-              className="inline-flex items-center text-agrivive-primary hover:underline"
+              className="text-xs font-bold text-[#16A34A] hover:underline"
             >
-              View <ChevronRight className="size-3" />
+              VIEW &gt;
             </Link>
           </div>
           <Link
             href={`/marketplace/${context.productId}`}
-            className="group flex items-center gap-3 rounded-xl border border-border/70 p-2.5 transition hover:bg-agrivive-background"
+            className="flex items-center gap-3 rounded-2xl border border-neutral-100 bg-[#F9FAFB] p-2.5 transition hover:bg-[#F3F4F6]"
           >
-            {context.productImageUrl ? (
-              <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
-                <Image
-                  src={context.productImageUrl}
-                  alt={context.productName || "Produce"}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-            ) : (
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-agrivive-background text-agrivive-primary">
-                <Store className="size-5" />
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-foreground group-hover:text-agrivive-primary">
-                {context.productName || "Surplus Produce"}
-              </p>
-              <p className="text-[11px] text-muted-foreground">Active marketplace listing</p>
+            <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-neutral-200/80 bg-white flex items-center justify-center">
+              {context.productImageUrl ? (
+                <img src={context.productImageUrl} alt="" className="size-full object-cover" />
+              ) : (
+                <Store className="size-5 text-[#16A34A]" />
+              )}
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-bold text-neutral-900">
+                {context.productName || "Fresh Produce"}
+              </p>
+              <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                {context.productPrice != null && (
+                  <span className="font-semibold text-neutral-700">
+                    ₱{Number(context.productPrice).toFixed(2)}
+                    {context.scalingType ? `/${context.scalingType}` : ""}
+                  </span>
+                )}
+                {context.productQty != null && (
+                  <span>• {Number(context.productQty) > 0 ? `${Number(context.productQty)} ${context.scalingType || "unit"}` : "Sold out"}</span>
+                )}
+              </div>
+            </div>
+            <span className="size-2 rounded-full bg-[#16A34A] shrink-0" />
           </Link>
         </div>
       )}

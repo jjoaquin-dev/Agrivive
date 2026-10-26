@@ -4,36 +4,35 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Bell,
-  ClipboardList,
-  LogOut,
-  Menu,
-  ShoppingCart,
-  Store,
-  UserCircle,
-  X,
-} from "lucide-react";
+import { Bell, ClipboardList, LogOut, Menu, ShoppingCart, Store, UserCircle, X } from "lucide-react";
 import { authClient } from "@/src/lib/auth-client";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { PageContainer } from "./PageContainer";
 import { SiteHeaderMobileNav } from "./SiteHeaderMobileNav";
+import { ConfirmationModalComponent } from "./ConfirmationModalComponent";
 
 export function SiteHeader() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const { itemCount, isReady: cartReady } = useCart();
-  const userName =
-    session?.user?.name || session?.user?.email || "Buyer profile";
+  const userName = session?.user?.name || session?.user?.email || "Buyer profile";
 
   async function handleSignOut() {
-    await authClient.signOut();
-    setProfileOpen(false);
-    setMenuOpen(false);
-    router.replace("/marketplace");
-    router.refresh();
+    setSigningOut(true);
+    try {
+      await authClient.signOut();
+      setShowSignOutModal(false);
+      setProfileOpen(false);
+      setMenuOpen(false);
+      router.replace("/marketplace");
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   return (
@@ -41,20 +40,18 @@ export function SiteHeader() {
       <PageContainer className="flex min-h-[68px] items-center justify-between gap-5">
         <Link
           href="/"
-          className="group flex shrink-0 items-center gap-2.5"
+          className="group flex shrink-0 items-center gap-1.5"
           aria-label="Agrivive home"
         >
-          <div className="flex size-10 items-center justify-center rounded-xl bg-agrivive-primary/5 p-1 transition-transform group-hover:scale-105">
-            <Image
-              src="/brand/agrivive-logo-icon.png"
-              alt="Agrivive"
-              width={36}
-              height={36}
-              className="size-8 object-contain"
-              priority
-            />
-          </div>
-          <span className="font-heading text-xl font-extrabold tracking-tight text-agrivive-primary">
+          <Image
+            src="/brand/agrivive-logo-crate.png"
+            alt="Agrivive"
+            width={26}
+            height={26}
+            className="size-[26px] object-contain transition-transform group-hover:scale-105"
+            priority
+          />
+          <span className="font-heading text-[28px] font-bold leading-none tracking-tight text-agrivive-primary">
             Agrivive
           </span>
         </Link>
@@ -133,7 +130,10 @@ export function SiteHeader() {
                   <button
                     type="button"
                     role="menuitem"
-                    onClick={handleSignOut}
+                    onClick={() => {
+                      setProfileOpen(false);
+                      setShowSignOutModal(true);
+                    }}
                     className="inline-flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm font-semibold text-agrivive-error hover:bg-red-50"
                   >
                     <LogOut aria-hidden="true" size={17} />
@@ -144,16 +144,10 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="inline-flex min-h-10 items-center rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary"
-              >
+              <Link href="/login" className="inline-flex min-h-10 items-center rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
                 Sign in
               </Link>
-              <Link
-                href="/signup"
-                className="inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]"
-              >
+              <Link href="/signup" className="inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]">
                 Register
               </Link>
             </>
@@ -168,11 +162,7 @@ export function SiteHeader() {
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((current) => !current)}
         >
-          {menuOpen ? (
-            <X aria-hidden="true" size={20} strokeWidth={2} />
-          ) : (
-            <Menu aria-hidden="true" size={20} strokeWidth={2} />
-          )}
+          {menuOpen ? <X aria-hidden="true" size={20} strokeWidth={2} /> : <Menu aria-hidden="true" size={20} strokeWidth={2} />}
         </button>
       </PageContainer>
 
@@ -184,7 +174,22 @@ export function SiteHeader() {
         cartReady={cartReady}
         itemCount={itemCount}
         onCloseMenu={() => setMenuOpen(false)}
-        onSignOut={handleSignOut}
+        onSignOut={() => {
+          setMenuOpen(false);
+          setShowSignOutModal(true);
+        }}
+      />
+
+      <ConfirmationModalComponent
+        open={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleSignOut}
+        loading={signingOut}
+        variant="destructive"
+        title="Sign Out"
+        description="Are you sure you want to sign out of your account?"
+        confirmLabel="Sign out"
+        cancelLabel="No"
       />
     </header>
   );

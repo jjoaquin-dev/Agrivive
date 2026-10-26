@@ -1,22 +1,20 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Check } from "lucide-react";
 import type { MarketplaceFilterValues } from "./MarketplaceFilters";
-import type { MarketplaceUnit } from "../types";
-import { MarketplaceLocationFilter } from "./MarketplaceLocationFilter";
+import { MarketplacePriceSlider } from "./MarketplacePriceSlider";
 
 const categories = [
-  "Leafy Greens",
-  "Fruit Vegetables",
-  "Root Vegetables",
-  "Pod Vegetables",
-  "Tuber Vegetables",
-  "Bulb Vegetables",
+  { label: "All produce", value: "" },
+  { label: "Bulb vegetables", value: "Bulb Vegetables" },
+  { label: "Fruit vegetables", value: "Fruit Vegetables" },
+  { label: "Leafy greens", value: "Leafy Greens" },
+  { label: "Pod vegetables", value: "Pod Vegetables" },
+  { label: "Root vegetables", value: "Root Vegetables" },
+  { label: "Tuber vegetables", value: "Tuber Vegetables" },
 ];
 
-const units: MarketplaceUnit[] = ["kilo", "pile", "sack"];
+const distances = ["1km", "3km", "5km", "10km"];
 
 interface MarketplaceFilterSidebarProps {
   values: MarketplaceFilterValues;
@@ -29,170 +27,137 @@ interface MarketplaceFilterSidebarProps {
   locationStatus: "idle" | "loading" | "error";
   locationError: string;
   onUseLocation: () => void;
+  onApply?: () => void;
 }
 
 export function MarketplaceFilterSidebar({
   values,
   onChange,
   onClearAll,
-  resultsCount,
   showMap,
   onToggleMap,
-  hasLocation,
-  locationStatus,
-  locationError,
-  onUseLocation,
 }: MarketplaceFilterSidebarProps) {
   return (
-    <aside className="space-y-5 rounded-[24px] border border-border/80 bg-white p-5 shadow-[0_8px_24px_rgba(31,77,58,0.04)]">
-      {/* Top Header: Results & Map Toggle */}
-      <div className="flex items-center justify-between border-b border-border/70 pb-4">
+    <aside className="overflow-hidden rounded-[24px] border border-neutral-200/60 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-neutral-100 bg-white px-5 py-3.5">
+        <span className="font-heading text-sm font-bold tracking-tight text-[#457d00]">
+          Filters
+        </span>
+        <button
+          type="button"
+          onClick={onClearAll}
+          className="text-xs font-semibold text-[#457d00] transition-colors hover:opacity-80 hover:underline cursor-pointer"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div className="space-y-5 p-5">
+        {/* Vegetable Category Section */}
         <div>
-          <span className="font-heading text-base font-bold text-foreground">
-            {resultsCount} listings
-          </span>
-          <p className="text-xs text-muted-foreground">Davao Public Markets</p>
+          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#457d00]">
+            Vegetable Category
+          </label>
+          <div className="space-y-1.5">
+            {categories.map((cat) => {
+              const isSelected =
+                values.productType === cat.value ||
+                (!values.productType && cat.value === "");
+              return (
+                <button
+                  key={cat.label}
+                  type="button"
+                  onClick={() => onChange("productType", isSelected && cat.value !== "" ? "" : cat.value)}
+                  className={`group flex min-h-[40px] w-full cursor-pointer select-none items-center gap-2.5 rounded-xl px-3 py-1.5 text-xs transition-all ${
+                    isSelected
+                      ? "border-[0.6px] border-[#457d00]/70 bg-[#457d00]/10 font-semibold text-[#457d00] shadow-2xs"
+                      : "border-[0.6px] border-neutral-200/60 bg-white font-medium text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50/70"
+                  }`}
+                >
+                  <div
+                    className={`flex size-4.5 shrink-0 items-center justify-center rounded-[5px] border transition-all ${
+                      isSelected
+                        ? "border-[#457d00] bg-[#457d00] text-white shadow-2xs"
+                        : "border-neutral-300 bg-white group-hover:border-neutral-400"
+                    }`}
+                  >
+                    {isSelected && <Check className="size-3 stroke-[2.5]" />}
+                  </div>
+                  <span className="flex-1 text-left">{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <label className="flex cursor-pointer select-none items-center gap-2 text-xs font-semibold text-agrivive-primary">
-          <span>Show on map</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={showMap}
-            onClick={() => onToggleMap(!showMap)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary ${
-              showMap ? "bg-agrivive-primary" : "bg-muted"
-            }`}
-          >
-            <span
-              className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                showMap ? "translate-x-5" : "translate-x-0"
-              }`}
-            />
-          </button>
-        </label>
-      </div>
 
-      {/* Produce Category Pills */}
-      <div>
-        <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Vegetable Category
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => onChange("productType", "")}
-            className={`min-h-9 rounded-full px-3 text-xs font-medium transition-colors ${
-              !values.productType
-                ? "bg-agrivive-primary text-white shadow-xs"
-                : "border border-border/80 bg-background text-foreground hover:bg-muted"
-            }`}
-          >
-            All Produce
-          </button>
-          {categories.map((cat) => {
-            const active = values.productType === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => onChange("productType", active ? "" : cat)}
-                className={`min-h-9 rounded-full px-3 text-xs font-medium transition-colors ${
-                  active
-                    ? "bg-agrivive-primary text-white shadow-xs"
-                    : "border border-border/80 bg-background text-foreground hover:bg-muted"
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Price Range */}
-      <div>
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Price Range (PHP)
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            aria-label="Min Price"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Min ₱"
-            value={values.minPrice}
-            onChange={(e) => onChange("minPrice", e.target.value)}
-            className="h-10 rounded-xl text-xs"
-          />
-          <Input
-            aria-label="Max Price"
-            type="number"
-            min="0"
-            step="1"
-            placeholder="Max ₱"
-            value={values.maxPrice}
-            onChange={(e) => onChange("maxPrice", e.target.value)}
-            className="h-10 rounded-xl text-xs"
+        {/* Price Range Section */}
+        <div>
+          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#457d00]">
+            Price Range (PHP)
+          </label>
+          <MarketplacePriceSlider
+            minPrice={values.minPrice}
+            maxPrice={values.maxPrice}
+            onChange={onChange}
+            minLimit={0}
+            maxLimit={1000}
           />
         </div>
-      </div>
 
-      {/* Selling Unit Pills */}
-      <div>
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Selling Unit
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => onChange("unit", "")}
-            className={`min-h-8 rounded-lg px-2.5 text-xs font-medium ${
-              !values.unit
-                ? "bg-agrivive-primary text-white"
-                : "border border-border/80 bg-background text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            Any
-          </button>
-          {units.map((u) => (
+        {/* Seller Distance Section */}
+        <div>
+          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#457d00]">
+            Seller Distance
+          </label>
+          <div className="grid grid-cols-4 gap-2">
+            {distances.map((dist) => {
+              const distValue = dist.replace("km", "");
+              const isHighlighted =
+                values.radiusKm === distValue ||
+                (!values.radiusKm && distValue === "10");
+              return (
+                <button
+                  key={dist}
+                  type="button"
+                  onClick={() => onChange("radiusKm", isHighlighted ? "" : distValue)}
+                  className={`flex h-10 cursor-pointer select-none items-center justify-center rounded-xl text-xs transition-all ${
+                    isHighlighted
+                      ? "border-[0.6px] border-[#457d00]/70 bg-[#457d00]/10 font-bold text-[#457d00] shadow-2xs"
+                      : "border-[0.6px] border-neutral-200/70 bg-white font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50/70"
+                  }`}
+                >
+                  {dist}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Show on Map Toggle */}
+        <div className="border-t border-neutral-100 pt-3.5">
+          <label className="flex cursor-pointer select-none items-center justify-between gap-3 rounded-xl border border-neutral-200/60 bg-white p-3 transition-colors hover:border-neutral-300">
+            <div>
+              <span className="block text-xs font-bold text-[#14231A]">Show on map</span>
+              <span className="block text-[11px] text-[#5F7367]">Filter produce locations</span>
+            </div>
             <button
-              key={u}
               type="button"
-              onClick={() => onChange("unit", values.unit === u ? "" : u)}
-              className={`min-h-8 rounded-lg px-2.5 text-xs font-medium capitalize ${
-                values.unit === u
-                  ? "bg-agrivive-primary text-white"
-                  : "border border-border/80 bg-background text-muted-foreground hover:bg-muted"
+              role="switch"
+              aria-checked={showMap}
+              onClick={() => onToggleMap(!showMap)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                showMap ? "bg-[#457d00]" : "bg-neutral-300"
               }`}
             >
-              {u}
+              <span
+                className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  showMap ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
             </button>
-          ))}
+          </label>
         </div>
-      </div>
-
-      {/* Nearby GPS Pickup */}
-      <MarketplaceLocationFilter
-        hasLocation={hasLocation}
-        locationStatus={locationStatus}
-        locationError={locationError}
-        onUseLocation={onUseLocation}
-      />
-
-      {/* Clear All Action */}
-      <div className="border-t border-border/70 pt-3">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClearAll}
-          className="w-full gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <RotateCcw className="size-3.5" />
-          Reset filters
-        </Button>
       </div>
     </aside>
   );

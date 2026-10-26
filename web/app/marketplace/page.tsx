@@ -20,7 +20,7 @@ export default function MarketplacePage() {
     return (
       <>
         <BuyerSiteHeader />
-        <main className="min-h-[calc(100vh-73px)] bg-agrivive-background py-12">
+        <main className="min-h-[calc(100vh-73px)] bg-[#fdfdfd] py-12">
           <div className="mx-auto max-w-7xl px-4 animate-pulse">
             <div className="h-32 w-full rounded-2xl bg-card" />
           </div>

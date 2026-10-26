@@ -57,9 +57,16 @@ export function useMarketplaceBrowser() {
   }, [searchKey, retryKey]);
 
   useEffect(() => {
-    const params = new URLSearchParams(searchKey);
-    params.delete("cursor");
-    params.delete("limit");
+    // Query the seller directory using location parameters so stalls always appear
+    const params = new URLSearchParams();
+    const lat = searchParams.get("latitude");
+    const lng = searchParams.get("longitude");
+    const rad = searchParams.get("radiusKm");
+    if (lat && lng) {
+      params.set("latitude", lat);
+      params.set("longitude", lng);
+      if (rad) params.set("radiusKm", rad);
+    }
     const controller = new AbortController();
     let active = true;
     setSellerMapLoading(true);
@@ -80,7 +87,7 @@ export function useMarketplaceBrowser() {
       active = false;
       controller.abort();
     };
-  }, [searchKey, sellerMapRetryKey]);
+  }, [searchParams.get("latitude"), searchParams.get("longitude"), searchParams.get("radiusKm"), sellerMapRetryKey]);
 
   const filters = useMemo<MarketplaceFilterValues>(() => {
     const params = new URLSearchParams(searchKey);

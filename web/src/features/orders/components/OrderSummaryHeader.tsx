@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, CheckCircle2, Sparkles, Tag } from "lucide-react";
+import { Calendar, PiggyBank } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 
 function money(value: string | number) {
@@ -16,48 +16,50 @@ interface OrderSummaryHeaderProps {
 
 export function OrderSummaryHeader({ order }: OrderSummaryHeaderProps) {
   const total = Number(order.totalAmount);
-  // Calculate estimated surplus savings (approx 25-30% saved from standard market retail)
   const estimatedSavings = Math.round(total * 0.3);
   const formattedDate = new Date(order.createdAt).toLocaleDateString("en-PH", {
-    day: "numeric",
     month: "short",
+    day: "numeric",
     year: "numeric",
   });
 
   return (
-    <div className="flex flex-col justify-between gap-4 rounded-[24px] border border-border/80 bg-white p-5 shadow-[0_8px_24px_rgba(31,77,58,0.04)] sm:flex-row sm:items-center sm:p-6">
-      {/* Left: Order ID & Item count */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs font-bold tracking-wider text-agrivive-terracotta">
-            Order ID: AGR-{order.id.slice(0, 8).toUpperCase()}
+    <div className="space-y-1.5" aria-label="Order summary">
+      {/* Top Metadata Row: Order ID, Date, and Savings Badge */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
+          <span className="font-semibold text-neutral-400 uppercase tracking-wider">
+            ORDER ID:{" "}
+            <span className="font-bold text-[#E94C00]">
+              AGR-{order.id.slice(0, 8).toUpperCase()}
+            </span>
           </span>
-          <span className="inline-block size-1 rounded-full bg-border" />
-          <span className="text-xs font-medium text-muted-foreground">
-            {order.items.length} {order.items.length === 1 ? "item" : "items"}
+          <span className="text-neutral-300" aria-hidden="true">•</span>
+          <span className="inline-flex items-center gap-1.5 text-neutral-500">
+            <Calendar className="size-3.5 text-neutral-400" aria-hidden="true" />
+            <span>{formattedDate}</span>
           </span>
         </div>
-        <p className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-          Surplus Produce Reservation
-        </p>
+
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-[#16A34A] shadow-2xs">
+          <PiggyBank className="size-3.5 text-[#16A34A]" aria-hidden="true" />
+          <span>You saved {money(estimatedSavings)}</span>
+        </span>
       </div>
 
-      {/* Middle/Right: Price & Savings Pill */}
-      <div className="flex flex-wrap items-center gap-4 sm:justify-end">
-        <div className="text-left sm:text-right">
-          <p className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-            {money(total)}
-          </p>
-          <div className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-            <Sparkles className="size-3.5 text-emerald-600" />
-            <span>You saved ~{money(estimatedSavings)}</span>
-          </div>
-        </div>
+      {/* Main Title and Total Amount Row */}
+      <div className="flex flex-wrap items-baseline justify-between gap-3 pt-0.5">
+        <h1 className="font-heading text-2xl sm:text-[28px] font-bold tracking-tight text-[#14231A] leading-tight">
+          Surplus Produce Reservation
+        </h1>
 
-        {/* Date Stamp */}
-        <div className="flex items-center gap-1.5 border-t border-border/60 pt-2 text-xs text-muted-foreground sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
-          <Calendar className="size-3.5" />
-          <span>{formattedDate}</span>
+        <div className="flex items-baseline gap-1.5 sm:gap-2">
+          <span className="text-xs sm:text-sm font-medium text-neutral-400">
+            Total:
+          </span>
+          <span className="font-heading text-2xl sm:text-[28px] font-bold tracking-tight text-[#14231A]">
+            {money(total)}
+          </span>
         </div>
       </div>
     </div>

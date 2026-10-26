@@ -5,9 +5,10 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthInput } from "@/src/features/auth/components/AuthInput";
 import { AuthShell } from "@/src/features/auth/components/AuthShell";
+import { OtpCodeInput } from "@/src/features/auth/components/OtpCodeInput";
 import { authClient } from "@/src/lib/auth-client";
 import { DEFAULT_BUYER_DESTINATION, sanitizeNextPath, withNextPath } from "@/src/lib/navigation";
-import { ArrowLeft, KeyRound, Mail, MailCheck, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail, MailCheck, RefreshCw, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
@@ -78,12 +79,13 @@ export default function VerifyEmailPage() {
 
   return (
     <AuthShell
+      centered
       title="Verify your email"
       description={email ? `Enter the 6-digit code sent to ${email}.` : "Enter the verification code sent to your email."}
       footer={
         <Link
           href={withNextPath("/login", nextPath)}
-          className="inline-flex items-center gap-1 font-semibold text-agrivive-primary underline-offset-4 hover:underline"
+          className="inline-flex items-center gap-1.5 font-semibold text-[#457D00] underline-offset-4 hover:underline"
         >
           <ArrowLeft aria-hidden="true" size={15} />
           Back to sign in
@@ -92,9 +94,9 @@ export default function VerifyEmailPage() {
     >
       <form onSubmit={handleVerify} aria-busy={loading || resending}>
         {message ? (
-          <Alert className="mb-5 border-emerald-200 bg-emerald-50 text-emerald-800">
-            <MailCheck aria-hidden="true" className="size-4 text-emerald-600" />
-            <AlertDescription>{message}</AlertDescription>
+          <Alert className="mb-5 border-[#457D00]/20 bg-[#F7FAF2] text-[#457D00] rounded-[16px] p-4">
+            <MailCheck aria-hidden="true" className="size-4 text-[#457D00]" />
+            <AlertDescription className="text-sm font-medium">{message}</AlertDescription>
           </Alert>
         ) : null}
 
@@ -112,25 +114,33 @@ export default function VerifyEmailPage() {
             icon={<Mail className="size-4" />}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            className="bg-[#EEF2FF] border-indigo-100/90 text-[#14231A]"
           />
 
-          <AuthInput
-            id="otp"
-            label="6-digit verification code"
-            icon={<KeyRound className="size-4" />}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            placeholder="000000"
-            className="text-center font-mono text-2xl font-bold tracking-[0.3em]"
-            value={otp}
-            onChange={(event) => {
-              setOtp(event.target.value.replace(/\D/g, ""));
-              if (error) setError("");
-            }}
-          />
+          <div className="space-y-2">
+            <label
+              htmlFor="verification-otp"
+              className="block text-xs font-semibold uppercase tracking-wider text-[#14231A]/85 text-center"
+            >
+              6-digit verification code
+            </label>
+            <OtpCodeInput
+              id="verification-otp"
+              value={otp}
+              onChange={(val) => {
+                setOtp(val);
+                if (error) setError("");
+              }}
+              length={6}
+              error={Boolean(error && !otp)}
+            />
+          </div>
 
-          <Button type="submit" disabled={loading || resending} className="w-full">
+          <Button
+            type="submit"
+            disabled={loading || resending}
+            className="h-12 w-full rounded-[14px] bg-[#457D00] font-semibold text-white shadow-sm hover:bg-[#386600] active:scale-[0.99] transition-all"
+          >
             {loading ? (
               <>
                 <Spinner data-icon="inline-start" />
@@ -146,10 +156,9 @@ export default function VerifyEmailPage() {
 
           <Button
             type="button"
-            variant="outline"
             disabled={resending || loading || cooldown > 0}
             onClick={handleResend}
-            className="w-full"
+            className="h-12 w-full rounded-[14px] border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-[#14231A] shadow-2xs hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
           >
             {resending ? (
               <>

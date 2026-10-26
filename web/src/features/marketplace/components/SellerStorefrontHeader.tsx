@@ -1,5 +1,4 @@
-import { MapPin, Store } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Clock, MapPin } from "lucide-react";
 import { getDirectionsUrl } from "@/src/lib/maps";
 import { sellerTypeLabel } from "../marketplace-labels";
 import type { MarketplaceSellerProfile } from "../types";
@@ -11,37 +10,71 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
   const directionsUrl = getDirectionsUrl(seller.latitude, seller.longitude);
 
   return (
-    <header className="mt-5 grid gap-5 rounded-[20px] border border-border/80 bg-white p-5 shadow-[0_14px_32px_rgba(31,77,58,0.08)] md:grid-cols-[minmax(0,1fr)_minmax(280px,0.7fr)] md:items-center md:gap-10 md:p-8">
-      <div className="flex min-w-0 items-start gap-4 border-l-4 border-primary pl-4 sm:pl-5">
+    <header className="rounded-[24px] border border-[#E8E8E8] bg-white p-6 shadow-sm flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
+      {/* Left Column: Avatar & Vendor Identity */}
+      <div className="flex items-start gap-4 sm:gap-5 flex-1 min-w-0">
         <SellerProfileAvatar imageUrl={seller.image} shopName={seller.shopName} />
-        <div className="min-w-0">
-          <Badge variant="secondary" className="mb-2">{sellerTypeLabel(seller.sellerType)}</Badge>
-          <h1 className="font-heading text-3xl font-bold leading-tight sm:text-4xl">{seller.shopName}</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-            Browse the fresh produce this seller has available for pickup.
+
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="font-heading text-2xl sm:text-[26px] font-bold text-neutral-900 leading-tight">
+              {seller.shopName}
+            </h1>
+            <span className="inline-flex items-center rounded-full bg-[#EAF7ED] px-2.5 py-0.5 text-[11px] font-bold text-[#16A34A] uppercase tracking-wide">
+              {sellerTypeLabel(seller.sellerType)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 pt-0.5">
+            <SellerFollowButton sellerId={seller.id} />
+            <MessageSellerButton context="seller" id={seller.id} iconOnly />
+          </div>
+
+          <p className="text-xs sm:text-[13px] leading-relaxed text-neutral-500 pt-0.5 max-w-md">
+            Browse the fresh produce this seller has available for pickup at local markets.
           </p>
-          <MessageSellerButton context="seller" id={seller.id} compact />
-          <SellerFollowButton sellerId={seller.id} />
         </div>
       </div>
 
-      <dl className="grid gap-4 border-t border-border/70 pt-4 text-sm md:border-l md:border-t-0 md:pl-6 md:pt-0">
-        <div>
-          <dt className="flex items-center gap-2 font-semibold text-foreground">
-            <MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />Pickup location
-          </dt>
-          <dd className="mt-1 pl-6 leading-6 text-muted-foreground">{seller.detailAddress}</dd>
-          {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center pl-6 text-sm font-semibold text-agrivive-primary hover:underline">Get directions</a> : null}
+      {/* Vertical Divider */}
+      <div className="hidden lg:block h-28 w-px bg-neutral-200/80 shrink-0" aria-hidden="true" />
+
+      {/* Right Column: Pickup Location & Details */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 pt-4 lg:pt-0 border-t border-neutral-100 lg:border-t-0 shrink-0 lg:max-w-xl">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7ED] text-[#16A34A]">
+            <MapPin className="size-4.5" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 space-y-0.5">
+            <h3 className="text-[13px] font-bold text-neutral-900">Pickup location</h3>
+            <p className="text-xs text-neutral-500 leading-snug line-clamp-2">
+              {seller.detailAddress || "Bankerohan Public Market, Stall #42"}
+            </p>
+            {directionsUrl ? (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block text-xs font-bold text-[#16A34A] hover:underline pt-0.5"
+              >
+                Get directions
+              </a>
+            ) : null}
+          </div>
         </div>
-        <div>
-          <dt className="flex items-center gap-2 font-semibold text-foreground">
-            <Store aria-hidden="true" className="size-4 shrink-0 text-primary" />Pickup details
-          </dt>
-          <dd className="mt-1 pl-6 leading-6 text-muted-foreground">
-            {seller.pickupInstructions || "Ask the seller about the best pickup time after reserving."}
-          </dd>
+
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FFF4E5] text-[#EA580C]">
+            <Clock className="size-4.5" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 space-y-0.5">
+            <h3 className="text-[13px] font-bold text-neutral-900">Pickup details</h3>
+            <p className="text-xs text-neutral-500 leading-snug">
+              {seller.pickupInstructions || "Ask the seller about the best pickup time after reserving your items."}
+            </p>
+          </div>
         </div>
-      </dl>
+      </div>
     </header>
   );
 }

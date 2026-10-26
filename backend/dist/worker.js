@@ -29855,43 +29855,56 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
     cycleId: listing_cycles.id,
     productId: sellers_product.id,
     sellerId: sellers_product.userId,
-    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(eq(listing_cycles.id, listingCycleId)).limit(1);
+    productName: sellers_product.productName,
+    productType: sellers_product.productType,
+    unit: sellers_product.scalingType,
+    price: sellers_product.productPrice,
+    quantity: sellers_product.productQty,
+    originalQuantity: listing_cycles.originalQty,
+    isActive: sellers_product.isActive,
+    isMarketable: sellers_product.isMarketable,
+    publishedAt: sellers_product.publishedAt,
+    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
+    shopName: sellers_profile.shopName,
+    sellerName: user.name
+  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(eq(listing_cycles.id, listingCycleId)).limit(1);
   if (!target)
     return null;
+  if (!target.isActive || !target.isMarketable || Number(target.quantity ?? 0) <= 0 || Number(target.price ?? 0) <= 0) {
+    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
+  }
   const currentCycle = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
   const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
   const ranking = rankVisibilityCandidates(candidates);
   const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
   const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
-  if (!candidate || !result) {
-    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
-  }
-  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup" || options?.allowActiveListing === true;
-  const isPriorityScore = result.score >= 0.6;
+  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
+  const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
+  const isPriorityScore = result ? result.score >= 0.6 : false;
   const shared = {
-    ...target,
     cycleId: activeCycleId,
-    visibilityScore: Number(result.score.toFixed(4)),
-    visibilityTier: result.tier,
-    visibilityRank: result.rank,
+    sellerId: target.sellerId,
+    productId: target.productId,
+    visibilityScore: result ? Number(result.score.toFixed(4)) : 0.5,
+    visibilityTier: result?.tier ?? "Priority Boost",
+    visibilityRank: result?.rank ?? 1,
     policyVersion: ranking.policyVersion,
     evaluatedAt,
-    productName: candidate.productName,
-    productType: candidate.productType,
-    unit: candidate.unit,
-    price: candidate.price,
-    quantity: candidate.quantity,
-    originalQuantity: candidate.originalQuantity,
-    availability: Number(candidate.quantity) > 0 ? "available" : "sold_out",
-    shopName: candidate.shopName,
-    sellerName: candidate.sellerName,
-    listingUrl: marketplaceUrl(candidate.productId),
-    criteria: result.criteria,
+    productName: candidate?.productName ?? target.productName,
+    productType: candidate?.productType ?? target.productType,
+    unit: candidate?.unit ?? target.unit,
+    price: candidate?.price ?? target.price,
+    quantity: candidate?.quantity ?? target.quantity,
+    originalQuantity: candidate?.originalQuantity ?? target.originalQuantity ?? target.quantity,
+    availability: Number(target.quantity) > 0 ? "available" : "sold_out",
+    shopName: candidate?.shopName ?? target.shopName ?? "Agrivive Shop",
+    sellerName: candidate?.sellerName ?? target.sellerName ?? "Seller",
+    listingUrl: marketplaceUrl(target.productId),
+    criteria: result?.criteria ?? null,
     priceReductionPeriodsApplied: target.priceReductionPeriodsApplied ?? 0
   };
-  if (!isPriorityScore && !isPriceReduced) {
+  if (!isPriorityScore && !isPriceReduced && !isInitialEligible) {
     return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
   }
   return {
@@ -30262,6 +30275,13 @@ function notificationContent(job) {
       title: "Boost your listing",
       body: `${productName} has a new price. Boost its visibility now?`,
       path: "/(app)/notifications"
+    };
+  }
+  if (payload.orderId) {
+    return {
+      title: "New Reservation Received",
+      body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
+      path: `/(app)/orders/${String(payload.orderId)}`
     };
   }
   return {

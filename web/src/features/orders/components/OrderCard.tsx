@@ -4,11 +4,16 @@ import Link from "next/link";
 import { ArrowRight, QrCode } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
+import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
 import { OrderStatusBadge } from "./OrderStatusBadge";
-import { OrderCardItems } from "./OrderCardItems";
 
 function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value));
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(value));
 }
 
 function formatDate(iso: string) {
@@ -21,95 +26,113 @@ function formatDate(iso: string) {
 
 export function OrderCard({ order }: { order: BuyerOrder }) {
   const isPending = order.status === "pending";
+  const isCompleted = order.status === "completed";
   const orderNumber = `AGR-${order.id.slice(0, 8).toUpperCase()}`;
+  const firstItem = order.items[0];
 
   return (
-    <Card className="overflow-hidden rounded-[18px] border border-border/80 bg-white shadow-xs transition-shadow hover:shadow-md">
-      <CardContent className="p-5">
-        {/* Top Metadata Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+    <Card className="min-h-[160px] overflow-hidden rounded-[16px] border border-[#E8E8E8] bg-white p-4 shadow-xs transition-shadow hover:shadow-md">
+      <CardContent className="p-0">
+        {/* Top Header Strip: 12px font size with 16px bottom separation */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E8E8E8] mb-4 text-xs">
           <div className="flex items-center gap-2">
-            <span className="size-4 rounded border border-border/80 bg-muted/30" aria-hidden="true" />
-            <span className="font-semibold text-foreground">Stall: Davao Market Stall</span>
-            <span>·</span>
-            <span>Date of Order: <strong className="font-medium text-foreground">{formatDate(order.createdAt)}</strong></span>
+            <span className="size-2 rounded-full bg-[#457D00] inline-block" aria-hidden="true" />
+            <span className="font-semibold text-[#14231A]">Davao Market Stall</span>
+            <span className="text-[#E8E8E8]">|</span>
+            <span className="text-[#5F7367] font-medium">{formatDate(order.createdAt)}</span>
           </div>
-          <div className="font-mono text-xs font-semibold text-foreground">
-            Order ID: {orderNumber}
+          <div className="font-mono text-xs text-[#5F7367]">
+            Order #{orderNumber}
           </div>
         </div>
 
-        {/* Dashed Divider */}
-        <div className="my-3.5 border-t border-dashed border-border/70" />
-
-        {/* Content Row / Table Columns */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1.5fr_0.8fr_1fr_1.2fr_1fr] md:items-center">
-          {/* Product Column */}
-          <div>
-            <OrderCardItems items={order.items} />
+        {/* Content Row with 24px column spacing */}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1.2fr_1.2fr_auto] lg:items-center">
+          {/* 1. Product Preview */}
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="relative size-[60px] shrink-0 overflow-hidden rounded-[10px] bg-[#F8F6F1] border border-[#E8E8E8]">
+              {firstItem ? (
+                <ProductImage
+                  src={firstItem.imageUrl}
+                  alt={firstItem.productName}
+                  category={firstItem.productType ?? "Produce"}
+                  className="size-full object-cover"
+                />
+              ) : null}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h4 className="truncate font-heading text-sm font-semibold text-[#14231A]">
+                {firstItem?.productName ?? "Produce"}
+              </h4>
+              <p className="mt-0.5 text-xs text-[#5F7367] font-normal">
+                {firstItem ? `${Number(firstItem.quantity)} ${firstItem.scalingType}` : ""}
+                {order.items.length > 1 ? ` (+${order.items.length - 1} more)` : ""}
+              </p>
+            </div>
           </div>
 
-          {/* Price Column */}
+          {/* 2. Order Total */}
           <div>
-            <span className="text-[11px] font-medium text-muted-foreground md:hidden">Price: </span>
-            <span className="font-heading text-base font-bold text-foreground">
+            <p className="text-xs text-[#5F7367] font-normal">Order total</p>
+            <p className="mt-0.5 font-heading text-base font-bold text-[#14231A]">
               {money(order.totalAmount)}
-            </span>
+            </p>
           </div>
 
-          {/* Payment Column */}
+          {/* 3. Payment Method */}
           <div>
-            <p className="text-sm font-medium text-foreground">Cash on pickup</p>
-            <p className="text-[11px] text-muted-foreground">Pay at market stall</p>
+            <p className="text-xs text-[#5F7367] font-normal">Payment</p>
+            <p className="mt-0.5 text-sm font-semibold text-[#14231A]">Cash on pickup</p>
+            <p className="mt-0.5 text-xs text-[#5F7367]">Pay at market stall</p>
           </div>
 
-          {/* Status Column */}
-          <div className="flex flex-col items-start gap-1">
+          {/* 4. Status */}
+          <div className="flex flex-col items-start">
             <OrderStatusBadge status={order.status} />
-            <span className="text-[11px] text-muted-foreground">
-              {isPending && order.expiresAt
-                ? `Please pick up before ${formatDate(order.expiresAt)}`
-                : order.status === "completed"
-                  ? `Completed on ${formatDate(order.updatedAt)}`
+            <p className="mt-1 text-xs text-[#5F7367] font-normal">
+              {isCompleted
+                ? `Completed ${formatDate(order.updatedAt)}`
+                : isPending && order.expiresAt
+                  ? `Hold expires ${formatDate(order.expiresAt)}`
                   : "Reservation closed"}
-            </span>
+            </p>
           </div>
 
-          {/* Action Column */}
-          <div className="flex flex-col items-stretch gap-2 sm:items-end md:items-stretch">
+          {/* 5. 40px Actions Area with 8px Spacing */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:justify-end">
             {isPending ? (
-              <Link
-                href={`/orders/${order.id}`}
-                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition hover:bg-agrivive-primaryPressed active:translate-y-px"
-              >
-                <QrCode className="size-3.5" aria-hidden="true" />
-                View Pass
-              </Link>
+              <>
+                <Link
+                  href={`/orders/${order.id}`}
+                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#386600] text-white inline-flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <QrCode className="size-3.5" aria-hidden="true" />
+                  <span>View Pass</span>
+                </Link>
+                <Link
+                  href={`/orders/${order.id}#cancel`}
+                  className="h-10 min-h-[40px] px-3 rounded-xl font-semibold text-xs border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 inline-flex items-center justify-center transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  Cancel Order
+                </Link>
+              </>
             ) : (
-              <Link
-                href={`/orders/${order.id}`}
-                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-agrivive-border bg-white px-4 text-xs font-semibold text-agrivive-primary shadow-xs transition hover:bg-agrivive-background active:translate-y-px"
-              >
-                View details
-                <ArrowRight className="size-3.5" aria-hidden="true" />
-              </Link>
-            )}
-
-            {isPending ? (
-              <Link
-                href={`/orders/${order.id}#cancel`}
-                className="inline-flex min-h-9 items-center justify-center rounded-xl border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 active:translate-y-px"
-              >
-                Cancel Order
-              </Link>
-            ) : (
-              <button
-                type="button"
-                disabled
-                className="inline-flex min-h-9 cursor-not-allowed items-center justify-center rounded-xl border border-border/40 bg-muted/30 px-3 text-xs font-medium text-muted-foreground/60"
-              >
-                Cancel Order
-              </button>
+              <>
+                <Link
+                  href={`/orders/${order.id}`}
+                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs border border-[#E8E8E8] bg-white text-[#14231A] hover:bg-neutral-50 inline-flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  <span>View details</span>
+                  <ArrowRight className="size-3.5 text-[#5F7367]" aria-hidden="true" />
+                </Link>
+                <button
+                  type="button"
+                  disabled
+                  className="h-10 min-h-[40px] px-3 rounded-xl font-medium text-xs border border-[#E8E8E8] bg-neutral-50 text-neutral-400 inline-flex items-center justify-center cursor-not-allowed opacity-60 whitespace-nowrap"
+                >
+                  Cancel Order
+                </button>
+              </>
             )}
           </div>
         </div>

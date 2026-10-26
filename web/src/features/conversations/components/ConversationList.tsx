@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MessageCircle, Package, Search, Store } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ChevronRight, MessageSquare, Search, Store } from "lucide-react";
 import type { Conversation } from "../api";
 
 function formatDate(value: string) {
@@ -16,34 +15,6 @@ function formatDate(value: string) {
 
 function displayName(item: Conversation) {
   return item.sellerShopName || item.sellerName || "Seller";
-}
-
-function SellerAvatar({ item, small = false }: { item: Conversation; small?: boolean }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const name = displayName(item);
-  const initials = name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-  const size = small ? "size-10 rounded-full text-xs" : "size-12 rounded-full text-sm";
-
-  if (item.sellerImage && !imageFailed) {
-    return (
-      <img
-        src={item.sellerImage}
-        alt={`${name} profile`}
-        className={`${size} shrink-0 object-cover ring-2 ring-primary/10`}
-        onError={() => setImageFailed(true)}
-      />
-    );
-  }
-
-  return (
-    <span
-      aria-hidden="true"
-      className={`${size} flex shrink-0 items-center justify-center bg-agrivive-background font-heading font-bold text-primary ring-2 ring-primary/10`}
-    >
-      <Store className="size-4" />
-      {initials}
-    </span>
-  );
 }
 
 type TabType = "all" | "unread" | "important" | "closed";
@@ -71,15 +42,34 @@ export function ConversationList({
     if (!query) return list;
     return list.filter((item) =>
       [item.sellerShopName, item.sellerName, item.productName, item.lastMessageBody].some((v) =>
-        v?.toLowerCase().includes(query),
-      ),
+        v?.toLowerCase().includes(query)
+      )
     );
   }, [items, search, activeTab]);
 
   return (
-    <aside className={`flex min-h-[680px] flex-col border-b border-border/80 bg-white lg:border-b-0 lg:border-r ${className}`}>
-      {/* Top Filter Tabs matching reference */}
-      <div className="flex border-b border-border/70 px-4 pt-3">
+    <aside
+      className={`flex h-full flex-col overflow-hidden rounded-[26px] border border-[#E9EBE2] bg-white p-4 shadow-xs ${className}`}
+      aria-label="Messages list"
+    >
+      {/* Top Header */}
+      <div className="flex items-center justify-between pb-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#365E24] shadow-2xs">
+            <MessageSquare className="size-5" />
+          </div>
+          <div>
+            <h1 className="font-heading text-lg font-bold leading-tight text-[#25431D]">Messages</h1>
+            <p className="text-xs text-[#8A9685]">All communications</p>
+          </div>
+        </div>
+        <button type="button" aria-label="Messages settings" className="text-[#A6B0A2] hover:text-[#25431D] transition">
+          <ChevronRight className="size-4" />
+        </button>
+      </div>
+
+      {/* Pill Filter Tabs */}
+      <div className="mt-2 flex items-center justify-between rounded-full bg-[#F5F6EE] p-1">
         {(["all", "unread", "important", "closed"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           return (
@@ -87,87 +77,104 @@ export function ConversationList({
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`relative pb-3 px-3 text-xs font-bold capitalize transition-colors ${
-                isActive ? "text-agrivive-primary" : "text-muted-foreground hover:text-foreground"
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize transition-all ${
+                isActive
+                  ? "bg-white text-[#202E1B] shadow-2xs"
+                  : "text-[#7A8875] hover:text-[#202E1B]"
               }`}
             >
-              {tab}
-              {isActive && (
-                <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-agrivive-primary" />
+              <span>{tab}</span>
+              {tab === "all" && (
+                <span className="inline-flex size-[18px] shrink-0 items-center justify-center rounded-full bg-[#D2E794] text-[10px] font-bold leading-none text-[#244218]">
+                  {items.length || 2}
+                </span>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Search Input */}
-      <div className="p-3 border-b border-border/70">
-        <label className="relative block">
-          <span className="sr-only">Search by name</span>
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name"
-            className="h-10 rounded-xl pl-9 text-xs"
-          />
-        </label>
+      {/* Search Input Bar */}
+      <div className="relative mt-3.5">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#9EA899]" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name"
+          className="w-full rounded-full border border-[#E8EAE0] bg-[#FAF9F5] py-2 pl-9 pr-4 text-xs text-[#202E1B] placeholder:text-[#9EA899] outline-none transition focus:border-[#457D00] focus:ring-2 focus:ring-[#457D00]/15"
+        />
       </div>
 
       {/* Conversations List */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+      <div className="mt-3.5 flex-1 space-y-1.5 overflow-y-auto pr-1">
         {loading ? (
-          <div className="space-y-2 p-2">
-            <div className="h-14 animate-pulse rounded-xl bg-muted" />
-            <div className="h-14 animate-pulse rounded-xl bg-muted" />
+          <div className="space-y-2 p-1">
+            <div className="h-16 animate-pulse rounded-2xl bg-neutral-100" />
+            <div className="h-16 animate-pulse rounded-2xl bg-neutral-100" />
           </div>
         ) : null}
 
         {!loading && filteredItems.length === 0 ? (
-          <div className="px-4 py-12 text-center">
-            <MessageCircle className="mx-auto size-7 text-agrivive-sage" />
-            <p className="mt-2 text-xs font-semibold">
-              {search ? "No matching conversations" : "No messages found"}
-            </p>
+          <div className="py-12 text-center text-xs text-[#8A9685]">
+            {search ? "No matching conversations" : "No messages found"}
           </div>
         ) : null}
 
-        {!loading
-          ? filteredItems.map((item) => {
-              const title = displayName(item);
-              const isSelected = selectedId === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onSelect(item)}
-                  className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${
-                    isSelected
-                      ? "bg-amber-50/70 ring-1 ring-amber-200"
-                      : "hover:bg-agrivive-background/60"
-                  }`}
-                >
-                  <div className="relative">
-                    <SellerAvatar item={item} small />
+        {!loading &&
+          filteredItems.map((item) => {
+            const isSelected = selectedId === item.id;
+            const title = displayName(item);
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onSelect(item)}
+                className={`flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-all ${
+                  isSelected
+                    ? "border border-[#E3EBCE] bg-[#F6F8ED] shadow-2xs"
+                    : "hover:bg-[#FAF9F5]"
+                }`}
+              >
+                {/* Avatar with status capsule */}
+                <div className="relative shrink-0">
+                  <div
+                    className={`size-10 overflow-hidden rounded-full ring-2 ${
+                      isSelected ? "ring-[#386600]/30" : "ring-neutral-200"
+                    }`}
+                  >
+                    {item.sellerImage ? (
+                      <img src={item.sellerImage} alt="" className="size-full object-cover" />
+                    ) : (
+                      <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-[#386600]">
+                        <Store className="size-4" />
+                      </div>
+                    )}
                   </div>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-1">
-                      <span className="truncate text-xs font-bold text-foreground">{title}</span>
-                      <span className="shrink-0 text-[10px] text-muted-foreground">
-                        {formatDate(item.lastMessageAt)}
-                      </span>
+                  <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-[#457D00]" />
+                </div>
+
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="truncate text-xs font-bold text-[#202E1B]">{title}</span>
+                    <span className="shrink-0 text-[10px] text-[#9EA899]">
+                      {formatDate(item.lastMessageAt)}
                     </span>
-                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                  </div>
+                  <div className="mt-0.5 flex items-center justify-between gap-1">
+                    <p className="truncate text-[11px] text-[#7A8875]">
                       {item.lastMessageBody || "New conversation"}
-                    </span>
-                  </span>
-                  {item.unreadCount > 0 ? (
-                    <span className="size-2 rounded-full bg-agrivive-terracotta shrink-0" />
-                  ) : null}
-                </button>
-              );
-            })
-          : null}
+                    </p>
+                    {item.unreadCount > 0 ? (
+                      <span className="size-2 rounded-full bg-[#F59E0B] shrink-0" />
+                    ) : null}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
       </div>
     </aside>
   );

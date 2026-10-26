@@ -3,16 +3,15 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { AlertTriangle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError, isAbortError, isTrustAccessMessage } from "@/src/lib/api";
 import { authClient } from "@/src/lib/auth-client";
 import { usePolling } from "@/src/lib/usePolling";
 import type { BuyerOrder, MarketplaceProduct } from "@/src/features/marketplace/types";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
-import { PageContainer } from "@/src/components/PageContainer";
 import { getBuyerOrder } from "../api/orders";
 import { OrderQr } from "./OrderQr";
 import { OrderSummaryHeader } from "./OrderSummaryHeader";
@@ -22,7 +21,6 @@ import { OrderPickupStepper } from "./OrderPickupStepper";
 import { OrderSellerCard } from "./OrderSellerCard";
 import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderReportModal } from "./OrderReportModal";
-import { OrderReportIssueRow } from "./OrderReportIssueRow";
 import { OrderMessages } from "./OrderMessages";
 import { OrderCancellation } from "./OrderCancellation";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
@@ -63,9 +61,7 @@ export function OrderDetail() {
     } catch (reason) {
       if (run !== loadRun.current) return;
       if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
-        lastOrder.current = null;
-        setOrder(null);
-        setProducts([]);
+        lastOrder.current = null; setOrder(null); setProducts([]);
         if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
         else setError(reason.message);
       } else setError(reason instanceof ApiError ? reason.message : "We could not load this reservation.");
@@ -77,29 +73,18 @@ export function OrderDetail() {
   useEffect(() => {
     if (sessionPending) return;
     if (!accountId) {
-      loadRun.current++;
-      loadedAccount.current = null;
-      lastOrder.current = null;
-      setOrder(null);
-      setProducts([]);
+      loadRun.current++; loadedAccount.current = null; lastOrder.current = null; setOrder(null); setProducts([]);
       router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
       return;
     }
-    loadedAccount.current = accountId;
-    lastOrder.current = null;
-    setOrder(null);
-    setProducts([]);
-    setLastUpdated(null);
+    loadedAccount.current = accountId; lastOrder.current = null; setOrder(null); setProducts([]); setLastUpdated(null);
     void load();
     return () => { loadRun.current++; };
   }, [accountId, sessionPending, load, router, id]);
 
   const refreshPendingOrder = useCallback(async (signal: AbortSignal) => {
     const latest = await getBuyerOrder(id, signal);
-    lastOrder.current = latest;
-    setOrder(latest);
-    setLastUpdated(new Date());
-    setError("");
+    lastOrder.current = latest; setOrder(latest); setLastUpdated(new Date()); setError("");
   }, [id]);
 
   usePolling(refreshPendingOrder, {
@@ -109,9 +94,7 @@ export function OrderDetail() {
     onError: (reason) => {
       if (isAbortError(reason)) return;
       if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
-        lastOrder.current = null;
-        setOrder(null);
-        setProducts([]);
+        lastOrder.current = null; setOrder(null); setProducts([]);
         if (reason.status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
         else setError(reason.message);
         return;
@@ -122,74 +105,81 @@ export function OrderDetail() {
   });
 
   if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) {
-    return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer><Skeleton className="h-[540px] rounded-[24px] bg-white" /></PageContainer></main>;
+    return <main className="min-h-screen bg-[#FDFDFD] p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-[16px] border border-[#E8E8E8] bg-white" /></div></main>;
   }
   if (error && !order) {
-    return <main className="min-h-screen bg-agrivive-background p-6"><PageContainer>{isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}<Button type="button" variant="outline" className="mt-2" onClick={() => void load()}>Try again</Button></PageContainer></main>;
+    return (
+      <main className="min-h-screen bg-[#FDFDFD] p-6">
+        <div className="mx-auto max-w-7xl">
+          {isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+          <Button type="button" variant="outline" className="mt-4 min-h-[40px] rounded-xl border-[#E8E8E8]" onClick={() => void load()}>Try again</Button>
+        </div>
+      </main>
+    );
   }
   if (!order) return null;
 
-  const product = products[0];
-
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-6 text-foreground sm:py-8 lg:py-10">
-      <PageContainer>
-        <Link href="/orders" className={`${buttonVariants({ variant: "ghost", size: "sm" })} -ml-3 text-muted-foreground hover:text-foreground`}>
-          <ArrowLeft aria-hidden="true" className="size-4" />Back to reservations
+    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-6 py-6 text-foreground">
+      <div className="mx-auto max-w-7xl">
+        <Link href="/orders" className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer">
+          <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
+          <span>Back to reservations</span>
         </Link>
 
-        {/* Top Order Summary Card with Green Savings Badge */}
-        <div className="mt-4">
-          <OrderSummaryHeader order={order} />
-        </div>
+        <div className="mt-4"><OrderSummaryHeader order={order} /></div>
 
-        {error ? isTrustAccessMessage(error) ? <div className="mt-5"><TrustAccessNotice message={error} /></div> : <Alert variant="destructive" className="mt-5"><AlertDescription>{error}</AlertDescription></Alert> : null}
+        {error ? (
+          <div className="mt-4">
+            {isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+          </div>
+        ) : null}
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <section className="flex flex-col gap-6">
-            <OrderPickupStepper status={order.status} createdAt={order.createdAt} expiresAt={order.expiresAt} />
-
-            <div className="space-y-6 lg:hidden">
-              <OrderQr payload={order.qrPayload} status={order.status} orderId={order.id} shopName={product?.seller.shopName} />
-              <OrderPaymentBreakdown order={order} />
-            </div>
-
-            <OrderItemsCard items={order.items} />
-            <OrderSellerCard order={order} product={product} />
+        <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <section className="flex flex-col gap-5 lg:col-span-2">
+            <OrderPickupStepper
+              status={order.status}
+              createdAt={order.createdAt}
+              expiresAt={order.expiresAt}
+              shopName={products[0]?.seller.shopName}
+              cancellationReason={order.cancellationReason}
+            />
+            <OrderItemsCard items={order.items} status={order.status} />
+            <OrderSellerCard order={order} product={products[0]} />
             <OrderMessages orderId={order.id} refreshKey={lastUpdated?.getTime() ?? 0} />
-
             {order.status === "completed" ? <OrderReviews order={order} /> : null}
 
-            <OrderCancellation
-              order={order}
-              onCancelled={(updated) => { lastOrder.current = updated; setOrder(updated); }}
-              onAuthorizationFailure={(status) => {
-                lastOrder.current = null;
-                setOrder(null);
-                setProducts([]);
-                if (status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
-                else setError("Account is temporarily restricted");
-              }}
-            />
+            <div className="flex items-center justify-between px-1 pt-2">
+              <OrderCancellation
+                order={order}
+                onCancelled={(updated) => { lastOrder.current = updated; setOrder(updated); }}
+                onAuthorizationFailure={(status) => {
+                  lastOrder.current = null; setOrder(null); setProducts([]);
+                  if (status === 401) router.replace(`/login?next=${encodeURIComponent(`/orders/${id}`)}`);
+                  else setError("Account is temporarily restricted");
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowReportModal(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-800 transition-colors cursor-pointer"
+              >
+                <AlertTriangle className="size-3.5 text-neutral-400" />
+                <span>Report an issue with this order</span>
+              </button>
+            </div>
 
-            <OrderReportIssueRow onOpenReport={() => setShowReportModal(true)} />
-
-            <OrderReportModal
-              orderId={order.id}
-              isOpen={showReportModal}
-              onClose={() => setShowReportModal(false)}
-            />
+            <OrderReportModal orderId={order.id} isOpen={showReportModal} onClose={() => setShowReportModal(false)} />
           </section>
 
-          {/* Sticky Right Sidebar: QR Pickup Pass & Payment Breakdown */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-20 space-y-6">
-              <OrderQr payload={order.qrPayload} status={order.status} orderId={order.id} shopName={product?.seller.shopName} />
+          <aside className="flex flex-col gap-5 lg:col-span-1">
+            <div className="sticky top-6 flex flex-col gap-5">
+              <OrderQr payload={order.qrPayload} status={order.status} orderId={order.id} shopName={products[0]?.seller.shopName} totalAmount={order.totalAmount} />
               <OrderPaymentBreakdown order={order} />
             </div>
           </aside>
         </div>
-      </PageContainer>
+      </div>
     </main>
   );
 }

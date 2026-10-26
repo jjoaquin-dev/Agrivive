@@ -136,6 +136,11 @@ export async function createConversation(buyerId: string, input: CreateConversat
       createdAt: now,
     }).returning();
 
+    await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(
+      eq(conversation_participants.conversationId, activeConversation.id),
+      eq(conversation_participants.userId, buyerId),
+    ));
+
     return { conversation: activeConversation, message };
   });
 }

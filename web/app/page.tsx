@@ -1,32 +1,26 @@
 import { LandingHeader } from "@/src/features/home/components/LandingHeader";
-import { HomeBenefits } from "@/src/features/home/components/HomeBenefits";
+import { HomeHero } from "@/src/features/home/components/HomeHero";
+import { HomeCategories } from "@/src/features/home/components/HomeCategories";
+import { HomeFeaturedProduce } from "@/src/features/home/components/HomeFeaturedProduce";
+import { HomeHowItWorks } from "@/src/features/home/components/HomeHowItWorks";
+import { HomeWhySurplus } from "@/src/features/home/components/HomeWhySurplus";
+import { HomeImpactTestimonials } from "@/src/features/home/components/HomeImpactTestimonials";
+import { HomeFarmerFaq } from "@/src/features/home/components/HomeFarmerFaq";
 import { HomeFinalCta } from "@/src/features/home/components/HomeFinalCta";
 import { HomeFooter } from "@/src/features/home/components/HomeFooter";
-import { HomeHero } from "@/src/features/home/components/HomeHero";
-import { HomeHowItWorks } from "@/src/features/home/components/HomeHowItWorks";
-import { HomeMarketPulse } from "@/src/features/home/components/HomeMarketPulse";
-import { HomeSellerSection } from "@/src/features/home/components/HomeSellerSection";
-import { HomeWhyAgrivive } from "@/src/features/home/components/HomeWhyAgrivive";
 
 export default function HomePage() {
   return (
     <>
       <LandingHeader />
-      <main className="bg-agrivive-background text-agrivive-text">
+      <main className="bg-white text-neutral-900">
         <HomeHero />
-        <HomeBenefits />
-        <div
-          className="overflow-hidden border-b border-agrivive-border bg-agrivive-primary px-4 py-4 text-center font-heading text-xs font-extrabold uppercase tracking-[0.2em] text-[#F2DFAF] sm:text-sm"
-          aria-hidden="true"
-        >
-          Local produce <span className="mx-3 text-white/45">✦</span> Clear pickup plans{" "}
-          <span className="mx-3 text-white/45">✦</span> Better market days{" "}
-          <span className="mx-3 text-white/45">✦</span> Local produce
-        </div>
-        <HomeWhyAgrivive />
+        <HomeCategories />
+        <HomeFeaturedProduce />
         <HomeHowItWorks />
-        <HomeMarketPulse />
-        <HomeSellerSection />
+        <HomeWhySurplus />
+        <HomeImpactTestimonials />
+        <HomeFarmerFaq />
         <HomeFinalCta />
       </main>
       <HomeFooter />

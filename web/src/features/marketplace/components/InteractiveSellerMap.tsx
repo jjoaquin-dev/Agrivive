@@ -20,19 +20,15 @@ type InteractiveSellerMapProps = {
   error: string;
   onSelectSeller: (sellerId: string) => void;
   onRetry: () => void;
+  hideHeader?: boolean;
+  expanded?: boolean;
+  mapHeightClassName?: string;
 };
 
 export function InteractiveSellerMap({
-  sellers,
-  unmappedSellerCount,
-  latitude,
-  longitude,
-  radiusKm,
-  selectedSellerId,
-  loading,
-  error,
-  onSelectSeller,
-  onRetry,
+  sellers, unmappedSellerCount, latitude, longitude, radiusKm,
+  selectedSellerId, loading, error, onSelectSeller, onRetry, hideHeader = false, expanded = false,
+  mapHeightClassName,
 }: InteractiveSellerMapProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -54,7 +50,7 @@ export function InteractiveSellerMap({
       const leafletWithClusters = L as typeof L & {
         markerClusterGroup: (options?: Record<string, unknown>) => LayerGroup;
       };
-      map = L.map(mapElementRef.current, { zoomControl: true, scrollWheelZoom: false }).setView([0, 0], 2);
+      map = L.map(mapElementRef.current, { zoomControl: true, scrollWheelZoom: false }).setView([7.0731, 125.6128], 12);
       L.tileLayer(OPEN_STREET_MAP_TILE_URL, {
         attribution: OPEN_STREET_MAP_ATTRIBUTION,
         maxZoom: 19,
@@ -74,16 +70,21 @@ export function InteractiveSellerMap({
     return () => {
       cancelled = true;
       markerRefs.current.clear();
-      clusterRef.current?.clearLayers();
-      clusterRef.current = null;
-      locationCircleRef.current?.clearLayers();
-      locationCircleRef.current = null;
-      map?.remove();
-      mapRef.current = null;
-      leafletRef.current = null;
+      clusterRef.current?.clearLayers(); clusterRef.current = null;
+      locationCircleRef.current?.clearLayers(); locationCircleRef.current = null;
+      map?.remove(); mapRef.current = null; leafletRef.current = null;
       setMapReady(false);
     };
   }, []);
+
+  // Update map size on expand/collapse
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 200);
+    }
+  }, [expanded]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -94,13 +95,9 @@ export function InteractiveSellerMap({
     cluster.clearLayers();
     markerRefs.current.clear();
     const markerIcon = L.icon({
-      iconUrl: "/leaflet/marker-icon.png",
-      iconRetinaUrl: "/leaflet/marker-icon-2x.png",
-      shadowUrl: "/leaflet/marker-shadow.png",
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41],
+      iconUrl: "/leaflet/marker-icon.png", iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+      shadowUrl: "/leaflet/marker-shadow.png", iconSize: [25, 41], iconAnchor: [12, 41],
+      popupAnchor: [1, -34], shadowSize: [41, 41],
     });
 
     sellers.forEach((seller) => {
@@ -109,7 +106,7 @@ export function InteractiveSellerMap({
         title: seller.shopName,
         alt: `Seller ${seller.shopName}`,
       });
-      marker.bindPopup(sellerMapPopupContent(seller), { maxWidth: 300 });
+      marker.bindPopup(sellerMapPopupContent(seller), { maxWidth: 320 });
       marker.on("click", () => onSelectSeller(seller.id));
       markerRefs.current.set(seller.id, marker);
       cluster.addLayer(marker);
@@ -120,6 +117,8 @@ export function InteractiveSellerMap({
       map.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 });
     } else if (latitude !== null && longitude !== null) {
       map.setView([latitude, longitude], 11);
+    } else {
+      map.setView([7.0731, 125.6128], 12);
     }
   }, [latitude, longitude, mapReady, onSelectSeller, sellers]);
 
@@ -132,18 +131,10 @@ export function InteractiveSellerMap({
     locationCircleRef.current = group;
     if (latitude !== null && longitude !== null) {
       L.circle([latitude, longitude], {
-        radius: (radiusKm ?? 10) * 1000,
-        color: "#1f4d3a",
-        fillColor: "#1f4d3a",
-        fillOpacity: 0.08,
-        weight: 1,
+        radius: (radiusKm ?? 10) * 1000, color: "#457d00", fillColor: "#457d00", fillOpacity: 0.08, weight: 1,
       }).addTo(group);
       L.circleMarker([latitude, longitude], {
-        radius: 7,
-        color: "#ffffff",
-        weight: 2,
-        fillColor: "#1f4d3a",
-        fillOpacity: 1,
+        radius: 7, color: "#ffffff", weight: 2, fillColor: "#457d00", fillOpacity: 1,
       }).bindTooltip("Your location").addTo(group);
     }
   }, [latitude, longitude, mapReady, radiusKm]);
@@ -157,19 +148,31 @@ export function InteractiveSellerMap({
     marker.openPopup();
   }, [selectedSellerId]);
 
+  const mapHeightClass = mapHeightClassName ?? (hideHeader
+    ? expanded
+      ? "h-[460px] w-full bg-agrivive-background"
+      : "h-[312px] w-full bg-agrivive-background"
+    : "h-[312px] w-full bg-agrivive-background sm:h-[360px] lg:h-[420px]");
+
   return (
-    <section aria-label="Seller map" className="relative isolate z-0 overflow-hidden rounded-[20px] border border-border/80 bg-white shadow-[0_14px_32px_rgba(31,77,58,0.08)]">
-      <div className="flex items-start justify-between gap-4 border-b border-border/70 px-4 py-4 sm:px-5">
-        <div>
-          <h2 className="font-heading text-lg font-bold tracking-tight">Find a seller nearby</h2>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">Select a pin or a seller card to compare pickup spots.</p>
+    <div aria-label="Seller map" className="relative isolate z-0 flex h-full flex-col overflow-hidden w-full transition-all duration-300">
+      {!hideHeader ? (
+        <div className="flex items-start justify-between gap-4 border-b border-border/70 px-4 py-3 sm:px-5">
+          <div>
+            <h2 className="font-heading text-lg font-bold tracking-tight">Find a seller nearby</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">Select a pin or a seller card to compare pickup spots.</p>
+          </div>
+          <span className="shrink-0 rounded-full border border-agrivive-sage/60 bg-agrivive-secondary px-3 py-1.5 text-xs font-semibold text-agrivive-primary">
+            {sellers.length} {sellers.length === 1 ? "seller" : "sellers"}
+          </span>
         </div>
-        <span className="shrink-0 rounded-full border border-agrivive-sage/60 bg-agrivive-secondary px-3 py-1.5 text-xs font-semibold text-agrivive-primary">
-          {sellers.length} {sellers.length === 1 ? "seller" : "sellers"}
-        </span>
-      </div>
-      <div className="relative">
-        <div ref={mapElementRef} className="h-[340px] w-full bg-agrivive-background sm:h-[400px] lg:h-[600px]" aria-label="Interactive seller map" />
+      ) : null}
+      <div className="relative flex-1 h-full min-h-0">
+        <div
+          ref={mapElementRef}
+          className={mapHeightClass}
+          aria-label="Interactive seller map"
+        />
         {loading ? (
           <div className="pointer-events-none absolute inset-x-4 top-4 z-10 rounded-xl border border-border/60 bg-white/90 p-3 shadow-sm backdrop-blur-sm">
             <Skeleton className="h-4 w-40" />
@@ -187,10 +190,10 @@ export function InteractiveSellerMap({
         ) : null}
       </div>
       {unmappedSellerCount > 0 ? (
-        <p className="border-t border-border/70 px-4 py-3 text-xs leading-5 text-muted-foreground sm:px-5">
+        <p className="border-t border-border/70 px-4 py-2.5 text-xs leading-5 text-muted-foreground sm:px-5">
           {unmappedSellerCount} matching {unmappedSellerCount === 1 ? "seller has" : "sellers have"} no map location yet.
         </p>
       ) : null}
-    </section>
+    </div>
   );
 }

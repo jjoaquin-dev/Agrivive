@@ -39,11 +39,24 @@ export async function createConversationMessage(userId: string, conversationId: 
       body,
       createdAt: now,
     }).returning();
-    await tx.update(conversations).set({ lastMessageAt: now, updatedAt: now }).where(eq(conversations.id, conversationId));
+    await tx.update(conversations).set({
+      productId: input.productId ?? conversation.productId,
+      lastMessageAt: now,
+      updatedAt: now,
+    }).where(eq(conversations.id, conversationId));
     await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(
       eq(conversation_participants.conversationId, conversationId),
       eq(conversation_participants.userId, userId),
     ));
+
+    if (input.productId && userId === conversation.buyerId) {
+      await tx.insert(product_inquiries).values({
+        productId: input.productId,
+        buyerId: userId,
+        sellerId: conversation.sellerId,
+        question: body,
+      }).onConflictDoNothing();
+    }
 
     const recipientUserId = userId === conversation.sellerId
       ? conversation.buyerId

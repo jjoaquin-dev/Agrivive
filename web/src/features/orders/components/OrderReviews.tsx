@@ -70,11 +70,11 @@ function ReviewForm({
   }
 
   return (
-    <Card className="rounded-[20px] border border-border/80 bg-white shadow-[0_8px_24px_rgba(31,77,58,0.04)]">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-bold">{title}{itemName ? `: ${itemName}` : ""}</CardTitle>
+    <Card className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+      <CardHeader className="p-0 pb-3">
+        <CardTitle className="text-[18px] font-semibold text-foreground">{title}{itemName ? `: ${itemName}` : ""}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {saved ? (
           <div role="status" className="flex items-start gap-3">
             <Star aria-hidden="true" className="mt-0.5 size-5 shrink-0 fill-amber-400 text-amber-400" />
@@ -87,7 +87,7 @@ function ReviewForm({
         ) : (
           <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
             <RatingPicker value={rating} onChange={setRating} label="Your rating" />
-            <label className="block text-sm font-semibold text-foreground/80" htmlFor={`review-comment-${inputId}`}>
+            <label className="block text-xs font-semibold text-foreground" htmlFor={`review-comment-${inputId}`}>
               Comment <span className="font-normal text-muted-foreground">(optional)</span>
             </label>
             <textarea
@@ -97,10 +97,10 @@ function ReviewForm({
               maxLength={2000}
               rows={3}
               placeholder="Share a few words about your experience"
-              className="w-full resize-y rounded-xl border border-input bg-card px-3 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
+              className="w-full resize-y rounded-xl border border-[#E8E8E8] bg-white px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/20 focus-visible:border-[#457D00]"
             />
-            {error ? <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert> : null}
-            <Button type="submit" disabled={rating < 1 || saving} className="min-h-12 rounded-xl px-6 font-semibold active:translate-y-px">
+            {error ? <Alert variant="destructive" className="text-xs"><AlertDescription>{error}</AlertDescription></Alert> : null}
+            <Button type="submit" disabled={rating < 1 || saving} className="min-h-[40px] h-10 rounded-xl bg-[#457D00] px-5 text-[14px] font-semibold text-white hover:bg-[#386600] active:translate-y-px">
               {saving ? "Saving…" : itemName ? "Post product review" : "Post seller review"}
             </Button>
           </form>

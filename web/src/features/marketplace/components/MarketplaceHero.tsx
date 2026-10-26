@@ -1,75 +1,39 @@
-import { FormEvent } from "react";
 import Image from "next/image";
-import { MapPin, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { FormEvent } from "react";
 
 interface MarketplaceHeroProps {
-  searchInput: string;
-  onSearchInputChange: (value: string) => void;
-  onSearchSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  searchInput?: string;
+  onSearchInputChange?: (value: string) => void;
+  onSearchSubmit?: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-export function MarketplaceHero({
-  searchInput,
-  onSearchInputChange,
-  onSearchSubmit,
-}: MarketplaceHeroProps) {
+export function MarketplaceHero(_props: MarketplaceHeroProps) {
   return (
-    <section className="relative grid overflow-hidden rounded-[24px] border border-border/80 bg-white shadow-[0_12px_36px_rgba(31,77,58,0.07)] lg:grid-cols-[1.15fr_0.85fr]">
-      <div className="relative flex flex-col justify-center px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-        <h1 className="mt-5 max-w-xl font-heading text-3xl font-bold leading-[1.08] tracking-tight text-foreground sm:text-4xl lg:text-[2.75rem]">
-          Fresh surplus produce,{" "}
-          <span className="text-agrivive-primary">
-            direct from local stalls.
-          </span>
-        </h1>
-        <p className="mt-4 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-          Reserve available produce at Bankerohan, Agdao, and Toril before
-          market close.
-        </p>
-        <form
-          onSubmit={onSearchSubmit}
-          className="mt-7 flex w-full max-w-xl flex-col gap-2 sm:flex-row"
-          role="search"
-        >
-          <div className="relative min-w-0 flex-1">
-            <Search
-              className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <label htmlFor="marketplace-search" className="sr-only">
-              Search produce
-            </label>
-            <Input
-              id="marketplace-search"
-              value={searchInput}
-              onChange={(e) => onSearchInputChange(e.target.value)}
-              placeholder="Search produce"
-              className="h-12 border-input bg-card pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-agrivive-primary/30"
-            />
-          </div>
-          <Button type="submit" className="h-12 px-6">
-            Search
-          </Button>
-        </form>
-      </div>
-      <div className="relative hidden min-h-[300px] overflow-hidden bg-agrivive-primary lg:block">
-        <Image
-          src="/brand/cute-veggies-market.jpg"
-          alt="3D Nano Banana and cute vegetables at Davao Organic Harvest market"
-          fill
-          className="object-cover object-center"
-          sizes="(min-width: 1024px) 40vw, 1px"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-agrivive-primary/80 via-transparent to-black/10" />
-        <div className="absolute inset-x-6 bottom-6 rounded-2xl border border-white/30 bg-white/85 p-4 text-agrivive-text shadow-md backdrop-blur-md">
-          <p className="text-xs font-bold uppercase tracking-wider text-agrivive-primary">
-            Fresh & Healthy Harvest
+    <section className="relative overflow-hidden rounded-[28px] border border-neutral-800/40 shadow-xs">
+      {/* Full Card Background Image */}
+      <Image
+        src="/brand/marketplace-hero-farm-stall.jpg"
+        alt="Fresh vegetables in crates and woven baskets at a local farm stall"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
+
+      {/* Dark gradient overlay for text readability & contrast */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+
+      {/* Content */}
+      <div className="relative z-10 flex min-h-[300px] flex-col justify-center px-6 py-10 sm:min-h-[350px] sm:px-10 sm:py-12 md:min-h-[380px] lg:min-h-[400px] lg:px-12">
+        <div className="max-w-md sm:max-w-xl lg:max-w-2xl">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#FCEC9A]">
+            Surplus Today, Value for Everyone
           </p>
-          <p className="mt-0.5 font-heading text-base font-bold leading-tight">
-            Good nutrition rescued directly from Davao market stalls.
+          <h1 className="mt-2.5 font-heading text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[44px] drop-shadow-xs">
+            Your local connection to affordable, marketable vegetables
+          </h1>
+          <p className="mt-3.5 max-w-lg text-base sm:text-lg font-medium leading-relaxed text-white/90 drop-shadow-xs">
+            Discover surplus vegetables from local vendors at prices that work for you.
           </p>
         </div>
       </div>

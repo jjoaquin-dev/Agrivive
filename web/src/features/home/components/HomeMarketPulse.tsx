@@ -8,7 +8,7 @@ export function HomeMarketPulse() {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-20 lg:px-8">
         <div>
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#F2DFAF]">Public market data</span>
-          <h2 className="mt-4 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.05em] sm:text-5xl">
+          <h2 className="mt-4 max-w-xl font-heading text-4xl font-bold leading-[1.02] tracking-[-0.05em] sm:text-5xl">
             A clearer view of what local buyers are looking for.
           </h2>
           <p className="mt-5 max-w-xl text-base leading-7 text-emerald-50/75">

@@ -9,16 +9,15 @@ interface OrderReportIssueRowProps {
 
 export function OrderReportIssueRow({ onOpenReport }: OrderReportIssueRowProps) {
   return (
-    <div className="border-t border-border/70 pt-4">
+    <div className="pt-1">
       <Button
         type="button"
         variant="ghost"
-        size="sm"
-        className="gap-2 text-muted-foreground hover:text-destructive"
+        className="min-h-[40px] h-10 gap-2 rounded-xl px-3 text-[14px] font-medium text-muted-foreground hover:bg-amber-50/50 hover:text-amber-800"
         onClick={onOpenReport}
       >
-        <AlertTriangle className="size-4 text-amber-600" />
-        Report an issue with this order
+        <AlertTriangle className="size-4 text-[#FEA938]" />
+        <span>Report an issue with this order</span>
       </Button>
     </div>
   );
