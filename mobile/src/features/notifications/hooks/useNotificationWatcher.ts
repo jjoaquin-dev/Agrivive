@@ -14,7 +14,8 @@ export function useNotificationWatcher() {
   const isInitialized = useRef(false);
 
   useEffect(() => {
-    if (Platform.OS === "web" || !session?.user?.id) return;
+    const currentUserId = session?.user?.id;
+    if (Platform.OS === "web" || !currentUserId) return;
 
     let active = true;
 
@@ -58,7 +59,12 @@ export function useNotificationWatcher() {
           for (const convo of list) {
             if (convo.lastMessageBody) {
               const prev = knownConvoMsgIds.current.get(convo.id);
-              if (isInitialized.current && prev && prev !== convo.lastMessageBody && (convo.unreadCount || 0) > 0) {
+              const isFromBuyer = convo.lastMessageSenderId
+                ? convo.lastMessageSenderId !== currentUserId
+                : true;
+              const isNewMessage = isInitialized.current && (prev === undefined || prev !== convo.lastMessageBody);
+
+              if (isNewMessage && isFromBuyer && convo.lastMessageSenderId !== currentUserId && (convo.unreadCount || 0) > 0) {
                 if (Notifications) {
                   await Notifications.scheduleNotificationAsync({
                     content: {

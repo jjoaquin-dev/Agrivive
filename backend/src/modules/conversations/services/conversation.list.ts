@@ -71,6 +71,13 @@ export async function listConversations(userId: string, limit = 50, cursor?: str
       order by latest_message.created_at desc, latest_message.id desc
       limit 1
     )`,
+    lastMessageSenderId: sql<string | null>`(
+      select latest_message.sender_id
+      from conversation_messages as latest_message
+      where latest_message.conversation_id = ${conversations.id}
+      order by latest_message.created_at desc, latest_message.id desc
+      limit 1
+    )`,
     unreadCount: sql<number>`(
       select count(*)::int from conversation_messages as unread_message
       where unread_message.conversation_id = ${conversations.id}
