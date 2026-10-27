@@ -44,8 +44,8 @@ export function LandingHeader() {
         <PageContainer className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-1.5" aria-label="Agrivive home">
-            <Image src="/brand/agrivive-logo-crate.png" alt="Agrivive" width={26} height={26} className="size-[26px] object-contain transition-transform group-hover:scale-105" priority />
-            <span className="font-heading text-[28px] font-bold leading-none tracking-tight text-[#457D00]">Agrivive</span>
+            <Image src="/brand/agrivive-logo-crate.png" alt="Agrivive" width={18} height={18} className="h-[18px] w-auto object-contain transition-transform group-hover:scale-105" priority />
+            <span className="font-brand text-[22px] font-black leading-none tracking-tight text-[#457D00]">Agrivive</span>
           </Link>
 
           {/* Integrated Search Bar (PioMart Style) */}

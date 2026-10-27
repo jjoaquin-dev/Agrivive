@@ -68,6 +68,7 @@ const config: Config = {
         },
       },
       fontFamily: {
+        brand: ["var(--font-brand)", "var(--font-heading)", "Poppins", "sans-serif"],
         heading: ["var(--font-heading)", "Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
         subheading: ["var(--font-subheading)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
         body: ["var(--font-body)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],

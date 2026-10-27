@@ -47,13 +47,8 @@ export function useMarketplaceBrowser() {
           setError(reason instanceof ApiError ? reason.message : "We could not load the marketplace.");
         }
       })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-      controller.abort();
-    };
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; controller.abort(); };
   }, [searchKey, retryKey]);
 
   useEffect(() => {
@@ -72,21 +67,14 @@ export function useMarketplaceBrowser() {
     setSellerMapLoading(true);
     setSellerMapError("");
     listMarketplaceSellersMap(params, controller.signal)
-      .then((result) => {
-        if (active) setSellerMap(result);
-      })
+      .then((result) => { if (active) setSellerMap(result); })
       .catch((reason: unknown) => {
         if (active && !isAbortError(reason)) {
           setSellerMapError(reason instanceof ApiError ? reason.message : "We could not refresh the seller map.");
         }
       })
-      .finally(() => {
-        if (active) setSellerMapLoading(false);
-      });
-    return () => {
-      active = false;
-      controller.abort();
-    };
+      .finally(() => { if (active) setSellerMapLoading(false); });
+    return () => { active = false; controller.abort(); };
   }, [searchParams.get("latitude"), searchParams.get("longitude"), searchParams.get("radiusKm"), sellerMapRetryKey]);
 
   const filters = useMemo<MarketplaceFilterValues>(() => {
@@ -99,7 +87,7 @@ export function useMarketplaceBrowser() {
       maxPrice: params.get("maxPrice") ?? "",
       minQuantity: params.get("minQuantity") ?? "",
       maxQuantity: params.get("maxQuantity") ?? "",
-      radiusKm: params.get("radiusKm") ?? "10",
+      radiusKm: params.get("radiusKm") ?? "",
     };
   }, [searchKey]);
 
@@ -108,7 +96,13 @@ export function useMarketplaceBrowser() {
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
-  const { locationStatus, locationError, handleRemoveLocation, handleUseLocation } = useMarketplaceLocation(searchKey, navigateWithParams);
+  const {
+    locationStatus,
+    locationError,
+    handleRemoveLocation,
+    handleUseLocation,
+    handleUseCoordinates,
+  } = useMarketplaceLocation(searchKey, navigateWithParams);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -119,6 +113,16 @@ export function useMarketplaceBrowser() {
   }
 
   function handleFilterChange(key: keyof MarketplaceFilterValues, value: string) {
+    if (key === "radiusKm") {
+      if (!value) {
+        handleRemoveLocation();
+        return;
+      }
+      if (!searchParams.get("latitude") || !searchParams.get("longitude")) {
+        handleUseLocation(value);
+        return;
+      }
+    }
     const params = new URLSearchParams(searchKey);
     if (value) params.set(key, value);
     else params.delete(key);
@@ -180,6 +184,7 @@ export function useMarketplaceBrowser() {
     locationStatus,
     locationError,
     handleUseLocation,
+    handleUseCoordinates,
     filterProps,
     handleSearch,
     handleFilterChange,

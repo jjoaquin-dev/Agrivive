@@ -46,12 +46,12 @@ export function SiteHeader() {
           <Image
             src="/brand/agrivive-logo-crate.png"
             alt="Agrivive"
-            width={26}
-            height={26}
-            className="size-[26px] object-contain transition-transform group-hover:scale-105"
+            width={18}
+            height={18}
+            className="h-[18px] w-auto object-contain transition-transform group-hover:scale-105"
             priority
           />
-          <span className="font-heading text-[28px] font-bold leading-none tracking-tight text-agrivive-primary">
+          <span className="font-brand text-[22px] font-black leading-none tracking-tight text-agrivive-primary">
             Agrivive
           </span>
         </Link>

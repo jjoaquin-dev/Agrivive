@@ -3,7 +3,6 @@
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
-
 import { useEffect, useRef, useState } from "react";
 import type { LayerGroup, Map as LeafletMap, Marker } from "leaflet";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,17 +15,11 @@ import { sellerMapPopupContent } from "./seller-map-popup";
 type InteractiveSellerMapProps = {
   sellers: MarketplaceSellerMapResult[];
   unmappedSellerCount: number;
-  latitude: number | null;
-  longitude: number | null;
-  radiusKm: number | null;
+  latitude: number | null; longitude: number | null; radiusKm: number | null;
   selectedSellerId: string | null;
-  loading: boolean;
-  error: string;
-  onSelectSeller: (sellerId: string) => void;
-  onRetry: () => void;
-  hideHeader?: boolean;
-  expanded?: boolean;
-  mapHeightClassName?: string;
+  loading: boolean; error: string;
+  onSelectSeller: (sellerId: string) => void; onRetry: () => void;
+  hideHeader?: boolean; expanded?: boolean; mapHeightClassName?: string;
 };
 
 export function InteractiveSellerMap({
@@ -55,14 +48,9 @@ export function InteractiveSellerMap({
         markerClusterGroup: (options?: Record<string, unknown>) => LayerGroup;
       };
       map = L.map(mapElementRef.current, { zoomControl: true, scrollWheelZoom: false }).setView([7.0731, 125.6128], 12);
-      L.tileLayer(OPEN_STREET_MAP_TILE_URL, {
-        attribution: OPEN_STREET_MAP_ATTRIBUTION,
-        maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(OPEN_STREET_MAP_TILE_URL, { attribution: OPEN_STREET_MAP_ATTRIBUTION, maxZoom: 19 }).addTo(map);
       clusterRef.current = leafletWithClusters.markerClusterGroup({
-        showCoverageOnHover: false,
-        maxClusterRadius: 48,
-        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false, maxClusterRadius: 48, spiderfyOnMaxZoom: true,
       }).addTo(map);
       mapRef.current = map;
       leafletRef.current = L;
@@ -83,11 +71,7 @@ export function InteractiveSellerMap({
 
   // Update map size on expand/collapse
   useEffect(() => {
-    if (mapRef.current) {
-      setTimeout(() => {
-        mapRef.current?.invalidateSize();
-      }, 200);
-    }
+    if (mapRef.current) setTimeout(() => mapRef.current?.invalidateSize(), 200);
   }, [expanded]);
 
   useEffect(() => {
@@ -116,11 +100,11 @@ export function InteractiveSellerMap({
       cluster.addLayer(marker);
     });
 
-    if (sellers.length > 0) {
+    if (latitude !== null && longitude !== null) {
+      // Map view bounds handled by the location circle effect
+    } else if (sellers.length > 0) {
       const bounds = L.latLngBounds(sellers.map((seller) => [seller.latitude, seller.longitude] as [number, number]));
       map.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 });
-    } else if (latitude !== null && longitude !== null) {
-      map.setView([latitude, longitude], 11);
     } else {
       map.setView([7.0731, 125.6128], 12);
     }
@@ -134,12 +118,25 @@ export function InteractiveSellerMap({
     const group = L.layerGroup().addTo(map);
     locationCircleRef.current = group;
     if (latitude !== null && longitude !== null) {
-      L.circle([latitude, longitude], {
-        radius: (radiusKm ?? 10) * 1000, color: "#457d00", fillColor: "#457d00", fillOpacity: 0.08, weight: 1,
+      const circle = L.circle([latitude, longitude], {
+        radius: (radiusKm ?? 10) * 1000,
+        color: "#457d00",
+        fillColor: "#457d00",
+        fillOpacity: 0.08,
+        weight: 1.5,
       }).addTo(group);
       L.circleMarker([latitude, longitude], {
-        radius: 7, color: "#ffffff", weight: 2, fillColor: "#457d00", fillOpacity: 1,
-      }).bindTooltip("Your location").addTo(group);
+        radius: 8,
+        color: "#ffffff",
+        weight: 2.5,
+        fillColor: "#457d00",
+        fillOpacity: 1,
+      }).bindTooltip("You are here", {
+        permanent: true,
+        direction: "top",
+        offset: [0, -8],
+      }).addTo(group);
+      map.fitBounds(circle.getBounds(), { padding: [24, 24] });
     }
   }, [latitude, longitude, mapReady, radiusKm]);
 
@@ -153,9 +150,7 @@ export function InteractiveSellerMap({
   }, [selectedSellerId]);
 
   const mapHeightClass = mapHeightClassName ?? (hideHeader
-    ? expanded
-      ? "h-[460px] w-full bg-agrivive-background"
-      : "h-[312px] w-full bg-agrivive-background"
+    ? (expanded ? "h-[460px] w-full bg-agrivive-background" : "h-[312px] w-full bg-agrivive-background")
     : "h-[312px] w-full bg-agrivive-background sm:h-[360px] lg:h-[420px]");
 
   return (

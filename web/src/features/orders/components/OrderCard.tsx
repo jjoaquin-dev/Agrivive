@@ -24,7 +24,13 @@ function formatDate(iso: string) {
   });
 }
 
-export function OrderCard({ order }: { order: BuyerOrder }) {
+export function OrderCard({
+  order,
+  onCancel,
+}: {
+  order: BuyerOrder;
+  onCancel?: (order: BuyerOrder) => void;
+}) {
   const isPending = order.status === "pending";
   const isCompleted = order.status === "completed";
   const orderNumber = `AGR-${order.id.slice(0, 8).toUpperCase()}`;
@@ -109,12 +115,13 @@ export function OrderCard({ order }: { order: BuyerOrder }) {
                   <QrCode className="size-3.5" aria-hidden="true" />
                   <span>View Pass</span>
                 </Link>
-                <Link
-                  href={`/orders/${order.id}#cancel`}
+                <button
+                  type="button"
+                  onClick={() => onCancel?.(order)}
                   className="h-10 min-h-[40px] px-3 rounded-xl font-semibold text-xs border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 inline-flex items-center justify-center transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   Cancel Order
-                </Link>
+                </button>
               </>
             ) : (
               <>

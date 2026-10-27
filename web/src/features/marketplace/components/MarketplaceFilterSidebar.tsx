@@ -13,7 +13,6 @@ const categories = [
   { label: "Root vegetables", value: "Root Vegetables" },
   { label: "Tuber vegetables", value: "Tuber Vegetables" },
 ];
-
 const distances = ["1km", "3km", "5km", "10km"];
 
 interface MarketplaceFilterSidebarProps {
@@ -26,16 +25,14 @@ interface MarketplaceFilterSidebarProps {
   hasLocation: boolean;
   locationStatus: "idle" | "loading" | "error";
   locationError: string;
-  onUseLocation: () => void;
+  onUseLocation: (preferredRadius?: string) => void;
+  onUseCoordinates?: (latitude: number, longitude: number, preferredRadius?: string) => void;
   onApply?: () => void;
 }
 
 export function MarketplaceFilterSidebar({
-  values,
-  onChange,
-  onClearAll,
-  showMap,
-  onToggleMap,
+  values, onChange, onClearAll, showMap, onToggleMap,
+  hasLocation, locationStatus, locationError, onUseCoordinates,
 }: MarketplaceFilterSidebarProps) {
   return (
     <aside className="overflow-hidden rounded-[24px] border border-neutral-200/60 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
@@ -107,15 +104,24 @@ export function MarketplaceFilterSidebar({
 
         {/* Seller Distance Section */}
         <div>
-          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#457d00]">
-            Seller Distance
-          </label>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-[#457d00]">
+              Seller Distance
+            </label>
+            {hasLocation ? (
+              <button
+                type="button"
+                onClick={() => onChange("radiusKm", "")}
+                className="text-[11px] font-semibold text-neutral-500 hover:text-neutral-800 transition-colors cursor-pointer"
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
           <div className="grid grid-cols-4 gap-2">
             {distances.map((dist) => {
               const distValue = dist.replace("km", "");
-              const isHighlighted =
-                values.radiusKm === distValue ||
-                (!values.radiusKm && distValue === "10");
+              const isHighlighted = hasLocation && values.radiusKm === distValue;
               return (
                 <button
                   key={dist}
@@ -131,6 +137,36 @@ export function MarketplaceFilterSidebar({
                 </button>
               );
             })}
+          </div>
+
+          {/* Location Feedback & Helper */}
+          <div className="mt-2 text-[11px]">
+            {locationStatus === "loading" ? (
+              <p className="animate-pulse font-medium text-[#457d00]">
+                Finding your location…
+              </p>
+            ) : locationStatus === "error" ? (
+              <div className="space-y-1">
+                <p className="text-red-600">{locationError}</p>
+                {onUseCoordinates ? (
+                  <button
+                    type="button"
+                    onClick={() => onUseCoordinates(7.0731, 125.6128, values.radiusKm || "10")}
+                    className="font-semibold text-[#457d00] underline hover:opacity-80 cursor-pointer"
+                  >
+                    Use Davao City center instead
+                  </button>
+                ) : null}
+              </div>
+            ) : hasLocation ? (
+              <p className="font-medium text-[#5F7367]">
+                📍 Filtering stalls within {values.radiusKm || "10"}km of your location.
+              </p>
+            ) : (
+              <p className="text-[#5F7367]">
+                Choose a distance to find stalls near you.
+              </p>
+            )}
           </div>
         </div>
 

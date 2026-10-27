@@ -105,9 +105,9 @@ export function ProductCardAction({
           e.stopPropagation();
           onAddToCart(selectedQty);
         }}
-        className="flex min-h-[42px] flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#B4EB4A] hover:bg-[#9DE038] px-6 py-2.5 text-xs font-semibold tracking-wide text-[#14231A] shadow-2xs transition-all active:scale-95"
+        className="flex min-h-[42px] flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#386600] px-6 py-2.5 text-xs font-semibold tracking-wide text-white shadow-2xs transition-all active:scale-95 cursor-pointer"
       >
-        <ShoppingCart className="size-4 stroke-[2] shrink-0 text-[#14231A]" />
+        <ShoppingCart className="size-4 stroke-[2] shrink-0 text-white" />
         <span className="truncate font-semibold">Add to Cart</span>
       </button>
     </div>

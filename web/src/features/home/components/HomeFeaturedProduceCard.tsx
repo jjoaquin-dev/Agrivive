@@ -138,16 +138,16 @@ export function HomeFeaturedProduceCard({ item }: { item: FeaturedProduceItem })
         <button
           type="button"
           onClick={handleAdd}
-          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#B8EB5E] hover:bg-[#A8DF4E] px-4 text-xs font-bold text-[#14422B] shadow-2xs transition-all active:scale-95"
+          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#457D00] hover:bg-[#386600] px-4 text-xs font-bold text-white shadow-2xs transition-all active:scale-95 cursor-pointer"
         >
           {inCart > 0 ? (
             <>
-              <Check className="size-3.5 stroke-[3]" />
+              <Check className="size-3.5 stroke-[3] text-white" />
               <span>{inCart} in cart</span>
             </>
           ) : (
             <>
-              <ShoppingCart className="size-3.5 stroke-[2.5]" />
+              <ShoppingCart className="size-3.5 stroke-[2.5] text-white" />
               <span>Add to Cart</span>
             </>
           )}

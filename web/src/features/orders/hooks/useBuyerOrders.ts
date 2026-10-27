@@ -71,5 +71,10 @@ export function useBuyerOrders() {
     void load();
   }, [userId, isPending, load]);
 
-  return { orders: owner === userId ? orders : [], nextCursor, loading, loadingMore, error, load };
+  const updateOrder = useCallback((updated: BuyerOrder) => {
+    cache.current = cache.current.map((o) => (o.id === updated.id ? updated : o));
+    setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+  }, []);
+
+  return { orders: owner === userId ? orders : [], nextCursor, loading, loadingMore, error, load, updateOrder };
 }
