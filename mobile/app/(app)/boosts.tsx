@@ -132,7 +132,7 @@ export default function BoostHistoryScreen() {
                 onPageSizeChange={setPageSize}
                 itemLabel="boosts"
               />
-            ) : null}
+            ) : undefined}
           </View>
         }
         refreshControl={
@@ -155,7 +155,7 @@ export default function BoostHistoryScreen() {
               <Text style={styles.emptyTitle}>{items.length === 0 ? "No boosts yet" : "No boosts in this group"}</Text>
               <Text style={styles.emptyText}>{items.length === 0 ? "Boost a listing from Analytics to see it here." : "Choose another status to see more boosts."}</Text>
             </View>
-          ) : null
+          ) : undefined
         }
       />
     </SafeAreaView>

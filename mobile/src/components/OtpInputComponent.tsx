@@ -3,8 +3,7 @@ import {
   StyleSheet,
   View,
   TextInput,
-  NativeSyntheticEvent,
-  TextInputKeyPressEventData,
+  TextInputKeyPressEvent,
   Text,
 } from "react-native";
 import { colors } from "../theme";
@@ -26,7 +25,7 @@ export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
   disabled = false,
   autoFocus = true,
 }) => {
-  const inputRefs = useRef<(TextInput | null)[]>([]);
+  const inputRefs = useRef<(React.ElementRef<typeof TextInput> | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   // Split value into array of single characters
@@ -58,7 +57,7 @@ export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
   };
 
   const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    e: TextInputKeyPressEvent,
     index: number,
   ) => {
     if (e.nativeEvent.key === "Backspace") {
