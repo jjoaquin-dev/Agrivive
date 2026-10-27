@@ -8,10 +8,7 @@ import type { MarketplaceSellerMapResult } from "../types";
 
 const InteractiveSellerMap = dynamic(
   () => import("./InteractiveSellerMap").then((m) => m.InteractiveSellerMap),
-  {
-    ssr: false,
-    loading: () => <Skeleton className="h-72 w-full rounded-2xl sm:h-80" />,
-  }
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-2xl sm:h-80" /> }
 );
 
 const SellerMapModal = dynamic(
@@ -41,6 +38,7 @@ export function MarketplaceSellerSection(props: MarketplaceSellerSectionProps) {
       ? s.detailAddress.split(",")[0].replace(/^Stall\s*#__,\s*/i, "").trim()
       : "Davao City";
     const locationText = s.distanceKm !== null ? `${s.distanceKm.toFixed(1)} km away` : marketLocation;
+    const ratingDisplay = typeof s.rating === "number" && s.rating > 0 ? s.rating.toFixed(1) : "0";
 
     return {
       id: s.id,
@@ -48,7 +46,7 @@ export function MarketplaceSellerSection(props: MarketplaceSellerSectionProps) {
       ownerName: s.name,
       count: s.productCount,
       distance: locationText,
-      rating: "4.9",
+      rating: ratingDisplay,
       avatar: s.image,
       initials: (s.shopName || s.name || "ST").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
     };
