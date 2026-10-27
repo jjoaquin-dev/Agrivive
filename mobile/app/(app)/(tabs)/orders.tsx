@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { QrCode } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
@@ -29,6 +29,16 @@ export default function OrdersScreen() {
     const start = (currentPage - 1) * pageSize;
     return orders.slice(start, start + pageSize);
   }, [orders, currentPage, pageSize]);
+
+  const renderItem = React.useCallback(
+    ({ item }: { item: any }) => (
+      <OrderCard
+        order={item}
+        onPress={() => router.push({ pathname: "/(app)/orders/[id]", params: { id: item.id } })}
+      />
+    ),
+    [router]
+  );
 
   return (
     <View style={styles.screen}>
@@ -79,12 +89,11 @@ export default function OrdersScreen() {
             ) : null}
           </View>
         }
-        renderItem={({ item }) => (
-          <OrderCard
-            order={item}
-            onPress={() => router.push({ pathname: "/(app)/orders/[id]", params: { id: item.id } })}
-          />
-        )}
+        renderItem={renderItem}
+        removeClippedSubviews={Platform.OS === "android"}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        initialNumToRender={6}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={

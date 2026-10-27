@@ -1,6 +1,6 @@
 import React from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
-import { Bell, MapPin, Check, Sprout } from "lucide-react-native";
+import { StyleSheet, View, Text, Pressable, Image } from "react-native";
+import { Bell, MapPin, Check } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface DashboardHeaderProps {
@@ -43,9 +43,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <View style={styles.topBar}>
         <View style={styles.brandGroup}>
           <View style={styles.logoRow}>
-            <View style={styles.logoCircle}>
-              <Sprout size={16} color="#FFFFFF" strokeWidth={2.5} />
-            </View>
+            <Image
+              source={require("../../../../assets/brand/Agrivive_Logo.png")}
+              style={styles.logoImage}
+              resizeMode="contain"
+              accessibilityLabel="Agrivive"
+            />
             <Text style={styles.brandTitle}>Agrivive</Text>
           </View>
           <View style={styles.locationRow}>
@@ -99,8 +102,8 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.base },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
   brandGroup: { flex: 1, marginRight: spacing.sm },
-  logoRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  logoCircle: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#16A34A", alignItems: "center", justifyContent: "center" },
+  logoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  logoImage: { width: 26, height: 26 },
   brandTitle: { fontFamily: fonts.heading.bold, fontSize: 18, color: "#16A34A", letterSpacing: -0.3 },
   locationRow: { flexDirection: "row", alignItems: "center", marginTop: 2, paddingLeft: 2 },
   locationIcon: { marginRight: 3 },

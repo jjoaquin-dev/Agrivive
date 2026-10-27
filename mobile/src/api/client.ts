@@ -84,24 +84,12 @@ export async function apiFetch<T = any>(
     // Ignore cookie retrieval failure if none exists
   }
 
-  let session: any = null;
-  try {
-    session = await Promise.race([
-      authClient.getSession(),
-      new Promise((resolve) => setTimeout(() => resolve(null), 3500)),
-    ]);
-  } catch {
-    // Continue with existing credentials if lookup fails
-  }
-  const token = session?.data?.session?.token;
-
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
 
   const headers: Record<string, string> = {
     Accept: "application/json",
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(cookieHeader ? { cookie: cookieHeader } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...((options.headers as Record<string, string>) || {}),
   };
 

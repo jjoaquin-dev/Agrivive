@@ -17,7 +17,7 @@ function formatDate(value: string) {
   });
 }
 
-export function OrderCard({ order, onPress }: { order: SellerOrder; onPress: () => void }) {
+function OrderCardComponent({ order, onPress }: { order: SellerOrder; onPress: () => void }) {
   const firstItem = order.items[0];
   const itemCount = order.items.length;
 
@@ -116,3 +116,5 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+
+export const OrderCard = React.memo(OrderCardComponent);

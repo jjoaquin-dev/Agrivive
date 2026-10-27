@@ -19,7 +19,7 @@ interface ProductCardProps {
   onEdit?: () => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({
+const ProductCardComponent: React.FC<ProductCardProps> = ({
   product,
   onPress,
   onEdit,
@@ -487,3 +487,5 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
+
+export const ProductCard = React.memo(ProductCardComponent);

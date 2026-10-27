@@ -20,7 +20,7 @@ export function useInventory() {
 
   const loadProducts = useCallback(async (reset = true) => {
     if (reset) {
-      setLoading(true);
+      if (products.length === 0) setLoading(true);
       setError(null);
     } else {
       setLoadingMore(true);
@@ -44,7 +44,7 @@ export function useInventory() {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, [nextCursor]);
+  }, [nextCursor, products.length]);
 
   useFocusEffect(
     useCallback(() => {

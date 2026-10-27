@@ -15,6 +15,7 @@ export function createRateLimitPlugin(options: RateLimitOptions = {}) {
   const windowMs = options.windowMs ?? 60_000;
   const maxRequests = options.maxRequests ?? 120;
   const authMaxRequests = options.authMaxRequests ?? 30;
+  const maxTrackedClients = 10_000;
   const clients = new Map<string, ClientRecord>();
 
   setInterval(() => {
@@ -24,7 +25,7 @@ export function createRateLimitPlugin(options: RateLimitOptions = {}) {
         clients.delete(key);
       }
     }
-  }, 120_000).unref?.();
+  }, 60_000).unref?.();
 
   return new Elysia({ name: "rate-limit-plugin" })
     .onRequest(({ request, set }) => {
@@ -35,10 +36,12 @@ export function createRateLimitPlugin(options: RateLimitOptions = {}) {
         return;
       }
 
-      const forwarded = request.headers.get("x-forwarded-for");
-      const clientIp = (forwarded ? forwarded.split(",")[0].trim() : null)
+      const rawForwarded = request.headers.get("x-forwarded-for");
+      const candidateIp = (rawForwarded ? rawForwarded.split(",")[0].trim() : null)
         || request.headers.get("x-real-ip")
         || "127.0.0.1";
+      const isValidIp = /^([0-9]{1,3}\.){3}[0-9]{1,3}$|^[a-f0-9:]+$/i.test(candidateIp);
+      const clientIp = isValidIp ? candidateIp : "127.0.0.1";
 
       const now = Date.now();
       const isAuthRoute = path.startsWith("/api/auth") || path.startsWith("/auth");
@@ -48,6 +51,10 @@ export function createRateLimitPlugin(options: RateLimitOptions = {}) {
       let record = clients.get(recordKey);
 
       if (!record || now > record.resetAt) {
+        if (clients.size >= maxTrackedClients) {
+          const oldestKey = clients.keys().next().value;
+          if (oldestKey) clients.delete(oldestKey);
+        }
         record = { count: 1, resetAt: now + windowMs };
         clients.set(recordKey, record);
       } else {

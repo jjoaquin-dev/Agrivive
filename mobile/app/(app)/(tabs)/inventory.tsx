@@ -9,6 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -314,18 +315,27 @@ export default function InventoryScreen() {
     );
   };
 
+  const renderItem = React.useCallback(
+    ({ item }: { item: any }) => (
+      <ProductCard
+        product={item}
+        onPress={() => router.push(`/(app)/inventory/${item.id}`)}
+        onEdit={() => router.push(`/(app)/inventory/${item.id}/edit`)}
+      />
+    ),
+    [router]
+  );
+
   return (
     <View style={styles.screen}>
       <FlatList
         data={paginatedProducts}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            onPress={() => router.push(`/(app)/inventory/${item.id}`)}
-            onEdit={() => router.push(`/(app)/inventory/${item.id}/edit`)}
-          />
-        )}
+        renderItem={renderItem}
+        removeClippedSubviews={Platform.OS === "android"}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        initialNumToRender={6}
         ListHeaderComponent={renderHeader()}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={styles.listContent}
