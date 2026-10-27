@@ -32,7 +32,7 @@ const configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
+const localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 const webCorsOrigin = configuredWebOrigins.length
   ? (isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins)
   : localWebOrigin;

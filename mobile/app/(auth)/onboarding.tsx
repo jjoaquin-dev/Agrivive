@@ -90,12 +90,15 @@ export default function OnboardingScreen() {
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
       {/* Top Header matching concept mockup */}
       <View style={styles.topBar}>
-        <Image
-          source={require("../../assets/brand/agrivive-logo-full.png")}
-          style={styles.logo}
-          resizeMode="contain"
-          accessibilityLabel="Agrivive Logo"
-        />
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../../assets/brand/Agrivive_Logo.png")}
+            style={styles.logoImage}
+            resizeMode="contain"
+            accessibilityLabel="Agrivive Logo"
+          />
+          <Text style={styles.logoText}>Agrivive</Text>
+        </View>
         <Pressable
           onPress={handleSkip}
           hitSlop={12}
@@ -189,9 +192,20 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     height: 56,
   },
-  logo: {
-    width: 176,
-    height: 44,
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  logoImage: {
+    width: 32,
+    height: 32,
+  },
+  logoText: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 22,
+    color: colors.primary,
+    letterSpacing: -0.3,
   },
   skipText: {
     fontFamily: fonts.body.semiBold,

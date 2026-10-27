@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const timer = setTimeout(() => {
       setSessionTimedOut(true);
-    }, 2000);
+    }, 600);
     return () => clearTimeout(timer);
   }, []);
 

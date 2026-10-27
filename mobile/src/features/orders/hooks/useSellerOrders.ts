@@ -13,9 +13,12 @@ export function useSellerOrders() {
   const [error, setError] = useState<string | null>(null);
 
   const loadOrders = useCallback(async (reset = true) => {
-    if (reset) setLoading(true);
-    else setLoadingMore(true);
-    setError(null);
+    if (reset) {
+      if (orders.length === 0) setLoading(true);
+      setError(null);
+    } else {
+      setLoadingMore(true);
+    }
 
     try {
       const response = await fetchSellerOrders({
@@ -33,7 +36,7 @@ export function useSellerOrders() {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, [filter, nextCursor]);
+  }, [filter, nextCursor, orders.length]);
 
   useFocusEffect(
     useCallback(() => {

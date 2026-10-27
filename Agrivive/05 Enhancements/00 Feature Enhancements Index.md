@@ -23,7 +23,8 @@ Agrivive/05 Enhancements/
   ├── 05 Mobile and Backend Flow Enhancements.md
   ├── 06 Web Landing Page UI-UX Enhancements.md
   ├── 07 Web Buyer Notification Popover Enhancements.md
-  └── 08 Web Production Performance Optimization.md
+  ├── 08 Web Production Performance Optimization.md
+  └── 09 Mobile Production Performance Optimization.md
 ```
 
 ---
@@ -94,6 +95,36 @@ Agrivive/05 Enhancements/
   * Unlocked instant SSR by removing client-side auth gating on public marketplace browsing.
   * Isolated Leaflet map bundle and styles to on-demand client chunks.
   * Debounced price slider input to prevent navigation and network flooding.
+
+### 8. Mobile Production Performance Optimization
+* **Document Note:** `[[09 Mobile Production Performance Optimization]]`
+* **Focus:**
+  * Removed blocking network `authClient.getSession()` handshake inside `apiFetch` (0ms pre-flight latency).
+  * Enabled Metro `.mjs` tree-shaking for `lucide-react-native` icons, eliminating all 1,400+ unused SVG icons from memory.
+  * Removed unused `react-native-maps` and dead fonts, slashing native binary dependencies.
+  * Enabled Proguard/R8 shrinking and resource optimization in `app.json`.
+  * Removed artificial splash screen and session delays (hiding splash screen instantly when fonts are loaded).
+  * Implemented stale-while-revalidate navigation across Inventory and Orders tabs.
+  * Memoized `ProductCard` and `OrderCard` with `React.memo` and tuned `FlatList` virtualization.
+
+### 9. Unified Produce Bag Application and Internal Logo Replacement
+* **Document Note:** `[[2026-10-27 Unified Produce Bag Logo Across Web and Mobile]]`
+* **Focus:**
+  * Replaced legacy brand icons and generic internal icons across Web and Mobile with the official produce tote bag artwork (`Agrivive_Logo.png`).
+  * Generated high-resolution, contrast-aligned light and dark variants (`agrivive-logo-crate.png`, `agrivive-logo-crate-dark.png`) preserving exact alpha transparency.
+  * Generated crisp mobile launcher icons, Android adaptive foregrounds with safe-zone bounds, and splash icons.
+  * Replaced `<Sprout />` internal icon in seller dashboard header with the official Agrivive emblem.
+  * Replaced legacy onboarding header asset with the new bag emblem and wordmark.
+
+### 10. Backend Performance and Security Hardening
+* **Document Note:** `[[2026-10-27 Backend Performance and Security Hardening]]`
+* **Focus:**
+  * Eliminated IP spoofing and unbounded Map memory leaks in the API rate limiter.
+  * Added PostgreSQL connection pool error listeners, 5s connection acquisition timeouts, and pool limits.
+  * Added global production error sanitization preventing raw SQL syntax and schema leakage (CWE-209).
+  * Implemented 30-second in-memory session user status caching, cutting redundant database queries by 50%.
+  * Added 6 composite indexes on `orders`, `ordered_items`, and `sellers_product` to replace sequential full-table scans with index scans.
+  * Expanded development CORS to support LAN IPs (`192.168.*.*`, `10.*.*.*`) for physical mobile and Expo clients.
 
 ---
 

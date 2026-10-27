@@ -243,8 +243,12 @@ export const sellers_product = pgTable("sellers_product", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-}, (table) => [index("sellers_product_marketplace_visibility_idx")
-  .on(table.isActive, table.isMarketable, table.publishedAt)]);
+}, (table) => [
+  index("sellers_product_marketplace_visibility_idx")
+    .on(table.isActive, table.isMarketable, table.publishedAt),
+  index("sellers_product_user_id_created_at_idx")
+    .on(table.userId, table.createdAt),
+]);
 
 export const buyer_saved_products = pgTable("buyer_saved_products", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -549,7 +553,11 @@ export const orders = pgTable("orders", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+}, (table) => [
+  index("orders_buyers_id_created_at_idx").on(table.buyersId, table.createdAt),
+  index("orders_sellers_id_created_at_idx").on(table.sellersId, table.createdAt),
+  index("orders_status_expires_at_idx").on(table.status, table.expiresAt),
+]);
 
 export const seller_scan_grace = pgTable("seller_scan_grace", {
   orderId: uuid("order_id").primaryKey().references(() => orders.id, { onDelete: "cascade" }),
@@ -749,7 +757,10 @@ export const ordered_items = pgTable("ordered_items", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-});
+}, (table) => [
+  index("ordered_items_orders_id_idx").on(table.ordersId),
+  index("ordered_items_product_id_idx").on(table.productId),
+]);
 
 export const product_reviews = pgTable("product_reviews", {
   id: uuid("id").defaultRandom().primaryKey(),

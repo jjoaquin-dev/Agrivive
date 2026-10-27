@@ -29,13 +29,6 @@ export default function RootLayout() {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync().catch(() => {});
     }
-
-    // Safety timeout fallback: ensure splash screen never stays locked indefinitely
-    const timer = setTimeout(() => {
-      SplashScreen.hideAsync().catch(() => {});
-    }, 1200);
-
-    return () => clearTimeout(timer);
   }, [fontsLoaded, fontError]);
 
   return (

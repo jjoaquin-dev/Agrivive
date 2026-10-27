@@ -116213,7 +116213,13 @@ function drizzle(...params) {
 
 // src/db/index.ts
 var pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  max: Number(process.env.DB_POOL_MAX || 20),
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000
+});
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle PostgreSQL client:", err);
 });
 var db2 = drizzle({ client: pool });
 // node_modules/drizzle-orm/pg-core/columns/enum.js
@@ -116464,7 +116470,10 @@ var sellers_product = pgTable("sellers_product", {
   scalingType: scaling_type_enum().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-}, (table) => [index("sellers_product_marketplace_visibility_idx").on(table.isActive, table.isMarketable, table.publishedAt)]);
+}, (table) => [
+  index("sellers_product_marketplace_visibility_idx").on(table.isActive, table.isMarketable, table.publishedAt),
+  index("sellers_product_user_id_created_at_idx").on(table.userId, table.createdAt)
+]);
 var buyer_saved_products = pgTable("buyer_saved_products", {
   id: uuid2("id").defaultRandom().primaryKey().notNull(),
   buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -116732,7 +116741,11 @@ var orders = pgTable("orders", {
   expiredAt: timestamp("expired_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-});
+}, (table) => [
+  index("orders_buyers_id_created_at_idx").on(table.buyersId, table.createdAt),
+  index("orders_sellers_id_created_at_idx").on(table.sellersId, table.createdAt),
+  index("orders_status_expires_at_idx").on(table.status, table.expiresAt)
+]);
 var seller_scan_grace = pgTable("seller_scan_grace", {
   orderId: uuid2("order_id").primaryKey().references(() => orders.id, { onDelete: "cascade" }),
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -116903,7 +116916,10 @@ var ordered_items = pgTable("ordered_items", {
   }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-});
+}, (table) => [
+  index("ordered_items_orders_id_idx").on(table.ordersId),
+  index("ordered_items_product_id_idx").on(table.productId)
+]);
 var product_reviews = pgTable("product_reviews", {
   id: uuid2("id").defaultRandom().primaryKey(),
   orderId: uuid2("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
@@ -119575,6 +119591,8 @@ async function touchUserActivity(userId) {
 }
 
 // src/modules/auth/services/auth.session.ts
+var userStatusCache = new Map;
+var STATUS_CACHE_TTL_MS = 30000;
 var sellerRoute = new Elysia({ name: "auth.session" });
 var sessionAuth = new Elysia().macro({
   role: (allowedRoles = []) => ({
@@ -119585,13 +119603,28 @@ var sessionAuth = new Elysia().macro({
       if (!authSession) {
         return status(401);
       }
-      const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
-      if (!current?.isActive)
+      const now = Date.now();
+      let cached = userStatusCache.get(authSession.user.id);
+      if (!cached || now - cached.cachedAt > STATUS_CACHE_TTL_MS) {
+        const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
+        if (!current)
+          return status(403);
+        cached = {
+          isActive: Boolean(current.isActive),
+          role: current.role ?? [],
+          email: current.email,
+          cachedAt: now
+        };
+        if (userStatusCache.size > 5000)
+          userStatusCache.clear();
+        userStatusCache.set(authSession.user.id, cached);
+      }
+      if (!cached.isActive)
         return status(403);
       touchUserActivity(authSession.user.id);
-      const userRoles = [...current.role ?? []];
+      const userRoles = [...cached.role ?? []];
       const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
-      if (stakeholderEmails.has(current.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
+      if (stakeholderEmails.has(cached.email.toLowerCase()) && !userRoles.includes("stakeholder")) {
         userRoles.push("stakeholder");
       }
       const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
@@ -119599,7 +119632,7 @@ var sessionAuth = new Elysia().macro({
         return status(403);
       }
       return {
-        user: { ...authSession.user, role: userRoles, isActive: current.isActive },
+        user: { ...authSession.user, role: userRoles, isActive: cached.isActive },
         session: authSession.session
       };
     }
@@ -142628,6 +142661,11 @@ var validationPlugin = new Elysia({
   if (code === "VALIDATION") {
     return error;
   }
+  if (code === "NOT_FOUND") {
+    return status(404, { message: "Resource not found" });
+  }
+  console.error("[API Error]", code, error);
+  if (false) {}
 });
 
 // src/plugins/security-headers.plugin.ts
@@ -142644,6 +142682,7 @@ function createRateLimitPlugin(options = {}) {
   const windowMs = options.windowMs ?? 60000;
   const maxRequests = options.maxRequests ?? 120;
   const authMaxRequests = options.authMaxRequests ?? 30;
+  const maxTrackedClients = 1e4;
   const clients = new Map;
   setInterval(() => {
     const now = Date.now();
@@ -142652,21 +142691,28 @@ function createRateLimitPlugin(options = {}) {
         clients.delete(key);
       }
     }
-  }, 120000).unref?.();
+  }, 60000).unref?.();
   return new Elysia({ name: "rate-limit-plugin" }).onRequest(({ request, set }) => {
     const url = new URL(request.url);
     const path = url.pathname;
     if (path === "/health" || path === "/health/ready" || path === "/") {
       return;
     }
-    const forwarded = request.headers.get("x-forwarded-for");
-    const clientIp = (forwarded ? forwarded.split(",")[0].trim() : null) || request.headers.get("x-real-ip") || "127.0.0.1";
+    const rawForwarded = request.headers.get("x-forwarded-for");
+    const candidateIp = (rawForwarded ? rawForwarded.split(",")[0].trim() : null) || request.headers.get("x-real-ip") || "127.0.0.1";
+    const isValidIp = /^([0-9]{1,3}\.){3}[0-9]{1,3}$|^[a-f0-9:]+$/i.test(candidateIp);
+    const clientIp = isValidIp ? candidateIp : "127.0.0.1";
     const now = Date.now();
     const isAuthRoute = path.startsWith("/api/auth") || path.startsWith("/auth");
     const effectiveLimit = isAuthRoute ? authMaxRequests : maxRequests;
     const recordKey = `${clientIp}:${isAuthRoute ? "auth" : "gen"}`;
     let record = clients.get(recordKey);
     if (!record || now > record.resetAt) {
+      if (clients.size >= maxTrackedClients) {
+        const oldestKey = clients.keys().next().value;
+        if (oldestKey)
+          clients.delete(oldestKey);
+      }
       record = { count: 1, resetAt: now + windowMs };
       clients.set(recordKey, record);
     } else {
@@ -142935,7 +142981,7 @@ async function deliverPushNotifications() {
 process.env.NODE_ENV = "development";
 var isDev = true;
 var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
-var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/;
+var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 var webCorsOrigin = configuredWebOrigins.length ? isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins : localWebOrigin;
 var openapiPlugin = isDev ? index_default() : new Elysia({ name: "noop-openapi" });
 var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
