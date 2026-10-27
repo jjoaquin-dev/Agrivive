@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import { authClient } from "../../../api/client";
 import { useAuth } from "../../../context/AuthContext";
@@ -49,9 +50,10 @@ export function GoogleSignInButton({
     setError("");
 
     try {
+      const callbackURL = Linking.createURL("/");
       const response = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL,
       });
 
       if (response.error) {
@@ -78,8 +80,14 @@ export function GoogleSignInButton({
       }
 
       router.replace("/(app)/profile/setup");
-    } catch {
-      setError("We could not start Google sign-in. Please try again.");
+    } catch (err: any) {
+      console.error("[Google Sign-In Error]", err);
+      const msg = err?.message || "";
+      if (msg.includes("Network") || msg.includes("Failed to connect")) {
+        setError("Could not connect to authentication server. Check your network.");
+      } else {
+        setError(msg || "We could not start Google sign-in. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
