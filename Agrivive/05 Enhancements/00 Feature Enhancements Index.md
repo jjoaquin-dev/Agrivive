@@ -126,6 +126,14 @@ Agrivive/05 Enhancements/
   * Added 6 composite indexes on `orders`, `ordered_items`, and `sellers_product` to replace sequential full-table scans with index scans.
   * Expanded development CORS to support LAN IPs (`192.168.*.*`, `10.*.*.*`) for physical mobile and Expo clients.
 
+### 11. Facebook Page Public Visibility & Permanent Token Fix
+* **Document Note:** `[[2026-10-27 Facebook Page Public Visibility and Permanent Token]]`
+* **Focus:**
+  * Migrated from locked "Tech Provider" app to clean `Agrivive_social` app without corporate verification blocks.
+  * Generated permanent, never-expiring Page Access Token (`expires_at: 0`) with full publishing scopes.
+  * Added explicit `published: "true"` to Graph API photo upload payload to ensure instant public timeline posts.
+
+
 ---
 
 ## Governance & Prioritization Principles
