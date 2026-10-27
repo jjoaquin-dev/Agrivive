@@ -21,10 +21,8 @@ export function getApiBaseUrl(): string {
     return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, "");
   }
 
-  // Fallback for Android emulator (10.0.2.2) and iOS/Web (localhost)
-  return Platform.OS === "android"
-    ? "http://10.0.2.2:3000"
-    : "http://localhost:3000";
+  // Production fallback for standalone builds
+  return "https://api.agrivive.tech";
 }
 
 export const authClient = createAuthClient({

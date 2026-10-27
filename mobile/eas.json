@@ -7,6 +7,9 @@
       "distribution": "internal",
       "environment": "preview",
       "bun": "1.4.2",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.agrivive.tech"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -16,6 +19,9 @@
       "environment": "production",
       "bun": "1.4.2",
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.agrivive.tech"
+      },
       "android": {
         "buildType": "app-bundle"
       }
