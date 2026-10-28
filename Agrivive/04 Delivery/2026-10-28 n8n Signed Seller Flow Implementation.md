@@ -15,6 +15,7 @@ To ensure 100% compliance with the signed paper while keeping database integrity
 - **Database Schema**: Added `fb_post_logs` table in `backend/src/db/schema.ts` and generated Drizzle migration `backend/drizzle/20261028052448_tricky_scrambler/migration.sql`.
 - **Product Creation Webhook**: Updated `backend/src/modules/seller/services/seller.product.create.ts` to asynchronously notify `N8N_SELLER_FLOW_WEBHOOK_URL` on product listing creation.
 - **Price Reduction Endpoint**: Added `backend/src/modules/integrations/services/integrations.product-price-reduce.ts` and `backend/src/modules/integrations/index/integrations.product-price.ts`.
+- **Unified Product Context Endpoint**: Added `backend/src/modules/integrations/services/integrations.product-context.ts` and `backend/src/modules/integrations/index/integrations.product-context.ts` to seamlessly resolve product facts whether a `productId` or `campaignId` is supplied by the incoming webhook.
 - **Post Log Endpoint**: Added `backend/src/modules/integrations/services/integrations.fb-logs.ts` and `backend/src/modules/integrations/index/integrations.fb-logs.ts`.
 - **Main App Mounting**: Registered new routes in `backend/src/index.ts`.
 - **Environment**: Updated `backend/.env` and `backend/.env.example` with `N8N_SELLER_FLOW_WEBHOOK_URL`.

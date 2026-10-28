@@ -17,6 +17,7 @@ import { integrationsSocialPublishRoute } from "./modules/integrations/index/int
 import { integrationsVisibilityBoostRoute } from "./modules/integrations/index/integrations.visibility-boost";
 import { integrationsProductPriceRoute } from "./modules/integrations/index/integrations.product-price";
 import { integrationsFbLogsRoute } from "./modules/integrations/index/integrations.fb-logs";
+import { integrationsProductContextRoute } from "./modules/integrations/index/integrations.product-context";
 import { conversationsRoute } from "./modules/conversations";
 import { notificationsRoute } from "./modules/notifications";
 import { trustRoute } from "./modules/trust";
@@ -70,6 +71,7 @@ const app = new Elysia()
   .use(integrationsVisibilityBoostRoute)
   .use(integrationsProductPriceRoute)
   .use(integrationsFbLogsRoute)
+  .use(integrationsProductContextRoute)
   .get("/", () => "Hello Elysia")
   .get("/health", () => ({ status: "ok" }))
   .get("/health/ready", async ({ status }) => {

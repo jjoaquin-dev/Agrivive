@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../../../db";
-import { sellers_product } from "../../../db/schema";
+import { seller_social_campaigns, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 
 function cents(value: string): bigint {
@@ -13,8 +13,18 @@ function decimal(centsValue: bigint): string {
   return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
 }
 
-export async function reduceSellerProductPriceByPercent(productId: string) {
+export async function reduceSellerProductPriceByPercent(identifier: string) {
   return await db.transaction(async (tx) => {
+    let productId = identifier;
+    const [campaign] = await tx.select({ productId: seller_social_campaigns.productId })
+      .from(seller_social_campaigns)
+      .where(eq(seller_social_campaigns.id, identifier))
+      .limit(1);
+
+    if (campaign) {
+      productId = campaign.productId;
+    }
+
     const [product] = await tx.select().from(sellers_product)
       .where(eq(sellers_product.id, productId))
       .for("update")
