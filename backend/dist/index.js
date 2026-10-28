@@ -137201,6 +137201,12 @@ async function readOrderReview(userId, orderId, side) {
 // src/modules/seller/model/seller.order.review.ts
 var sellerReviewParams = t.Object({ id: t.String({ format: "uuid" }) });
 var sellerReviewResponseBody = t.Object({ response: t.String({ minLength: 1, maxLength: 2000 }) });
+var sellerReviewsQuery = t.Object({
+  filter: t.Optional(t.Union([t.Literal("all"), t.Literal("unanswered"), t.Literal("replied")])),
+  rating: t.Optional(t.Numeric({ minimum: 1, maximum: 5 })),
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, default: 20 })),
+  offset: t.Optional(t.Numeric({ minimum: 0, default: 0 }))
+});
 
 // src/modules/seller/services/seller.order.review.respond.ts
 function respondSellerReview(sellerId, orderId, response) {
@@ -137213,8 +137219,121 @@ function respondSellerReview(sellerId, orderId, response) {
   });
 }
 
+// src/modules/seller/services/seller.review.reply.ts
+function respondSellerReviewById(sellerId, reviewId, response) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [review] = await tx.update(order_reviews).set({ sellerResponse: response.trim() }).where(and(eq(order_reviews.id, reviewId), eq(order_reviews.sellerId, sellerId), isNull2(order_reviews.sellerResponse))).returning();
+    if (!review)
+      throw new OrderError(404, "Unanswered review not found");
+    return review;
+  });
+}
+
+// src/modules/seller/services/seller.reviews.list.ts
+async function readSellerReviewsList(sellerId, options = {}) {
+  await db2.transaction((tx) => requireVerifiedSeller(tx, sellerId));
+  const limit = options.limit ?? 20;
+  const offset = options.offset ?? 0;
+  const [summary] = await db2.select({
+    count: sql3`count(*)::int`,
+    average: sql3`round(avg(${order_reviews.rating})::numeric, 1)::text`,
+    star5: sql3`count(case when ${order_reviews.rating} = 5 then 1 end)::int`,
+    star4: sql3`count(case when ${order_reviews.rating} = 4 then 1 end)::int`,
+    star3: sql3`count(case when ${order_reviews.rating} = 3 then 1 end)::int`,
+    star2: sql3`count(case when ${order_reviews.rating} = 2 then 1 end)::int`,
+    star1: sql3`count(case when ${order_reviews.rating} = 1 then 1 end)::int`,
+    unansweredCount: sql3`count(case when ${order_reviews.sellerResponse} is null then 1 end)::int`
+  }).from(order_reviews).where(eq(order_reviews.sellerId, sellerId));
+  const conditions = [eq(order_reviews.sellerId, sellerId)];
+  if (options.filter === "unanswered") {
+    conditions.push(sql3`${order_reviews.sellerResponse} is null`);
+  } else if (options.filter === "replied") {
+    conditions.push(sql3`${order_reviews.sellerResponse} is not null`);
+  }
+  if (options.rating && options.rating >= 1 && options.rating <= 5) {
+    conditions.push(eq(order_reviews.rating, options.rating));
+  }
+  const rows = await db2.select({
+    id: order_reviews.id,
+    orderId: order_reviews.orderId,
+    rating: order_reviews.rating,
+    review: order_reviews.review,
+    sellerResponse: order_reviews.sellerResponse,
+    createdAt: order_reviews.createdAt,
+    buyerName: user.name
+  }).from(order_reviews).leftJoin(user, eq(user.id, order_reviews.buyerId)).where(and(...conditions)).orderBy(desc(order_reviews.createdAt)).limit(limit).offset(offset);
+  const orderIds = rows.map((r) => r.orderId);
+  const itemsByOrder = new Map;
+  if (orderIds.length > 0) {
+    const items = await db2.select({
+      ordersId: ordered_items.ordersId,
+      productName: ordered_items.productName
+    }).from(ordered_items).where(inArray(ordered_items.ordersId, orderIds));
+    for (const item of items) {
+      if (!item.productName)
+        continue;
+      const list = itemsByOrder.get(item.ordersId) ?? [];
+      list.push(item.productName);
+      itemsByOrder.set(item.ordersId, list);
+    }
+  }
+  const reviews = rows.map((r) => {
+    let formattedName = "Verified buyer";
+    if (r.buyerName) {
+      const parts = r.buyerName.trim().split(/\s+/);
+      const firstName = parts[0];
+      const lastInitial = parts[1]?.[0] ? ` ${parts[1][0]}.` : "";
+      formattedName = `${firstName}${lastInitial}`;
+    }
+    return {
+      id: r.id,
+      orderId: r.orderId,
+      rating: r.rating,
+      review: r.review,
+      sellerResponse: r.sellerResponse,
+      createdAt: r.createdAt.toISOString(),
+      buyerName: formattedName,
+      items: itemsByOrder.get(r.orderId) ?? []
+    };
+  });
+  return {
+    summary: {
+      count: summary?.count ?? 0,
+      average: summary?.average ?? null,
+      breakdown: {
+        5: summary?.star5 ?? 0,
+        4: summary?.star4 ?? 0,
+        3: summary?.star3 ?? 0,
+        2: summary?.star2 ?? 0,
+        1: summary?.star1 ?? 0
+      },
+      unansweredCount: summary?.unansweredCount ?? 0
+    },
+    reviews
+  };
+}
+
 // src/modules/seller/index/seller.order.review.ts
-var sellerReviewRoute = new Elysia().use(sessionAuth).get("/orders/:id/review", async ({ session, params, status }) => {
+var sellerReviewRoute = new Elysia().use(sessionAuth).get("/reviews", async ({ session, query, status }) => {
+  try {
+    return await readSellerReviewsList(session.userId, query);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to read seller reviews" });
+  }
+}, { role: ["seller"], query: sellerReviewsQuery }).post("/reviews/:id/reply", async ({ session, params, body, status }) => {
+  try {
+    return await respondSellerReviewById(session.userId, params.id, body.response);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to respond to review" });
+  }
+}, { role: ["seller"], params: sellerReviewParams, body: sellerReviewResponseBody }).get("/orders/:id/review", async ({ session, params, status }) => {
   try {
     return await readOrderReview(session.userId, params.id, "seller");
   } catch (error) {
