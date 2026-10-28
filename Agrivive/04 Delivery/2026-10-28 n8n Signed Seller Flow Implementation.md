@@ -19,7 +19,7 @@ To ensure 100% compliance with the signed paper while keeping database integrity
 - **Post Log Endpoint**: Added `backend/src/modules/integrations/services/integrations.fb-logs.ts` and `backend/src/modules/integrations/index/integrations.fb-logs.ts`.
 - **Main App Mounting**: Registered new routes in `backend/src/index.ts`.
 - **Environment**: Updated `backend/.env` and `backend/.env.example` with `N8N_SELLER_FLOW_WEBHOOK_URL`.
-- **n8n Workflow**: Created and refined `n8n/workflows/agrivive-seller-flow.json` with 6-hour recursive lifecycle loop and resilient Groq fallback chains.
+- **n8n Workflow**: Created and refined `n8n/workflows/agrivive-seller-flow.json` with 6-hour recursive lifecycle loop, standard JSON bodies without `JSON.stringify` for n8n Fixed editor compatibility, and resilient Groq fallback chains.
 - **Price Floor & Metadata Integrity**: Updated `backend/src/modules/integrations/services/integrations.product-price-reduce.ts` to guarantee complete product metadata even when minimum price floor is reached or when produce is sold out.
 
 ## Affected Files
