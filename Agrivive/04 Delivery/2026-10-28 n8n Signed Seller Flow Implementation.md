@@ -35,6 +35,8 @@ To ensure 100% compliance with the signed paper while keeping database integrity
 - `n8n/workflows/agrivive-seller-flow.json`
 
 ## Commits
+- Commit: `b75aab2`
+- Message: `fix: ensure product details and resilient fallbacks in n8n seller loop`
 - Commit: `339ca7d`
 - Message: `feat: implement signed n8n seller flow with dynamic price reduction`
 - Branch: `development`
