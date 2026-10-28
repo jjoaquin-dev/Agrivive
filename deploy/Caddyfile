@@ -39,6 +39,12 @@
     import security_headers
     encode zstd gzip
 
+        # Enable request logging with duration
+    log {
+        output stdout
+        format console
+    }
+
     request_body {
         max_size 25MB
     }
