@@ -50,6 +50,12 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu }: BuyerSiteHeaderNav
                 </Link>
               );
             })}
+            <Link
+              href="/marketplace/overview"
+              className="border-b-2 border-transparent pb-1 font-semibold text-[#457D00] hover:border-[#457D00] transition-all"
+            >
+              Public Overview
+            </Link>
           </nav>
         </PageContainer>
       </div>
@@ -61,6 +67,13 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu }: BuyerSiteHeaderNav
             <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
               Categories
             </p>
+            <Link
+              href="/marketplace/overview"
+              onClick={onCloseMenu}
+              className="py-1.5 text-xs font-bold text-[#457D00] hover:underline"
+            >
+              Public Marketplace Overview
+            </Link>
             {produceCategories.map((cat) => {
               const isActive = selectedType === cat.value || (!selectedType && cat.value === "");
               const href = cat.value

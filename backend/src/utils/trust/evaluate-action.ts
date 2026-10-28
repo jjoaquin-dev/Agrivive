@@ -2,7 +2,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "../../db";
 import { trust_actions, trust_events, user } from "../../db/schema";
 import { queueTrustNotice } from "./index";
-import { trustActionPolicy, resolveTrustAction, trustPolicyVersion } from "./policy";
+import { trustActionPolicy, resolveTrustAction, resolveTrustDurationHours, trustPolicyVersion } from "./policy";
 import { readTrustMonitoringScore } from "./score";
 
 const actionNoticeKinds = {
@@ -30,9 +30,16 @@ export async function evaluateTrustAction(subjectId: string, sourceOrderId?: str
   const orderId = sourceOrderId ?? sourceEvent?.orderId ?? null;
   const sourceKey = sourceEventKey ?? sourceOrderId ?? "score";
   const actionKey = `${trustPolicyVersion}:${subjectId}:${actionType}:${sourceKey}`;
-  const endsAt = actionType === "temporary_restriction"
-    ? new Date(Date.now() + trustActionPolicy.restrictionHours * 3_600_000)
+
+  const durationHours = resolveTrustDurationHours(monitoring.weightedPoints);
+  const endsAt = actionType === "temporary_restriction" && durationHours > 0
+    ? new Date(Date.now() + durationHours * 3_600_000)
     : null;
+
+  const durationLabel = durationHours >= 72 ? "3 days" : durationHours >= 24 ? "24 hours" : "12 hours";
+  const reasonText = actionType === "warning"
+    ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account."
+    : `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}.`;
 
   return db.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions)
@@ -45,7 +52,7 @@ export async function evaluateTrustAction(subjectId: string, sourceOrderId?: str
       actionType,
       weightedPoints: monitoring.weightedPoints,
       policyVersion: trustPolicyVersion,
-      reason: `Trust monitoring reached the ${actionType} threshold at ${monitoring.weightedPoints} point(s).`,
+      reason: reasonText,
       sourceEventId: sourceEvent?.id ?? null,
       sourceOrderId: orderId,
       endsAt,

@@ -24,6 +24,21 @@ function formatDate(iso: string) {
   });
 }
 
+function formatExpiration(iso: string) {
+  const date = new Date(iso);
+  const datePart = date.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timePart = date.toLocaleTimeString("en-PH", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${datePart}, ${timePart}`;
+}
+
 export function OrderCard({
   order,
   onCancel,
@@ -99,7 +114,7 @@ export function OrderCard({
               {isCompleted
                 ? `Completed ${formatDate(order.updatedAt)}`
                 : isPending && order.expiresAt
-                  ? `Hold expires ${formatDate(order.expiresAt)}`
+                  ? `Hold expires ${formatExpiration(order.expiresAt)}`
                   : "Reservation closed"}
             </p>
           </div>

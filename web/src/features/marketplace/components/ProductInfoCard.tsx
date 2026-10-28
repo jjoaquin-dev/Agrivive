@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Check, MapPin, ShoppingBasket, ShoppingCart } from "lucide-react";
+import { Check, Compass, MapPin, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { isTrustAccessMessage } from "@/src/lib/api";
+import { getDirectionsUrl } from "@/src/lib/maps";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 import { sellerTypeLabel } from "../marketplace-labels";
 import type { MarketplaceProduct } from "../types";
@@ -40,6 +41,11 @@ export function ProductInfoCard({
   const previousPrice = product.basePrice == null ? null : Number(product.basePrice);
   const currentPrice = Number(product.productPrice);
   const isReduced = previousPrice !== null && previousPrice > currentPrice;
+  const directionsUrl = getDirectionsUrl(
+    product.seller.latitude,
+    product.seller.longitude,
+    product.seller.detailAddress,
+  );
 
   return (
     <div className="flex h-full flex-col justify-between space-y-5 rounded-[24px] border border-[#E5E2DA] bg-white p-6 shadow-xs lg:col-span-1">
@@ -101,7 +107,20 @@ export function ProductInfoCard({
 
         {/* Pickup Location Box */}
         <div className="space-y-1.5 rounded-2xl border border-[#EAECE0] bg-[#FAF9F5] p-4 text-[14px]">
-          <span className="text-[12px] font-semibold text-foreground">Pickup details</span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[12px] font-semibold text-foreground">Pickup details</span>
+            {directionsUrl ? (
+              <a
+                href={directionsUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#457D00] hover:text-[#386600] hover:underline"
+              >
+                <Compass className="size-3.5 shrink-0" aria-hidden="true" />
+                <span>Get Direction</span>
+              </a>
+            ) : null}
+          </div>
           <p className="flex items-start gap-1.5 text-foreground">
             <MapPin className="mt-0.5 size-4 shrink-0 text-[#457D00]" />
             <span>{product.seller.detailAddress}</span>

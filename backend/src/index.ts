@@ -24,6 +24,7 @@ import { rateLimitPlugin } from "./plugins/rate-limit.plugin";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { deliverPushNotifications } from "./jobs/deliver-push-notifications";
+import { sendSellerListingNotices } from "./jobs/send-seller-listing-notices";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -82,9 +83,10 @@ const app = new Elysia()
   .use(validationPlugin)
   .listen(3000);
 
-// Process and deliver queued push notifications every 30 seconds
+// Process and deliver queued push notifications and seller notices every 30 seconds
 setInterval(async () => {
   try {
+    await sendSellerListingNotices();
     await deliverPushNotifications();
   } catch (error) {
     console.error("[Push] Auto-delivery error:", error);

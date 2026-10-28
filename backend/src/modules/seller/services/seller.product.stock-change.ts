@@ -5,7 +5,8 @@ import { quantityToHundredths } from "../../../utils/order-amount";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
-import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
+import { queueFirstPublicListing, queueSellerListingEvent } from "../../../utils/seller-listing-event";
+import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
 
 const maxHundredths = 9_999_999_999n;
 
@@ -20,7 +21,7 @@ function toDecimal(value: bigint): string {
   return `${value < 0n ? "-" : ""}${absolute / 100n}.${(absolute % 100n).toString().padStart(2, "0")}`;
 }
 
-export function changeSellerProductStock(
+export async function changeSellerProductStock(
   sellerId: string,
   productId: string,
   delta: number,
@@ -34,7 +35,7 @@ export function changeSellerProductStock(
   if (!cleanReason || cleanReason.length > 500) throw new OrderError(400, "Stock change reason is required");
   const signedChange = delta < 0 ? -change : change;
 
-  return db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [product] = await tx.select().from(sellers_product).where(and(
       eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId),
@@ -59,7 +60,7 @@ export function changeSellerProductStock(
 
     const now = new Date();
     const cycleBasePrice = product.basePrice ?? product.productPrice;
-    const [updated] = await tx.update(sellers_product).set({
+    const [updatedProduct] = await tx.update(sellers_product).set({
       productQty: toDecimal(after),
       ...(originalQty !== product.originalQty ? { originalQty } : {}),
       ...(newCycle || initializeLegacy ? {
@@ -90,7 +91,15 @@ export function changeSellerProductStock(
       afterQty: toDecimal(after),
       reason: cleanReason,
     });
-    await queueFirstPublicListing(tx, updated.id);
-    return updated;
+    if (before === 0n && after > 0n) {
+      await queueSellerListingEvent(tx, updatedProduct.id, "restock", {
+        stock: toDecimal(after),
+      });
+    } else {
+      await queueFirstPublicListing(tx, updatedProduct.id);
+    }
+    return updatedProduct;
   });
+  void sendSellerListingNotices().catch(() => {});
+  return updated;
 }

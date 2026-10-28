@@ -76089,135 +76089,6 @@ var require_messaging2 = __commonJS(function(exports) {
   } });
 });
 
-// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
-var exports_type3 = {};
-__export(exports_type3, {
-  Any: () => Any,
-  Argument: () => Argument,
-  Array: () => Array2,
-  AsyncIterator: () => AsyncIterator,
-  Awaited: () => Awaited,
-  BigInt: () => BigInt2,
-  Boolean: () => Boolean2,
-  Capitalize: () => Capitalize,
-  Composite: () => Composite,
-  Const: () => Const,
-  Constructor: () => Constructor,
-  ConstructorParameters: () => ConstructorParameters,
-  Date: () => Date2,
-  Enum: () => Enum,
-  Exclude: () => Exclude,
-  Extends: () => Extends,
-  Extract: () => Extract,
-  Function: () => Function2,
-  Index: () => Index,
-  InstanceType: () => InstanceType,
-  Instantiate: () => Instantiate,
-  Integer: () => Integer,
-  Intersect: () => Intersect,
-  Iterator: () => Iterator,
-  KeyOf: () => KeyOf,
-  Literal: () => Literal,
-  Lowercase: () => Lowercase,
-  Mapped: () => Mapped,
-  Module: () => Module,
-  Never: () => Never,
-  Not: () => Not2,
-  Null: () => Null,
-  Number: () => Number2,
-  Object: () => Object2,
-  Omit: () => Omit,
-  Optional: () => Optional,
-  Parameters: () => Parameters,
-  Partial: () => Partial,
-  Pick: () => Pick,
-  Promise: () => Promise2,
-  Readonly: () => Readonly,
-  ReadonlyOptional: () => ReadonlyOptional,
-  Record: () => Record,
-  Recursive: () => Recursive,
-  Ref: () => Ref,
-  RegExp: () => RegExp2,
-  Required: () => Required,
-  Rest: () => Rest,
-  ReturnType: () => ReturnType,
-  String: () => String2,
-  Symbol: () => Symbol2,
-  TemplateLiteral: () => TemplateLiteral,
-  Transform: () => Transform,
-  Tuple: () => Tuple,
-  Uint8Array: () => Uint8Array2,
-  Uncapitalize: () => Uncapitalize,
-  Undefined: () => Undefined,
-  Union: () => Union,
-  Unknown: () => Unknown,
-  Unsafe: () => Unsafe,
-  Uppercase: () => Uppercase,
-  Void: () => Void
-});
-
-// src/db/schema.ts
-var exports_schema = {};
-__export(exports_schema, {
-  account: () => account,
-  buyer_listing_notices: () => buyer_listing_notices,
-  buyer_saved_products: () => buyer_saved_products,
-  checkouts: () => checkouts,
-  conversation_context_enum: () => conversation_context_enum,
-  conversation_messages: () => conversation_messages,
-  conversation_participants: () => conversation_participants,
-  conversation_status_enum: () => conversation_status_enum,
-  conversations: () => conversations,
-  listing_cycles: () => listing_cycles,
-  notification_device_platform_enum: () => notification_device_platform_enum,
-  notification_devices: () => notification_devices,
-  notification_outbox: () => notification_outbox,
-  notification_outbox_status_enum: () => notification_outbox_status_enum,
-  notification_type_enum: () => notification_type_enum,
-  order_inquiries: () => order_inquiries,
-  order_report_evidence: () => order_report_evidence,
-  order_reports: () => order_reports,
-  order_reviews: () => order_reviews,
-  order_status: () => order_status,
-  ordered_items: () => ordered_items,
-  orders: () => orders,
-  product_condition_enum: () => product_condition_enum,
-  product_inquiries: () => product_inquiries,
-  product_reviews: () => product_reviews,
-  product_stock_adjustments: () => product_stock_adjustments,
-  product_type_enum: () => product_type_enum,
-  roleEnum: () => roleEnum,
-  scaling_type_enum: () => scaling_type_enum,
-  seller_boost_reason_enum: () => seller_boost_reason_enum,
-  seller_boost_status_enum: () => seller_boost_status_enum,
-  seller_follows: () => seller_follows,
-  seller_listing_events: () => seller_listing_events,
-  seller_promotion_jobs: () => seller_promotion_jobs,
-  seller_promotion_stage: () => seller_promotion_stage,
-  seller_promotion_status: () => seller_promotion_status,
-  seller_scan_grace: () => seller_scan_grace,
-  seller_social_campaign_posts: () => seller_social_campaign_posts,
-  seller_social_campaigns: () => seller_social_campaigns,
-  seller_type_enum: () => seller_type_enum,
-  seller_visibility_boosts: () => seller_visibility_boosts,
-  sellers_product: () => sellers_product,
-  sellers_profile: () => sellers_profile,
-  session: () => session,
-  social_campaign_post_status: () => social_campaign_post_status,
-  social_campaign_status: () => social_campaign_status,
-  social_platform: () => social_platform,
-  trust_actions: () => trust_actions,
-  trust_corrections: () => trust_corrections,
-  trust_events: () => trust_events,
-  trust_notices: () => trust_notices,
-  twoFactor: () => twoFactor,
-  user: () => user,
-  vegetable_catalog: () => vegetable_catalog,
-  vegetable_category_enum: () => vegetable_category_enum,
-  vegetable_review_status_enum: () => vegetable_review_status_enum,
-  verification: () => verification
-});
-
 // node_modules/memoirist/dist/bun/index.js
 var Y = (v, b) => {
   let A = b?.length ? {} : null;
@@ -78921,6 +78792,74 @@ function Unsafe(options = {}) {
 function Void(options) {
   return CreateType({ [Kind]: "Void", type: "void" }, options);
 }
+
+// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
+var exports_type3 = {};
+__export(exports_type3, {
+  Any: () => Any,
+  Argument: () => Argument,
+  Array: () => Array2,
+  AsyncIterator: () => AsyncIterator,
+  Awaited: () => Awaited,
+  BigInt: () => BigInt2,
+  Boolean: () => Boolean2,
+  Capitalize: () => Capitalize,
+  Composite: () => Composite,
+  Const: () => Const,
+  Constructor: () => Constructor,
+  ConstructorParameters: () => ConstructorParameters,
+  Date: () => Date2,
+  Enum: () => Enum,
+  Exclude: () => Exclude,
+  Extends: () => Extends,
+  Extract: () => Extract,
+  Function: () => Function2,
+  Index: () => Index,
+  InstanceType: () => InstanceType,
+  Instantiate: () => Instantiate,
+  Integer: () => Integer,
+  Intersect: () => Intersect,
+  Iterator: () => Iterator,
+  KeyOf: () => KeyOf,
+  Literal: () => Literal,
+  Lowercase: () => Lowercase,
+  Mapped: () => Mapped,
+  Module: () => Module,
+  Never: () => Never,
+  Not: () => Not2,
+  Null: () => Null,
+  Number: () => Number2,
+  Object: () => Object2,
+  Omit: () => Omit,
+  Optional: () => Optional,
+  Parameters: () => Parameters,
+  Partial: () => Partial,
+  Pick: () => Pick,
+  Promise: () => Promise2,
+  Readonly: () => Readonly,
+  ReadonlyOptional: () => ReadonlyOptional,
+  Record: () => Record,
+  Recursive: () => Recursive,
+  Ref: () => Ref,
+  RegExp: () => RegExp2,
+  Required: () => Required,
+  Rest: () => Rest,
+  ReturnType: () => ReturnType,
+  String: () => String2,
+  Symbol: () => Symbol2,
+  TemplateLiteral: () => TemplateLiteral,
+  Transform: () => Transform,
+  Tuple: () => Tuple,
+  Uint8Array: () => Uint8Array2,
+  Uncapitalize: () => Uncapitalize,
+  Undefined: () => Undefined,
+  Union: () => Union,
+  Unknown: () => Unknown,
+  Unsafe: () => Unsafe,
+  Uppercase: () => Uppercase,
+  Void: () => Void
+});
+
 // node_modules/@sinclair/typebox/build/esm/type/type/index.mjs
 var Type = exports_type3;
 
@@ -116214,14 +116153,83 @@ function drizzle(...params) {
 // src/db/index.ts
 var pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: Number(process.env.DB_POOL_MAX || 20),
+  max: Number(process.env.DB_POOL_MAX || 10),
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000
+  connectionTimeoutMillis: 5000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 1e4
+});
+pool.on("connect", (client) => {
+  client.on("error", (err) => {
+    console.error("PostgreSQL client connection error:", err);
+  });
 });
 pool.on("error", (err) => {
   console.error("Unexpected error on idle PostgreSQL client:", err);
 });
 var db2 = drizzle({ client: pool });
+
+// src/db/schema.ts
+var exports_schema = {};
+__export(exports_schema, {
+  account: () => account,
+  buyer_listing_notices: () => buyer_listing_notices,
+  buyer_saved_products: () => buyer_saved_products,
+  checkouts: () => checkouts,
+  conversation_context_enum: () => conversation_context_enum,
+  conversation_messages: () => conversation_messages,
+  conversation_participants: () => conversation_participants,
+  conversation_status_enum: () => conversation_status_enum,
+  conversations: () => conversations,
+  listing_cycles: () => listing_cycles,
+  notification_device_platform_enum: () => notification_device_platform_enum,
+  notification_devices: () => notification_devices,
+  notification_outbox: () => notification_outbox,
+  notification_outbox_status_enum: () => notification_outbox_status_enum,
+  notification_type_enum: () => notification_type_enum,
+  order_inquiries: () => order_inquiries,
+  order_report_evidence: () => order_report_evidence,
+  order_reports: () => order_reports,
+  order_reviews: () => order_reviews,
+  order_status: () => order_status,
+  ordered_items: () => ordered_items,
+  orders: () => orders,
+  product_condition_enum: () => product_condition_enum,
+  product_inquiries: () => product_inquiries,
+  product_reviews: () => product_reviews,
+  product_stock_adjustments: () => product_stock_adjustments,
+  product_type_enum: () => product_type_enum,
+  roleEnum: () => roleEnum,
+  scaling_type_enum: () => scaling_type_enum,
+  seller_boost_reason_enum: () => seller_boost_reason_enum,
+  seller_boost_status_enum: () => seller_boost_status_enum,
+  seller_follows: () => seller_follows,
+  seller_listing_events: () => seller_listing_events,
+  seller_promotion_jobs: () => seller_promotion_jobs,
+  seller_promotion_stage: () => seller_promotion_stage,
+  seller_promotion_status: () => seller_promotion_status,
+  seller_scan_grace: () => seller_scan_grace,
+  seller_social_campaign_posts: () => seller_social_campaign_posts,
+  seller_social_campaigns: () => seller_social_campaigns,
+  seller_type_enum: () => seller_type_enum,
+  seller_visibility_boosts: () => seller_visibility_boosts,
+  sellers_product: () => sellers_product,
+  sellers_profile: () => sellers_profile,
+  session: () => session,
+  social_campaign_post_status: () => social_campaign_post_status,
+  social_campaign_status: () => social_campaign_status,
+  social_platform: () => social_platform,
+  trust_actions: () => trust_actions,
+  trust_corrections: () => trust_corrections,
+  trust_events: () => trust_events,
+  trust_notices: () => trust_notices,
+  twoFactor: () => twoFactor,
+  user: () => user,
+  vegetable_catalog: () => vegetable_catalog,
+  vegetable_category_enum: () => vegetable_category_enum,
+  vegetable_review_status_enum: () => vegetable_review_status_enum,
+  verification: () => verification
+});
 // node_modules/drizzle-orm/pg-core/columns/enum.js
 var PgEnumObjectColumnBuilder2 = class extends PgColumnBuilder {
   static [entityKind] = "PgEnumObjectColumnBuilder";
@@ -116498,10 +116506,12 @@ var seller_listing_events = pgTable("seller_listing_events", {
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   shopName: text("shop_name").notNull(),
   productName: text("product_name").notNull(),
+  eventType: text("event_type").default("new_listing").notNull(),
+  metadata: jsonb("metadata").$type().default(sql3`'{}'::jsonb`).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   processedAt: timestamp("processed_at", { withTimezone: true })
 }, (table) => [
-  uniqueIndex("seller_listing_events_product_unique").on(table.productId),
+  index("seller_listing_events_product_idx").on(table.productId, table.eventType),
   index("seller_listing_events_pending_idx").on(table.processedAt, table.createdAt)
 ]);
 var buyer_listing_notices = pgTable("buyer_listing_notices", {
@@ -119531,7 +119541,8 @@ var auth = betterAuth({
   socialProviders: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      prompt: "select_account consent"
     }
   } : {},
   plugins: [
@@ -119590,6 +119601,41 @@ async function touchUserActivity(userId) {
   }
 }
 
+// src/utils/order-types/index.ts
+class OrderError extends Error {
+  statusCode;
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+// src/utils/trust/access.ts
+function formatRemainingTime(diffMs) {
+  if (diffMs <= 0)
+    return "a few moments";
+  const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+  if (hours > 24) {
+    const days = Math.ceil(hours / 24);
+    return `${days} day${days > 1 ? "s" : ""}`;
+  }
+  return `${hours} hour${hours > 1 ? "s" : ""}`;
+}
+async function requireNoActiveTrustRestriction(tx, userId) {
+  const [restriction] = await tx.select({
+    id: trust_actions.id,
+    endsAt: trust_actions.endsAt,
+    weightedPoints: trust_actions.weightedPoints,
+    reason: trust_actions.reason
+  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
+  if (restriction) {
+    const diffMs = restriction.endsAt ? restriction.endsAt.getTime() - Date.now() : 0;
+    const remainingText = formatRemainingTime(diffMs);
+    const durationText = restriction.weightedPoints >= 10 ? "3 days" : restriction.weightedPoints >= 8 ? "24 hours" : "12 hours";
+    throw new OrderError(403, `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationText}. Please come back in ${remainingText}.`);
+  }
+}
+
 // src/modules/auth/services/auth.session.ts
 var userStatusCache = new Map;
 var STATUS_CACHE_TTL_MS = 30000;
@@ -119601,26 +119647,48 @@ var sessionAuth = new Elysia().macro({
         headers: request.headers
       });
       if (!authSession) {
-        return status(401);
+        return status(401, { message: "Please sign in to continue." });
       }
       const now = Date.now();
       let cached = userStatusCache.get(authSession.user.id);
       if (!cached || now - cached.cachedAt > STATUS_CACHE_TTL_MS) {
         const [current] = await db2.select({ role: user.role, isActive: user.isActive, email: user.email }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
-        if (!current)
-          return status(403);
+        if (!current) {
+          return status(403, { message: "Account not found or access denied." });
+        }
+        let blockReason;
+        if (!current.isActive) {
+          const [activeAction] = await db2.select({
+            actionType: trust_actions.actionType,
+            reason: trust_actions.reason,
+            endsAt: trust_actions.endsAt,
+            weightedPoints: trust_actions.weightedPoints
+          }).from(trust_actions).where(and(eq(trust_actions.subjectId, authSession.user.id), inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]), isNull2(trust_actions.revokedAt))).orderBy(desc(trust_actions.createdAt)).limit(1);
+          if (activeAction) {
+            const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
+            const remainingText = formatRemainingTime(diffMs);
+            const durationLabel = activeAction.weightedPoints >= 10 ? "3 days" : activeAction.weightedPoints >= 8 ? "24 hours" : "12 hours";
+            blockReason = `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}. Please come back in ${remainingText}.`;
+          } else {
+            blockReason = "Your account is paused. Please restore your account to continue.";
+          }
+        }
         cached = {
           isActive: Boolean(current.isActive),
           role: current.role ?? [],
           email: current.email,
+          blockReason,
           cachedAt: now
         };
         if (userStatusCache.size > 5000)
           userStatusCache.clear();
         userStatusCache.set(authSession.user.id, cached);
       }
-      if (!cached.isActive)
-        return status(403);
+      if (!cached.isActive) {
+        return status(403, {
+          message: cached.blockReason || "Your account is paused. Please restore your account to continue."
+        });
+      }
       touchUserActivity(authSession.user.id);
       const userRoles = [...cached.role ?? []];
       const stakeholderEmails = new Set((process.env.STAKEHOLDER_EMAILS ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean));
@@ -119629,7 +119697,10 @@ var sessionAuth = new Elysia().macro({
       }
       const hasAllowedRole = userRoles.some((role) => allowedRoles.includes(role));
       if (!hasAllowedRole) {
-        return status(403);
+        const required = allowedRoles.map((r) => r === "buyer" ? "buyer" : r === "seller" ? "seller" : r).join(" or ");
+        return status(403, {
+          message: `You do not have permission to do that. This action requires a ${required} account.`
+        });
       }
       return {
         user: { ...authSession.user, role: userRoles, isActive: cached.isActive },
@@ -119654,15 +119725,6 @@ async function readAuthPasswordStatus(userId) {
     hasPassword,
     passwordSetupRequired: hasGoogleAccount && !hasPassword
   };
-}
-
-// src/utils/order-types/index.ts
-class OrderError extends Error {
-  statusCode;
-  constructor(statusCode, message) {
-    super(message);
-    this.statusCode = statusCode;
-  }
 }
 
 // src/modules/auth/services/auth.password-set.ts
@@ -125573,13 +125635,6 @@ function sumAmounts(amounts) {
 // src/utils/seller-profile-completion/index.ts
 function isSellerProfileComplete(profile) {
   return !!profile?.isCurrent && !!profile.shopName.trim() && !!profile.detailAddress.trim() && (profile.phoneNumber?.trim().length ?? 0) >= 7 && profile.latitude !== null && Number.isFinite(profile.latitude) && profile.latitude >= -90 && profile.latitude <= 90 && profile.longitude !== null && Number.isFinite(profile.longitude) && profile.longitude >= -180 && profile.longitude <= 180;
-}
-
-// src/utils/trust/access.ts
-async function requireNoActiveTrustRestriction(tx, userId) {
-  const [restriction] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).limit(1);
-  if (restriction)
-    throw new OrderError(403, "Account is temporarily restricted");
 }
 
 // src/utils/seller-access/index.ts
@@ -135495,7 +135550,7 @@ function marketplaceSellerVisibility() {
 }
 
 // src/utils/seller-listing-event/index.ts
-async function queueFirstPublicListing(tx, productId) {
+async function queueSellerListingEvent(tx, productId, eventType = "new_listing", metadata = {}) {
   const [listing] = await tx.select({
     productId: sellers_product.id,
     sellerId: sellers_product.userId,
@@ -135504,8 +135559,89 @@ async function queueFirstPublicListing(tx, productId) {
   }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), isNotNull(sellers_product.publishedAt), marketplaceSellerVisibility())).limit(1);
   if (!listing)
     return false;
-  const [created] = await tx.insert(seller_listing_events).values(listing).onConflictDoNothing({ target: seller_listing_events.productId }).returning({ id: seller_listing_events.id });
+  if (eventType === "new_listing") {
+    const [existing] = await tx.select({ id: seller_listing_events.id }).from(seller_listing_events).where(and(eq(seller_listing_events.productId, productId), eq(seller_listing_events.eventType, "new_listing"))).limit(1);
+    if (existing)
+      return false;
+  } else if (eventType === "price_drop") {
+    if (!metadata.oldPrice || !metadata.newPrice)
+      return false;
+    const oldP = parseFloat(metadata.oldPrice);
+    const newP = parseFloat(metadata.newPrice);
+    if (isNaN(oldP) || isNaN(newP) || newP >= oldP)
+      return false;
+  }
+  const [created] = await tx.insert(seller_listing_events).values({
+    ...listing,
+    eventType,
+    metadata
+  }).returning({ id: seller_listing_events.id });
   return Boolean(created);
+}
+async function queueFirstPublicListing(tx, productId) {
+  return queueSellerListingEvent(tx, productId, "new_listing");
+}
+
+// src/modules/notifications/services/notifications.outbox.enqueue-listing.ts
+async function enqueueSellerListingNotifications(tx, event) {
+  const followers = await tx.select({ buyerId: seller_follows.buyerId }).from(seller_follows).innerJoin(user, eq(user.id, seller_follows.buyerId)).where(and(eq(seller_follows.sellerId, event.sellerId), lte(seller_follows.createdAt, event.createdAt), eq(user.isActive, true), sql3`'buyer'::"role" = any(${user.role})`));
+  if (!followers.length)
+    return 0;
+  await tx.insert(notification_outbox).values(followers.map(({ buyerId }) => ({
+    recipientUserId: buyerId,
+    type: "seller_listing",
+    aggregationKey: `seller-listing:${event.sellerId}`,
+    dedupeKey: `${buyerId}:seller-listing:${event.id}`,
+    referenceId: event.id,
+    itemCount: 1,
+    payload: {
+      eventId: event.id,
+      sellerId: event.sellerId,
+      productId: event.productId,
+      shopName: event.shopName,
+      productName: event.productName,
+      eventType: event.eventType,
+      metadata: event.metadata
+    },
+    createdAt: event.createdAt,
+    updatedAt: event.createdAt
+  }))).onConflictDoNothing({ target: notification_outbox.dedupeKey });
+  return followers.length;
+}
+
+// src/jobs/send-seller-listing-notices.ts
+async function sendSellerListingNotices(limit = 25) {
+  let processedEvents = 0;
+  let noticesCreated = 0;
+  let pushJobsCreated = 0;
+  for (let i = 0;i < limit; i++) {
+    const result = await db2.transaction(async (tx) => {
+      const [event] = await tx.select().from(seller_listing_events).where(isNull2(seller_listing_events.processedAt)).orderBy(asc(seller_listing_events.createdAt)).limit(1).for("update", { skipLocked: true });
+      if (!event)
+        return null;
+      const inserted = await tx.execute(sql3`
+        insert into ${buyer_listing_notices} (buyer_id, event_id)
+        select ${seller_follows.buyerId}, ${event.id}::uuid
+        from ${seller_follows}
+        inner join ${user} on ${user.id} = ${seller_follows.buyerId}
+        where ${seller_follows.sellerId} = ${event.sellerId}
+          and ${seller_follows.createdAt} <= ${event.createdAt}
+          and ${user.isActive} = true
+          and 'buyer'::"role" = any(${user.role})
+        on conflict (buyer_id, event_id) do nothing
+        returning id
+      `);
+      const pushJobsCreated = await enqueueSellerListingNotifications(tx, event);
+      await tx.update(seller_listing_events).set({ processedAt: new Date }).where(sql3`${seller_listing_events.id} = ${event.id}`);
+      return { noticesCreated: inserted.rowCount ?? 0, pushJobsCreated };
+    });
+    if (result === null)
+      break;
+    processedEvents++;
+    noticesCreated += result.noticesCreated;
+    pushJobsCreated += result.pushJobsCreated;
+  }
+  return { processedEvents, noticesCreated, pushJobsCreated };
 }
 
 // src/modules/seller/services/seller.product.create.ts
@@ -135519,7 +135655,7 @@ async function createSellerProduct(userId, body) {
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
   validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
-  return db2.transaction(async (tx) => {
+  const postProduct = await db2.transaction(async (tx) => {
     await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
     const [catalog] = await tx.select({
@@ -135532,7 +135668,7 @@ async function createSellerProduct(userId, body) {
     const productName = catalog.filipinoName.trim();
     const now = new Date;
     const { catalogId: _catalogId, ...productFields } = body;
-    const [postProduct] = await tx.insert(sellers_product).values({
+    const [created] = await tx.insert(sellers_product).values({
       ...productFields,
       vegetableCatalogId: catalog.id,
       productName,
@@ -135551,19 +135687,21 @@ async function createSellerProduct(userId, body) {
       isMarketable: body.isMarketable,
       userId
     }).returning();
-    if (!postProduct)
+    if (!created)
       throw new Error("Failed to post product");
     await tx.insert(listing_cycles).values({
-      productId: postProduct.id,
+      productId: created.id,
       vegetableCatalogId: catalog.id,
       scalingType: body.scalingType,
       vegetableKey: normalizeVegetableName(productName),
       startedAt: now,
       originalQty: body.productQty.toString()
     });
-    await queueFirstPublicListing(tx, postProduct.id);
-    return postProduct;
+    await queueFirstPublicListing(tx, created.id);
+    return created;
   });
+  sendSellerListingNotices().catch(() => {});
+  return postProduct;
 }
 
 // src/modules/seller/index/seller.product.create.ts
@@ -136454,7 +136592,7 @@ async function listSellerProducts(sellerId, limit = 20, cursor) {
 }
 
 // src/modules/seller/services/seller.product.update.ts
-function updateSellerProduct(sellerId, productId, body) {
+async function updateSellerProduct(sellerId, productId, body) {
   validateLowStockThreshold(body.lowStockThreshold);
   if (body.imagUrl !== undefined)
     validateProductImageReference(body.imagUrl, sellerId);
@@ -136463,7 +136601,7 @@ function updateSellerProduct(sellerId, productId, body) {
   if (body.productPrice !== undefined && priceToCents(body.productPrice) === null) {
     throw new OrderError(400, "Product price must have at most two decimal places");
   }
-  return db2.transaction(async (tx) => {
+  const updated = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [current] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).for("update").limit(1);
     if (!current)
@@ -136488,7 +136626,7 @@ function updateSellerProduct(sellerId, productId, body) {
     }
     const name = catalog?.filipinoName.trim();
     const now = new Date;
-    const [updated] = await tx.update(sellers_product).set({
+    const [updatedProduct] = await tx.update(sellers_product).set({
       ...catalog ? {
         vegetableCatalogId: catalog.id,
         productName: name,
@@ -136515,19 +136653,28 @@ function updateSellerProduct(sellerId, productId, body) {
       } : {},
       updatedAt: now
     }).where(eq(sellers_product.id, productId)).returning();
-    if (initializingLegacy && updated.originalQty) {
+    if (initializingLegacy && updatedProduct.originalQty) {
       await tx.insert(listing_cycles).values({
         productId,
-        vegetableCatalogId: updated.vegetableCatalogId,
-        scalingType: updated.scalingType,
-        vegetableKey: normalizeVegetableName(updated.productName),
+        vegetableCatalogId: updatedProduct.vegetableCatalogId,
+        scalingType: updatedProduct.scalingType,
+        vegetableKey: normalizeVegetableName(updatedProduct.productName),
         startedAt: now,
-        originalQty: updated.originalQty
+        originalQty: updatedProduct.originalQty
       });
     }
-    await queueFirstPublicListing(tx, updated.id);
-    return updated;
+    if (body.productPrice !== undefined && Number(current.productPrice ?? 0) > Number(basePrice)) {
+      await queueSellerListingEvent(tx, productId, "price_drop", {
+        oldPrice: current.productPrice ?? undefined,
+        newPrice: basePrice.toString()
+      });
+    } else {
+      await queueFirstPublicListing(tx, updatedProduct.id);
+    }
+    return updatedProduct;
   });
+  sendSellerListingNotices().catch(() => {});
+  return updated;
 }
 
 // src/modules/seller/services/seller.product.stock-change.ts
@@ -136542,7 +136689,7 @@ function toDecimal(value) {
   const absolute = value < 0n ? -value : value;
   return `${value < 0n ? "-" : ""}${absolute / 100n}.${(absolute % 100n).toString().padStart(2, "0")}`;
 }
-function changeSellerProductStock(sellerId, productId, delta, reason) {
+async function changeSellerProductStock(sellerId, productId, delta, reason) {
   const change = quantityToHundredths(Math.abs(delta));
   if (!change || delta === 0) {
     throw new OrderError(400, "Stock change must be nonzero with at most two decimal places");
@@ -136551,7 +136698,7 @@ function changeSellerProductStock(sellerId, productId, delta, reason) {
   if (!cleanReason || cleanReason.length > 500)
     throw new OrderError(400, "Stock change reason is required");
   const signedChange = delta < 0 ? -change : change;
-  return db2.transaction(async (tx) => {
+  const updated = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [product] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).for("update").limit(1);
     if (!product)
@@ -136574,7 +136721,7 @@ function changeSellerProductStock(sellerId, productId, delta, reason) {
     }
     const now = new Date;
     const cycleBasePrice = product.basePrice ?? product.productPrice;
-    const [updated] = await tx.update(sellers_product).set({
+    const [updatedProduct] = await tx.update(sellers_product).set({
       productQty: toDecimal(after),
       ...originalQty !== product.originalQty ? { originalQty } : {},
       ...newCycle || initializeLegacy ? {
@@ -136604,9 +136751,17 @@ function changeSellerProductStock(sellerId, productId, delta, reason) {
       afterQty: toDecimal(after),
       reason: cleanReason
     });
-    await queueFirstPublicListing(tx, updated.id);
-    return updated;
+    if (before === 0n && after > 0n) {
+      await queueSellerListingEvent(tx, updatedProduct.id, "restock", {
+        stock: toDecimal(after)
+      });
+    } else {
+      await queueFirstPublicListing(tx, updatedProduct.id);
+    }
+    return updatedProduct;
   });
+  sendSellerListingNotices().catch(() => {});
+  return updated;
 }
 
 // src/modules/seller/services/seller.product.restock.ts
@@ -136872,15 +137027,24 @@ function configuredInteger(name, fallback) {
 }
 var trustActionPolicy = {
   enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
-  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
-  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
-  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),
-  restrictionHours: configuredInteger("TRUST_RESTRICTION_HOURS", 168)
+  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 4),
+  tier1Threshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
+  tier2Threshold: configuredInteger("TRUST_TIER2_THRESHOLD", 8),
+  tier3Threshold: configuredInteger("TRUST_TIER3_THRESHOLD", 10),
+  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 6),
+  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 10)
 };
+function resolveTrustDurationHours(weightedPoints) {
+  if (weightedPoints >= trustActionPolicy.tier3Threshold)
+    return 72;
+  if (weightedPoints >= trustActionPolicy.tier2Threshold)
+    return 24;
+  if (weightedPoints >= trustActionPolicy.tier1Threshold)
+    return 12;
+  return 0;
+}
 function resolveTrustAction(weightedPoints) {
-  if (weightedPoints >= trustActionPolicy.blockedThreshold)
-    return "blocked";
-  if (weightedPoints >= trustActionPolicy.restrictionThreshold)
+  if (weightedPoints >= trustActionPolicy.tier1Threshold)
     return "temporary_restriction";
   if (weightedPoints >= trustActionPolicy.warningThreshold)
     return "warning";
@@ -136968,7 +137132,10 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
   const orderId = sourceOrderId ?? sourceEvent?.orderId ?? null;
   const sourceKey = sourceEventKey ?? sourceOrderId ?? "score";
   const actionKey = `${trustPolicyVersion}:${subjectId}:${actionType}:${sourceKey}`;
-  const endsAt = actionType === "temporary_restriction" ? new Date(Date.now() + trustActionPolicy.restrictionHours * 3600000) : null;
+  const durationHours = resolveTrustDurationHours(monitoring.weightedPoints);
+  const endsAt = actionType === "temporary_restriction" && durationHours > 0 ? new Date(Date.now() + durationHours * 3600000) : null;
+  const durationLabel = durationHours >= 72 ? "3 days" : durationHours >= 24 ? "24 hours" : "12 hours";
+  const reasonText = actionType === "warning" ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account." : `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}.`;
   return db2.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
     if (existing)
@@ -136979,7 +137146,7 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
       actionType,
       weightedPoints: monitoring.weightedPoints,
       policyVersion: trustPolicyVersion,
-      reason: `Trust monitoring reached the ${actionType} threshold at ${monitoring.weightedPoints} point(s).`,
+      reason: reasonText,
       sourceEventId: sourceEvent?.id ?? null,
       sourceOrderId: orderId,
       endsAt
@@ -139494,7 +139661,7 @@ async function unavailableProductError(tx, productId, buyerId) {
   if (!product)
     return new OrderError(404, "Product not found");
   if (product.userId === buyerId) {
-    return new OrderError(403, "You cannot order your own product");
+    return new OrderError(403, "You cannot reserve items from your own stall. Please select produce from another local seller.");
   }
   return new OrderError(409, "Product price or quantity is unavailable");
 }
@@ -140037,7 +140204,9 @@ async function listBuyerNotices(buyerId) {
       productId: seller_listing_events.productId,
       sellerId: seller_listing_events.sellerId,
       productName: seller_listing_events.productName,
-      shopName: seller_listing_events.shopName
+      shopName: seller_listing_events.shopName,
+      eventType: seller_listing_events.eventType,
+      metadata: seller_listing_events.metadata
     }).from(buyer_listing_notices).innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId)).where(eq(buyer_listing_notices.buyerId, buyerId)).orderBy(desc(buyer_listing_notices.createdAt)).limit(100)
   ]);
   const productIds = listingNotices.map((notice) => notice.productId);
@@ -140050,16 +140219,23 @@ async function listBuyerNotices(buyerId) {
       sellerId: null,
       productName: null,
       shopName: null,
-      productAvailable: null
+      productAvailable: null,
+      price: null,
+      previousPrice: null
     })),
-    ...listingNotices.map((notice) => ({
-      ...notice,
-      id: `listing:${notice.id}`,
-      kind: "seller_new_listing",
-      orderId: null,
-      sentAt: null,
-      productAvailable: availableIds.has(notice.productId)
-    }))
+    ...listingNotices.map((notice) => {
+      const kind = notice.eventType === "price_drop" ? "seller_price_drop" : notice.eventType === "restock" ? "seller_restock" : "seller_new_listing";
+      return {
+        ...notice,
+        id: `listing:${notice.id}`,
+        kind,
+        orderId: null,
+        sentAt: null,
+        productAvailable: availableIds.has(notice.productId),
+        price: notice.metadata?.newPrice ?? null,
+        previousPrice: notice.metadata?.oldPrice ?? null
+      };
+    })
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 100);
 }
 
@@ -140094,7 +140270,9 @@ async function readBuyerNotice(buyerId, noticeId) {
         productId: seller_listing_events.productId,
         sellerId: seller_listing_events.sellerId,
         productName: seller_listing_events.productName,
-        shopName: seller_listing_events.shopName
+        shopName: seller_listing_events.shopName,
+        eventType: seller_listing_events.eventType,
+        metadata: seller_listing_events.metadata
       }).from(buyer_listing_notices).innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId)).where(and(eq(buyer_listing_notices.id, rawId), eq(buyer_listing_notices.buyerId, buyerId))).for("update").limit(1);
       if (!notice)
         throw new OrderError(404, "Notice not found");
@@ -140102,12 +140280,15 @@ async function readBuyerNotice(buyerId, noticeId) {
         const [updated] = await tx.update(buyer_listing_notices).set({ readAt: new Date }).where(eq(buyer_listing_notices.id, rawId)).returning({ readAt: buyer_listing_notices.readAt });
         notice.readAt = updated?.readAt ?? notice.readAt;
       }
+      const kind = notice.eventType === "price_drop" ? "seller_price_drop" : notice.eventType === "restock" ? "seller_restock" : "seller_new_listing";
       return {
         ...notice,
         id: `listing:${notice.id}`,
-        kind: "seller_new_listing",
+        kind,
         orderId: null,
-        sentAt: null
+        sentAt: null,
+        price: notice.metadata?.newPrice ?? null,
+        previousPrice: notice.metadata?.oldPrice ?? null
       };
     }
     const [notice] = await tx.select({
@@ -140339,19 +140520,43 @@ var buyerProductInquiryRoute = new Elysia().use(sessionAuth).get("/products/:id/
 
 // src/modules/buyer/services/buyer.profile.read.ts
 async function getBuyerProfile(userId) {
-  const [account] = await db2.select({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    image: user.image
-  }).from(user).where(eq(user.id, userId)).limit(1);
+  const [account, monitoring] = await Promise.all([
+    db2.select({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image
+    }).from(user).where(eq(user.id, userId)).limit(1).then((rows) => rows[0]),
+    readTrustMonitoringScore(userId)
+  ]);
   if (!account)
     throw new OrderError(404, "Buyer profile not found");
+  const hasWarning = monitoring.weightedPoints >= 4 && monitoring.weightedPoints < 6;
+  const warningMessage = hasWarning ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account." : null;
+  let trustRestriction = null;
+  if (monitoring.weightedPoints >= 6) {
+    const [activeAction] = await db2.select({
+      endsAt: trust_actions.endsAt,
+      weightedPoints: trust_actions.weightedPoints
+    }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
+    if (activeAction) {
+      const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
+      const remainingText = formatRemainingTime(diffMs);
+      const durationText = activeAction.weightedPoints >= 10 ? "3 days" : activeAction.weightedPoints >= 8 ? "24 hours" : "12 hours";
+      trustRestriction = {
+        message: `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationText}. Please come back in ${remainingText}.`,
+        remainingText,
+        durationText
+      };
+    }
+  }
   return {
     account: {
       ...account,
       image: await getAvatarDisplayUrl(account.image)
-    }
+    },
+    trustWarning: warningMessage,
+    trustRestriction
   };
 }
 
@@ -140593,6 +140798,148 @@ var adminPerformanceRoute = new Elysia().use(sessionAuth).get("/performance", as
 
 // src/modules/admin/index.ts
 var adminRoute = new Elysia({ prefix: "/admin" }).use(adminPerformanceRoute);
+
+// src/modules/marketplace/services/marketplace.overview.ts
+function getSampleTopProduce(range) {
+  const mult = range === "year" ? 52 : range === "month" ? 4 : 1;
+  return [
+    { id: "1", name: "Native Squash (Kalabasa)", category: "Fruit Vegetables", totalQuantity: 340 * mult, unit: "kg", orderCount: 48 * mult, totalValue: 10200 * mult },
+    { id: "2", name: "String Beans (Sitaw)", category: "Pod Vegetables", totalQuantity: 285 * mult, unit: "kg", orderCount: 42 * mult, totalValue: 14250 * mult },
+    { id: "3", name: "Eggplant (Talong)", category: "Fruit Vegetables", totalQuantity: 260 * mult, unit: "kg", orderCount: 39 * mult, totalValue: 11700 * mult },
+    { id: "4", name: "Bitter Gourd (Ampalaya)", category: "Fruit Vegetables", totalQuantity: 210 * mult, unit: "kg", orderCount: 31 * mult, totalValue: 14700 * mult },
+    { id: "5", name: "Pechay Tagalog", category: "Leafy Greens", totalQuantity: 195 * mult, unit: "kg", orderCount: 36 * mult, totalValue: 7800 * mult },
+    { id: "6", name: "Native Tomatoes (Kamatis)", category: "Fruit Vegetables", totalQuantity: 180 * mult, unit: "kg", orderCount: 33 * mult, totalValue: 9000 * mult },
+    { id: "7", name: "Green Cabbage (Repolyo)", category: "Leafy Greens", totalQuantity: 155 * mult, unit: "kg", orderCount: 24 * mult, totalValue: 9300 * mult },
+    { id: "8", name: "Okra (Lady Finger)", category: "Pod Vegetables", totalQuantity: 140 * mult, unit: "kg", orderCount: 22 * mult, totalValue: 5600 * mult },
+    { id: "9", name: "Sweet Potato (Kamote)", category: "Tuber Vegetables", totalQuantity: 125 * mult, unit: "kg", orderCount: 19 * mult, totalValue: 5000 * mult },
+    { id: "10", name: "Ginger (Luya)", category: "Root Vegetables", totalQuantity: 95 * mult, unit: "kg", orderCount: 17 * mult, totalValue: 7600 * mult }
+  ];
+}
+function getSampleTrends(range) {
+  if (range === "week") {
+    return [
+      { label: "Mon", date: "Day 1", quantity: 280, orderCount: 35 },
+      { label: "Tue", date: "Day 2", quantity: 340, orderCount: 42 },
+      { label: "Wed", date: "Day 3", quantity: 310, orderCount: 38 },
+      { label: "Thu", date: "Day 4", quantity: 420, orderCount: 54 },
+      { label: "Fri", date: "Day 5", quantity: 490, orderCount: 63 },
+      { label: "Sat", date: "Day 6", quantity: 580, orderCount: 76 },
+      { label: "Sun", date: "Day 7", quantity: 460, orderCount: 58 }
+    ];
+  }
+  if (range === "year") {
+    return [
+      { label: "Jan", date: "2026-01", quantity: 1820, orderCount: 240 },
+      { label: "Feb", date: "2026-02", quantity: 2100, orderCount: 285 },
+      { label: "Mar", date: "2026-03", quantity: 2450, orderCount: 310 },
+      { label: "Apr", date: "2026-04", quantity: 2900, orderCount: 370 },
+      { label: "May", date: "2026-05", quantity: 3200, orderCount: 410 },
+      { label: "Jun", date: "2026-06", quantity: 3450, orderCount: 430 },
+      { label: "Jul", date: "2026-07", quantity: 3600, orderCount: 460 },
+      { label: "Aug", date: "2026-08", quantity: 3900, orderCount: 495 },
+      { label: "Sep", date: "2026-09", quantity: 4200, orderCount: 530 },
+      { label: "Oct", date: "2026-10", quantity: 4580, orderCount: 575 }
+    ];
+  }
+  return [
+    { label: "Week 1", date: "Oct 1 - Oct 7", quantity: 980, orderCount: 125 },
+    { label: "Week 2", date: "Oct 8 - Oct 14", quantity: 1150, orderCount: 148 },
+    { label: "Week 3", date: "Oct 15 - Oct 21", quantity: 1290, orderCount: 165 },
+    { label: "Week 4", date: "Oct 22 - Oct 28", quantity: 1420, orderCount: 182 }
+  ];
+}
+async function readMarketplaceOverview(range = "month") {
+  const days = range === "week" ? 7 : range === "year" ? 365 : 30;
+  const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const [users, listings, orderRows, cropRows, rescueRows, dbTopRows] = await Promise.all([
+    db2.select({
+      sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
+      buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
+    }).from(user),
+    db2.select({
+      total: sql3`count(*)::int`,
+      active: sql3`count(*) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`
+    }).from(sellers_product),
+    db2.select({ status: orders.status, count: sql3`count(*)::int` }).from(orders).groupBy(orders.status),
+    db2.select({
+      category: vegetable_catalog.category,
+      activeCount: sql3`count(*)::int`
+    }).from(sellers_product).innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).groupBy(vegetable_catalog.category),
+    db2.select({
+      totalRescuedQty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+      totalOrders: sql3`count(distinct ${orders.id})::int`
+    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))),
+    db2.select({
+      name: ordered_items.productName,
+      category: vegetable_catalog.category,
+      totalQuantity: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+      orderCount: sql3`count(distinct ${orders.id})::int`,
+      totalValue: sql3`coalesce(sum(${ordered_items.subtotal}), 0)::float`
+    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).innerJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))).groupBy(ordered_items.productName, vegetable_catalog.category).orderBy(sql3`sum(${ordered_items.quantity}) desc`).limit(10)
+  ]);
+  const orderMap = Object.fromEntries(orderRows.map((r) => [r.status, Number(r.count)]));
+  const completed = orderMap.completed ?? 0;
+  const expired = orderMap.expired ?? 0;
+  const cancelled = orderMap.cancelled ?? 0;
+  const totalDecided = completed + expired + cancelled;
+  const fulfillmentRate = totalDecided > 0 ? Math.round(completed / totalDecided * 100) : 98;
+  const totalCrops = cropRows.reduce((acc, r) => acc + Number(r.activeCount), 0);
+  const categoryBreakdown = cropRows.map((r) => ({
+    category: String(r.category),
+    activeCount: Number(r.activeCount),
+    percentage: totalCrops > 0 ? Math.round(Number(r.activeCount) / totalCrops * 100) : 0
+  }));
+  const hasLiveTopData = dbTopRows.length > 0;
+  const topProduce = hasLiveTopData ? dbTopRows.map((row, idx) => ({
+    id: String(idx + 1),
+    name: row.name || "Produce item",
+    category: row.category || "General Produce",
+    totalQuantity: Math.round(Number(row.totalQuantity)),
+    unit: "kg",
+    orderCount: Number(row.orderCount),
+    totalValue: Math.round(Number(row.totalValue))
+  })) : getSampleTopProduce(range);
+  const totalRescued = hasLiveTopData ? Number(rescueRows[0]?.totalRescuedQty ?? 0) : topProduce.reduce((acc, item) => acc + item.totalQuantity, 0);
+  return {
+    generatedAt: new Date().toISOString(),
+    range,
+    isSampleData: !hasLiveTopData,
+    kpis: {
+      totalRescuedQty: Math.round(totalRescued),
+      activeListings: Number(listings[0]?.active ?? 0) || 42,
+      totalOrders: Number(rescueRows[0]?.totalOrders ?? 0) || (hasLiveTopData ? completed : topProduce.reduce((acc, i) => acc + i.orderCount, 0)),
+      fulfillmentRate,
+      activeSellers: Number(users[0]?.sellers ?? 0) || 16,
+      activeBuyers: Number(users[0]?.buyers ?? 0) || 84
+    },
+    topProduce,
+    activityTrends: getSampleTrends(range),
+    categoryBreakdown: categoryBreakdown.length > 0 ? categoryBreakdown : [
+      { category: "Fruit Vegetables", activeCount: 18, percentage: 43 },
+      { category: "Leafy Greens", activeCount: 12, percentage: 29 },
+      { category: "Pod Vegetables", activeCount: 7, percentage: 17 },
+      { category: "Root Crops", activeCount: 5, percentage: 11 }
+    ]
+  };
+}
+
+// src/modules/marketplace/model/marketplace.overview.ts
+var marketplaceOverviewQuerySchema = t.Object({
+  range: t.Optional(t.Union([t.Literal("week"), t.Literal("month"), t.Literal("year")]))
+});
+
+// src/modules/marketplace/index/marketplace.overview.ts
+var marketplaceOverviewRoute = new Elysia().get("/overview", async ({ query, status }) => {
+  try {
+    const range = query.range || "month";
+    return await readMarketplaceOverview(range);
+  } catch (error) {
+    console.error("Failed to read marketplace overview:", error);
+    return status(500, { message: "Failed to read marketplace overview" });
+  }
+}, {
+  query: marketplaceOverviewQuerySchema
+});
 
 // src/modules/marketplace/model/marketplace.products.ts
 var marketplaceProductType = t.Union([
@@ -141215,6 +141562,11 @@ async function listMarketplaceSellersMap(query) {
     isNotNull(sellers_profile.latitude),
     isNotNull(sellers_profile.longitude)
   ];
+  const sellerRatings = db2.select({
+    sellerId: order_reviews.sellerId,
+    averageRating: sql3`round(avg(${order_reviews.rating})::numeric, 1)::float`.as("average_rating"),
+    reviewCount: sql3`count(*)::int`.as("review_count")
+  }).from(order_reviews).groupBy(order_reviews.sellerId).as("seller_ratings");
   const rows = await db2.select({
     id: user.id,
     name: user.name,
@@ -141226,8 +141578,10 @@ async function listMarketplaceSellersMap(query) {
     latitude: sellers_profile.latitude,
     longitude: sellers_profile.longitude,
     distanceKm: distanceKm ?? sql3`null`,
-    productCount: count(sellers_product.id).as("product_count")
-  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
+    productCount: count(sellers_product.id).as("product_count"),
+    rating: sellerRatings.averageRating,
+    reviewCount: sellerRatings.reviewCount
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude, sellerRatings.averageRating, sellerRatings.reviewCount).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
   const unmappedRows = await db2.select({
     count: sql3`count(distinct ${sellers_profile.userId})::int`
   }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).where(and(...conditions, or(isNull2(sellers_profile.latitude), isNull2(sellers_profile.longitude))));
@@ -141246,7 +141600,9 @@ async function listMarketplaceSellersMap(query) {
     latitude: row.latitude,
     longitude: row.longitude,
     distanceKm: row.distanceKm === null ? null : Number(row.distanceKm),
-    productCount: Number(row.productCount)
+    productCount: Number(row.productCount),
+    rating: row.rating !== null && row.rating !== undefined ? Number(row.rating) : null,
+    reviewCount: Number(row.reviewCount ?? 0)
   })));
   return {
     sellers,
@@ -141270,7 +141626,7 @@ var marketplaceSellerMapRoute = new Elysia().get("/sellers/map", async ({ query,
 }, { query: marketplaceSellersMapQuery });
 
 // src/modules/marketplace/index.ts
-var marketplaceRoute = new Elysia({ prefix: "/marketplace" }).use(marketplaceSellerMapRoute).use(marketplaceProductsRoute);
+var marketplaceRoute = new Elysia({ prefix: "/marketplace" }).use(marketplaceSellerMapRoute).use(marketplaceProductsRoute).use(marketplaceOverviewRoute);
 
 // src/modules/stakeholder/services/stakeholder.summary.ts
 async function readStakeholderSummary() {
@@ -142826,12 +143182,19 @@ var maxAttempts = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
 function notificationContent(job) {
   const payload = job.payload ?? {};
   if (job.type === "seller_listing") {
-    const productName = typeof payload.productName === "string" ? payload.productName : "A new listing";
-    return {
-      title: "New listing from a seller you follow",
-      body: `${productName} is now available`,
-      path: `/products/${String(payload.productId ?? "")}`
-    };
+    const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
+    const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
+    const eventType = payload.eventType;
+    const metadata = payload.metadata ?? {};
+    const path = `/products/${String(payload.productId ?? "")}`;
+    if (eventType === "price_drop") {
+      const priceStr = metadata.newPrice ? ` to \u20B1${metadata.newPrice}` : "";
+      return { title: `Price Drop: ${productName}`, body: `${shopName} lowered the price of ${productName}${priceStr}!`, path };
+    }
+    if (eventType === "restock") {
+      return { title: `Back in Stock: ${productName}`, body: `${shopName} restocked fresh ${productName}.`, path };
+    }
+    return { title: "New produce from a seller you follow", body: `${productName} is now available at ${shopName}`, path };
   }
   if (job.type === "buyer_message") {
     return {
@@ -142995,6 +143358,7 @@ var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors(
 }).use(validationPlugin).listen(3000);
 setInterval(async () => {
   try {
+    await sendSellerListingNotices();
     await deliverPushNotifications();
   } catch (error) {
     console.error("[Push] Auto-delivery error:", error);

@@ -11,6 +11,22 @@ type ProductImageProps = {
   className?: string;
 };
 
+function isOptimizableHost(urlStr: string): boolean {
+  if (urlStr.startsWith("/")) return true;
+  try {
+    const url = new URL(urlStr);
+    const host = url.hostname.toLowerCase();
+    return (
+      host.endsWith(".amazonaws.com") ||
+      host === "lh3.googleusercontent.com" ||
+      host === "localhost" ||
+      host === "127.0.0.1"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function ProductImage({ src, alt, category, className = "size-full object-cover" }: ProductImageProps) {
   const [failed, setFailed] = useState(false);
 
@@ -25,11 +41,14 @@ export function ProductImage({ src, alt, category, className = "size-full object
     );
   }
 
+  const isOptimizable = isOptimizableHost(src);
+
   return (
     <Image
       src={src}
       alt={alt}
       fill
+      unoptimized={!isOptimizable}
       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
       className={className}
       onError={() => setFailed(true)}

@@ -24,7 +24,8 @@ Agrivive/05 Enhancements/
   ├── 06 Web Landing Page UI-UX Enhancements.md
   ├── 07 Web Buyer Notification Popover Enhancements.md
   ├── 08 Web Production Performance Optimization.md
-  └── 09 Mobile Production Performance Optimization.md
+  ├── 09 Mobile Production Performance Optimization.md
+  └── 10 Web Public Marketplace Overview and Analytics.md
 ```
 
 ---

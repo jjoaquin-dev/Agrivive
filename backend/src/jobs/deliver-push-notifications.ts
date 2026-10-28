@@ -12,12 +12,19 @@ type OutboxJob = typeof notification_outbox.$inferSelect;
 function notificationContent(job: OutboxJob) {
   const payload = job.payload ?? {};
   if (job.type === "seller_listing") {
-    const productName = typeof payload.productName === "string" ? payload.productName : "A new listing";
-    return {
-      title: "New listing from a seller you follow",
-      body: `${productName} is now available`,
-      path: `/products/${String(payload.productId ?? "")}`,
-    };
+    const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
+    const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
+    const eventType = payload.eventType as string | undefined;
+    const metadata = (payload.metadata ?? {}) as Record<string, unknown>;
+    const path = `/products/${String(payload.productId ?? "")}`;
+    if (eventType === "price_drop") {
+      const priceStr = metadata.newPrice ? ` to ₱${metadata.newPrice}` : "";
+      return { title: `Price Drop: ${productName}`, body: `${shopName} lowered the price of ${productName}${priceStr}!`, path };
+    }
+    if (eventType === "restock") {
+      return { title: `Back in Stock: ${productName}`, body: `${shopName} restocked fresh ${productName}.`, path };
+    }
+    return { title: "New produce from a seller you follow", body: `${productName} is now available at ${shopName}`, path };
   }
   if (job.type === "buyer_message") {
     return {

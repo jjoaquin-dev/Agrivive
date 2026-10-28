@@ -10,6 +10,7 @@ import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { validatePriceReductionConfig } from "../../../utils/price-reduction";
 import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
+import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
 
 export async function createSellerProduct(userId: string, body: SellerProductCreate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -21,7 +22,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
   validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
-  return db.transaction(async (tx) => {
+  const postProduct = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
     const [catalog] = await tx.select({
@@ -38,7 +39,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     const productName = catalog.filipinoName.trim();
     const now = new Date();
     const { catalogId: _catalogId, ...productFields } = body;
-    const [postProduct] = await tx
+    const [created] = await tx
       .insert(sellers_product)
       .values({
         ...productFields,
@@ -61,16 +62,18 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
       })
       .returning();
 
-    if (!postProduct) throw new Error("Failed to post product");
+    if (!created) throw new Error("Failed to post product");
     await tx.insert(listing_cycles).values({
-      productId: postProduct.id,
+      productId: created.id,
       vegetableCatalogId: catalog.id,
       scalingType: body.scalingType,
       vegetableKey: normalizeVegetableName(productName),
       startedAt: now,
       originalQty: body.productQty.toString(),
     });
-    await queueFirstPublicListing(tx, postProduct.id);
-    return postProduct;
+    await queueFirstPublicListing(tx, created.id);
+    return created;
   });
+  void sendSellerListingNotices().catch(() => {});
+  return postProduct;
 }

@@ -16,11 +16,17 @@ export function GoogleSignInButton({ nextPath }: { nextPath: string }) {
     setLoading(true);
     setError("");
     try {
+      await authClient.signOut().catch(() => {});
+
       const response = await authClient.signIn.social({
         provider: "google",
         callbackURL: `${window.location.origin}${sanitizeNextPath(nextPath)}`,
       });
-      if (response.error) {
+      if (response?.data?.url) {
+        window.location.href = response.data.url;
+        return;
+      }
+      if (response?.error) {
         setError(response.error.message || "Google sign-in is not available right now.");
         setLoading(false);
       }

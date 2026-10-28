@@ -19,7 +19,7 @@ export function isTrustAccessError(error: unknown) {
 }
 
 export function isTrustAccessMessage(message: string) {
-  return /account (is )?inactive|temporarily restricted|account is blocked|blocked by the trust policy/i.test(message);
+  return /account (is )?(inactive|paused)|temporarily (restricted|paused)|reservations are (temporarily )?paused|account is blocked|blocked by the trust policy/i.test(message);
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {

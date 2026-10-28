@@ -15,6 +15,8 @@ export async function readBuyerNotice(buyerId: string, noticeId: string) {
         readAt: buyer_listing_notices.readAt, createdAt: buyer_listing_notices.createdAt,
         productId: seller_listing_events.productId, sellerId: seller_listing_events.sellerId,
         productName: seller_listing_events.productName, shopName: seller_listing_events.shopName,
+        eventType: seller_listing_events.eventType,
+        metadata: seller_listing_events.metadata,
       }).from(buyer_listing_notices)
         .innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId))
         .where(and(eq(buyer_listing_notices.id, rawId), eq(buyer_listing_notices.buyerId, buyerId)))
@@ -25,8 +27,20 @@ export async function readBuyerNotice(buyerId: string, noticeId: string) {
           .where(eq(buyer_listing_notices.id, rawId)).returning({ readAt: buyer_listing_notices.readAt });
         notice.readAt = updated?.readAt ?? notice.readAt;
       }
-      return { ...notice, id: `listing:${notice.id}`, kind: "seller_new_listing",
-        orderId: null, sentAt: null };
+      const kind = notice.eventType === "price_drop"
+        ? "seller_price_drop"
+        : notice.eventType === "restock"
+        ? "seller_restock"
+        : "seller_new_listing";
+      return {
+        ...notice,
+        id: `listing:${notice.id}`,
+        kind,
+        orderId: null,
+        sentAt: null,
+        price: (notice.metadata as { newPrice?: string } | undefined)?.newPrice ?? null,
+        previousPrice: (notice.metadata as { oldPrice?: string } | undefined)?.oldPrice ?? null,
+      };
     }
     const [notice] = await tx.select({
       id: trust_notices.id,
