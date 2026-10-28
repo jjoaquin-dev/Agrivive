@@ -28364,7 +28364,20 @@ function drizzle(...params) {
 
 // src/db/index.ts
 var pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  max: Number(process.env.DB_POOL_MAX || 10),
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 1e4
+});
+pool.on("connect", (client) => {
+  client.on("error", (err) => {
+    console.error("PostgreSQL client connection error:", err);
+  });
+});
+pool.on("error", (err) => {
+  console.error("Unexpected error on idle PostgreSQL client:", err);
 });
 var db = drizzle({ client: pool });
 // node_modules/drizzle-orm/pg-core/columns/enum.js
@@ -28615,7 +28628,10 @@ var sellers_product = pgTable("sellers_product", {
   scalingType: scaling_type_enum().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-}, (table) => [index("sellers_product_marketplace_visibility_idx").on(table.isActive, table.isMarketable, table.publishedAt)]);
+}, (table) => [
+  index("sellers_product_marketplace_visibility_idx").on(table.isActive, table.isMarketable, table.publishedAt),
+  index("sellers_product_user_id_created_at_idx").on(table.userId, table.createdAt)
+]);
 var buyer_saved_products = pgTable("buyer_saved_products", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -28640,10 +28656,12 @@ var seller_listing_events = pgTable("seller_listing_events", {
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   shopName: text("shop_name").notNull(),
   productName: text("product_name").notNull(),
+  eventType: text("event_type").default("new_listing").notNull(),
+  metadata: jsonb("metadata").$type().default(sql`'{}'::jsonb`).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   processedAt: timestamp("processed_at", { withTimezone: true })
 }, (table) => [
-  uniqueIndex("seller_listing_events_product_unique").on(table.productId),
+  index("seller_listing_events_product_idx").on(table.productId, table.eventType),
   index("seller_listing_events_pending_idx").on(table.processedAt, table.createdAt)
 ]);
 var buyer_listing_notices = pgTable("buyer_listing_notices", {
@@ -28883,7 +28901,11 @@ var orders = pgTable("orders", {
   expiredAt: timestamp("expired_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-});
+}, (table) => [
+  index("orders_buyers_id_created_at_idx").on(table.buyersId, table.createdAt),
+  index("orders_sellers_id_created_at_idx").on(table.sellersId, table.createdAt),
+  index("orders_status_expires_at_idx").on(table.status, table.expiresAt)
+]);
 var seller_scan_grace = pgTable("seller_scan_grace", {
   orderId: uuid("order_id").primaryKey().references(() => orders.id, { onDelete: "cascade" }),
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -29054,7 +29076,10 @@ var ordered_items = pgTable("ordered_items", {
   }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
-});
+}, (table) => [
+  index("ordered_items_orders_id_idx").on(table.ordersId),
+  index("ordered_items_product_id_idx").on(table.productId)
+]);
 var product_reviews = pgTable("product_reviews", {
   id: uuid("id").defaultRandom().primaryKey(),
   orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
@@ -29067,6 +29092,17 @@ var product_reviews = pgTable("product_reviews", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
+]);
+var fb_post_logs = pgTable("fb_post_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  postType: text("post_type").notNull(),
+  facebookPostId: text("facebook_post_id"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
+  status: text("status").notNull()
+}, (table) => [
+  index("fb_post_logs_product_idx").on(table.productId, table.postedAt)
 ]);
 
 // src/utils/order-stock/index.ts
@@ -29140,15 +29176,24 @@ function configuredInteger(name, fallback) {
 }
 var trustActionPolicy = {
   enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
-  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
-  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
-  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),
-  restrictionHours: configuredInteger("TRUST_RESTRICTION_HOURS", 168)
+  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 4),
+  tier1Threshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
+  tier2Threshold: configuredInteger("TRUST_TIER2_THRESHOLD", 8),
+  tier3Threshold: configuredInteger("TRUST_TIER3_THRESHOLD", 10),
+  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 6),
+  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 10)
 };
+function resolveTrustDurationHours(weightedPoints) {
+  if (weightedPoints >= trustActionPolicy.tier3Threshold)
+    return 72;
+  if (weightedPoints >= trustActionPolicy.tier2Threshold)
+    return 24;
+  if (weightedPoints >= trustActionPolicy.tier1Threshold)
+    return 12;
+  return 0;
+}
 function resolveTrustAction(weightedPoints) {
-  if (weightedPoints >= trustActionPolicy.blockedThreshold)
-    return "blocked";
-  if (weightedPoints >= trustActionPolicy.restrictionThreshold)
+  if (weightedPoints >= trustActionPolicy.tier1Threshold)
     return "temporary_restriction";
   if (weightedPoints >= trustActionPolicy.warningThreshold)
     return "warning";
@@ -29236,7 +29281,10 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
   const orderId = sourceOrderId ?? sourceEvent?.orderId ?? null;
   const sourceKey = sourceEventKey ?? sourceOrderId ?? "score";
   const actionKey = `${trustPolicyVersion}:${subjectId}:${actionType}:${sourceKey}`;
-  const endsAt = actionType === "temporary_restriction" ? new Date(Date.now() + trustActionPolicy.restrictionHours * 3600000) : null;
+  const durationHours = resolveTrustDurationHours(monitoring.weightedPoints);
+  const endsAt = actionType === "temporary_restriction" && durationHours > 0 ? new Date(Date.now() + durationHours * 3600000) : null;
+  const durationLabel = durationHours >= 72 ? "3 days" : durationHours >= 24 ? "24 hours" : "12 hours";
+  const reasonText = actionType === "warning" ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account." : `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}.`;
   return db.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
     if (existing)
@@ -29247,7 +29295,7 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
       actionType,
       weightedPoints: monitoring.weightedPoints,
       policyVersion: trustPolicyVersion,
-      reason: `Trust monitoring reached the ${actionType} threshold at ${monitoring.weightedPoints} point(s).`,
+      reason: reasonText,
       sourceEventId: sourceEvent?.id ?? null,
       sourceOrderId: orderId,
       endsAt
@@ -29558,7 +29606,9 @@ async function enqueueSellerListingNotifications(tx, event) {
       sellerId: event.sellerId,
       productId: event.productId,
       shopName: event.shopName,
-      productName: event.productName
+      productName: event.productName,
+      eventType: event.eventType,
+      metadata: event.metadata
     },
     createdAt: event.createdAt,
     updatedAt: event.createdAt
@@ -29601,6 +29651,48 @@ async function sendSellerListingNotices(limit = 25) {
   return { processedEvents, noticesCreated, pushJobsCreated };
 }
 
+// src/modules/marketplace/services/marketplace.visibility.ts
+var sellerRole = sql`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
+function marketplaceSellerVisibility() {
+  return and(eq(sellers_profile.isCurrent, true), sql`length(btrim(${sellers_profile.shopName})) > 0`, sql`length(btrim(${sellers_profile.detailAddress})) > 0`, sql`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, eq(user.isActive, true), eq(user.emailVerified, true), sellerRole, sql`not exists (
+      select 1 from ${trust_actions}
+      where ${trust_actions.subjectId} = ${user.id}
+        and ${trust_actions.actionType} = 'temporary_restriction'
+        and ${trust_actions.revokedAt} is null
+        and (${trust_actions.endsAt} is null or ${trust_actions.endsAt} > now())
+    )`);
+}
+
+// src/utils/seller-listing-event/index.ts
+async function queueSellerListingEvent(tx, productId, eventType = "new_listing", metadata = {}) {
+  const [listing] = await tx.select({
+    productId: sellers_product.id,
+    sellerId: sellers_product.userId,
+    productName: sellers_product.productName,
+    shopName: sellers_profile.shopName
+  }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), isNotNull(sellers_product.publishedAt), marketplaceSellerVisibility())).limit(1);
+  if (!listing)
+    return false;
+  if (eventType === "new_listing") {
+    const [existing] = await tx.select({ id: seller_listing_events.id }).from(seller_listing_events).where(and(eq(seller_listing_events.productId, productId), eq(seller_listing_events.eventType, "new_listing"))).limit(1);
+    if (existing)
+      return false;
+  } else if (eventType === "price_drop") {
+    if (!metadata.oldPrice || !metadata.newPrice)
+      return false;
+    const oldP = parseFloat(metadata.oldPrice);
+    const newP = parseFloat(metadata.newPrice);
+    if (isNaN(oldP) || isNaN(newP) || newP >= oldP)
+      return false;
+  }
+  const [created] = await tx.insert(seller_listing_events).values({
+    ...listing,
+    eventType,
+    metadata
+  }).returning({ id: seller_listing_events.id });
+  return Boolean(created);
+}
+
 // src/modules/seller/services/seller.product.price-reduction.followup.ts
 function cents(value) {
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
@@ -29631,6 +29723,12 @@ async function applySellerPromotionPriceReduction(tx, productId, now = new Date)
   }).where(eq(sellers_product.id, productId)).returning({
     productPrice: sellers_product.productPrice
   });
+  if (updated && updated.productPrice && current.productPrice) {
+    await queueSellerListingEvent(tx, productId, "price_drop", {
+      oldPrice: current.productPrice,
+      newPrice: updated.productPrice
+    });
+  }
   return updated ? { before: current.productPrice, after: updated.productPrice } : null;
 }
 
@@ -29875,12 +29973,18 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
   }
   const currentCycle = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
-  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
-  const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
   const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
   const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
+  let candidates = [];
+  let ranking = null;
+  let candidate;
+  let result;
+  if (!isPriceReduced && !isInitialEligible) {
+    candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+    ranking = rankVisibilityCandidates(candidates);
+    candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+    result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
+  }
   const isPriorityScore = result ? result.score >= 0.6 : false;
   const shared = {
     cycleId: activeCycleId,
@@ -29889,7 +29993,7 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
     visibilityScore: result ? Number(result.score.toFixed(4)) : 0.5,
     visibilityTier: result?.tier ?? "Priority Boost",
     visibilityRank: result?.rank ?? 1,
-    policyVersion: ranking.policyVersion,
+    policyVersion: ranking?.policyVersion ?? "visibility-ahptopsis-v1",
     evaluatedAt,
     productName: candidate?.productName ?? target.productName,
     productType: candidate?.productType ?? target.productType,
@@ -30255,12 +30359,19 @@ var maxAttempts2 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4))
 function notificationContent(job) {
   const payload = job.payload ?? {};
   if (job.type === "seller_listing") {
-    const productName = typeof payload.productName === "string" ? payload.productName : "A new listing";
-    return {
-      title: "New listing from a seller you follow",
-      body: `${productName} is now available`,
-      path: `/products/${String(payload.productId ?? "")}`
-    };
+    const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
+    const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
+    const eventType = payload.eventType;
+    const metadata = payload.metadata ?? {};
+    const path = `/products/${String(payload.productId ?? "")}`;
+    if (eventType === "price_drop") {
+      const priceStr = metadata.newPrice ? ` to \u20B1${metadata.newPrice}` : "";
+      return { title: `Price Drop: ${productName}`, body: `${shopName} lowered the price of ${productName}${priceStr}!`, path };
+    }
+    if (eventType === "restock") {
+      return { title: `Back in Stock: ${productName}`, body: `${shopName} restocked fresh ${productName}.`, path };
+    }
+    return { title: "New produce from a seller you follow", body: `${productName} is now available at ${shopName}`, path };
   }
   if (job.type === "buyer_message") {
     return {

@@ -180,6 +180,7 @@ export default function ProfileOverviewScreen() {
 
         <ProfileSettingsList
           onNotifications={() => router.push("/(app)/notifications")}
+          onReviews={() => router.push("/(app)/reviews")}
           onTrust={() => router.push("/(app)/trust")}
           onSecurity={() => router.push("/(app)/profile/security")}
           onActivity={() => router.push("/(app)/activity")}
