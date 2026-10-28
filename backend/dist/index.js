@@ -141693,7 +141693,7 @@ async function publishFacebookPagePhoto(imageUrl, caption) {
     response = await fetch(`https://graph.facebook.com/${version}/${pageId}/photos`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ url: imageUrl, caption }),
+      body: new URLSearchParams({ url: imageUrl, caption, published: "true" }),
       signal: AbortSignal.timeout(30000)
     });
   } catch (error) {
