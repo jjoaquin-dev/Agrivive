@@ -146,7 +146,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://api.agrivive.tech/integrations/products/{{$('4. Format Post Content').first().json.productId}}/context",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$json.productId || $('4. Format Post Content').first().json.productId}}/context",
         "options": { "timeout": 30000 }
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -180,7 +180,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.agrivive.tech/integrations/products/{{$('4. Format Post Content').first().json.productId}}/reduce-price",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$json.productId || $json.id || $('4. Format Post Content').first().json.productId}}/reduce-price",
         "options": { "timeout": 30000 }
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -208,7 +208,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  model: 'openai/gpt-oss-20b',\n  temperature: 0.4,\n  response_format: { type: 'json_object' },\n  messages: [\n    {\n      role: 'system',\n      content: 'You are Agrivive social media copywriter. Return a JSON object with a single caption field. Write an urgent flash-sale Facebook post announcing a price reduction deal. Highlight the discount percentage, the old price vs the new price, and encourage fast pickups.'\n    },\n    {\n      role: 'user',\n      content: `Product: ${$json.productName}, Old Price: ₱${$json.originalPrice}, New Price: ₱${$json.newPrice} (${$json.discountPercent}% discount), Remaining Stock: ${$json.stock}, URL: https://agrivive.tech/marketplace/${$json.productId}`\n    }\n  ]\n}) }}",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'openai/gpt-oss-20b',\n  temperature: 0.4,\n  response_format: { type: 'json_object' },\n  messages: [\n    {\n      role: 'system',\n      content: 'You are Agrivive social media copywriter. Return a JSON object with a single caption field. Write an urgent flash-sale Facebook post announcing a price reduction deal. Highlight the discount percentage, the old price vs the new price, and encourage fast pickups.'\n    },\n    {\n      role: 'user',\n      content: `Product: ${$json.productName || $('8. Retrieve Latest Product Data').last().json.productName}, Old Price: ₱${$json.originalPrice || $('8. Retrieve Latest Product Data').last().json.productPrice}, New Price: ₱${$json.newPrice || $json.currentPrice || $('8. Retrieve Latest Product Data').last().json.productPrice} (${$json.discountPercent || 0}% discount), Remaining Stock: ${$json.stock || $('8. Retrieve Latest Product Data').last().json.productQty}, URL: https://agrivive.tech/marketplace/${$json.productId || $('8. Retrieve Latest Product Data').last().json.productId}`\n    }\n  ]\n}) }}",
         "options": { "timeout": 30000 }
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -220,7 +220,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const reduced = $('10. Apply % Reduction (PostgreSQL)').first().json;\nlet caption = `⚡ FLASH SALE: ${reduced.productName} is now ${reduced.discountPercent}% OFF! Only ₱${reduced.newPrice} (was ₱${reduced.originalPrice}) at Agrivive! Grab yours now before it sells out: https://agrivive.tech/marketplace/${reduced.productId}`;\ntry {\n  const raw = $input.first().json.choices[0].message.content;\n  const parsed = JSON.parse(raw);\n  if (parsed.caption) caption = parsed.caption;\n} catch (e) {}\nreturn [{\n  json: {\n    productId: reduced.productId,\n    productName: reduced.productName,\n    newPrice: String(reduced.newPrice),\n    caption: caption,\n    imageUrl: `https://api.agrivive.tech/integrations/media/social-products/${reduced.productId}`\n  }\n}];"
+        "jsCode": "const reduced = $('10. Apply % Reduction (PostgreSQL)').last().json;\nconst ctx = $('8. Retrieve Latest Product Data').last().json;\nconst pName = reduced.productName || ctx.productName || 'Fresh Produce';\nconst nPrice = reduced.newPrice || reduced.currentPrice || ctx.productPrice || '0';\nconst oPrice = reduced.originalPrice || ctx.productPrice || nPrice;\nconst dPercent = reduced.discountPercent || 0;\nconst pId = reduced.productId || ctx.productId || ctx.id;\nlet caption = `⚡ FLASH SALE: ${pName} is now ${dPercent}% OFF! Only ₱${nPrice} (was ₱${oPrice}) at Agrivive! Grab yours now before it sells out: https://agrivive.tech/marketplace/${pId}`;\ntry {\n  const raw = $input.first().json.choices[0].message.content;\n  const parsed = JSON.parse(raw);\n  if (parsed.caption) caption = parsed.caption;\n} catch (e) {}\nreturn [{\n  json: {\n    productId: pId,\n    productName: pName,\n    newPrice: String(nPrice),\n    caption: caption,\n    imageUrl: `https://api.agrivive.tech/integrations/media/social-products/${pId}`\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -283,7 +283,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"productId\": \"{{$('12. Format New Post').first().json.productId}}\",\n  \"postType\": \"second_post\",\n  \"facebookPostId\": \"{{$json.post_id || $json.id || 'fb_post_2_created'}}\",\n  \"price\": \"{{$('12. Format New Post').first().json.newPrice}}\",\n  \"status\": \"{{$json.id || $json.post_id ? 'success' : 'failed'}}\"\n}",
+        "jsonBody": "={\n  \"productId\": \"{{$('12. Format New Post').last().json.productId}}\",\n  \"postType\": \"second_post\",\n  \"facebookPostId\": \"{{$json.post_id || $json.id || 'fb_post_2_created'}}\",\n  \"price\": \"{{$('12. Format New Post').last().json.newPrice}}\",\n  \"status\": \"{{$json.id || $json.post_id ? 'success' : 'failed'}}\"\n}",
         "options": { "timeout": 15000 }
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -333,6 +333,9 @@
     },
     "13. Post to Facebook (2nd Post)": {
       "main": [[{ "node": "14. Store 2nd Post Record", "type": "main", "index": 0 }]]
+    },
+    "14. Store 2nd Post Record": {
+      "main": [[{ "node": "7. Wait 6 Hours", "type": "main", "index": 0 }]]
     }
   },
   "active": false,

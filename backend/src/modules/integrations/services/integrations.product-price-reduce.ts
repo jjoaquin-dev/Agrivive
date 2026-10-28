@@ -32,7 +32,15 @@ export async function reduceSellerProductPriceByPercent(identifier: string) {
 
     if (!product) throw new OrderError(404, "Product not found");
     if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0 || !product.productPrice) {
-      return { success: false, inStock: false, message: "Produce is sold out or inactive" };
+      return {
+        success: false,
+        inStock: false,
+        message: "Produce is sold out or inactive",
+        productId: product.id,
+        productName: product.productName,
+        currentPrice: product.productPrice ?? "0.00",
+        stock: product.productQty ?? "0",
+      };
     }
 
     const currentCents = cents(product.productPrice);
@@ -52,6 +60,12 @@ export async function reduceSellerProductPriceByPercent(identifier: string) {
         atFloor: true,
         message: "Product has already reached seller minimum price floor",
         productId: product.id,
+        productName: product.productName,
+        originalPrice: decimal(currentCents),
+        newPrice: decimal(currentCents),
+        discountPercent: 0,
+        periodsApplied: product.priceReductionPeriodsApplied ?? 0,
+        stock: product.productQty ?? "0",
         currentPrice: decimal(currentCents),
       };
     }

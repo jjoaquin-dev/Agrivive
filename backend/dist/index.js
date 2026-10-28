@@ -142049,7 +142049,15 @@ async function reduceSellerProductPriceByPercent(identifier) {
     if (!product)
       throw new OrderError(404, "Product not found");
     if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0 || !product.productPrice) {
-      return { success: false, inStock: false, message: "Produce is sold out or inactive" };
+      return {
+        success: false,
+        inStock: false,
+        message: "Produce is sold out or inactive",
+        productId: product.id,
+        productName: product.productName,
+        currentPrice: product.productPrice ?? "0.00",
+        stock: product.productQty ?? "0"
+      };
     }
     const currentCents = cents2(product.productPrice);
     const floorCents = product.minimumPrice ? cents2(product.minimumPrice) : 0n;
@@ -142065,6 +142073,12 @@ async function reduceSellerProductPriceByPercent(identifier) {
         atFloor: true,
         message: "Product has already reached seller minimum price floor",
         productId: product.id,
+        productName: product.productName,
+        originalPrice: decimal5(currentCents),
+        newPrice: decimal5(currentCents),
+        discountPercent: 0,
+        periodsApplied: product.priceReductionPeriodsApplied ?? 0,
+        stock: product.productQty ?? "0",
         currentPrice: decimal5(currentCents)
       };
     }
