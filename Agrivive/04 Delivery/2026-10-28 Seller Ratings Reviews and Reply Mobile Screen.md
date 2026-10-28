@@ -50,3 +50,8 @@ Empower sellers in the mobile app to view their overall rating score, star break
 - Executed `bun build src/index.ts --outdir dist --target bun` in `backend/` — built cleanly in 83ms.
 - Executed `bunx tsc --noEmit` in `mobile/` — passed with 0 errors.
 - Verified line count of all 13 modified and newly created files: all files strictly $\le 185$ lines ($\le 200$ line guideline).
+
+## Commit Reference
+- Commit: `e94f28b` — `add rating viewer`
+- Commit: `c00901a` — `add proxy logs`
+
