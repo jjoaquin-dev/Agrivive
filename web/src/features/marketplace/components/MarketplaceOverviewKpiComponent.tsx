@@ -15,7 +15,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
       value: `${kpis.totalRescuedQty.toLocaleString()} kg`,
       description: `Surplus agricultural produce rescued in the ${rangeLabel}`,
       icon: PackageCheck,
-      badge: "+18% vs prev period",
+      badge: "Verified Pickups",
       highlightColor: "text-emerald-700 bg-emerald-50 border-emerald-200",
     },
     {
@@ -31,7 +31,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
       value: `${kpis.fulfillmentRate}%`,
       description: `${kpis.totalOrders} total completed market pickups verified`,
       icon: CheckCircle2,
-      badge: "High Reliability",
+      badge: "Reliable Stalls",
       highlightColor: "text-teal-700 bg-teal-50 border-teal-200",
     },
     {
@@ -71,7 +71,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
             <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
               <span className="font-semibold text-neutral-700">{card.badge}</span>
               <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                <TrendingUp className="size-3" /> Healthy Flow
+                <TrendingUp className="size-3" /> Live Database
               </span>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { LandingHeader } from "@/src/features/home/components/LandingHeader";
 import { PageContainer } from "@/src/components/PageContainer";
-import { HomeFooter } from "@/src/features/home/components/HomeFooter";
+import { MarketplaceFooter } from "@/src/features/marketplace/components/MarketplaceFooter";
 import {
   getMarketplaceOverview,
   type MarketplaceOverviewRange,
@@ -15,6 +15,8 @@ import { MarketplaceOverviewKpiComponent } from "@/src/features/marketplace/comp
 import { MarketplaceTopProduceChartComponent } from "@/src/features/marketplace/components/MarketplaceTopProduceChartComponent";
 import { MarketplaceActivityTrendComponent } from "@/src/features/marketplace/components/MarketplaceActivityTrendComponent";
 import { MarketplaceCategoryBreakdownComponent } from "@/src/features/marketplace/components/MarketplaceCategoryBreakdownComponent";
+import { MarketplaceSellerStallsComponent } from "@/src/features/marketplace/components/MarketplaceSellerStallsComponent";
+import { MarketplaceBuyerImpactComponent } from "@/src/features/marketplace/components/MarketplaceBuyerImpactComponent";
 import { MarketplaceOverviewPrintComponent } from "@/src/features/marketplace/components/MarketplaceOverviewPrintComponent";
 
 export default function MarketplaceOverviewPage() {
@@ -109,6 +111,15 @@ export default function MarketplaceOverviewPage() {
                     />
                   </div>
                 </div>
+
+                <div className="grid gap-6 lg:grid-cols-12 items-start">
+                  <div className="lg:col-span-7">
+                    <MarketplaceSellerStallsComponent stalls={data.sellerStalls} />
+                  </div>
+                  <div className="lg:col-span-5">
+                    <MarketplaceBuyerImpactComponent summary={data.buyerSummary} />
+                  </div>
+                </div>
               </div>
 
               {/* Official Printable Report View */}
@@ -119,7 +130,7 @@ export default function MarketplaceOverviewPage() {
       </main>
 
       <div className="print:hidden">
-        <HomeFooter />
+        <MarketplaceFooter />
       </div>
     </>
   );

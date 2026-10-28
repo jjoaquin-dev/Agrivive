@@ -45,7 +45,7 @@ export function LandingHeader() {
         <PageContainer className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-1.5" aria-label="Agrivive home">
-            <Image src="/brand/agrivive-logo-crate.png" alt="Agrivive" width={18} height={18} className="h-[18px] w-auto object-contain transition-transform group-hover:scale-105" priority />
+            <Image src="/brand/agrivive-logo-bag.png" alt="Agrivive" width={22} height={22} className="h-[22px] w-auto object-contain transition-transform group-hover:scale-105" priority />
             <span className="font-brand text-[22px] font-black leading-none tracking-tight text-[#457D00]">Agrivive</span>
           </Link>
 
@@ -82,14 +82,7 @@ export function LandingHeader() {
               <span>Marketplace</span>
             </Link>
 
-            {hasSession ? (
-              <Link
-                href="/buyer/orders"
-                className="inline-flex min-h-9 items-center rounded-lg bg-[#457D00] px-4 text-xs font-bold text-white transition hover:bg-[#386600]"
-              >
-                My Passes
-              </Link>
-            ) : (
+            {!hasSession && (
               <div className="flex items-center gap-2">
                 <Link href="/login" className="px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900">
                   Sign In
