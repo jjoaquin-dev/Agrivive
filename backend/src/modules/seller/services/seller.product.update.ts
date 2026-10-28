@@ -9,16 +9,17 @@ import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import type { SellerProductUpdate } from "../model/seller.product";
 import { validatePriceReductionConfig } from "../../../utils/price-reduction";
-import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
+import { queueFirstPublicListing, queueSellerListingEvent } from "../../../utils/seller-listing-event";
+import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
 
-export function updateSellerProduct(sellerId: string, productId: string, body: SellerProductUpdate) {
+export async function updateSellerProduct(sellerId: string, productId: string, body: SellerProductUpdate) {
   validateLowStockThreshold(body.lowStockThreshold);
   if (body.imagUrl !== undefined) validateProductImageReference(body.imagUrl, sellerId);
   if (Object.keys(body).length === 0) throw new OrderError(400, "At least one product field is required");
   if (body.productPrice !== undefined && priceToCents(body.productPrice) === null) {
     throw new OrderError(400, "Product price must have at most two decimal places");
   }
-  return db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [current] = await tx.select().from(sellers_product).where(and(
       eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId),
@@ -49,7 +50,7 @@ export function updateSellerProduct(sellerId: string, productId: string, body: S
     }
     const name = catalog?.filipinoName.trim();
     const now = new Date();
-    const [updated] = await tx.update(sellers_product).set({
+    const [updatedProduct] = await tx.update(sellers_product).set({
       ...(catalog ? {
         vegetableCatalogId: catalog.id,
         productName: name,
@@ -76,17 +77,26 @@ export function updateSellerProduct(sellerId: string, productId: string, body: S
       } : {}),
       updatedAt: now,
     }).where(eq(sellers_product.id, productId)).returning();
-    if (initializingLegacy && updated.originalQty) {
+    if (initializingLegacy && updatedProduct.originalQty) {
       await tx.insert(listing_cycles).values({
         productId,
-        vegetableCatalogId: updated.vegetableCatalogId,
-        scalingType: updated.scalingType,
-        vegetableKey: normalizeVegetableName(updated.productName),
+        vegetableCatalogId: updatedProduct.vegetableCatalogId,
+        scalingType: updatedProduct.scalingType,
+        vegetableKey: normalizeVegetableName(updatedProduct.productName),
         startedAt: now,
-        originalQty: updated.originalQty,
+        originalQty: updatedProduct.originalQty,
       });
     }
-    await queueFirstPublicListing(tx, updated.id);
-    return updated;
+    if (body.productPrice !== undefined && Number(current.productPrice ?? 0) > Number(basePrice)) {
+      await queueSellerListingEvent(tx, productId, "price_drop", {
+        oldPrice: current.productPrice ?? undefined,
+        newPrice: basePrice.toString(),
+      });
+    } else {
+      await queueFirstPublicListing(tx, updatedProduct.id);
+    }
+    return updatedProduct;
   });
+  void sendSellerListingNotices().catch(() => {});
+  return updated;
 }

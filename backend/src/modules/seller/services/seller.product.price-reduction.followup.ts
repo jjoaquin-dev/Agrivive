@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { sellers_product } from "../../../db/schema";
 import type { OrderTransaction } from "../../../utils/order-types";
+import { queueSellerListingEvent } from "../../../utils/seller-listing-event";
 
 function cents(value: string) {
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
@@ -37,5 +38,13 @@ export async function applySellerPromotionPriceReduction(
   }).where(eq(sellers_product.id, productId)).returning({
     productPrice: sellers_product.productPrice,
   });
+
+  if (updated && updated.productPrice && current.productPrice) {
+    await queueSellerListingEvent(tx, productId, "price_drop", {
+      oldPrice: current.productPrice,
+      newPrice: updated.productPrice,
+    });
+  }
+
   return updated ? { before: current.productPrice, after: updated.productPrice } : null;
 }

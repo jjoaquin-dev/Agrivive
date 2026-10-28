@@ -15,6 +15,8 @@ export async function listBuyerNotices(buyerId: string) {
       createdAt: buyer_listing_notices.createdAt, productId: seller_listing_events.productId,
       sellerId: seller_listing_events.sellerId, productName: seller_listing_events.productName,
       shopName: seller_listing_events.shopName,
+      eventType: seller_listing_events.eventType,
+      metadata: seller_listing_events.metadata,
     }).from(buyer_listing_notices)
       .innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId))
       .where(eq(buyer_listing_notices.buyerId, buyerId))
@@ -34,10 +36,23 @@ export async function listBuyerNotices(buyerId: string) {
   const availableIds = new Set(available.map((product) => product.id));
   return [
     ...orderNotices.map((notice) => ({ ...notice, productId: null, sellerId: null,
-      productName: null, shopName: null, productAvailable: null })),
-    ...listingNotices.map((notice) => ({
-      ...notice, id: `listing:${notice.id}`, kind: "seller_new_listing",
-      orderId: null, sentAt: null, productAvailable: availableIds.has(notice.productId),
-    })),
+      productName: null, shopName: null, productAvailable: null, price: null, previousPrice: null })),
+    ...listingNotices.map((notice) => {
+      const kind = notice.eventType === "price_drop"
+        ? "seller_price_drop"
+        : notice.eventType === "restock"
+        ? "seller_restock"
+        : "seller_new_listing";
+      return {
+        ...notice,
+        id: `listing:${notice.id}`,
+        kind,
+        orderId: null,
+        sentAt: null,
+        productAvailable: availableIds.has(notice.productId),
+        price: (notice.metadata as { newPrice?: string } | undefined)?.newPrice ?? null,
+        previousPrice: (notice.metadata as { oldPrice?: string } | undefined)?.oldPrice ?? null,
+      };
+    }),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 100);
 }

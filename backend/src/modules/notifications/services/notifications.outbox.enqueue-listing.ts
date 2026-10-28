@@ -35,6 +35,8 @@ export async function enqueueSellerListingNotifications(
       productId: event.productId,
       shopName: event.shopName,
       productName: event.productName,
+      eventType: event.eventType,
+      metadata: event.metadata,
     },
     createdAt: event.createdAt,
     updatedAt: event.createdAt,

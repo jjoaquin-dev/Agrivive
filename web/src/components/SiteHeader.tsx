@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, ClipboardList, LogOut, Menu, ShoppingCart, Store, UserCircle, X } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, LogOut, Menu, ShoppingCart, Store, UserCircle, X } from "lucide-react";
 import { authClient } from "@/src/lib/auth-client";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { PageContainer } from "./PageContainer";
@@ -59,6 +59,9 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-2 text-sm font-semibold md:flex" aria-label="Primary navigation">
           <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-agrivive-background px-3 text-agrivive-primary hover:bg-agrivive-sage/25">
             <Store aria-hidden="true" size={18} strokeWidth={1.8} /> Marketplace
+          </Link>
+          <Link href="/marketplace/overview" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
+            <BarChart3 aria-hidden="true" size={18} strokeWidth={1.8} /> Overview
           </Link>
           <Link href="/orders" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
             <ClipboardList aria-hidden="true" size={18} strokeWidth={1.8} /> Orders

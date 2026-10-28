@@ -14,17 +14,25 @@ function configuredInteger(name: string, fallback: number) {
 
 export const trustActionPolicy = {
   enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
-  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 3),
-  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 5),
-  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 8),
-  restrictionHours: configuredInteger("TRUST_RESTRICTION_HOURS", 168),
+  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 4),
+  tier1Threshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
+  tier2Threshold: configuredInteger("TRUST_TIER2_THRESHOLD", 8),
+  tier3Threshold: configuredInteger("TRUST_TIER3_THRESHOLD", 10),
+  restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 6),
+  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 10),
 } as const;
 
 export type TrustActionType = "warning" | "temporary_restriction" | "blocked";
 
+export function resolveTrustDurationHours(weightedPoints: number): number {
+  if (weightedPoints >= trustActionPolicy.tier3Threshold) return 72; // 3 days
+  if (weightedPoints >= trustActionPolicy.tier2Threshold) return 24; // 24 hours
+  if (weightedPoints >= trustActionPolicy.tier1Threshold) return 12; // 12 hours
+  return 0; // 4 points is warning only (no restriction)
+}
+
 export function resolveTrustAction(weightedPoints: number): TrustActionType | null {
-  if (weightedPoints >= trustActionPolicy.blockedThreshold) return "blocked";
-  if (weightedPoints >= trustActionPolicy.restrictionThreshold) return "temporary_restriction";
+  if (weightedPoints >= trustActionPolicy.tier1Threshold) return "temporary_restriction";
   if (weightedPoints >= trustActionPolicy.warningThreshold) return "warning";
   return null;
 }

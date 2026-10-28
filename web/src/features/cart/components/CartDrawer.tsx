@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { ArrowRight, RefreshCw, ShoppingCart } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ArrowRight, RefreshCw, ShoppingCart } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ApiError, isTrustAccessMessage } from "@/src/lib/api";
@@ -13,6 +13,7 @@ import { useCart } from "../CartProvider";
 import { createCartCheckout } from "../api/cart";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
 import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
+import { getBuyerProfile } from "@/src/features/profile/api/profile";
 import { CartSellerHeaderComponent } from "./CartSellerHeaderComponent";
 import { CartItemComponent } from "./CartItemComponent";
 
@@ -27,6 +28,24 @@ export function CartDrawer() {
   const [checkoutError, setCheckoutError] = useState("");
   const [checkingOut, setCheckingOut] = useState(false);
   const [showReserveModal, setShowReserveModal] = useState(false);
+  const [trustWarning, setTrustWarning] = useState<string | null>(null);
+  const [trustRestriction, setTrustRestriction] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    let cancelled = false;
+    getBuyerProfile()
+      .then((res) => {
+        if (!cancelled) {
+          setTrustWarning(res.trustWarning ?? null);
+          setTrustRestriction(res.trustRestriction?.message ?? null);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [drawerOpen]);
 
   const total = useMemo(() => items.reduce((sum, item) => sum + Number(item.productPrice) * item.quantity, 0), [items]);
 
@@ -85,6 +104,15 @@ export function CartDrawer() {
           <div className="m-6 h-40 animate-pulse rounded-[20px] bg-white" aria-label="Loading cart" />
         ) : items.length > 0 ? (
           <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-5">
+            {trustWarning ? (
+              <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-900">
+                <AlertTriangle className="size-4 shrink-0 text-amber-600" />
+                <AlertTitle className="font-semibold text-amber-900">Missed pickup warning</AlertTitle>
+                <AlertDescription className="text-xs leading-relaxed text-amber-800">
+                  {trustWarning}
+                </AlertDescription>
+              </Alert>
+            ) : null}
             {itemsBySeller.map(([shopName, sellerItems]) => (
               <div key={shopName} className="space-y-2.5">
                 <CartSellerHeaderComponent shopName={shopName} />
@@ -117,8 +145,8 @@ export function CartDrawer() {
 
         {items.length > 0 ? (
           <SheetFooter className="border-t border-border/80 bg-white p-5">
-            {checkoutError && isTrustAccessMessage(checkoutError) ? (
-              <TrustAccessNotice message={checkoutError} />
+            {trustRestriction || (checkoutError && isTrustAccessMessage(checkoutError)) ? (
+              <TrustAccessNotice message={trustRestriction || checkoutError} />
             ) : checkoutError ? (
               <Alert variant="destructive" className="mb-3">
                 <AlertDescription>{checkoutError}</AlertDescription>
@@ -134,7 +162,7 @@ export function CartDrawer() {
             <Button
               type="button"
               onClick={() => setShowReserveModal(true)}
-              disabled={checkingOut || !isReady}
+              disabled={checkingOut || !isReady || Boolean(trustRestriction)}
               className="min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
             >
               {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" />

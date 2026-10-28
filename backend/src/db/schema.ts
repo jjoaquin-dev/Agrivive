@@ -280,10 +280,17 @@ export const seller_listing_events = pgTable("seller_listing_events", {
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   shopName: text("shop_name").notNull(),
   productName: text("product_name").notNull(),
+  eventType: text("event_type").default("new_listing").notNull(),
+  metadata: jsonb("metadata").$type<{
+    oldPrice?: string;
+    newPrice?: string;
+    priceReductionPercent?: number;
+    stock?: string;
+  }>().default(sql`'{}'::jsonb`).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   processedAt: timestamp("processed_at", { withTimezone: true }),
 }, (table) => [
-  uniqueIndex("seller_listing_events_product_unique").on(table.productId),
+  index("seller_listing_events_product_idx").on(table.productId, table.eventType),
   index("seller_listing_events_pending_idx").on(table.processedAt, table.createdAt),
 ]);
 

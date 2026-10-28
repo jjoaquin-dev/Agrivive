@@ -8,6 +8,9 @@ import type { BuyerNotice } from "../types";
 
 export type NoticeFilterTab = "all" | "reservations" | "produce" | "updates";
 
+const isProduceNotice = (kind: string) =>
+  kind === "seller_new_listing" || kind === "seller_price_drop" || kind === "seller_restock";
+
 export function useBuyerNotifications() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
   const [notices, setNotices] = useState<BuyerNotice[]>([]);
@@ -55,8 +58,8 @@ export function useBuyerNotifications() {
     return {
       all: notices.length,
       reservations: notices.filter((n) => n.kind.includes("cancellation") || n.orderId).length,
-      produce: notices.filter((n) => n.kind === "seller_new_listing").length,
-      updates: notices.filter((n) => !n.orderId && n.kind !== "seller_new_listing").length,
+      produce: notices.filter((n) => isProduceNotice(n.kind)).length,
+      updates: notices.filter((n) => !n.orderId && !isProduceNotice(n.kind)).length,
     };
   }, [notices]);
 
@@ -65,10 +68,10 @@ export function useBuyerNotifications() {
       return notices.filter((n) => n.kind.includes("cancellation") || n.orderId);
     }
     if (activeTab === "produce") {
-      return notices.filter((n) => n.kind === "seller_new_listing");
+      return notices.filter((n) => isProduceNotice(n.kind));
     }
     if (activeTab === "updates") {
-      return notices.filter((n) => !n.orderId && n.kind !== "seller_new_listing");
+      return notices.filter((n) => !n.orderId && !isProduceNotice(n.kind));
     }
     return notices;
   }, [activeTab, notices]);

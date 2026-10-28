@@ -14,6 +14,7 @@ const navCategories = ["All Categories", "Vegetables", "Fruits", "Leafy Greens",
 const sectionLinks = [
   { label: "Home", href: "/" },
   { label: "Marketplace", href: "/marketplace", isRoute: true },
+  { label: "Public Marketplace Overview", href: "/marketplace/overview", isRoute: true },
   { label: "Categories", href: "#categories" },
   { label: "Live Surplus", href: "#live-inventory" },
   { label: "How It Works", href: "#how-it-works" },
@@ -150,16 +151,27 @@ export function LandingHeader() {
             </button>
           </form>
           <div className="flex flex-col gap-2">
-            {sectionLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="py-1.5 text-xs font-semibold text-neutral-700 hover:text-[#457D00]"
-              >
-                {link.label}
-              </a>
-            ))}
+            {sectionLinks.map((link) =>
+              link.isRoute ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="py-1.5 text-xs font-semibold text-neutral-700 hover:text-[#457D00]"
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="py-1.5 text-xs font-semibold text-neutral-700 hover:text-[#457D00]"
+                >
+                  {link.label}
+                </a>
+              )
+            )}
           </div>
         </div>
       )}

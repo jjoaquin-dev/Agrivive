@@ -19,7 +19,7 @@ async function unavailableProductError(
     .limit(1);
   if (!product) return new OrderError(404, "Product not found");
   if (product.userId === buyerId) {
-    return new OrderError(403, "You cannot order your own product");
+    return new OrderError(403, "You cannot reserve items from your own stall. Please select produce from another local seller.");
   }
   return new OrderError(409, "Product price or quantity is unavailable");
 }

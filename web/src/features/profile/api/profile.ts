@@ -9,6 +9,12 @@ export type BuyerProfileResponse = {
     email: string;
     image: string | null;
   };
+  trustWarning?: string | null;
+  trustRestriction?: {
+    message: string;
+    remainingText: string;
+    durationText: string;
+  } | null;
 };
 
 export function getBuyerProfile() {

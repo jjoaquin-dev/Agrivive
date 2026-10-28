@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ClipboardList, LogIn, LogOut, ShoppingCart, Store, UserPlus } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, LogIn, LogOut, ShoppingCart, Store, UserPlus } from "lucide-react";
 import { PageContainer } from "./PageContainer";
 
 type SiteHeaderMobileNavProps = {
@@ -32,6 +32,9 @@ export function SiteHeaderMobileNav({
       <PageContainer className="flex flex-col gap-1">
         <Link href="/marketplace" className="inline-flex items-center gap-3 rounded-lg px-3 py-3 font-semibold text-agrivive-primary hover:bg-agrivive-background" onClick={onCloseMenu}>
           <Store aria-hidden="true" size={18} />Marketplace
+        </Link>
+        <Link href="/marketplace/overview" className="inline-flex items-center gap-3 rounded-lg px-3 py-3 font-semibold text-agrivive-text hover:bg-agrivive-background" onClick={onCloseMenu}>
+          <BarChart3 aria-hidden="true" size={18} />Public Overview
         </Link>
         <Link href="/orders" className="inline-flex items-center gap-3 rounded-lg px-3 py-3 font-semibold text-agrivive-text hover:bg-agrivive-background" onClick={onCloseMenu}>
           <ClipboardList aria-hidden="true" size={18} />Orders

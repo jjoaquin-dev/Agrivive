@@ -1,62 +1,35 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import {
-  HomeFeaturedProduceCard,
-  type FeaturedProduceItem,
-} from "./HomeFeaturedProduceCard";
-
-const liveOfferings: FeaturedProduceItem[] = [
-  {
-    id: "prod-1",
-    name: "Sun-Freckled Native Tomatoes",
-    category: "Fruit Vegetables",
-    originalPrice: "₱80",
-    surplusPrice: "₱40",
-    unit: "kilo",
-    quantity: "14 kilos left",
-    discount: "50% OFF",
-    stall: "Bankerohan Market",
-    image: "/produce/native-tomatoes.jpg",
-  },
-  {
-    id: "prod-2",
-    name: "Curved Highland Carrots",
-    category: "Root Vegetables",
-    originalPrice: "₱65",
-    surplusPrice: "₱35",
-    unit: "pile",
-    quantity: "8 piles left",
-    discount: "46% OFF",
-    stall: "Marilog Farm Direct",
-    image: "/produce/highland-carrots.jpg",
-  },
-  {
-    id: "prod-3",
-    name: "Glossy Purple Eggplant",
-    category: "Fruit Vegetables",
-    originalPrice: "₱800",
-    surplusPrice: "₱450",
-    unit: "sack",
-    quantity: "5 sacks left",
-    discount: "44% OFF",
-    stall: "Agdao Public Market",
-    image: "/produce/purple-eggplant.jpg",
-  },
-  {
-    id: "prod-4",
-    name: "Native Green Ampalaya",
-    category: "Fruit Vegetables",
-    originalPrice: "₱55",
-    surplusPrice: "₱30",
-    unit: "pile",
-    quantity: "12 piles left",
-    discount: "45% OFF",
-    stall: "Toril Farm Direct",
-    image: "/produce/green-ampalaya.jpg",
-  },
-];
+import { listMarketplaceProducts } from "@/src/features/marketplace/api/marketplace";
+import type { MarketplaceProduct } from "@/src/features/marketplace/types";
+import { HomeFeaturedProduceCard } from "./HomeFeaturedProduceCard";
 
 export function HomeFeaturedProduce() {
+  const [products, setProducts] = useState<MarketplaceProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    listMarketplaceProducts(new URLSearchParams({ limit: "4" }), controller.signal)
+      .then((res) => {
+        if (active) {
+          setProducts(res.products.slice(0, 4));
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, []);
+
   return (
     <section id="live-inventory" className="bg-[#FAF9F5] py-16 sm:py-20 border-b border-neutral-200/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -83,12 +56,35 @@ export function HomeFeaturedProduce() {
           </Link>
         </div>
 
-        {/* 4 Clean Modern Cards with Canonical Selling Units */}
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {liveOfferings.map((item) => (
-            <HomeFeaturedProduceCard key={item.id} item={item} />
-          ))}
-        </div>
+        {/* Dynamic Live Cards from Sellers */}
+        {loading ? (
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-[380px] animate-pulse rounded-[22px] border border-neutral-200/70 bg-white p-3.5"
+              />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {products.map((product) => (
+              <HomeFeaturedProduceCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-[22px] border border-neutral-200/70 bg-white p-12 text-center">
+            <p className="text-sm font-medium text-neutral-600">
+              No surplus produce listed right now. Check back shortly as local stalls update their inventory!
+            </p>
+            <Link
+              href="/marketplace"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#457D00] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#386600]"
+            >
+              Browse Marketplace <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );
