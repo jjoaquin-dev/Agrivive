@@ -142038,8 +142038,13 @@ function cents2(value) {
 function decimal5(centsValue) {
   return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
 }
-async function reduceSellerProductPriceByPercent(productId) {
+async function reduceSellerProductPriceByPercent(identifier) {
   return await db2.transaction(async (tx) => {
+    let productId = identifier;
+    const [campaign] = await tx.select({ productId: seller_social_campaigns.productId }).from(seller_social_campaigns).where(eq(seller_social_campaigns.id, identifier)).limit(1);
+    if (campaign) {
+      productId = campaign.productId;
+    }
     const [product] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
     if (!product)
       throw new OrderError(404, "Product not found");
@@ -142127,6 +142132,56 @@ var integrationsFbLogsRoute = new Elysia().post("/integrations/social/fb-logs", 
     price: t.String(),
     status: t.Union([t.Literal("success"), t.Literal("failed")])
   })
+});
+
+// src/modules/integrations/services/integrations.product-context.ts
+async function getProductUnifiedContext(identifier) {
+  let productId = identifier;
+  const [campaign] = await db2.select({ productId: seller_social_campaigns.productId }).from(seller_social_campaigns).where(eq(seller_social_campaigns.id, identifier)).limit(1);
+  if (campaign) {
+    productId = campaign.productId;
+  }
+  const [row] = await db2.select({
+    id: sellers_product.id,
+    productName: sellers_product.productName,
+    productPrice: sellers_product.productPrice,
+    basePrice: sellers_product.basePrice,
+    productQty: sellers_product.productQty,
+    scalingType: sellers_product.scalingType,
+    shopName: sellers_profile.shopName,
+    sellerName: user.name
+  }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(eq(sellers_product.id, productId)).limit(1);
+  if (!row)
+    throw new OrderError(404, "Product not found");
+  const apiBase = (process.env.SOCIAL_PUBLIC_API_URL || "https://api.agrivive.tech").replace(/\/$/, "");
+  return {
+    id: row.id,
+    productId: row.id,
+    productName: row.productName,
+    productPrice: row.productPrice,
+    basePrice: row.basePrice,
+    productQty: row.productQty,
+    scalingType: row.scalingType,
+    shopName: row.shopName,
+    sellerName: row.sellerName,
+    listingUrl: `https://agrivive.tech/marketplace/${row.id}`,
+    imageUrl: `${apiBase}/integrations/media/social-products/${row.id}`
+  };
+}
+
+// src/modules/integrations/index/integrations.product-context.ts
+var integrationsProductContextRoute = new Elysia().get("/integrations/products/:id/context", async ({ params, status }) => {
+  try {
+    return await getProductUnifiedContext(params.id);
+  } catch (error) {
+    if (error instanceof OrderError) {
+      return status(error.statusCode, { message: error.message });
+    }
+    console.error("Could not fetch unified product context", error);
+    return status(500, { message: "Could not fetch product context" });
+  }
+}, {
+  params: t.Object({ id: t.String({ format: "uuid" }) })
 });
 
 // src/modules/conversations/services/conversation.error.ts
@@ -143127,7 +143182,7 @@ var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").ma
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 var webCorsOrigin = configuredWebOrigins.length ? isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins : localWebOrigin;
 var openapiPlugin = isDev ? index_default() : new Elysia({ name: "noop-openapi" });
-var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).use(integrationsProductPriceRoute).use(integrationsFbLogsRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).use(integrationsProductPriceRoute).use(integrationsFbLogsRoute).use(integrationsProductContextRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

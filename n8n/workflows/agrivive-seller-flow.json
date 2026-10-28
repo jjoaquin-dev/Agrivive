@@ -17,7 +17,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://api.agrivive.tech/products/{{$json.body?.productId || $json.productId}}",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$json.body?.productId || $json.body?.campaignId || $json.productId || $json.campaignId}}/context",
         "options": { "timeout": 30000 }
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -146,7 +146,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://api.agrivive.tech/products/{{$('4. Format Post Content').first().json.productId}}",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$('4. Format Post Content').first().json.productId}}/context",
         "options": { "timeout": 30000 }
       },
       "type": "n8n-nodes-base.httpRequest",
