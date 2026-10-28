@@ -70,23 +70,34 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v26.0/1418061001382207/photos",
+        "url": "https://graph.facebook.com/v26.0/1418061001382207/photos",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
               "value": "Bearer YOUR_META_PAGE_ACCESS_TOKEN"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/x-www-form-urlencoded"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "string",
-        "body": "=url={{encodeURIComponent($json.imageUrl)}}&message={{encodeURIComponent($json.caption)}}&published=true",
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{$json.imageUrl}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "published",
+              "value": "true"
+            }
+          ]
+        },
         "options": { "timeout": 45000 }
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -220,23 +231,34 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://graph.facebook.com/v26.0/1418061001382207/photos",
+        "url": "https://graph.facebook.com/v26.0/1418061001382207/photos",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
               "value": "Bearer YOUR_META_PAGE_ACCESS_TOKEN"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/x-www-form-urlencoded"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "string",
-        "body": "=url={{encodeURIComponent($json.imageUrl)}}&message={{encodeURIComponent($json.caption)}}&published=true",
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{$json.imageUrl}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "published",
+              "value": "true"
+            }
+          ]
+        },
         "options": { "timeout": 45000 }
       },
       "type": "n8n-nodes-base.httpRequest",
