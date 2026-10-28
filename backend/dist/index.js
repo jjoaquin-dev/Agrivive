@@ -138440,12 +138440,18 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
   }
   const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
-  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
-  const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
   const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
   const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
+  let candidates = [];
+  let ranking = null;
+  let candidate;
+  let result;
+  if (!isPriceReduced && !isInitialEligible) {
+    candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+    ranking = rankVisibilityCandidates(candidates);
+    candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+    result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
+  }
   const isPriorityScore = result ? result.score >= 0.6 : false;
   const shared = {
     cycleId: activeCycleId,
@@ -138454,7 +138460,7 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
     visibilityScore: result ? Number(result.score.toFixed(4)) : 0.5,
     visibilityTier: result?.tier ?? "Priority Boost",
     visibilityRank: result?.rank ?? 1,
-    policyVersion: ranking.policyVersion,
+    policyVersion: ranking?.policyVersion ?? "visibility-ahptopsis-v1",
     evaluatedAt,
     productName: candidate?.productName ?? target.productName,
     productType: candidate?.productType ?? target.productType,
@@ -141215,6 +141221,11 @@ async function listMarketplaceSellersMap(query) {
     isNotNull(sellers_profile.latitude),
     isNotNull(sellers_profile.longitude)
   ];
+  const sellerRatings = db2.select({
+    sellerId: order_reviews.sellerId,
+    averageRating: sql3`round(avg(${order_reviews.rating})::numeric, 1)::float`.as("average_rating"),
+    reviewCount: sql3`count(*)::int`.as("review_count")
+  }).from(order_reviews).groupBy(order_reviews.sellerId).as("seller_ratings");
   const rows = await db2.select({
     id: user.id,
     name: user.name,
@@ -141226,8 +141237,10 @@ async function listMarketplaceSellersMap(query) {
     latitude: sellers_profile.latitude,
     longitude: sellers_profile.longitude,
     distanceKm: distanceKm ?? sql3`null`,
-    productCount: count(sellers_product.id).as("product_count")
-  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
+    productCount: count(sellers_product.id).as("product_count"),
+    rating: sellerRatings.averageRating,
+    reviewCount: sellerRatings.reviewCount
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude, sellerRatings.averageRating, sellerRatings.reviewCount).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
   const unmappedRows = await db2.select({
     count: sql3`count(distinct ${sellers_profile.userId})::int`
   }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).where(and(...conditions, or(isNull2(sellers_profile.latitude), isNull2(sellers_profile.longitude))));
@@ -141246,7 +141259,9 @@ async function listMarketplaceSellersMap(query) {
     latitude: row.latitude,
     longitude: row.longitude,
     distanceKm: row.distanceKm === null ? null : Number(row.distanceKm),
-    productCount: Number(row.productCount)
+    productCount: Number(row.productCount),
+    rating: row.rating !== null && row.rating !== undefined ? Number(row.rating) : null,
+    reviewCount: Number(row.reviewCount ?? 0)
   })));
   return {
     sellers,
