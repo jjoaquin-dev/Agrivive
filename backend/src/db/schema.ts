@@ -775,3 +775,15 @@ export const product_reviews = pgTable("product_reviews", {
 }, (table) => [
   index("product_reviews_product_created_idx").on(table.productId, table.createdAt),
 ]);
+
+export const fb_post_logs = pgTable("fb_post_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  postType: text("post_type").notNull(),
+  facebookPostId: text("facebook_post_id"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
+  status: text("status").notNull(),
+}, (table) => [
+  index("fb_post_logs_product_idx").on(table.productId, table.postedAt),
+]);
