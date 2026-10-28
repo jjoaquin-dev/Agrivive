@@ -133,7 +133,7 @@ export default function ActivityScreen() {
         contentContainerStyle={styles.listContent}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} /> : null}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 16 }} /> : undefined}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

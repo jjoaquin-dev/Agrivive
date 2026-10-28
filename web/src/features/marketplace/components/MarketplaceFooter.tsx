@@ -8,9 +8,9 @@ export function MarketplaceFooter() {
           <img
             src="/brand/agrivive-logo-crate-dark.png"
             alt="Agrivive"
-            className="size-7 object-contain"
+            className="h-[15px] w-auto object-contain"
           />
-          <span className="font-heading text-sm font-bold text-white">
+          <span className="font-brand text-[15px] font-black leading-none text-white">
             Agrivive
           </span>
           <span className="hidden text-xs text-white/60 sm:inline">

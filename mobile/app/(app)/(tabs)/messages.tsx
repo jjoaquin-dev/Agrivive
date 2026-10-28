@@ -137,7 +137,7 @@ export default function SellerMessagesScreen() {
           keyExtractor={(item) => item.id}
           onEndReached={web.loadMore}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={web.loadingMore ? <ActivityIndicator color="#16A34A" style={styles.loader} /> : null}
+          ListFooterComponent={web.loadingMore ? <ActivityIndicator color="#16A34A" style={styles.loader} /> : undefined}
           refreshControl={<RefreshControl refreshing={web.refreshing} onRefresh={web.refresh} colors={["#16A34A"]} />}
           renderItem={({ item }) => <ProductInquiryCard inquiry={item} onReply={web.reply} isReplying={web.replyingId === item.id} />}
           ListEmptyComponent={
@@ -158,7 +158,7 @@ export default function SellerMessagesScreen() {
           keyExtractor={(item) => item.id}
           onEndReached={direct.loadMore}
           onEndReachedThreshold={0.5}
-          ListFooterComponent={direct.loadingMore ? <ActivityIndicator color="#16A34A" style={styles.loader} /> : null}
+          ListFooterComponent={direct.loadingMore ? <ActivityIndicator color="#16A34A" style={styles.loader} /> : undefined}
           refreshControl={<RefreshControl refreshing={direct.refreshing} onRefresh={direct.refresh} colors={["#16A34A"]} />}
           renderItem={({ item }) => (
             <ConversationListItem

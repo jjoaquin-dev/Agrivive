@@ -77,6 +77,9 @@ export function sellerMapPopupContent(seller: MarketplaceSellerMapResult) {
     </div>
 
     <div class="mt-2.5 flex flex-wrap items-center gap-1.5" style="margin-top: 10px !important;">
+      <span class="inline-flex items-center gap-0.5 rounded-full bg-[#FEA938]/15 px-2 py-0.5 text-[11px] font-bold text-[#B45309]">
+        ⭐ ${typeof seller.rating === "number" && seller.rating > 0 ? seller.rating.toFixed(1) : "0"}
+      </span>
       <span class="inline-flex items-center rounded-full border border-[#457D00]/10 bg-[#EDF2EB] px-2.5 py-0.5 text-[11px] font-semibold text-[#457D00]">
         ${itemCountText}
       </span>

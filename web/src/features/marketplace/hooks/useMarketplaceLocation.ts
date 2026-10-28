@@ -16,7 +16,7 @@ export function useMarketplaceLocation(searchKey: string, navigateWithParams: (p
     navigateWithParams(params);
   }
 
-  function handleUseLocation() {
+  function handleUseLocation(preferredRadius?: string) {
     if (!navigator.geolocation) {
       setLocationStatus("error");
       setLocationError("Location is not available in this browser.");
@@ -29,7 +29,7 @@ export function useMarketplaceLocation(searchKey: string, navigateWithParams: (p
         const params = new URLSearchParams(searchKey);
         params.set("latitude", coords.latitude.toFixed(6));
         params.set("longitude", coords.longitude.toFixed(6));
-        params.set("radiusKm", params.get("radiusKm") || "10");
+        params.set("radiusKm", preferredRadius || params.get("radiusKm") || "10");
         params.delete("cursor");
         setLocationStatus("idle");
         navigateWithParams(params);
@@ -48,5 +48,22 @@ export function useMarketplaceLocation(searchKey: string, navigateWithParams: (p
     );
   }
 
-  return { locationStatus, locationError, handleRemoveLocation, handleUseLocation };
+  function handleUseCoordinates(latitude: number, longitude: number, preferredRadius?: string) {
+    const params = new URLSearchParams(searchKey);
+    params.set("latitude", latitude.toFixed(6));
+    params.set("longitude", longitude.toFixed(6));
+    params.set("radiusKm", preferredRadius || params.get("radiusKm") || "10");
+    params.delete("cursor");
+    setLocationError("");
+    setLocationStatus("idle");
+    navigateWithParams(params);
+  }
+
+  return {
+    locationStatus,
+    locationError,
+    handleRemoveLocation,
+    handleUseLocation,
+    handleUseCoordinates,
+  };
 }

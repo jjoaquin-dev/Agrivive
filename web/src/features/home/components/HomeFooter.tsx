@@ -14,12 +14,12 @@ export function HomeFooter() {
               <Image
                 src="/brand/agrivive-logo-crate-dark.png"
                 alt="Agrivive"
-                width={40}
-                height={40}
-                className="size-10 object-contain"
+                width={18}
+                height={18}
+                className="h-[18px] w-auto object-contain"
               />
-              <span className="font-heading text-xl font-bold tracking-[0.14em] text-white">
-                AGRIVIVE
+              <span className="font-brand text-[22px] font-black leading-none tracking-tight text-white">
+                Agrivive
               </span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-emerald-50/70">

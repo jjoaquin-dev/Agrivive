@@ -11,7 +11,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.agrivive.seller",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Agrivive requires camera access to scan buyer pickup QR passes.",
+        "NSPhotoLibraryUsageDescription": "Agrivive requires access to your photo library to upload stall and produce photos.",
+        "NSLocationWhenInUseUsageDescription": "Agrivive uses your location to help place your market stall on the map."
       }
     },
     "android": {
@@ -61,9 +64,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "3e64477e-cda0-4d9b-8f02-174adda7da11"
+        "projectId": "11922e25-7454-48ac-a99d-74578f6334d6"
       }
     },
-    "owner": "joaquin_jara"
+    "owner": "aribartiquien"
   }
 }

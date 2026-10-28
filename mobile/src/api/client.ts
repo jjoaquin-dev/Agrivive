@@ -6,13 +6,18 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 export function getApiBaseUrl(): string {
+  // When using tunnel mode or a remote HTTPS API, prefer the configured API URL
+  if (process.env.EXPO_PUBLIC_API_URL && !process.env.EXPO_PUBLIC_API_URL.includes("localhost")) {
+    return process.env.EXPO_PUBLIC_API_URL.replace(/\/$/, "");
+  }
+
   // In development / Expo Go, dynamically use Metro host IP so Wi-Fi changes work seamlessly
   const hostUri =
     Constants.expoConfig?.hostUri ||
     (Constants as any).manifest?.debuggerHost ||
     (Constants as any).manifest2?.extra?.expoGo?.debuggerHost;
 
-  if (hostUri) {
+  if (hostUri && !hostUri.includes("exp.direct")) {
     const host = hostUri.split(":")[0];
     return `http://${host}:3000`;
   }

@@ -59,6 +59,7 @@ function MarketplaceBrowserContent() {
     retrySellerMap,
     retry,
     handleUseLocation,
+    handleUseCoordinates,
   } = useMarketplaceBrowser();
 
   const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
@@ -172,6 +173,7 @@ function MarketplaceBrowserContent() {
                   locationStatus={locationStatus}
                   locationError={locationError}
                   onUseLocation={handleUseLocation}
+                  onUseCoordinates={handleUseCoordinates}
                 />
               </div>
 
@@ -192,6 +194,7 @@ function MarketplaceBrowserContent() {
                     locationStatus={locationStatus}
                     locationError={locationError}
                     onUseLocation={handleUseLocation}
+                    onUseCoordinates={handleUseCoordinates}
                   />
                 </SheetContent>
               </Sheet>

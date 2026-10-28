@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import { StyleSheet } from "react-native";
-import { WebView, type WebViewMessageEvent } from "react-native-webview";
+import { WebView, type WebViewMessageEvent, type WebViewProps } from "react-native-webview";
 import type { Coordinates } from "./types";
 
 export interface MapPickerMapHandle {
@@ -13,9 +13,13 @@ interface MapPickerMapProps {
   onCoordinatesChange: (coordinates: Coordinates) => void;
 }
 
+const LeafletWebView = WebView as unknown as React.ComponentType<
+  WebViewProps & { ref?: React.Ref<WebView<any>> }
+>;
+
 export const MapPickerMap = forwardRef<MapPickerMapHandle, MapPickerMapProps>(
   function MapPickerMap({ coordinates, readOnly, onCoordinatesChange }, ref) {
-    const webViewRef = useRef<WebView | null>(null);
+    const webViewRef = useRef<WebView<any> | null>(null);
 
     useImperativeHandle(ref, () => ({
       panTo(latitude, longitude) {
@@ -107,7 +111,7 @@ export const MapPickerMap = forwardRef<MapPickerMapHandle, MapPickerMapProps>(
       .replace("__INTERACTIONS__", interactions);
 
     return (
-      <WebView
+      <LeafletWebView
         ref={webViewRef}
         originWhitelist={["*"]}
         source={{ html: leafletHtml }}

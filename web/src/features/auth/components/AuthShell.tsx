@@ -29,18 +29,18 @@ export function AuthShell({
           <div className="mb-6 flex justify-center">
             <Link
               href="/"
-              className="group inline-flex items-center gap-1 transition-transform duration-150 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/30"
+              className="group inline-flex items-center gap-1.5 transition-transform duration-150 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/30"
               aria-label="Agrivive home"
             >
               <Image
                 src="/brand/agrivive-logo-crate.png"
                 alt="Agrivive"
-                width={40}
-                height={40}
-                className="size-10 object-contain"
+                width={22}
+                height={22}
+                className="h-[22px] w-auto object-contain"
                 priority
               />
-              <span className="font-heading text-[32px] font-bold leading-none tracking-tight text-[#457D00]">
+              <span className="font-brand text-[26px] font-black leading-none tracking-tight text-[#457D00]">
                 Agrivive
               </span>
             </Link>
@@ -87,18 +87,18 @@ export function AuthShell({
           <div className={cn("mx-auto w-full", formMaxWidth)}>
             <Link
               href="/"
-              className="group mb-6 flex w-fit items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/30"
+              className="group mb-6 flex w-fit items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/30"
               aria-label="Agrivive home"
             >
               <Image
                 src="/brand/agrivive-logo-crate.png"
                 alt="Agrivive"
-                width={40}
-                height={40}
-                className="size-10 object-contain transition-transform duration-150 group-hover:scale-105"
+                width={22}
+                height={22}
+                className="h-[22px] w-auto object-contain transition-transform duration-150 group-hover:scale-105"
                 priority
               />
-              <span className="font-heading text-[32px] font-bold leading-none tracking-tight text-[#457D00]">
+              <span className="font-brand text-[26px] font-black leading-none tracking-tight text-[#457D00]">
                 Agrivive
               </span>
             </Link>

@@ -28,7 +28,7 @@ import {
 export default function ProfileSetupScreen() {
   const router = useRouter();
   const { session, refreshSetup } = useAuth();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
 
   const [personName, setPersonName] = useState(
     session?.user?.name && session.user.name !== "Seller"

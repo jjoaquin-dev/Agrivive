@@ -37,6 +37,8 @@ export type MarketplaceSellerMapResult = {
   longitude: number;
   distanceKm: number | null;
   productCount: number;
+  rating?: number | null;
+  reviewCount?: number;
 };
 
 export type MarketplaceSellerMapResponse = {

@@ -1,6 +1,6 @@
 import { and, asc, count, eq, gt, gte, ilike, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
+import { order_reviews, sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { marketplaceDistanceExpression } from "./marketplace.distance";
@@ -62,6 +62,17 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
     isNotNull(sellers_profile.latitude),
     isNotNull(sellers_profile.longitude),
   ];
+
+  const sellerRatings = db
+    .select({
+      sellerId: order_reviews.sellerId,
+      averageRating: sql<number>`round(avg(${order_reviews.rating})::numeric, 1)::float`.as("average_rating"),
+      reviewCount: sql<number>`count(*)::int`.as("review_count"),
+    })
+    .from(order_reviews)
+    .groupBy(order_reviews.sellerId)
+    .as("seller_ratings");
+
   const rows = await db.select({
     id: user.id,
     name: user.name,
@@ -74,10 +85,13 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
     longitude: sellers_profile.longitude,
     distanceKm: distanceKm ?? sql<null>`null`,
     productCount: count(sellers_product.id).as("product_count"),
+    rating: sellerRatings.averageRating,
+    reviewCount: sellerRatings.reviewCount,
   }).from(sellers_product)
     .innerJoin(user, eq(user.id, sellers_product.userId))
     .innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId))
     .leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId))
+    .leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id))
     .where(and(...mappedConditions))
     .groupBy(
       user.id,
@@ -89,6 +103,8 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
       sellers_profile.pickupInstructions,
       sellers_profile.latitude,
       sellers_profile.longitude,
+      sellerRatings.averageRating,
+      sellerRatings.reviewCount,
     )
     .orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
 
@@ -118,6 +134,8 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
         longitude: row.longitude,
         distanceKm: row.distanceKm === null ? null : Number(row.distanceKm),
         productCount: Number(row.productCount),
+        rating: row.rating !== null && row.rating !== undefined ? Number(row.rating) : null,
+        reviewCount: Number(row.reviewCount ?? 0),
       })));
 
   return {
