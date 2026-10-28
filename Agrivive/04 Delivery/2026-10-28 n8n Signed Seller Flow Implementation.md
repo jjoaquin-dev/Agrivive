@@ -35,6 +35,8 @@ To ensure 100% compliance with the signed paper while keeping database integrity
 - `n8n/workflows/agrivive-seller-flow.json`
 
 ## Commits
+- Commit: `b541827`
+- Message: `fix: use standard json body without json stringify in n8n groq nodes`
 - Commit: `b75aab2`
 - Message: `fix: ensure product details and resilient fallbacks in n8n seller loop`
 - Commit: `339ca7d`
