@@ -1,0 +1,342 @@
+{
+  "name": "Agrivive Seller Flow - 1st Post & 6-Hour % Price Reduction",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agrivive-seller-listing",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [200, 300],
+      "id": "11111111-0001-4000-8000-000000000001",
+      "name": "1. New Listing Created"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$json.body?.productId || $json.body?.campaignId || $json.productId || $json.campaignId}}/context",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, 300],
+      "id": "11111111-0002-4000-8000-000000000002",
+      "name": "2. Retrieve Product Data (ElysiaJS)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GROQ_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"temperature\": 0.4,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are Agrivive social media copywriter. Return a JSON object with a single 'caption' field. Write an engaging Facebook post for newly listed fresh local produce. Mention product name, price, and seller shop name. Include the marketplace listing link.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Product: {{$json.productName}}, Price: ₱{{$json.productPrice}} per {{$json.scalingType}}, Shop: {{$json.shopName}}, URL: https://agrivive.tech/marketplace/{{$json.id}}\"\n    }\n  ]\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300],
+      "id": "11111111-0003-4000-8000-000000000003",
+      "name": "3. Generate Content (Model/Groq)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const product = $('2. Retrieve Product Data (ElysiaJS)').first().json;\nlet caption = `Fresh ${product.productName} now available at ₱${product.productPrice} from ${product.shopName}! Shop now: https://agrivive.tech/marketplace/${product.id}`;\ntry {\n  const raw = $input.first().json.choices[0].message.content;\n  const parsed = JSON.parse(raw);\n  if (parsed.caption) caption = parsed.caption;\n} catch (e) {}\nreturn [{\n  json: {\n    productId: product.id,\n    productName: product.productName,\n    price: String(product.productPrice),\n    caption: caption,\n    imageUrl: `https://api.agrivive.tech/integrations/media/social-products/${product.id}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [860, 300],
+      "id": "11111111-0004-4000-8000-000000000004",
+      "name": "4. Format Post Content"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v26.0/1418061001382207/photos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_META_PAGE_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{$json.imageUrl}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "published",
+              "value": "true"
+            }
+          ]
+        },
+        "options": { "timeout": 45000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 300],
+      "id": "11111111-0005-4000-8000-000000000005",
+      "name": "5. Post to Facebook",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.agrivive.tech/integrations/social/fb-logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"productId\": \"{{$('4. Format Post Content').first().json.productId}}\",\n  \"postType\": \"first_post\",\n  \"facebookPostId\": \"{{$json.post_id || $json.id || 'fb_post_created'}}\",\n  \"price\": \"{{$('4. Format Post Content').first().json.price}}\",\n  \"status\": \"{{$json.id || $json.post_id ? 'success' : 'failed'}}\"\n}",
+        "options": { "timeout": 15000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 300],
+      "id": "11111111-0006-4000-8000-000000000006",
+      "name": "6. Store Post Record (PostgreSQL)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 6,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1520, 300],
+      "id": "11111111-0007-4000-8000-000000000007",
+      "name": "7. Wait 6 Hours"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$('4. Format Post Content').first().json.productId}}/context",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, 560],
+      "id": "11111111-0008-4000-8000-000000000008",
+      "name": "8. Retrieve Latest Product Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{Number($json.productQty || 0)}}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [420, 560],
+      "id": "11111111-0009-4000-8000-000000000009",
+      "name": "9. In Stock Check (>0)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.agrivive.tech/integrations/products/{{$('4. Format Post Content').first().json.productId}}/reduce-price",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 540],
+      "id": "11111111-0010-4000-8000-000000000010",
+      "name": "10. Apply % Reduction (PostgreSQL)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GROQ_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"temperature\": 0.4,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are Agrivive social media copywriter. Return a JSON object with a single 'caption' field. Write an urgent flash-sale Facebook post announcing a price reduction deal. Highlight the discount percentage, the old price vs the new price, and encourage fast pickups.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Product: {{$json.productName}}, Old Price: ₱{{$json.originalPrice}}, New Price: ₱{{$json.newPrice}} ({{$json.discountPercent}}% discount), Remaining Stock: {{$json.stock}}, URL: https://agrivive.tech/marketplace/{{$json.productId}}\"\n    }\n  ]\n}",
+        "options": { "timeout": 30000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 540],
+      "id": "11111111-0011-4000-8000-000000000011",
+      "name": "11. Generate New Content (Groq)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const reduced = $('10. Apply % Reduction (PostgreSQL)').first().json;\nlet caption = `⚡ FLASH SALE: ${reduced.productName} is now ${reduced.discountPercent}% OFF! Only ₱${reduced.newPrice} (was ₱${reduced.originalPrice}) at Agrivive! Grab yours now before it sells out: https://agrivive.tech/marketplace/${reduced.productId}`;\ntry {\n  const raw = $input.first().json.choices[0].message.content;\n  const parsed = JSON.parse(raw);\n  if (parsed.caption) caption = parsed.caption;\n} catch (e) {}\nreturn [{\n  json: {\n    productId: reduced.productId,\n    productName: reduced.productName,\n    newPrice: String(reduced.newPrice),\n    caption: caption,\n    imageUrl: `https://api.agrivive.tech/integrations/media/social-products/${reduced.productId}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 540],
+      "id": "11111111-0012-4000-8000-000000000012",
+      "name": "12. Format New Post"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v26.0/1418061001382207/photos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_META_PAGE_ACCESS_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{$json.imageUrl}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$json.caption}}"
+            },
+            {
+              "name": "published",
+              "value": "true"
+            }
+          ]
+        },
+        "options": { "timeout": 45000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 540],
+      "id": "11111111-0013-4000-8000-000000000013",
+      "name": "13. Post to Facebook (2nd Post)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.agrivive.tech/integrations/social/fb-logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"productId\": \"{{$('12. Format New Post').first().json.productId}}\",\n  \"postType\": \"second_post\",\n  \"facebookPostId\": \"{{$json.post_id || $json.id || 'fb_post_2_created'}}\",\n  \"price\": \"{{$('12. Format New Post').first().json.newPrice}}\",\n  \"status\": \"{{$json.id || $json.post_id ? 'success' : 'failed'}}\"\n}",
+        "options": { "timeout": 15000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1520, 540],
+      "id": "11111111-0014-4000-8000-000000000014",
+      "name": "14. Store 2nd Post Record",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "1. New Listing Created": {
+      "main": [[{ "node": "2. Retrieve Product Data (ElysiaJS)", "type": "main", "index": 0 }]]
+    },
+    "2. Retrieve Product Data (ElysiaJS)": {
+      "main": [[{ "node": "3. Generate Content (Model/Groq)", "type": "main", "index": 0 }]]
+    },
+    "3. Generate Content (Model/Groq)": {
+      "main": [[{ "node": "4. Format Post Content", "type": "main", "index": 0 }]]
+    },
+    "4. Format Post Content": {
+      "main": [[{ "node": "5. Post to Facebook", "type": "main", "index": 0 }]]
+    },
+    "5. Post to Facebook": {
+      "main": [[{ "node": "6. Store Post Record (PostgreSQL)", "type": "main", "index": 0 }]]
+    },
+    "6. Store Post Record (PostgreSQL)": {
+      "main": [[{ "node": "7. Wait 6 Hours", "type": "main", "index": 0 }]]
+    },
+    "7. Wait 6 Hours": {
+      "main": [[{ "node": "8. Retrieve Latest Product Data", "type": "main", "index": 0 }]]
+    },
+    "8. Retrieve Latest Product Data": {
+      "main": [[{ "node": "9. In Stock Check (>0)", "type": "main", "index": 0 }]]
+    },
+    "9. In Stock Check (>0)": {
+      "main": [[{ "node": "10. Apply % Reduction (PostgreSQL)", "type": "main", "index": 0 }]]
+    },
+    "10. Apply % Reduction (PostgreSQL)": {
+      "main": [[{ "node": "11. Generate New Content (Groq)", "type": "main", "index": 0 }]]
+    },
+    "11. Generate New Content (Groq)": {
+      "main": [[{ "node": "12. Format New Post", "type": "main", "index": 0 }]]
+    },
+    "12. Format New Post": {
+      "main": [[{ "node": "13. Post to Facebook (2nd Post)", "type": "main", "index": 0 }]]
+    },
+    "13. Post to Facebook (2nd Post)": {
+      "main": [[{ "node": "14. Store 2nd Post Record", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

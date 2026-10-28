@@ -22,7 +22,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
   validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
-  const postProduct = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
     const [catalog] = await tx.select({
@@ -74,6 +74,23 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
     await queueFirstPublicListing(tx, created.id);
     return created;
   });
+
   void sendSellerListingNotices().catch(() => {});
-  return postProduct;
+
+  const webhookUrl = process.env.N8N_SELLER_FLOW_WEBHOOK_URL?.trim();
+  if (webhookUrl?.startsWith("https://")) {
+    void fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: result.id,
+        productName: result.productName,
+        price: result.productPrice,
+        event: "new_listing",
+      }),
+      signal: AbortSignal.timeout(5_000),
+    }).catch((error) => console.error("Failed to notify n8n seller flow webhook", error));
+  }
+
+  return result;
 }

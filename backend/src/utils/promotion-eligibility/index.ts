@@ -57,13 +57,20 @@ export async function getPriorityPromotionEligibility(
     .orderBy(desc(listing_cycles.startedAt)).limit(1);
   const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
 
-  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
-  const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
-
   const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
   const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
+
+  let candidates: Awaited<ReturnType<typeof loadEligibleVisibilityCandidates>> = [];
+  let ranking: ReturnType<typeof rankVisibilityCandidates> | null = null;
+  let candidate: (typeof candidates)[number] | undefined;
+  let result: NonNullable<ReturnType<typeof rankVisibilityCandidates>>["results"][number] | undefined;
+
+  if (!isPriceReduced && !isInitialEligible) {
+    candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+    ranking = rankVisibilityCandidates(candidates);
+    candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+    result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
+  }
   const isPriorityScore = result ? result.score >= 0.60 : false;
 
   const shared = {
@@ -73,7 +80,7 @@ export async function getPriorityPromotionEligibility(
     visibilityScore: result ? Number(result.score.toFixed(4)) : 0.50,
     visibilityTier: (result?.tier ?? "Priority Boost") as VisibilityTier,
     visibilityRank: result?.rank ?? 1,
-    policyVersion: ranking.policyVersion,
+    policyVersion: ranking?.policyVersion ?? "visibility-ahptopsis-v1",
     evaluatedAt,
     productName: candidate?.productName ?? target.productName,
     productType: candidate?.productType ?? target.productType,

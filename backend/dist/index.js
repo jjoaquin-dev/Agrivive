@@ -116181,6 +116181,7 @@ __export(exports_schema, {
   conversation_participants: () => conversation_participants,
   conversation_status_enum: () => conversation_status_enum,
   conversations: () => conversations,
+  fb_post_logs: () => fb_post_logs,
   listing_cycles: () => listing_cycles,
   notification_device_platform_enum: () => notification_device_platform_enum,
   notification_devices: () => notification_devices,
@@ -116942,6 +116943,17 @@ var product_reviews = pgTable("product_reviews", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
+]);
+var fb_post_logs = pgTable("fb_post_logs", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  postType: text("post_type").notNull(),
+  facebookPostId: text("facebook_post_id"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
+  status: text("status").notNull()
+}, (table) => [
+  index("fb_post_logs_product_idx").on(table.productId, table.postedAt)
 ]);
 // node_modules/better-auth/dist/package.mjs
 var version2 = "1.7.3";
@@ -135655,7 +135667,7 @@ async function createSellerProduct(userId, body) {
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
   validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
-  const postProduct = await db2.transaction(async (tx) => {
+  const result = await db2.transaction(async (tx) => {
     await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
     const [catalog] = await tx.select({
@@ -135701,7 +135713,21 @@ async function createSellerProduct(userId, body) {
     return created;
   });
   sendSellerListingNotices().catch(() => {});
-  return postProduct;
+  const webhookUrl = process.env.N8N_SELLER_FLOW_WEBHOOK_URL?.trim();
+  if (webhookUrl?.startsWith("https://")) {
+    fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: result.id,
+        productName: result.productName,
+        price: result.productPrice,
+        event: "new_listing"
+      }),
+      signal: AbortSignal.timeout(5000)
+    }).catch((error) => console.error("Failed to notify n8n seller flow webhook", error));
+  }
+  return result;
 }
 
 // src/modules/seller/index/seller.product.create.ts
@@ -138607,12 +138633,18 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
   }
   const currentCycle = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
-  const candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
-  const ranking = rankVisibilityCandidates(candidates);
-  const candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
-  const result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
   const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
   const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
+  let candidates = [];
+  let ranking = null;
+  let candidate;
+  let result;
+  if (!isPriceReduced && !isInitialEligible) {
+    candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
+    ranking = rankVisibilityCandidates(candidates);
+    candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
+    result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
+  }
   const isPriorityScore = result ? result.score >= 0.6 : false;
   const shared = {
     cycleId: activeCycleId,
@@ -138621,7 +138653,7 @@ async function getPriorityPromotionEligibility(listingCycleId, options) {
     visibilityScore: result ? Number(result.score.toFixed(4)) : 0.5,
     visibilityTier: result?.tier ?? "Priority Boost",
     visibilityRank: result?.rank ?? 1,
-    policyVersion: ranking.policyVersion,
+    policyVersion: ranking?.policyVersion ?? "visibility-ahptopsis-v1",
     evaluatedAt,
     productName: candidate?.productName ?? target.productName,
     productType: candidate?.productType ?? target.productType,
@@ -142049,7 +142081,7 @@ async function publishFacebookPagePhoto(imageUrl, caption) {
     response = await fetch(`https://graph.facebook.com/${version}/${pageId}/photos`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ url: imageUrl, caption }),
+      body: new URLSearchParams({ url: imageUrl, message: caption, caption, published: "true" }),
       signal: AbortSignal.timeout(30000)
     });
   } catch (error) {
@@ -142340,6 +142372,162 @@ var integrationsVisibilityBoostRoute = new Elysia().get("/integrations/visibilit
 }, {
   params: t.Object({ id: t.String({ format: "uuid" }) }),
   headers: t.Object({ authorization: t.Optional(t.String()) })
+});
+
+// src/modules/integrations/services/integrations.product-price-reduce.ts
+function cents2(value) {
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
+  if (!match)
+    throw new Error("Invalid price amount");
+  return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+}
+function decimal5(centsValue) {
+  return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
+}
+async function reduceSellerProductPriceByPercent(identifier) {
+  return await db2.transaction(async (tx) => {
+    let productId = identifier;
+    const [campaign] = await tx.select({ productId: seller_social_campaigns.productId }).from(seller_social_campaigns).where(eq(seller_social_campaigns.id, identifier)).limit(1);
+    if (campaign) {
+      productId = campaign.productId;
+    }
+    const [product] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
+    if (!product)
+      throw new OrderError(404, "Product not found");
+    if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0 || !product.productPrice) {
+      return { success: false, inStock: false, message: "Produce is sold out or inactive" };
+    }
+    const currentCents = cents2(product.productPrice);
+    const floorCents = product.minimumPrice ? cents2(product.minimumPrice) : 0n;
+    const configuredPercent = Number(product.priceReductionPercent ?? 0);
+    const percent = configuredPercent > 0 ? configuredPercent : 10;
+    const basisPoints = BigInt(Math.round(percent * 100));
+    const reducedCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
+    const nextCents = reducedCents < floorCents ? floorCents : reducedCents;
+    if (nextCents >= currentCents) {
+      return {
+        success: false,
+        inStock: true,
+        atFloor: true,
+        message: "Product has already reached seller minimum price floor",
+        productId: product.id,
+        currentPrice: decimal5(currentCents)
+      };
+    }
+    const nextPeriods = (product.priceReductionPeriodsApplied ?? 0) + 1;
+    const [updated] = await tx.update(sellers_product).set({
+      productPrice: decimal5(nextCents),
+      priceReductionPeriodsApplied: nextPeriods,
+      updatedAt: new Date
+    }).where(eq(sellers_product.id, productId)).returning();
+    return {
+      success: true,
+      inStock: true,
+      productId: updated.id,
+      productName: updated.productName,
+      originalPrice: decimal5(currentCents),
+      newPrice: decimal5(nextCents),
+      discountPercent: percent,
+      periodsApplied: nextPeriods,
+      stock: updated.productQty
+    };
+  });
+}
+
+// src/modules/integrations/index/integrations.product-price.ts
+var integrationsProductPriceRoute = new Elysia().post("/integrations/products/:id/reduce-price", async ({ params, status }) => {
+  try {
+    return await reduceSellerProductPriceByPercent(params.id);
+  } catch (error) {
+    if (error instanceof OrderError) {
+      return status(error.statusCode, { message: error.message });
+    }
+    console.error("Price reduction failed", error);
+    return status(500, { message: "Could not apply price reduction" });
+  }
+}, {
+  params: t.Object({ id: t.String({ format: "uuid" }) })
+});
+
+// src/modules/integrations/services/integrations.fb-logs.ts
+async function createFacebookPostLog(input) {
+  const [log] = await db2.insert(fb_post_logs).values({
+    productId: input.productId,
+    postType: input.postType,
+    facebookPostId: input.facebookPostId ?? null,
+    price: input.price,
+    status: input.status,
+    postedAt: new Date
+  }).returning();
+  return log;
+}
+
+// src/modules/integrations/index/integrations.fb-logs.ts
+var integrationsFbLogsRoute = new Elysia().post("/integrations/social/fb-logs", async ({ body, status }) => {
+  try {
+    return await createFacebookPostLog(body);
+  } catch (error) {
+    console.error("Failed to store facebook post log", error);
+    return status(500, { message: "Could not record post log" });
+  }
+}, {
+  body: t.Object({
+    productId: t.String({ format: "uuid" }),
+    postType: t.Union([t.Literal("first_post"), t.Literal("second_post")]),
+    facebookPostId: t.Optional(t.String()),
+    price: t.String(),
+    status: t.Union([t.Literal("success"), t.Literal("failed")])
+  })
+});
+
+// src/modules/integrations/services/integrations.product-context.ts
+async function getProductUnifiedContext(identifier) {
+  let productId = identifier;
+  const [campaign] = await db2.select({ productId: seller_social_campaigns.productId }).from(seller_social_campaigns).where(eq(seller_social_campaigns.id, identifier)).limit(1);
+  if (campaign) {
+    productId = campaign.productId;
+  }
+  const [row] = await db2.select({
+    id: sellers_product.id,
+    productName: sellers_product.productName,
+    productPrice: sellers_product.productPrice,
+    basePrice: sellers_product.basePrice,
+    productQty: sellers_product.productQty,
+    scalingType: sellers_product.scalingType,
+    shopName: sellers_profile.shopName,
+    sellerName: user.name
+  }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(eq(sellers_product.id, productId)).limit(1);
+  if (!row)
+    throw new OrderError(404, "Product not found");
+  const apiBase = (process.env.SOCIAL_PUBLIC_API_URL || "https://api.agrivive.tech").replace(/\/$/, "");
+  return {
+    id: row.id,
+    productId: row.id,
+    productName: row.productName,
+    productPrice: row.productPrice,
+    basePrice: row.basePrice,
+    productQty: row.productQty,
+    scalingType: row.scalingType,
+    shopName: row.shopName,
+    sellerName: row.sellerName,
+    listingUrl: `https://agrivive.tech/marketplace/${row.id}`,
+    imageUrl: `${apiBase}/integrations/media/social-products/${row.id}`
+  };
+}
+
+// src/modules/integrations/index/integrations.product-context.ts
+var integrationsProductContextRoute = new Elysia().get("/integrations/products/:id/context", async ({ params, status }) => {
+  try {
+    return await getProductUnifiedContext(params.id);
+  } catch (error) {
+    if (error instanceof OrderError) {
+      return status(error.statusCode, { message: error.message });
+    }
+    console.error("Could not fetch unified product context", error);
+    return status(500, { message: "Could not fetch product context" });
+  }
+}, {
+  params: t.Object({ id: t.String({ format: "uuid" }) })
 });
 
 // src/modules/conversations/services/conversation.error.ts
@@ -143347,7 +143535,7 @@ var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").ma
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 var webCorsOrigin = configuredWebOrigins.length ? isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins : localWebOrigin;
 var openapiPlugin = isDev ? index_default() : new Elysia({ name: "noop-openapi" });
-var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).use(integrationsProductPriceRoute).use(integrationsFbLogsRoute).use(integrationsProductContextRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };
