@@ -68,6 +68,7 @@ export default function AppLayout() {
       <Stack.Screen name="boosts" options={{ title: "Boost History" }} />
       <Stack.Screen name="advisories" options={{ title: "Advisories" }} />
       <Stack.Screen name="trust" options={{ title: "Trust History" }} />
+      <Stack.Screen name="reviews" options={{ title: "Ratings & Reviews" }} />
       <Stack.Screen name="profile/index" options={{ title: "Seller Profile" }} />
       <Stack.Screen name="profile/setup" options={{ headerShown: false }} />
       <Stack.Screen name="profile/edit" options={{ title: "Edit Profile" }} />

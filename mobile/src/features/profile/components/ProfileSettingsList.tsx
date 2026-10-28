@@ -1,10 +1,11 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { Bell, ShieldCheck, Lock, History, ChevronRight, LogOut } from "lucide-react-native";
+import { Bell, ShieldCheck, Lock, History, ChevronRight, LogOut, Star } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface ProfileSettingsListProps {
   onNotifications: () => void;
+  onReviews: () => void;
   onTrust: () => void;
   onSecurity: () => void;
   onActivity: () => void;
@@ -13,12 +14,19 @@ interface ProfileSettingsListProps {
 
 export const ProfileSettingsList: React.FC<ProfileSettingsListProps> = ({
   onNotifications,
+  onReviews,
   onTrust,
   onSecurity,
   onActivity,
   onSignOut,
 }) => {
   const items = [
+    {
+      title: "Ratings & Reviews",
+      subtitle: "See customer feedback and reply to reviews",
+      icon: <Star size={18} color="#D97706" />,
+      action: onReviews,
+    },
     {
       title: "Notification Preferences",
       subtitle: "Manage alerts, sound, and pickup reminders",
