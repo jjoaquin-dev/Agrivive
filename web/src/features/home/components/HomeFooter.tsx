@@ -12,11 +12,11 @@ export function HomeFooter() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-1.5">
               <Image
-                src="/brand/agrivive-logo-crate-dark.png"
+                src="/brand/agrivive-logo-bag-dark.png"
                 alt="Agrivive"
-                width={18}
-                height={18}
-                className="h-[18px] w-auto object-contain"
+                width={22}
+                height={22}
+                className="h-[22px] w-auto object-contain"
               />
               <span className="font-brand text-[22px] font-black leading-none tracking-tight text-white">
                 Agrivive

@@ -44,11 +44,11 @@ export function SiteHeader() {
           aria-label="Agrivive home"
         >
           <Image
-            src="/brand/agrivive-logo-crate.png"
+            src="/brand/agrivive-logo-bag.png"
             alt="Agrivive"
-            width={18}
-            height={18}
-            className="h-[18px] w-auto object-contain transition-transform group-hover:scale-105"
+            width={22}
+            height={22}
+            className="h-[22px] w-auto object-contain transition-transform group-hover:scale-105"
             priority
           />
           <span className="font-brand text-[22px] font-black leading-none tracking-tight text-agrivive-primary">

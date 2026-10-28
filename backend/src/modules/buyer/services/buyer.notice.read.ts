@@ -1,15 +1,29 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../../../db";
-import { buyer_listing_notices, seller_listing_events, trust_notices } from "../../../db/schema";
+import { buyer_listing_notices, seller_listing_events, trust_actions, trust_notices } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 
 export async function readBuyerNotice(buyerId: string, noticeId: string) {
+  const action = noticeId.startsWith("action:");
   const listing = noticeId.startsWith("listing:");
-  const rawId = listing ? noticeId.slice("listing:".length) : noticeId;
+  const rawId = action ? noticeId.slice("action:".length) : listing ? noticeId.slice("listing:".length) : noticeId;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawId)) {
     throw new OrderError(400, "Invalid notice ID");
   }
   return db.transaction(async (tx) => {
+    if (action) {
+      const [act] = await tx.select().from(trust_actions)
+        .where(and(eq(trust_actions.id, rawId), eq(trust_actions.subjectId, buyerId))).limit(1);
+      if (!act) throw new OrderError(404, "Notice not found");
+      return {
+        id: `action:${act.id}`,
+        kind: act.actionType === "temporary_restriction" ? "trust_action_restriction" : "trust_action_warning",
+        orderId: act.sourceOrderId,
+        readAt: new Date(),
+        createdAt: act.createdAt,
+        reason: act.reason,
+      };
+    }
     if (listing) {
       const [notice] = await tx.select({ id: buyer_listing_notices.id,
         readAt: buyer_listing_notices.readAt, createdAt: buyer_listing_notices.createdAt,

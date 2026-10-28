@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Clock, Hourglass, RefreshCw, ShoppingBasket, Tag } from "lucide-react";
+import { AlertTriangle, Check, Clock, Hourglass, RefreshCw, ShoppingBasket, Tag } from "lucide-react";
 import type { BuyerNotice } from "../types";
 
 interface NotificationCardComponentProps {
@@ -27,9 +27,16 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
   const isRestock = notice.kind === "seller_restock";
   const isProduce = isListing || isPriceDrop || isRestock;
   const isCancellation = notice.kind === "seller_cancellation_buyer";
+  const isWarning = notice.kind === "trust_action_warning" || notice.kind.includes("warning");
+  const isRestriction = notice.kind === "trust_action_restriction" || notice.kind.includes("restriction");
+  const isTrustNotice = isWarning || isRestriction;
   const isUnread = !notice.readAt;
 
-  const title = isPriceDrop
+  const title = isRestriction
+    ? "Reservations Temporarily Paused"
+    : isWarning
+    ? "Account Notice: Cancellation Advisory"
+    : isPriceDrop
     ? `Price Drop: ${notice.productName || "Fresh Produce"}`
     : isRestock
     ? `Back in Stock: ${notice.productName || "Fresh Produce"}`
@@ -41,7 +48,9 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? "Inquiry Awaiting Seller Response"
     : "Pickup Completed";
 
-  const description = isPriceDrop
+  const description = isTrustNotice
+    ? (notice.reason || (isRestriction ? "Reservations on your account are temporarily paused." : "Please avoid frequent cancellations to keep your reservations active."))
+    : isPriceDrop
     ? `${notice.shopName || "A stall you follow"} lowered the price of ${notice.productName || "produce"}${notice.price ? ` to ₱${notice.price}` : ""}${notice.previousPrice ? ` (was ₱${notice.previousPrice})` : ""}! Reserve yours before stock runs out.`
     : isRestock
     ? `${notice.shopName || "A stall you follow"} restocked fresh ${notice.productName || "produce"}. Available now for stall pickup.`
@@ -57,6 +66,8 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
       : notice.sellerId
       ? `/sellers/${notice.sellerId}`
       : "/marketplace"
+    : isTrustNotice
+    ? "/orders"
     : notice.orderId
     ? `/orders/${notice.orderId}`
     : "/profile";
@@ -65,7 +76,11 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     <article
       onClick={() => onRead(notice)}
       className={`group relative flex items-start gap-4 rounded-2xl p-5 transition-all duration-200 cursor-pointer ${
-        isProduce && isUnread
+        isRestriction
+          ? "border border-rose-200 border-l-[4px] border-l-rose-500 bg-[#FFF9F9] hover:bg-[#FFF5F5]"
+          : isWarning
+          ? "border border-amber-200 border-l-[4px] border-l-amber-500 bg-[#FFFDF9] hover:bg-[#FFFBF2]"
+          : isProduce && isUnread
           ? "border border-[#E2EFE5] border-l-[4px] border-l-[#1B4D36] bg-[#F4FBF6] hover:bg-[#EDF8F0]"
           : isCancellation && isUnread
           ? "border border-[#FCEFE3] border-l-[4px] border-l-[#1B4D36] bg-[#FEFAF6] hover:bg-[#FDF5ED]"
@@ -77,7 +92,11 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
       <div className="relative shrink-0 mt-0.5">
         <div
           className={`flex size-10 items-center justify-center rounded-full ${
-            isPriceDrop
+            isRestriction
+              ? "bg-rose-100 text-rose-700"
+              : isWarning
+              ? "bg-amber-100 text-amber-700"
+              : isPriceDrop
               ? "bg-[#FEF3C7] text-[#D97706]"
               : isRestock
               ? "bg-[#E0F2FE] text-[#0284C7]"
@@ -88,7 +107,9 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
               : "bg-[#F3F4F6] text-neutral-400"
           }`}
         >
-          {isPriceDrop ? (
+          {isTrustNotice ? (
+            <AlertTriangle className="size-5" />
+          ) : isPriceDrop ? (
             <Tag className="size-5" />
           ) : isRestock ? (
             <RefreshCw className="size-5" />
@@ -109,10 +130,14 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           <h3 className="font-heading text-[15px] font-bold text-neutral-900 group-hover:text-[#1B4D36] transition-colors leading-snug">
             {title}
           </h3>
-          {isUnread && (
+          {(isUnread || isTrustNotice) && (
             <span
               className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                isPriceDrop
+                isRestriction
+                  ? "bg-rose-100 text-rose-800"
+                  : isWarning
+                  ? "bg-amber-100 text-amber-800"
+                  : isPriceDrop
                   ? "bg-[#FEF3C7] text-[#B45309]"
                   : isRestock
                   ? "bg-[#E0F2FE] text-[#0369A1]"
@@ -121,7 +146,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
                   : "bg-[#E8F8ED] text-[#16A34A]"
               }`}
             >
-              {isPriceDrop ? "Price Drop" : isRestock ? "Restocked" : isCancellation ? "Expiring" : "New"}
+              {isRestriction ? "Restriction" : isWarning ? "Advisory" : isPriceDrop ? "Price Drop" : isRestock ? "Restocked" : isCancellation ? "Expiring" : "New"}
             </span>
           )}
         </div>
@@ -142,10 +167,20 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
               onRead(notice);
             }}
             className={`font-semibold hover:underline cursor-pointer ${
-              isCancellation ? "text-[#EA580C]" : "text-[#1B4D36]"
+              isRestriction
+                ? "text-rose-600"
+                : isWarning
+                ? "text-amber-700"
+                : isCancellation
+                ? "text-[#EA580C]"
+                : "text-[#1B4D36]"
             }`}
           >
-            {isProduce ? (notice.productAvailable ? "View Details" : "Browse Stall") : isCancellation ? "Show QR Pass" : "View Details"}
+            {isTrustNotice
+              ? "View Orders"
+              : isProduce
+              ? notice.productAvailable ? "View Details" : "Browse Stall"
+              : isCancellation ? "Show QR Pass" : "View Details"}
           </Link>
         </div>
       </div>

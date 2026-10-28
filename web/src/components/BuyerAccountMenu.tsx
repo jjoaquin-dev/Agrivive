@@ -3,20 +3,13 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, User } from "lucide-react";
+import { Heart, LogOut, Package, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/src/lib/auth-client";
 import { ConfirmationModalComponent } from "./ConfirmationModalComponent";
-import {
-  BUYER_PROFILE_IMAGE_UPDATED_EVENT,
-  getBuyerProfile,
-} from "@/src/features/profile/api/profile";
+import { BUYER_PROFILE_IMAGE_UPDATED_EVENT, getBuyerProfile } from "@/src/features/profile/api/profile";
 
-interface BuyerAccountMenuProps {
-  onActionComplete?: () => void;
-}
-
-export function BuyerAccountMenu({ onActionComplete }: BuyerAccountMenuProps) {
+export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () => void }) {
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
@@ -29,27 +22,16 @@ export function BuyerAccountMenu({ onActionComplete }: BuyerAccountMenuProps) {
   useEffect(() => {
     const userId = session?.user?.id;
     const sessionImage = session?.user?.image ?? null;
-    if (!userId) {
-      setProfileImage(null);
-      return;
-    }
+    if (!userId) { setProfileImage(null); return; }
     let cancelled = false;
     setProfileImage(sessionImage);
     getBuyerProfile()
-      .then((res) => {
-        if (!cancelled) setProfileImage(res.account.image);
-      })
-      .catch(() => {
-        if (!cancelled) setProfileImage(sessionImage);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .then((res) => { if (!cancelled) setProfileImage(res.account.image); })
+      .catch(() => { if (!cancelled) setProfileImage(sessionImage); });
+    return () => { cancelled = true; };
   }, [session?.user?.id, session?.user?.image]);
 
-  useEffect(() => {
-    setProfileImageFailed(false);
-  }, [profileImage]);
+  useEffect(() => { setProfileImageFailed(false); }, [profileImage]);
 
   useEffect(() => {
     const handleProfileUpdate = (e: Event) => {
@@ -140,6 +122,17 @@ export function BuyerAccountMenu({ onActionComplete }: BuyerAccountMenuProps) {
               >
                 <Package aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-[#457D00]" />
                 <span>All Orders</span>
+              </Link>
+
+              <Link
+                href="/favorites"
+                role="menuitem"
+                title="View your saved favorite produce"
+                onClick={() => { setProfileOpen(false); onActionComplete?.(); }}
+                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[13px] font-medium text-neutral-700 transition-colors duration-150 hover:bg-[#FEA938]/10 hover:text-[#D97706] active:bg-[#FEA938]/10 cursor-pointer outline-none"
+              >
+                <Heart aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-[#FEA938]" />
+                <span>Favorites</span>
               </Link>
 
               <Link

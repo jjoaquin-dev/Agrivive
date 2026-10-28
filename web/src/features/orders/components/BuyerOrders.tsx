@@ -13,11 +13,15 @@ import { ApiError, isTrustAccessMessage } from "@/src/lib/api";
 import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 import { useCart } from "@/src/features/cart/CartProvider";
+import { getBuyerProfile } from "@/src/features/profile/api/profile";
 import { cancelBuyerOrder } from "../api/orders";
 import { useBuyerOrders } from "../hooks/useBuyerOrders";
 import { OrderCard } from "./OrderCard";
 import { OrderFilterTabs, type OrderTab } from "./OrderFilterTabs";
 import { OrderSortDropdown, type OrderSortOption } from "./OrderSortDropdown";
+import { OrderCancelToast } from "./OrderCancelToast";
+import { OrderSuccessToast } from "./OrderSuccessToast";
+import { BuyerTrustBanner } from "./BuyerTrustBanner";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 
 type SortOption = OrderSortOption;
@@ -33,12 +37,25 @@ export function BuyerOrders() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [cancelNotice, setCancelNotice] = useState<string | null>(null);
+  const [showCheckoutToast, setShowCheckoutToast] = useState(Boolean(checkoutId));
+  const [trustWarning, setTrustWarning] = useState<string | null>(null);
+  const [trustRestriction, setTrustRestriction] = useState<string | null>(null);
   const clearedCheckoutRef = useRef<string | null>(null);
+
+  const refreshTrustStatus = () => {
+    getBuyerProfile().then((res) => {
+      setTrustWarning(res.trustWarning ?? null);
+      setTrustRestriction(res.trustRestriction?.message ?? null);
+    }).catch(() => {});
+  };
+
+  useEffect(() => { refreshTrustStatus(); }, []);
 
   useEffect(() => {
     if (checkoutId && clearedCheckoutRef.current !== checkoutId) {
       clearedCheckoutRef.current = checkoutId;
       clearCart();
+      setShowCheckoutToast(true);
     }
   }, [checkoutId, clearCart]);
 
@@ -51,6 +68,7 @@ export function BuyerOrders() {
       updateOrder(updated);
       setCancellingOrder(null);
       setCancelNotice(`Reservation #AGR-${updated.id.slice(0, 8).toUpperCase()} was cancelled.`);
+      refreshTrustStatus();
     } catch (reason) {
       setCancelError(reason instanceof ApiError ? reason.message : "We could not cancel this reservation. Please try again.");
     } finally {
@@ -66,19 +84,15 @@ export function BuyerOrders() {
   }), [orders]);
 
   const filteredOrders = useMemo(() => {
-    let result = orders;
-    if (activeTab === "pending") result = result.filter((o) => o.status === "pending");
-    else if (activeTab === "completed") result = result.filter((o) => o.status === "completed");
-    else if (activeTab === "archived") result = result.filter((o) => o.status === "cancelled" || o.status === "expired");
-
+    let result = orders.filter((o) =>
+      activeTab === "all" ? true : activeTab === "archived" ? o.status === "cancelled" || o.status === "expired" : o.status === activeTab
+    );
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter((o) =>
-        o.id.toLowerCase().includes(q) || o.status.toLowerCase().includes(q) ||
-        o.items.some((item) => item.productName.toLowerCase().includes(q))
+        o.id.toLowerCase().includes(q) || o.status.toLowerCase().includes(q) || o.items.some((i) => i.productName.toLowerCase().includes(q))
       );
     }
-
     return [...result].sort((a, b) => {
       if (sortBy === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       if (sortBy === "highest") return Number(b.totalAmount) - Number(a.totalAmount);
@@ -102,29 +116,14 @@ export function BuyerOrders() {
           <p className="mt-4 text-xs text-[#5F7367]">Check all orders and reservations at a single place. It&apos;s easy to manage.</p>
         </header>
 
-        {checkoutId ? (
-          <div className="mb-4">
-            <Alert className="border border-[#E8E8E8] bg-emerald-50/70 text-emerald-950 p-4 rounded-xl shadow-2xs">
-              <CheckCircle2 className="size-4 text-emerald-700" />
-              <AlertTitle className="text-sm font-semibold">Cart reserved successfully!</AlertTitle>
-              <AlertDescription className="text-xs text-emerald-800">Your pickup pass and QR code are ready below.</AlertDescription>
-            </Alert>
-          </div>
-        ) : null}
+        <OrderSuccessToast
+          show={showCheckoutToast}
+          onDismiss={() => setShowCheckoutToast(false)}
+        />
 
-        {cancelNotice ? (
-          <div className="mb-4">
-            <Alert className="border border-emerald-200 bg-emerald-50/70 text-emerald-950 p-4 rounded-xl flex items-center justify-between shadow-2xs">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-emerald-700 shrink-0" />
-                <AlertDescription className="text-xs font-semibold text-emerald-800">{cancelNotice}</AlertDescription>
-              </div>
-              <button type="button" onClick={() => setCancelNotice(null)} className="text-xs font-semibold text-emerald-700 hover:underline cursor-pointer">
-                Dismiss
-              </button>
-            </Alert>
-          </div>
-        ) : null}
+        <OrderCancelToast notice={cancelNotice} onDismiss={() => setCancelNotice(null)} />
+
+        <BuyerTrustBanner trustRestriction={trustRestriction} trustWarning={trustWarning} />
 
         {error && isTrustAccessMessage(error) ? <div className="mb-4"><TrustAccessNotice message={error} /></div> : null}
         {error && !isTrustAccessMessage(error) ? (

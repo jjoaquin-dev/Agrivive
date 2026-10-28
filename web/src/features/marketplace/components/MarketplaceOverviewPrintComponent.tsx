@@ -84,18 +84,63 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
         </table>
       </div>
 
-      {/* Category Breakdown Table */}
-      <div className="mb-8">
-        <h2 className="text-sm font-bold uppercase tracking-wider mb-2 border-b border-neutral-200 pb-1">
-          Surplus Inventory Category Distribution
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          {data.categoryBreakdown.map((c) => (
-            <div key={c.category} className="border border-neutral-200 p-2.5 rounded flex justify-between text-xs">
-              <span className="font-bold">{c.category}</span>
-              <span>{c.activeCount} active listings ({c.percentage}%)</span>
-            </div>
-          ))}
+      {/* Category Breakdown & Seller Stalls Table */}
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-2 border-b border-neutral-200 pb-1">
+            Surplus Inventory Categories
+          </h2>
+          <div className="space-y-1.5">
+            {data.categoryBreakdown.map((c) => (
+              <div key={c.category} className="border border-neutral-200 p-2 rounded flex justify-between text-xs">
+                <span className="font-bold">{c.category}</span>
+                <span>{c.activeCount} active listings ({c.percentage}%)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-2 border-b border-neutral-200 pb-1">
+            Participating Market Stalls
+          </h2>
+          <div className="space-y-1.5">
+            {data.sellerStalls.map((s) => (
+              <div key={s.id} className="border border-neutral-200 p-2 rounded flex justify-between text-xs">
+                <div>
+                  <span className="font-bold block">{s.shopName}</span>
+                  <span className="text-[10px] text-neutral-500">{s.detailAddress}</span>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="font-bold">{s.totalStockKg} kg</span>
+                  <span className="text-[10px] text-neutral-500 block">{s.activeListings} lots</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Buyer Community Impact */}
+      <div className="border border-neutral-200 rounded p-3 mb-6 bg-neutral-50/50">
+        <h3 className="text-xs font-bold uppercase text-neutral-700 mb-2">Community Shopper Impact Summary</h3>
+        <div className="grid grid-cols-4 gap-2 text-xs">
+          <div>
+            <span className="text-neutral-500 block">Registered Shoppers</span>
+            <span className="font-bold text-sm">{data.buyerSummary.registeredBuyers}</span>
+          </div>
+          <div>
+            <span className="text-neutral-500 block">Shoppers With Orders</span>
+            <span className="font-bold text-sm">{data.buyerSummary.activeBuyersWithOrders}</span>
+          </div>
+          <div>
+            <span className="text-neutral-500 block">Completed Pickups</span>
+            <span className="font-bold text-sm">{data.buyerSummary.completedPickups}</span>
+          </div>
+          <div>
+            <span className="text-neutral-500 block">Active Reservations</span>
+            <span className="font-bold text-sm">{data.buyerSummary.pendingPickups}</span>
+          </div>
         </div>
       </div>
 

@@ -71,37 +71,46 @@ export function ProductCardMedia({
         ) : null}
       </div>
 
-      {/* Top-Right: Circular White Heart Button */}
-      <button
-        type="button"
-        onClick={handleToggleSave}
-        disabled={!ready || saving}
-        title={error || (isSaved ? "Remove from saved" : "Save item")}
-        aria-label={
-          error ||
-          (isSaved
-            ? `Remove ${product.productName} from saved items`
-            : `Save ${product.productName}`)
-        }
-        aria-pressed={isSaved}
-        aria-busy={saving}
-        className={`absolute right-3 top-3 z-10 flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-2xs transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
-          isSaved
-            ? "text-[#FEA938]"
-            : "text-[#14231A] hover:bg-neutral-50"
-        }`}
-      >
-        {saving ? (
-          <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-        ) : (
-          <Heart
-            className={`size-5 stroke-[1.75] ${
-              isSaved ? "fill-[#FEA938] text-[#FEA938]" : "fill-transparent text-[#14231A]"
-            }`}
-            aria-hidden="true"
-          />
-        )}
-      </button>
+      {/* Top-Right: Circular White Heart Button with Tooltip */}
+      <div className="group/heart absolute right-3 top-3 z-10">
+        <button
+          type="button"
+          onClick={handleToggleSave}
+          disabled={!ready || saving}
+          aria-label={
+            error ||
+            (isSaved
+              ? `Remove ${product.productName} from favorites`
+              : `Add ${product.productName} to favorites`)
+          }
+          aria-pressed={isSaved}
+          aria-busy={saving}
+          className={`flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-2xs transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
+            isSaved
+              ? "text-[#FEA938]"
+              : "text-[#14231A] hover:bg-neutral-50"
+          }`}
+        >
+          {saving ? (
+            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Heart
+              className={`size-5 stroke-[1.75] ${
+                isSaved ? "fill-[#FEA938] text-[#FEA938]" : "fill-transparent text-[#14231A]"
+              }`}
+              aria-hidden="true"
+            />
+          )}
+        </button>
+
+        {/* Floating Tooltip */}
+        <div
+          role="tooltip"
+          className="pointer-events-none absolute right-0 top-full mt-1.5 hidden whitespace-nowrap rounded-lg bg-neutral-900/90 px-2.5 py-1 text-[11px] font-medium text-white shadow-lg backdrop-blur-xs transition group-hover/heart:block sm:block sm:opacity-0 sm:group-hover/heart:opacity-100"
+        >
+          {isSaved ? "Remove from favorites" : "Add to favorites"}
+        </div>
+      </div>
     </div>
   );
 }

@@ -139851,6 +139851,33 @@ var buyerOrderGetRoute = new Elysia().use(sessionAuth).get("/orders/:id", async 
     return status(500, { message: "Failed to get order" });
   }
 }, { role: ["buyer"], params: orderIdParams2 });
+// src/utils/trust/cancellation-policy.ts
+function resolveCancellationCooldownHours(cancelCount) {
+  if (cancelCount >= 10)
+    return 72;
+  if (cancelCount >= 9)
+    return 24;
+  if (cancelCount >= 7)
+    return 12;
+  return 0;
+}
+function resolveCancellationWarning(cancelCount) {
+  if (cancelCount >= 5 && cancelCount < 7) {
+    return `You have canceled ${cancelCount} reservations. To help market vendors plan surplus stock, please avoid frequent cancellations. Reaching 7 cancellations will temporarily pause reservations for 12 hours.`;
+  }
+  return null;
+}
+function resolveCancellationRestrictionMessage(cancelCount, endsAt) {
+  const diffMs = endsAt ? endsAt.getTime() - Date.now() : 0;
+  const remainingText = formatRemainingTime(diffMs);
+  const durationText = cancelCount >= 10 ? "3 days" : cancelCount >= 9 ? "24 hours" : "12 hours";
+  return {
+    message: `Your account is paused because you have reached ${cancelCount} canceled reservations. To help market vendors plan surplus stock, reservations are temporarily paused for ${durationText}. Please come back in ${remainingText}.`,
+    remainingText,
+    durationText
+  };
+}
+
 // src/modules/buyer/services/buyer.order.cancel.ts
 async function cancelBuyerOrder(orderId, buyerId) {
   await db2.transaction(async (tx) => {
@@ -139866,6 +139893,38 @@ async function cancelBuyerOrder(orderId, buyerId) {
       throw new OrderError(409, "Order is no longer pending");
     }
     await restoreOrderStock(tx, cancelled.id);
+    const [cancelRow] = await tx.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, buyerId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer")));
+    const cancelCount = Number(cancelRow?.count ?? 0);
+    const cooldownHours = resolveCancellationCooldownHours(cancelCount);
+    if (cooldownHours > 0) {
+      const endsAt = new Date(Date.now() + cooldownHours * 3600000);
+      const { message } = resolveCancellationRestrictionMessage(cancelCount, endsAt);
+      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}`;
+      await tx.insert(trust_actions).values({
+        actionKey,
+        subjectId: buyerId,
+        actionType: "temporary_restriction",
+        weightedPoints: cancelCount,
+        policyVersion: trustPolicyVersion,
+        reason: message,
+        sourceOrderId: cancelled.id,
+        endsAt
+      }).onConflictDoNothing({ target: trust_actions.actionKey });
+    } else if (cancelCount >= 5) {
+      const warningMessage = resolveCancellationWarning(cancelCount);
+      if (warningMessage) {
+        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}`;
+        await tx.insert(trust_actions).values({
+          actionKey,
+          subjectId: buyerId,
+          actionType: "warning",
+          weightedPoints: cancelCount,
+          policyVersion: trustPolicyVersion,
+          reason: warningMessage,
+          sourceOrderId: cancelled.id
+        }).onConflictDoNothing({ target: trust_actions.actionKey });
+      }
+    }
   });
   return getBuyerOrder(orderId, buyerId);
 }
@@ -140220,7 +140279,7 @@ var buyerReportRoute = new Elysia().use(sessionAuth).post("/orders/:id/report", 
 
 // src/modules/buyer/services/buyer.notices.list.ts
 async function listBuyerNotices(buyerId) {
-  const [orderNotices, listingNotices] = await Promise.all([
+  const [orderNotices, listingNotices, actionNotices] = await Promise.all([
     db2.select({
       id: trust_notices.id,
       orderId: trust_notices.orderId,
@@ -140239,7 +140298,15 @@ async function listBuyerNotices(buyerId) {
       shopName: seller_listing_events.shopName,
       eventType: seller_listing_events.eventType,
       metadata: seller_listing_events.metadata
-    }).from(buyer_listing_notices).innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId)).where(eq(buyer_listing_notices.buyerId, buyerId)).orderBy(desc(buyer_listing_notices.createdAt)).limit(100)
+    }).from(buyer_listing_notices).innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId)).where(eq(buyer_listing_notices.buyerId, buyerId)).orderBy(desc(buyer_listing_notices.createdAt)).limit(100),
+    db2.select({
+      id: trust_actions.id,
+      actionKey: trust_actions.actionKey,
+      actionType: trust_actions.actionType,
+      reason: trust_actions.reason,
+      createdAt: trust_actions.createdAt,
+      sourceOrderId: trust_actions.sourceOrderId
+    }).from(trust_actions).where(eq(trust_actions.subjectId, buyerId)).orderBy(desc(trust_actions.createdAt)).limit(20)
   ]);
   const productIds = listingNotices.map((notice) => notice.productId);
   const available = productIds.length ? await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(and(inArray(sellers_product.id, productIds), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), isNotNull(sellers_product.publishedAt), marketplaceSellerVisibility())) : [];
@@ -140253,7 +140320,24 @@ async function listBuyerNotices(buyerId) {
       shopName: null,
       productAvailable: null,
       price: null,
-      previousPrice: null
+      previousPrice: null,
+      reason: null
+    })),
+    ...actionNotices.map((action) => ({
+      id: `action:${action.id}`,
+      kind: action.actionType === "temporary_restriction" ? "trust_action_restriction" : "trust_action_warning",
+      orderId: action.sourceOrderId,
+      productId: null,
+      sellerId: null,
+      productName: null,
+      shopName: null,
+      productAvailable: null,
+      price: null,
+      previousPrice: null,
+      reason: action.reason,
+      createdAt: action.createdAt,
+      sentAt: null,
+      readAt: null
     })),
     ...listingNotices.map((notice) => {
       const kind = notice.eventType === "price_drop" ? "seller_price_drop" : notice.eventType === "restock" ? "seller_restock" : "seller_new_listing";
@@ -140265,7 +140349,8 @@ async function listBuyerNotices(buyerId) {
         sentAt: null,
         productAvailable: availableIds.has(notice.productId),
         price: notice.metadata?.newPrice ?? null,
-        previousPrice: notice.metadata?.oldPrice ?? null
+        previousPrice: notice.metadata?.oldPrice ?? null,
+        reason: null
       };
     })
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 100);
@@ -140288,12 +140373,26 @@ var buyerNoticeParams = t.Object({
 
 // src/modules/buyer/services/buyer.notice.read.ts
 async function readBuyerNotice(buyerId, noticeId) {
+  const action = noticeId.startsWith("action:");
   const listing = noticeId.startsWith("listing:");
-  const rawId = listing ? noticeId.slice("listing:".length) : noticeId;
+  const rawId = action ? noticeId.slice("action:".length) : listing ? noticeId.slice("listing:".length) : noticeId;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawId)) {
     throw new OrderError(400, "Invalid notice ID");
   }
   return db2.transaction(async (tx) => {
+    if (action) {
+      const [act] = await tx.select().from(trust_actions).where(and(eq(trust_actions.id, rawId), eq(trust_actions.subjectId, buyerId))).limit(1);
+      if (!act)
+        throw new OrderError(404, "Notice not found");
+      return {
+        id: `action:${act.id}`,
+        kind: act.actionType === "temporary_restriction" ? "trust_action_restriction" : "trust_action_warning",
+        orderId: act.sourceOrderId,
+        readAt: new Date,
+        createdAt: act.createdAt,
+        reason: act.reason
+      };
+    }
     if (listing) {
       const [notice] = await tx.select({
         id: buyer_listing_notices.id,
@@ -140552,34 +140651,40 @@ var buyerProductInquiryRoute = new Elysia().use(sessionAuth).get("/products/:id/
 
 // src/modules/buyer/services/buyer.profile.read.ts
 async function getBuyerProfile(userId) {
-  const [account, monitoring] = await Promise.all([
+  const [account, monitoring, cancelRow] = await Promise.all([
     db2.select({
       id: user.id,
       name: user.name,
       email: user.email,
       image: user.image
     }).from(user).where(eq(user.id, userId)).limit(1).then((rows) => rows[0]),
-    readTrustMonitoringScore(userId)
+    readTrustMonitoringScore(userId),
+    db2.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, userId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer"))).then((rows) => Number(rows[0]?.count ?? 0))
   ]);
   if (!account)
     throw new OrderError(404, "Buyer profile not found");
-  const hasWarning = monitoring.weightedPoints >= 4 && monitoring.weightedPoints < 6;
-  const warningMessage = hasWarning ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account." : null;
   let trustRestriction = null;
-  if (monitoring.weightedPoints >= 6) {
-    const [activeAction] = await db2.select({
-      endsAt: trust_actions.endsAt,
-      weightedPoints: trust_actions.weightedPoints
-    }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
-    if (activeAction) {
-      const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
-      const remainingText = formatRemainingTime(diffMs);
-      const durationText = activeAction.weightedPoints >= 10 ? "3 days" : activeAction.weightedPoints >= 8 ? "24 hours" : "12 hours";
-      trustRestriction = {
-        message: `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationText}. Please come back in ${remainingText}.`,
-        remainingText,
-        durationText
-      };
+  const [activeAction] = await db2.select({
+    endsAt: trust_actions.endsAt,
+    weightedPoints: trust_actions.weightedPoints,
+    reason: trust_actions.reason
+  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
+  if (activeAction) {
+    const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
+    const remainingText = formatRemainingTime(diffMs);
+    const durationText = activeAction.weightedPoints >= 10 ? "3 days" : activeAction.weightedPoints >= 8 || activeAction.weightedPoints === 9 ? "24 hours" : "12 hours";
+    trustRestriction = {
+      message: activeAction.reason.includes("Please come back in") ? activeAction.reason : `${activeAction.reason} Please come back in ${remainingText}.`,
+      remainingText,
+      durationText
+    };
+  }
+  let warningMessage = null;
+  if (!trustRestriction) {
+    if (cancelRow >= 5 && cancelRow < 7) {
+      warningMessage = resolveCancellationWarning(cancelRow);
+    } else if (monitoring.weightedPoints >= 4 && monitoring.weightedPoints < 6) {
+      warningMessage = "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.";
     }
   }
   return {
@@ -140588,7 +140693,9 @@ async function getBuyerProfile(userId) {
       image: await getAvatarDisplayUrl(account.image)
     },
     trustWarning: warningMessage,
-    trustRestriction
+    trustRestriction,
+    cancellationsCount: cancelRow,
+    missedPickupsPoints: monitoring.weightedPoints
   };
 }
 
@@ -140653,8 +140760,55 @@ var buyerProfileAvatarRoute = new Elysia().use(sessionAuth).post("/profile/avata
 
 // src/modules/buyer/services/buyer.wishlist.list.ts
 async function listBuyerWishlist(buyerId) {
-  const rows = await db2.select({ productId: buyer_saved_products.productId }).from(buyer_saved_products).where(eq(buyer_saved_products.buyerId, buyerId)).orderBy(desc(buyer_saved_products.createdAt));
-  return { productIds: rows.map((row) => row.productId) };
+  const rows = await db2.select({
+    id: sellers_product.id,
+    productName: sellers_product.productName,
+    imagUrl: sellers_product.imagUrl,
+    productPrice: sellers_product.productPrice,
+    basePrice: sellers_product.basePrice,
+    productQty: sellers_product.productQty,
+    scalingType: sellers_product.scalingType,
+    productType: sellers_product.productType,
+    condition: sellers_product.condition,
+    publishedAt: sellers_product.publishedAt,
+    sellerId: sellers_profile.userId,
+    sellerName: user.name,
+    shopName: sellers_profile.shopName,
+    sellerType: sellers_profile.sellerType,
+    detailAddress: sellers_profile.detailAddress,
+    pickupInstructions: sellers_profile.pickupInstructions,
+    latitude: sellers_profile.latitude,
+    longitude: sellers_profile.longitude
+  }).from(buyer_saved_products).innerJoin(sellers_product, eq(sellers_product.id, buyer_saved_products.productId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(and(eq(buyer_saved_products.buyerId, buyerId), eq(sellers_product.isActive, true), eq(user.isActive, true), marketplaceSellerVisibility())).orderBy(desc(buyer_saved_products.createdAt));
+  const products = await Promise.all(rows.map(async (row) => ({
+    id: row.id,
+    productName: row.productName,
+    imageUrl: await getProductImageDisplayUrl(row.imagUrl, row.sellerId),
+    productPrice: row.productPrice,
+    basePrice: row.basePrice,
+    productQty: row.productQty,
+    scalingType: row.scalingType,
+    productType: row.productType,
+    condition: row.condition,
+    availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
+    averageRating: null,
+    reviewCount: 0,
+    seller: {
+      id: row.sellerId,
+      name: row.sellerName,
+      shopName: row.shopName,
+      sellerType: row.sellerType,
+      detailAddress: row.detailAddress,
+      pickupInstructions: row.pickupInstructions,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      distanceKm: null
+    }
+  })));
+  return {
+    productIds: rows.map((row) => row.id),
+    products
+  };
 }
 
 // src/modules/buyer/index/buyer.wishlist.list.ts
@@ -140831,59 +140985,72 @@ var adminPerformanceRoute = new Elysia().use(sessionAuth).get("/performance", as
 // src/modules/admin/index.ts
 var adminRoute = new Elysia({ prefix: "/admin" }).use(adminPerformanceRoute);
 
-// src/modules/marketplace/services/marketplace.overview.ts
-function getSampleTopProduce(range) {
-  const mult = range === "year" ? 52 : range === "month" ? 4 : 1;
-  return [
-    { id: "1", name: "Native Squash (Kalabasa)", category: "Fruit Vegetables", totalQuantity: 340 * mult, unit: "kg", orderCount: 48 * mult, totalValue: 10200 * mult },
-    { id: "2", name: "String Beans (Sitaw)", category: "Pod Vegetables", totalQuantity: 285 * mult, unit: "kg", orderCount: 42 * mult, totalValue: 14250 * mult },
-    { id: "3", name: "Eggplant (Talong)", category: "Fruit Vegetables", totalQuantity: 260 * mult, unit: "kg", orderCount: 39 * mult, totalValue: 11700 * mult },
-    { id: "4", name: "Bitter Gourd (Ampalaya)", category: "Fruit Vegetables", totalQuantity: 210 * mult, unit: "kg", orderCount: 31 * mult, totalValue: 14700 * mult },
-    { id: "5", name: "Pechay Tagalog", category: "Leafy Greens", totalQuantity: 195 * mult, unit: "kg", orderCount: 36 * mult, totalValue: 7800 * mult },
-    { id: "6", name: "Native Tomatoes (Kamatis)", category: "Fruit Vegetables", totalQuantity: 180 * mult, unit: "kg", orderCount: 33 * mult, totalValue: 9000 * mult },
-    { id: "7", name: "Green Cabbage (Repolyo)", category: "Leafy Greens", totalQuantity: 155 * mult, unit: "kg", orderCount: 24 * mult, totalValue: 9300 * mult },
-    { id: "8", name: "Okra (Lady Finger)", category: "Pod Vegetables", totalQuantity: 140 * mult, unit: "kg", orderCount: 22 * mult, totalValue: 5600 * mult },
-    { id: "9", name: "Sweet Potato (Kamote)", category: "Tuber Vegetables", totalQuantity: 125 * mult, unit: "kg", orderCount: 19 * mult, totalValue: 5000 * mult },
-    { id: "10", name: "Ginger (Luya)", category: "Root Vegetables", totalQuantity: 95 * mult, unit: "kg", orderCount: 17 * mult, totalValue: 7600 * mult }
-  ];
-}
-function getSampleTrends(range) {
+// src/modules/marketplace/services/marketplace.overview.trends.ts
+async function calculateRealTrends(range) {
+  const now = new Date;
   if (range === "week") {
-    return [
-      { label: "Mon", date: "Day 1", quantity: 280, orderCount: 35 },
-      { label: "Tue", date: "Day 2", quantity: 340, orderCount: 42 },
-      { label: "Wed", date: "Day 3", quantity: 310, orderCount: 38 },
-      { label: "Thu", date: "Day 4", quantity: 420, orderCount: 54 },
-      { label: "Fri", date: "Day 5", quantity: 490, orderCount: 63 },
-      { label: "Sat", date: "Day 6", quantity: 580, orderCount: 76 },
-      { label: "Sun", date: "Day 7", quantity: 460, orderCount: 58 }
-    ];
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const points = [];
+    for (let i = 6;i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+      const res = await db2.select({
+        qty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+        orders: sql3`count(distinct ${orders.id})::int`
+      }).from(orders).leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, startOfDay), sql3`${orders.createdAt} <= ${endOfDay}`));
+      points.push({
+        label: dayNames[d.getDay()],
+        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        quantity: Math.round(Number(res[0]?.qty ?? 0)),
+        orderCount: Number(res[0]?.orders ?? 0)
+      });
+    }
+    return points;
   }
   if (range === "year") {
-    return [
-      { label: "Jan", date: "2026-01", quantity: 1820, orderCount: 240 },
-      { label: "Feb", date: "2026-02", quantity: 2100, orderCount: 285 },
-      { label: "Mar", date: "2026-03", quantity: 2450, orderCount: 310 },
-      { label: "Apr", date: "2026-04", quantity: 2900, orderCount: 370 },
-      { label: "May", date: "2026-05", quantity: 3200, orderCount: 410 },
-      { label: "Jun", date: "2026-06", quantity: 3450, orderCount: 430 },
-      { label: "Jul", date: "2026-07", quantity: 3600, orderCount: 460 },
-      { label: "Aug", date: "2026-08", quantity: 3900, orderCount: 495 },
-      { label: "Sep", date: "2026-09", quantity: 4200, orderCount: 530 },
-      { label: "Oct", date: "2026-10", quantity: 4580, orderCount: 575 }
-    ];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const points = [];
+    for (let m = 11;m >= 0; m--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+      const res = await db2.select({
+        qty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+        orders: sql3`count(distinct ${orders.id})::int`
+      }).from(orders).leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, start), sql3`${orders.createdAt} <= ${end}`));
+      points.push({
+        label: monthNames[d.getMonth()],
+        date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+        quantity: Math.round(Number(res[0]?.qty ?? 0)),
+        orderCount: Number(res[0]?.orders ?? 0)
+      });
+    }
+    return points;
   }
-  return [
-    { label: "Week 1", date: "Oct 1 - Oct 7", quantity: 980, orderCount: 125 },
-    { label: "Week 2", date: "Oct 8 - Oct 14", quantity: 1150, orderCount: 148 },
-    { label: "Week 3", date: "Oct 15 - Oct 21", quantity: 1290, orderCount: 165 },
-    { label: "Week 4", date: "Oct 22 - Oct 28", quantity: 1420, orderCount: 182 }
-  ];
+  const points = [];
+  for (let w = 3;w >= 0; w--) {
+    const start = new Date(now.getTime() - (w + 1) * 7 * 24 * 60 * 60 * 1000);
+    const end = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000);
+    const res = await db2.select({
+      qty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+      orders: sql3`count(distinct ${orders.id})::int`
+    }).from(orders).leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, start), sql3`${orders.createdAt} < ${end}`));
+    points.push({
+      label: `Week ${4 - w}`,
+      date: `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+      quantity: Math.round(Number(res[0]?.qty ?? 0)),
+      orderCount: Number(res[0]?.orders ?? 0)
+    });
+  }
+  return points;
 }
+
+// src/modules/marketplace/services/marketplace.overview.ts
 async function readMarketplaceOverview(range = "month") {
   const days = range === "week" ? 7 : range === "year" ? 365 : 30;
   const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const [users, listings, orderRows, cropRows, rescueRows, dbTopRows] = await Promise.all([
+  const [users, listings, orderRows, cropRows, rescueRows, dbTopRows, stalls, buyerSummary, activityTrends] = await Promise.all([
     db2.select({
       sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
       buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
@@ -140894,64 +141061,143 @@ async function readMarketplaceOverview(range = "month") {
     }).from(sellers_product),
     db2.select({ status: orders.status, count: sql3`count(*)::int` }).from(orders).groupBy(orders.status),
     db2.select({
-      category: vegetable_catalog.category,
+      category: sellers_product.productType,
       activeCount: sql3`count(*)::int`
-    }).from(sellers_product).innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).groupBy(vegetable_catalog.category),
+    }).from(sellers_product).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).groupBy(sellers_product.productType),
     db2.select({
       totalRescuedQty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
       totalOrders: sql3`count(distinct ${orders.id})::int`
     }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))),
     db2.select({
-      name: ordered_items.productName,
-      category: vegetable_catalog.category,
+      name: sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`,
+      category: sellers_product.productType,
       totalQuantity: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
       orderCount: sql3`count(distinct ${orders.id})::int`,
       totalValue: sql3`coalesce(sum(${ordered_items.subtotal}), 0)::float`
-    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).innerJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))).groupBy(ordered_items.productName, vegetable_catalog.category).orderBy(sql3`sum(${ordered_items.quantity}) desc`).limit(10)
+    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))).groupBy(sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`, sellers_product.productType).orderBy(sql3`sum(${ordered_items.quantity}) desc`).limit(10),
+    db2.select({
+      id: sellers_profile.id,
+      shopName: sellers_profile.shopName,
+      detailAddress: sellers_profile.detailAddress,
+      activeListings: sql3`count(distinct ${sellers_product.id}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`,
+      totalStockKg: sql3`coalesce(sum(${sellers_product.productQty}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable}), 0)::float`
+    }).from(sellers_profile).leftJoin(sellers_product, eq(sellers_profile.userId, sellers_product.userId)).where(eq(sellers_profile.isCurrent, true)).groupBy(sellers_profile.id, sellers_profile.shopName, sellers_profile.detailAddress).orderBy(desc(sql3`count(distinct ${sellers_product.id}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})`)).limit(6),
+    db2.select({
+      totalBuyersWhoOrdered: sql3`count(distinct ${orders.buyersId})::int`,
+      completedPickups: sql3`count(*) filter (where ${orders.status} = 'completed')::int`,
+      activeOrders: sql3`count(*) filter (where ${orders.status} = 'pending')::int`
+    }).from(orders),
+    calculateRealTrends(range)
   ]);
   const orderMap = Object.fromEntries(orderRows.map((r) => [r.status, Number(r.count)]));
   const completed = orderMap.completed ?? 0;
   const expired = orderMap.expired ?? 0;
   const cancelled = orderMap.cancelled ?? 0;
   const totalDecided = completed + expired + cancelled;
-  const fulfillmentRate = totalDecided > 0 ? Math.round(completed / totalDecided * 100) : 98;
+  const fulfillmentRate = totalDecided > 0 ? Math.round(completed / totalDecided * 100) : 100;
   const totalCrops = cropRows.reduce((acc, r) => acc + Number(r.activeCount), 0);
   const categoryBreakdown = cropRows.map((r) => ({
     category: String(r.category),
     activeCount: Number(r.activeCount),
     percentage: totalCrops > 0 ? Math.round(Number(r.activeCount) / totalCrops * 100) : 0
   }));
-  const hasLiveTopData = dbTopRows.length > 0;
-  const topProduce = hasLiveTopData ? dbTopRows.map((row, idx) => ({
+  const topProduce = dbTopRows.map((row, idx) => ({
     id: String(idx + 1),
-    name: row.name || "Produce item",
-    category: row.category || "General Produce",
+    name: row.name?.trim() || "Produce item",
+    category: row.category || "Fresh Produce",
     totalQuantity: Math.round(Number(row.totalQuantity)),
     unit: "kg",
     orderCount: Number(row.orderCount),
     totalValue: Math.round(Number(row.totalValue))
-  })) : getSampleTopProduce(range);
-  const totalRescued = hasLiveTopData ? Number(rescueRows[0]?.totalRescuedQty ?? 0) : topProduce.reduce((acc, item) => acc + item.totalQuantity, 0);
+  }));
+  const existingNames = new Set(topProduce.map((p) => p.name.toLowerCase()));
+  if (topProduce.length < 10) {
+    const allTimeCompleted = await db2.select({
+      name: sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`,
+      category: sellers_product.productType,
+      totalQuantity: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+      orderCount: sql3`count(distinct ${orders.id})::int`,
+      totalValue: sql3`coalesce(sum(${ordered_items.subtotal}), 0)::float`
+    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).where(eq(orders.status, "completed")).groupBy(sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`, sellers_product.productType).orderBy(sql3`sum(${ordered_items.quantity}) desc`);
+    for (const item of allTimeCompleted) {
+      if (topProduce.length >= 10)
+        break;
+      const cleanName = item.name?.trim() || "Fresh Produce";
+      if (!existingNames.has(cleanName.toLowerCase())) {
+        existingNames.add(cleanName.toLowerCase());
+        topProduce.push({
+          id: String(topProduce.length + 1),
+          name: cleanName,
+          category: item.category || "Fresh Produce",
+          totalQuantity: Math.round(Number(item.totalQuantity)),
+          unit: "kg",
+          orderCount: Number(item.orderCount),
+          totalValue: Math.round(Number(item.totalValue))
+        });
+      }
+    }
+  }
+  if (topProduce.length < 10) {
+    const activeListings = await db2.select({
+      name: sellers_product.productName,
+      category: sellers_product.productType,
+      qty: sellers_product.productQty,
+      price: sellers_product.productPrice
+    }).from(sellers_product).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).orderBy(desc(sellers_product.productQty));
+    for (const p of activeListings) {
+      if (topProduce.length >= 10)
+        break;
+      const cleanName = p.name?.trim() || "Market Produce";
+      if (!existingNames.has(cleanName.toLowerCase())) {
+        existingNames.add(cleanName.toLowerCase());
+        const qty = Math.round(Number(p.qty ?? 0));
+        const price = Number(p.price ?? 0);
+        topProduce.push({
+          id: String(topProduce.length + 1),
+          name: cleanName,
+          category: p.category || "Fresh Produce",
+          totalQuantity: qty,
+          unit: "kg",
+          orderCount: 1,
+          totalValue: Math.round(qty * price)
+        });
+      }
+    }
+  }
+  const finalTopProduce = topProduce.slice(0, 10).map((item, idx) => ({
+    ...item,
+    id: String(idx + 1)
+  }));
+  const registeredBuyers = Number(users[0]?.buyers ?? 0);
+  const registeredSellers = Number(users[0]?.sellers ?? 0);
   return {
     generatedAt: new Date().toISOString(),
     range,
-    isSampleData: !hasLiveTopData,
+    isSampleData: false,
     kpis: {
-      totalRescuedQty: Math.round(totalRescued),
-      activeListings: Number(listings[0]?.active ?? 0) || 42,
-      totalOrders: Number(rescueRows[0]?.totalOrders ?? 0) || (hasLiveTopData ? completed : topProduce.reduce((acc, i) => acc + i.orderCount, 0)),
+      totalRescuedQty: Math.round(Number(rescueRows[0]?.totalRescuedQty ?? 0)),
+      activeListings: Number(listings[0]?.active ?? 0),
+      totalOrders: Number(rescueRows[0]?.totalOrders ?? 0),
       fulfillmentRate,
-      activeSellers: Number(users[0]?.sellers ?? 0) || 16,
-      activeBuyers: Number(users[0]?.buyers ?? 0) || 84
+      activeSellers: registeredSellers,
+      activeBuyers: registeredBuyers
     },
-    topProduce,
-    activityTrends: getSampleTrends(range),
-    categoryBreakdown: categoryBreakdown.length > 0 ? categoryBreakdown : [
-      { category: "Fruit Vegetables", activeCount: 18, percentage: 43 },
-      { category: "Leafy Greens", activeCount: 12, percentage: 29 },
-      { category: "Pod Vegetables", activeCount: 7, percentage: 17 },
-      { category: "Root Crops", activeCount: 5, percentage: 11 }
-    ]
+    topProduce: finalTopProduce,
+    activityTrends,
+    categoryBreakdown,
+    sellerStalls: stalls.map((s) => ({
+      id: s.id,
+      shopName: s.shopName,
+      detailAddress: s.detailAddress,
+      activeListings: Number(s.activeListings ?? 0),
+      totalStockKg: Math.round(Number(s.totalStockKg ?? 0))
+    })),
+    buyerSummary: {
+      registeredBuyers,
+      activeBuyersWithOrders: Number(buyerSummary[0]?.totalBuyersWhoOrdered ?? 0),
+      completedPickups: Number(buyerSummary[0]?.completedPickups ?? 0),
+      pendingPickups: Number(buyerSummary[0]?.activeOrders ?? 0)
+    }
   };
 }
 
