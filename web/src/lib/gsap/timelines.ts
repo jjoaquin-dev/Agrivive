@@ -1,6 +1,6 @@
 import gsap from "gsap";
-import { EASINGS } from "./easings";
 import type { SplashTimelineOptions } from "@/src/types/animation";
+import { createSplashGrid } from "./splash-grid";
 
 export function createSplashTimeline(
   container: HTMLElement,
@@ -18,113 +18,103 @@ export function createSplashTimeline(
   mainTl.timeScale(speed);
 
   const cartBox = container.querySelector<HTMLElement>("#cart-box");
-  const v1 = container.querySelector<HTMLElement>("#v1");
-  const v2 = container.querySelector<HTMLElement>("#v2");
-  const v3 = container.querySelector<HTMLElement>("#v3");
+  const cartSvg = container.querySelector<SVGElement>(".cart-svg");
+  const v1 = container.querySelector<SVGElement>("#v1");
+  const v2 = container.querySelector<SVGElement>("#v2");
+  const v3 = container.querySelector<SVGElement>("#v3");
   const brandStage = container.querySelector<HTMLElement>("#brand-stage");
   const brandUnit = container.querySelector<HTMLElement>("#brand-unit");
   const chars = container.querySelectorAll<HTMLElement>(".char");
   const tileGrid = container.querySelector<HTMLElement>("#tile-grid");
 
-  if (!cartBox || !brandUnit || !tileGrid) {
-    return mainTl;
+  if (!cartBox || !brandUnit || !tileGrid || !cartSvg) return mainTl;
+
+  const { cols, rawTiles, tilesLeftEdge } = createSplashGrid(tileGrid);
+
+  // Measure dead-center position for isolated cart start
+  gsap.set(cartBox, { x: 0 });
+  const cartRect = cartBox.getBoundingClientRect();
+  const cartCenterX = cartRect.left + cartRect.width / 2;
+  const viewportCenterX = (typeof window !== "undefined" ? window.innerWidth : 1200) / 2;
+  const initialCartOffset = viewportCenterX - cartCenterX;
+
+  gsap.set(cartBox, { x: initialCartOffset, y: 0, scale: 1, rotation: 0, opacity: 1 });
+  gsap.set(cartSvg, { transformOrigin: "center bottom" });
+  gsap.set(chars, { y: 35, opacity: 0, scale: 0.25, rotation: (i) => (i % 2 === 0 ? -12 : 12) });
+
+  const isMobile = (typeof window !== "undefined" ? window.innerWidth : 1200) < 640;
+  const projX = isMobile ? 160 : 240;
+  const projY = isMobile ? 200 : 260;
+
+  if (v1) gsap.set(v1, { x: -projX, y: -projY, rotation: -75, opacity: 0 });
+  if (v2) gsap.set(v2, { x: 0, y: -(projY + 30), rotation: 120, opacity: 0 });
+  if (v3) gsap.set(v3, { x: projX, y: -projY, rotation: 75, opacity: 0 });
+
+  // STEP 1: 3 VEGGIES FLY INTO BASKET SLOTS (PROJECTILE ARCS & SQUASH)
+  if (v1) {
+    mainTl.set(v1, { opacity: 1 }, "v1");
+    mainTl.to(v1, { x: 0, rotation: -6, duration: 0.44, ease: "power1.out" }, "v1");
+    mainTl.to(v1, { y: 0, duration: 0.44, ease: "power2.in" }, "v1");
   }
 
-  // 1. Initial State Setup
-  gsap.set(cartBox, { scale: 0.8, opacity: 0, transformOrigin: "center bottom" });
-  if (v1) gsap.set(v1, { y: -140, rotation: -28, opacity: 0 });
-  if (v2) gsap.set(v2, { y: -170, rotation: 22, opacity: 0 });
-  if (v3) gsap.set(v3, { y: -130, rotation: -18, opacity: 0 });
-  gsap.set(chars, { y: 45, opacity: 0, scale: 0.85, rotation: 4 });
-
-  // Clear any existing tiles and generate fresh 18x10 grid
-  tileGrid.innerHTML = "";
-  const cols = 18;
-  const rows = 10;
-  const rawTiles: { r: number; c: number; el: HTMLDivElement }[] = [];
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const tile = document.createElement("div");
-      tile.className = "tile";
-      tileGrid.appendChild(tile);
-      rawTiles.push({ r, c, el: tile });
-    }
-  }
-
-  // Sort tiles for Left Edge "<" exit peel (center row exits first)
-  const tilesLeftEdge = [...rawTiles]
-    .sort((a, b) => {
-      const centerR = (rows - 1) / 2;
-      const distA = Math.abs(a.r - centerR);
-      const distB = Math.abs(b.r - centerR);
-      const orderA = a.c + distA * 0.45;
-      const orderB = b.c + distB * 0.45;
-      return orderA - orderB;
-    })
-    .map((t) => t.el);
-
-  // =================================================================
-  // PHASE 1: PHYSICS ASSEMBLY
-  // =================================================================
-  mainTl.addLabel("assemble", 0.05);
-
-  // Cart scales in
   mainTl.to(
-    cartBox,
+    cartSvg,
     {
-      scale: 1,
-      opacity: 1,
-      duration: 0.42,
-      ease: EASINGS.SPRING,
+      keyframes: [
+        { y: 8, rotation: -3.5, scaleX: 1.08, scaleY: 0.92, duration: 0.06 },
+        { y: -5, rotation: 2.5, duration: 0.06 },
+        { y: 2, rotation: -1, duration: 0.05 },
+        { y: 0, rotation: 0, scaleX: 1, scaleY: 1, duration: 0.09 },
+      ],
+      ease: "power1.out",
     },
+    "v1+=0.42"
+  );
+
+  if (v2) {
+    mainTl.set(v2, { opacity: 1 }, "v1+=0.28");
+    mainTl.to(v2, { y: 0, rotation: 0, duration: 0.38, ease: "power2.in" }, "v1+=0.28");
+  }
+
+  mainTl.to(
+    cartSvg,
+    {
+      keyframes: [
+        { y: 12, scaleX: 1.12, scaleY: 0.88, duration: 0.06 },
+        { y: -6, scaleX: 0.95, scaleY: 1.05, duration: 0.06 },
+        { y: 0, scaleX: 1, scaleY: 1, duration: 0.12, ease: "elastic.out(1.2, 0.4)" },
+      ],
+    },
+    "v1+=0.64"
+  );
+
+  if (v3) {
+    mainTl.set(v3, { opacity: 1 }, "v1+=0.56");
+    mainTl.to(v3, { x: 0, rotation: 6, duration: 0.44, ease: "power1.out" }, "v1+=0.56");
+    mainTl.to(v3, { y: 0, duration: 0.44, ease: "power2.in" }, "v1+=0.56");
+  }
+
+  mainTl.to(
+    cartSvg,
+    {
+      keyframes: [
+        { y: 13, rotation: 4, scaleX: 1.1, scaleY: 0.9, duration: 0.06 },
+        { y: -7, rotation: -3, duration: 0.06 },
+        { y: 2.5, rotation: 1, duration: 0.06 },
+        { y: 0, rotation: 0, scaleX: 1, scaleY: 1, duration: 0.12 },
+      ],
+    },
+    "v1+=0.98"
+  );
+
+  // STEP 2: CART SLIDES LEFT, WHEELS ROLL, AGRIVIVE ENTERS, CART TILTS (-11°)
+  mainTl.to(cartBox, { x: 0, duration: 0.55, ease: "power2.inOut" }, "assemble");
+  mainTl.to(
+    container.querySelectorAll(".cart-wheel"),
+    { rotation: -360, transformOrigin: "center center", duration: 0.55, ease: "power2.inOut" },
     "assemble"
   );
 
-  // Veggies drop into cart
-  if (v1) {
-    mainTl.to(
-      v1,
-      {
-        y: 0,
-        rotation: 0,
-        opacity: 1,
-        duration: 0.52,
-        ease: EASINGS.ELASTIC,
-      },
-      "assemble+=0.08"
-    );
-  }
-
-  if (v2) {
-    mainTl.to(
-      v2,
-      {
-        y: 0,
-        rotation: 0,
-        opacity: 1,
-        duration: 0.58,
-        ease: EASINGS.ELASTIC,
-      },
-      "assemble+=0.13"
-    );
-  }
-
-  if (v3) {
-    mainTl.to(
-      v3,
-      {
-        y: 0,
-        rotation: 0,
-        opacity: 1,
-        duration: 0.48,
-        ease: EASINGS.ELASTIC,
-      },
-      "assemble+=0.18"
-    );
-  }
-
-  // Letters cascade in
   mainTl.to(
     chars,
     {
@@ -132,137 +122,71 @@ export function createSplashTimeline(
       opacity: 1,
       scale: 1,
       rotation: 0,
-      duration: 0.5,
+      duration: 0.52,
       stagger: 0.035,
-      ease: EASINGS.ELASTIC,
+      ease: "elastic.out(1.15, 0.45)",
     },
     "assemble+=0.16"
   );
 
-  // Cart playful tilt
   mainTl.to(
     cartBox,
-    {
-      rotation: -11,
-      transformOrigin: "left bottom",
-      duration: 0.38,
-      ease: EASINGS.POP,
-    },
+    { rotation: -11, transformOrigin: "left bottom", duration: 0.38, ease: "back.out(2)" },
     "assemble+=0.45"
   );
 
-  // =================================================================
-  // PHASE 2: "<|" TRANSITION WAVE (Solid Green Tile Sweep)
-  // =================================================================
+  // STEP 3: "<|" TRANSITION WAVE (Pure Vertical Bar "|" Sweep & Color Inversion)
   mainTl.addLabel("waveSweep", "+=0.2");
+  if (brandStage) mainTl.set(brandStage, { zIndex: 30 }, "waveSweep");
 
-  if (brandStage) {
-    mainTl.set(brandStage, { zIndex: 30 }, "waveSweep");
-  }
-
-  // Pure vertical bar "|" sweep
   for (let c = 0; c < cols; c++) {
     const colTiles = rawTiles.filter((t) => t.c === c).map((t) => t.el);
-    mainTl.to(
-      colTiles,
-      {
-        opacity: 1,
-        duration: 0.16,
-        ease: EASINGS.ACCEL_DECEL,
-      },
-      `waveSweep+=${(c * 0.022).toFixed(4)}`
-    );
+    mainTl.to(colTiles, { opacity: 1, duration: 0.16, ease: "power1.inOut" }, `waveSweep+=${(c * 0.022).toFixed(4)}`);
   }
 
-  // Coordinate-matched color switch to white
   const colWidth = (typeof window !== "undefined" ? window.innerWidth : 1200) / cols;
   const staggerPerCol = 0.022;
-
-  const cartRect = cartBox.getBoundingClientRect();
-  const cartCol = Math.max(0, Math.min(cols - 1, cartRect.left / colWidth));
+  const cartRectNow = cartBox.getBoundingClientRect();
+  const cartCol = Math.max(0, Math.min(cols - 1, cartRectNow.left / colWidth));
   const cartWaveHit = cartCol * staggerPerCol;
 
   mainTl.to(
     container.querySelectorAll("#cart-box .cart-fill, #cart-box .veggie-fill"),
-    { fill: "#ffffff", duration: 0.18, ease: EASINGS.SMOOTH },
+    { fill: "#ffffff", duration: 0.18, ease: "power1.out" },
     `waveSweep+=${cartWaveHit.toFixed(3)}`
   );
-
   mainTl.to(
     container.querySelectorAll("#cart-box .cart-stroke, #cart-box .veggie-stroke"),
-    { stroke: "#ffffff", duration: 0.18, ease: EASINGS.SMOOTH },
+    { stroke: "#ffffff", duration: 0.18, ease: "power1.out" },
     `waveSweep+=${cartWaveHit.toFixed(3)}`
   );
-
   mainTl.to(
     container.querySelectorAll("#cart-box .accent-cut, #cart-box .veggie-cutout"),
-    { stroke: "#457D00", duration: 0.18, ease: EASINGS.SMOOTH },
+    { stroke: "#457D00", duration: 0.18, ease: "power1.out" },
     `waveSweep+=${cartWaveHit.toFixed(3)}`
   );
-
   mainTl.to(
     container.querySelectorAll("#cart-box .cart-wheel"),
-    { fill: "#457D00", stroke: "#ffffff", duration: 0.18, ease: EASINGS.SMOOTH },
+    { fill: "#457D00", stroke: "#ffffff", duration: 0.18, ease: "power1.out" },
     `waveSweep+=${cartWaveHit.toFixed(3)}`
   );
 
   chars.forEach((charEl) => {
     const r = charEl.getBoundingClientRect();
     const col = Math.max(0, Math.min(cols - 1, r.left / colWidth));
-    const hitTime = col * staggerPerCol;
-    mainTl.to(
-      charEl,
-      { color: "#ffffff", duration: 0.16, ease: EASINGS.SMOOTH },
-      `waveSweep+=${hitTime.toFixed(3)}`
-    );
+    mainTl.to(charEl, { color: "#ffffff", duration: 0.16, ease: "power1.out" }, `waveSweep+=${(col * staggerPerCol).toFixed(3)}`);
   });
 
   const fullCoverTime = 0.56;
+  mainTl.call(() => brandUnit.classList.add("is-inverted"), [], `waveSweep+=${fullCoverTime}`);
 
-  mainTl.call(
-    () => {
-      brandUnit.classList.add("is-inverted");
-    },
-    [],
-    `waveSweep+=${fullCoverTime}`
-  );
-
-  // =================================================================
-  // PHASE 3 & 4: CHEVRON EXIT PEEL ("<")
-  // =================================================================
+  // STEP 4: LEFT EDGE "<" CHEVRON EXIT PEEL
   const holdTime = fullCoverTime + 0.45;
   mainTl.addLabel("tileOut", `waveSweep+=${holdTime}`);
 
-  mainTl.to(
-    brandUnit,
-    {
-      scale: 0.9,
-      opacity: 0,
-      duration: 0.22,
-      ease: "power2.in",
-    },
-    "tileOut"
-  );
-
-  // Left edge "<" peels tiles away
-  mainTl.to(
-    tilesLeftEdge,
-    {
-      opacity: 0,
-      duration: 0.18,
-      stagger: 0.0025,
-      ease: EASINGS.ACCEL_DECEL,
-    },
-    "tileOut+=0.04"
-  );
-
-  mainTl.call(
-    () => {
-      if (onTileOut) onTileOut();
-    },
-    [],
-    "tileOut+=0.55"
-  );
+  mainTl.to(brandUnit, { scale: 0.9, opacity: 0, duration: 0.22, ease: "power2.in" }, "tileOut");
+  mainTl.to(tilesLeftEdge, { opacity: 0, duration: 0.18, stagger: 0.0025, ease: "power1.inOut" }, "tileOut+=0.04");
+  mainTl.call(() => { if (onTileOut) onTileOut(); }, [], "tileOut+=0.55");
 
   return mainTl;
 }

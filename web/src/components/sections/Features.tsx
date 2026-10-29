@@ -7,7 +7,6 @@ import { HomeCategories } from "@/src/features/home/components/HomeCategories";
 import { HomeFeaturedProduce } from "@/src/features/home/components/HomeFeaturedProduce";
 import { HomeHowItWorks } from "@/src/features/home/components/HomeHowItWorks";
 import { HomeWhySurplus } from "@/src/features/home/components/HomeWhySurplus";
-import { HomeImpactTestimonials } from "@/src/features/home/components/HomeImpactTestimonials";
 import { HomeFarmerFaq } from "@/src/features/home/components/HomeFarmerFaq";
 import { HomeFinalCta } from "@/src/features/home/components/HomeFinalCta";
 
@@ -87,28 +86,7 @@ export function Features() {
         );
       }
 
-      // 4. Testimonials Cards
-      const testCards = el.querySelectorAll("#testimonials .grid > div");
-      if (testCards.length > 0) {
-        gsap.fromTo(
-          testCards,
-          { y: 35, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.65,
-            stagger: 0.08,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: "#testimonials",
-              start: "top 80%",
-              toggleActions: "play none none none",
-            },
-          }
-        );
-      }
-
-      // 5. FAQ Accordion Items
+      // 4. FAQ Accordion Items
       const faqItems = el.querySelectorAll("#faq .divide-y > div");
       if (faqItems.length > 0) {
         gsap.fromTo(
@@ -139,7 +117,6 @@ export function Features() {
       <HomeFeaturedProduce />
       <HomeHowItWorks />
       <HomeWhySurplus />
-      <HomeImpactTestimonials />
       <HomeFarmerFaq />
       <HomeFinalCta />
     </div>

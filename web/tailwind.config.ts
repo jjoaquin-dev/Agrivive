@@ -68,11 +68,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        brand: ["var(--font-brand)", "var(--font-heading)", "Poppins", "sans-serif"],
-        heading: ["var(--font-heading)", "Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
-        subheading: ["var(--font-subheading)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
-        body: ["var(--font-body)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
-        sans: ["var(--font-body)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
+        brand: ["Parkinsans", "var(--font-brand)", "Poppins", "sans-serif"],
+        heading: ["Plus Jakarta Sans", "var(--font-heading)", "Poppins", "sans-serif"],
+        subheading: ["Plus Jakarta Sans", "var(--font-subheading)", "Lato", "sans-serif"],
+        body: ["Plus Jakarta Sans", "var(--font-body)", "Lato", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "var(--font-body)", "Lato", "sans-serif"],
       },
       boxShadow: {
         auth: "0 24px 70px rgba(31, 77, 58, 0.14)",

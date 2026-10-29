@@ -1,3 +1,54 @@
+@import url("https://fonts.googleapis.com/css2?family=Parkinsans:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+:root {
+  /* Mobile default (< 480px) */
+  --cart-w: 110px;
+  --cart-h: 88px;
+  --brand-font-size: 2.85rem;
+  --brand-gap: 13px;
+  --cart-overlap: -30px;
+}
+
+@media (min-width: 480px) {
+  :root {
+    --cart-w: 140px;
+    --cart-h: 112px;
+    --brand-font-size: 3.6rem;
+    --brand-gap: 13px;
+    --cart-overlap: -38px;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --cart-w: 180px;
+    --cart-h: 144px;
+    --brand-font-size: 4.6rem;
+    --brand-gap: 13px;
+    --cart-overlap: -50px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --cart-w: 225px;
+    --cart-h: 180px;
+    --brand-font-size: 5.75rem;
+    --brand-gap: 13px;
+    --cart-overlap: -62px;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --cart-w: 260px;
+    --cart-h: 208px;
+    --brand-font-size: 6.6rem;
+    --brand-gap: 13px;
+    --cart-overlap: -72px;
+  }
+}
+
 /* Lenis Smooth Scroll Core Rules */
 html.lenis,
 html.lenis body {
@@ -21,8 +72,71 @@ html.lenis body {
 }
 
 /* ========================================================= */
-/* SPLASH SCREEN & TILE GRID                                 */
+/* SPLASH SCREEN & BRAND STAGE                               */
 /* ========================================================= */
+.viewport-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.brand-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--brand-gap);
+  transform-origin: center center;
+}
+
+.cart-box {
+  position: relative;
+  width: var(--cart-w);
+  height: var(--cart-h);
+  margin-right: var(--cart-overlap);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transform-origin: center bottom;
+}
+
+.cart-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.brand-text {
+  display: flex;
+  align-items: center;
+  font-family: 'Parkinsans', sans-serif;
+  font-size: var(--brand-font-size);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  white-space: nowrap;
+  color: #457D00;
+}
+
+.char {
+  display: inline-block;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  color: #457D00;
+}
+
+.cart-fill { fill: #457D00; }
+.cart-stroke { stroke: #457D00; fill: none; }
+.cart-wheel { fill: #ffffff; stroke: #457D00; }
+.accent-cut { stroke: #ffffff; fill: none; }
+.veggie-fill { fill: #457D00; }
+.veggie-stroke { stroke: #457D00; fill: none; }
+.veggie-cutout { stroke: #ffffff; }
+
 #tile-grid {
   position: absolute;
   inset: 0;
@@ -44,6 +158,10 @@ html.lenis body {
   height: 100%;
   margin-left: -0.5px;
   will-change: opacity;
+}
+
+.elevated {
+  z-index: 30 !important;
 }
 
 /* Symmetrical Color Inversion on Green Surface */
