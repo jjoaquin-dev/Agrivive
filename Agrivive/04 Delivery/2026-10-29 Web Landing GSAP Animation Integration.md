@@ -120,5 +120,13 @@ Every piece of existing text in `web/src/features/home/components/` was maintain
 
 ## Commit Record
 
-- **Commit**: `abfc30a`
-- **Message**: `add gsap landing animations and splash screen`
+- **Initial Commit**: `abfc30a`
+  - **Message**: `add gsap landing animations and splash screen`
+- **Follow-up Commit**: `cad3239`
+  - **Message**: `update header layout fonts and splash screen physics`
+  - **Key Adjustments**:
+    1. Removed Testimonials section completely from landing page per user instruction (`Features.tsx`).
+    2. Replicated the exact floating pill header layout and mega-menu from `scratch/splash-demo.html` into `LandingHeader.tsx` and `HeaderMegaMenu.tsx` (tilted vector cart logo lockup, "Browse Produce" mega-menu with category cards and live Bankerohan market stall card, "Live Surplus" pulsing dot, and `#E2FD56` electric volt lime Register button).
+    3. Updated typography across the application to Google Fonts **Parkinsans** (brand) and **Plus Jakarta Sans** (headings, subheadings, and body).
+    4. Upgraded splash screen physics in `timelines.ts` and `splash-grid.ts` to replicate `scratch/splash-demo.html` pixel-for-pixel: isolated dead-center cart start, 3 projectile produce drops with squash & shake keyframes, rolling cart wheels, -11° tilt, exact coordinate color inversion, and left-chevron exit peel.
+    5. Maintained all source code files strictly under 200 lines.
