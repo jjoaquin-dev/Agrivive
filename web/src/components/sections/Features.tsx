@@ -22,7 +22,27 @@ export function Features() {
     if (!el) return;
 
     const ctx = gsap.context(() => {
-      // 1. Categories Cards Cascade
+      // 1. Section Headings Reveal
+      const headings = el.querySelectorAll("section h2");
+      headings.forEach((heading) => {
+        gsap.fromTo(
+          heading,
+          { y: 30, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: heading,
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      });
+
+      // 2. Categories Cards Cascade
       const catCards = el.querySelectorAll("#categories a");
       if (catCards.length > 0) {
         gsap.fromTo(
@@ -44,7 +64,7 @@ export function Features() {
         );
       }
 
-      // 2. How It Works Steps
+      // 3. How It Works Steps
       const stepCards = el.querySelectorAll("#how-it-works .grid > div");
       if (stepCards.length > 0) {
         gsap.fromTo(
@@ -65,7 +85,7 @@ export function Features() {
         );
       }
 
-      // 3. Why Surplus Bento Cards
+      // 4. Why Surplus Bento Cards
       const bentoCards = el.querySelectorAll("#why-agrivive .grid > div");
       if (bentoCards.length > 0) {
         gsap.fromTo(
@@ -86,7 +106,7 @@ export function Features() {
         );
       }
 
-      // 4. FAQ Accordion Items
+      // 5. FAQ Accordion Items
       const faqItems = el.querySelectorAll("#faq .divide-y > div");
       if (faqItems.length > 0) {
         gsap.fromTo(
@@ -101,6 +121,27 @@ export function Features() {
             scrollTrigger: {
               trigger: "#faq",
               start: "top 82%",
+              toggleActions: "play none none none",
+            },
+          }
+        );
+      }
+
+      // 6. Final CTA Banner Card Scale Entrance
+      const ctaCard = el.querySelector("#cta-banner, section:last-child > div");
+      if (ctaCard) {
+        gsap.fromTo(
+          ctaCard,
+          { y: 40, scale: 0.95, opacity: 0 },
+          {
+            y: 0,
+            scale: 1,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: ctaCard,
+              start: "top 85%",
               toggleActions: "play none none none",
             },
           }

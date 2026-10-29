@@ -1,6 +1,8 @@
 import gsap from "gsap";
 import type { SplashTimelineOptions } from "@/src/types/animation";
 import { createSplashGrid } from "./splash-grid";
+import { setupHeroInitialStates, animateHeroEntrance } from "./hero-entrance";
+import { addWaveColorInversion } from "./wave-inversion";
 
 export function createSplashTimeline(
   container: HTMLElement,
@@ -41,6 +43,9 @@ export function createSplashTimeline(
   gsap.set(cartBox, { x: initialCartOffset, y: 0, scale: 1, rotation: 0, opacity: 1 });
   gsap.set(cartSvg, { transformOrigin: "center bottom" });
   gsap.set(chars, { y: 35, opacity: 0, scale: 0.25, rotation: (i) => (i % 2 === 0 ? -12 : 12) });
+
+  // Pre-hide hero elements and navigation so they cascade in upon peel
+  setupHeroInitialStates();
 
   const isMobile = (typeof window !== "undefined" ? window.innerWidth : 1200) < 640;
   const projX = isMobile ? 160 : 240;
@@ -144,41 +149,19 @@ export function createSplashTimeline(
     mainTl.to(colTiles, { opacity: 1, duration: 0.16, ease: "power1.inOut" }, `waveSweep+=${(c * 0.022).toFixed(4)}`);
   }
 
-  const colWidth = (typeof window !== "undefined" ? window.innerWidth : 1200) / cols;
   const staggerPerCol = 0.022;
-  const cartRectNow = cartBox.getBoundingClientRect();
-  const cartCol = Math.max(0, Math.min(cols - 1, cartRectNow.left / colWidth));
-  const cartWaveHit = cartCol * staggerPerCol;
-
-  mainTl.to(
-    container.querySelectorAll("#cart-box .cart-fill, #cart-box .veggie-fill"),
-    { fill: "#ffffff", duration: 0.18, ease: "power1.out" },
-    `waveSweep+=${cartWaveHit.toFixed(3)}`
-  );
-  mainTl.to(
-    container.querySelectorAll("#cart-box .cart-stroke, #cart-box .veggie-stroke"),
-    { stroke: "#ffffff", duration: 0.18, ease: "power1.out" },
-    `waveSweep+=${cartWaveHit.toFixed(3)}`
-  );
-  mainTl.to(
-    container.querySelectorAll("#cart-box .accent-cut, #cart-box .veggie-cutout"),
-    { stroke: "#457D00", duration: 0.18, ease: "power1.out" },
-    `waveSweep+=${cartWaveHit.toFixed(3)}`
-  );
-  mainTl.to(
-    container.querySelectorAll("#cart-box .cart-wheel"),
-    { fill: "#457D00", stroke: "#ffffff", duration: 0.18, ease: "power1.out" },
-    `waveSweep+=${cartWaveHit.toFixed(3)}`
-  );
-
-  chars.forEach((charEl) => {
-    const r = charEl.getBoundingClientRect();
-    const col = Math.max(0, Math.min(cols - 1, r.left / colWidth));
-    mainTl.to(charEl, { color: "#ffffff", duration: 0.16, ease: "power1.out" }, `waveSweep+=${(col * staggerPerCol).toFixed(3)}`);
-  });
+  addWaveColorInversion(mainTl, container, cartBox, chars, cols, staggerPerCol);
 
   const fullCoverTime = 0.56;
-  mainTl.call(() => brandUnit.classList.add("is-inverted"), [], `waveSweep+=${fullCoverTime}`);
+
+  // IMPORTANT: Switch container to transparent so peeling reveals the green #hero section
+  mainTl.set(container, { backgroundColor: "transparent" }, `waveSweep+=${fullCoverTime}`);
+  mainTl.call(() => {
+    container.classList.remove("bg-white");
+    container.classList.add("bg-transparent");
+    brandUnit.classList.add("is-inverted");
+    if (typeof window !== "undefined") window.scrollTo(0, 0);
+  }, [], `waveSweep+=${fullCoverTime}`);
 
   // STEP 4: LEFT EDGE "<" CHEVRON EXIT PEEL
   const holdTime = fullCoverTime + 0.45;
@@ -187,6 +170,9 @@ export function createSplashTimeline(
   mainTl.to(brandUnit, { scale: 0.9, opacity: 0, duration: 0.22, ease: "power2.in" }, "tileOut");
   mainTl.to(tilesLeftEdge, { opacity: 0, duration: 0.18, stagger: 0.0025, ease: "power1.inOut" }, "tileOut+=0.04");
   mainTl.call(() => { if (onTileOut) onTileOut(); }, [], "tileOut+=0.55");
+
+  // STEP 5: HERO SECTION "IN" ENTRANCE TRANSITION
+  animateHeroEntrance(mainTl, "tileOut");
 
   return mainTl;
 }
