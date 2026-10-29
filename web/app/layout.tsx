@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Lato, Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import "../src/styles/tokens.css";
+import "./globals.css";
 import { CartProvider } from "@/src/features/cart/CartProvider";
 import { CartDrawer } from "@/src/features/cart/components/CartDrawer";
 import { WishlistProvider } from "@/src/features/wishlist/WishlistProvider";
 import { PasswordSetupGuard } from "@/src/features/auth/components/PasswordSetupGuard";
+import { LenisProvider } from "@/src/components/animations/LenisProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -64,13 +66,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${poppins.variable} ${lato.variable} ${mdNichrome.variable} font-body`} suppressHydrationWarning>
       <body className="font-body antialiased" suppressHydrationWarning>
-        <WishlistProvider>
-          <CartProvider>
-            <PasswordSetupGuard />
-            {children}
-            <CartDrawer />
-          </CartProvider>
-        </WishlistProvider>
+        <LenisProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <PasswordSetupGuard />
+              {children}
+              <CartDrawer />
+            </CartProvider>
+          </WishlistProvider>
+        </LenisProvider>
       </body>
     </html>
   );

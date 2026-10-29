@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { PageContainer } from "@/src/components/PageContainer";
 import { HeaderCategoryDropdown } from "@/src/components/HeaderCategoryDropdown";
@@ -27,8 +27,17 @@ export function LandingHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [scrolled, setScrolled] = useState(false);
   const { data: session } = authClient.useSession();
   const hasSession = Boolean(session?.user);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +48,12 @@ export function LandingHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-200/80 bg-white/95 backdrop-blur shadow-xs">
+    <header
+      id="nav-pill"
+      className={`sticky top-0 z-40 transition-all duration-300 border-b border-neutral-200/80 bg-white/95 backdrop-blur ${
+        scrolled ? "header-scrolled shadow-md border-[#457D00]/25" : "shadow-xs"
+      }`}
+    >
       {/* Top Main Bar */}
       <div className="border-b border-neutral-100 py-2.5">
         <PageContainer className="flex items-center justify-between gap-4">
