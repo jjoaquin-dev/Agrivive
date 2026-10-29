@@ -115,3 +115,10 @@ Every piece of existing text in `web/src/features/home/components/` was maintain
    - **Data Integrity Audit**: Verified `hasHeadline: true`, `hasSubtitle: true`, `hasShopHarvestBtn: true`, `hasSellerBtn: true`, `hasCategories: true`, `hasHowItWorks: true`, `hasWhySurplusStats: true`, `hasTestimonials: true`, `hasFaq: true`, `hasFooter: true`.
    - **Lenis Smooth Anchor Scroll**: Intercepted `#how-it-works`, scrolled to `scrollY: 2333` with exact `targetTop: 90px` clearance under fixed header, and dynamic `.header-scrolled` elevation applied. Captured `web_scrolled_section.png`.
    - **Mobile Viewport (375x812)**: `scrollWidth: 375`, `hasHorizontalOverflow: false` (zero horizontal overflow), nav pill height 58px. Captured `web_mobile_hero.png`.
+
+---
+
+## Commit Record
+
+- **Commit**: `abfc30a`
+- **Message**: `add gsap landing animations and splash screen`
