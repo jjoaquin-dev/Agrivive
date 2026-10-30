@@ -1,16 +1,10 @@
 import { and, desc, eq, lte } from "drizzle-orm";
 import { db } from "../../db";
 import { listing_cycles, sellers_product, sellers_profile, user } from "../../db/schema";
+import { marketplaceUrl } from "../marketplace-url";
 import { rankVisibilityCandidates, type VisibilityTier } from "../visibility-ranking";
 import { loadEligibleVisibilityCandidates } from "../visibility-ranking/load";
 
-function marketplaceUrl(productId: string) {
-  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "")
-    .trim().replace(/\/$/, "");
-  const path = `/marketplace/${productId}`;
-  try { return base ? new URL(path, base).toString() : path; }
-  catch { return path; }
-}
 
 export type PromotionEligibilityOptions = {
   stage?: "initial" | "followup";

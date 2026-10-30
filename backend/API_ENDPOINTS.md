@@ -208,6 +208,15 @@ The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|fo
 
 The backend checks initial eligibility hourly with the Figure 5 AHP–TOPSIS engine. It compares all currently eligible active surplus listings, uses weights `0.40/0.30/0.20/0.10`, and queues only listings at `Ci* >= 0.60` for Priority Boost. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. At that follow-up, the backend may apply one configured percentage reduction toward the seller's minimum price before n8n fetches the refreshed context. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
 
+## Confirmed Boost posting (n8n)
+
+After a seller adds a product, the app asks **Boost** or **Not now**. **Boost** calls the seller's `POST /seller/products/:id/boost`. The worker then sends `{ "boostId": "<uuid>", "reason": "initial|price_reduction" }` to `N8N_VISIBILITY_BOOST_WEBHOOK_URL` with `Authorization: Bearer <N8N_VISIBILITY_BOOST_SERVICE_TOKEN>`. Both routes below need the same Bearer token and return `401` without it.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| GET | `/integrations/visibility-boosts/:id/context` | Current product facts, `previousPrice` (price drops only), `listingUrl`, and public `imageUrl`. |
+| POST | `/integrations/visibility-boosts/:id/facebook-post` | Body `{"caption":"..."}`. The backend rechecks the boost and listing, posts with its own Meta credentials, saves the `fb_post_logs` row, removes any link in the caption and adds the product page link, and replaces captions that do not show the current price. A repeated delivery returns `alreadyPosted: true`. |
+
 ## Seller social publishing to official Agrivive pages
 
 These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page and linked Instagram Professional account; no seller OAuth linking is used. TikTok and X publishing are not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.

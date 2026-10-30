@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-10-30 10:00 PST
+last_updated: 2026-10-31 PST
 status: active
 ---
 
@@ -11,19 +11,19 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-10-30 10:00 PST
+2026-10-31 PST
 
 ## Latest completed task
 
-Fixed the header on `/marketplace/overview`: section links now go to `/#section`, current-page highlight is per page, and the page title clears the fixed header. Details: [[2026-10-30 Overview Page Header Fixes]]. Earlier: [[2026-10-30 Category Cards Scroll Lift]].
+Added the Boost / Not now popup after a seller lists a product (mobile) and rebuilt the n8n workflow around the existing confirmed Boost. Details: [[2026-10-31 Boost Popup and Confirmed Boost Workflow]]. This supersedes [[2026-10-31 n8n Seller Flow Hardening]].
 
-Validation: `bun run typecheck` and `bun run build` in `web/` passed. Not checked in a browser.
+Validation: backend `bunx tsc --noEmit` and both builds, mobile `bun run typecheck`. Not tested on a device or against n8n/Meta.
 
 ## Current project status
 
 - Branch `development`; last commit `a058dc3`. Web landing and splash work is **uncommitted**.
 - Buyer website (`web/`) landing page is refined but not yet visually verified in a browser.
-- Mobile app and backend are not part of the recent work.
+- Backend and mobile Boost changes and the rebuilt `dist/` are **uncommitted**. Boost posting uses `N8N_VISIBILITY_BOOST_*`; `/integrations/visibility-boosts/:id/context|facebook-post` need its Bearer token.
 
 ## Active architectural decisions
 
@@ -56,6 +56,8 @@ Many other `web/` files show as modified in git from earlier sessions. Those wer
 
 ## Unresolved issues
 
+- Boost: owner must test the popup, `POST /seller/products/:id/boost`, the two integration routes (401 without token, one post per boost), and import `agrivive-visibility-boost.json` with credentials.
+
 - No browser check yet: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, reveal behavior, and Core Web Vitals.
 - The splash length is estimated from timeline math (about 3.04 s to hand-off), not measured.
 - Parkinsans has no size-matched fallback metrics, so the wordmark may shift slightly while the font loads.
@@ -67,5 +69,5 @@ Open the buyer site in a browser (`bun run dev` in `web/`, port 3001). Check the
 
 ## Historical changelog
 
-- Latest entry: [[2026-10-30 Splash Pacing Three-Second Sequence]]
+- Latest entry: [[2026-10-31 Boost Popup and Confirmed Boost Workflow]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].
