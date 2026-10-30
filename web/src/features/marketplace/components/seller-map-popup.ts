@@ -20,14 +20,6 @@ function sellerInitials(seller: MarketplaceSellerMapResult) {
     .toUpperCase();
 }
 
-function sellerTypeLabel(sellerType: MarketplaceSellerMapResult["sellerType"]) {
-  return {
-    supplier: "Supplier",
-    supplier_vendor: "Supplier vendor",
-    retail_vendor: "Retail vendor",
-  }[sellerType];
-}
-
 export function sellerMapPopupContent(seller: MarketplaceSellerMapResult) {
   const directionsUrl = getDirectionsUrl(seller.latitude, seller.longitude);
   const avatar = `<div class="relative flex h-[44px] w-[44px] shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-[#EDF2EB] text-sm font-bold text-[#457D00] ring-1 ring-[#457D00]/10">
@@ -68,7 +60,7 @@ export function sellerMapPopupContent(seller: MarketplaceSellerMapResult) {
           ${escapeHtml(seller.shopName)}
         </h3>
         <div class="mt-1 truncate text-xs text-[#5C6460]">
-          ${escapeHtml(seller.name)} · ${escapeHtml(sellerTypeLabel(seller.sellerType))}
+          ${escapeHtml(seller.name)}
         </div>
       </div>
     </div>

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "animations/how-it-works/index.html"
+        ],
+        "createdAt": "2026-10-30T07:39:17.960Z",
+        "reason": "Sanctioned exception: the user's brief requires preserving the existing 'THE PROCESS' eyebrow above the heading, matching the live HomeHowItWorks section."
+      }
+    ]
+  }
+}

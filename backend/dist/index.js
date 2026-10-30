@@ -76089,136 +76089,6 @@ var require_messaging2 = __commonJS(function(exports) {
   } });
 });
 
-// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
-var exports_type3 = {};
-__export(exports_type3, {
-  Any: () => Any,
-  Argument: () => Argument,
-  Array: () => Array2,
-  AsyncIterator: () => AsyncIterator,
-  Awaited: () => Awaited,
-  BigInt: () => BigInt2,
-  Boolean: () => Boolean2,
-  Capitalize: () => Capitalize,
-  Composite: () => Composite,
-  Const: () => Const,
-  Constructor: () => Constructor,
-  ConstructorParameters: () => ConstructorParameters,
-  Date: () => Date2,
-  Enum: () => Enum,
-  Exclude: () => Exclude,
-  Extends: () => Extends,
-  Extract: () => Extract,
-  Function: () => Function2,
-  Index: () => Index,
-  InstanceType: () => InstanceType,
-  Instantiate: () => Instantiate,
-  Integer: () => Integer,
-  Intersect: () => Intersect,
-  Iterator: () => Iterator,
-  KeyOf: () => KeyOf,
-  Literal: () => Literal,
-  Lowercase: () => Lowercase,
-  Mapped: () => Mapped,
-  Module: () => Module,
-  Never: () => Never,
-  Not: () => Not2,
-  Null: () => Null,
-  Number: () => Number2,
-  Object: () => Object2,
-  Omit: () => Omit,
-  Optional: () => Optional,
-  Parameters: () => Parameters,
-  Partial: () => Partial,
-  Pick: () => Pick,
-  Promise: () => Promise2,
-  Readonly: () => Readonly,
-  ReadonlyOptional: () => ReadonlyOptional,
-  Record: () => Record,
-  Recursive: () => Recursive,
-  Ref: () => Ref,
-  RegExp: () => RegExp2,
-  Required: () => Required,
-  Rest: () => Rest,
-  ReturnType: () => ReturnType,
-  String: () => String2,
-  Symbol: () => Symbol2,
-  TemplateLiteral: () => TemplateLiteral,
-  Transform: () => Transform,
-  Tuple: () => Tuple,
-  Uint8Array: () => Uint8Array2,
-  Uncapitalize: () => Uncapitalize,
-  Undefined: () => Undefined,
-  Union: () => Union,
-  Unknown: () => Unknown,
-  Unsafe: () => Unsafe,
-  Uppercase: () => Uppercase,
-  Void: () => Void
-});
-
-// src/db/schema.ts
-var exports_schema = {};
-__export(exports_schema, {
-  account: () => account,
-  buyer_listing_notices: () => buyer_listing_notices,
-  buyer_saved_products: () => buyer_saved_products,
-  checkouts: () => checkouts,
-  conversation_context_enum: () => conversation_context_enum,
-  conversation_messages: () => conversation_messages,
-  conversation_participants: () => conversation_participants,
-  conversation_status_enum: () => conversation_status_enum,
-  conversations: () => conversations,
-  fb_post_logs: () => fb_post_logs,
-  listing_cycles: () => listing_cycles,
-  notification_device_platform_enum: () => notification_device_platform_enum,
-  notification_devices: () => notification_devices,
-  notification_outbox: () => notification_outbox,
-  notification_outbox_status_enum: () => notification_outbox_status_enum,
-  notification_type_enum: () => notification_type_enum,
-  order_inquiries: () => order_inquiries,
-  order_report_evidence: () => order_report_evidence,
-  order_reports: () => order_reports,
-  order_reviews: () => order_reviews,
-  order_status: () => order_status,
-  ordered_items: () => ordered_items,
-  orders: () => orders,
-  product_condition_enum: () => product_condition_enum,
-  product_inquiries: () => product_inquiries,
-  product_reviews: () => product_reviews,
-  product_stock_adjustments: () => product_stock_adjustments,
-  product_type_enum: () => product_type_enum,
-  roleEnum: () => roleEnum,
-  scaling_type_enum: () => scaling_type_enum,
-  seller_boost_reason_enum: () => seller_boost_reason_enum,
-  seller_boost_status_enum: () => seller_boost_status_enum,
-  seller_follows: () => seller_follows,
-  seller_listing_events: () => seller_listing_events,
-  seller_promotion_jobs: () => seller_promotion_jobs,
-  seller_promotion_stage: () => seller_promotion_stage,
-  seller_promotion_status: () => seller_promotion_status,
-  seller_scan_grace: () => seller_scan_grace,
-  seller_social_campaign_posts: () => seller_social_campaign_posts,
-  seller_social_campaigns: () => seller_social_campaigns,
-  seller_type_enum: () => seller_type_enum,
-  seller_visibility_boosts: () => seller_visibility_boosts,
-  sellers_product: () => sellers_product,
-  sellers_profile: () => sellers_profile,
-  session: () => session,
-  social_campaign_post_status: () => social_campaign_post_status,
-  social_campaign_status: () => social_campaign_status,
-  social_platform: () => social_platform,
-  trust_actions: () => trust_actions,
-  trust_corrections: () => trust_corrections,
-  trust_events: () => trust_events,
-  trust_notices: () => trust_notices,
-  twoFactor: () => twoFactor,
-  user: () => user,
-  vegetable_catalog: () => vegetable_catalog,
-  vegetable_category_enum: () => vegetable_category_enum,
-  vegetable_review_status_enum: () => vegetable_review_status_enum,
-  verification: () => verification
-});
-
 // node_modules/memoirist/dist/bun/index.js
 var Y = (v, b) => {
   let A = b?.length ? {} : null;
@@ -78922,6 +78792,74 @@ function Unsafe(options = {}) {
 function Void(options) {
   return CreateType({ [Kind]: "Void", type: "void" }, options);
 }
+
+// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
+var exports_type3 = {};
+__export(exports_type3, {
+  Any: () => Any,
+  Argument: () => Argument,
+  Array: () => Array2,
+  AsyncIterator: () => AsyncIterator,
+  Awaited: () => Awaited,
+  BigInt: () => BigInt2,
+  Boolean: () => Boolean2,
+  Capitalize: () => Capitalize,
+  Composite: () => Composite,
+  Const: () => Const,
+  Constructor: () => Constructor,
+  ConstructorParameters: () => ConstructorParameters,
+  Date: () => Date2,
+  Enum: () => Enum,
+  Exclude: () => Exclude,
+  Extends: () => Extends,
+  Extract: () => Extract,
+  Function: () => Function2,
+  Index: () => Index,
+  InstanceType: () => InstanceType,
+  Instantiate: () => Instantiate,
+  Integer: () => Integer,
+  Intersect: () => Intersect,
+  Iterator: () => Iterator,
+  KeyOf: () => KeyOf,
+  Literal: () => Literal,
+  Lowercase: () => Lowercase,
+  Mapped: () => Mapped,
+  Module: () => Module,
+  Never: () => Never,
+  Not: () => Not2,
+  Null: () => Null,
+  Number: () => Number2,
+  Object: () => Object2,
+  Omit: () => Omit,
+  Optional: () => Optional,
+  Parameters: () => Parameters,
+  Partial: () => Partial,
+  Pick: () => Pick,
+  Promise: () => Promise2,
+  Readonly: () => Readonly,
+  ReadonlyOptional: () => ReadonlyOptional,
+  Record: () => Record,
+  Recursive: () => Recursive,
+  Ref: () => Ref,
+  RegExp: () => RegExp2,
+  Required: () => Required,
+  Rest: () => Rest,
+  ReturnType: () => ReturnType,
+  String: () => String2,
+  Symbol: () => Symbol2,
+  TemplateLiteral: () => TemplateLiteral,
+  Transform: () => Transform,
+  Tuple: () => Tuple,
+  Uint8Array: () => Uint8Array2,
+  Uncapitalize: () => Uncapitalize,
+  Undefined: () => Undefined,
+  Union: () => Union,
+  Unknown: () => Unknown,
+  Unsafe: () => Unsafe,
+  Uppercase: () => Uppercase,
+  Void: () => Void
+});
+
 // node_modules/@sinclair/typebox/build/esm/type/type/index.mjs
 var Type = exports_type3;
 
@@ -116230,6 +116168,68 @@ pool.on("error", (err) => {
   console.error("Unexpected error on idle PostgreSQL client:", err);
 });
 var db2 = drizzle({ client: pool });
+
+// src/db/schema.ts
+var exports_schema = {};
+__export(exports_schema, {
+  account: () => account,
+  buyer_listing_notices: () => buyer_listing_notices,
+  buyer_saved_products: () => buyer_saved_products,
+  checkouts: () => checkouts,
+  conversation_context_enum: () => conversation_context_enum,
+  conversation_messages: () => conversation_messages,
+  conversation_participants: () => conversation_participants,
+  conversation_status_enum: () => conversation_status_enum,
+  conversations: () => conversations,
+  fb_post_logs: () => fb_post_logs,
+  listing_cycles: () => listing_cycles,
+  notification_device_platform_enum: () => notification_device_platform_enum,
+  notification_devices: () => notification_devices,
+  notification_outbox: () => notification_outbox,
+  notification_outbox_status_enum: () => notification_outbox_status_enum,
+  notification_type_enum: () => notification_type_enum,
+  order_inquiries: () => order_inquiries,
+  order_report_evidence: () => order_report_evidence,
+  order_reports: () => order_reports,
+  order_reviews: () => order_reviews,
+  order_status: () => order_status,
+  ordered_items: () => ordered_items,
+  orders: () => orders,
+  product_condition_enum: () => product_condition_enum,
+  product_inquiries: () => product_inquiries,
+  product_reviews: () => product_reviews,
+  product_stock_adjustments: () => product_stock_adjustments,
+  product_type_enum: () => product_type_enum,
+  roleEnum: () => roleEnum,
+  scaling_type_enum: () => scaling_type_enum,
+  seller_boost_reason_enum: () => seller_boost_reason_enum,
+  seller_boost_status_enum: () => seller_boost_status_enum,
+  seller_follows: () => seller_follows,
+  seller_listing_events: () => seller_listing_events,
+  seller_promotion_jobs: () => seller_promotion_jobs,
+  seller_promotion_stage: () => seller_promotion_stage,
+  seller_promotion_status: () => seller_promotion_status,
+  seller_scan_grace: () => seller_scan_grace,
+  seller_social_campaign_posts: () => seller_social_campaign_posts,
+  seller_social_campaigns: () => seller_social_campaigns,
+  seller_visibility_boosts: () => seller_visibility_boosts,
+  sellers_product: () => sellers_product,
+  sellers_profile: () => sellers_profile,
+  session: () => session,
+  social_campaign_post_status: () => social_campaign_post_status,
+  social_campaign_status: () => social_campaign_status,
+  social_platform: () => social_platform,
+  trust_actions: () => trust_actions,
+  trust_corrections: () => trust_corrections,
+  trust_events: () => trust_events,
+  trust_notices: () => trust_notices,
+  twoFactor: () => twoFactor,
+  user: () => user,
+  vegetable_catalog: () => vegetable_catalog,
+  vegetable_category_enum: () => vegetable_category_enum,
+  vegetable_review_status_enum: () => vegetable_review_status_enum,
+  verification: () => verification
+});
 // node_modules/drizzle-orm/pg-core/columns/enum.js
 var PgEnumObjectColumnBuilder2 = class extends PgColumnBuilder {
   static [entityKind] = "PgEnumObjectColumnBuilder";
@@ -116375,11 +116375,6 @@ var twoFactor = pgTable("two_factor", {
   failedVerificationCount: integer2("failed_verification_count").default(0).notNull(),
   lockedUntil: timestamp("locked_until")
 }, (table) => [index("two_factor_user_id_idx").on(table.userId)]);
-var seller_type_enum = pgEnum2("seller_type", [
-  "supplier",
-  "supplier_vendor",
-  "retail_vendor"
-]);
 var sellers_profile = pgTable("sellers_profile", {
   id: uuid2("id").defaultRandom().primaryKey().notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -116388,7 +116383,6 @@ var sellers_profile = pgTable("sellers_profile", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
-  sellerType: seller_type_enum("seller_type").default("supplier").notNull(),
   pickupInstructions: text("pickup_instructions"),
   isCurrent: boolean4("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -135763,7 +135757,6 @@ var sellerProfileModel = t.Object({
   latitude: t.Number({ minimum: -90, maximum: 90 }),
   longitude: t.Number({ minimum: -180, maximum: 180 }),
   phoneNumber: t.String({ minLength: 7, maxLength: 30, pattern: "\\S" }),
-  sellerType: t.Optional(t.UnionEnum(["supplier", "supplier_vendor", "retail_vendor"])),
   pickupInstructions: t.Optional(t.Nullable(t.String({ maxLength: 500 })))
 }, { additionalProperties: false });
 
@@ -135787,7 +135780,6 @@ async function createSellerProfile(userId, body) {
       latitude: body.latitude,
       longitude: body.longitude,
       phoneNumber,
-      sellerType: body.sellerType ?? "supplier",
       pickupInstructions: body.pickupInstructions?.trim() || null,
       userId
     }).returning();
@@ -136423,7 +136415,6 @@ function updateSellerProfile(sellerId, body) {
       ...body.latitude !== undefined ? { latitude: body.latitude } : {},
       ...body.longitude !== undefined ? { longitude: body.longitude } : {},
       ...phoneNumber !== undefined ? { phoneNumber } : {},
-      ...body.sellerType !== undefined ? { sellerType: body.sellerType } : {},
       ...pickupInstructions !== undefined ? { pickupInstructions: pickupInstructions || null } : {},
       updatedAt: new Date
     }).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true))).returning();
@@ -140892,7 +140883,6 @@ async function listBuyerWishlist(buyerId) {
     sellerId: sellers_profile.userId,
     sellerName: user.name,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -140915,7 +140905,6 @@ async function listBuyerWishlist(buyerId) {
       id: row.sellerId,
       name: row.sellerName,
       shopName: row.shopName,
-      sellerType: row.sellerType,
       detailAddress: row.detailAddress,
       pickupInstructions: row.pickupInstructions,
       latitude: row.latitude,
@@ -141354,17 +141343,11 @@ var marketplaceUnit = t.Union([
   t.Literal("kilo"),
   t.Literal("pile")
 ]);
-var marketplaceSellerType = t.Union([
-  t.Literal("supplier"),
-  t.Literal("supplier_vendor"),
-  t.Literal("retail_vendor")
-]);
 var marketplaceProductsQuery = t.Object({
   sellerId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
   search: t.Optional(t.String({ maxLength: 120 })),
   productType: t.Optional(marketplaceProductType),
   unit: t.Optional(marketplaceUnit),
-  sellerType: t.Optional(marketplaceSellerType),
   minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
@@ -141551,7 +141534,6 @@ async function getMarketplaceProduct(productId) {
       name: detail.user.name,
       image: await getAvatarDisplayUrl(detail.user.image),
       shopName: profile.shopName,
-      sellerType: profile.sellerType,
       detailAddress: profile.detailAddress,
       pickupInstructions: profile.pickupInstructions,
       latitude: profile.latitude,
@@ -141568,7 +141550,6 @@ async function getMarketplaceSeller(sellerId) {
     id: sellers_profile.userId,
     image: user.image,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -141707,7 +141688,6 @@ function serializeProduct(row, imageUrl, distanceKm, rating, policyVersion, calc
       id: row.sellerId,
       name: row.sellerName,
       shopName: row.shopName,
-      sellerType: row.sellerType,
       detailAddress: row.detailAddress,
       pickupInstructions: row.pickupInstructions,
       latitude: row.latitude,
@@ -141745,8 +141725,6 @@ async function listMarketplaceProducts(query) {
     conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit)
     conditions.push(eq(sellers_product.scalingType, query.unit));
-  if (query.sellerType)
-    conditions.push(eq(sellers_profile.sellerType, query.sellerType));
   if (query.minPrice !== undefined)
     conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
   if (query.maxPrice !== undefined)
@@ -141783,7 +141761,6 @@ async function listMarketplaceProducts(query) {
     sellerId: sellers_profile.userId,
     sellerName: user.name,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -141894,7 +141871,6 @@ var marketplaceSellersMapQuery = t.Object({
   search: t.Optional(t.String({ maxLength: 120 })),
   productType: t.Optional(marketplaceProductType),
   unit: t.Optional(marketplaceUnit),
-  sellerType: t.Optional(marketplaceSellerType),
   minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
@@ -141935,8 +141911,6 @@ function matchingProductConditions(query) {
     conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit)
     conditions.push(eq(sellers_product.scalingType, query.unit));
-  if (query.sellerType)
-    conditions.push(eq(sellers_profile.sellerType, query.sellerType));
   if (query.minPrice !== undefined)
     conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
   if (query.maxPrice !== undefined)
@@ -141968,7 +141942,6 @@ async function listMarketplaceSellersMap(query) {
     name: user.name,
     image: user.image,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -141977,7 +141950,7 @@ async function listMarketplaceSellersMap(query) {
     productCount: count(sellers_product.id).as("product_count"),
     rating: sellerRatings.averageRating,
     reviewCount: sellerRatings.reviewCount
-  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude, sellerRatings.averageRating, sellerRatings.reviewCount).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude, sellerRatings.averageRating, sellerRatings.reviewCount).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
   const unmappedRows = await db2.select({
     count: sql3`count(distinct ${sellers_profile.userId})::int`
   }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).where(and(...conditions, or(isNull2(sellers_profile.latitude), isNull2(sellers_profile.longitude))));
@@ -141990,7 +141963,6 @@ async function listMarketplaceSellersMap(query) {
     name: row.name,
     image: await getAvatarDisplayUrl(row.image),
     shopName: row.shopName,
-    sellerType: row.sellerType,
     detailAddress: row.detailAddress,
     pickupInstructions: row.pickupInstructions,
     latitude: row.latitude,

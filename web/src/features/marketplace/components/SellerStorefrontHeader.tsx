@@ -1,6 +1,5 @@
 import { Clock, MapPin } from "lucide-react";
 import { getDirectionsUrl } from "@/src/lib/maps";
-import { sellerTypeLabel } from "../marketplace-labels";
 import type { MarketplaceSellerProfile } from "../types";
 import { SellerFollowButton } from "./SellerFollowButton";
 import { SellerProfileAvatar } from "./SellerProfileAvatar";
@@ -20,9 +19,6 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
             <h1 className="font-heading text-2xl sm:text-[26px] font-bold text-neutral-900 leading-tight">
               {seller.shopName}
             </h1>
-            <span className="inline-flex items-center rounded-full bg-[#EAF7ED] px-2.5 py-0.5 text-[11px] font-bold text-[#16A34A] uppercase tracking-wide">
-              {sellerTypeLabel(seller.sellerType)}
-            </span>
           </div>
 
           <div className="flex items-center gap-2 pt-0.5">

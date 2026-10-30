@@ -1,7 +1,7 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { MarketplaceFilterValues } from "./MarketplaceFilters";
-import { marketplaceUnitLabel, sellerTypeLabel } from "../marketplace-labels";
+import { marketplaceUnitLabel } from "../marketplace-labels";
 
 interface ActiveFiltersProps {
   filters: MarketplaceFilterValues;
@@ -38,13 +38,6 @@ export function ActiveFilters({
       id: "unit",
       label: marketplaceUnitLabel(filters.unit),
       onRemove: () => onRemoveFilter("unit"),
-    });
-  }
-  if (filters.sellerType) {
-    chips.push({
-      id: "sellerType",
-      label: sellerTypeLabel(filters.sellerType),
-      onRemove: () => onRemoveFilter("sellerType"),
     });
   }
   if (filters.minPrice || filters.maxPrice) {

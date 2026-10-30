@@ -135,7 +135,6 @@ export default function ProfileOverviewScreen() {
         <ProfileHeroCard
           shopName={shopName}
           sellerName={sellerName}
-          sellerType={(profile as any)?.sellerType || "supplier"}
           avatarUrl={avatarUrl}
           isVerified={Boolean(setup?.sellerVerified || setup?.badge)}
           memberSince={memberSince}
@@ -149,7 +148,6 @@ export default function ProfileOverviewScreen() {
 
         <ProfileVerificationCard
           isVerified={Boolean(setup?.sellerVerified || setup?.badge)}
-          sellerType={(profile as any)?.sellerType || "supplier"}
           verifiedSince={verifiedSince}
           isActive={(session?.user as any)?.isActive !== false}
           onRequestReview={() => router.push("/(app)/trust")}

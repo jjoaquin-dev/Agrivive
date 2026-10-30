@@ -31,7 +31,6 @@ export function updateSellerProfile(sellerId: string, body: SellerProfileUpdate)
       ...(body.latitude !== undefined ? { latitude: body.latitude } : {}),
       ...(body.longitude !== undefined ? { longitude: body.longitude } : {}),
       ...(phoneNumber !== undefined ? { phoneNumber } : {}),
-      ...(body.sellerType !== undefined ? { sellerType: body.sellerType } : {}),
       ...(pickupInstructions !== undefined ? { pickupInstructions: pickupInstructions || null } : {}),
       updatedAt: new Date(),
     }).where(and(

@@ -258,6 +258,11 @@ section[id] {
   text-wrap: balance;
 }
 
+/* Hero headline: sized for the left column of the three-part hero */
+.hero-title-line {
+  font-size: clamp(2.75rem, 1.2rem + 4.2vw, 7rem);
+}
+
 .type-section {
   font-size: clamp(1.875rem, 1.35rem + 2.2vw, 3.25rem);
   line-height: 1.08;

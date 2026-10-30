@@ -82,7 +82,6 @@ export function useMarketplaceBrowser() {
     return {
       productType: params.get("productType") ?? "",
       unit: params.get("unit") ?? "",
-      sellerType: params.get("sellerType") ?? "",
       minPrice: params.get("minPrice") ?? "",
       maxPrice: params.get("maxPrice") ?? "",
       minQuantity: params.get("minQuantity") ?? "",

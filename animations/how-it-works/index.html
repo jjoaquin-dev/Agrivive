@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How Agrivive Works - animation</title>
+<style>
+@font-face {
+  font-family: "Jakarta";
+  src: url("fonts/plus-jakarta-sans-400-800.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: block;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #FAF9F5; }
+body { font-family: "Jakarta", sans-serif; color: #171717; -webkit-font-smoothing: antialiased; }
+#frame { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #FAF9F5; }
+#section { position: absolute; left: 50%; top: 170px; width: 1216px; margin-left: -608px; transform-origin: 50% 50%; }
+
+/* Header */
+.head { max-width: 768px; margin: 0 auto; text-align: center; }
+.eyebrow { display: inline-block; font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #457D00; opacity: 0; }
+h2 { margin: 12px 0 0; font-size: 52px; line-height: 1.08; letter-spacing: -0.03em; font-weight: 700; color: #171717; }
+.word { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.word > .in { display: inline-block; transform: translateY(110%); }
+.accent { position: relative; display: inline-block; color: #457D00; }
+.accent .word { vertical-align: baseline; }
+.ul { position: absolute; left: 0; bottom: -8px; width: 100%; height: 14px; overflow: visible; pointer-events: none; }
+.lede { margin: 16px auto 0; max-width: 672px; font-size: 18px; line-height: 1.65; color: #525252; text-wrap: pretty; opacity: 0; }
+
+/* Timeline and steps */
+.steps { position: relative; margin: 80px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+.hair { position: absolute; left: 24px; right: 24px; top: 24px; height: 1px; background: rgba(69, 125, 0, 0.2); transform-origin: 0 50%; transform: scaleX(0); }
+.hairfill { position: absolute; height: 2px; border-radius: 2px; background: #457D00; width: 0; opacity: 0; }
+.step { position: relative; display: flex; flex-direction: column; }
+.num { position: relative; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 9999px; border: 1px solid rgba(69, 125, 0, 0.25); background: #FAF9F5; font-size: 14px; font-weight: 700; color: #457D00; opacity: 0; }
+.num .fill { position: absolute; inset: -1px; border-radius: 9999px; background: #457D00; opacity: 0; }
+.num .t { position: relative; }
+.media { position: relative; margin-top: 32px; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 16px; background: #F5F5F5; clip-path: inset(100% 0 0 0 round 16px); }
+.zoom { position: absolute; inset: 0; transform-origin: 0 0; }
+.zoom img { position: absolute; display: block; max-width: none; user-select: none; }
+.ctitle { margin: 24px 0 0; font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; color: #171717; }
+.desc { margin: 8px 0 0; font-size: 15px; line-height: 1.625; color: #525252; opacity: 0; }
+
+/* Interaction layers (card coordinates, inside .zoom) */
+.hi { position: absolute; border: 2.5px solid #457D00; border-radius: 14px; opacity: 0; }
+.ripple { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 9999px; border: 2px solid #457D00; opacity: 0; }
+.cursor { position: absolute; width: 22px; height: 22px; opacity: 0; }
+.cursor svg { display: block; width: 100%; height: 100%; }
+.qr { position: absolute; opacity: 0; border-radius: 6px; }
+.qr i { position: absolute; width: 18px; height: 18px; border: 3px solid #457D00; }
+.qr .c1 { left: 0; top: 0; border-right: 0; border-bottom: 0; border-radius: 6px 0 0 0; }
+.qr .c2 { right: 0; top: 0; border-left: 0; border-bottom: 0; border-radius: 0 6px 0 0; }
+.qr .c3 { left: 0; bottom: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 6px; }
+.qr .c4 { right: 0; bottom: 0; border-left: 0; border-top: 0; border-radius: 0 0 6px 0; }
+.scan { position: absolute; left: 6px; right: 6px; height: 2px; border-radius: 2px; background: #457D00; opacity: 0; }
+
+/* Through-line marker and focus frame (section coordinates) */
+.marker { position: absolute; box-sizing: border-box; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 9999px; border: 3px solid rgba(69, 125, 0, 0.22); background: #457D00; opacity: 1; }
+.focus { position: absolute; border: 2px solid #457D00; border-radius: 16px; opacity: 0; }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="section">
+    <header class="head">
+      <span id="eyebrow" class="eyebrow">The Process</span>
+      <h2>
+        <span class="word"><span id="w1" class="in">How</span></span>
+        <span class="accent"><span class="word"><span id="w2" class="in">Agrivive</span></span><svg class="ul" viewBox="0 0 120 16" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path id="ulp" d="M3 13 C 35 3, 85 3, 117 13" stroke="#FEA938" stroke-width="4" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg></span>
+        <span class="word"><span id="w3" class="in">Works</span></span>
+      </h2>
+      <p id="lede" class="lede">Three simple steps to rescue wholesome harvest, save money, and empower Davao local growers.</p>
+    </header>
+
+    <div id="hairfill" class="hairfill"></div>
+
+    <ol id="steps" class="steps">
+      <span id="hair" class="hair"></span>
+
+      <li class="step">
+        <span id="n1" class="num"><span class="fill" id="f1"></span><span class="t" id="t1">01</span></span>
+        <div id="m1" class="media">
+          <div id="z1" class="zoom"><img id="i1" src="images/step-1-source.jpg" alt="Local farmer holding a wooden harvest crate full of fresh carrots, tomatoes, and greens"></div>
+        </div>
+        <h3 class="ctitle"><span class="word"><span id="h1" class="in">SOURCE</span></span></h3>
+        <p id="d1" class="desc">Discover surplus produce from local growers and market sellers across Davao. Good vegetables deserve a second chance.</p>
+      </li>
+
+      <li class="step">
+        <span id="n2" class="num"><span class="fill" id="f2"></span><span class="t" id="t2">02</span></span>
+        <div id="m2" class="media">
+          <div id="z2" class="zoom">
+            <img id="i2" src="images/step-2-discover.png" alt="Agrivive digital marketplace browsing interface with seasonal produce categories">
+            <div id="hi" class="hi"></div>
+            <div id="rip" class="ripple"></div>
+            <div id="cur" class="cursor"><svg viewBox="0 0 24 24"><path d="M3 2.5 L3 19.5 L7.8 15.2 L11 22 L13.6 20.8 L10.5 14.2 L17 14.2 Z" fill="#111827" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <h3 class="ctitle"><span class="word"><span id="h2" class="in">DISCOVER</span></span></h3>
+        <p id="d2" class="desc">Browse available surplus produce, check stock, and find options that fit your needs.</p>
+      </li>
+
+      <li class="step">
+        <span id="n3" class="num"><span class="fill" id="f3"></span><span class="t" id="t3">03</span></span>
+        <div id="m3" class="media">
+          <div id="z3" class="zoom">
+            <img id="i3" src="images/step-3-collect.jpg" alt="Customer and seller scanning reservation QR code at public market produce stall">
+            <div id="qr" class="qr"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><div id="scan" class="scan"></div></div>
+          </div>
+        </div>
+        <h3 class="ctitle"><span class="word"><span id="h3" class="in">COLLECT</span></span></h3>
+        <p id="d3" class="desc">Present your reservation QR code to the seller and collect your produce with ease.</p>
+      </li>
+    </ol>
+
+    <div id="focus" class="focus"></div>
+    <div id="marker" class="marker"></div>
+  </div>
+</div>
+
+<script>
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+const clamp01 = x => (x < 0 ? 0 : x > 1 ? 1 : x);
+const win = (t, t0, d) => clamp01((t - t0) / d);
+const ease = p => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2); // easeInOutCubic
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const lerp = (a, b, p) => a + (b - a) * p;
+// Damped spring, zeta 0.82, omega 12 rad/s: about 1% overshoot, settles in ~0.35 s
+function spring(t, t0) {
+  const x = t - t0;
+  if (x <= 0) return 0;
+  const z = 0.82, w = 12, wd = w * Math.sqrt(1 - z * z);
+  return 1 - Math.exp(-z * w * x) * (Math.cos(wd * x) + (z / Math.sqrt(1 - z * z)) * Math.sin(wd * x));
+}
+// Piecewise path through keyframes [{t, x, y}] with eased segments, holding at both ends
+function path(t, pts) {
+  if (t <= pts[0].t) return { x: pts[0].x, y: pts[0].y };
+  for (let i = 1; i < pts.length; i++) {
+    if (t <= pts[i].t) {
+      const p = ease(win(t, pts[i - 1].t, pts[i].t - pts[i - 1].t));
+      return { x: lerp(pts[i - 1].x, pts[i].x, p), y: lerp(pts[i - 1].y, pts[i].y, p) };
+    }
+  }
+  const last = pts[pts.length - 1];
+  return { x: last.x, y: last.y };
+}
+
+// ---------- layout (measured once, before any transform is applied) ----------
+const SEC = $("section");
+const IMG_DIMS = [[1024, 679], [1024, 496], [1024, 675]];
+const IMGS = [$("i1"), $("i2"), $("i3")];
+const L = {};
+
+function measure() {
+  const sr = SEC.getBoundingClientRect();
+  const r = el => {
+    const b = el.getBoundingClientRect();
+    return { x: b.left - sr.left, y: b.top - sr.top, w: b.width, h: b.height };
+  };
+  const nums = [$("n1"), $("n2"), $("n3")];
+  L.c = nums.map(n => {
+    const b = r(n);
+    return { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+  });
+  const h = r($("hair"));
+  L.hairL = h.x;
+  L.hairR = h.x + h.w;
+  L.m = [$("m1"), $("m2"), $("m3")].map(r);
+  // cover geometry: each photo is drawn exactly as object-fit: cover would draw it
+  L.g = L.m.map((m, i) => {
+    const [iw, ih] = IMG_DIMS[i];
+    const s = Math.max(m.w / iw, m.h / ih);
+    const ox = (m.w - iw * s) / 2;
+    const oy = (m.h - ih * s) / 2;
+    Object.assign(IMGS[i].style, { left: ox + "px", top: oy + "px", width: iw * s + "px", height: ih * s + "px" });
+    return { s, ox, oy };
+  });
+}
+// image pixel -> card pixel
+const tc = (i, x, y) => ({ x: x * L.g[i].s + L.g[i].ox, y: y * L.g[i].s + L.g[i].oy });
+// image-pixel rectangle -> card-pixel box
+const rc = (i, x0, y0, x1, y1) => {
+  const a = tc(i, x0, y0);
+  return { x: a.x, y: a.y, w: (x1 - x0) * L.g[i].s, h: (y1 - y0) * L.g[i].s };
+};
+function place(el, b) {
+  el.style.left = b.x + "px";
+  el.style.top = b.y + "px";
+  el.style.width = b.w + "px";
+  el.style.height = b.h + "px";
+}
+// camera: zoom s about a fixed card-pixel focal point (fx, fy)
+function camera(el, s, fx, fy) {
+  el.style.transform = `translate(${fx * (1 - s)}px, ${fy * (1 - s)}px) scale(${s})`;
+}
+
+// ---------- scene layout constants ----------
+const CATS = [[121, 238], [248, 365], [375, 492], [502, 619], [630, 747], [757, 874]]; // marketplace tiles, image px
+const CAT_Y0 = 345, CAT_Y1 = 471;
+const QR = [612, 114, 712, 214]; // right-hand phone QR, image px
+const CRATE_FOCUS = [460, 420];
+const MARKET_FOCUS = [500, 408];
+const QR_FOCUS = [661, 163];
+const BASKET_FOCUS = [560, 520];
+const CURSOR_PATH = [
+  { t: 7.0, x: 860, y: 330 },
+  { t: 7.5, x: 688, y: 408 }, // Tuber
+  { t: 8.1, x: 560, y: 408 }, // Pod
+  { t: 8.7, x: 433, y: 408 }  // Root
+];
+
+// Marker x across time: holds on each circle, glides between them
+function markerX(t) {
+  const c = L.c;
+  if (t < 5.9) return c[0].x;
+  if (t < 6.5) return lerp(c[0].x, c[1].x, ease(win(t, 5.9, 0.6)));
+  if (t < 9.6) return c[1].x;
+  if (t < 10.2) return lerp(c[1].x, c[2].x, ease(win(t, 9.6, 0.6)));
+  if (t < 13.1) return c[2].x;
+  return lerp(c[2].x, L.hairR, ease(win(t, 13.1, 0.6)));
+}
+// Marker scale: pops in, shrinks into a focus frame, pops back out, and so on
+function markerK(t) {
+  if (t < 2.0) return 0;
+  if (t < 2.4) return easeOut(win(t, 2.0, 0.4));
+  if (t < 3.4) return 1;
+  if (t < 3.6) return 1 - easeOut(win(t, 3.4, 0.2));
+  if (t < 5.6) return 0;
+  if (t < 5.8) return easeOut(win(t, 5.6, 0.2));
+  if (t < 6.5) return 1;
+  if (t < 6.7) return 1 - easeOut(win(t, 6.5, 0.2));
+  if (t < 9.4) return 0;
+  if (t < 9.6) return easeOut(win(t, 9.4, 0.2));
+  if (t < 10.6) return 1;
+  if (t < 10.8) return 1 - easeOut(win(t, 10.6, 0.2));
+  if (t < 12.9) return 0;
+  if (t < 13.1) return easeOut(win(t, 12.9, 0.2));
+  return 1 - easeOut(win(t, 14.2, 0.4));
+}
+
+function wordIn(el, p) {
+  el.style.transform = `translateY(${(1 - clamp01(p)) * 110}%)`;
+}
+function fadeUp(el, p, dy = 14) {
+  const q = clamp01(p);
+  el.style.opacity = q;
+  el.style.transform = `translateY(${(1 - q) * dy}px)`;
+}
+
+// ---------- frame render ----------
+function render(t) {
+  // Section heading and timeline
+  fadeUp($("eyebrow"), spring(t, 0.0), 10);
+  wordIn($("w1"), spring(t, 0.2));
+  wordIn($("w2"), spring(t, 0.32));
+  wordIn($("w3"), spring(t, 0.44));
+  $("ulp").style.strokeDashoffset = 100 * (1 - easeOut(win(t, 0.9, 0.6)));
+  fadeUp($("lede"), spring(t, 0.9));
+  $("hair").style.transform = `scaleX(${ease(win(t, 1.2, 1.0))})`;
+
+  // Circles appear in turn, then activate with their step
+  [[1.5, 3.1], [1.8, 6.5], [2.1, 10.2]].forEach(([appear, activate], i) => {
+    const n = $("n" + (i + 1));
+    const p = clamp01(spring(t, appear));
+    n.style.opacity = p;
+    n.style.transform = `scale(${0.6 + 0.4 * p})`;
+    $("f" + (i + 1)).style.opacity = easeOut(win(t, activate, 0.3));
+    $("t" + (i + 1)).style.color = t > activate + 0.12 ? "#FFFFFF" : "#457D00";
+  });
+
+  // Progress line behind the circles: starts at circle 01, follows the marker
+  const mx = markerX(t);
+  const fillOn = win(t, 2.6, 0.2) * (1 - ease(win(t, 14.0, 0.6)));
+  const hf = $("hairfill");
+  hf.style.left = L.c[0].x + "px";
+  hf.style.top = L.c[0].y - 1 + "px";
+  hf.style.width = Math.max(0, mx - L.c[0].x) + "px";
+  hf.style.opacity = fillOn;
+
+  // Marker and focus frame
+  const k = markerK(t);
+  const mk = $("marker");
+  mk.style.left = mx + "px";
+  mk.style.top = L.c[0].y + "px";
+  mk.style.transform = `scale(${k})`;
+  mk.style.opacity = t > 14.2 ? 1 - win(t, 14.2, 0.4) : 1;
+
+  const cardRect = L.m[0];
+  const dotBox = { x: L.c[0].x - 8, y: L.c[0].y - 8, w: 16, h: 16 };
+  const frameBox = { x: cardRect.x + 16, y: cardRect.y + 16, w: cardRect.w - 32, h: cardRect.h - 32 };
+  const enter = ease(win(t, 3.4, 0.6));
+  const exit = ease(win(t, 5.4, 0.4));
+  const fb = {};
+  for (const key of ["x", "y", "w", "h"]) {
+    fb[key] = lerp(lerp(dotBox[key], frameBox[key], enter), dotBox[key], exit);
+  }
+  const focus = $("focus");
+  place(focus, fb);
+  focus.style.opacity = win(t, 3.5, 0.3) * (1 - win(t, 5.5, 0.25));
+
+  // Card 01 - SOURCE
+  $("m1").style.clipPath = `inset(${(1 - easeOut(win(t, 3.1, 0.8))) * 100}% 0 0 0 round 16px)`;
+  wordIn($("h1"), spring(t, 3.5));
+  fadeUp($("d1"), spring(t, 3.8));
+  const s1 = 1 + 0.12 * ease(win(t, 3.4, 2.6)) - 0.12 * ease(win(t, 6.0, 0.6));
+  const f1 = tc(0, CRATE_FOCUS[0] + 6 * win(t, 3.4, 5), CRATE_FOCUS[1]);
+  camera($("z1"), s1, f1.x, f1.y);
+
+  // Card 02 - DISCOVER
+  $("m2").style.clipPath = `inset(0 ${(1 - ease(win(t, 6.3, 1.1))) * 100}% 0 0 round 16px)`;
+  wordIn($("h2"), spring(t, 7.0));
+  fadeUp($("d2"), spring(t, 7.4));
+  const s2 = 1 + 0.2 * ease(win(t, 7.1, 1.5)) - 0.2 * ease(win(t, 9.4, 0.5));
+  const f2 = tc(1, MARKET_FOCUS[0], MARKET_FOCUS[1]);
+  camera($("z2"), s2, f2.x, f2.y);
+
+  const cur = path(t, CURSOR_PATH.map(p => ({ t: p.t, x: p.x, y: p.y })));
+  const cp = tc(1, cur.x, cur.y);
+  const curEl = $("cur");
+  curEl.style.left = cp.x - 2.7 + "px";
+  curEl.style.top = cp.y - 2.3 + "px";
+  curEl.style.opacity = win(t, 7.0, 0.3) * (1 - win(t, 9.9, 0.2));
+
+  const hiBox = rc(1, CATS[2][0] - 5, CAT_Y0 - 5, CATS[2][1] + 5, CAT_Y1 + 5);
+  const hi = $("hi");
+  place(hi, hiBox);
+  hi.style.opacity = win(t, 9.2, 0.25) * (1 - win(t, 10.0, 0.25));
+  hi.style.transform = `scale(${0.96 + 0.04 * clamp01(spring(t, 9.2))})`;
+
+  const rippleP = win(t, 9.2, 0.4);
+  const rc0 = tc(1, (CATS[2][0] + CATS[2][1]) / 2, 408);
+  const rip = $("rip");
+  rip.style.left = rc0.x + "px";
+  rip.style.top = rc0.y + "px";
+  rip.style.transform = `scale(${0.3 + 1.4 * easeOut(rippleP)})`;
+  rip.style.opacity = t >= 9.2 && t < 9.6 ? 0.8 * (1 - rippleP) : 0;
+
+  // Card 03 - COLLECT
+  $("m3").style.clipPath = `inset(${(1 - easeOut(win(t, 10.2, 0.8))) * 100}% 0 0 0 round 16px)`;
+  wordIn($("h3"), spring(t, 10.9));
+  fadeUp($("d3"), spring(t, 11.2));
+  const A = ease(win(t, 10.8, 1.4)), B = ease(win(t, 12.2, 0.7)), C = ease(win(t, 12.9, 0.9));
+  const s3 = 1 + 0.3 * A - 0.12 * B - 0.18 * C;
+  const qf = [lerp(QR_FOCUS[0], BASKET_FOCUS[0], B), lerp(QR_FOCUS[1], BASKET_FOCUS[1], B)];
+  const f3 = tc(2, qf[0], qf[1]);
+  camera($("z3"), s3, f3.x, f3.y);
+
+  const qrBox = rc(2, QR[0], QR[1], QR[2], QR[3]);
+  const qrEl = $("qr");
+  place(qrEl, qrBox);
+  const scanIn = win(t, 11.3, 0.25) * (1 - win(t, 12.8, 0.25));
+  qrEl.style.opacity = scanIn;
+  qrEl.style.background = `rgba(69, 125, 0, ${0.16 * Math.sin(Math.PI * win(t, 12.2, 0.6))})`;
+  qrEl.style.transform = `scale(${1 - 0.07 * Math.sin(Math.PI * win(t, 12.2, 0.5))})`;
+  const scan = $("scan");
+  scan.style.top = 6 + (qrBox.h - 14) * win(t, 11.5, 0.7) + "px";
+  scan.style.opacity = t >= 11.5 && t < 12.3 ? 0.9 : 0;
+
+  // Whole section: gentle push before the pull-back to the original framing
+  const bump = ease(win(t, 12.2, 0.8)) * (1 - ease(win(t, 13.0, 1.5)));
+  SEC.style.transform = `scale(${1 + 0.035 * bump})`;
+}
+
+window.seek = t => render(t);
+window.ready = false;
+document.fonts.ready.then(() => {
+  let pending = IMGS.length;
+  const done = () => {
+    measure();
+    render(0);
+    window.ready = true;
+  };
+  IMGS.forEach(img => {
+    if (img.complete) {
+      if (--pending === 0) done();
+    } else {
+      img.onload = () => { if (--pending === 0) done(); };
+    }
+  });
+});
+
+// ---------- soundtrack (rendered offline, 120 BPM) ----------
+window.renderAudio = async () => {
+  const SR = 44100, DUR = 15;
+  const ctx = new OfflineAudioContext(2, SR * DUR, SR);
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, 0);
+  master.gain.linearRampToValueAtTime(0.9, 0.3);
+  master.gain.setValueAtTime(0.9, 14.2);
+  master.gain.linearRampToValueAtTime(0, DUR);
+  master.connect(ctx.destination);
+
+  const noiseBuf = ctx.createBuffer(1, SR * 0.5, SR);
+  const nd = noiseBuf.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+  const tone = (type, f, t0, dur, g, f2) => {
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(f, t0);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    const e = ctx.createGain();
+    e.gain.setValueAtTime(0.0001, t0);
+    e.gain.exponentialRampToValueAtTime(g, t0 + 0.01);
+    e.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(e).connect(master);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  };
+  const click = (t0, dur, g, hp) => {
+    const s = ctx.createBufferSource();
+    s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter();
+    f.type = "highpass";
+    f.frequency.value = hp;
+    const e = ctx.createGain();
+    e.gain.setValueAtTime(g, t0);
+    e.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    s.connect(f).connect(e).connect(master);
+    s.start(t0);
+    s.stop(t0 + dur + 0.02);
+  };
+
+  const BEAT = 0.5;
+  for (let b = 0; b * BEAT < 14.5; b++) tone("sine", 120, b * BEAT, 0.25, 0.45, 45); // kick on every beat
+  for (let e = 0; e * BEAT < 14.5; e++) click(e * BEAT + BEAT / 2, 0.05, 0.05, 7000); // offbeat hats
+
+  // Am - F - C - G, one bar every 2 s
+  const CH = [[220, 261.63, 329.63, 110], [174.61, 220, 261.63, 87.31], [261.63, 329.63, 392, 130.81], [196, 246.94, 293.66, 98]];
+  for (let bar = 0; bar * 2 < 15; bar++) {
+    const c = CH[bar % 4];
+    const t0 = bar * 2;
+    tone("sine", c[3], t0, 0.6, 0.16);
+    tone("sine", c[3], t0 + 1.0, 0.6, 0.14);
+    for (let k = 0; k < 8; k++) tone("triangle", c[k % 3] * 2, t0 + k * 0.25, 0.5, 0.05);
+  }
+
+  // Accent chimes on the three step beats and the finish
+  [3.0, 6.0, 10.0, 13.0].forEach(t0 => {
+    tone("sine", 880, t0, 0.8, 0.09);
+    tone("sine", 1320, t0 + 0.02, 0.7, 0.05);
+  });
+  // Interface clicks: circle activations and the cursor press
+  [3.1, 6.5, 9.2, 10.2].forEach(t0 => click(t0, 0.02, 0.12, 2000));
+  // Scan sound and success chirp
+  tone("sine", 1800, 11.5, 0.7, 0.05, 2600);
+  tone("sine", 2400, 11.9, 0.08, 0.06);
+  tone("sine", 2400, 12.1, 0.08, 0.06);
+  tone("sine", 1320, 12.3, 0.25, 0.07);
+  tone("sine", 1760, 12.42, 0.3, 0.07);
+
+  const buf = await ctx.startRendering();
+  const ch = buf.numberOfChannels, len = buf.length, sr = buf.sampleRate;
+  const view = new DataView(new ArrayBuffer(44 + len * ch * 2));
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); view.setUint32(4, 36 + len * ch * 2, true); str(8, "WAVE");
+  str(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, ch, true); view.setUint32(24, sr, true); view.setUint32(28, sr * ch * 2, true);
+  view.setUint16(32, ch * 2, true); view.setUint16(34, 16, true);
+  str(36, "data"); view.setUint32(40, len * ch * 2, true);
+  const chans = [];
+  for (let c = 0; c < ch; c++) chans.push(buf.getChannelData(c));
+  let o = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < ch; c++) {
+      const s = Math.max(-1, Math.min(1, chans[c][i]));
+      view.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      o += 2;
+    }
+  }
+  const bytes = new Uint8Array(view.buffer);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+};
+</script>
+</body>
+</html>

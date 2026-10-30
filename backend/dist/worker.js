@@ -28525,11 +28525,6 @@ var twoFactor = pgTable("two_factor", {
   failedVerificationCount: integer("failed_verification_count").default(0).notNull(),
   lockedUntil: timestamp("locked_until")
 }, (table) => [index("two_factor_user_id_idx").on(table.userId)]);
-var seller_type_enum = pgEnum2("seller_type", [
-  "supplier",
-  "supplier_vendor",
-  "retail_vendor"
-]);
 var sellers_profile = pgTable("sellers_profile", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -28538,7 +28533,6 @@ var sellers_profile = pgTable("sellers_profile", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
-  sellerType: seller_type_enum("seller_type").default("supplier").notNull(),
   pickupInstructions: text("pickup_instructions"),
   isCurrent: boolean("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
