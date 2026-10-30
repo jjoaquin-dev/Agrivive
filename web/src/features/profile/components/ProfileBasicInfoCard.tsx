@@ -90,7 +90,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="e.g. Maria"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </Field>
           <Field>
@@ -103,7 +103,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="e.g. Santos"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </Field>
         </div>
@@ -144,7 +144,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+63 9XX XXX XXXX"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </div>
         </Field>

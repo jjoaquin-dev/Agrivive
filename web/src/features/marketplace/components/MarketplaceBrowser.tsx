@@ -179,7 +179,7 @@ function MarketplaceBrowserContent() {
 
               {/* Mobile Filter Drawer */}
               <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
-                <SheetContent side="left" className="w-[310px] overflow-y-auto p-4 sm:max-w-md">
+                <SheetContent data-lenis-prevent side="left" className="w-[310px] overflow-y-auto p-4 sm:max-w-md">
                   <SheetHeader className="border-none px-1 pb-3">
                     <SheetTitle className="text-base text-[#457D00]">Filter Produce</SheetTitle>
                   </SheetHeader>

@@ -19,6 +19,11 @@ const config: Config = {
       "9xl": ["7.5rem", { lineHeight: "1" }],
     },
     extend: {
+      transitionTimingFunction: {
+        pop: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        settle: "cubic-bezier(0.215, 0.61, 0.355, 1)",
+        glide: "cubic-bezier(0.455, 0.03, 0.515, 0.955)",
+      },
       colors: {
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
@@ -56,7 +61,7 @@ const config: Config = {
           background: "#F8F6F1",
           surface: "#FFFFFF",
           text: "#202622",
-          muted: "#6F776F",
+          muted: "#636B63",
           sage: "#96B125",
           olive: "#C6C736",
           terracotta: "#FEA938",
@@ -68,11 +73,11 @@ const config: Config = {
         },
       },
       fontFamily: {
-        brand: ["var(--font-brand)", "var(--font-heading)", "Poppins", "sans-serif"],
-        heading: ["var(--font-heading)", "Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
-        subheading: ["var(--font-subheading)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
-        body: ["var(--font-body)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
-        sans: ["var(--font-body)", "Lato", "ui-sans-serif", "system-ui", "sans-serif"],
+        brand: ["var(--font-parkinsans)", "var(--font-brand)", "Poppins", "sans-serif"],
+        heading: ["var(--font-jakarta)", "var(--font-heading)", "Poppins", "sans-serif"],
+        subheading: ["var(--font-jakarta)", "var(--font-subheading)", "Lato", "sans-serif"],
+        body: ["var(--font-jakarta)", "var(--font-body)", "Lato", "sans-serif"],
+        sans: ["var(--font-jakarta)", "var(--font-body)", "Lato", "sans-serif"],
       },
       boxShadow: {
         auth: "0 24px 70px rgba(31, 77, 58, 0.14)",

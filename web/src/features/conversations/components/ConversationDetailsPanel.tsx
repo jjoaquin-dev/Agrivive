@@ -26,6 +26,7 @@ export function ConversationDetailsPanel({
 
   return (
     <aside
+      data-lenis-prevent
       className={`flex h-full w-full flex-col overflow-y-auto rounded-[24px] border border-neutral-200/80 bg-white p-5 shadow-xs ${className}`}
       aria-label="Conversation details"
     >

@@ -121,7 +121,7 @@ export function ConversationInput({
           maxLength={2000}
           rows={2}
           disabled={sending}
-          className="w-full resize-none rounded-xl border-[0.5px] border-[#DCDED5] bg-white px-3 py-2 text-xs text-[#202E1B] shadow-2xs outline-none transition-colors placeholder:text-[#9EA899] focus:border-[#C4C9BC] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
+          className="w-full resize-none rounded-xl border-[0.5px] border-[#DCDED5] bg-white px-3 py-2 text-xs text-[#202E1B] shadow-2xs outline-none transition-colors placeholder:text-[#6B736B] focus:border-[#C4C9BC] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
         />
         <input
           type="file"

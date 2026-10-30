@@ -43,11 +43,12 @@ export function PasswordInput({
           id={id}
           type={visible ? "text" : "password"}
           aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
           className={cn(
-            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white pl-11 pr-12 text-sm font-medium text-[#14231A] shadow-2xs transition-all placeholder:text-[#5F7367]/50",
-            "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
+            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white pl-11 pr-14 text-sm font-medium text-[#14231A] shadow-2xs transition-all placeholder:text-[#5F7367]",
+            "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40 focus-visible:ring-offset-0",
             "[&::-ms-reveal]:hidden [&::-ms-clear]:hidden",
-            error && "border-destructive/80 focus:border-destructive focus:ring-0",
+            error && "border-destructive/80 focus:border-destructive focus-visible:ring-destructive/40",
             className,
           )}
         />
@@ -55,13 +56,13 @@ export function PasswordInput({
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Hide password" : "Show password"}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[#5F7367] hover:bg-[#F7FAF2] hover:text-[#457D00] transition-colors focus-visible:outline-none"
+          className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-[#5F7367] hover:bg-[#F7FAF2] hover:text-[#457D00] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
         >
           {visible ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
         </button>
       </div>
       {error && (
-        <p role="alert" className="text-xs font-medium text-destructive">
+        <p id={`${id}-error`} role="alert" className="text-xs font-medium text-destructive">
           {error}
         </p>
       )}

@@ -1,0 +1,562 @@
+/home/jarajoaquinjara/projects/Agrivive/.claude/CLAUDE.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/mobile-design/DESIGN-LAYOUT.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/mobile-design/DESIGN.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/web-design/DESIGN-LAYOUT.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/web-design/DESIGN.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/rules/design-replication-rule/RULE.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/design-taste-frontend/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/ai-sdk.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/astro.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/better-auth.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/cloudflare-worker.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/deno.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/drizzle.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/expo.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/nextjs.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/nodejs.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/nuxt.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/prisma.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/react-email.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/sveltekit.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/tanstack-start.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/integrations/vercel.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/patterns/mvc.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/bearer.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/cors.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/cron.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/graphql-apollo.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/graphql-yoga.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/html.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/jwt.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/openapi.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/opentelemetry.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/server-timing.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/plugins/static.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/bun-fullstack-dev-server.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/cookie.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/deployment.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/eden.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/lifecycle.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/macro.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/plugin.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/route.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/testing.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/validation.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/elysiajs/references/websocket.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ios-design/MODIFICATIONS.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ios-design/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ios-design/reference/craft.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ios-design/reference/overdrive.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ios-design/references/uizze-reference-policy.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/class-mapping.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/consumer-props.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/disclosure.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/display-misc.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/form-controls.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/menus.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/overlays.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/universal-patterns.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/migrate-radix-to-base/wrapper-shapes.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/POWER.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-analyze-app.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-analyze-js.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-barrel-exports.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-code-splitting.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-hermes-mmap.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-library-size.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-native-assets.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-r8-android.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/bundle-tree-shaking.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-animations-reanimated.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-atomic-state.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-bottomsheet.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-concurrent-react.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-lists-flatlist-flashlist.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-measure-fps.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-memory-leaks.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-profile-react.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-react-compiler.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/js-uncontrolled-components.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-android-16kb-alignment.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-measure-tti.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-memory-leaks.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-memory-patterns.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-platform-setup.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-profiling.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-sdks-over-polyfills.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-threading-model.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-turbo-modules.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/native-view-flattening.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/AI-AND-LLM.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/ATTACK-CLASSES.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/CLIENT-SIDE.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/CLOUD-AND-DEPLOYMENT.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/DATA-ISOLATION-AND-LIFECYCLE.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/DESKTOP-MOBILE-AND-LOCAL-IPC.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/HUNTING.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/MEMORY-SAFETY-AND-BINARY.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/PROTOCOLS-RPC-AND-MESSAGING.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/RECONNAISSANCE.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/RESOURCE-EXHAUSTION-AND-AVAILABILITY.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/SUPPLY-CHAIN-AND-RELEASE.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/VALIDATION-AND-REPORTING.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/security-audit/WEB-PROTOCOL-AND-AUTH.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/cli.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/customization.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/mcp.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/registry.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/rules/base-vs-radix.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/rules/chat.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/rules/composition.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/rules/forms.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/rules/icons.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/rules/styling.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/MODIFICATIONS.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/SKILL.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/audit.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/craft.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/distill.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/ios.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/new-work.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/operate.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/overdrive.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/reference/polish.md
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/ui-taste/references/uizze-reference-policy.md
+/home/jarajoaquinjara/projects/Agrivive/AGENTS.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/00 Home.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/01 Foundation/Goals and Boundaries.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/01 Foundation/People and Roles.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/01 Foundation/Problem and Evidence.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/01 Foundation/Project Brief.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/02 Product/Feature Map.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/02 Product/Product Journeys.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/02 Product/Reservation and QR Pickup.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/03 Intelligence/Contextual Advisories.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/03 Intelligence/Marketing Boost.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/03 Intelligence/Seller Analytics.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/03 Intelligence/Trust and Flagging.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/03 Intelligence/Weighted Surplus Visibility.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Direct Order Backend.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 ElysiaJS Skill.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Mobile Design System.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Module Layout Convention.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Secret Handling Guide.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Seller Onboarding Concept.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Seller Product Duplicate Guard.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-20 Vault Creation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Avatar Multipart Upload Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Mobile Field Validation Guidance.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Private S3 Avatar Display.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 S3 Standard Upload URLs.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Seller Mobile Inventory.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Seller Mobile Onboarding Auth Profile.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Seller Product Full CRUD.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Seller Profile CRUD.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Seller Verification and Trust Backend.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-21 Weighted Surplus Visibility API.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Buyer Marketplace Backend.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Buyer Web Authentication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Buyer Web Design and Skills.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Contextual Advisories.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Mobile CI Workflow.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Seller Analytics Groq.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Seller Communication and Notifications.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Seller Mobile Orders.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-22 Seller Price Reduction.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Auth Marketplace Return Flow.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Login Navigation Performance.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Marketplace Request Race Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Multi-Store Cart Checkout.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Session Profile Header.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Web CORS Local Origins.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Web Lucide Icon System.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Web Marketplace MVP.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Web Marketplace Reference Layout.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Web Signup Email OTP.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer Web UX Principles.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-24 Buyer and Seller Order Polling.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Agrivive Advertisement Preparation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Marketplace Header.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Marketplace Storefront Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Marketplace UI Cleanup.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Product Reviews Backend.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Product Reviews Frontend.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Profile Refinement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Seller Storefront.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Auth Polish.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Marketplace Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Orders Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Orders Suite Redesign and UX Laws.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Product Card Polish.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Product Detail Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Profile Polish and Per-Field Errors.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Profile.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Buyer Web Shadcn Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Frontend Design Taste Skill.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Source File Length Limit.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-26 Typography Alignment and Icon Harmonization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Analytics and Advisory Fixes.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Backend Completion Batch.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Buyer Profile Header Sign Out Removal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Frontend Feature Integration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Mobile Login and Marketplace Visibility Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 OTP Profile Setup Redirect Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Seller GPS Address Autofill.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Shelf-Life Planning Removal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-09-28 Web GitHub Actions Workflow.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-03 Buyer Profile Image Upload.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-03 Buyer UI Reference Research.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-03 Buyer Wishlist Heart.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-03 Full Interactive Mapping.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-03 One-shot Integration Completion.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-06 Leaflet Marker Asset Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-06 Product Detail Full Screen UI.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-06 Requirement Verification Record.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-06 Seller Follows and Quality Completion.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-07 Priority Listing Promotions with n8n.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-07 VPS CD Workflows.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-07 Visibility Cycle Label.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-08 Groq Social Draft 400 Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-08 Seller Boost Visibility Social Publishing.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-10 Recommendation Scope Cleanup.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-11 AHP-TOPSIS Visibility Implementation Plan.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-11 Notification Delivery and Scalability.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-11 Real-time Buyer Seller Conversations.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-11 Trust and Flagging Policy Enforcement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-11 Vegetable Catalog and Naming.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 Agrivive Landing Page Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 Brand Illustration Generation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 Docker VPS Deployment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 Expo Go Notification Compatibility.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 Inventory Search Keyboard Focus Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 UI Enhancement and Nano Banana 3D Mascot System.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-12 Web OAuth and Trust Completion.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-13 GitHub Mobile Preview Dependency Cache.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-13 Mobile EAS Release Configuration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-13 Seller Visibility Boost Status and History.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-13 Social Boost Preview Restored.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-13 VPS Docker Pull Rebuild Reset Runbook.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-13 Visibility Boost Webhook Diagnostics.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-16 AHP-TOPSIS Marketing Boost Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-16 Feature Enhancements Vault Creation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-16 Google OAuth Password Setup Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-16 Trust and Flagging Gap Analysis and Enhancements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-17 Mobile and Backend Flow Enhancements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-18 AHP-TOPSIS Visibility Functional Test Cases.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-18 Full Flagging and Trust Mechanism Implementation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-18 Partial Pickup and Stock Auto-Restoration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-19 Chat Attachments Avatars and Marketplace Map Pinpoint Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-19 Next.js Remote Images and S3 Presigned URLs Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-19 Promotional Posting Price Inclusion in n8n and Social Campaigns.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-19 n8n Priority Promotion Functional Test Suite.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Aging Produce Stock Guard, Instagram Permalink Fix, and Visibility Guide Priority Ordering.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Descriptive Sales Trend Alignment with Proposal Framework.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Descriptive Sales Trend Analytics Test Cases.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Handover Verification Loading Fix and Quantity Stepper Refinement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Market Pulse Landing Integration and Session Route Guards.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Meta Graph API and Instagram Business Setup.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Mobile Splash Screen, App Icon, and App Name Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Mobile UI-UX Navigation Placement and Keyboard Overlap Overhaul.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Product Archive and Dual-Role Account Fixes.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Public Stakeholder Analytics Total Dashboard and PDF Export.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Removal of Premature Post Suggestion on Product Creation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-20 Security Hardening and Cloudflare Audit Remediation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-22 AHP-TOPSIS and 12-Hour Price Reduction Promotion Eligibility Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 FAQ Section Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Final CTA Section Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Header and Footer Navigation Refinements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 How Agrivive Works Section Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Mobile Login Flow UI Replication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Popular Categories Card Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Simplified Root Docker Compose.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Standardized Product Card UI-UX Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Testimonial Section Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-24 Why Choose Agrivive Section Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 12-Hour Boost Eligibility and Notification Revert Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Allow Repeat Product Listings for Produce Batches.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Android APK Build and Firebase Push Notification Configuration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Authentication Pages Modern UI-UX Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 End-to-End Data Screen Pagination Across Mobile and Backend.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Find a Seller Nearby Subtle Palette Gradient.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Inventory and My Listings UI Replication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Login Hero 3D Burlap Sacks Market Illustration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Login Hero 3D Grocery Cart Illustration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Marketplace Filter Sidebar Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Marketplace Hero Banner 3D Scene Repositioning and Shadow Refinement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Marketplace Page Layout and Style Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Marketplace UI-UX Sections, Gradients, Typography, and Filter Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Mobile Clean White Background Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Mobile Login UI Enhancement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Mobile Messages Page UI Replication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Mobile Notifications Page UI Replication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Mobile Typography and Color System Consistency Audit.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Notification Mark As Read Bug Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Security TOTP Card Hierarchy Fix and Modularization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Seller Analytics Screen UI Enhancement with Gifted Charts.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Seller Dashboard UI Replication and Real Data Integration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Seller Profile Page UI Enhancement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Single Character OTP and TOTP Input Replication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-25 Weather and Holiday Advisory UI Enhancement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 AHP-TOPSIS and 12-Hour Boost Eligibility Flow.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Account Settings System Tabs Search and Pill Inputs Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 All Orders Page Tabs Cards and Dropdown Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Android POST_NOTIFICATIONS Permission and Push Registration Logging.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Buyer Account Menu Notifications and Messages Redundancy Removal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Extension Hydration Warning Suppression.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 General Font Inter Standardization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Linked Inquired Produce Reference and Card Height Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Marketplace Hero Categories Map and Product Card Refinements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Marketplace Visual Refinements and Spacing Harmonization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Message Input Inner Border Rounding and Soft Styling.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Message Seller Product Preview and Chat Flow.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Messages Back Navigation Design and Destination Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Messages Listing Reference and Seller Details Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Messages Page UI-UX Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Mobile Design Markdown Documentation Synchronization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Mobile and Backend Push Notification Pipeline Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Notification Modal Horizontal Scrollbar Removal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Notifications Page Visual Redesign and Card Accent Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Order Checkout Cart Clearance Infinite Loop Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Order Details Cards Redesign and Color Palette Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Order Details Stepper Explanation Banner and Expiration Cause.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Product Card Spacing Gaps and Typography Harmonization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Product Card Typography and Price Size Enhancement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Product Detail Image and Info Card Vertical Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Product Detail View Listing Page Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Reservation Details and Pickup Pass Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Search Header Category Dropdown Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Seller Profile Card Redesign and 4-Column Product Grid.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Seller Storefront Profile Avatar Size Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Shopping Cart UI-UX Modern Redesign.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Synchronous Cart State and Reservation Cleanup.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Systemwide Back Navigation Standardization and Consistency.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Systemwide FDFDFD Background Color Harmonization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Systemwide Textbox Pill Ratio Consistency.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Systemwide UI-UX Standards and Layout Harmonization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Unified Pill Capsule Tab Bar Styling.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 View Listing Design Alignment and Section Removal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Web Color Palette Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Web Profile TOTP Two-Factor Authentication.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Web Spacing, Padding, and Sizing Standards Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-26 Web Typography Nunito Header and PT Sans Body Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 12-Hour Boost Single Trigger and Analytics Warning Card.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Action Confirmation Modals for Sign Out, Cancel Reservation, and Reserve.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 All Orders In-Place Cancellation Modal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Android APK Cleartext Traffic and Network Security Policy Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Backend Performance and Security Hardening.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Better Auth Trusted Proxies and IP Resolution Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Boost History Pagination Implementation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Brand Logo Dual Variant Contrast Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Collapsible Visibility Guide Cards.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Discounted Price Preview Post Button and Triggers.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Expo Go Notification Native Module Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Facebook Page Public Visibility and Permanent Token.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Google Login Pill Button and Facebook OAuth Retirement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Header Brand Logo Proportions and Height Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Landing Page Hero Seller App Outline Button.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Landing Page How It Works Step 2 Image Update.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Landing Page Mascot Removal and Clean Modernization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Marketplace Hero Farm Stall Photographic Background.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Marketplace Hero Typography Enhancement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Marketplace Seller Distance and Map Locator Integration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Messages Screen Horizontal Filter Scroll Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Mobile Google Sign-In Deep Link Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Mobile Pagination and Page Size Filter.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Mobile Screen Flow and Routing Architecture.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Mobile UI Screen Space Reclamation and Redundancy Removal.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Notification FlatList KeyExtractor and Date Sort Crash Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 PR 31 Merge Conflict Resolution.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Production API Domain Configuration for EAS APK.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Production Server Security and Performance Hardening.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Removal of Twitter X Boost Option.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Self-Sent Message Notification Bug Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Socials Restricted to Facebook and Instagram.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Unified Produce Bag Logo Across Web and Mobile.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Vegetable Crate Logo and Typography Refinement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 Web Typography Migration to Poppins and Lato.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-27 iOS Device Support and EAS Build Configuration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 All Orders Hold Expiration Time Display.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Facebook Timeline Message Parameter Alignment.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Google OAuth Account Chooser Prompt.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Human-Friendly Reservation and Trust Error Messages.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Landing Page Live Inventory Seller Produce Integration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Marketplace Seller Ratings Synchronization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Product Image Unconfigured Host Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Product Listing Pickup Details Google Directions.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Promotion Context Fast Path Performance Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Seller Follow Updates and Price Drop Notifications.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Seller Listing Events Migration and Production Sync.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 Seller Ratings Reviews and Reply Mobile Screen.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-28 n8n Signed Seller Flow Implementation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-29 Splash Screen Color Inversion Symmetry Fix.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-29 Web Landing GSAP Animation Integration.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/2026-10-30 Web Landing Audit Fixes.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Acceptance and Evaluation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Architecture and Integrations.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Current Implementation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Delivery Roadmap.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Landscape and Feasibility.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Open Decisions.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/04 Delivery/Source and Reading Guide.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/00 Feature Enhancements Index.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/02 Marketplace Visibility and AHP-TOPSIS Refinements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/03 Order Lifecycle and Smart Reservation Reconciliation.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/04 Seller Operations and Multi-Channel Promotion.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/05 Mobile and Backend Flow Enhancements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/06 Web Landing Page UI-UX Enhancements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/07 Web Buyer Notification Popover Enhancements.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/08 Web Production Performance Optimization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/09 Mobile Production Performance Optimization.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/10 Web Public Marketplace Overview and Analytics.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/00 Audits and Discrepancies Index.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/01 Flagging and Trust Discrepancies.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/02 Flagging and Trust Scope Narrowed.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/03 Flagging and Trust Features Needing Enhancement.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/04 Flagging and Trust Functional Test Cases.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/05 AHP-TOPSIS Visibility Functional Test Cases.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/06 n8n Priority Promotion and Price Reduction Functional Test Cases.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/06 Audits and Discrepancies/07 Descriptive Sales Trend Analytics Functional Test Cases.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/Welcome.md
+/home/jarajoaquinjara/projects/Agrivive/backend/API_ENDPOINTS.md
+/home/jarajoaquinjara/projects/Agrivive/backend/BACKEND.MD
+/home/jarajoaquinjara/projects/Agrivive/backend/README.md
+/home/jarajoaquinjara/projects/Agrivive/deploy/README.md
+/home/jarajoaquinjara/projects/Agrivive/mobile/AGENTS.md
+/home/jarajoaquinjara/projects/Agrivive/mobile/CLAUDE.md
+/home/jarajoaquinjara/projects/Agrivive/mobile/README.md
+/home/jarajoaquinjara/projects/Agrivive/outputs/test.html
+/home/jarajoaquinjara/projects/Agrivive/web/AGENTS.md
+/home/jarajoaquinjara/projects/Agrivive/Agrivive/05 Enhancements/01 Descriptive Sales Trend Analytics Enhancements.md
+/home/jarajoaquinjara/projects/Agrivive/outputs/Agrivive_AHP_TOPSIS_Engine.pdf
+/home/jarajoaquinjara/projects/Agrivive/outputs/test_reportlab.pdf
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/mobile-design/agrivive-logo-full.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/mobile-design/agrivive-logo-icon.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/mobile-design/seller-onboarding-concept-v2.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/design/mobile-design/seller-onboarding-concept.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/bundle-treemap-source-map-explorer.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/controlled-textinput-pingpong.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/devtools-flamegraph.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/emerge-xray-ios.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/expo-atlas-treemap.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/flashlight-flatlist-vs-flashlist.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/fps-drop-graph.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/memory-heap-snapshot.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/tti-warm-start-diagram.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/view-hierarchy-flattening.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/xcode-instruments-templates.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/mobile/references/images/xcode-thread-view.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/assets/shadcn-small.png
+/home/jarajoaquinjara/projects/Agrivive/.claude/skills/shadcn/assets/shadcn.png
+/home/jarajoaquinjara/projects/Agrivive/band1.png
+/home/jarajoaquinjara/projects/Agrivive/band2.png
+/home/jarajoaquinjara/projects/Agrivive/band3.png
+/home/jarajoaquinjara/projects/Agrivive/band4.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/agrivive-adaptive-foreground.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/agrivive-icon.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/agrivive-splash.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/android-icon-background.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/android-icon-foreground.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/android-icon-monochrome.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/brand/Agrivive_Logo.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/brand/agrivive-logo-full.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/brand/agrivive-logo-icon.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/favicon.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/icon.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/onboarding/onboarding-1.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/onboarding/onboarding-2.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/onboarding/onboarding-3.png
+/home/jarajoaquinjara/projects/Agrivive/mobile/assets/splash-icon.png
+/home/jarajoaquinjara/projects/Agrivive/web/app/apple-icon.png
+/home/jarajoaquinjara/projects/Agrivive/web/app/icon.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/avatars/danilo.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/avatars/elena.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/avatars/grace.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/avatars/marcus.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/avatars/robert.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/avatars/susan.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/benefits/empower-communities.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/benefits/fight-food-waste.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/Agrivive_Logo.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-buyer-reserve.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-harvest-crates.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-bag-dark.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-bag.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-crate-dark.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-crate.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-full.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-icon-dark.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-logo-icon.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-market-day-hero.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-market-pulse.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-pickup.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-seller-listing.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-vegetable-basket-clean.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-vegetable-basket.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/agrivive-welcome-basket.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/all-veggie-slices-clean.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/buyer-market-auth.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-3d-carrot.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-3d-faq-veggies.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-3d-tomato.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-veggies-auth.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-veggies-footer.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-veggies-market.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/cute-veggies-order.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/floating-sliced-tomato-transparent.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/hero-scattered-veggies.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-expanded-fitted.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-expanded.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-farm-stall.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-fitted.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-sacks-veggies.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-sketch-banner.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/marketplace-hero-transparent.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/scattered-veggies-floating.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-basil-leaf.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-carrot-coin.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-carrot.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-cucumber-real.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-cucumber.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-onion.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-red-onion-ring.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-tomato-stem.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-tomato-wheel.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-tomato.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/slice-yellow-pepper.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/sliced-tomato-floating.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/tomato-slice-bottom.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/tomato-slice-juicy.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/tomato-slice-round.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/tomato-slice-top.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/veggie-slice-3.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/veggie-slice-4.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/veggie-slice-cluster-1.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/veggie-slice-cluster-2.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/brand/veggie-slice-cluster-3.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/bulb-vegetables.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/bulb-vegetables.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/fruit-vegetables.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/fruit-vegetables.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/leafy-greens.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/leafy-greens.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/pod-vegetables.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/pod-vegetables.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/root-vegetables.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/root-vegetables.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/tuber-vegetables.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/categories/tuber-vegetables.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/how-it-works/step-1-source.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/how-it-works/step-2-discover.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/how-it-works/step-3-collect.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/leaflet/marker-icon-2x.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/leaflet/marker-icon.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/leaflet/marker-shadow.png
+/home/jarajoaquinjara/projects/Agrivive/web/public/produce/green-ampalaya.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/produce/highland-carrots.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/produce/native-tomatoes.jpg
+/home/jarajoaquinjara/projects/Agrivive/web/public/produce/purple-eggplant.jpg

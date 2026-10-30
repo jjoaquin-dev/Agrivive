@@ -1,16 +1,19 @@
 import { Coins, ShieldCheck, MapPin, QrCode, SlidersHorizontal, Store } from "lucide-react";
 import { HomeWhySurplusBenefitCard } from "./HomeWhySurplusCard";
 
+// TODO(owner): name the survey and year behind the 95.1% and 97.6% figures. The caption shows once this is set.
+const STAT_SOURCE: string = "";
+
 export function HomeWhySurplus() {
   return (
     <section id="why-agrivive" className="bg-[#14231A] py-16 sm:py-24 border-b border-neutral-800 text-white overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header with Styled Agrivive Word */}
-        <div className="relative mx-auto max-w-3xl text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#B8EB5E]">
+        <div data-reveal className="relative mx-auto max-w-3xl text-center">
+          <span className="type-eyebrow text-[#B8EB5E]">
             Why Choose Agrivive
           </span>
-          <h2 className="mt-3 font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h2 className="type-section mt-3 font-heading text-white">
             Why Choose{" "}
             <span className="relative inline-block text-[#B8EB5E]">
               Agrivive
@@ -31,30 +34,27 @@ export function HomeWhySurplus() {
             </span>
             ?
           </h2>
-          <p className="mt-4 text-sm sm:text-base leading-relaxed text-neutral-300 max-w-2xl mx-auto">
-            The platform assists local vendors and buyers in Davao City by making surplus vegetable listings easier to track, helping reduce postharvest losses and connect supply with local demand.
+          <p className="type-lede mx-auto mt-4 max-w-2xl text-neutral-300">
+            Agrivive helps Davao City sellers and buyers find extra vegetables before they go to waste.
           </p>
         </div>
 
         {/* Bento Grid */}
         <div className="mt-12 sm:mt-16 grid grid-cols-1 gap-3.5 sm:gap-4 lg:grid-cols-12">
           {/* Row 1 - Horizontal Card 1: Visual & Verified Transparency */}
-          <div className="relative lg:col-span-7">
-            <div className="group relative flex flex-col justify-between overflow-hidden rounded-[26px] bg-[#FEA938] p-6 sm:p-8 text-neutral-950 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl h-full">
+          <div data-reveal className="relative lg:col-span-7">
+            <div className="group relative flex flex-col justify-between overflow-hidden rounded-[26px] bg-[#FEA938] p-6 sm:p-8 text-neutral-950 shadow-lg transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-2xl h-full">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center rounded-xl bg-black/10 px-3.5 py-1.5 font-heading text-xs font-bold text-neutral-900 backdrop-blur-md border border-black/15">
                     Visual &amp; Verified Transparency
                   </span>
-                  <span className="rounded-full bg-black/20 px-3 py-1 font-heading text-xs font-bold text-neutral-950">
-                    Buyer Guarantee
-                  </span>
                 </div>
-                <h3 className="mt-6 font-heading text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950">
+                <h3 className="type-card mt-6 font-heading text-neutral-950 sm:text-[1.75rem]">
                   Real-Time Photos and Verified Sellers
                 </h3>
-                <p className="mt-3 text-xs sm:text-sm leading-relaxed text-neutral-900/90 max-w-xl">
-                  Address common buying concerns by viewing recent product photographs (desired by 95.1% of buyers) and verified seller legitimacy details (preferred by 97.6%) upfront, giving you complete confidence before traveling or purchasing.
+                <p className="mt-3 text-sm sm:text-[15px] leading-relaxed text-neutral-900/90 max-w-xl">
+                  See recent product photos (wanted by 95.1% of buyers) and seller verification (wanted by 97.6%) before you travel or buy.
                 </p>
               </div>
 
@@ -69,15 +69,18 @@ export function HomeWhySurplus() {
                   <p className="mt-0.5 text-xs font-semibold text-neutral-900/80">Rely on Seller Verification</p>
                 </div>
               </div>
+              {STAT_SOURCE ? (
+                <p className="mt-4 text-xs font-semibold text-neutral-900/80">Source: {STAT_SOURCE}</p>
+              ) : null}
             </div>
           </div>
 
           {/* Row 1 - Small Card 1: Fight Food Waste */}
-          <div className="relative lg:col-span-5">
+          <div data-reveal className="relative lg:col-span-5">
             <HomeWhySurplusBenefitCard
               tag="Fight Food Waste"
               headline="Environmental Impact"
-              description="Directly combat local postharvest losses—which exceed 20% for key crops like cabbage, eggplant, and tomato—by giving surplus produce a productive purpose before spoilage occurs."
+              description="Good vegetables get a second chance to be eaten, not thrown away."
               bgType="image"
               imageSrc="/benefits/fight-food-waste.jpg"
               className="relative z-10 h-full"
@@ -91,17 +94,17 @@ export function HomeWhySurplus() {
             description="Purchase edible surplus produce at or near wholesale and buying prices, allowing you to access quality vegetables while keeping your costs low."
             bgType="cream"
             icon={<Coins className="size-6 text-[#B45309]" />}
-            className="lg:col-span-4"
+            revealed className="lg:col-span-4"
           />
 
           {/* Row 2 - Small Card 3: Empower Local Communities */}
           <HomeWhySurplusBenefitCard
             tag="Empower Local Communities"
             headline="Support Local Vendors"
-            description="Keep your spending within the regional agricultural ecosystem by directly backing hardworking suppliers and vendors from major local markets."
+            description="Your money stays in Davao and goes straight to local sellers."
             bgType="image"
             imageSrc="/benefits/empower-communities.jpg"
-            className="lg:col-span-4"
+            revealed className="lg:col-span-4"
           />
 
           {/* Row 2 - Small Card 4: Convenient Local Pickup */}
@@ -111,7 +114,7 @@ export function HomeWhySurplus() {
             description="Locate nearby surplus items quickly and pick them up at designated market stalls with minimal friction or confusion."
             bgType="sage"
             icon={<MapPin className="size-6 text-[#457D00]" />}
-            className="lg:col-span-4"
+            revealed className="lg:col-span-4"
           />
         </div>
       </div>

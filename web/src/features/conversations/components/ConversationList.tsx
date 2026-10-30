@@ -102,12 +102,12 @@ export function ConversationList({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name"
-          className="w-full rounded-full border border-[#E8EAE0] bg-[#FAF9F5] py-2 pl-9 pr-4 text-xs text-[#202E1B] placeholder:text-[#9EA899] outline-none transition focus:border-[#457D00] focus:ring-2 focus:ring-[#457D00]/15"
+          className="w-full rounded-full border border-[#E8EAE0] bg-[#FAF9F5] py-2 pl-9 pr-4 text-xs text-[#202E1B] placeholder:text-[#6B736B] outline-none transition focus:border-[#457D00] focus:ring-2 focus:ring-[#457D00]/15"
         />
       </div>
 
       {/* Conversations List */}
-      <div className="mt-3.5 flex-1 space-y-1.5 overflow-y-auto pr-1">
+      <div data-lenis-prevent className="mt-3.5 flex-1 space-y-1.5 overflow-y-auto pr-1">
         {loading ? (
           <div className="space-y-2 p-1">
             <div className="h-16 animate-pulse rounded-2xl bg-neutral-100" />

@@ -89,7 +89,7 @@ export function BuyerSiteHeader() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search vegetable name..."
-              className="w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
+              className="w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
             />
             <HeaderCategoryDropdown
               categories={navCategories}

@@ -1,0 +1,311 @@
+:root {
+  /* Lockup balance: cart height is about 1.4x the wordmark font size at every breakpoint (the header logo uses the same ratio). */
+  /* Mobile default (< 480px) */
+  --cart-w: 80px;
+  --cart-h: 64px;
+  --brand-font-size: 2.85rem;
+  --brand-gap: 13px;
+  --cart-overlap: -22px;
+}
+
+@media (min-width: 480px) {
+  :root {
+    --cart-w: 100px;
+    --cart-h: 80px;
+    --brand-font-size: 3.6rem;
+    --brand-gap: 13px;
+    --cart-overlap: -28px;
+  }
+}
+
+@media (min-width: 768px) {
+  :root {
+    --cart-w: 130px;
+    --cart-h: 104px;
+    --brand-font-size: 4.6rem;
+    --brand-gap: 13px;
+    --cart-overlap: -36px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --cart-w: 160px;
+    --cart-h: 128px;
+    --brand-font-size: 5.75rem;
+    --brand-gap: 13px;
+    --cart-overlap: -44px;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --cart-w: 185px;
+    --cart-h: 148px;
+    --brand-font-size: 6.6rem;
+    --brand-gap: 13px;
+    --cart-overlap: -51px;
+  }
+}
+
+/* Lenis Smooth Scroll Core Rules */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* ========================================================= */
+/* SPLASH SCREEN & BRAND STAGE                               */
+/* ========================================================= */
+.splash-skip #splash-container,
+.splash-skip #splash-skip {
+  display: none;
+}
+
+/* Overlay stays white but its content waits for the timeline's start frame. */
+.splash-pending #brand-stage {
+  visibility: hidden;
+}
+
+/* The header logo waits for the splash logo to land on it. */
+.splash-pending #header-logo {
+  visibility: hidden;
+}
+
+.viewport-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.brand-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--brand-gap);
+  transform-origin: center center;
+}
+
+.cart-box {
+  position: relative;
+  width: var(--cart-w);
+  height: var(--cart-h);
+  margin-right: var(--cart-overlap);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transform-origin: center bottom;
+}
+
+.cart-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.brand-text {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-parkinsans), sans-serif;
+  font-size: var(--brand-font-size);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  white-space: nowrap;
+  color: #457D00;
+}
+
+.char {
+  display: inline-block;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  color: #457D00;
+}
+
+.cart-fill { fill: #457D00; }
+.cart-stroke { stroke: #457D00; fill: none; }
+.cart-wheel { fill: #ffffff; stroke: #457D00; }
+.accent-cut { stroke: #ffffff; fill: none; }
+.veggie-fill { fill: #457D00; }
+.veggie-stroke { stroke: #457D00; fill: none; }
+.veggie-cutout { stroke: #ffffff; }
+
+#tile-grid {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  pointer-events: none;
+  z-index: 25;
+  overflow: hidden;
+}
+
+.tile {
+  background-color: #457D00;
+  opacity: 0;
+  width: calc(100% + 1px);
+  height: 100%;
+  margin-left: -0.5px;
+  will-change: opacity;
+}
+
+.elevated {
+  z-index: 30 !important;
+}
+
+/* Symmetrical Color Inversion on Green Surface. Not !important: the hold shimmer and the fly-to-header colour return are inline GSAP tweens that must win. */
+.is-inverted .cart-fill {
+  fill: #ffffff;
+}
+
+.is-inverted .cart-stroke {
+  stroke: #ffffff;
+  fill: none;
+}
+
+.is-inverted .cart-wheel {
+  fill: #457D00;
+  stroke: #ffffff;
+}
+
+.is-inverted .accent-cut {
+  stroke: #457D00;
+  fill: none;
+}
+
+.is-inverted .veggie-fill {
+  fill: #ffffff;
+}
+
+.is-inverted .veggie-stroke {
+  stroke: #ffffff;
+  fill: none;
+}
+
+.is-inverted .veggie-cutout {
+  stroke: #457D00;
+}
+
+.is-inverted #brand-text,
+.is-inverted .char {
+  color: #ffffff;
+}
+
+/* ========================================================= */
+/* HERO TOPOGRAPHIC & TEXTURE EFFECTS                        */
+/* ========================================================= */
+.hero-grain-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* The splash timeline hides these with gsap.set (strokeDashoffset: 1400) and draws them in. */
+.topo-line {
+  stroke-dasharray: 1400;
+  will-change: stroke-dashoffset;
+}
+
+/* Hero decoration is still: no infinite loops. The slices only move with the desktop scroll parallax in Hero.tsx. */
+.hero-glow {
+  transform: translate(-50%, -50%);
+  opacity: 0.22;
+}
+
+/* Anchor targets clear the fixed landing header without scripted offsets */
+section[id] {
+  scroll-margin-top: 112px;
+}
+
+/* ========================================================= */
+/* LANDING TYPE SCALE (fluid; weights stay within the 700 cap in tokens.css) */
+/* ========================================================= */
+.type-display {
+  font-size: clamp(2.25rem, 1.35rem + 3.9vw, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.type-section {
+  font-size: clamp(1.875rem, 1.35rem + 2.2vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.type-card {
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.type-lede {
+  font-size: clamp(0.9375rem, 0.88rem + 0.3vw, 1.125rem);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.type-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* FAQ answer panel: grid rows animate open height without measuring content in JS */
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-panel {
+    transition: none;
+  }
+}
+
+/* Header Scrolled Elevation */
+.header-scrolled {
+  box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.16), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+  border-color: rgba(69, 125, 0, 0.25) !important;
+}
