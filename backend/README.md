@@ -77,3 +77,9 @@ Buyer profile photo endpoints:
 
 - `GET /buyer/profile` returns the signed-in buyer profile and a signed display URL when a photo exists.
 - `POST /buyer/profile/avatar` accepts a `multipart/form-data` request with a `file` field. Accepted files are JPEG, PNG, or WebP up to 5 MB. The request requires an active buyer session and stores the image under the configured S3 avatar path.
+
+## Confirmed Boost posting
+
+After a seller adds a product, the mobile app asks **Boost** or **Not now**. Nothing is posted unless the seller taps **Boost**. The first Boost posts once; if the product has a price drop set, the 12-hour price job lowers the price and asks the seller again.
+
+Set `N8N_VISIBILITY_BOOST_WEBHOOK_URL`, `N8N_VISIBILITY_BOOST_SERVICE_TOKEN`, `SOCIAL_PUBLIC_API_URL`, `WEB_APP_URL` and the Meta page values in the backend's private `.env`. Import `n8n/workflows/agrivive-visibility-boost.json`, replace `YOUR_AGRIVIVE_API_HOST`, and attach one Header Auth credential (the same token) to the webhook and backend requests plus a Groq credential. The workflow holds no Meta token: the backend posts to the Facebook Page, stores the post log, and ends every post with a link to the product page (`WEB_APP_URL/marketplace/<id>`). The export is inactive until the owner configures it.

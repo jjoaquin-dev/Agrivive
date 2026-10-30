@@ -77,20 +77,5 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
 
   void sendSellerListingNotices().catch(() => {});
 
-  const webhookUrl = process.env.N8N_SELLER_FLOW_WEBHOOK_URL?.trim();
-  if (webhookUrl?.startsWith("https://")) {
-    void fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: result.id,
-        productName: result.productName,
-        price: result.productPrice,
-        event: "new_listing",
-      }),
-      signal: AbortSignal.timeout(5_000),
-    }).catch((error) => console.error("Failed to notify n8n seller flow webhook", error));
-  }
-
   return result;
 }

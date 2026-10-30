@@ -29732,6 +29732,17 @@ async function applySellerPromotionPriceReduction(tx, productId, now = new Date)
   return updated ? { before: current.productPrice, after: updated.productPrice } : null;
 }
 
+// src/utils/marketplace-url/index.ts
+function marketplaceUrl(productId) {
+  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
+  const path = `/marketplace/${productId}`;
+  try {
+    return base ? new URL(path, base).toString() : path;
+  } catch {
+    return path;
+  }
+}
+
 // src/utils/ahp-topsis/index.ts
 var criterionCount = 4;
 var consistencyRandomIndex = 0.9;
@@ -29938,15 +29949,6 @@ async function loadEligibleVisibilityCandidates(evaluatedAt) {
 }
 
 // src/utils/promotion-eligibility/index.ts
-function marketplaceUrl(productId) {
-  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
-  const path = `/marketplace/${productId}`;
-  try {
-    return base ? new URL(path, base).toString() : path;
-  } catch {
-    return path;
-  }
-}
 async function getPriorityPromotionEligibility(listingCycleId, options) {
   const evaluatedAt = new Date;
   const [target] = await db.select({
