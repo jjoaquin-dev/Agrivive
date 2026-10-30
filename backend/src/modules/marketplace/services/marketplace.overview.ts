@@ -1,74 +1,24 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   ordered_items,
   orders,
   sellers_product,
+  sellers_profile,
   user,
-  vegetable_catalog,
 } from "../../../db/schema";
 import type {
   MarketplaceOverviewRange,
   MarketplaceOverviewResponse,
   TopProduceItem,
-  ActivityTrendPoint,
 } from "../model/marketplace.overview";
-
-function getSampleTopProduce(range: MarketplaceOverviewRange): TopProduceItem[] {
-  const mult = range === "year" ? 52 : range === "month" ? 4 : 1;
-  return [
-    { id: "1", name: "Native Squash (Kalabasa)", category: "Fruit Vegetables", totalQuantity: 340 * mult, unit: "kg", orderCount: 48 * mult, totalValue: 10200 * mult },
-    { id: "2", name: "String Beans (Sitaw)", category: "Pod Vegetables", totalQuantity: 285 * mult, unit: "kg", orderCount: 42 * mult, totalValue: 14250 * mult },
-    { id: "3", name: "Eggplant (Talong)", category: "Fruit Vegetables", totalQuantity: 260 * mult, unit: "kg", orderCount: 39 * mult, totalValue: 11700 * mult },
-    { id: "4", name: "Bitter Gourd (Ampalaya)", category: "Fruit Vegetables", totalQuantity: 210 * mult, unit: "kg", orderCount: 31 * mult, totalValue: 14700 * mult },
-    { id: "5", name: "Pechay Tagalog", category: "Leafy Greens", totalQuantity: 195 * mult, unit: "kg", orderCount: 36 * mult, totalValue: 7800 * mult },
-    { id: "6", name: "Native Tomatoes (Kamatis)", category: "Fruit Vegetables", totalQuantity: 180 * mult, unit: "kg", orderCount: 33 * mult, totalValue: 9000 * mult },
-    { id: "7", name: "Green Cabbage (Repolyo)", category: "Leafy Greens", totalQuantity: 155 * mult, unit: "kg", orderCount: 24 * mult, totalValue: 9300 * mult },
-    { id: "8", name: "Okra (Lady Finger)", category: "Pod Vegetables", totalQuantity: 140 * mult, unit: "kg", orderCount: 22 * mult, totalValue: 5600 * mult },
-    { id: "9", name: "Sweet Potato (Kamote)", category: "Tuber Vegetables", totalQuantity: 125 * mult, unit: "kg", orderCount: 19 * mult, totalValue: 5000 * mult },
-    { id: "10", name: "Ginger (Luya)", category: "Root Vegetables", totalQuantity: 95 * mult, unit: "kg", orderCount: 17 * mult, totalValue: 7600 * mult },
-  ];
-}
-
-function getSampleTrends(range: MarketplaceOverviewRange): ActivityTrendPoint[] {
-  if (range === "week") {
-    return [
-      { label: "Mon", date: "Day 1", quantity: 280, orderCount: 35 },
-      { label: "Tue", date: "Day 2", quantity: 340, orderCount: 42 },
-      { label: "Wed", date: "Day 3", quantity: 310, orderCount: 38 },
-      { label: "Thu", date: "Day 4", quantity: 420, orderCount: 54 },
-      { label: "Fri", date: "Day 5", quantity: 490, orderCount: 63 },
-      { label: "Sat", date: "Day 6", quantity: 580, orderCount: 76 },
-      { label: "Sun", date: "Day 7", quantity: 460, orderCount: 58 },
-    ];
-  }
-  if (range === "year") {
-    return [
-      { label: "Jan", date: "2026-01", quantity: 1820, orderCount: 240 },
-      { label: "Feb", date: "2026-02", quantity: 2100, orderCount: 285 },
-      { label: "Mar", date: "2026-03", quantity: 2450, orderCount: 310 },
-      { label: "Apr", date: "2026-04", quantity: 2900, orderCount: 370 },
-      { label: "May", date: "2026-05", quantity: 3200, orderCount: 410 },
-      { label: "Jun", date: "2026-06", quantity: 3450, orderCount: 430 },
-      { label: "Jul", date: "2026-07", quantity: 3600, orderCount: 460 },
-      { label: "Aug", date: "2026-08", quantity: 3900, orderCount: 495 },
-      { label: "Sep", date: "2026-09", quantity: 4200, orderCount: 530 },
-      { label: "Oct", date: "2026-10", quantity: 4580, orderCount: 575 },
-    ];
-  }
-  return [
-    { label: "Week 1", date: "Oct 1 - Oct 7", quantity: 980, orderCount: 125 },
-    { label: "Week 2", date: "Oct 8 - Oct 14", quantity: 1150, orderCount: 148 },
-    { label: "Week 3", date: "Oct 15 - Oct 21", quantity: 1290, orderCount: 165 },
-    { label: "Week 4", date: "Oct 22 - Oct 28", quantity: 1420, orderCount: 182 },
-  ];
-}
+import { calculateRealTrends } from "./marketplace.overview.trends";
 
 export async function readMarketplaceOverview(range: MarketplaceOverviewRange = "month"): Promise<MarketplaceOverviewResponse> {
   const days = range === "week" ? 7 : range === "year" ? 365 : 30;
   const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const [users, listings, orderRows, cropRows, rescueRows, dbTopRows] = await Promise.all([
+  const [users, listings, orderRows, cropRows, rescueRows, dbTopRows, stalls, buyerSummary, activityTrends] = await Promise.all([
     db.select({
       sellers: sql<number>`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
       buyers: sql<number>`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`,
@@ -79,13 +29,12 @@ export async function readMarketplaceOverview(range: MarketplaceOverviewRange = 
     }).from(sellers_product),
     db.select({ status: orders.status, count: sql<number>`count(*)::int` }).from(orders).groupBy(orders.status),
     db.select({
-      category: vegetable_catalog.category,
+      category: sellers_product.productType,
       activeCount: sql<number>`count(*)::int`,
     })
       .from(sellers_product)
-      .innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id))
       .where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true)))
-      .groupBy(vegetable_catalog.category),
+      .groupBy(sellers_product.productType),
     db.select({
       totalRescuedQty: sql<number>`coalesce(sum(${ordered_items.quantity}), 0)::float`,
       totalOrders: sql<number>`count(distinct ${orders.id})::int`,
@@ -94,20 +43,38 @@ export async function readMarketplaceOverview(range: MarketplaceOverviewRange = 
       .innerJoin(orders, eq(ordered_items.ordersId, orders.id))
       .where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))),
     db.select({
-      name: ordered_items.productName,
-      category: vegetable_catalog.category,
+      name: sql<string>`coalesce(${ordered_items.productName}, ${sellers_product.productName})`,
+      category: sellers_product.productType,
       totalQuantity: sql<number>`coalesce(sum(${ordered_items.quantity}), 0)::float`,
       orderCount: sql<number>`count(distinct ${orders.id})::int`,
       totalValue: sql<number>`coalesce(sum(${ordered_items.subtotal}), 0)::float`,
     })
       .from(ordered_items)
       .innerJoin(orders, eq(ordered_items.ordersId, orders.id))
-      .innerJoin(sellers_product, eq(ordered_items.productId, sellers_product.id))
-      .innerJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id))
+      .leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id))
       .where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate)))
-      .groupBy(ordered_items.productName, vegetable_catalog.category)
+      .groupBy(sql`coalesce(${ordered_items.productName}, ${sellers_product.productName})`, sellers_product.productType)
       .orderBy(sql`sum(${ordered_items.quantity}) desc`)
       .limit(10),
+    db.select({
+      id: sellers_profile.id,
+      shopName: sellers_profile.shopName,
+      detailAddress: sellers_profile.detailAddress,
+      activeListings: sql<number>`count(distinct ${sellers_product.id}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`,
+      totalStockKg: sql<number>`coalesce(sum(${sellers_product.productQty}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable}), 0)::float`,
+    })
+      .from(sellers_profile)
+      .leftJoin(sellers_product, eq(sellers_profile.userId, sellers_product.userId))
+      .where(eq(sellers_profile.isCurrent, true))
+      .groupBy(sellers_profile.id, sellers_profile.shopName, sellers_profile.detailAddress)
+      .orderBy(desc(sql`count(distinct ${sellers_product.id}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})`))
+      .limit(6),
+    db.select({
+      totalBuyersWhoOrdered: sql<number>`count(distinct ${orders.buyersId})::int`,
+      completedPickups: sql<number>`count(*) filter (where ${orders.status} = 'completed')::int`,
+      activeOrders: sql<number>`count(*) filter (where ${orders.status} = 'pending')::int`,
+    }).from(orders),
+    calculateRealTrends(range),
   ]);
 
   const orderMap = Object.fromEntries(orderRows.map((r) => [r.status, Number(r.count)]));
@@ -115,7 +82,7 @@ export async function readMarketplaceOverview(range: MarketplaceOverviewRange = 
   const expired = orderMap.expired ?? 0;
   const cancelled = orderMap.cancelled ?? 0;
   const totalDecided = completed + expired + cancelled;
-  const fulfillmentRate = totalDecided > 0 ? Math.round((completed / totalDecided) * 100) : 98;
+  const fulfillmentRate = totalDecided > 0 ? Math.round((completed / totalDecided) * 100) : 100;
 
   const totalCrops = cropRows.reduce((acc, r) => acc + Number(r.activeCount), 0);
   const categoryBreakdown = cropRows.map((r) => ({
@@ -124,42 +91,117 @@ export async function readMarketplaceOverview(range: MarketplaceOverviewRange = 
     percentage: totalCrops > 0 ? Math.round((Number(r.activeCount) / totalCrops) * 100) : 0,
   }));
 
-  const hasLiveTopData = dbTopRows.length > 0;
-  const topProduce: TopProduceItem[] = hasLiveTopData
-    ? dbTopRows.map((row, idx) => ({
-        id: String(idx + 1),
-        name: row.name || "Produce item",
-        category: row.category || "General Produce",
-        totalQuantity: Math.round(Number(row.totalQuantity)),
-        unit: "kg",
-        orderCount: Number(row.orderCount),
-        totalValue: Math.round(Number(row.totalValue)),
-      }))
-    : getSampleTopProduce(range);
+  const topProduce: TopProduceItem[] = dbTopRows.map((row, idx) => ({
+    id: String(idx + 1),
+    name: row.name?.trim() || "Produce item",
+    category: row.category || "Fresh Produce",
+    totalQuantity: Math.round(Number(row.totalQuantity)),
+    unit: "kg",
+    orderCount: Number(row.orderCount),
+    totalValue: Math.round(Number(row.totalValue)),
+  }));
 
-  const totalRescued = hasLiveTopData
-    ? Number(rescueRows[0]?.totalRescuedQty ?? 0)
-    : topProduce.reduce((acc, item) => acc + item.totalQuantity, 0);
+  const existingNames = new Set(topProduce.map((p) => p.name.toLowerCase()));
+
+  if (topProduce.length < 10) {
+    const allTimeCompleted = await db.select({
+      name: sql<string>`coalesce(${ordered_items.productName}, ${sellers_product.productName})`,
+      category: sellers_product.productType,
+      totalQuantity: sql<number>`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+      orderCount: sql<number>`count(distinct ${orders.id})::int`,
+      totalValue: sql<number>`coalesce(sum(${ordered_items.subtotal}), 0)::float`,
+    })
+      .from(ordered_items)
+      .innerJoin(orders, eq(ordered_items.ordersId, orders.id))
+      .leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id))
+      .where(eq(orders.status, "completed"))
+      .groupBy(sql`coalesce(${ordered_items.productName}, ${sellers_product.productName})`, sellers_product.productType)
+      .orderBy(sql`sum(${ordered_items.quantity}) desc`);
+
+    for (const item of allTimeCompleted) {
+      if (topProduce.length >= 10) break;
+      const cleanName = item.name?.trim() || "Fresh Produce";
+      if (!existingNames.has(cleanName.toLowerCase())) {
+        existingNames.add(cleanName.toLowerCase());
+        topProduce.push({
+          id: String(topProduce.length + 1),
+          name: cleanName,
+          category: item.category || "Fresh Produce",
+          totalQuantity: Math.round(Number(item.totalQuantity)),
+          unit: "kg",
+          orderCount: Number(item.orderCount),
+          totalValue: Math.round(Number(item.totalValue)),
+        });
+      }
+    }
+  }
+
+  if (topProduce.length < 10) {
+    const activeListings = await db.select({
+      name: sellers_product.productName,
+      category: sellers_product.productType,
+      qty: sellers_product.productQty,
+      price: sellers_product.productPrice,
+    })
+      .from(sellers_product)
+      .where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true)))
+      .orderBy(desc(sellers_product.productQty));
+
+    for (const p of activeListings) {
+      if (topProduce.length >= 10) break;
+      const cleanName = p.name?.trim() || "Market Produce";
+      if (!existingNames.has(cleanName.toLowerCase())) {
+        existingNames.add(cleanName.toLowerCase());
+        const qty = Math.round(Number(p.qty ?? 0));
+        const price = Number(p.price ?? 0);
+        topProduce.push({
+          id: String(topProduce.length + 1),
+          name: cleanName,
+          category: p.category || "Fresh Produce",
+          totalQuantity: qty,
+          unit: "kg",
+          orderCount: 1,
+          totalValue: Math.round(qty * price),
+        });
+      }
+    }
+  }
+
+  const finalTopProduce = topProduce.slice(0, 10).map((item, idx) => ({
+    ...item,
+    id: String(idx + 1),
+  }));
+
+  const registeredBuyers = Number(users[0]?.buyers ?? 0);
+  const registeredSellers = Number(users[0]?.sellers ?? 0);
 
   return {
     generatedAt: new Date().toISOString(),
     range,
-    isSampleData: !hasLiveTopData,
+    isSampleData: false,
     kpis: {
-      totalRescuedQty: Math.round(totalRescued),
-      activeListings: Number(listings[0]?.active ?? 0) || 42,
-      totalOrders: Number(rescueRows[0]?.totalOrders ?? 0) || (hasLiveTopData ? completed : topProduce.reduce((acc, i) => acc + i.orderCount, 0)),
+      totalRescuedQty: Math.round(Number(rescueRows[0]?.totalRescuedQty ?? 0)),
+      activeListings: Number(listings[0]?.active ?? 0),
+      totalOrders: Number(rescueRows[0]?.totalOrders ?? 0),
       fulfillmentRate,
-      activeSellers: Number(users[0]?.sellers ?? 0) || 16,
-      activeBuyers: Number(users[0]?.buyers ?? 0) || 84,
+      activeSellers: registeredSellers,
+      activeBuyers: registeredBuyers,
     },
-    topProduce,
-    activityTrends: getSampleTrends(range),
-    categoryBreakdown: categoryBreakdown.length > 0 ? categoryBreakdown : [
-      { category: "Fruit Vegetables", activeCount: 18, percentage: 43 },
-      { category: "Leafy Greens", activeCount: 12, percentage: 29 },
-      { category: "Pod Vegetables", activeCount: 7, percentage: 17 },
-      { category: "Root Crops", activeCount: 5, percentage: 11 },
-    ],
+    topProduce: finalTopProduce,
+    activityTrends,
+    categoryBreakdown,
+    sellerStalls: stalls.map((s) => ({
+      id: s.id,
+      shopName: s.shopName,
+      detailAddress: s.detailAddress,
+      activeListings: Number(s.activeListings ?? 0),
+      totalStockKg: Math.round(Number(s.totalStockKg ?? 0)),
+    })),
+    buyerSummary: {
+      registeredBuyers,
+      activeBuyersWithOrders: Number(buyerSummary[0]?.totalBuyersWhoOrdered ?? 0),
+      completedPickups: Number(buyerSummary[0]?.completedPickups ?? 0),
+      pendingPickups: Number(buyerSummary[0]?.activeOrders ?? 0),
+    },
   };
 }

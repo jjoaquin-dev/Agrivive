@@ -133,14 +133,7 @@ export function LandingHeader() {
               <span>Marketplace</span>
             </Link>
 
-            {hasSession ? (
-              <Link
-                href="/orders"
-                className="inline-flex min-h-11 items-center rounded-full bg-[#457D00] px-4 text-sm font-bold text-white transition hover:bg-[#386600]"
-              >
-                My Passes
-              </Link>
-            ) : (
+            {!hasSession && (
               <div className="flex items-center gap-2">
                 <Link href="/login" className="inline-flex min-h-11 items-center px-3 text-sm font-bold text-neutral-700 hover:text-[#457D00] transition-colors">
                   Sign In

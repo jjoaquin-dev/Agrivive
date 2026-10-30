@@ -57,21 +57,21 @@ export function useBuyerNotifications() {
   const counts = useMemo(() => {
     return {
       all: notices.length,
-      reservations: notices.filter((n) => n.kind.includes("cancellation") || n.orderId).length,
+      reservations: notices.filter((n) => n.kind.includes("cancellation") || (Boolean(n.orderId) && !n.kind.includes("trust"))).length,
       produce: notices.filter((n) => isProduceNotice(n.kind)).length,
-      updates: notices.filter((n) => !n.orderId && !isProduceNotice(n.kind)).length,
+      updates: notices.filter((n) => n.kind.includes("trust") || (!n.orderId && !isProduceNotice(n.kind))).length,
     };
   }, [notices]);
 
   const filteredNotices = useMemo(() => {
     if (activeTab === "reservations") {
-      return notices.filter((n) => n.kind.includes("cancellation") || n.orderId);
+      return notices.filter((n) => n.kind.includes("cancellation") || (Boolean(n.orderId) && !n.kind.includes("trust")));
     }
     if (activeTab === "produce") {
       return notices.filter((n) => isProduceNotice(n.kind));
     }
     if (activeTab === "updates") {
-      return notices.filter((n) => !n.orderId && !isProduceNotice(n.kind));
+      return notices.filter((n) => n.kind.includes("trust") || (!n.orderId && !isProduceNotice(n.kind)));
     }
     return notices;
   }, [activeTab, notices]);

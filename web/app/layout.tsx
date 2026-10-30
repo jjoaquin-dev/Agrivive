@@ -86,10 +86,10 @@ export const metadata: Metadata = {
   description: "Find and reserve fresh surplus produce.",
   icons: {
     icon: [
-      { url: "/brand/agrivive-logo-crate.png", type: "image/png" },
+      { url: "/brand/agrivive-logo-bag.png", type: "image/png" },
     ],
-    shortcut: "/brand/agrivive-logo-crate.png",
-    apple: "/brand/agrivive-logo-crate.png",
+    shortcut: "/brand/agrivive-logo-bag.png",
+    apple: "/brand/agrivive-logo-bag.png",
   },
 };
 

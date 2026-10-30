@@ -107,7 +107,9 @@ export function CartDrawer() {
             {trustWarning ? (
               <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-900">
                 <AlertTriangle className="size-4 shrink-0 text-amber-600" />
-                <AlertTitle className="font-semibold text-amber-900">Missed pickup warning</AlertTitle>
+                <AlertTitle className="font-semibold text-amber-900">
+                  {trustWarning.toLowerCase().includes("cancel") ? "Cancellation warning" : "Missed pickup warning"}
+                </AlertTitle>
                 <AlertDescription className="text-xs leading-relaxed text-amber-800">
                   {trustWarning}
                 </AlertDescription>

@@ -25,6 +25,21 @@ export interface CategoryDistributionItem {
   percentage: number;
 }
 
+export interface StallOverviewItem {
+  id: string;
+  shopName: string;
+  detailAddress: string;
+  activeListings: number;
+  totalStockKg: number;
+}
+
+export interface BuyerCommunitySummary {
+  registeredBuyers: number;
+  activeBuyersWithOrders: number;
+  completedPickups: number;
+  pendingPickups: number;
+}
+
 export interface MarketplaceOverviewResponse {
   generatedAt: string;
   range: MarketplaceOverviewRange;
@@ -40,6 +55,8 @@ export interface MarketplaceOverviewResponse {
   topProduce: TopProduceItem[];
   activityTrends: ActivityTrendPoint[];
   categoryBreakdown: CategoryDistributionItem[];
+  sellerStalls: StallOverviewItem[];
+  buyerSummary: BuyerCommunitySummary;
 }
 
 export function getMarketplaceOverview(range: MarketplaceOverviewRange = "month", signal?: AbortSignal) {

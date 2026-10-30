@@ -15,6 +15,8 @@ export type BuyerProfileResponse = {
     remainingText: string;
     durationText: string;
   } | null;
+  cancellationsCount?: number;
+  missedPickupsPoints?: number;
 };
 
 export function getBuyerProfile() {
