@@ -12,15 +12,12 @@ export function HomeFooter() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-1.5">
               <Image
-                src="/brand/agrivive-logo-bag-dark.png"
+                src="/brand/agrivive-logo-full-new.png"
                 alt="Agrivive"
-                width={22}
-                height={22}
-                className="h-[22px] w-auto object-contain"
+                width={130}
+                height={38}
+                className="h-[38px] w-auto object-contain brightness-0 invert"
               />
-              <span className="font-brand text-[22px] font-black leading-none tracking-tight text-white">
-                Agrivive
-              </span>
             </div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-emerald-50/70">
               Connecting local Davao City market vendors and smallholder farms with conscious buyers to reduce surplus waste and celebrate fresh harvest.

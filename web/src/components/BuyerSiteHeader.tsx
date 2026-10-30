@@ -70,16 +70,13 @@ export function BuyerSiteHeader() {
           {/* Brand Logo */}
           <Link href="/" className="group flex shrink-0 items-center gap-1.5" aria-label="Agrivive home">
             <Image
-              src="/brand/agrivive-logo-bag.png"
+              src="/brand/agrivive-logo-full-new.png"
               alt="Agrivive"
-              width={22}
-              height={22}
-              className="h-[22px] w-auto object-contain transition-transform group-hover:scale-105"
+              width={130}
+              height={36}
+              className="h-[36px] w-auto object-contain transition-transform group-hover:scale-105"
               priority
             />
-            <span className="font-brand text-[22px] font-black leading-none tracking-tight text-[#457D00]">
-              Agrivive
-            </span>
           </Link>
 
           {/* Integrated Search Bar (Landing Page Style) */}
