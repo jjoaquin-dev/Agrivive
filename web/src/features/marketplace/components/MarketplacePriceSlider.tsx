@@ -144,7 +144,7 @@ export function MarketplacePriceSlider({
             value={localMin}
             onChange={(e) => triggerChange("minPrice", e.target.value)}
             aria-label="Minimum price"
-            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-400 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
+            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-500 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
           />
         </div>
         <span className="select-none text-sm font-bold text-neutral-400">-</span>
@@ -161,7 +161,7 @@ export function MarketplacePriceSlider({
             value={localMax}
             onChange={(e) => triggerChange("maxPrice", e.target.value)}
             aria-label="Maximum price"
-            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-400 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
+            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-500 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
           />
         </div>
       </div>

@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import type { ParallaxProps } from "@/src/types/animation";
+import { prefersReducedMotion } from "@/src/lib/motion";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -19,7 +20,7 @@ export function Parallax({
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       gsap.to(el, {

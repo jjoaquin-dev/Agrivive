@@ -1,51 +1,50 @@
-@import url("https://fonts.googleapis.com/css2?family=Parkinsans:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
-
 :root {
+  /* Lockup balance: cart height is about 1.4x the wordmark font size at every breakpoint (the header logo uses the same ratio). */
   /* Mobile default (< 480px) */
-  --cart-w: 110px;
-  --cart-h: 88px;
+  --cart-w: 80px;
+  --cart-h: 64px;
   --brand-font-size: 2.85rem;
   --brand-gap: 13px;
-  --cart-overlap: -30px;
+  --cart-overlap: -22px;
 }
 
 @media (min-width: 480px) {
   :root {
-    --cart-w: 140px;
-    --cart-h: 112px;
+    --cart-w: 100px;
+    --cart-h: 80px;
     --brand-font-size: 3.6rem;
     --brand-gap: 13px;
-    --cart-overlap: -38px;
+    --cart-overlap: -28px;
   }
 }
 
 @media (min-width: 768px) {
   :root {
-    --cart-w: 180px;
-    --cart-h: 144px;
+    --cart-w: 130px;
+    --cart-h: 104px;
     --brand-font-size: 4.6rem;
     --brand-gap: 13px;
-    --cart-overlap: -50px;
+    --cart-overlap: -36px;
   }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --cart-w: 225px;
-    --cart-h: 180px;
+    --cart-w: 160px;
+    --cart-h: 128px;
     --brand-font-size: 5.75rem;
     --brand-gap: 13px;
-    --cart-overlap: -62px;
+    --cart-overlap: -44px;
   }
 }
 
 @media (min-width: 1440px) {
   :root {
-    --cart-w: 260px;
-    --cart-h: 208px;
+    --cart-w: 185px;
+    --cart-h: 148px;
     --brand-font-size: 6.6rem;
     --brand-gap: 13px;
-    --cart-overlap: -72px;
+    --cart-overlap: -51px;
   }
 }
 
@@ -74,6 +73,21 @@ html.lenis body {
 /* ========================================================= */
 /* SPLASH SCREEN & BRAND STAGE                               */
 /* ========================================================= */
+.splash-skip #splash-container,
+.splash-skip #splash-skip {
+  display: none;
+}
+
+/* Overlay stays white but its content waits for the timeline's start frame. */
+.splash-pending #brand-stage {
+  visibility: hidden;
+}
+
+/* The header logo waits for the splash logo to land on it. */
+.splash-pending #header-logo {
+  visibility: hidden;
+}
+
 .viewport-stage {
   position: absolute;
   inset: 0;
@@ -113,9 +127,9 @@ html.lenis body {
 .brand-text {
   display: flex;
   align-items: center;
-  font-family: 'Parkinsans', sans-serif;
+  font-family: var(--font-parkinsans), sans-serif;
   font-size: var(--brand-font-size);
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.035em;
   line-height: 1;
   white-space: nowrap;
@@ -164,42 +178,42 @@ html.lenis body {
   z-index: 30 !important;
 }
 
-/* Symmetrical Color Inversion on Green Surface */
+/* Symmetrical Color Inversion on Green Surface. Not !important: the hold shimmer and the fly-to-header colour return are inline GSAP tweens that must win. */
 .is-inverted .cart-fill {
-  fill: #ffffff !important;
+  fill: #ffffff;
 }
 
 .is-inverted .cart-stroke {
-  stroke: #ffffff !important;
-  fill: none !important;
+  stroke: #ffffff;
+  fill: none;
 }
 
 .is-inverted .cart-wheel {
-  fill: #457D00 !important;
-  stroke: #ffffff !important;
+  fill: #457D00;
+  stroke: #ffffff;
 }
 
 .is-inverted .accent-cut {
-  stroke: #457D00 !important;
-  fill: none !important;
+  stroke: #457D00;
+  fill: none;
 }
 
 .is-inverted .veggie-fill {
-  fill: #ffffff !important;
+  fill: #ffffff;
 }
 
 .is-inverted .veggie-stroke {
-  stroke: #ffffff !important;
-  fill: none !important;
+  stroke: #ffffff;
+  fill: none;
 }
 
 .is-inverted .veggie-cutout {
-  stroke: #457D00 !important;
+  stroke: #457D00;
 }
 
 .is-inverted #brand-text,
 .is-inverted .char {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 /* ========================================================= */
@@ -216,103 +230,78 @@ html.lenis body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
+/* The splash timeline hides these with gsap.set (strokeDashoffset: 1400) and draws them in. */
 .topo-line {
   stroke-dasharray: 1400;
-  stroke-dashoffset: 1400;
   will-change: stroke-dashoffset;
 }
 
-@keyframes topoBreathe {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-  }
-  50% {
-    transform: translateY(-6px) scale(1.006);
-  }
-}
-
-.topo-layer {
-  animation: topoBreathe 12s ease-in-out infinite;
-  transform-origin: center center;
-  will-change: transform;
-}
-
-/* Floating Produce Slices Keyframes */
-@keyframes floatA {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(-18px) rotate(4deg) scale(1.03);
-  }
-}
-
-@keyframes floatB {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(16px) rotate(-5deg) scale(0.97);
-  }
-}
-
-@keyframes floatC {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(-14px) rotate(-3deg) scale(1.04);
-  }
-}
-
-@keyframes floatD {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(15px) rotate(6deg) scale(1.02);
-  }
-}
-
-.float-slice-1 {
-  animation: floatA 10s ease-in-out infinite;
-  will-change: transform;
-}
-.float-slice-2 {
-  animation: floatB 8s ease-in-out infinite;
-  will-change: transform;
-}
-.float-slice-3 {
-  animation: floatC 12s ease-in-out infinite;
-  will-change: transform;
-}
-.float-slice-4 {
-  animation: floatD 9s ease-in-out infinite;
-  will-change: transform;
-}
-.float-slice-5 {
-  animation: floatA 11s ease-in-out 1.5s infinite;
-  will-change: transform;
-}
-.float-slice-6 {
-  animation: floatB 7.5s ease-in-out 0.8s infinite;
-  will-change: transform;
-}
-
-@keyframes floatGlow {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.16;
-  }
-  50% {
-    transform: translate(-50%, -46%) scale(1.18);
-    opacity: 0.3;
-  }
-}
-
+/* Hero decoration is still: no infinite loops. The slices only move with the desktop scroll parallax in Hero.tsx. */
 .hero-glow {
-  animation: floatGlow 8s ease-in-out infinite;
-  will-change: transform, opacity;
+  transform: translate(-50%, -50%);
+  opacity: 0.22;
+}
+
+/* Anchor targets clear the fixed landing header without scripted offsets */
+section[id] {
+  scroll-margin-top: 112px;
+}
+
+/* ========================================================= */
+/* LANDING TYPE SCALE (fluid; weights stay within the 700 cap in tokens.css) */
+/* ========================================================= */
+.type-display {
+  font-size: clamp(2.25rem, 1.35rem + 3.9vw, 4.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.type-section {
+  font-size: clamp(1.875rem, 1.35rem + 2.2vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.type-card {
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.type-lede {
+  font-size: clamp(0.9375rem, 0.88rem + 0.3vw, 1.125rem);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.type-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* FAQ answer panel: grid rows animate open height without measuring content in JS */
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-panel {
+    transition: none;
+  }
 }
 
 /* Header Scrolled Elevation */

@@ -23,7 +23,7 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
               Agrivive Marketplace Overview & Planning Report
             </h1>
             <p className="text-xs text-neutral-600 mt-1">
-              Public Agricultural Food Rescue, Market Trends & Supply Analytics — Davao City Network
+              Public Agricultural Food Rescue, Market Trends & Supply Analytics - Davao City Network
             </p>
           </div>
           <div className="text-right text-xs text-neutral-600">

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { EASINGS } from "@/src/lib/gsap/easings";
+import { prefersReducedMotion } from "@/src/lib/motion";
 import type { StaggerProps } from "@/src/types/animation";
 
 export function useStagger<T extends HTMLElement = HTMLDivElement>(
@@ -14,12 +15,12 @@ export function useStagger<T extends HTMLElement = HTMLDivElement>(
     selector = "> *",
     delay = 0,
     duration = 0.65,
-    ease = EASINGS.SMOOTH,
+    ease = EASINGS.SETTLE,
   } = options;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || prefersReducedMotion()) return;
 
     const ctx = gsap.context(() => {
       const targets = el.querySelectorAll(selector);

@@ -90,7 +90,7 @@ export function BuyerProfile() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search settings..."
-              className="h-11 w-full rounded-full border border-neutral-200/90 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-400 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200/90 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
             />
           </div>
         </div>

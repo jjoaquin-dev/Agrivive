@@ -4,8 +4,8 @@
 
 Use:
 
-- `.agents/design/web-design/DESIGN.md`
-- `.agents/design/web-design/DESIGN-LAYOUT.md`
+- `.claude/design/web-design/DESIGN.md`
+- `.claude/design/web-design/DESIGN-LAYOUT.md`
 
 These adapt the seller mobile brand system for the buyer website. Keep the mobile design files unchanged.
 

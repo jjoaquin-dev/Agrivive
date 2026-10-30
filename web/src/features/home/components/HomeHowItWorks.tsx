@@ -32,11 +32,11 @@ export function HomeHowItWorks() {
     <section id="how-it-works" className="bg-[#FAF9F5] py-16 sm:py-24 border-b border-neutral-200/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header with One-Line Subheader & Styled Agrivive Word */}
-        <div className="mx-auto max-w-3xl lg:max-w-4xl text-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#457D00]">
+        <div data-reveal className="mx-auto max-w-3xl lg:max-w-4xl text-center">
+          <span className="type-eyebrow text-[#457D00]">
             The Process
           </span>
-          <h2 className="mt-3 font-heading text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl md:text-5xl">
+          <h2 className="type-section mt-3 font-heading text-neutral-900">
             How{" "}
             <span className="relative inline-block text-[#457D00]">
               Agrivive
@@ -57,20 +57,21 @@ export function HomeHowItWorks() {
             </span>{" "}
             Works
           </h2>
-          <p className="mt-4 text-sm text-neutral-600 sm:text-base md:text-[17px] sm:whitespace-nowrap">
+          <p className="type-lede mx-auto mt-4 max-w-2xl text-neutral-600">
             Three simple steps to rescue wholesome harvest, save money, and empower Davao local growers.
           </p>
         </div>
 
         {/* 3 Modern Sequential Cards with Edge-to-Edge Image Headers */}
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
+        <div className="mt-12 grid grid-cols-1 gap-6 sm:mt-16 md:grid-cols-3 lg:gap-8">
           {steps.map((item) => (
             <div
               key={item.step}
-              className="group relative flex flex-col justify-between overflow-hidden rounded-[26px] border border-neutral-200/70 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_36px_-6px_rgba(20,50,30,0.1)]"
+              data-reveal="pop"
+              className="group relative flex flex-col justify-between overflow-hidden rounded-[26px] border border-neutral-200/70 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_rgba(20,50,30,0.1)]"
             >
               {/* Full-Bleed Image Header (Flush horizontally and at the top) */}
-              <div className="relative h-56 sm:h-64 w-full overflow-hidden bg-neutral-100">
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
                 {/* 01, 02, 03 Frosted Badge */}
                 <div className="absolute top-4 left-4 z-10">
                   <span className="inline-flex items-center rounded-xl bg-white/95 px-3 py-1 font-heading text-xs sm:text-sm font-bold text-[#FEA938] shadow-xs backdrop-blur-md border border-neutral-200/60">
@@ -83,7 +84,7 @@ export function HomeHowItWorks() {
                   alt={item.alt}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-500 ease-settle group-hover:scale-105"
                 />
               </div>
 
@@ -92,10 +93,10 @@ export function HomeHowItWorks() {
                 <span className="font-heading text-xs font-bold tracking-widest text-[#FEA938] mb-1">
                   {item.step}
                 </span>
-                <h3 className="font-heading text-lg sm:text-xl font-bold tracking-tight text-neutral-900 group-hover:text-[#457D00] transition-colors">
+                <h3 className="type-card font-heading text-neutral-900 transition-colors group-hover:text-[#457D00]">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-neutral-600">
+                <p className="mt-2 text-[15px] leading-relaxed text-neutral-600">
                   {item.description}
                 </p>
               </div>

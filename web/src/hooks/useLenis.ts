@@ -4,12 +4,15 @@ import { useEffect, useRef } from "react";
 import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { prefersReducedMotion } from "@/src/lib/motion";
 
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Native scrolling, with the scroll-margin-top rule in globals.css clearing the fixed header.
+    if (prefersReducedMotion()) return;
 
     const lenis = new Lenis({
       duration: 1.2,
@@ -34,7 +37,7 @@ export function useLenis() {
     gsap.ticker.add(updateTicker);
     gsap.ticker.lagSmoothing(0);
 
-    // Anchor links interceptor with -90px offset for fixed floating header
+    // Anchor links interceptor; the offset matches scroll-margin-top in globals.css so both paths clear the two-row header
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest('a[href^="#"]');
       if (!target) return;
@@ -46,7 +49,7 @@ export function useLenis() {
       if (elem) {
         e.preventDefault();
         lenis.scrollTo(elem as HTMLElement, {
-          offset: -90,
+          offset: -112,
           duration: 1.2,
           immediate: false,
         });

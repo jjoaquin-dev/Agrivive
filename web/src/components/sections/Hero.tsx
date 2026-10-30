@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Smartphone } from "lucide-react";
+import { ArrowRight, MapPin, Smartphone } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { HeroFloatingSlices } from "./HeroFloatingSlices";
@@ -19,50 +19,44 @@ export function Hero() {
     const el = heroRef.current;
     if (!el) return;
 
-    const ctx = gsap.context(() => {
-      // Multi-layer Parallax Scrub on Scroll
-      gsap.to(".float-slice-1, .float-slice-2, .float-slice-3", {
-        y: -110,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1.2,
-        },
-      });
+    const mm = gsap.matchMedia(heroRef);
 
-      gsap.to(".float-slice-4, .float-slice-5, .float-slice-6", {
-        y: -160,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1.5,
-        },
-      });
+    // Desktop only: a light two-depth drift on the decorative slices. Phones and reduced motion keep them still.
+    mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+      const scrollTrigger = { trigger: el, start: "top top", end: "bottom top", scrub: 0.8 };
+      gsap.to(".float-slice-1, .float-slice-2, .float-slice-3", { y: -60, ease: "none", scrollTrigger: { ...scrollTrigger } });
+      gsap.to(".float-slice-4, .float-slice-5, .float-slice-6", { y: -100, ease: "none", scrollTrigger: { ...scrollTrigger } });
+    });
 
-      gsap.to("#topo-container", {
-        y: -70,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1,
-        },
+    // Resting life: each slice bobs a few pixels on its own slow loop, paused while the hero is off screen.
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const bobs = gsap.utils.toArray<HTMLElement>(".hero-slice", el).map((slice) =>
+        gsap.to(slice, {
+          y: gsap.utils.random(-14, -8),
+          duration: gsap.utils.random(3, 4.5),
+          delay: gsap.utils.random(0, 2),
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        })
+      );
+      const watcher = ScrollTrigger.create({
+        trigger: el,
+        start: "top bottom",
+        end: "bottom top",
+        onToggle: (self) => bobs.forEach((bob) => (self.isActive ? bob.resume() : bob.pause())),
       });
-    }, heroRef);
+      return () => watcher.kill();
+    });
 
-    return () => ctx.revert();
+    return () => mm.revert();
   }, []);
 
   return (
     <section
       ref={heroRef}
       id="hero"
-      className="relative overflow-hidden bg-[#457D00] pt-[140px] pb-14 sm:pt-[180px] sm:pb-24 text-white min-h-[92vh] sm:min-h-screen flex items-center"
+      className="relative overflow-hidden bg-[#457D00] pt-[120px] pb-12 sm:pt-[168px] sm:pb-20 text-white min-h-[92dvh] sm:min-h-dvh flex items-center"
     >
       {/* 1. Organic Paper Grain Micro-Texture */}
       <div className="hero-grain-overlay pointer-events-none" aria-hidden="true" />
@@ -82,9 +76,6 @@ export function Hero() {
             <path className="topo-line" d="M -40 780 C 320 720, 680 840, 1120 760 C 1300 730, 1420 810, 1480 840" />
             <path className="topo-line" d="M -40 860 C 380 810, 780 900, 1180 830 C 1340 810, 1440 870, 1480 890" strokeDasharray="6 8" />
           </g>
-          <g fill="#E2FD56" fontFamily="monospace" fontSize="10" fontWeight="bold" opacity="0.25" letterSpacing="1">
-            <text x="720" y="810" textAnchor="middle">DAVAO FERTILE HIGHLAND ELEVATION 280m - 540m</text>
-          </g>
         </svg>
       </div>
 
@@ -93,43 +84,50 @@ export function Hero() {
 
       {/* 4. Real Content */}
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full z-10">
-        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-          <h1 id="hero-title" className="font-heading text-3xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl leading-[1.12]">
+        <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
+          <p id="hero-eyebrow" className="type-eyebrow inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-[#E2FD56]">
+            <MapPin className="size-3.5" aria-hidden="true" />
+            Davao City Farms &amp; Public Market Stalls
+          </p>
+
+          <h1 id="hero-title" className="type-display mt-5 font-heading text-white sm:mt-6">
             Rescue{" "}
             <span className="relative inline-block text-[#E2FD56]">
               Surplus
-              <svg className="absolute -bottom-1.5 left-0 w-full text-[#E2FD56]/80 sm:-bottom-2" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 9C30 3 80 3 107 9" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+              <svg className="absolute -bottom-1.5 left-0 w-full text-[#E2FD56]/80 sm:-bottom-2" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path className="hero-underline" pathLength={1} d="M3 9C30 3 80 3 107 9" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
               </svg>
             </span>{" "}
-            Vegetables in Davao City
+            Vegetables
+            <br className="hidden sm:block" /> in Davao City
           </h1>
 
-          <p id="hero-desc" className="mt-4 sm:mt-6 max-w-2xl font-body text-sm leading-relaxed text-emerald-50/90 sm:text-lg">
-            Reserve marketable surplus directly from verified local stalls. Secure your order with a 24-hour QR code and save money while helping vendors reduce food waste.
+          <p id="hero-desc" className="type-lede mt-5 max-w-xl font-body text-emerald-50/90 sm:mt-6">
+            Reserve fresh surplus from verified local stalls. Pick up with a 24-hour QR code and help cut food waste.
           </p>
 
-          <div id="hero-actions" className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3.5 sm:mt-8 w-full sm:w-auto">
+          <div id="hero-actions" className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
             <Link
               href="/marketplace"
-              className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-full bg-[#E2FD56] px-8 text-sm font-black text-[#111827] shadow-lg transition-all hover:bg-[#d4f244] hover:shadow-xl hover:scale-105 active:scale-95"
+              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#E2FD56] px-8 text-[15px] font-bold text-[#111827] shadow-lg transition-[transform,background-color,box-shadow] duration-200 hover:-translate-y-0.5 hover:bg-[#d4f244] hover:shadow-xl active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#457D00]"
             >
               <span>Shop Today's Harvest</span>
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
 
-            <Link
-              href="#sellers"
-              className="group inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 text-sm font-bold text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/20 active:scale-95"
+            <a
+              href="/downloads/agrivive-seller.apk"
+              download="agrivive-seller.apk"
+              className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-7 text-[15px] font-bold text-white backdrop-blur-md transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-white/20 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#457D00]"
             >
-              <Smartphone className="size-4 text-[#E2FD56] transition-colors" />
-              <span>Are you a Seller? Get the App here</span>
-            </Link>
+              <Smartphone className="size-4 text-[#E2FD56]" aria-hidden="true" />
+              <span>Get the Seller App</span>
+            </a>
           </div>
         </div>
 
         {/* Harvest Crates */}
-        <div id="hero-crate" className="relative mx-auto mt-8 sm:mt-10 w-full max-w-5xl px-2">
+        <div id="hero-crate" className="relative mx-auto mt-10 sm:mt-14 w-full max-w-5xl px-2">
           <div className="relative mx-auto flex w-full items-center justify-center">
             <Image
               src="/brand/agrivive-harvest-crates.png"
@@ -138,7 +136,7 @@ export function Hero() {
               height={572}
               priority
               sizes="(min-width: 1024px) 860px, (min-width: 640px) 90vw, 100vw"
-              className="h-auto w-full max-w-[760px] lg:max-w-[850px] object-contain drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)] transition-transform duration-500 hover:scale-[1.015]"
+              className="h-auto w-full max-w-[760px] lg:max-w-[850px] object-contain drop-shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
             />
           </div>
         </div>

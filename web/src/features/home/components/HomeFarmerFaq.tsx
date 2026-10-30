@@ -40,12 +40,12 @@ export function HomeFarmerFaq() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
           {/* Left Column: Side Header & Contact Action */}
-          <div className="lg:col-span-5 flex flex-col justify-between">
+          <div data-reveal className="lg:col-span-5 flex flex-col justify-between lg:sticky lg:top-32 lg:self-start">
             <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-[#457D00]">
+              <span className="type-eyebrow text-[#457D00]">
                 Frequently Asked Questions
               </span>
-              <h2 className="mt-3 font-heading text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl md:text-[42px] leading-[1.15]">
+              <h2 className="type-section mt-3 font-heading text-neutral-900">
                 FAQ about{" "}
                 <span className="relative inline-block text-[#457D00]">
                   Agrivive
@@ -65,8 +65,8 @@ export function HomeFarmerFaq() {
                   </svg>
                 </span>
               </h2>
-              <p className="mt-4 text-sm sm:text-base leading-relaxed text-neutral-600 max-w-md">
-                Everything you need to know about using our local surplus produce platform—answered. Can&apos;t find what you&apos;re looking for?
+              <p className="type-lede mt-4 max-w-md text-neutral-600">
+                Everything you need to know about using Agrivive. Can&apos;t find what you&apos;re looking for?
               </p>
 
               <div className="mt-8">
@@ -82,18 +82,21 @@ export function HomeFarmerFaq() {
           </div>
 
           {/* Right Column: Clean, Enlarged Accordion List */}
-          <div className="lg:col-span-7 divide-y divide-neutral-200/80">
+          <div data-reveal className="lg:col-span-7 divide-y divide-neutral-200/80 border-y border-neutral-200/80">
             {faqItems.map((faq, idx) => {
               const isOpen = openIndex === idx;
               return (
-                <div key={faq.q} className="py-6 sm:py-7 first:pt-0 last:pb-0">
+                <div key={faq.q} className="py-5 sm:py-6">
                   <button
+                    type="button"
+                    id={`faq-q-${idx}`}
                     onClick={() => toggleFaq(idx)}
-                    className="flex w-full items-center justify-between gap-4 text-left group cursor-pointer"
+                    className="group flex min-h-12 w-full cursor-pointer items-center justify-between gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2"
                     aria-expanded={isOpen}
+                    aria-controls={`faq-a-${idx}`}
                   >
                     <span
-                      className={`font-heading text-lg sm:text-xl md:text-[21px] font-bold transition-colors ${
+                      className={`font-heading text-[17px] sm:text-xl font-bold leading-snug transition-colors ${
                         isOpen
                           ? "text-[#457D00]"
                           : "text-neutral-900 group-hover:text-[#457D00]"
@@ -110,13 +113,17 @@ export function HomeFarmerFaq() {
                     </span>
                   </button>
 
-                  {isOpen && (
-                    <div className="mt-4 pr-6 sm:pr-10 animate-in fade-in-50 duration-200">
-                      <p className="text-sm sm:text-base leading-relaxed text-neutral-600">
-                        {faq.a}
-                      </p>
+                  <div
+                    id={`faq-a-${idx}`}
+                    role="region"
+                    aria-labelledby={`faq-q-${idx}`}
+                    data-open={isOpen}
+                    className="faq-panel"
+                  >
+                    <div className="overflow-hidden" inert={!isOpen}>
+                      <p className="type-lede mt-3 max-w-2xl pr-6 text-neutral-600 sm:pr-10">{faq.a}</p>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}

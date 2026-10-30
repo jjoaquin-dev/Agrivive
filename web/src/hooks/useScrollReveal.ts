@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { EASINGS } from "@/src/lib/gsap/easings";
+import { prefersReducedMotion } from "@/src/lib/motion";
 import type { RevealProps } from "@/src/types/animation";
 
 if (typeof window !== "undefined") {
@@ -21,12 +22,12 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     once = true,
     delay = 0,
     duration = 0.75,
-    ease = EASINGS.DECEL,
+    ease = EASINGS.SETTLE,
   } = options;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || prefersReducedMotion()) return;
 
     const xOffset = direction === "left" ? distance : direction === "right" ? -distance : 0;
     const yOffset = direction === "up" ? distance : direction === "down" ? -distance : 0;

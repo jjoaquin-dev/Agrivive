@@ -87,7 +87,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="relative w-full max-w-lg rounded-[24px] border border-border/80 bg-card p-6 shadow-[0_24px_60px_rgba(31,77,58,0.14)] max-h-[90vh] overflow-y-auto">
+      <div data-lenis-prevent className="relative w-full max-w-lg rounded-[24px] border border-border/80 bg-card p-6 shadow-[0_24px_60px_rgba(31,77,58,0.14)] max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           disabled={submitting}

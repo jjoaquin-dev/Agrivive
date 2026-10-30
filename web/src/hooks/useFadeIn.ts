@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { EASINGS } from "@/src/lib/gsap/easings";
+import { prefersReducedMotion } from "@/src/lib/motion";
 import type { FadeInProps } from "@/src/types/animation";
 
 export function useFadeIn<T extends HTMLElement = HTMLDivElement>(
@@ -14,12 +15,12 @@ export function useFadeIn<T extends HTMLElement = HTMLDivElement>(
     distance = 30,
     delay = 0,
     duration = 0.7,
-    ease = EASINGS.DECEL,
+    ease = EASINGS.SETTLE,
   } = options;
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || prefersReducedMotion()) return;
 
     const xOffset = direction === "left" ? distance : direction === "right" ? -distance : 0;
     const yOffset = direction === "up" ? distance : direction === "down" ? -distance : 0;

@@ -9,6 +9,7 @@ interface BenefitCardProps {
   imageSrc?: string;
   icon?: ReactNode;
   className?: string;
+  revealed?: boolean;
 }
 
 export function HomeWhySurplusBenefitCard({
@@ -19,18 +20,21 @@ export function HomeWhySurplusBenefitCard({
   imageSrc,
   icon,
   className = "",
+  revealed = false,
 }: BenefitCardProps) {
+  const revealProps = revealed ? { "data-reveal": true } : {};
   if (bgType === "image" && imageSrc) {
     return (
       <div
-        className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] p-7 text-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${className}`}
+        {...revealProps}
+        className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] p-7 text-white shadow-sm transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-xl ${className}`}
       >
         <Image
           src={imageSrc}
           alt={headline}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-settle group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
 
@@ -41,10 +45,10 @@ export function HomeWhySurplusBenefitCard({
         </div>
 
         <div className="relative z-10 mt-16 sm:mt-24">
-          <h3 className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-white">
+          <h3 className="type-card font-heading text-white">
             {headline}
           </h3>
-          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-white/85">
+          <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-white/85">
             {description}
           </p>
         </div>
@@ -62,7 +66,8 @@ export function HomeWhySurplusBenefitCard({
 
   return (
     <div
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${bgStyles} ${className}`}
+      {...revealProps}
+      className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-lg ${bgStyles} ${className}`}
     >
       <div className="flex items-center justify-between">
         <span
@@ -74,10 +79,10 @@ export function HomeWhySurplusBenefitCard({
       </div>
 
       <div className="mt-14 sm:mt-20">
-        <h3 className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-neutral-900">
+        <h3 className="type-card font-heading text-neutral-900">
           {headline}
         </h3>
-        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-neutral-600">
+        <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-neutral-600">
           {description}
         </p>
       </div>

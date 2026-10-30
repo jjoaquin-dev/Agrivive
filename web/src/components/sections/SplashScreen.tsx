@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { createSplashTimeline } from "@/src/lib/gsap/timelines";
+import { markSplashSeen, shouldSkipSplash, waitForSplashAssets } from "@/src/lib/motion";
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -9,36 +11,61 @@ interface SplashScreenProps {
 
 export function SplashScreen({ onComplete }: SplashScreenProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<ReturnType<typeof createSplashTimeline> | null>(null);
   const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
+    // Play once per browser session, and never for people who ask for less motion.
+    if (shouldSkipSplash()) {
+      setIsDone(true);
+      if (onComplete) onComplete();
+      return;
+    }
+
     const container = containerRef.current;
     if (!container) return;
+
+    let cancelled = false;
+    let ctx: gsap.Context | undefined;
 
     // Lock scroll during splash
     document.body.style.overflow = "hidden";
 
-    const tl = createSplashTimeline(container, {
-      onTileOut: () => {
-        document.body.style.overflow = "";
-      },
-      onComplete: () => {
-        setIsDone(true);
-        if (onComplete) onComplete();
-      },
+    // The server-rendered stage stays hidden (see layout.tsx) until fonts and the hero image are ready.
+    waitForSplashAssets(document.querySelector<HTMLImageElement>("#hero-crate img")).then(() => {
+      if (cancelled) return;
+
+      document.documentElement.classList.remove("splash-pending");
+      markSplashSeen();
+
+      // gsap.context scopes every tween and timeline created here, so cleanup reverts them all.
+      ctx = gsap.context(() => {
+        const tl = createSplashTimeline(container, {
+          // Hero entrance keeps running after this; the overlay itself is finished.
+          onTileOut: () => {
+            document.body.style.overflow = "";
+            setIsDone(true);
+            if (onComplete) onComplete();
+          },
+        });
+
+        timelineRef.current = tl;
+        tl.play();
+      }, container);
     });
 
-    tl.play();
-
     return () => {
+      cancelled = true;
       document.body.style.overflow = "";
-      tl.kill();
+      timelineRef.current = null;
+      ctx?.revert();
     };
   }, [onComplete]);
 
   if (isDone) return null;
 
   return (
+    <>
     <div
       ref={containerRef}
       id="splash-container"
@@ -114,7 +141,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             </svg>
           </div>
 
-          {/* Agrivive Text in Parkinsans Bold */}
+          {/* Agrivive Text in Parkinsans SemiBold */}
           <div className="brand-text" id="brand-text">
             <span className="char">A</span>
             <span className="char">g</span>
@@ -131,5 +158,16 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       {/* 18x10 Tile Grid Overlay for <| Transition Shape */}
       <div id="tile-grid" />
     </div>
+
+    {/* Outside the aria-hidden stage so keyboard and screen reader users can reach it */}
+    <button
+      type="button"
+      onClick={() => timelineRef.current?.timeScale(10)}
+      id="splash-skip"
+      className="fixed bottom-4 right-4 z-[10000] inline-flex min-h-12 items-center rounded-full border border-neutral-300 bg-white/95 px-5 text-sm font-semibold text-neutral-800 shadow-md transition-transform hover:bg-white active:scale-95"
+    >
+      Skip
+    </button>
+    </>
   );
 }

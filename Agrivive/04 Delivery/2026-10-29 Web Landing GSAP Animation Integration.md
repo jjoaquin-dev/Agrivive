@@ -130,3 +130,23 @@ Every piece of existing text in `web/src/features/home/components/` was maintain
     3. Updated typography across the application to Google Fonts **Parkinsans** (brand) and **Plus Jakarta Sans** (headings, subheadings, and body).
     4. Upgraded splash screen physics in `timelines.ts` and `splash-grid.ts` to replicate `scratch/splash-demo.html` pixel-for-pixel: isolated dead-center cart start, 3 projectile produce drops with squash & shake keyframes, rolling cart wheels, -11° tilt, exact coordinate color inversion, and left-chevron exit peel.
     5. Maintained all source code files strictly under 200 lines.
+- **Fix Commit**: `a058dc3`
+  - **Message**: `fix splash fadeout transparency, fixed header, hero entrance animations`
+  - **Key Adjustments**:
+    1. **Fixed splash white flash**: `LandingHeader` changed from `sticky` to `fixed` positioning so `#hero` sits at viewport `top: 0` behind `#splash-container`. In `timelines.ts`, the splash container background switches to `transparent` at `waveSweep += fullCoverTime` — peeling the green tiles now reveals the green hero section instead of white.
+    2. **Hero "IN" entrance animations**: Created `hero-entrance.ts` with `setupHeroInitialStates()` (pre-hides hero elements) and `animateHeroEntrance(tl, "tileOut")` (topo lines draw in with `strokeDashoffset → 0`, floating produce slices pop with `back.out(1.35)`, headline/description glide up with `power3.out`, CTA buttons spring up with `back.out(1.4)`, harvest crates float up — all overlapping the tile peel).
+    3. **Restored real header contents**: Search input with `HeaderCategoryDropdown`, real section links (Home, Marketplace, Categories, Live Surplus, etc.), Marketplace link with ShoppingBag icon, session-aware Sign In/Register vs My Passes. Extracted `LandingHeaderMobileDrawer` to keep under 200 lines.
+    4. **Extracted components for 200-line limit**: `HeroFloatingSlices.tsx` (70 lines), `LandingHeaderMobileDrawer.tsx` (95 lines), `wave-inversion.ts` (28 lines).
+    5. **Removed `HeaderMegaMenu.tsx`** (mock dummy categories).
+    6. **Hero padding**: Adjusted `pt-[140px] sm:pt-[180px]` to account for fixed header height.
+  - **Files Changed**:
+    - `web/src/features/home/components/LandingHeader.tsx` (198 lines)
+    - `web/src/features/home/components/LandingHeaderMobileDrawer.tsx` (95 lines, new)
+    - `web/src/features/home/components/HeaderMegaMenu.tsx` (deleted)
+    - `web/src/components/sections/Hero.tsx` (148 lines)
+    - `web/src/components/sections/HeroFloatingSlices.tsx` (70 lines, new)
+    - `web/src/components/sections/Features.tsx` (165 lines)
+    - `web/src/lib/gsap/timelines.ts` (178 lines)
+    - `web/src/lib/gsap/hero-entrance.ts` (21 lines, new)
+    - `web/src/lib/gsap/wave-inversion.ts` (28 lines, new)
+  - **Verification**: `tsc --noEmit` 0 errors. Headless Chrome CDP screenshots confirm: splash plays on white → green tiles cover → container goes transparent → tiles peel revealing green hero with animated entrance → header `position: fixed`. No white flash.

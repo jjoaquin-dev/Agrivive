@@ -3,7 +3,7 @@ import Image from "next/image";
 export function HeroFloatingSlices() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      {/* Left Side Produce */}
+      {/* Left Side Produce (phones show the corner slices only, so the headline has clear space) */}
       <div className="hero-slice absolute top-[7%] sm:top-[11%] left-[2%] sm:left-[8%] lg:left-[11%] w-[72px] sm:w-[168px] md:w-[192px] lg:w-[216px] drop-shadow-[0_20px_35px_rgba(0,0,0,0.55)] opacity-85 sm:opacity-95">
         <div className="float-slice-1 w-full h-full">
           <Image src="/brand/slice-tomato-wheel.png" alt="Juicy red tomato slice" width={216} height={216} className="w-full h-auto object-contain -rotate-[16deg]" />
@@ -14,7 +14,7 @@ export function HeroFloatingSlices() {
           <Image src="/brand/slice-cucumber-real.png" alt="Fresh green cucumber slice" width={136} height={136} className="w-full h-auto object-contain rotate-[18deg]" />
         </div>
       </div>
-      <div className="hero-slice absolute top-[48%] sm:top-[44%] -left-3.5 sm:left-[6%] lg:left-[7%] w-[64px] sm:w-[136px] md:w-[168px] drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] opacity-85 sm:opacity-95">
+      <div className="hero-slice hidden sm:block absolute top-[48%] sm:top-[44%] -left-3.5 sm:left-[6%] lg:left-[7%] w-[64px] sm:w-[136px] md:w-[168px] drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] opacity-85 sm:opacity-95">
         <div className="float-slice-3 w-full h-full">
           <Image src="/brand/slice-red-onion-ring.png" alt="Sliced red onion ring" width={168} height={168} className="w-full h-auto object-contain -rotate-[24deg]" />
         </div>
@@ -46,7 +46,7 @@ export function HeroFloatingSlices() {
           <Image src="/brand/slice-basil-leaf.png" alt="Fresh basil leaf" width={112} height={112} className="w-full h-auto object-contain rotate-[28deg]" />
         </div>
       </div>
-      <div className="hero-slice absolute top-[50%] sm:top-[48%] -right-3.5 sm:right-[6%] lg:right-[8%] w-[64px] sm:w-[136px] md:w-[168px] drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] opacity-85 sm:opacity-95">
+      <div className="hero-slice hidden sm:block absolute top-[50%] sm:top-[48%] -right-3.5 sm:right-[6%] lg:right-[8%] w-[64px] sm:w-[136px] md:w-[168px] drop-shadow-[0_20px_35px_rgba(0,0,0,0.5)] opacity-85 sm:opacity-95">
         <div className="float-slice-3 w-full h-full">
           <Image src="/brand/slice-red-onion-ring.png" alt="Sliced red onion ring" width={168} height={168} className="w-full h-auto object-contain rotate-[32deg]" />
         </div>

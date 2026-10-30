@@ -92,7 +92,7 @@ export function ConversationThread({
       <ConversationContextCard context={context} />
 
       {/* Messages Scroll Feed */}
-      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-2">
+      <div data-lenis-prevent className="flex-1 space-y-4 overflow-y-auto px-6 py-2">
         {thread.loading ? (
           <div className="space-y-3">
             <div className="h-12 w-2/5 animate-pulse rounded-2xl bg-neutral-100" />
