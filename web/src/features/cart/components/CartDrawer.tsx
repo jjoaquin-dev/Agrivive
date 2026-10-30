@@ -103,7 +103,7 @@ export function CartDrawer() {
         {!isReady ? (
           <div className="m-6 h-40 animate-pulse rounded-[20px] bg-white" aria-label="Loading cart" />
         ) : items.length > 0 ? (
-          <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-5">
+          <div data-lenis-prevent className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-5">
             {trustWarning ? (
               <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-900">
                 <AlertTriangle className="size-4 shrink-0 text-amber-600" />

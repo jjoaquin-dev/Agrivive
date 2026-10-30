@@ -84,7 +84,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
       </div>
 
       {/* Scrollable Notifications List */}
-      <div className="max-h-[380px] divide-y divide-neutral-100 overflow-y-auto px-2 pb-2">
+      <div data-lenis-prevent className="max-h-[380px] divide-y divide-neutral-100 overflow-y-auto px-2 pb-2">
         {loading && !notices.length ? (
           <div className="space-y-3 p-3">
             {[1, 2, 3].map((i) => (

@@ -13,6 +13,7 @@ status: active
 
 ## Start here
 
+- [[00-LATEST]] — current Agrivive development snapshot (read this first in a new session)
 - [[Project Brief]] — one-page concept and value proposition
 - [[Problem and Evidence]] — field findings and why the system exists
 - [[Goals and Boundaries]] — objectives, scope, exclusions, and claims to avoid

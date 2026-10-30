@@ -59,6 +59,15 @@ export interface MarketplaceOverviewResponse {
   buyerSummary: BuyerCommunitySummary;
 }
 
-export function getMarketplaceOverview(range: MarketplaceOverviewRange = "month", signal?: AbortSignal) {
-  return apiRequest<MarketplaceOverviewResponse>(`/marketplace/overview?range=${range}`, { signal });
+// An API that has not been redeployed yet may omit the newer lists; default them so the page still renders.
+export async function getMarketplaceOverview(range: MarketplaceOverviewRange = "month", signal?: AbortSignal) {
+  const res = await apiRequest<MarketplaceOverviewResponse>(`/marketplace/overview?range=${range}`, { signal });
+  return {
+    ...res,
+    topProduce: res.topProduce ?? [],
+    activityTrends: res.activityTrends ?? [],
+    categoryBreakdown: res.categoryBreakdown ?? [],
+    sellerStalls: res.sellerStalls ?? [],
+    buyerSummary: res.buyerSummary ?? { registeredBuyers: 0, activeBuyersWithOrders: 0, completedPickups: 0, pendingPickups: 0 },
+  };
 }

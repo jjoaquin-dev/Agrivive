@@ -31,7 +31,7 @@ backend/src/
 
 ## ElysiaJS Implementation Pattern
 
-The project-local ElysiaJS skill is at `.agents/skills/elysiajs/SKILL.md`. Consult it and the official ElysiaJS documentation when changing routes, validation, macros, plugins, or integrations. Apply project conventions in this file when choosing file names and service boundaries. Write application code in `backend/src/`, not in the installed skill.
+The project-local ElysiaJS skill is at `.claude/skills/elysiajs/SKILL.md`. Consult it and the official ElysiaJS documentation when changing routes, validation, macros, plugins, or integrations. Apply project conventions in this file when choosing file names and service boundaries. Write application code in `backend/src/`, not in the installed skill.
 
 Create a route as a chained Elysia instance in `index/<feature>.ts`. Register body schemas from `model/<feature>.ts`, define header schemas in the route options, use `sessionAuth` and the appropriate role on protected routes, and pass validated values to the matching service. Keep database transactions, stock changes, and order state transitions in services. Use `status(...)` in handlers for HTTP responses and preserve distinct error statuses from services. Keep the module's `index.ts` limited to route composition.
 
@@ -60,9 +60,16 @@ Use short, familiar words that a five-year-old can understand in mobile labels, 
 
 Use specific, professional headings and labels that name the content or action. Do not use filler headings such as "What does it do?" or vague recommendation copy. Include captions only when they add information the heading does not provide. Label synthetic content visibly as "Sample data"; never imply it reflects real purchases. Keep loading and error copy consistent with the section heading.
 
-## Implementation and Plan mode Approval
+## Following Instructions
 
-Before editing code, show the proposed code and the file path where it will go. Wait for the user's review and approval before making the edit.
+Read the instruction the user gives and carry it out directly. Planning is already done, so do not show proposed code or wait for approval before editing.
+
+When the user supplies a specification, treat it as the completed plan:
+
+- Do not repeat the planning process or propose alternative designs.
+- Validate the specification against the existing codebase with targeted reads only. Avoid broad exploration and do not launch planning agents.
+- If the specification contradicts the codebase or itself, explain the contradiction before making any changes.
+- Otherwise, implement directly and report the result.
 
 ## Obsidian Vault Updates
 

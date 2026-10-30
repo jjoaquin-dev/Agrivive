@@ -53,7 +53,7 @@ export default function MarketplaceOverviewPage() {
         <LandingHeader />
       </div>
 
-      <main className="min-h-screen bg-[#F8F6F1] py-8 text-neutral-900 lg:py-12 print:bg-white print:p-0">
+      <main className="min-h-screen bg-[#F8F6F1] pb-8 pt-24 text-neutral-900 md:pt-44 lg:pb-12 print:bg-white print:p-0">
         <PageContainer>
           {loading && !data ? (
             <div className="space-y-6">

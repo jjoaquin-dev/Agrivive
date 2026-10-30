@@ -1,5 +1,9 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useScrollLift } from "@/src/hooks/useScrollLift";
 
 const categories = [
   {
@@ -9,7 +13,6 @@ const categories = [
     alt: "Fresh leafy greens including bok choy, lettuce, and water spinach",
     topGradient: "from-[#EAF7E1]/90 via-[#F4FBEF]/40 to-transparent",
     hoverBorder: "hover:border-[#CFECC0]",
-    shadow: "hover:shadow-[#457D00]/10",
   },
   {
     name: "Fruit Vegetables",
@@ -18,7 +21,6 @@ const categories = [
     alt: "Fresh fruit vegetables including tomatoes, eggplant, and squash",
     topGradient: "from-[#FEECE0]/90 via-[#FEF6F0]/40 to-transparent",
     hoverBorder: "hover:border-[#F7CDB5]",
-    shadow: "hover:shadow-[#FEA938]/10",
   },
   {
     name: "Root Vegetables",
@@ -27,7 +29,6 @@ const categories = [
     alt: "Fresh root vegetables including carrots, radish, and beetroot",
     topGradient: "from-[#FEF0D8]/90 via-[#FFF8EC]/40 to-transparent",
     hoverBorder: "hover:border-[#F8D8B0]",
-    shadow: "hover:shadow-[#E07A5F]/10",
   },
   {
     name: "Pod Vegetables",
@@ -36,7 +37,6 @@ const categories = [
     alt: "Fresh pod vegetables including okra, string beans, and snap peas",
     topGradient: "from-[#E7F8DC]/90 via-[#F3FCEF]/40 to-transparent",
     hoverBorder: "hover:border-[#C5E8B2]",
-    shadow: "hover:shadow-[#457D00]/10",
   },
   {
     name: "Tuber Vegetables",
@@ -45,7 +45,6 @@ const categories = [
     alt: "Fresh tuber vegetables including potatoes, ube yam, and taro",
     topGradient: "from-[#F2EBFE]/90 via-[#F9F5FF]/40 to-transparent",
     hoverBorder: "hover:border-[#DDCFF5]",
-    shadow: "hover:shadow-[#7C3AED]/10",
   },
   {
     name: "Bulb Vegetables",
@@ -54,55 +53,56 @@ const categories = [
     alt: "Fresh bulb vegetables including onions, garlic, and scallions",
     topGradient: "from-[#FEF4DC]/90 via-[#FFF9EC]/40 to-transparent",
     hoverBorder: "hover:border-[#F6DCB2]",
-    shadow: "hover:shadow-[#D97706]/10",
   },
 ];
 
 export function HomeCategories() {
+  const gridRef = useRef<HTMLUListElement>(null);
+  useScrollLift(gridRef, ".category-lift");
+
   return (
-    <section id="categories" className="bg-[#FAF9F5] py-14 sm:py-20 border-y border-neutral-200/60">
+    <section id="categories" className="bg-[#FAF9F5] py-16 sm:py-24 border-y border-neutral-200/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-heading text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl md:text-4xl">
-            Our Popular Categories
-          </h2>
-          <p className="mt-2.5 text-xs text-neutral-600 sm:text-sm md:text-base">
+        {/* Editorial split header: heading left, supporting line right on desktop */}
+        <div data-reveal className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+          <h2 className="type-section font-heading text-neutral-900">Our Popular Categories</h2>
+          <p className="type-lede max-w-md text-neutral-600 lg:text-right">
             Browse rescued surplus harvest by category directly from Davao partner farms and public stalls.
           </p>
         </div>
 
-        {/* Clean Modern Categories Row */}
-        <div className="mt-8 sm:mt-10 flex gap-3.5 sm:gap-5 overflow-x-auto scrollbar-none py-3 px-1 sm:justify-center snap-x snap-mandatory">
+        {/* 2 / 3 / 6 columns: every category stays visible, no sideways scrolling on phones */}
+        <ul ref={gridRef} className="mt-10 grid grid-cols-2 gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
           {categories.map((cat) => (
-            <Link
-              key={cat.name}
-              href={cat.href}
-              className={`group relative flex flex-col items-center justify-between shrink-0 w-[145px] sm:w-[160px] md:w-[172px] h-[185px] sm:h-[200px] rounded-[24px] bg-white p-3.5 sm:p-4 border border-neutral-200/70 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.03)] hover:-translate-y-1.5 hover:shadow-lg ${cat.hoverBorder} ${cat.shadow} transition-all duration-300 snap-start select-none overflow-hidden`}
-            >
-              {/* Subtle Upper Gradient Wash (Top until the middle, fades to transparent) */}
-              <div
-                className={`absolute top-0 inset-x-0 h-32 rounded-t-[24px] bg-gradient-to-b ${cat.topGradient} pointer-events-none`}
-              />
+            <li key={cat.name} data-reveal="pop">
+              {/* Three layers, no clashes: li = reveal, this wrapper = scroll lift, Link = hover lift */}
+              <div className="category-lift">
+              <Link
+                href={cat.href}
+                className={`group relative flex aspect-[4/5] flex-col items-center justify-between overflow-hidden rounded-[24px] border border-neutral-200/70 bg-white p-4 transition-[transform,border-color,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-[0_12px_28px_-12px_rgba(20,50,30,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF9F5] ${cat.hoverBorder}`}
+              >
+                {/* Soft wash behind the produce */}
+                <div className={`pointer-events-none absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b ${cat.topGradient}`} />
 
-              {/* Centered Produce Photography (Guaranteed Visible Dimensions) */}
-              <div className="relative z-10 w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center mt-1">
-                <Image
-                  src={cat.image}
-                  alt={cat.alt}
-                  width={128}
-                  height={128}
-                  className="h-full w-full object-contain drop-shadow-sm transition-transform duration-300 ease-out group-hover:scale-108"
-                />
+                <div className="relative z-10 flex w-full flex-1 items-center justify-center">
+                  <Image
+                    src={cat.image}
+                    alt={cat.alt}
+                    width={160}
+                    height={160}
+                    sizes="(min-width: 1024px) 160px, (min-width: 640px) 30vw, 45vw"
+                    className="h-auto w-[78%] max-w-[160px] object-contain drop-shadow-sm transition-transform duration-500 ease-settle group-hover:scale-105"
+                  />
+                </div>
+
+                <span className="relative z-10 mt-2 text-center font-heading text-sm font-bold tracking-tight text-neutral-900 transition-colors group-hover:text-[#457D00] sm:text-[15px]">
+                  {cat.name}
+                </span>
+              </Link>
               </div>
-
-              {/* Category Name on Crisp White Surface */}
-              <span className="relative z-10 font-heading text-xs sm:text-sm md:text-[15px] font-bold text-neutral-900 text-center group-hover:text-[#457D00] transition-colors mb-0.5 line-clamp-1 tracking-tight">
-                {cat.name}
-              </span>
-            </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

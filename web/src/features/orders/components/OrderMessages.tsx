@@ -28,7 +28,7 @@ export function OrderMessages({ orderId, refreshKey = 0 }: { orderId: string; re
         {conversation.error ? <Alert variant="destructive"><AlertDescription>{conversation.error}</AlertDescription></Alert> : null}
 
         {conversation.messages.length > 0 ? (
-          <div className="max-h-80 space-y-2.5 overflow-y-auto rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
+          <div data-lenis-prevent className="max-h-80 space-y-2.5 overflow-y-auto rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3">
             {conversation.messages.map((item) => (
               <div key={item.id} className="rounded-xl border border-[#E8E8E8] bg-white p-3">
                 <p className="text-[12px] font-semibold text-[#457D00]">

@@ -44,20 +44,20 @@ export function HomeFinalCta() {
     <section className="bg-white py-16 sm:py-24 border-b border-neutral-200/80">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Modern Elevated Botanical Card */}
-        <div className="relative overflow-hidden rounded-[32px] sm:rounded-[40px] bg-[#457D00] px-6 py-14 sm:px-12 sm:py-20 text-center text-white shadow-2xl border border-[#386600]">
+        <div data-reveal className="relative overflow-hidden rounded-[32px] sm:rounded-[40px] bg-[#457D00] px-6 py-14 sm:px-12 sm:py-24 text-center text-white shadow-2xl border border-[#386600]">
           {/* Subtle Ambient Radial Lighting */}
           <div className="pointer-events-none absolute -right-20 -top-20 size-96 rounded-full bg-[#457D00]/20 blur-3xl" />
           <div className="pointer-events-none absolute -left-20 -bottom-20 size-96 rounded-full bg-[#FEA938]/10 blur-3xl" />
 
           <div className="relative z-10 mx-auto max-w-3xl">
             {/* Headline */}
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
+            <h2 className="type-section font-heading text-white">
               Start Shopping Today’s Harvest
             </h2>
 
             {/* Subtitle */}
-            <p className="mt-4 text-sm sm:text-base leading-relaxed text-neutral-200 max-w-xl mx-auto">
-              Join conscious Davao buyers and support local growers while enjoying up to 50% off fresh surplus produce directly from neighborhood stalls.
+            <p className="type-lede mx-auto mt-4 max-w-xl text-white/90">
+              Join Davao buyers who save on fresh surplus produce straight from neighborhood stalls.
             </p>
 
             {/* Integrated Search Bar (Matching Navbar Style) */}
@@ -71,7 +71,7 @@ export function HomeFinalCta() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search surplus vegetables (e.g. tomatoes, eggplant)..."
-                className="w-full bg-transparent px-3 text-xs sm:text-sm text-neutral-900 placeholder:text-neutral-400 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
+                className="min-w-0 w-full bg-transparent px-3 text-sm text-neutral-900 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
               />
 
               {/* Category Selector Divider */}
@@ -102,13 +102,13 @@ export function HomeFinalCta() {
 
             {/* Popular Search Chips (Recognition Over Recall) */}
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
-              <span className="font-semibold text-neutral-300">Popular:</span>
+              <span className="font-semibold text-white">Popular:</span>
               {popularSearches.map((item) => (
                 <button
                   key={item.label}
                   type="button"
                   onClick={() => handleQuickSearch(item.query)}
-                  className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-xs hover:bg-white/20 hover:text-white transition cursor-pointer border border-white/10"
+                  className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-xs hover:bg-white/20 transition cursor-pointer border border-white/10"
                 >
                   {item.label}
                 </button>
@@ -117,7 +117,7 @@ export function HomeFinalCta() {
 
             {/* Secondary Action & Trust Assurances */}
             <div className="mt-10 pt-8 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-neutral-300">
+              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-white">
                 <span className="inline-flex items-center gap-1.5">
                   <ShieldCheck className="size-4 text-[#B8EB5E]" /> 24-Hour QR Holds
                 </span>
@@ -129,7 +129,7 @@ export function HomeFinalCta() {
 
               <Link
                 href="/marketplace"
-                className="inline-flex items-center gap-1.5 font-heading text-xs sm:text-sm font-bold text-[#B8EB5E] hover:text-[#d3f596] transition underline underline-offset-4"
+                className="inline-flex items-center gap-1.5 font-heading text-xs sm:text-sm font-bold text-white hover:text-[#E2FD56] transition underline underline-offset-4"
               >
                 <span>Browse Full Marketplace Catalog</span>
                 <ArrowRight className="size-4" />
