@@ -11,6 +11,7 @@ import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { validatePriceReductionConfig } from "../../../utils/price-reduction";
 import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function createSellerProduct(userId: string, body: SellerProductCreate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -72,6 +73,13 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
       originalQty: body.productQty.toString(),
     });
     await queueFirstPublicListing(tx, created.id);
+    await createSellerNotification(tx, {
+      sellerId: userId,
+      kind: "listing_live",
+      dedupeKey: `listing-live:${created.id}`,
+      productId: created.id,
+      payload: { productName },
+    });
     return created;
   });
 

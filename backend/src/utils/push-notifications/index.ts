@@ -66,7 +66,7 @@ export async function sendPushNotificationBatch(messages: PushNotificationMessag
       android: {
         priority: "high",
         collapseKey: first.data.collapseKey,
-        notification: { channelId: "default" },
+        notification: { channelId: first.data.channelId || "default" },
       },
       apns: {
         headers: first.data.collapseKey ? { "apns-collapse-id": first.data.collapseKey } : undefined,

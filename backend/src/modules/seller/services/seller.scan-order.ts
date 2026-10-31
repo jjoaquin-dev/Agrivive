@@ -7,6 +7,7 @@ import { requireSellerScanAccess } from "../../../utils/seller-access";
 import { verifyOrderQr } from "../../../utils/order-qr";
 import { getOrder } from "../../../utils/order-read";
 import { OrderError } from "../../../utils/order-types";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function scanSellerOrder(sellerId: string, body: ScanOrderInput) {
   const orderId = verifyOrderQr(body.qrPayload);
@@ -131,6 +132,13 @@ export async function scanSellerOrder(sellerId: string, body: ScanOrderInput) {
           eq(orders.status, "pending"),
         ),
       );
+
+    await createSellerNotification(tx, {
+      sellerId,
+      kind: "pickup_done",
+      dedupeKey: `pickup-done:${orderId}`,
+      orderId,
+    });
   });
 
   return getOrder(orderId, sellerId, "seller");

@@ -9,9 +9,12 @@ import { deliverSellerPromotionWebhooks } from "./deliver-seller-promotion-webho
 import { deliverPushNotifications } from "./deliver-push-notifications";
 import { applySellerPriceReductions } from "./apply-seller-price-reductions";
 import { deliverSellerVisibilityBoosts } from "./deliver-seller-visibility-boosts";
+import { deliverSellerBoostFollowUps } from "./deliver-seller-boost-follow-ups";
+import { sendReservationEndingNotices } from "./send-reservation-ending-notices";
 
 export async function runScheduledJobs() {
   const expiredOrders = await expirePendingOrders();
+  const reservationEndingNotices = await sendReservationEndingNotices();
   const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
@@ -21,6 +24,7 @@ export async function runScheduledJobs() {
   const sellerPromotionChecks = await checkSellerPromotionEligibility();
   const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
+  const sellerBoostFollowUps = await deliverSellerBoostFollowUps();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
+  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, sellerBoostFollowUps, pushNotifications };
 }

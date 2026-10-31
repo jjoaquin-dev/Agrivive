@@ -10,6 +10,7 @@ import { NotificationCategoryTabs } from "../../src/features/notifications/compo
 import { NotificationSearchBar } from "../../src/features/notifications/components/NotificationSearchBar";
 import { NotificationTimelineCard } from "../../src/features/notifications/components/NotificationTimelineCard";
 import { NotificationFilterModal, NotificationFilterState } from "../../src/features/notifications/components/NotificationFilterModal";
+import { NotificationSettingsSheet } from "../../src/features/notifications/components/NotificationSettingsSheet";
 import { PaginationControl } from "../../src/components/PaginationControl";
 import type { NotificationCategory, UnifiedNotificationItem } from "../../src/features/notifications/types";
 
@@ -25,6 +26,7 @@ export default function NotificationsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<NotificationFilterState>({
@@ -114,7 +116,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <NotificationHeaderBar unreadCount={unreadCount} onMarkAllRead={markAllRead} onOpenMenu={handleOpenMenu} />
+      <NotificationHeaderBar unreadCount={unreadCount} onMarkAllRead={markAllRead} onOpenMenu={handleOpenMenu} onOpenSettings={() => setSettingsVisible(true)} />
 
       <FlatList
         data={sectionedData}
@@ -164,6 +166,8 @@ export default function NotificationsScreen() {
           )
         }
       />
+
+      <NotificationSettingsSheet visible={settingsVisible} onClose={() => setSettingsVisible(false)} />
 
       <NotificationFilterModal
         visible={filterModalVisible}

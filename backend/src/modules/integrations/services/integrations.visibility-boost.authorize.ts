@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 
-export function isServiceTokenAuthorized(authorization: string | undefined, expectedToken: string | undefined) {
-  const expected = expectedToken?.trim();
+export function isVisibilityBoostAuthorized(authorization?: string) {
+  const expected = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
   if (!expected || !authorization?.startsWith("Bearer ")) return false;
   const provided = Buffer.from(authorization.slice(7).trim());
   const expectedBytes = Buffer.from(expected);

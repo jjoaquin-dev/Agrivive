@@ -3,6 +3,7 @@ import { db } from "../../db";
 import { order_inquiries, orders, trust_events, trust_notices } from "../../db/schema";
 import { OrderError, type OrderSide } from "../order-types";
 import type { OrderTransaction } from "../order-types";
+import { alertSellerOfTrustNotice } from "../seller-notifications";
 
 export function recordTrustEvent(tx: OrderTransaction, input: {
   eventKey: string;
@@ -15,13 +16,16 @@ export function recordTrustEvent(tx: OrderTransaction, input: {
   return tx.insert(trust_events).values(input).onConflictDoNothing({ target: trust_events.eventKey }).returning();
 }
 
-export function queueTrustNotice(tx: OrderTransaction, input: {
+export async function queueTrustNotice(tx: OrderTransaction, input: {
   noticeKey: string;
   recipientId: string;
   orderId?: string | null;
   kind: string;
 }) {
-  return tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+  const rows = await tx.insert(trust_notices).values(input)
+    .onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+  if (rows.length) await alertSellerOfTrustNotice(tx, input);
+  return rows;
 }
 
 export async function recordInquiryDeadlines(tx: OrderTransaction, inquiry: {

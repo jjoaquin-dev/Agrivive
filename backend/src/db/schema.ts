@@ -31,6 +31,7 @@ export const notification_type_enum = pgEnum("notification_type", [
   "buyer_message",
   "seller_listing",
   "seller_boost",
+  "seller_alert",
 ]);
 
 export const user = pgTable("user", {
@@ -486,6 +487,8 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
   readAt: timestamp("read_at", { withTimezone: true }),
+  followUpDueAt: timestamp("follow_up_due_at", { withTimezone: true }),
+  followUpAttempts: integer("follow_up_attempts").default(0).notNull(),
   priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -495,6 +498,7 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
 ]);
@@ -794,3 +798,30 @@ export const fb_post_logs = pgTable("fb_post_logs", {
 }, (table) => [
   index("fb_post_logs_product_idx").on(table.productId, table.postedAt),
 ]);
+
+export const seller_notifications = pgTable("seller_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => sellers_product.id, { onDelete: "cascade" }),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+  dedupeKey: text("dedupe_key").notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("seller_notifications_dedupe_unique").on(table.dedupeKey),
+  index("seller_notifications_seller_created_idx").on(table.sellerId, table.createdAt.desc()),
+]);
+
+export const seller_notification_settings = pgTable("seller_notification_settings", {
+  sellerId: text("seller_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+  stockPrice: boolean("stock_price").default(true).notNull(),
+  boost: boolean("boost").default(true).notNull(),
+  account: boolean("account").default(true).notNull(),
+  nightMode: boolean("night_mode").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});

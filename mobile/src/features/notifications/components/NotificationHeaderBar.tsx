@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ArrowLeft, CheckCheck, MoreHorizontal } from "lucide-react-native";
+import { ArrowLeft, BellRing, CheckCheck, MoreHorizontal } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { colors, fonts, radii, spacing } from "../../../theme";
 
@@ -8,9 +8,10 @@ interface Props {
   unreadCount: number;
   onMarkAllRead: () => void;
   onOpenMenu?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenMenu }: Props) {
+export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenMenu, onOpenSettings }: Props) {
   const router = useRouter();
 
   return (
@@ -34,6 +35,15 @@ export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenMenu }
       </View>
 
       <View style={styles.rightActions}>
+        <Pressable
+          onPress={onOpenSettings}
+          accessibilityRole="button"
+          accessibilityLabel="Phone alert settings"
+          style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
+        >
+          <BellRing size={18} color={colors.textMuted} />
+        </Pressable>
+
         <Pressable
           onPress={onMarkAllRead}
           accessibilityRole="button"

@@ -2,11 +2,11 @@ import { and, desc, eq, gt, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   listing_cycles,
-  notification_outbox,
   seller_visibility_boosts,
   sellers_product,
 } from "../db/schema";
 import { applySellerProductPriceReduction } from "../modules/seller/services/seller.product.price-reduction";
+import { createSellerNotification } from "../utils/seller-notifications";
 
 const batchSize = 100;
 
@@ -37,6 +37,14 @@ export async function applySellerPriceReductions() {
       if (!updated || updated.priceReductionPeriodsApplied <= before.priceReductionPeriodsApplied ||
         Number(updated.productPrice ?? 0) >= Number(before.productPrice ?? 0)) return { reduced: false, prompt: false };
 
+      await createSellerNotification(tx, {
+        sellerId: before.userId,
+        kind: "price_lowered",
+        dedupeKey: `price-lowered:${product.id}:${updated.priceReductionPeriodsApplied}`,
+        productId: product.id,
+        payload: { productName: before.productName, priceAfter: updated.productPrice },
+      });
+
       const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles)
         .where(eq(listing_cycles.productId, product.id))
         .orderBy(desc(listing_cycles.startedAt)).limit(1);
@@ -59,20 +67,6 @@ export async function applySellerPriceReductions() {
       });
       if (!prompt) return { reduced: true, prompt: false };
 
-      await tx.insert(notification_outbox).values({
-        recipientUserId: before.userId,
-        type: "seller_boost",
-        aggregationKey: `seller-boost:${before.userId}`,
-        dedupeKey: `${before.userId}:seller-boost:${boostKey}`,
-        referenceId: prompt.id,
-        payload: {
-          boostId: prompt.id,
-          productId: product.id,
-          productName: before.productName,
-          priceBefore: before.productPrice,
-          priceAfter: updated.productPrice,
-        },
-      }).onConflictDoNothing({ target: notification_outbox.dedupeKey });
       return { reduced: true, prompt: true };
     });
 
