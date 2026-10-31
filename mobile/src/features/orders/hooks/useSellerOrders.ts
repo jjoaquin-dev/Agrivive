@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useIsFocused } from "expo-router";
+import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { fetchSellerOrders } from "../api/seller-orders";
 import type { SellerOrder, SellerOrderFilter } from "../types";
 
@@ -43,6 +44,9 @@ export function useSellerOrders() {
       void loadOrders(true);
     }, [filter]),
   );
+
+  const isFocused = useIsFocused();
+  useRefreshOnSignal(() => loadOrders(true), { pushTypes: ["seller_alert", "seller_message"], enabled: isFocused });
 
   const refresh = useCallback(() => {
     setRefreshing(true);

@@ -160,6 +160,8 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | GET | `/seller/notifications` | `backend/src/modules/seller/index/seller.notifications.ts` |
 | POST | `/seller/notifications/:id/read` | `backend/src/modules/seller/index/seller.notifications.ts` |
 | POST | `/seller/notifications/read-all` | `backend/src/modules/seller/index/seller.notifications.ts` |
+| GET | `/seller/notification-settings` | `backend/src/modules/seller/index/seller.notification-settings.ts` |
+| PATCH | `/seller/notification-settings` | `backend/src/modules/seller/index/seller.notification-settings.ts` |
 | GET | `/seller/promotions` | `backend/src/modules/seller/index/seller.promotions.ts` |
 | POST | `/seller/promotions/:id/read` | `backend/src/modules/seller/index/seller.promotions.ts` |
 | POST | `/seller/promotions/read-all` | `backend/src/modules/seller/index/seller.promotions.ts` |
@@ -208,6 +210,18 @@ The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|fo
 
 The backend checks initial eligibility hourly with the Figure 5 AHP–TOPSIS engine. It compares all currently eligible active surplus listings, uses weights `0.40/0.30/0.20/0.10`, and queues only listings at `Ci* >= 0.60` for Priority Boost. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. At that follow-up, the backend may apply one configured percentage reduction toward the seller's minimum price before n8n fetches the refreshed context. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
 
+## Boost posting (n8n)
+
+The seller taps **Boost** (after adding a product, or from a price-drop prompt). The app calls `POST /seller/products/:id/boost` (or `POST /seller/boost-prompts/:id/boost`), and the backend sends only `{ "boostId": "<uuid>", "reason": "initial|price_reduction" }` to `N8N_VISIBILITY_BOOST_WEBHOOK_URL` with `Authorization: Bearer <N8N_VISIBILITY_BOOST_SERVICE_TOKEN>`. n8n writes the title and description with Groq, then calls these routes, which all need the same Bearer token and return `401` without it.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| GET | `/integrations/visibility-boosts/:id/context` | Current product facts, `previousPrice` (price drops only), `listingUrl`, public `imageUrl`. |
+| POST | `/integrations/visibility-boosts/:id/facebook-post` | Body `{"postType":"first_post|second_post","caption":"..."}`. The backend rechecks the listing, posts with its own Meta credentials, saves the `fb_post_logs` row, removes any link in the caption and adds the product page link, and replaces captions that do not show the current price. Before posting it saves a `pending` row. A repeated call returns `alreadyPosted: true`. A `pending` row that never finished returns `409` ("still being sent", or after 5 minutes "may have reached Facebook, check the Page"), so nothing posts twice; the owner checks the Page and sets that row to `success` or `failed`. A price-drop boost post returns `409` if another price drop post went out in the last 3 hours. After the first post is saved the seller gets a **Boost Started** push and the boost gets a follow-up due time 6 hours later (only when the seller turned on price drops). After the second post of a first boost is saved, the backend creates a price-drop boost prompt and sends a **Price Lowered** push ("from ₱X to ₱Y. You can boost it again in 3 hours."). |
+| POST | `/integrations/visibility-boosts/:id/reduce-price` | The 6-hour rule. Cuts the price once by the seller's `priceReductionPercent`, never below `minimumPrice`. First boost only, and needs the first post saved (`409` otherwise). Returns `reduced` plus `reason` (`not_enabled`, `at_floor`, `unavailable`) when nothing changed. A retry does not cut twice. When nothing was cut, the follow-up is closed. |
+
+The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due_at`), not in n8n. When it passes, the worker sends `{ "boostId": "<uuid>", "reason": "follow_up" }` to the same webhook. n8n then calls `context`, `reduce-price`, writes the flash-sale caption and calls `facebook-post` with `second_post`. If the second post is not saved, the worker asks again every 15 minutes, up to 5 times. Seller routes `POST /seller/products/:id/boost` and `POST /seller/boost-prompts/:id/boost` return `409` ("You can boost again in about N hours") for a price drop boost within 3 hours of the last price drop post. Apply `backend/drizzle/20261031140000_boost_follow_up` before testing.
+
 ## Seller social publishing to official Agrivive pages
 
 These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page and linked Instagram Professional account; no seller OAuth linking is used. TikTok and X publishing are not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.
@@ -251,6 +265,41 @@ This endpoint reports aggregate usage, listings, orders, verified trust event co
 Trust actions are disabled by default with `TRUST_ACTIONS_ENABLED=false`. When explicitly enabled and manually validated, the scheduled system can create a warning, a temporary restriction, or a blocked state. Temporary restrictions expire through `runScheduledJobs`; blocked-account restoration requires the public OTP recovery flow above.
 
 Evidence files are stored with private access in the configured S3 bucket. Keep the bucket policy private; download links are signed and expire after five minutes.
+
+## Seller notifications
+
+Seller role, session cookie or bearer session. The feed merges stored alerts (`seller_notifications`) with trust notices (`trust_notices`).
+
+`GET /seller/notifications?limit=20&cursor=<id>&unreadOnly=true` returns:
+
+```json
+{
+  "items": [
+    {
+      "id": "uuid",
+      "source": "alert",
+      "kind": "sold_out",
+      "category": "listings",
+      "title": "Sold Out",
+      "body": "Red Tomatoes is sold out.",
+      "orderId": null,
+      "productId": "uuid",
+      "createdAt": "2026-10-31T08:00:00.000Z",
+      "readAt": null
+    }
+  ],
+  "nextCursor": null,
+  "unreadCount": 1
+}
+```
+
+`source` is `alert` or `trust`. `category` is `reservations`, `messages`, `listings` or `trust`. Pass `nextCursor` back as `cursor`.
+
+`POST /seller/notifications/:id/read` returns the updated item. `POST /seller/notifications/read-all` returns `{ "updatedCount": 3 }`.
+
+`GET /seller/notification-settings` returns `{ "stockPrice": true, "boost": true, "account": true, "nightMode": false }`. `PATCH` takes any of those keys and returns the saved settings. They change phone alerts only; the feed always shows everything.
+
+Phone alerts: events of the same kind inside one 60-second window (`PUSH_SELLER_ALERT_WINDOW_SECONDS`, 10 to 600) become one alert. Reservations, buyer cancellations, chat messages, buyer reminders, and account limits ring on the `orders` channel. Stock, price, Boost, and account notes arrive quietly on the `updates` channel. Night Mode (9 PM to 6 AM Asia/Manila) turns chat messages and reminders quiet; reservations, "ends soon", and account limits keep their sound.
 
 ## Stakeholder
 

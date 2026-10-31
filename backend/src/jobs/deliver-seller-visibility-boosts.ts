@@ -1,6 +1,7 @@
 import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { db } from "../db";
 import { seller_visibility_boosts } from "../db/schema";
+import { getBoostWebhookTarget } from "./boost-webhook-target";
 
 const maxAttempts = 5;
 const batchSize = 50;
@@ -10,19 +11,9 @@ function retryDelay(attempt: number) {
 }
 
 export async function deliverSellerVisibilityBoosts() {
-  const webhookUrl = process.env.N8N_VISIBILITY_BOOST_WEBHOOK_URL?.trim();
-  const serviceToken = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
-  if (!webhookUrl || !serviceToken) return { configured: false, queued: 0, sent: 0, failed: 0 };
-
-  let target: URL;
-  try {
-    target = new URL(webhookUrl);
-    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname)) {
-      return { configured: false, queued: 0, sent: 0, failed: 0 };
-    }
-  } catch {
-    return { configured: false, queued: 0, sent: 0, failed: 0 };
-  }
+  const webhook = getBoostWebhookTarget();
+  if (!webhook) return { configured: false, queued: 0, sent: 0, failed: 0 };
+  const { target, serviceToken } = webhook;
 
   const now = new Date();
   const due = await db.select({

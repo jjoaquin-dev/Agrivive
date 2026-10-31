@@ -6,6 +6,7 @@ import { multiplyPrice, quantityToHundredths } from "../../../utils/order-amount
 import { OrderError, type OrderTransaction } from "../../../utils/order-types";
 import type { ReservedOrderItem } from "../model/buyer.order.create";
 import { applySellerProductPriceReduction } from "../../seller/services/seller.product.price-reduction";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 async function unavailableProductError(
   tx: OrderTransaction,
@@ -22,6 +23,26 @@ async function unavailableProductError(
     return new OrderError(403, "You cannot reserve items from your own stall. Please select produce from another local seller.");
   }
   return new OrderError(409, "Product price or quantity is unavailable");
+}
+
+async function notifyStockLevel(
+  tx: OrderTransaction,
+  product: typeof sellers_product.$inferSelect,
+  quantity: number,
+) {
+  const after = Number(product.productQty ?? 0);
+  const before = after + quantity;
+  const threshold = product.lowStockThreshold === null ? null : Number(product.lowStockThreshold);
+  const soldOut = after <= 0 && before > 0;
+  const runningLow = !soldOut && threshold !== null && threshold > 0 && before > threshold && after <= threshold;
+  if (!soldOut && !runningLow) return;
+  await createSellerNotification(tx, {
+    sellerId: product.userId,
+    kind: soldOut ? "sold_out" : "running_low",
+    dedupeKey: `${soldOut ? "sold-out" : "running-low"}:${product.id}:${crypto.randomUUID()}`,
+    productId: product.id,
+    payload: { productName: product.productName, left: `${after} ${product.scalingType}` },
+  });
 }
 
 export async function reserveOrderItem(
@@ -55,6 +76,7 @@ export async function reserveOrderItem(
   if (!product) throw await unavailableProductError(tx, productId, buyerId);
   await requireActiveUser(tx, product.userId, "seller");
   await requireVerifiedSeller(tx, product.userId);
+  await notifyStockLevel(tx, product, quantity);
   return {
     productId: product.id,
     sellerId: product.userId,

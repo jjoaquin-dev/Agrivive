@@ -57,10 +57,6 @@ export const ProfileVerificationCard: React.FC<ProfileVerificationCardProps> = (
         </Text>
       </View>
 
-      <Text style={styles.footerNote}>
-        Your account was approved during verification. Ask for a review if something looks wrong.
-      </Text>
-
       <Pressable
         onPress={onRequestReview}
         accessibilityRole="button"
@@ -165,13 +161,6 @@ const styles = StyleSheet.create({
   },
   inactiveStatus: {
     color: "#DC2626",
-  },
-  footerNote: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    lineHeight: 16,
-    color: "#94A3B8",
-    marginTop: spacing.sm,
   },
   reviewLink: {
     flexDirection: "row",

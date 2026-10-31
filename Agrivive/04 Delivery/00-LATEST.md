@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-10-30
+last_updated: 2026-10-31 PST
 status: active
 ---
 
@@ -11,21 +11,22 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-10-30
+2026-10-31 PST
 
 ## Latest completed task
 
-Hero redesigned to the uploaded green reference: "Rescue Surplus Vegetables" on one line from 1024px, centred sentence and both CTAs, a smaller transparent basket cutout, and four floating labels from 768px. The floating slices and their components are removed. Details: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]]. Earlier: [[2026-10-30 Hero Decluttered with Line Art]].
+Seller type removed from the database, backend, mobile and web, which also fixed the `/seller/notifications` 500 on the dev database (the column was gone but the code still read it). Details and the required production order: [[2026-10-31 Remove Seller Type]].
 
-Open point: the reference's floating label chips were not added (they would add copy).
+Validation: backend typecheck, drizzle check and both builds; mobile typecheck; web typecheck and build. Not checked in a browser or on a device.
 
-Validation: `bun run typecheck` in `web/` passed. Browser check at 1440 and 375 passed on a dev server at port 3002. `bun run build` and reduced motion not yet run.
+Earlier the same day: [[2026-10-31 Mobile Data Freshness]], [[2026-10-31 Seller Notifications]].
+
+Web landing stream (branch `ui-enhancements`, 2026-10-30): hero redesigned to the uploaded green reference, with "Rescue Surplus Vegetables" on one line from 1024px, a centred sentence and both CTAs, a smaller transparent basket cutout, and four floating labels from 768px. The floating slices and their components are removed. Details: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]]. Earlier: [[2026-10-30 Hero Decluttered with Line Art]]. Validation: `bun run typecheck` in `web/` passed; browser check at 1440 and 375 passed on a dev server at port 3002; `bun run build` and reduced motion not yet run for that work.
 
 ## Current project status
 
-- Branch `ui-enhancements`. Landing, splash and Why Choose work is **uncommitted**.
-- Buyer website (`web/`) landing page is refined. Browser checks cover the reveal only; the remaining layout checks are still open.
-- Mobile app and backend are not part of the recent work.
+- Backend and mobile work (seller notifications, data freshness, seller type removal) is merged to `main` (PR #57). Migrations `20261031120000_seller_notifications`, `20261031130000_remove_seller_type` (applied on dev only) and `20261031140000_boost_follow_up` are **not applied to production**. Production order: notifications before the deploy, remove_seller_type after it (see [[2026-10-31 Remove Seller Type]]). Boost posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
+- Branch `ui-enhancements` carries the buyer website (`web/`) landing, splash and Why Choose work. The landing page is refined; browser checks cover the reveal only, and the remaining layout checks are still open.
 
 ## Active architectural decisions
 
@@ -56,11 +57,14 @@ Many other `web/` files show as modified in git from earlier sessions. Those wer
 
 ## Unresolved issues
 
+- Mobile freshness: owner to check on a development build that lists update after a push, nothing is fetched while backgrounded, and chat reconnects after an API restart.
+- Seller notifications: owner must apply the migration, test `GET /seller/notifications`, the read routes and `/seller/notification-settings`, and walk each trigger on a development build (reserve, cancel, expire, scan, stock low and zero, price drop, Boost result).
+- Boost: owner must apply the follow-up migration, import `agrivive-visibility-boost.json` with credentials, set the two env vars, and test the popup, one post per boost, the 6-hour follow-up from the worker, and the 3-hour gap. A stuck `pending` row in `fb_post_logs` needs a manual Page check. The Boost Visibility screen is unchanged and still uses the social-publishing workflow.
 - No browser check yet for: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, and Core Web Vitals. The Why Choose reveal was checked in a browser, but not with reduced motion on.
-- Port 3001 was held by another process during this task, so the dev server ran on 3002.
+- Port 3001 was held by another process during the web work, so the dev server ran on 3002.
 - The splash length is estimated from timeline math (about 3.04 s to hand-off), not measured.
 - Parkinsans has no size-matched fallback metrics, so the wordmark may shift slightly while the font loads.
-- Nothing is committed. The diff is large, so review it before committing.
+- The `ui-enhancements` web diff is large, so review it before merging to `main`.
 
 ## Next development task
 
@@ -68,5 +72,6 @@ Check the buyer site in a browser (`bun run dev` in `web/`). Turn on reduced mot
 
 ## Historical changelog
 
-- Latest entry: [[2026-10-30 Why Choose Scroll Reveal]]
+- Latest entry: [[2026-10-31 Remove Seller Type]]
+- Latest web landing entry: [[2026-10-30 Why Choose Scroll Reveal]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].

@@ -76089,6 +76089,137 @@ var require_messaging2 = __commonJS(function(exports) {
   } });
 });
 
+// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
+var exports_type3 = {};
+__export(exports_type3, {
+  Any: () => Any,
+  Argument: () => Argument,
+  Array: () => Array2,
+  AsyncIterator: () => AsyncIterator,
+  Awaited: () => Awaited,
+  BigInt: () => BigInt2,
+  Boolean: () => Boolean2,
+  Capitalize: () => Capitalize,
+  Composite: () => Composite,
+  Const: () => Const,
+  Constructor: () => Constructor,
+  ConstructorParameters: () => ConstructorParameters,
+  Date: () => Date2,
+  Enum: () => Enum,
+  Exclude: () => Exclude,
+  Extends: () => Extends,
+  Extract: () => Extract,
+  Function: () => Function2,
+  Index: () => Index,
+  InstanceType: () => InstanceType,
+  Instantiate: () => Instantiate,
+  Integer: () => Integer,
+  Intersect: () => Intersect,
+  Iterator: () => Iterator,
+  KeyOf: () => KeyOf,
+  Literal: () => Literal,
+  Lowercase: () => Lowercase,
+  Mapped: () => Mapped,
+  Module: () => Module,
+  Never: () => Never,
+  Not: () => Not2,
+  Null: () => Null,
+  Number: () => Number2,
+  Object: () => Object2,
+  Omit: () => Omit,
+  Optional: () => Optional,
+  Parameters: () => Parameters,
+  Partial: () => Partial,
+  Pick: () => Pick,
+  Promise: () => Promise2,
+  Readonly: () => Readonly,
+  ReadonlyOptional: () => ReadonlyOptional,
+  Record: () => Record,
+  Recursive: () => Recursive,
+  Ref: () => Ref,
+  RegExp: () => RegExp2,
+  Required: () => Required,
+  Rest: () => Rest,
+  ReturnType: () => ReturnType,
+  String: () => String2,
+  Symbol: () => Symbol2,
+  TemplateLiteral: () => TemplateLiteral,
+  Transform: () => Transform,
+  Tuple: () => Tuple,
+  Uint8Array: () => Uint8Array2,
+  Uncapitalize: () => Uncapitalize,
+  Undefined: () => Undefined,
+  Union: () => Union,
+  Unknown: () => Unknown,
+  Unsafe: () => Unsafe,
+  Uppercase: () => Uppercase,
+  Void: () => Void
+});
+
+// src/db/schema.ts
+var exports_schema = {};
+__export(exports_schema, {
+  account: () => account,
+  buyer_listing_notices: () => buyer_listing_notices,
+  buyer_saved_products: () => buyer_saved_products,
+  checkouts: () => checkouts,
+  conversation_context_enum: () => conversation_context_enum,
+  conversation_messages: () => conversation_messages,
+  conversation_participants: () => conversation_participants,
+  conversation_status_enum: () => conversation_status_enum,
+  conversations: () => conversations,
+  fb_post_logs: () => fb_post_logs,
+  listing_cycles: () => listing_cycles,
+  notification_device_platform_enum: () => notification_device_platform_enum,
+  notification_devices: () => notification_devices,
+  notification_outbox: () => notification_outbox,
+  notification_outbox_status_enum: () => notification_outbox_status_enum,
+  notification_type_enum: () => notification_type_enum,
+  order_inquiries: () => order_inquiries,
+  order_report_evidence: () => order_report_evidence,
+  order_reports: () => order_reports,
+  order_reviews: () => order_reviews,
+  order_status: () => order_status,
+  ordered_items: () => ordered_items,
+  orders: () => orders,
+  product_condition_enum: () => product_condition_enum,
+  product_inquiries: () => product_inquiries,
+  product_reviews: () => product_reviews,
+  product_stock_adjustments: () => product_stock_adjustments,
+  product_type_enum: () => product_type_enum,
+  roleEnum: () => roleEnum,
+  scaling_type_enum: () => scaling_type_enum,
+  seller_boost_reason_enum: () => seller_boost_reason_enum,
+  seller_boost_status_enum: () => seller_boost_status_enum,
+  seller_follows: () => seller_follows,
+  seller_listing_events: () => seller_listing_events,
+  seller_notification_settings: () => seller_notification_settings,
+  seller_notifications: () => seller_notifications,
+  seller_promotion_jobs: () => seller_promotion_jobs,
+  seller_promotion_stage: () => seller_promotion_stage,
+  seller_promotion_status: () => seller_promotion_status,
+  seller_scan_grace: () => seller_scan_grace,
+  seller_social_campaign_posts: () => seller_social_campaign_posts,
+  seller_social_campaigns: () => seller_social_campaigns,
+  seller_visibility_boosts: () => seller_visibility_boosts,
+  sellers_product: () => sellers_product,
+  sellers_profile: () => sellers_profile,
+  session: () => session,
+  social_campaign_post_status: () => social_campaign_post_status,
+  social_campaign_status: () => social_campaign_status,
+  social_platform: () => social_platform,
+  trust_actions: () => trust_actions,
+  trust_corrections: () => trust_corrections,
+  trust_events: () => trust_events,
+  trust_notices: () => trust_notices,
+  twoFactor: () => twoFactor,
+  user: () => user,
+  vegetable_catalog: () => vegetable_catalog,
+  vegetable_category_enum: () => vegetable_category_enum,
+  vegetable_review_status_enum: () => vegetable_review_status_enum,
+  verification: () => verification
+});
+
 // node_modules/memoirist/dist/bun/index.js
 var Y = (v, b) => {
   let A = b?.length ? {} : null;
@@ -78792,74 +78923,6 @@ function Unsafe(options = {}) {
 function Void(options) {
   return CreateType({ [Kind]: "Void", type: "void" }, options);
 }
-
-// node_modules/@sinclair/typebox/build/esm/type/type/type.mjs
-var exports_type3 = {};
-__export(exports_type3, {
-  Any: () => Any,
-  Argument: () => Argument,
-  Array: () => Array2,
-  AsyncIterator: () => AsyncIterator,
-  Awaited: () => Awaited,
-  BigInt: () => BigInt2,
-  Boolean: () => Boolean2,
-  Capitalize: () => Capitalize,
-  Composite: () => Composite,
-  Const: () => Const,
-  Constructor: () => Constructor,
-  ConstructorParameters: () => ConstructorParameters,
-  Date: () => Date2,
-  Enum: () => Enum,
-  Exclude: () => Exclude,
-  Extends: () => Extends,
-  Extract: () => Extract,
-  Function: () => Function2,
-  Index: () => Index,
-  InstanceType: () => InstanceType,
-  Instantiate: () => Instantiate,
-  Integer: () => Integer,
-  Intersect: () => Intersect,
-  Iterator: () => Iterator,
-  KeyOf: () => KeyOf,
-  Literal: () => Literal,
-  Lowercase: () => Lowercase,
-  Mapped: () => Mapped,
-  Module: () => Module,
-  Never: () => Never,
-  Not: () => Not2,
-  Null: () => Null,
-  Number: () => Number2,
-  Object: () => Object2,
-  Omit: () => Omit,
-  Optional: () => Optional,
-  Parameters: () => Parameters,
-  Partial: () => Partial,
-  Pick: () => Pick,
-  Promise: () => Promise2,
-  Readonly: () => Readonly,
-  ReadonlyOptional: () => ReadonlyOptional,
-  Record: () => Record,
-  Recursive: () => Recursive,
-  Ref: () => Ref,
-  RegExp: () => RegExp2,
-  Required: () => Required,
-  Rest: () => Rest,
-  ReturnType: () => ReturnType,
-  String: () => String2,
-  Symbol: () => Symbol2,
-  TemplateLiteral: () => TemplateLiteral,
-  Transform: () => Transform,
-  Tuple: () => Tuple,
-  Uint8Array: () => Uint8Array2,
-  Uncapitalize: () => Uncapitalize,
-  Undefined: () => Undefined,
-  Union: () => Union,
-  Unknown: () => Unknown,
-  Unsafe: () => Unsafe,
-  Uppercase: () => Uppercase,
-  Void: () => Void
-});
-
 // node_modules/@sinclair/typebox/build/esm/type/type/index.mjs
 var Type = exports_type3;
 
@@ -116168,68 +116231,6 @@ pool.on("error", (err) => {
   console.error("Unexpected error on idle PostgreSQL client:", err);
 });
 var db2 = drizzle({ client: pool });
-
-// src/db/schema.ts
-var exports_schema = {};
-__export(exports_schema, {
-  account: () => account,
-  buyer_listing_notices: () => buyer_listing_notices,
-  buyer_saved_products: () => buyer_saved_products,
-  checkouts: () => checkouts,
-  conversation_context_enum: () => conversation_context_enum,
-  conversation_messages: () => conversation_messages,
-  conversation_participants: () => conversation_participants,
-  conversation_status_enum: () => conversation_status_enum,
-  conversations: () => conversations,
-  fb_post_logs: () => fb_post_logs,
-  listing_cycles: () => listing_cycles,
-  notification_device_platform_enum: () => notification_device_platform_enum,
-  notification_devices: () => notification_devices,
-  notification_outbox: () => notification_outbox,
-  notification_outbox_status_enum: () => notification_outbox_status_enum,
-  notification_type_enum: () => notification_type_enum,
-  order_inquiries: () => order_inquiries,
-  order_report_evidence: () => order_report_evidence,
-  order_reports: () => order_reports,
-  order_reviews: () => order_reviews,
-  order_status: () => order_status,
-  ordered_items: () => ordered_items,
-  orders: () => orders,
-  product_condition_enum: () => product_condition_enum,
-  product_inquiries: () => product_inquiries,
-  product_reviews: () => product_reviews,
-  product_stock_adjustments: () => product_stock_adjustments,
-  product_type_enum: () => product_type_enum,
-  roleEnum: () => roleEnum,
-  scaling_type_enum: () => scaling_type_enum,
-  seller_boost_reason_enum: () => seller_boost_reason_enum,
-  seller_boost_status_enum: () => seller_boost_status_enum,
-  seller_follows: () => seller_follows,
-  seller_listing_events: () => seller_listing_events,
-  seller_promotion_jobs: () => seller_promotion_jobs,
-  seller_promotion_stage: () => seller_promotion_stage,
-  seller_promotion_status: () => seller_promotion_status,
-  seller_scan_grace: () => seller_scan_grace,
-  seller_social_campaign_posts: () => seller_social_campaign_posts,
-  seller_social_campaigns: () => seller_social_campaigns,
-  seller_visibility_boosts: () => seller_visibility_boosts,
-  sellers_product: () => sellers_product,
-  sellers_profile: () => sellers_profile,
-  session: () => session,
-  social_campaign_post_status: () => social_campaign_post_status,
-  social_campaign_status: () => social_campaign_status,
-  social_platform: () => social_platform,
-  trust_actions: () => trust_actions,
-  trust_corrections: () => trust_corrections,
-  trust_events: () => trust_events,
-  trust_notices: () => trust_notices,
-  twoFactor: () => twoFactor,
-  user: () => user,
-  vegetable_catalog: () => vegetable_catalog,
-  vegetable_category_enum: () => vegetable_category_enum,
-  vegetable_review_status_enum: () => vegetable_review_status_enum,
-  verification: () => verification
-});
 // node_modules/drizzle-orm/pg-core/columns/enum.js
 var PgEnumObjectColumnBuilder2 = class extends PgColumnBuilder {
   static [entityKind] = "PgEnumObjectColumnBuilder";
@@ -116318,7 +116319,8 @@ var notification_type_enum = pgEnum2("notification_type", [
   "seller_message",
   "buyer_message",
   "seller_listing",
-  "seller_boost"
+  "seller_boost",
+  "seller_alert"
 ]);
 var user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -116691,6 +116693,8 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
   readAt: timestamp("read_at", { withTimezone: true }),
+  followUpDueAt: timestamp("follow_up_due_at", { withTimezone: true }),
+  followUpAttempts: integer2("follow_up_attempts").default(0).notNull(),
   priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -116700,6 +116704,7 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
 ]);
@@ -116948,6 +116953,28 @@ var fb_post_logs = pgTable("fb_post_logs", {
 }, (table) => [
   index("fb_post_logs_product_idx").on(table.productId, table.postedAt)
 ]);
+var seller_notifications = pgTable("seller_notifications", {
+  id: uuid2("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  orderId: uuid2("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  productId: uuid2("product_id").references(() => sellers_product.id, { onDelete: "cascade" }),
+  payload: jsonb("payload").$type().notNull().default(sql3`'{}'::jsonb`),
+  dedupeKey: text("dedupe_key").notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("seller_notifications_dedupe_unique").on(table.dedupeKey),
+  index("seller_notifications_seller_created_idx").on(table.sellerId, table.createdAt.desc())
+]);
+var seller_notification_settings = pgTable("seller_notification_settings", {
+  sellerId: text("seller_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+  stockPrice: boolean4("stock_price").default(true).notNull(),
+  boost: boolean4("boost").default(true).notNull(),
+  account: boolean4("account").default(true).notNull(),
+  nightMode: boolean4("night_mode").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
+});
 // node_modules/better-auth/dist/package.mjs
 var version2 = "1.7.3";
 
@@ -135649,6 +135676,336 @@ async function sendSellerListingNotices(limit = 25) {
   return { processedEvents, noticesCreated, pushJobsCreated };
 }
 
+// src/utils/seller-notifications/messages.ts
+var text3 = (value, fallback) => typeof value === "string" && value.trim() ? value : fallback;
+var code = (p) => text3(p.code, "Your reservation");
+var product = (p) => text3(p.productName, "Your listing");
+var sellerNoticeDefs = {
+  new_reservation: {
+    title: "New Reservation",
+    plural: "New Reservations",
+    body: (p) => text3(p.summary, "A buyer reserved produce from your stall"),
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order",
+    nightExempt: true
+  },
+  reservation_ending: {
+    title: "Reservation Ends Soon",
+    plural: "Reservations End Soon",
+    body: (p) => `${code(p)} has about an hour left. The buyer has not picked up yet.`,
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order",
+    nightExempt: true
+  },
+  reservation_ended: {
+    title: "Reservation Ended",
+    plural: "Reservations Ended",
+    body: (p) => `${code(p)} was not picked up in time. The stock went back to your listing.`,
+    level: "silent",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  buyer_cancelled: {
+    title: "Buyer Cancelled",
+    plural: "Buyers Cancelled",
+    body: (p) => `${code(p)} was cancelled by the buyer. The stock went back to your listing.`,
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  pickup_done: {
+    title: "Pickup Done",
+    plural: "Pickups Done",
+    body: (p) => `${code(p)} was picked up. Pickup confirmed.`,
+    level: "feed",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  listing_live: {
+    title: "Listing Is Live",
+    plural: "Listings Are Live",
+    body: (p) => `${product(p)} is now on sale.`,
+    level: "feed",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  running_low: {
+    title: "Running Low",
+    plural: "Running Low",
+    body: (p) => `${product(p)} is running low. ${text3(p.left, "A little")} left.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  sold_out: {
+    title: "Sold Out",
+    plural: "Sold Out",
+    body: (p) => `${product(p)} is sold out.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  price_lowered: {
+    title: "Price Lowered",
+    plural: "Prices Lowered",
+    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. ${p.waitHours ? `You can boost it again in ${p.waitHours} hours.` : "Tap to boost it again."}` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_started: {
+    title: "Boost Started",
+    plural: "Boosts Started",
+    body: (p) => p.willLowerPrice ? `${product(p)} was posted. In 6 hours we lower the price if it has not sold out.` : `${product(p)} was posted on the Agrivive Facebook Page.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_posted: {
+    title: "Boost Posted",
+    plural: "Boosts Posted",
+    body: (p) => `${product(p)} was posted to the Agrivive pages.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_failed: {
+    title: "Boost Did Not Post",
+    plural: "Boosts Did Not Post",
+    body: (p) => `We could not post ${product(p)}. Please try again later.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  seller_cancellation_warning: {
+    title: "Cancellation Warning",
+    plural: "Cancellation Warnings",
+    body: (p) => `You cancelled ${code(p)}. This is saved in your record.`,
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_event_corrected: {
+    title: "Record Fixed",
+    plural: "Records Fixed",
+    body: () => "We checked your record again and removed a mistake.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_action_warning: {
+    title: "Account Warning",
+    plural: "Account Warnings",
+    body: () => "Your record reached the warning level. Please reply to buyers on time.",
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_action_restriction: {
+    title: "Account Limited",
+    plural: "Account Limited",
+    body: () => "Your account has a short limit. It ends by itself.",
+    level: "sound",
+    topic: "account",
+    category: "trust",
+    target: "trust",
+    nightExempt: true
+  },
+  trust_action_blocked: {
+    title: "Account Blocked",
+    plural: "Account Blocked",
+    body: () => "Your account is blocked. Open Agrivive to get it back.",
+    level: "sound",
+    topic: "account",
+    category: "trust",
+    target: "trust",
+    nightExempt: true
+  },
+  trust_action_expired: {
+    title: "Limit Lifted",
+    plural: "Limits Lifted",
+    body: () => "Your short limit has ended. You can use Agrivive again.",
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inactivity_3w_warning: {
+    title: "We Miss You",
+    plural: "We Miss You",
+    body: () => "You have not opened Agrivive for 3 weeks. Please log in soon.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inactivity_1m_blocked: {
+    title: "Account Paused",
+    plural: "Account Paused",
+    body: () => "Your account was paused after 30 days away. Follow the steps to get it back.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inquiry_12h_reminder: {
+    title: "Buyer Is Waiting",
+    plural: "Buyers Are Waiting",
+    body: () => "A buyer has waited 12 hours for your reply.",
+    level: "sound",
+    topic: "orders",
+    category: "messages",
+    target: "order"
+  },
+  inquiry_24h_warning: {
+    title: "Buyer Still Waiting",
+    plural: "Buyers Still Waiting",
+    body: () => "A buyer has waited 24 hours for your reply.",
+    level: "sound",
+    topic: "orders",
+    category: "messages",
+    target: "order"
+  }
+};
+function getSellerNoticeDef(kind) {
+  return sellerNoticeDefs[kind];
+}
+function sellerNoticePath(target, orderId) {
+  if (target === "order" && orderId)
+    return `/(app)/orders/${orderId}`;
+  if (target === "listing")
+    return "/(app)/(tabs)/inventory";
+  if (target === "trust")
+    return "/(app)/trust";
+  if (target === "messages")
+    return "/(app)/(tabs)/messages";
+  return "/(app)/notifications";
+}
+function sellerOrderCode(orderId) {
+  return `RSV-${orderId.slice(0, 4).toUpperCase()}`;
+}
+
+// src/utils/seller-notifications/night.ts
+var timeZone = "Asia/Manila";
+function inNightHours(now = new Date) {
+  const hour = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    hourCycle: "h23"
+  }).format(now));
+  return hour >= 21 || hour < 6;
+}
+
+// src/utils/seller-notifications/enqueue.ts
+var windowMs = () => {
+  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 60);
+  return Math.max(10, Math.min(seconds, 600)) * 1000;
+};
+async function readSellerAlertSettings(tx, sellerId) {
+  const [row] = await tx.select().from(seller_notification_settings).where(eq(seller_notification_settings.sellerId, sellerId)).limit(1);
+  return {
+    stockPrice: row?.stockPrice ?? true,
+    boost: row?.boost ?? true,
+    account: row?.account ?? true,
+    nightMode: row?.nightMode ?? false
+  };
+}
+async function sellerMessageChannel(tx, sellerId) {
+  const settings = await readSellerAlertSettings(tx, sellerId);
+  return settings.nightMode && inNightHours() ? "updates" : "orders";
+}
+async function enqueueSellerAlert(tx, input) {
+  const def = getSellerNoticeDef(input.kind);
+  if (!def || def.level === "feed")
+    return;
+  const settings = await readSellerAlertSettings(tx, input.sellerId);
+  if (def.topic !== "orders") {
+    const topicOn = def.topic === "stock_price" ? settings.stockPrice : def.topic === "boost" ? settings.boost : settings.account;
+    if (!topicOn)
+      return;
+  }
+  const channel = def.level === "sound" && !(settings.nightMode && inNightHours() && !def.nightExempt) ? "orders" : "updates";
+  const group = channel === "orders" ? input.kind : "updates";
+  const createdAt = input.createdAt ?? new Date;
+  const size = windowMs();
+  const windowStart = new Date(Math.floor(createdAt.getTime() / size) * size);
+  const availableAt = new Date(windowStart.getTime() + size);
+  const countPath = `{counts,${input.kind}}`;
+  await tx.insert(notification_outbox).values({
+    recipientUserId: input.sellerId,
+    type: "seller_alert",
+    aggregationKey: `seller-alert:${input.sellerId}:${group}`,
+    dedupeKey: `${input.sellerId}:alert:${group}:${windowStart.toISOString()}`,
+    referenceId: input.orderId ?? null,
+    itemCount: 1,
+    payload: { ...input.payload, kind: input.kind, channel, counts: { [input.kind]: 1 } },
+    availableAt,
+    createdAt,
+    updatedAt: createdAt
+  }).onConflictDoUpdate({
+    target: notification_outbox.dedupeKey,
+    set: {
+      itemCount: sql3`${notification_outbox.itemCount} + 1`,
+      payload: sql3`jsonb_set(${notification_outbox.payload}, ${countPath}::text[], to_jsonb(coalesce((${notification_outbox.payload}->'counts'->>${input.kind}::text)::int, 0) + 1))`,
+      updatedAt: createdAt
+    }
+  });
+}
+
+// src/utils/seller-notifications/index.ts
+async function createSellerNotification(tx, input) {
+  const payload = {
+    ...input.orderId ? { code: sellerOrderCode(input.orderId) } : {},
+    ...input.payload
+  };
+  const [row] = await tx.insert(seller_notifications).values({
+    sellerId: input.sellerId,
+    kind: input.kind,
+    orderId: input.orderId ?? null,
+    productId: input.productId ?? null,
+    payload,
+    dedupeKey: input.dedupeKey
+  }).onConflictDoNothing({ target: seller_notifications.dedupeKey }).returning();
+  if (!row)
+    return null;
+  await enqueueSellerAlert(tx, {
+    sellerId: input.sellerId,
+    kind: input.kind,
+    orderId: input.orderId,
+    payload,
+    createdAt: row.createdAt
+  });
+  return row;
+}
+async function alertSellerOfTrustNotice(tx, notice) {
+  const [recipient] = await tx.select({ id: user.id }).from(user).where(sql3`${user.id} = ${notice.recipientId} and 'seller'::"role" = any(${user.role})`).limit(1);
+  if (!recipient)
+    return;
+  await enqueueSellerAlert(tx, {
+    sellerId: notice.recipientId,
+    kind: notice.kind,
+    orderId: notice.orderId,
+    payload: notice.orderId ? { code: sellerOrderCode(notice.orderId) } : {}
+  });
+}
+
 // src/modules/seller/services/seller.product.create.ts
 async function createSellerProduct(userId, body) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -135703,23 +136060,16 @@ async function createSellerProduct(userId, body) {
       originalQty: body.productQty.toString()
     });
     await queueFirstPublicListing(tx, created.id);
+    await createSellerNotification(tx, {
+      sellerId: userId,
+      kind: "listing_live",
+      dedupeKey: `listing-live:${created.id}`,
+      productId: created.id,
+      payload: { productName }
+    });
     return created;
   });
   sendSellerListingNotices().catch(() => {});
-  const webhookUrl = process.env.N8N_SELLER_FLOW_WEBHOOK_URL?.trim();
-  if (webhookUrl?.startsWith("https://")) {
-    fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: result.id,
-        productName: result.productName,
-        price: result.productPrice,
-        event: "new_listing"
-      }),
-      signal: AbortSignal.timeout(5000)
-    }).catch((error) => console.error("Failed to notify n8n seller flow webhook", error));
-  }
   return result;
 }
 
@@ -136317,6 +136667,12 @@ async function scanSellerOrder(sellerId, body) {
       completedAt: now,
       updatedAt: now
     }).where(and(eq(orders.id, orderId), eq(orders.sellersId, sellerId), eq(orders.status, "pending")));
+    await createSellerNotification(tx, {
+      sellerId,
+      kind: "pickup_done",
+      dedupeKey: `pickup-done:${orderId}`,
+      orderId
+    });
   });
   return getOrder(orderId, sellerId, "seller");
 }
@@ -136985,8 +137341,11 @@ async function restoreOrderStock(tx, orderId) {
 function recordTrustEvent(tx, input) {
   return tx.insert(trust_events).values(input).onConflictDoNothing({ target: trust_events.eventKey }).returning();
 }
-function queueTrustNotice(tx, input) {
-  return tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+async function queueTrustNotice(tx, input) {
+  const rows = await tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+  if (rows.length)
+    await alertSellerOfTrustNotice(tx, input);
+  return rows;
 }
 async function recordInquiryDeadlines(tx, inquiry, now) {
   const hours = (now.getTime() - inquiry.createdAt.getTime()) / 3600000;
@@ -137949,37 +138308,61 @@ var sellerNotificationParams = t.Object({
   id: t.String({ format: "uuid" })
 });
 
+// src/utils/seller-notifications/to-item.ts
+function toSellerNotificationItem(source, row) {
+  const def = getSellerNoticeDef(row.kind);
+  const payload = {
+    ...row.orderId ? { code: sellerOrderCode(row.orderId) } : {},
+    ...row.payload ?? {}
+  };
+  const isInquiry = row.kind.includes("inquiry");
+  return {
+    id: row.id,
+    source,
+    kind: row.kind,
+    category: def?.category ?? (isInquiry ? "messages" : "trust"),
+    title: def?.title ?? (isInquiry ? "Buyer Question Waiting" : "Account Update"),
+    body: def?.body(payload) ?? "Open this to see what changed on your account.",
+    orderId: row.orderId,
+    productId: row.productId ?? null,
+    createdAt: row.createdAt,
+    readAt: row.readAt
+  };
+}
+
 // src/modules/seller/services/seller.notifications.list.ts
 async function listSellerNotifications(sellerId, query = {}) {
   const limit = query.limit ?? 20;
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId, true, true);
-    const unreadCondition = query.unreadOnly ? isNull2(trust_notices.readAt) : undefined;
-    let before;
+    let anchor;
     if (query.cursor) {
-      const [anchor] = await tx.select({
-        id: trust_notices.id,
-        createdAt: trust_notices.createdAt
-      }).from(trust_notices).where(and(eq(trust_notices.id, query.cursor), eq(trust_notices.recipientId, sellerId))).limit(1);
+      [anchor] = await tx.select({ id: seller_notifications.id, createdAt: seller_notifications.createdAt }).from(seller_notifications).where(and(eq(seller_notifications.id, query.cursor), eq(seller_notifications.sellerId, sellerId))).limit(1);
+      if (!anchor) {
+        [anchor] = await tx.select({ id: trust_notices.id, createdAt: trust_notices.createdAt }).from(trust_notices).where(and(eq(trust_notices.id, query.cursor), eq(trust_notices.recipientId, sellerId))).limit(1);
+      }
       if (!anchor)
         throw new OrderError(400, "Invalid notification cursor");
-      before = or(lt(trust_notices.createdAt, anchor.createdAt), and(eq(trust_notices.createdAt, anchor.createdAt), lt(trust_notices.id, anchor.id)));
     }
-    const rows = await tx.select({
+    const alertRows = await tx.select().from(seller_notifications).where(and(eq(seller_notifications.sellerId, sellerId), query.unreadOnly ? isNull2(seller_notifications.readAt) : undefined, anchor ? or(lt(seller_notifications.createdAt, anchor.createdAt), and(eq(seller_notifications.createdAt, anchor.createdAt), lt(seller_notifications.id, anchor.id))) : undefined)).orderBy(desc(seller_notifications.createdAt), desc(seller_notifications.id)).limit(limit + 1);
+    const trustRows = await tx.select({
       id: trust_notices.id,
       kind: trust_notices.kind,
       orderId: trust_notices.orderId,
       createdAt: trust_notices.createdAt,
       readAt: trust_notices.readAt
-    }).from(trust_notices).where(and(eq(trust_notices.recipientId, sellerId), unreadCondition, before)).orderBy(desc(trust_notices.createdAt), desc(trust_notices.id)).limit(limit + 1);
-    const page = rows.slice(0, limit);
-    const [unread] = await tx.select({
-      count: sql3`count(*)::int`
-    }).from(trust_notices).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt)));
+    }).from(trust_notices).where(and(eq(trust_notices.recipientId, sellerId), query.unreadOnly ? isNull2(trust_notices.readAt) : undefined, anchor ? or(lt(trust_notices.createdAt, anchor.createdAt), and(eq(trust_notices.createdAt, anchor.createdAt), lt(trust_notices.id, anchor.id))) : undefined)).orderBy(desc(trust_notices.createdAt), desc(trust_notices.id)).limit(limit + 1);
+    const merged = [
+      ...alertRows.map((row) => toSellerNotificationItem("alert", row)),
+      ...trustRows.map((row) => toSellerNotificationItem("trust", row))
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1));
+    const page = merged.slice(0, limit);
+    const [alertUnread] = await tx.select({ count: sql3`count(*)::int` }).from(seller_notifications).where(and(eq(seller_notifications.sellerId, sellerId), isNull2(seller_notifications.readAt)));
+    const [trustUnread] = await tx.select({ count: sql3`count(*)::int` }).from(trust_notices).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt)));
     return {
       items: page,
-      nextCursor: rows.length > limit && page.length > 0 ? page[page.length - 1].id : null,
-      unreadCount: Number(unread?.count ?? 0)
+      nextCursor: merged.length > limit && page.length > 0 ? page[page.length - 1].id : null,
+      unreadCount: Number(alertUnread?.count ?? 0) + Number(trustUnread?.count ?? 0)
     };
   });
 }
@@ -137988,17 +138371,24 @@ async function listSellerNotifications(sellerId, query = {}) {
 async function readSellerNotification(sellerId, notificationId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId, true, true);
-    const [notification] = await tx.select({
+    const [alert] = await tx.select().from(seller_notifications).where(and(eq(seller_notifications.id, notificationId), eq(seller_notifications.sellerId, sellerId))).for("update").limit(1);
+    if (alert) {
+      if (alert.readAt)
+        return toSellerNotificationItem("alert", alert);
+      const [updated] = await tx.update(seller_notifications).set({ readAt: new Date }).where(eq(seller_notifications.id, alert.id)).returning();
+      return toSellerNotificationItem("alert", updated ?? alert);
+    }
+    const [notice] = await tx.select({
       id: trust_notices.id,
       kind: trust_notices.kind,
       orderId: trust_notices.orderId,
       createdAt: trust_notices.createdAt,
       readAt: trust_notices.readAt
     }).from(trust_notices).where(and(eq(trust_notices.id, notificationId), eq(trust_notices.recipientId, sellerId))).for("update").limit(1);
-    if (!notification)
+    if (!notice)
       throw new OrderError(404, "Notification not found");
-    if (notification.readAt)
-      return notification;
+    if (notice.readAt)
+      return toSellerNotificationItem("trust", notice);
     const [updated] = await tx.update(trust_notices).set({ readAt: new Date }).where(eq(trust_notices.id, notificationId)).returning({
       id: trust_notices.id,
       kind: trust_notices.kind,
@@ -138006,7 +138396,7 @@ async function readSellerNotification(sellerId, notificationId) {
       createdAt: trust_notices.createdAt,
       readAt: trust_notices.readAt
     });
-    return updated ?? notification;
+    return toSellerNotificationItem("trust", updated ?? notice);
   });
 }
 
@@ -138014,8 +138404,10 @@ async function readSellerNotification(sellerId, notificationId) {
 async function readAllSellerNotifications(sellerId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId, true, true);
-    const updated = await tx.update(trust_notices).set({ readAt: new Date }).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt))).returning({ id: trust_notices.id });
-    return { updatedCount: updated.length };
+    const now = new Date;
+    const alerts = await tx.update(seller_notifications).set({ readAt: now }).where(and(eq(seller_notifications.sellerId, sellerId), isNull2(seller_notifications.readAt))).returning({ id: seller_notifications.id });
+    const notices = await tx.update(trust_notices).set({ readAt: now }).where(and(eq(trust_notices.recipientId, sellerId), isNull2(trust_notices.readAt))).returning({ id: trust_notices.id });
+    return { updatedCount: alerts.length + notices.length };
   });
 }
 
@@ -138053,6 +138445,61 @@ var sellerNotificationsRoute = new Elysia().use(sessionAuth).get("/notifications
 }, {
   role: ["seller"]
 });
+
+// src/modules/seller/model/seller.notification-settings.ts
+var sellerNotificationSettingsBody = t.Object({
+  stockPrice: t.Optional(t.Boolean()),
+  boost: t.Optional(t.Boolean()),
+  account: t.Optional(t.Boolean()),
+  nightMode: t.Optional(t.Boolean())
+});
+
+// src/modules/seller/services/seller.notification-settings.get.ts
+async function getSellerNotificationSettings(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId, true, true);
+    return readSellerAlertSettings(tx, sellerId);
+  });
+}
+
+// src/modules/seller/services/seller.notification-settings.update.ts
+async function updateSellerNotificationSettings(sellerId, body) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId, true, true);
+    const changes = {
+      ...body.stockPrice !== undefined ? { stockPrice: body.stockPrice } : {},
+      ...body.boost !== undefined ? { boost: body.boost } : {},
+      ...body.account !== undefined ? { account: body.account } : {},
+      ...body.nightMode !== undefined ? { nightMode: body.nightMode } : {}
+    };
+    await tx.insert(seller_notification_settings).values({ sellerId, ...changes }).onConflictDoUpdate({
+      target: seller_notification_settings.sellerId,
+      set: { ...changes, updatedAt: new Date }
+    });
+    return readSellerAlertSettings(tx, sellerId);
+  });
+}
+
+// src/modules/seller/index/seller.notification-settings.ts
+function settingsFailure(error, status) {
+  if (error instanceof OrderError)
+    return status(error.statusCode, { message: error.message });
+  console.error(error);
+  return status(500, { message: "Notification settings failed" });
+}
+var sellerNotificationSettingsRoute = new Elysia().use(sessionAuth).get("/notification-settings", async ({ session, status }) => {
+  try {
+    return await getSellerNotificationSettings(session.userId);
+  } catch (error) {
+    return settingsFailure(error, status);
+  }
+}, { role: ["seller"] }).patch("/notification-settings", async ({ session, body, status }) => {
+  try {
+    return await updateSellerNotificationSettings(session.userId, body);
+  } catch (error) {
+    return settingsFailure(error, status);
+  }
+}, { role: ["seller"], body: sellerNotificationSettingsBody });
 
 // src/modules/seller/model/seller.analytics.ts
 var sellerAnalyticsQuery = t.Object({
@@ -139403,7 +139850,126 @@ var sellerVegetableCatalogRoute = new Elysia().use(sessionAuth).get("/vegetable-
   }
 }, { role: ["seller"], query: sellerVegetableCatalogQuery });
 
+// src/jobs/boost-webhook-target.ts
+function getBoostWebhookTarget() {
+  const webhookUrl = process.env.N8N_VISIBILITY_BOOST_WEBHOOK_URL?.trim();
+  const serviceToken = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
+  if (!webhookUrl || !serviceToken)
+    return null;
+  try {
+    const target = new URL(webhookUrl);
+    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname))
+      return null;
+    return { target, serviceToken };
+  } catch {
+    return null;
+  }
+}
+
+// src/jobs/deliver-seller-visibility-boosts.ts
+var maxAttempts = 5;
+var batchSize = 50;
+function retryDelay(attempt) {
+  return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
+}
+async function deliverSellerVisibilityBoosts() {
+  const webhook = getBoostWebhookTarget();
+  if (!webhook)
+    return { configured: false, queued: 0, sent: 0, failed: 0 };
+  const { target, serviceToken } = webhook;
+  const now = new Date;
+  const due = await db2.select({
+    id: seller_visibility_boosts.id,
+    reason: seller_visibility_boosts.reason,
+    retryCount: seller_visibility_boosts.retryCount
+  }).from(seller_visibility_boosts).where(and(or(eq(seller_visibility_boosts.status, "queued"), eq(seller_visibility_boosts.status, "sent")), lte(seller_visibility_boosts.nextAttemptAt, now), or(isNull2(seller_visibility_boosts.leaseUntil), lte(seller_visibility_boosts.leaseUntil, now)))).limit(batchSize);
+  let sent = 0;
+  let failed = 0;
+  for (const boost of due) {
+    const [claimed] = await db2.update(seller_visibility_boosts).set({
+      leaseUntil: new Date(now.getTime() + 15000)
+    }).where(and(eq(seller_visibility_boosts.id, boost.id), or(eq(seller_visibility_boosts.status, "queued"), eq(seller_visibility_boosts.status, "sent")), lte(seller_visibility_boosts.nextAttemptAt, now), or(isNull2(seller_visibility_boosts.leaseUntil), lte(seller_visibility_boosts.leaseUntil, now)))).returning({ id: seller_visibility_boosts.id });
+    if (!claimed)
+      continue;
+    try {
+      const response = await fetch(target, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ boostId: boost.id, reason: boost.reason }),
+        signal: AbortSignal.timeout(12000)
+      });
+      const attempt = boost.retryCount + 1;
+      if (!response.ok) {
+        const responseBody = await response.text().catch(() => "");
+        const exhausted = attempt >= maxAttempts;
+        console.error("Visibility boost webhook rejected", {
+          boostId: boost.id,
+          status: response.status,
+          response: responseBody.slice(0, 500)
+        });
+        await db2.update(seller_visibility_boosts).set({
+          status: exhausted ? "failed" : "queued",
+          retryCount: attempt,
+          leaseUntil: null,
+          nextAttemptAt: new Date(now.getTime() + retryDelay(attempt)),
+          lastError: `n8n visibility boost webhook returned HTTP ${response.status}`,
+          updatedAt: now
+        }).where(eq(seller_visibility_boosts.id, boost.id));
+        if (exhausted)
+          failed++;
+        continue;
+      }
+      await db2.update(seller_visibility_boosts).set({
+        status: "sent",
+        retryCount: attempt,
+        leaseUntil: null,
+        sentAt: now,
+        nextAttemptAt: new Date("2099-01-01T00:00:00.000Z"),
+        lastError: null,
+        updatedAt: now
+      }).where(eq(seller_visibility_boosts.id, boost.id));
+      sent++;
+    } catch (error) {
+      const attempt = boost.retryCount + 1;
+      const exhausted = attempt >= maxAttempts;
+      console.error("Visibility boost webhook delivery failed", { boostId: boost.id, error });
+      await db2.update(seller_visibility_boosts).set({
+        status: exhausted ? "failed" : "queued",
+        retryCount: attempt,
+        leaseUntil: null,
+        nextAttemptAt: new Date(now.getTime() + retryDelay(attempt)),
+        lastError: "n8n visibility boost webhook delivery failed",
+        updatedAt: now
+      }).where(eq(seller_visibility_boosts.id, boost.id));
+      if (exhausted)
+        failed++;
+    }
+  }
+  return { configured: true, queued: due.length, sent, failed };
+}
+
+// src/utils/boost-cooldown/index.ts
+var priceDropPostGapHours = 3;
+async function getPriceDropPostCooldownEnd(executor, productId, before) {
+  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "second_post"), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+  if (!last)
+    return null;
+  const end = new Date(last.postedAt.getTime() + priceDropPostGapHours * 3600000);
+  return end.getTime() > Date.now() ? end : null;
+}
+
 // src/modules/seller/services/seller.visibility-boost.queue.ts
+async function requirePriceDropGap(tx, productId) {
+  const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
+  if (!waitUntil)
+    return;
+  const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
+  throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+}
 async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial", promptId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
@@ -139423,6 +139989,8 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
       const [prompt] = await tx.select().from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId), eq(seller_visibility_boosts.status, "prompt"))).for("update").limit(1);
       if (!prompt)
         throw new OrderError(404, "Boost prompt not found");
+      if (prompt.reason === "price_reduction")
+        await requirePriceDropGap(tx, productId);
       const [queued] = await tx.update(seller_visibility_boosts).set({
         status: "queued",
         readAt: now,
@@ -139438,6 +140006,8 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
     const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
     const boostKey = currentPeriod === 0 ? `${cycle.id}:initial` : `${cycle.id}:reduction:${currentPeriod}`;
     const boostReason = currentPeriod === 0 ? "initial" : "price_reduction";
+    if (boostReason === "price_reduction")
+      await requirePriceDropGap(tx, productId);
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
       productId,
@@ -139710,7 +140280,9 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
   }
 }, { role: ["seller"], params }).post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
   try {
-    return await queueSellerVisibilityBoost(session.userId, routeParams.id);
+    const queued = await queueSellerVisibilityBoost(session.userId, routeParams.id);
+    deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
+    return queued;
   } catch (error) {
     return failure2(error, status);
   }
@@ -139753,7 +140325,7 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
 }, { role: ["seller"], params });
 
 // src/modules/seller/index.ts
-var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerPromotionsRoute).use(sellerVisibilityBoostRoute).use(sellerSocialCampaignsRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
+var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerNotificationSettingsRoute).use(sellerPromotionsRoute).use(sellerVisibilityBoostRoute).use(sellerSocialCampaignsRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
 
 // src/modules/buyer/model/buyer.order.create.ts
 var orderModel = t.Object({
@@ -139806,6 +140378,22 @@ async function unavailableProductError(tx, productId, buyerId) {
   }
   return new OrderError(409, "Product price or quantity is unavailable");
 }
+async function notifyStockLevel(tx, product, quantity) {
+  const after = Number(product.productQty ?? 0);
+  const before = after + quantity;
+  const threshold = product.lowStockThreshold === null ? null : Number(product.lowStockThreshold);
+  const soldOut = after <= 0 && before > 0;
+  const runningLow = !soldOut && threshold !== null && threshold > 0 && before > threshold && after <= threshold;
+  if (!soldOut && !runningLow)
+    return;
+  await createSellerNotification(tx, {
+    sellerId: product.userId,
+    kind: soldOut ? "sold_out" : "running_low",
+    dedupeKey: `${soldOut ? "sold-out" : "running-low"}:${product.id}:${crypto.randomUUID()}`,
+    productId: product.id,
+    payload: { productName: product.productName, left: `${after} ${product.scalingType}` }
+  });
+}
 async function reserveOrderItem(tx, buyerId, productId, quantity) {
   if (quantityToHundredths(quantity) === null) {
     throw new OrderError(400, "Quantity must be between 0.01 and 99999999 with at most two decimal places");
@@ -139816,6 +140404,7 @@ async function reserveOrderItem(tx, buyerId, productId, quantity) {
     throw await unavailableProductError(tx, productId, buyerId);
   await requireActiveUser(tx, product.userId, "seller");
   await requireVerifiedSeller(tx, product.userId);
+  await notifyStockLevel(tx, product, quantity);
   return {
     productId: product.id,
     sellerId: product.userId,
@@ -139828,20 +140417,14 @@ async function reserveOrderItem(tx, buyerId, productId, quantity) {
 }
 
 // src/modules/notifications/services/notifications.outbox.enqueue-order.ts
-async function enqueueOrderNotification(tx, sellerId, orderId, summary, createdAt = new Date) {
-  const dedupeKey = `${sellerId}:order:${orderId}`;
-  await tx.insert(notification_outbox).values({
-    recipientUserId: sellerId,
-    type: "seller_message",
-    aggregationKey: `seller_order:${sellerId}`,
-    dedupeKey,
-    referenceId: orderId,
-    itemCount: 1,
-    payload: { orderId, summary },
-    availableAt: createdAt,
-    createdAt,
-    updatedAt: createdAt
-  }).onConflictDoNothing({ target: notification_outbox.dedupeKey });
+async function enqueueOrderNotification(tx, sellerId, orderId, summary) {
+  await createSellerNotification(tx, {
+    sellerId,
+    kind: "new_reservation",
+    dedupeKey: `new-reservation:${orderId}`,
+    orderId,
+    payload: { summary }
+  });
 }
 
 // src/modules/buyer/services/buyer.order.create.ts
@@ -139991,7 +140574,7 @@ function resolveCancellationRestrictionMessage(cancelCount, endsAt) {
 async function cancelBuyerOrder(orderId, buyerId) {
   await db2.transaction(async (tx) => {
     const now = new Date;
-    const [cancelled] = await tx.update(orders).set({ status: "cancelled", cancelledBy: "buyer", cancelledAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id });
+    const [cancelled] = await tx.update(orders).set({ status: "cancelled", cancelledBy: "buyer", cancelledAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"), gt(orders.expiresAt, now))).returning({ id: orders.id, sellersId: orders.sellersId });
     if (!cancelled) {
       const [current] = await tx.select({ status: orders.status, expiresAt: orders.expiresAt }).from(orders).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId))).limit(1);
       if (!current)
@@ -140002,6 +140585,12 @@ async function cancelBuyerOrder(orderId, buyerId) {
       throw new OrderError(409, "Order is no longer pending");
     }
     await restoreOrderStock(tx, cancelled.id);
+    await createSellerNotification(tx, {
+      sellerId: cancelled.sellersId,
+      kind: "buyer_cancelled",
+      dedupeKey: `buyer-cancelled:${cancelled.id}`,
+      orderId: cancelled.id
+    });
     const [cancelRow] = await tx.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, buyerId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer")));
     const cancelCount = Number(cancelRow?.count ?? 0);
     const cooldownHours = resolveCancellationCooldownHours(cancelCount);
@@ -142364,6 +142953,31 @@ var integrationsSocialProductImageRoute = new Elysia().get("/integrations/media/
 // src/modules/integrations/index/integrations.social-publish.ts
 import { timingSafeEqual as timingSafeEqual4 } from "crypto";
 
+// src/modules/integrations/services/integrations.social-publish-notify.ts
+async function notifySocialCampaignResult(campaignId, status) {
+  if (status !== "published" && status !== "failed")
+    return;
+  try {
+    const [campaign] = await db2.select({
+      sellerId: seller_social_campaigns.sellerId,
+      productId: seller_social_campaigns.productId,
+      productName: sellers_product.productName
+    }).from(seller_social_campaigns).innerJoin(sellers_product, eq(sellers_product.id, seller_social_campaigns.productId)).where(eq(seller_social_campaigns.id, campaignId)).limit(1);
+    if (!campaign)
+      return;
+    const kind = status === "published" ? "boost_posted" : "boost_failed";
+    await db2.transaction((tx) => createSellerNotification(tx, {
+      sellerId: campaign.sellerId,
+      kind,
+      dedupeKey: `${kind.replace("_", "-")}:${campaignId}`,
+      productId: campaign.productId,
+      payload: { productName: campaign.productName }
+    }));
+  } catch (error) {
+    console.error("Boost result notification failed", { campaignId, error });
+  }
+}
+
 // src/modules/integrations/services/integrations.social-publish-context.ts
 async function getSocialPublishContext(campaignId) {
   const [campaign] = await db2.select().from(seller_social_campaigns).where(eq(seller_social_campaigns.id, campaignId)).limit(1);
@@ -142386,6 +143000,7 @@ async function getSocialPublishContext(campaignId) {
       completedAt: new Date,
       updatedAt: new Date
     }).where(eq(seller_social_campaign_posts.campaignId, campaignId));
+    await notifySocialCampaignResult(campaignId, "failed");
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
   }
   if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {
@@ -142494,6 +143109,8 @@ async function refreshCampaignStatus(campaignId) {
     lastError: status === "failed" || status === "partial" ? "One or more channels need attention" : null,
     updatedAt: new Date
   }).where(eq(seller_social_campaigns.id, campaignId));
+  if (done)
+    await notifySocialCampaignResult(campaignId, status);
   return status;
 }
 async function dispatchSocialCampaignPlatform(campaignId, platform) {
@@ -142616,8 +143233,16 @@ var integrationsSocialPublishRoute = new Elysia().get("/integrations/social-camp
   headers: t.Object({ authorization: t.Optional(t.String()) })
 });
 
-// src/modules/integrations/index/integrations.visibility-boost.ts
+// src/modules/integrations/services/integrations.visibility-boost.authorize.ts
 import { timingSafeEqual as timingSafeEqual5 } from "crypto";
+function isVisibilityBoostAuthorized(authorization) {
+  const expected = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
+  if (!expected || !authorization?.startsWith("Bearer "))
+    return false;
+  const provided = Buffer.from(authorization.slice(7).trim());
+  const expectedBytes = Buffer.from(expected);
+  return provided.length > 0 && provided.length === expectedBytes.length && timingSafeEqual5(provided, expectedBytes);
+}
 
 // src/modules/integrations/services/integrations.visibility-boost.context.ts
 function publicUrl(base, path) {
@@ -142650,7 +143275,8 @@ async function getVisibilityBoostContext(boostId) {
     sellerVerified: user.emailVerified,
     sellerRoles: user.role,
     shopName: sellers_profile.shopName,
-    listingCycleId: seller_visibility_boosts.listingCycleId
+    listingCycleId: seller_visibility_boosts.listingCycleId,
+    priceBefore: seller_visibility_boosts.priceBefore
   }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, seller_visibility_boosts.sellerId), eq(sellers_profile.isCurrent, true))).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!row)
     throw new OrderError(404, "Visibility boost not found");
@@ -142667,6 +143293,7 @@ async function getVisibilityBoostContext(boostId) {
   return {
     boostId: row.boostId,
     reason: row.reason,
+    previousPrice: row.priceBefore ? Number(row.priceBefore) : null,
     product: {
       id: row.productId,
       name: row.productName,
@@ -142686,16 +143313,8 @@ async function getVisibilityBoostContext(boostId) {
 }
 
 // src/modules/integrations/index/integrations.visibility-boost.ts
-function isAuthorized(authorization) {
-  const expected = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
-  if (!expected || !authorization?.startsWith("Bearer "))
-    return false;
-  const provided = Buffer.from(authorization.slice(7).trim());
-  const expectedBytes = Buffer.from(expected);
-  return provided.length > 0 && provided.length === expectedBytes.length && timingSafeEqual5(provided, expectedBytes);
-}
 var integrationsVisibilityBoostRoute = new Elysia().get("/integrations/visibility-boosts/:id/context", async ({ headers, params, status }) => {
-  if (!isAuthorized(headers.authorization))
+  if (!isVisibilityBoostAuthorized(headers.authorization))
     return status(401, { message: "Visibility boost authentication required" });
   try {
     return await getVisibilityBoostContext(params.id);
@@ -142710,175 +143329,346 @@ var integrationsVisibilityBoostRoute = new Elysia().get("/integrations/visibilit
   headers: t.Object({ authorization: t.Optional(t.String()) })
 });
 
-// src/modules/integrations/services/integrations.product-price-reduce.ts
+// src/modules/integrations/model/integrations.visibility-boost.ts
+var visibilityBoostParams = t.Object({ id: t.String({ format: "uuid" }) });
+var visibilityBoostHeaders = t.Object({ authorization: t.Optional(t.String()) });
+var visibilityBoostFacebookPostBody = t.Object({
+  postType: t.Union([t.Literal("first_post"), t.Literal("second_post")]),
+  caption: t.String({ minLength: 1, maxLength: 2000 })
+});
+
+// src/modules/integrations/services/integrations.visibility-boost.post-claim.ts
+var stillSendingMs = 5 * 60000;
+async function claimFacebookPost(input) {
+  return db2.transaction(async (tx) => {
+    await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${`fb-post:${input.productId}:${input.postType}`}))`);
+    const rows = await tx.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, input.productId), eq(fb_post_logs.postType, input.postType), inArray(fb_post_logs.status, ["success", "pending"]), gte(fb_post_logs.postedAt, input.since))).orderBy(desc(fb_post_logs.postedAt));
+    const saved = rows.find((row) => row.status === "success");
+    if (saved)
+      return { saved, logId: null };
+    const pending = rows[0];
+    if (pending) {
+      const sending = Date.now() - pending.postedAt.getTime() < stillSendingMs;
+      throw new OrderError(409, sending ? "This post is still being sent" : "An earlier try may have reached Facebook. Check the Page before trying again");
+    }
+    const [log] = await tx.insert(fb_post_logs).values({
+      productId: input.productId,
+      postType: input.postType,
+      price: input.price,
+      status: "pending"
+    }).returning({ id: fb_post_logs.id });
+    return { saved: null, logId: log.id };
+  });
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.post-finish.ts
+async function finishFacebookPost(logId, result) {
+  const [log] = await db2.update(fb_post_logs).set({
+    status: result.status,
+    facebookPostId: result.status === "success" ? result.facebookPostId : null,
+    postedAt: new Date
+  }).where(eq(fb_post_logs.id, logId)).returning();
+  return log;
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.schedule.ts
+var followUpDelayMs = 6 * 3600000;
+async function scheduleBoostFollowUp(boostId, firstPostAt) {
+  try {
+    const [row] = await db2.select({
+      reason: seller_visibility_boosts.reason,
+      percent: sellers_product.priceReductionPercent,
+      minimumPrice: sellers_product.minimumPrice
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!row || row.reason !== "initial" || Number(row.percent ?? 0) <= 0 || row.minimumPrice === null)
+      return;
+    await db2.update(seller_visibility_boosts).set({
+      followUpDueAt: new Date(firstPostAt.getTime() + followUpDelayMs)
+    }).where(and(eq(seller_visibility_boosts.id, boostId), isNull2(seller_visibility_boosts.followUpDueAt), sql3`${seller_visibility_boosts.followUpAttempts} = 0`));
+  } catch (error) {
+    console.error("Boost follow-up schedule failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.finish.ts
+async function finishBoostFollowUp(boostId) {
+  try {
+    await db2.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boostId));
+  } catch (error) {
+    console.error("Boost follow-up finish failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.notify-price-lowered.ts
+async function notifyBoostPriceLowered(boostId) {
+  try {
+    const [boost] = await db2.select().from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!boost)
+      return;
+    const [product] = await db2.select({
+      name: sellers_product.productName,
+      price: sellers_product.productPrice,
+      periods: sellers_product.priceReductionPeriodsApplied
+    }).from(sellers_product).where(eq(sellers_product.id, boost.productId)).limit(1);
+    const [firstPost] = await db2.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, "first_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    if (!product?.price || !firstPost || product.periods < 1 || Number(product.price) >= Number(firstPost.price))
+      return;
+    await db2.transaction(async (tx) => {
+      await tx.insert(seller_visibility_boosts).values({
+        listingCycleId: boost.listingCycleId,
+        productId: boost.productId,
+        sellerId: boost.sellerId,
+        reason: "price_reduction",
+        reductionPeriod: product.periods,
+        boostKey: `${boost.listingCycleId}:reduction:${product.periods}`,
+        status: "prompt",
+        nextAttemptAt: new Date,
+        priceBefore: firstPost.price,
+        priceAfter: product.price
+      }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey });
+      await createSellerNotification(tx, {
+        sellerId: boost.sellerId,
+        kind: "price_lowered",
+        dedupeKey: `price-lowered:${boost.productId}:${product.periods}`,
+        productId: boost.productId,
+        payload: { productName: product.name, priceBefore: firstPost.price, priceAfter: product.price, waitHours: priceDropPostGapHours }
+      });
+    });
+  } catch (error) {
+    console.error("Price lowered notification failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.notify-started.ts
+async function notifyBoostStarted(boostId) {
+  try {
+    const [row] = await db2.select({
+      sellerId: seller_visibility_boosts.sellerId,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      percent: sellers_product.priceReductionPercent,
+      minimumPrice: sellers_product.minimumPrice
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!row)
+      return;
+    await db2.transaction((tx) => createSellerNotification(tx, {
+      sellerId: row.sellerId,
+      kind: "boost_started",
+      dedupeKey: `boost-started:${boostId}`,
+      productId: row.productId,
+      payload: {
+        productName: row.productName,
+        willLowerPrice: Number(row.percent ?? 0) > 0 && row.minimumPrice !== null
+      }
+    }));
+  } catch (error) {
+    console.error("Boost started notification failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.facebook-post.ts
+function mentionsPrice(caption, price) {
+  return [price, String(Number(price))].some((form) => new RegExp(`\u20B1\\s?${form.replace(".", "\\.")}(?!\\d|\\.\\d)`).test(caption));
+}
+function templateCaption(context, postType, price, previous) {
+  const per = context.product.unit ? ` per ${context.product.unit}` : "";
+  if (postType === "first_post") {
+    return `Fresh ${context.product.name} is now available at \u20B1${price}${per} from ${context.seller.shopName}!`;
+  }
+  const was = previous ? ` (was \u20B1${previous.toFixed(2)})` : "";
+  if (context.reason === "price_reduction") {
+    return `Still available: ${context.product.name} at \u20B1${price}${per}${was} from ${context.seller.shopName}. Order before it sells out!`;
+  }
+  return `Price drop! ${context.product.name} is now \u20B1${price}${per}${was} at ${context.seller.shopName}. Get yours before it sells out!`;
+}
+async function postVisibilityBoostToFacebook(boostId, body) {
+  const context = await getVisibilityBoostContext(boostId);
+  if (context.reason === "price_reduction" && body.postType !== "second_post") {
+    throw new OrderError(400, "A price drop boost can only make the second post");
+  }
+  const productId = context.product.id;
+  const [boost] = await db2.select({ createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+  if (!boost)
+    throw new OrderError(404, "Visibility boost not found");
+  const findPosted = async (postType) => {
+    const [row] = await db2.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    return row;
+  };
+  if (context.reason === "price_reduction") {
+    const waitUntil = await getPriceDropPostCooldownEnd(db2, productId, boost.createdAt);
+    if (waitUntil) {
+      throw new OrderError(409, `A price drop post went out less than ${priceDropPostGapHours} hours ago`);
+    }
+  }
+  let previous = null;
+  if (body.postType === "second_post") {
+    if (context.reason === "initial") {
+      const first = await findPosted("first_post");
+      if (!first)
+        throw new OrderError(409, "The first post has not been published yet");
+      previous = Number(first.price);
+    } else {
+      previous = context.previousPrice;
+    }
+  }
+  const price = context.product.price.toFixed(2);
+  const written = body.caption.replace(/https?:\/\/\S+/g, "").replace(/[ \t]+\n/g, `
+`).trim();
+  const text = written && mentionsPrice(written, price) ? written : templateCaption(context, body.postType, price, previous);
+  const campaign = body.postType === "first_post" ? "boost" : "price_drop";
+  const caption = `${text}
+
+Order here: ${context.product.listingUrl}` + `?utm_source=facebook&utm_medium=social&utm_campaign=${campaign}`;
+  const claim = await claimFacebookPost({ productId, postType: body.postType, price, since: boost.createdAt });
+  if (claim.saved) {
+    if (body.postType === "first_post")
+      await scheduleBoostFollowUp(boostId, claim.saved.postedAt);
+    return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: claim.saved.facebookPostId };
+  }
+  let result;
+  try {
+    result = await publishFacebookPagePhoto(context.product.imageUrl, caption);
+  } catch (error) {
+    await finishFacebookPost(claim.logId, { status: "failed" }).catch((logError) => console.error("Failed to store facebook post log", logError));
+    if (error instanceof OrderError)
+      throw error;
+    throw new OrderError(502, "Facebook could not publish this post");
+  }
+  const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId });
+  if (context.reason === "initial") {
+    if (body.postType === "first_post") {
+      await scheduleBoostFollowUp(boostId, log.postedAt);
+      await notifyBoostStarted(boostId);
+    } else {
+      await finishBoostFollowUp(boostId);
+      await notifyBoostPriceLowered(boostId);
+    }
+  }
+  return {
+    posted: true,
+    alreadyPosted: false,
+    postType: body.postType,
+    facebookPostId: result.postId,
+    postUrl: result.postUrl
+  };
+}
+
+// src/modules/integrations/index/integrations.visibility-boost.facebook-post.ts
+var integrationsVisibilityBoostFacebookPostRoute = new Elysia().post("/integrations/visibility-boosts/:id/facebook-post", async ({ body, headers, params, status }) => {
+  if (!isVisibilityBoostAuthorized(headers.authorization)) {
+    return status(401, { message: "Visibility boost authentication required" });
+  }
+  try {
+    return await postVisibilityBoostToFacebook(params.id, body);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error("Visibility boost Facebook post failed", error);
+    return status(500, { message: "Could not publish the Facebook post" });
+  }
+}, { params: visibilityBoostParams, headers: visibilityBoostHeaders, body: visibilityBoostFacebookPostBody });
+
+// src/modules/seller/services/seller.product.price-reduction.followup.ts
 function cents2(value) {
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
   if (!match)
     throw new Error("Invalid price amount");
   return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
 }
-function decimal5(centsValue) {
-  return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
+function decimal5(value) {
+  return `${value / 100n}.${(value % 100n).toString().padStart(2, "0")}`;
 }
-async function reduceSellerProductPriceByPercent(identifier) {
-  return await db2.transaction(async (tx) => {
-    let productId = identifier;
-    const [campaign] = await tx.select({ productId: seller_social_campaigns.productId }).from(seller_social_campaigns).where(eq(seller_social_campaigns.id, identifier)).limit(1);
-    if (campaign) {
-      productId = campaign.productId;
-    }
+async function applySellerPromotionPriceReduction(tx, productId, now = new Date) {
+  const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
+  if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 || !current.productPrice || !current.minimumPrice || Number(current.priceReductionPercent ?? 0) <= 0)
+    return null;
+  const currentCents = cents2(current.productPrice);
+  const floor = cents2(current.minimumPrice);
+  if (currentCents <= floor)
+    return null;
+  const basisPoints = BigInt(Math.round(Number(current.priceReductionPercent) * 100));
+  const reducedCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
+  const nextCents = reducedCents < floor ? floor : reducedCents;
+  if (nextCents >= currentCents)
+    return null;
+  const [updated] = await tx.update(sellers_product).set({
+    productPrice: decimal5(nextCents),
+    priceReductionPeriodsApplied: current.priceReductionPeriodsApplied + 1,
+    updatedAt: now
+  }).where(eq(sellers_product.id, productId)).returning({
+    productPrice: sellers_product.productPrice
+  });
+  if (updated && updated.productPrice && current.productPrice) {
+    await queueSellerListingEvent(tx, productId, "price_drop", {
+      oldPrice: current.productPrice,
+      newPrice: updated.productPrice
+    });
+  }
+  return updated ? { before: current.productPrice, after: updated.productPrice } : null;
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.reduce-price.ts
+async function reduceVisibilityBoostPrice(boostId) {
+  const context = await getVisibilityBoostContext(boostId);
+  if (context.reason !== "initial")
+    throw new OrderError(409, "Only the first boost lowers the price");
+  const productId = context.product.id;
+  const result = await db2.transaction(async (tx) => {
+    const [boost] = await tx.select({ createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!boost)
+      throw new OrderError(404, "Visibility boost not found");
     const [product] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
     if (!product)
       throw new OrderError(404, "Product not found");
-    if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0 || !product.productPrice) {
-      return {
-        success: false,
-        inStock: false,
-        message: "Produce is sold out or inactive",
-        productId: product.id,
-        productName: product.productName,
-        currentPrice: product.productPrice ?? "0.00",
-        stock: product.productQty ?? "0"
-      };
-    }
-    const currentCents = cents2(product.productPrice);
-    const floorCents = product.minimumPrice ? cents2(product.minimumPrice) : 0n;
-    const configuredPercent = Number(product.priceReductionPercent ?? 0);
-    const percent = configuredPercent > 0 ? configuredPercent : 10;
-    const basisPoints = BigInt(Math.round(percent * 100));
-    const reducedCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
-    const nextCents = reducedCents < floorCents ? floorCents : reducedCents;
-    if (nextCents >= currentCents) {
-      return {
-        success: false,
-        inStock: true,
-        atFloor: true,
-        message: "Product has already reached seller minimum price floor",
-        productId: product.id,
-        productName: product.productName,
-        originalPrice: decimal5(currentCents),
-        newPrice: decimal5(currentCents),
-        discountPercent: 0,
-        periodsApplied: product.priceReductionPeriodsApplied ?? 0,
-        stock: product.productQty ?? "0",
-        currentPrice: decimal5(currentCents)
-      };
-    }
-    const nextPeriods = (product.priceReductionPeriodsApplied ?? 0) + 1;
-    const [updated] = await tx.update(sellers_product).set({
-      productPrice: decimal5(nextCents),
-      priceReductionPeriodsApplied: nextPeriods,
-      updatedAt: new Date
-    }).where(eq(sellers_product.id, productId)).returning();
-    return {
-      success: true,
-      inStock: true,
-      productId: updated.id,
-      productName: updated.productName,
-      originalPrice: decimal5(currentCents),
-      newPrice: decimal5(nextCents),
-      discountPercent: percent,
-      periodsApplied: nextPeriods,
-      stock: updated.productQty
+    const [firstPost] = await tx.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "first_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    if (!firstPost)
+      throw new OrderError(409, "The first post has not been published yet");
+    const currentPrice = product.productPrice ?? "0.00";
+    const base = {
+      productId,
+      productName: product.productName,
+      discountPercent: Number(product.priceReductionPercent ?? 0)
     };
+    const unchanged = (reason) => ({
+      ...base,
+      reduced: false,
+      reason,
+      originalPrice: currentPrice,
+      newPrice: currentPrice
+    });
+    if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0) {
+      return unchanged("unavailable");
+    }
+    if (Number(currentPrice) < Number(firstPost.price)) {
+      return { ...base, reduced: true, originalPrice: firstPost.price, newPrice: currentPrice };
+    }
+    if (Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice) {
+      return unchanged("not_enabled");
+    }
+    const result = await applySellerPromotionPriceReduction(tx, productId);
+    if (!result)
+      return unchanged("at_floor");
+    return { ...base, reduced: true, originalPrice: result.before, newPrice: result.after };
   });
+  if (!result.reduced)
+    await finishBoostFollowUp(boostId);
+  return result;
 }
 
-// src/modules/integrations/index/integrations.product-price.ts
-var integrationsProductPriceRoute = new Elysia().post("/integrations/products/:id/reduce-price", async ({ params, status }) => {
+// src/modules/integrations/index/integrations.visibility-boost.reduce-price.ts
+var integrationsVisibilityBoostReducePriceRoute = new Elysia().post("/integrations/visibility-boosts/:id/reduce-price", async ({ headers, params, status }) => {
+  if (!isVisibilityBoostAuthorized(headers.authorization)) {
+    return status(401, { message: "Visibility boost authentication required" });
+  }
   try {
-    return await reduceSellerProductPriceByPercent(params.id);
+    return await reduceVisibilityBoostPrice(params.id);
   } catch (error) {
-    if (error instanceof OrderError) {
+    if (error instanceof OrderError)
       return status(error.statusCode, { message: error.message });
-    }
-    console.error("Price reduction failed", error);
-    return status(500, { message: "Could not apply price reduction" });
+    console.error("Visibility boost price reduction failed", error);
+    return status(500, { message: "Could not apply the price reduction" });
   }
-}, {
-  params: t.Object({ id: t.String({ format: "uuid" }) })
-});
-
-// src/modules/integrations/services/integrations.fb-logs.ts
-async function createFacebookPostLog(input) {
-  const [log] = await db2.insert(fb_post_logs).values({
-    productId: input.productId,
-    postType: input.postType,
-    facebookPostId: input.facebookPostId ?? null,
-    price: input.price,
-    status: input.status,
-    postedAt: new Date
-  }).returning();
-  return log;
-}
-
-// src/modules/integrations/index/integrations.fb-logs.ts
-var integrationsFbLogsRoute = new Elysia().post("/integrations/social/fb-logs", async ({ body, status }) => {
-  try {
-    return await createFacebookPostLog(body);
-  } catch (error) {
-    console.error("Failed to store facebook post log", error);
-    return status(500, { message: "Could not record post log" });
-  }
-}, {
-  body: t.Object({
-    productId: t.String({ format: "uuid" }),
-    postType: t.Union([t.Literal("first_post"), t.Literal("second_post")]),
-    facebookPostId: t.Optional(t.String()),
-    price: t.String(),
-    status: t.Union([t.Literal("success"), t.Literal("failed")])
-  })
-});
-
-// src/modules/integrations/services/integrations.product-context.ts
-async function getProductUnifiedContext(identifier) {
-  let productId = identifier;
-  const [campaign] = await db2.select({ productId: seller_social_campaigns.productId }).from(seller_social_campaigns).where(eq(seller_social_campaigns.id, identifier)).limit(1);
-  if (campaign) {
-    productId = campaign.productId;
-  }
-  const [row] = await db2.select({
-    id: sellers_product.id,
-    productName: sellers_product.productName,
-    productPrice: sellers_product.productPrice,
-    basePrice: sellers_product.basePrice,
-    productQty: sellers_product.productQty,
-    scalingType: sellers_product.scalingType,
-    shopName: sellers_profile.shopName,
-    sellerName: user.name
-  }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(eq(sellers_product.id, productId)).limit(1);
-  if (!row)
-    throw new OrderError(404, "Product not found");
-  const apiBase = (process.env.SOCIAL_PUBLIC_API_URL || "https://api.agrivive.tech").replace(/\/$/, "");
-  return {
-    id: row.id,
-    productId: row.id,
-    productName: row.productName,
-    productPrice: row.productPrice,
-    basePrice: row.basePrice,
-    productQty: row.productQty,
-    scalingType: row.scalingType,
-    shopName: row.shopName,
-    sellerName: row.sellerName,
-    listingUrl: `https://agrivive.tech/marketplace/${row.id}`,
-    imageUrl: `${apiBase}/integrations/media/social-products/${row.id}`
-  };
-}
-
-// src/modules/integrations/index/integrations.product-context.ts
-var integrationsProductContextRoute = new Elysia().get("/integrations/products/:id/context", async ({ params, status }) => {
-  try {
-    return await getProductUnifiedContext(params.id);
-  } catch (error) {
-    if (error instanceof OrderError) {
-      return status(error.statusCode, { message: error.message });
-    }
-    console.error("Could not fetch unified product context", error);
-    return status(500, { message: "Could not fetch product context" });
-  }
-}, {
-  params: t.Object({ id: t.String({ format: "uuid" }) })
-});
+}, { params: visibilityBoostParams, headers: visibilityBoostHeaders });
 
 // src/modules/conversations/services/conversation.error.ts
 class ConversationError extends Error {
@@ -143032,6 +143822,7 @@ async function enqueueConversationNotification(tx, recipientUserId, conversation
   const windowStart = new Date(Math.floor(createdAt.getTime() / windowMs) * windowMs);
   const dedupeKey = `${recipientUserId}:${type}:${windowStart.toISOString()}`;
   const availableAt = new Date(createdAt.getTime() + windowMs);
+  const channel = type === "seller_message" ? await sellerMessageChannel(tx, recipientUserId) : undefined;
   await tx.insert(notification_outbox).values({
     recipientUserId,
     type,
@@ -143039,7 +143830,7 @@ async function enqueueConversationNotification(tx, recipientUserId, conversation
     dedupeKey,
     referenceId: conversationId,
     itemCount: 1,
-    payload: { conversationId, type },
+    payload: { conversationId, type, ...channel ? { channel } : {} },
     availableAt,
     createdAt,
     updatedAt: createdAt
@@ -143687,7 +144478,7 @@ async function sendPushNotificationBatch(messages) {
       android: {
         priority: "high",
         collapseKey: first.data.collapseKey,
-        notification: { channelId: "default" }
+        notification: { channelId: first.data.channelId || "default" }
       },
       apns: {
         headers: first.data.collapseKey ? { "apns-collapse-id": first.data.collapseKey } : undefined
@@ -143713,12 +144504,46 @@ async function sendPushNotificationBatch(messages) {
   }
 }
 
+// src/utils/seller-notifications/push-content.ts
+function countsOf(payload) {
+  const counts = payload.counts ?? {};
+  return Object.entries(counts).filter(([kind]) => getSellerNoticeDef(kind));
+}
+function sellerAlertContent(payload, itemCount, referenceId) {
+  const kind = String(payload.kind ?? "");
+  const def = getSellerNoticeDef(kind);
+  const channel = payload.channel === "updates" ? "updates" : "orders";
+  if (!def) {
+    return { title: "Agrivive update", body: "Open Agrivive to see what is new.", path: "/(app)/notifications", channel };
+  }
+  if (itemCount <= 1) {
+    return {
+      title: def.title,
+      body: def.body(payload),
+      path: sellerNoticePath(def.target, referenceId),
+      channel
+    };
+  }
+  if (channel === "orders") {
+    return {
+      title: `${itemCount} ${def.plural}`,
+      body: "Open Agrivive to see them.",
+      path: "/(app)/notifications",
+      channel
+    };
+  }
+  const parts = countsOf(payload).map(([countKind, count]) => `${count > 1 ? `${count} ` : ""}${count > 1 ? getSellerNoticeDef(countKind).plural : getSellerNoticeDef(countKind).title}`);
+  return { title: `${itemCount} Updates`, body: parts.join(" \xB7 "), path: "/(app)/notifications", channel };
+}
+
 // src/jobs/deliver-push-notifications.ts
 var batchLimit = 50;
 var deviceBatchSize = 500;
-var maxAttempts = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
+var maxAttempts2 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
 function notificationContent(job) {
   const payload = job.payload ?? {};
+  if (job.type === "seller_alert")
+    return sellerAlertContent(payload, job.itemCount, job.referenceId);
   if (job.type === "seller_listing") {
     const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
     const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
@@ -143753,16 +144578,18 @@ function notificationContent(job) {
     return {
       title: "New Reservation Received",
       body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
-      path: `/(app)/orders/${String(payload.orderId)}`
+      path: `/(app)/orders/${String(payload.orderId)}`,
+      channel: "orders"
     };
   }
   return {
     title: "New buyer messages",
     body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,
-    path: "/messages"
+    path: "/messages",
+    channel: payload.channel === "updates" ? "updates" : "orders"
   };
 }
-function retryDelay(attempt) {
+function retryDelay2(attempt) {
   return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
 }
 async function claimJobs() {
@@ -143798,13 +144625,13 @@ async function finishJob(job, status, message) {
 }
 async function rescheduleJob(job, message) {
   const now = new Date;
-  if (job.attemptCount >= maxAttempts()) {
+  if (job.attemptCount >= maxAttempts2()) {
     await finishJob(job, "failed", message);
     return;
   }
   await db2.update(notification_outbox).set({
     status: "pending",
-    availableAt: new Date(now.getTime() + retryDelay(job.attemptCount)),
+    availableAt: new Date(now.getTime() + retryDelay2(job.attemptCount)),
     lockedAt: null,
     lastError: message,
     updatedAt: now
@@ -143837,7 +144664,8 @@ async function deliverJob(job) {
       notificationId: job.id,
       referenceId: job.referenceId ?? "",
       path: content.path,
-      collapseKey: job.aggregationKey
+      collapseKey: job.aggregationKey,
+      channelId: content.channel ?? "default"
     }
   }));
   let lastError;
@@ -143885,7 +144713,7 @@ var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").ma
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 var webCorsOrigin = configuredWebOrigins.length ? isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins : localWebOrigin;
 var openapiPlugin = isDev ? index_default() : new Elysia({ name: "noop-openapi" });
-var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).use(integrationsProductPriceRoute).use(integrationsFbLogsRoute).use(integrationsProductContextRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).use(integrationsVisibilityBoostFacebookPostRoute).use(integrationsVisibilityBoostReducePriceRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { Tabs } from "expo-router";
 import {
@@ -11,28 +11,25 @@ import {
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
 import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
+import { useRefreshOnSignal } from "../../../src/hooks/useRefreshOnSignal";
 
 export default function TabsLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    let mounted = true;
-    const checkUnread = async () => {
-      try {
-        const res = await fetchSellerMessages({ status: "open", limit: 1 });
-        if (mounted) setUnreadCount(res.openCount || 0);
-      } catch {}
-    };
-    void checkUnread();
-    const interval = setInterval(checkUnread, 30000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+  const checkUnread = useCallback(async () => {
+    try {
+      const res = await fetchSellerMessages({ status: "open", limit: 1 });
+      setUnreadCount(res.openCount || 0);
+    } catch {}
   }, []);
+
+  // No timer: refresh on open, on app foreground, and when a message push arrives.
+  useEffect(() => { void checkUnread(); }, [checkUnread]);
+  useRefreshOnSignal(checkUnread, { pushTypes: ["seller_message"] });
 
   return (
     <Tabs
+      screenListeners={{ focus: () => void checkUnread() }}
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,

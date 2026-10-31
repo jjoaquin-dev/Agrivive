@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Paperclip, Send, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
-import { fetchConversationMessages, fetchConversations, markConversationRead, openConversationSocket, sendConversationMessage, uploadConversationAttachment } from "../../../src/features/conversations/api";
+import { fetchConversationMessages, fetchConversations, markConversationRead, sendConversationMessage, uploadConversationAttachment } from "../../../src/features/conversations/api";
 import { ConversationBubble } from "../../../src/features/conversations/components/ConversationBubble";
 import { ConversationContextBanner } from "../../../src/features/conversations/components/ConversationContextBanner";
 import { ConversationReservationCard } from "../../../src/features/conversations/components/ConversationReservationCard";
@@ -13,6 +13,7 @@ import { ConversationHeaderBar } from "../../../src/features/conversations/compo
 import type { Conversation, ConversationMessage } from "../../../src/features/conversations/types";
 import { radii, spacing } from "../../../src/theme";
 import { getAvatarColor, getInitials } from "../../../src/features/conversations/utils/avatar";
+import { useConversationSocket } from "../../../src/features/conversations/hooks/useConversationSocket";
 
 export default function ConversationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,19 +33,19 @@ export default function ConversationDetailScreen() {
   useEffect(() => {
     if (!id) return;
     let active = true;
-    let socket: WebSocket | null = null;
     void Promise.all([fetchConversations(), fetchConversationMessages(id)])
       .then(async ([convosRes, history]) => {
         if (!active) return;
         setConversation(convosRes.items.find((item) => item.id === id) ?? null);
         setMessages(history);
         await markConversationRead(id);
-        socket = await openConversationSocket(id, addMessage, () => setError("Live messages unavailable. Pull down to refresh."));
       })
       .catch((r: any) => { if (active) setError(r?.message || "Could not load conversation."); })
       .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; socket?.close(); };
-  }, [addMessage, id]);
+    return () => { active = false; };
+  }, [id]);
+
+  const { paused } = useConversationSocket(id, !loading, addMessage);
 
   const senderName = useMemo(() => conversation?.buyerName || "Buyer", [conversation]);
   const avatarBg = useMemo(() => getAvatarColor(senderName), [senderName]);
@@ -131,7 +132,7 @@ export default function ConversationDetailScreen() {
         ) : null}
 
         <View style={styles.composer}>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || paused ? <Text style={styles.error}>{error || "Live messages paused. Reconnecting…"}</Text> : null}
           <Pressable onPress={handlePickImage} disabled={uploading || sending} style={styles.attachBtn}>
             <Paperclip size={18} color="#6B7280" />
           </Pressable>

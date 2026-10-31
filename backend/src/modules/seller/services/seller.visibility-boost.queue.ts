@@ -2,9 +2,18 @@ import { and, desc, eq, lte } from "drizzle-orm";
 import { db } from "../../../db";
 import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 
 type BoostReason = "initial" | "price_reduction";
+
+// Two price drop posts too close together look like spam on the Page.
+async function requirePriceDropGap(tx: Parameters<typeof getPriceDropPostCooldownEnd>[0], productId: string) {
+  const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
+  if (!waitUntil) return;
+  const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000));
+  throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+}
 
 export async function queueSellerVisibilityBoost(
   sellerId: string,
@@ -39,6 +48,7 @@ export async function queueSellerVisibilityBoost(
         eq(seller_visibility_boosts.status, "prompt"),
       )).for("update").limit(1);
       if (!prompt) throw new OrderError(404, "Boost prompt not found");
+      if (prompt.reason === "price_reduction") await requirePriceDropGap(tx, productId);
       const [queued] = await tx.update(seller_visibility_boosts).set({
         status: "queued",
         readAt: now,
@@ -57,6 +67,7 @@ export async function queueSellerVisibilityBoost(
     const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
     const boostKey = currentPeriod === 0 ? `${cycle.id}:initial` : `${cycle.id}:reduction:${currentPeriod}`;
     const boostReason = currentPeriod === 0 ? "initial" : "price_reduction";
+    if (boostReason === "price_reduction") await requirePriceDropGap(tx, productId);
 
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,

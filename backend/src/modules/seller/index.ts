@@ -21,6 +21,7 @@ import { sellerSetupRoute } from "./index/seller.setup";
 import { sellerProductImageRoute } from "./index/seller.product.image";
 import { sellerStockAdjustmentListRoute } from "./index/seller.stock-adjustment.list";
 import { sellerNotificationsRoute } from "./index/seller.notifications";
+import { sellerNotificationSettingsRoute } from "./index/seller.notification-settings";
 import { sellerAnalyticsRoute } from "./index/seller.analytics";
 import { sellerAdvisoriesRoute } from "./index/seller.advisories";
 import { sellerProductInquiryRoute } from "./index/seller.product.inquiry";
@@ -58,6 +59,7 @@ export const sellerRoute = new Elysia({ prefix: "/seller" })
   .use(sellerReportRoute)
   .use(sellerTrustRoute)
   .use(sellerNotificationsRoute)
+  .use(sellerNotificationSettingsRoute)
   .use(sellerPromotionsRoute)
   .use(sellerVisibilityBoostRoute)
   .use(sellerSocialCampaignsRoute)

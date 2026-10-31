@@ -31,6 +31,7 @@ export async function getVisibilityBoostContext(boostId: string) {
     sellerRoles: user.role,
     shopName: sellers_profile.shopName,
     listingCycleId: seller_visibility_boosts.listingCycleId,
+    priceBefore: seller_visibility_boosts.priceBefore,
   }).from(seller_visibility_boosts)
     .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
     .innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId))
@@ -59,6 +60,7 @@ export async function getVisibilityBoostContext(boostId: string) {
   return {
     boostId: row.boostId,
     reason: row.reason,
+    previousPrice: row.priceBefore ? Number(row.priceBefore) : null,
     product: {
       id: row.productId,
       name: row.productName,

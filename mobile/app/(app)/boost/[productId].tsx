@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, AppState, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Sparkles } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -91,6 +91,7 @@ export default function BoostVisibilityScreen() {
     if (!campaign || !["queued", "publishing", "processing"].includes(campaign.status)) return;
     let active = true;
     const refresh = async () => {
+      if (AppState.currentState !== "active") return;
       try {
         const next = await fetchSocialCampaign(campaign.id);
         if (active) setCampaign(next);

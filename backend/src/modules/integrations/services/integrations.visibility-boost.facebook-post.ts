@@ -1,0 +1,118 @@
+import { and, desc, eq, gte } from "drizzle-orm";
+import { db } from "../../../db";
+import { fb_post_logs, seller_visibility_boosts } from "../../../db/schema";
+import { OrderError } from "../../../utils/order-types";
+import type { VisibilityBoostFacebookPostBody } from "../model/integrations.visibility-boost";
+import { getPriceDropPostCooldownEnd, priceDropPostGapHours } from "../../../utils/boost-cooldown";
+import { claimFacebookPost } from "./integrations.visibility-boost.post-claim";
+import { finishFacebookPost } from "./integrations.visibility-boost.post-finish";
+import { scheduleBoostFollowUp } from "./integrations.visibility-boost.follow-up.schedule";
+import { finishBoostFollowUp } from "./integrations.visibility-boost.follow-up.finish";
+import { notifyBoostPriceLowered } from "./integrations.visibility-boost.notify-price-lowered";
+import { notifyBoostStarted } from "./integrations.visibility-boost.notify-started";
+import { getVisibilityBoostContext } from "./integrations.visibility-boost.context";
+import { publishFacebookPagePhoto } from "./integrations.social-publish-facebook";
+
+type Context = Awaited<ReturnType<typeof getVisibilityBoostContext>>;
+
+function mentionsPrice(caption: string, price: string) {
+  return [price, String(Number(price))].some((form) =>
+    new RegExp(`₱\\s?${form.replace(".", "\\.")}(?!\\d|\\.\\d)`).test(caption));
+}
+
+function templateCaption(context: Context, postType: string, price: string, previous: number | null) {
+  const per = context.product.unit ? ` per ${context.product.unit}` : "";
+  if (postType === "first_post") {
+    return `Fresh ${context.product.name} is now available at ₱${price}${per} from ${context.seller.shopName}!`;
+  }
+  const was = previous ? ` (was ₱${previous.toFixed(2)})` : "";
+  // A boost again after a price drop is a reminder, not a second flash sale.
+  if (context.reason === "price_reduction") {
+    return `Still available: ${context.product.name} at ₱${price}${per}${was} from ${context.seller.shopName}. Order before it sells out!`;
+  }
+  return `Price drop! ${context.product.name} is now ₱${price}${per}${was} at ${context.seller.shopName}. Get yours before it sells out!`;
+}
+
+export async function postVisibilityBoostToFacebook(boostId: string, body: VisibilityBoostFacebookPostBody) {
+  // Re-checks the boost, the seller and the listing before anything is posted.
+  const context = await getVisibilityBoostContext(boostId);
+  if (context.reason === "price_reduction" && body.postType !== "second_post") {
+    throw new OrderError(400, "A price drop boost can only make the second post");
+  }
+  const productId = context.product.id;
+  const [boost] = await db.select({ createdAt: seller_visibility_boosts.createdAt })
+    .from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+  if (!boost) throw new OrderError(404, "Visibility boost not found");
+
+  const findPosted = async (postType: "first_post" | "second_post") => {
+    const [row] = await db.select().from(fb_post_logs).where(and(
+      eq(fb_post_logs.productId, productId),
+      eq(fb_post_logs.postType, postType),
+      eq(fb_post_logs.status, "success"),
+      gte(fb_post_logs.postedAt, boost.createdAt),
+    )).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    return row;
+  };
+
+  // Backstop for the seller route: no second price drop post right after the last one.
+  if (context.reason === "price_reduction") {
+    const waitUntil = await getPriceDropPostCooldownEnd(db, productId, boost.createdAt);
+    if (waitUntil) {
+      throw new OrderError(409, `A price drop post went out less than ${priceDropPostGapHours} hours ago`);
+    }
+  }
+
+  let previous: number | null = null;
+  if (body.postType === "second_post") {
+    if (context.reason === "initial") {
+      const first = await findPosted("first_post");
+      if (!first) throw new OrderError(409, "The first post has not been published yet");
+      previous = Number(first.price);
+    } else {
+      previous = context.previousPrice;
+    }
+  }
+
+  // The backend owns the price and the link: drop any link the model wrote and add the right one.
+  const price = context.product.price.toFixed(2);
+  const written = body.caption.replace(/https?:\/\/\S+/g, "").replace(/[ \t]+\n/g, "\n").trim();
+  const text = written && mentionsPrice(written, price)
+    ? written
+    : templateCaption(context, body.postType, price, previous);
+  const campaign = body.postType === "first_post" ? "boost" : "price_drop";
+  const caption = `${text}\n\nOrder here: ${context.product.listingUrl}` +
+    `?utm_source=facebook&utm_medium=social&utm_campaign=${campaign}`;
+
+  // A repeated delivery of the same boost returns the saved post instead of posting twice.
+  const claim = await claimFacebookPost({ productId, postType: body.postType, price, since: boost.createdAt });
+  if (claim.saved) {
+    if (body.postType === "first_post") await scheduleBoostFollowUp(boostId, claim.saved.postedAt);
+    return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: claim.saved.facebookPostId };
+  }
+
+  let result: Awaited<ReturnType<typeof publishFacebookPagePhoto>>;
+  try {
+    result = await publishFacebookPagePhoto(context.product.imageUrl, caption);
+  } catch (error) {
+    await finishFacebookPost(claim.logId, { status: "failed" })
+      .catch((logError) => console.error("Failed to store facebook post log", logError));
+    if (error instanceof OrderError) throw error;
+    throw new OrderError(502, "Facebook could not publish this post");
+  }
+
+  // If saving fails here the row stays "pending", so a retry stops instead of posting twice.
+  const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId });
+  if (context.reason === "initial") {
+    if (body.postType === "first_post") {
+      await scheduleBoostFollowUp(boostId, log.postedAt);
+      await notifyBoostStarted(boostId);
+    } else {
+      await finishBoostFollowUp(boostId);
+      await notifyBoostPriceLowered(boostId);
+    }
+  }
+  return {
+    posted: true, alreadyPosted: false, postType: body.postType,
+    facebookPostId: result.postId, postUrl: result.postUrl,
+  };
+}
