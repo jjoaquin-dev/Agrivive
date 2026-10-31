@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useIsFocused, useRouter } from "expo-router";
 import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { useSellerNotifications } from "./useSellerNotifications";
-import { useSellerPromotions } from "./useSellerPromotions";
-import { fetchSellerBoostPrompts, markAllSellerBoostPromptsRead } from "../../boost/api/visibility-boosts";
+import { fetchSellerBoostPrompts, markAllSellerBoostPromptsRead } from "../../marketing/api/visibility-boosts";
 import { fetchConversations, markAllConversationsRead } from "../../conversations/api";
 import { mapUnifiedNotificationItems } from "../utils/unifiedNotificationMappers";
 import type { NotificationCategory, SellerBoostPrompt } from "../types";
@@ -12,7 +11,6 @@ import type { Conversation } from "../../conversations/types";
 export function useUnifiedNotifications() {
   const router = useRouter();
   const sellerNotices = useSellerNotifications();
-  const sellerPromotions = useSellerPromotions();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [boosts, setBoosts] = useState<SellerBoostPrompt[]>([]);
   const [boostCursor, setBoostCursor] = useState<string | null>(null);
@@ -56,7 +54,6 @@ export function useUnifiedNotifications() {
     const list = mapUnifiedNotificationItems({
       conversations,
       notices: sellerNotices.items,
-      promotions: sellerPromotions.items,
       boosts,
       router,
       markedReadIds: markedReadIdsRef.current,
@@ -67,12 +64,11 @@ export function useUnifiedNotifications() {
       return timeB - timeA;
     });
     // readVersion re-runs the mapping after "mark all read" updates the ref.
-  }, [boosts, conversations, router, sellerNotices.items, sellerPromotions.items, readVersion]);
+  }, [boosts, conversations, router, sellerNotices.items, readVersion]);
 
   const refresh = () => {
     setRefreshing(true);
     void sellerNotices.refresh();
-    void sellerPromotions.refresh();
     void loadData(true);
   };
 
@@ -88,7 +84,6 @@ export function useUnifiedNotifications() {
     setReadVersion((version) => version + 1);
     await Promise.allSettled([
       sellerNotices.markAllRead(),
-      sellerPromotions.markAllRead(),
       markAllSellerBoostPromptsRead(),
       markAllConversationsRead(),
     ]);

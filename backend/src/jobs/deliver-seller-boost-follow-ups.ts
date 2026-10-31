@@ -8,9 +8,10 @@ const retryAfterMs = 15 * 60_000;
 const batchSize = 50;
 
 /**
- * The 6-hour rule. When a first Boost post is saved, the boost gets a due time.
- * This job asks n8n to run the price cut and the second post once that time passes.
- * Until the second post is saved (or the cut is skipped) it asks again every 15 minutes, up to 5 times.
+ * The 6-hour rule. When a first Boost post is saved, the boost gets a due time 6 hours later.
+ * This job asks n8n to cut the price and post once that time passes. After each round is saved,
+ * the due time is set 6 hours ahead again, until the price reaches the seller's lowest price.
+ * Until a round is saved (or skipped) it asks again every 15 minutes, up to 5 times.
  */
 export async function deliverSellerBoostFollowUps() {
   const webhook = getBoostWebhookTarget();

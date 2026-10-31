@@ -23,7 +23,6 @@ import {
   ArrowUpDown,
   BookOpen,
   Archive,
-  TrendingUp,
 } from "lucide-react-native";
 import { useInventory, type InventoryFilterTab } from "../../../src/features/inventory/hooks/useInventory";
 import { ProductCard } from "../../../src/features/inventory/components/ProductCard";
@@ -400,17 +399,6 @@ export default function InventoryScreen() {
             >
               <Archive size={16} color="#374151" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>View Archived Listings</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/(app)/boosts");
-              }}
-              style={styles.menuItem}
-            >
-              <TrendingUp size={16} color="#374151" style={styles.menuItemIcon} />
-              <Text style={styles.menuItemText}>Marketing & Boosts</Text>
             </Pressable>
 
             <Pressable

@@ -93,17 +93,17 @@ export function AnalyticsProductPerformance({ products }: AnalyticsProductPerfor
                       {isDiscounted && (
                         <>
                           <View style={styles.discountBadge}>
-                            <Text style={styles.discountBadgeText}>12h Drop</Text>
+                            <Text style={styles.discountBadgeText}>Price Drop</Text>
                           </View>
                           <TouchableOpacity
-                            onPress={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: p.id } })}
+                            onPress={() => router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: p.id } })}
                             style={styles.previewPostBtn}
                             accessibilityRole="button"
-                            accessibilityLabel={`Preview post for ${p.productName}`}
+                            accessibilityLabel={`Boost ${p.productName}`}
                             hitSlop={6}
                           >
                             <Sparkles size={11} color="#FFFFFF" />
-                            <Text style={styles.previewPostBtnText}>Preview Post</Text>
+                            <Text style={styles.previewPostBtnText}>Boost</Text>
                           </TouchableOpacity>
                         </>
                       )}

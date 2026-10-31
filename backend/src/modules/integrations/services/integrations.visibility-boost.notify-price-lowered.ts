@@ -19,13 +19,13 @@ export async function notifyBoostPriceLowered(boostId: string) {
       price: sellers_product.productPrice,
       periods: sellers_product.priceReductionPeriodsApplied,
     }).from(sellers_product).where(eq(sellers_product.id, boost.productId)).limit(1);
-    const [firstPost] = await db.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(
+    // The two newest saved posts: this round's post, and the one before it (the price it replaced).
+    const [, previousPost] = await db.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(
       eq(fb_post_logs.productId, boost.productId),
-      eq(fb_post_logs.postType, "first_post"),
       eq(fb_post_logs.status, "success"),
       gte(fb_post_logs.postedAt, boost.createdAt),
-    )).orderBy(desc(fb_post_logs.postedAt)).limit(1);
-    if (!product?.price || !firstPost || product.periods < 1 || Number(product.price) >= Number(firstPost.price)) return;
+    )).orderBy(desc(fb_post_logs.postedAt)).limit(2);
+    if (!product?.price || !previousPost || product.periods < 1 || Number(product.price) >= Number(previousPost.price)) return;
 
     await db.transaction(async (tx) => {
       await tx.insert(seller_visibility_boosts).values({
@@ -37,7 +37,7 @@ export async function notifyBoostPriceLowered(boostId: string) {
         boostKey: `${boost.listingCycleId}:reduction:${product.periods}`,
         status: "prompt",
         nextAttemptAt: new Date(),
-        priceBefore: firstPost.price,
+        priceBefore: previousPost.price,
         priceAfter: product.price,
       }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey });
       await createSellerNotification(tx, {
@@ -45,7 +45,7 @@ export async function notifyBoostPriceLowered(boostId: string) {
         kind: "price_lowered",
         dedupeKey: `price-lowered:${boost.productId}:${product.periods}`,
         productId: boost.productId,
-        payload: { productName: product.name, priceBefore: firstPost.price, priceAfter: product.price, waitHours: priceDropPostGapHours },
+        payload: { productName: product.name, priceBefore: previousPost.price, priceAfter: product.price, waitHours: priceDropPostGapHours },
       });
     });
   } catch (error) {

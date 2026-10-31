@@ -3,6 +3,7 @@ import { db } from "../../../db";
 import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
+import { isBoostStuck } from "./seller.visibility-boost.used";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 
 type BoostReason = "initial" | "price_reduction";
@@ -88,6 +89,8 @@ export async function queueSellerVisibilityBoost(
     const [existing] = await tx.select({
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status,
+      createdAt: seller_visibility_boosts.createdAt,
+      sentAt: seller_visibility_boosts.sentAt,
     }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.boostKey, boostKey)).limit(1);
     if (!existing) throw new Error("Boost request could not be saved");
 
@@ -104,6 +107,17 @@ export async function queueSellerVisibilityBoost(
         eq(seller_visibility_boosts.status, "failed"),
       )).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
       if (retried) return { boostId: retried.id, status: retried.status, reason: boostReason, productId };
+    }
+
+    // Sent to n8n a while ago but nothing was posted (and no post is in progress): send it again.
+    if (existing.status === "sent" && await isBoostStuck(tx, { productId, reason: boostReason, createdAt: existing.createdAt, sentAt: existing.sentAt })) {
+      const [resent] = await tx.update(seller_visibility_boosts).set({
+        status: "queued", retryCount: 0, nextAttemptAt: now, leaseUntil: null, lastError: null, updatedAt: now,
+      }).where(and(
+        eq(seller_visibility_boosts.id, existing.id),
+        eq(seller_visibility_boosts.status, "sent"),
+      )).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
+      if (resent) return { boostId: resent.id, status: resent.status, reason: boostReason, productId };
     }
 
     if (existing.status === "prompt") {

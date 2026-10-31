@@ -64,8 +64,9 @@ export default function AppLayout() {
       <Stack.Screen name="conversations/[id]" options={{ title: "Conversation" }} />
       <Stack.Screen name="activity" options={{ title: "Change History" }} />
       <Stack.Screen name="analytics" options={{ title: "Analytics" }} />
-      <Stack.Screen name="boost/[productId]" options={{ title: "Boost Visibility" }} />
-      <Stack.Screen name="boosts" options={{ title: "Boost History" }} />
+      <Stack.Screen name="marketing/index" options={{ title: "Marketing" }} />
+      <Stack.Screen name="marketing/[productId]" options={{ title: "Preview Boost" }} />
+      <Stack.Screen name="marketing/started" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="advisories" options={{ title: "Advisories" }} />
       <Stack.Screen name="trust" options={{ title: "Trust History" }} />
       <Stack.Screen name="reviews" options={{ title: "Ratings & Reviews" }} />

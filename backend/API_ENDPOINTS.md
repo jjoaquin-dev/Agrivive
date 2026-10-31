@@ -162,15 +162,6 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | POST | `/seller/notifications/read-all` | `backend/src/modules/seller/index/seller.notifications.ts` |
 | GET | `/seller/notification-settings` | `backend/src/modules/seller/index/seller.notification-settings.ts` |
 | PATCH | `/seller/notification-settings` | `backend/src/modules/seller/index/seller.notification-settings.ts` |
-| GET | `/seller/promotions` | `backend/src/modules/seller/index/seller.promotions.ts` |
-| POST | `/seller/promotions/:id/read` | `backend/src/modules/seller/index/seller.promotions.ts` |
-| POST | `/seller/promotions/read-all` | `backend/src/modules/seller/index/seller.promotions.ts` |
-| GET | `/seller/promotions/:id/share` | `backend/src/modules/seller/index/seller.promotions.ts` |
-| GET | `/seller/social-campaigns/channels` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
-| POST | `/seller/social-campaigns/draft` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
-| GET | `/seller/social-campaigns/:id` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
-| POST | `/seller/social-campaigns/:id/publish` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
-| POST | `/seller/social-campaigns/:id/retry` | `backend/src/modules/seller/index/seller.social-campaigns.ts` |
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
 
@@ -194,22 +185,6 @@ The API reads the canonical Filipino name and category from the selected approve
 
 `GET /seller/products/:id/share` returns a prepared caption, marketplace link, and image URL. Set `WEB_APP_URL` to the buyer web app origin for absolute share links.
 
-Promotion drafts are seller-scoped and separate from the paginated order/trust notification feed. `GET /seller/promotions?limit=20&cursor=<uuid>` returns ready drafts, a next cursor, and the seller's unread draft count. `POST /seller/promotions/:id/read` and `POST /seller/promotions/read-all` require no body. `GET /seller/promotions/:id/share` returns fresh price, quantity, shop, and marketplace URL facts for the native share sheet. If a listing is no longer active, marketable, buyable, publicly visible, and Priority Boost eligible, the share endpoint returns HTTP 409 with `status: "unavailable"`. No post is published automatically.
-
-## Promotion integration (n8n)
-
-These routes use the server-side `N8N_PROMOTION_SERVICE_TOKEN` as `Authorization: Bearer <token>` instead of a buyer or seller session. Keep this token in backend configuration and an n8n credential; never put it in the workflow export.
-
-| Method | Path | Route source |
-|---|---|---|
-| GET | `/integrations/promotions/jobs/:id/context` | `backend/src/modules/integrations/index/integrations.promotion.context.ts` |
-| POST | `/integrations/promotions/jobs/:id/draft` | `backend/src/modules/integrations/index/integrations.promotion.draft.ts` |
-| POST | `/integrations/promotions/jobs/:id/failure` | `backend/src/modules/integrations/index/integrations.promotion.failure.ts` |
-
-The worker webhook body contains only `{ "jobId": "<uuid>", "stage": "initial|followup" }`. n8n retrieves the latest public listing context from the protected `context` route, generates wording only, and calls `draft` with `{"headline":"...","caption":"..."}`. The context is evaluated with `visibility-ahptopsis-v1` and includes the backend-confirmed price, quantity, availability, visibility tier, score, rank, and listing URL. A follow-up may mention only the current price, quantity, and availability supplied by the backend. Draft callbacks are idempotent. `failure` accepts `{"code":"model_failed|invalid_draft|callback_failed"}` and returns the job to bounded retry or a recorded terminal failure. A ready callback is accepted only after the backend independently confirms current Priority eligibility.
-
-The backend checks initial eligibility hourly with the Figure 5 AHP–TOPSIS engine. It compares all currently eligible active surplus listings, uses weights `0.40/0.30/0.20/0.10`, and queues only listings at `Ci* >= 0.60` for Priority Boost. It queues one follow-up for six hours after the initial draft becomes ready, only if the same listing cycle is still publicly visible, buyable, and Priority eligible. At that follow-up, the backend may apply one configured percentage reduction toward the seller's minimum price before n8n fetches the refreshed context. Existing listing cycles are inserted as skipped during migration to prevent historical drafts.
-
 ## Boost posting (n8n)
 
 The seller taps **Boost** (after adding a product, or from a price-drop prompt). The app calls `POST /seller/products/:id/boost` (or `POST /seller/boost-prompts/:id/boost`), and the backend sends only `{ "boostId": "<uuid>", "reason": "initial|price_reduction" }` to `N8N_VISIBILITY_BOOST_WEBHOOK_URL` with `Authorization: Bearer <N8N_VISIBILITY_BOOST_SERVICE_TOKEN>`. n8n writes the title and description with Groq, then calls these routes, which all need the same Bearer token and return `401` without it.
@@ -217,42 +192,26 @@ The seller taps **Boost** (after adding a product, or from a price-drop prompt).
 | Method | Path | Notes |
 | --- | --- | --- |
 | GET | `/integrations/visibility-boosts/:id/context` | Current product facts, `previousPrice` (price drops only), `listingUrl`, public `imageUrl`. |
-| POST | `/integrations/visibility-boosts/:id/facebook-post` | Body `{"postType":"first_post|second_post","caption":"..."}`. The backend rechecks the listing, posts with its own Meta credentials, saves the `fb_post_logs` row, removes any link in the caption and adds the product page link, and replaces captions that do not show the current price. Before posting it saves a `pending` row. A repeated call returns `alreadyPosted: true`. A `pending` row that never finished returns `409` ("still being sent", or after 5 minutes "may have reached Facebook, check the Page"), so nothing posts twice; the owner checks the Page and sets that row to `success` or `failed`. A price-drop boost post returns `409` if another price drop post went out in the last 3 hours. After the first post is saved the seller gets a **Boost Started** push and the boost gets a follow-up due time 6 hours later (only when the seller turned on price drops). After the second post of a first boost is saved, the backend creates a price-drop boost prompt and sends a **Price Lowered** push ("from ₱X to ₱Y. You can boost it again in 3 hours."). |
+| POST | `/integrations/visibility-boosts/:id/facebook-post` | Body `{"postType":"first_post|second_post","caption":"..."}`. The backend rechecks the listing, posts with its own Meta credentials, saves the `fb_post_logs` row, removes any link in the caption and adds the product page link, and replaces captions that do not show the current price. Before posting it saves a `pending` row. A repeated call returns `alreadyPosted: true`. A `pending` row that never finished returns `409` ("still being sent", or after 5 minutes "may have reached Facebook, check the Page"), so nothing posts twice; the owner checks the Page and sets that row to `success` or `failed`. A price-drop boost post returns `409` if another price drop post went out in the last 3 hours. After the first post is saved the seller gets a **Boost Started** push and the boost gets a follow-up due time 6 hours later (only when the seller turned on price drops). After the second post of a first boost is saved, the backend creates a price-drop boost prompt and sends a **Price Lowered** push ("from ₱X to ₱Y. You can boost it again in 3 hours.") each round. |
+
+The same call also posts to Instagram. The Instagram post is tried after Facebook, even when Facebook fails with a server error, and it is saved in `instagram_post_logs` with its own `pending` row (one post per product, post type and price since the boost began, so a repeated call never posts twice). A `409` from Facebook (still sending, too soon, first post missing) skips Instagram. A success response keeps its old fields and adds `instagram: { "status": "posted|failed", "posted", "alreadyPosted", "instagramPostId", "postUrl", "message" }`. An Instagram failure never fails the Facebook answer, and a Facebook failure keeps its own status code and message. The caption has no link and ends with the product page address. Needs `SOCIAL_INSTAGRAM_USER_ID` and a token that can publish to Instagram. Apply `backend/drizzle/20261101120000_instagram_post_logs` before testing.
+
+`GET /seller/products/:id/boost` now returns `product.quantity`, `product.unit` and `boost.channels` (`{ facebook, instagram }`, each `{ "status": "waiting|posting|posted|failed", "postUrl" }`) for the boost's own post. The mobile Boost Started screen polls it, so each platform shows its real answer.
 | POST | `/integrations/visibility-boosts/:id/reduce-price` | The 6-hour rule. Cuts the price once by the seller's `priceReductionPercent`, never below `minimumPrice`. First boost only, and needs the first post saved (`409` otherwise). Returns `reduced` plus `reason` (`not_enabled`, `at_floor`, `unavailable`) when nothing changed. A retry does not cut twice. When nothing was cut, the follow-up is closed. |
 
-The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due_at`), not in n8n. When it passes, the worker sends `{ "boostId": "<uuid>", "reason": "follow_up" }` to the same webhook. n8n then calls `context`, `reduce-price`, writes the flash-sale caption and calls `facebook-post` with `second_post`. If the second post is not saved, the worker asks again every 15 minutes, up to 5 times. Seller routes `POST /seller/products/:id/boost` and `POST /seller/boost-prompts/:id/boost` return `409` ("You can boost again in about N hours") for a price drop boost within 3 hours of the last price drop post. Apply `backend/drizzle/20261031140000_boost_follow_up` before testing.
+The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due_at`), not in n8n. When it passes, the worker sends `{ "boostId": "<uuid>", "reason": "follow_up" }` to the same webhook. n8n then calls `context`, `reduce-price`, writes the flash-sale caption and calls `facebook-post` with `second_post`. If the post is not saved, the worker asks again every 15 minutes, up to 5 times. After each round is saved (cut, flash-sale post, **Price Lowered** push), the due time is set 6 hours ahead again, so the rule repeats until the price reaches the seller's `minimumPrice`. It also ends when `reduce-price` cuts nothing (`not_enabled`, `at_floor`, `unavailable`). For a boosted product these rounds replace the 12-hour job's cuts, because every cut moves the 12-hour job's next due time further out. Seller routes `POST /seller/products/:id/boost` and `POST /seller/boost-prompts/:id/boost` return `409` ("You can boost again in about N hours") for a price drop boost within 3 hours of the last price drop post. Apply `backend/drizzle/20261031140000_boost_follow_up` before testing.
 
-## Seller social publishing to official Agrivive pages
+### Boost progress for the app
 
-These session-protected routes require a signed-in seller. Sellers select Agrivive's Facebook Page and linked Instagram Professional account; no seller OAuth linking is used. TikTok and X publishing are not offered. Provider credentials remain in backend environment settings and are never returned to mobile or sent to n8n.
+`GET /seller/products/:id/boost` and `GET /seller/boosts` (history) now return `progress` on each boost: `{ "state", "roundsDone", "nextDropAt", "posts": [{ "type", "price", "postedAt", "postUrl" }] }`. `state` is one of `posting`, `posted`, `running` (more price drops are due), `finished` (the price reached the seller's lowest price), `not_posted` (sent to n8n more than 5 minutes ago and nothing posted), `failed`, `needs_choice` or `dismissed`. `posts` are the saved Facebook posts, with the link to each one. The product route also returns `product.lowestPrice`, and history items return `currentPrice` and `lowestPrice`. `GET /seller/products` also returns `boost` on each listing: `null`, or `{ "state", "nextDropAt", "roundsDone", "priceDropPrompt" }` for the newest first boost, which the listing and analytics cards show as a chip. A failed post sends the seller a **Boost Did Not Post** push (`boost_failed`), once per boost and post type. The Priority Promotion draft flow (`/seller/promotions`, `/integrations/promotions/*`) was removed; its tables stay in the database.
 
-`GET /seller/social-campaigns/channels` returns each channel's label, caption limit, and configured state. `POST /seller/social-campaigns/draft` accepts `{"productId":"<uuid>"}` and returns an editable draft, listing name, and image preview URL. The backend checks seller ownership, current listing cycle, current public/buyable status, Agrivive-hosted listing photo, and `visibility-ahptopsis-v1 >= 0.60`.
-
-`POST /seller/social-campaigns/:id/publish` is the seller's explicit confirmation. Example body:
-
-```json
-{
-  "platforms": ["facebook", "instagram"],
-  "posts": {
-    "facebook": "Reviewed Facebook caption",
-    "instagram": "Reviewed Instagram caption"
-  }
-}
-```
-
-The request requires the normal seller session; the campaign must belong to that seller. The response is `{"campaignId":"<uuid>","status":"queued"}`. `GET /seller/social-campaigns/:id` returns live overall and per-channel statuses and any published links. `POST /seller/social-campaigns/:id/retry` retries only failed channels; already successful posts are retained.
-
-n8n uses `Authorization: Bearer <N8N_SOCIAL_SERVICE_TOKEN>` to coordinate the workflow. Its webhook receives only `{ "campaignId": "<uuid>" }`; it fetches targets and calls the backend per selected platform. It never receives provider access tokens or calls social provider APIs:
+## Boost product photo
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/integrations/social-campaigns/:id/context` | Recheck eligibility and return selected channel names/text plus a public eligible product image URL. |
-| POST | `/integrations/social-campaigns/:id/publish/:platform` | Ask the backend to publish to one selected channel using server-side credentials. |
-| GET | `/integrations/media/social-products/:id` | Stream the current eligible listing photo from private Agrivive storage for platform retrieval. |
+| GET | `/integrations/media/social-products/:id` | Streams the current eligible listing photo from private Agrivive storage so Facebook can fetch it for a Boost post. Public, no session. |
 
-Import `n8n/workflows/agrivive-social-publishing.json`, replace `YOUR_AGRIVIVE_API_HOST`, and set Header Auth credentials for the webhook and protected API requests. Keep execution payload retention disabled. The exported workflow is inactive; activate it only after backend setup and approved test-channel checks. If an older social-posting or TikTok status workflow was already imported, deactivate it. Do not import or reactivate `agrivive-tiktok-status-polling.json`.
-
-Set the server-only credentials listed in `backend/.env.example`: public HTTPS API URL, n8n webhook URL/token, Groq key, Meta Graph API version, Agrivive Facebook Page ID and Page access token, and linked Instagram Professional account ID. Meta requires the linked Instagram Professional account and approved posting permissions. No seller account tokens or OAuth callback URLs are used. Apply all pending migrations in timestamp order to an approved development/test database before manual acceptance. If the social-campaign migration is pending, apply `20261007165336_social_publishing` before `20261007181343_official_social_pages`; do not apply migrations to production as part of implementation.
+The old preview-and-post routes (`/seller/social-campaigns/*`, `/integrations/social-campaigns/*`) and the social-publishing n8n workflow were removed. Boost posting is described in the Boost posting section above.
 
 ## Admin monitoring
 

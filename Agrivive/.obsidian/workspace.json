@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "f4e75a4e2e2343a1",
+        "id": "a5c4d2cabb41791c",
         "type": "tabs",
         "children": [
           {
-            "id": "80c3e5dd24fefdce",
+            "id": "f0baab3ce27963fa",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "02 Product/Feature Map.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Feature Map"
             }
           }
         ]
@@ -51,7 +55,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "chr",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -75,7 +79,8 @@
               "title": "Bookmarks"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -184,11 +189,19 @@
       "bases:Create new base": false
     }
   },
-  "active": "80c3e5dd24fefdce",
+  "active": "92b5c31836f9f735",
   "lastOpenFiles": [
+    "04 Delivery/2026-10-31 Remove Seller Type.md",
+    "04 Delivery/00-LATEST.md",
+    "00 Home.md",
+    "04 Delivery/2026-10-31 Marketing Hub.md",
+    "04 Delivery/2026-10-31 Boost Chips and Photo Check.md",
+    "04 Delivery/2026-10-31 Boost UI Aligned With Backend.md",
+    "04 Delivery/2026-10-31 Boost Six-Hour Rule Repeats.md",
+    "04 Delivery/2026-10-31 Remove Old Social Publishing.md",
+    "04 Delivery/2026-10-31 Boost Screen Uses Same Boost.md",
     "Untitled 1.canvas",
     "Untitled.canvas",
-    "00 Home.md",
     "03 Intelligence/Marketing Boost.md",
     "04 Delivery/2026-10-28 Split-Screen Auth Layout Redesign.md",
     "04 Delivery/2026-10-28 Produce Tote Bag Logo Integration and Wordmark Height Alignment.md",
@@ -206,13 +219,6 @@
     "05 Enhancements/01 Descriptive Sales Trend Analytics Enhancements.md",
     "04 Delivery/2026-10-30 Overview Page Header Fixes.md",
     "04 Delivery/2026-10-30 Category Cards Scroll Lift.md",
-    "04 Delivery/2026-10-30 Self-Hosted Fonts for Docker Build.md",
-    "04 Delivery/2026-10-30 Splash Veggie Drop Pacing.md",
-    "04 Delivery/2026-10-30 Logo Lockup Balance.md",
-    "04 Delivery/2026-10-30 Splash Bounce Restore and Veggie Order.md",
-    "04 Delivery/2026-10-30 Landing Motion System Harmonization.md",
-    "04 Delivery/2026-10-30 Splash Logo Flight and Hold Shimmer.md",
-    "04 Delivery/2026-10-30 Landing Nav Active State and Footer Polish.md",
     "04 Delivery/2026-10-30 Splash Screen Refinement.md.tmp.11289.6355cc5c447e",
     "04 Delivery/2026-10-30 Web Landing Audit Fixes.md.tmp.410.07c84aa6e193",
     "04 Delivery/2026-10-30 Web Landing Audit Fixes.md.tmp.410.6b1084571621",

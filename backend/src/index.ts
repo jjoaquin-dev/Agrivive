@@ -11,9 +11,7 @@ import { buyerRoute } from "./modules/buyer";
 import { adminRoute } from "./modules/admin";
 import { marketplaceRoute } from "./modules/marketplace";
 import { stakeholderRoute } from "./modules/stakeholder";
-import { integrationsRoute } from "./modules/integrations";
 import { integrationsSocialProductImageRoute } from "./modules/integrations/index/integrations.social-product-image";
-import { integrationsSocialPublishRoute } from "./modules/integrations/index/integrations.social-publish";
 import { integrationsVisibilityBoostRoute } from "./modules/integrations/index/integrations.visibility-boost";
 import { integrationsVisibilityBoostFacebookPostRoute } from "./modules/integrations/index/integrations.visibility-boost.facebook-post";
 import { integrationsVisibilityBoostReducePriceRoute } from "./modules/integrations/index/integrations.visibility-boost.reduce-price";
@@ -65,9 +63,7 @@ const app = new Elysia()
   .use(conversationsRoute)
   .use(notificationsRoute)
   .use(trustRoute)
-  .use(integrationsRoute)
   .use(integrationsSocialProductImageRoute)
-  .use(integrationsSocialPublishRoute)
   .use(integrationsVisibilityBoostRoute)
   .use(integrationsVisibilityBoostFacebookPostRoute)
   .use(integrationsVisibilityBoostReducePriceRoute)

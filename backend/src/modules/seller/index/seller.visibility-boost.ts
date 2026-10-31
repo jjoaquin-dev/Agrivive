@@ -60,7 +60,10 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
   }, { role: ["seller"] })
   .post("/boost-prompts/:id/boost", async ({ session, params: routeParams, status }) => {
     try {
-      return await acceptSellerVisibilityBoostPrompt(session.userId, routeParams.id);
+      const accepted = await acceptSellerVisibilityBoostPrompt(session.userId, routeParams.id);
+      // Send it to n8n now; the worker's next pass is the safety net.
+      void deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
+      return accepted;
     } catch (error) {
       return failure(error, status);
     }

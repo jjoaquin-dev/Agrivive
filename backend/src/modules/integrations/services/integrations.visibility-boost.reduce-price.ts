@@ -20,9 +20,9 @@ export async function reduceVisibilityBoostPrice(boostId: string) {
       .where(eq(sellers_product.id, productId)).for("update").limit(1);
     if (!product) throw new OrderError(404, "Product not found");
 
+    // The newest saved post (first, or the second post of an earlier round) is the price to beat.
     const [firstPost] = await tx.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(
       eq(fb_post_logs.productId, productId),
-      eq(fb_post_logs.postType, "first_post"),
       eq(fb_post_logs.status, "success"),
       gte(fb_post_logs.postedAt, boost.createdAt),
     )).orderBy(desc(fb_post_logs.postedAt)).limit(1);
@@ -41,7 +41,7 @@ export async function reduceVisibilityBoostPrice(boostId: string) {
     if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0) {
       return unchanged("unavailable");
     }
-    // A retry after a successful cut must not cut the price a second time.
+    // A retry after a successful cut (price already below the last post) must not cut again.
     if (Number(currentPrice) < Number(firstPost.price)) {
       return { ...base, reduced: true, originalPrice: firstPost.price, newPrice: currentPrice };
     }

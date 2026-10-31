@@ -792,6 +792,19 @@ export const fb_post_logs = pgTable("fb_post_logs", {
   index("fb_post_logs_product_idx").on(table.productId, table.postedAt),
 ]);
 
+export const instagram_post_logs = pgTable("instagram_post_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  postType: text("post_type").notNull(),
+  instagramPostId: text("instagram_post_id"),
+  postUrl: text("post_url"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
+  status: text("status").notNull(),
+}, (table) => [
+  index("instagram_post_logs_product_idx").on(table.productId, table.postedAt),
+]);
+
 export const seller_notifications = pgTable("seller_notifications", {
   id: uuid("id").defaultRandom().primaryKey(),
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
