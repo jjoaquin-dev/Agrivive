@@ -3,22 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Search, ShoppingBag, X } from "lucide-react";
-import { HeaderCategoryDropdown } from "@/src/components/HeaderCategoryDropdown";
+import { Menu, ShoppingBag, X } from "lucide-react";
 import { authClient } from "@/src/lib/auth-client";
 import { LandingHeaderMobileDrawer } from "./LandingHeaderMobileDrawer";
-import { LandingHeaderNav } from "./LandingHeaderNav";
+import { LandingHeaderNav, type LandingSectionLink } from "./LandingHeaderNav";
 
-const navCategories = ["All Categories", "Vegetables", "Fruits", "Leafy Greens", "Root Crops"];
-
-const sectionLinks = [
-  { label: "Home", href: "/" },
-  { label: "Public Marketplace Overview", href: "/marketplace/overview", isRoute: true },
-  { label: "Categories", href: "#categories" },
-  { label: "Live Surplus", href: "#live-inventory" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Why Surplus?", href: "#why-agrivive" },
-  { label: "FAQ", href: "#faq" },
+const sectionLinks: LandingSectionLink[] = [
+  { label: "Public Marketplace Overview", href: "/marketplace/overview", isRoute: true, group: "page" },
+  { label: "Categories", href: "#categories", group: "section" },
+  { label: "Live Surplus", href: "#live-inventory", group: "section" },
+  { label: "How It Works", href: "#how-it-works", group: "section" },
+  { label: "Why Surplus?", href: "#why-agrivive", group: "section" },
+  { label: "FAQ", href: "#faq", group: "section" },
 ];
 
 export function LandingHeader() {
@@ -26,8 +22,8 @@ export function LandingHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [scrolled, setScrolled] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { data: session } = authClient.useSession();
   const hasSession = Boolean(session?.user);
 
@@ -37,6 +33,8 @@ export function LandingHeader() {
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -55,7 +53,6 @@ export function LandingHeader() {
     e.preventDefault();
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set("search", searchQuery.trim());
-    if (selectedCategory !== "All Categories") params.set("productType", selectedCategory);
     router.push(`/marketplace?${params.toString()}`);
   };
 
@@ -65,11 +62,16 @@ export function LandingHeader() {
 
   return (
     <header id="nav-pill" className="pointer-events-none fixed inset-x-0 top-3 z-40 px-3 sm:px-6 lg:px-8">
-      {/* Floating pill: logo, search and actions */}
-      <div className={`${pillSurface} pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-4 py-2 pl-5 pr-2`}>
+      {/* Page scroll progress */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[3px] bg-[#457D00]/10">
+        <div className="h-full origin-left bg-[#457D00]" style={{ transform: `scaleX(${progress})` }} />
+      </div>
+
+      {/* Floating pill: logo, section links and actions */}
+      <div className={`${pillSurface} pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-3 py-2 pl-5 pr-2`}>
         {/* Brand Logo Lockup: Vector Cart + Parkinsans Typography */}
         <Link id="header-logo" href="/" className="group flex shrink-0 items-center gap-1" aria-label="Agrivive home">
-          <div className="relative w-[38px] h-[30px] shrink-0 -mr-3 -rotate-[11deg] origin-bottom-left transition-transform duration-200 group-hover:-rotate-[14deg] group-hover:scale-105">
+          <div className="relative w-[28px] h-[22px] shrink-0 -mr-2 -rotate-[11deg] origin-bottom-left transition-transform duration-200 group-hover:-rotate-[14deg] group-hover:scale-105">
             <svg className="w-full h-full overflow-visible" viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g>
                 <path fill="#457D00" d="M 83 33 C 80 23 74 23 71 27 C 77 29 81 33 82 36 Z" />
@@ -97,28 +99,10 @@ export function LandingHeader() {
           <span className="font-brand text-[22px] font-semibold tracking-[-0.035em] text-[#457D00] leading-none">Agrivive</span>
         </Link>
 
-        {/* Integrated Real Search Bar (PioMart Style) */}
-        <form id="header-search" onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-xl items-center rounded-full border border-neutral-300 bg-neutral-50/70 p-1 pl-4 transition-all focus-within:border-[#457D00] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#457D00]/20">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search vegetable name..."
-            className="w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none font-sans"
-          />
-          <HeaderCategoryDropdown
-            categories={navCategories}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-          <button
-            type="submit"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#457D00] text-white shadow-xs transition-transform hover:bg-[#386600] active:scale-95"
-            aria-label="Search produce"
-          >
-            <Search className="size-4" />
-          </button>
-        </form>
+        {/* Section links live inside the main pill */}
+        <div id="header-subnav" className="hidden min-w-0 flex-1 justify-center lg:flex">
+          <LandingHeaderNav links={links} />
+        </div>
 
         {/* User & Marketplace Action */}
         <div id="header-actions" className="flex items-center gap-3">
@@ -147,7 +131,7 @@ export function LandingHeader() {
           {/* Mobile Hamburger */}
           <button
             type="button"
-            className="inline-flex size-11 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 md:hidden hover:bg-neutral-100 active:scale-95 transition-all"
+            className="inline-flex size-11 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 lg:hidden hover:bg-neutral-100 active:scale-95 transition-all"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
@@ -156,11 +140,6 @@ export function LandingHeader() {
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
-      </div>
-
-      {/* Section links pill (with Live Surplus indicator) */}
-      <div id="header-subnav" className={`${pillSurface} pointer-events-auto mx-auto mt-2 hidden w-fit px-2 py-1 md:block`}>
-        <LandingHeaderNav links={links} />
       </div>
 
       {/* Mobile Drawer */}

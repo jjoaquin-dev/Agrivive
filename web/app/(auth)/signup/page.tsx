@@ -19,6 +19,7 @@ export default function SignUpPage() {
       title="Create your buyer account"
       description="Reserve fresh vegetables from local markets and track your pickups."
       formMaxWidth="max-w-[560px]"
+      imagePosition="left"
       footer={
         <p className="text-sm text-[#5F7367]">
           Already have an account?{" "}

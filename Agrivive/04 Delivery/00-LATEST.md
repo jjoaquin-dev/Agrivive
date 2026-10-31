@@ -21,57 +21,57 @@ Validation: backend typecheck, drizzle check and both builds; mobile typecheck; 
 
 Earlier the same day: [[2026-10-31 Mobile Data Freshness]], [[2026-10-31 Seller Notifications]].
 
+Web landing stream (branch `ui-enhancements`, 2026-10-30): hero redesigned to the uploaded green reference, with "Rescue Surplus Vegetables" on one line from 1024px, a centred sentence and both CTAs, a smaller transparent basket cutout, and four floating labels from 768px. The floating slices and their components are removed. Details: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]]. Earlier: [[2026-10-30 Hero Decluttered with Line Art]]. Validation: `bun run typecheck` in `web/` passed; browser check at 1440 and 375 passed on a dev server at port 3002; `bun run build` and reduced motion not yet run for that work.
+
 ## Current project status
 
-- Branch `development`; last commit `a058dc3`. Web landing and splash work is **uncommitted**.
-- Buyer website (`web/`) landing page is refined but not yet visually verified in a browser.
-- Backend and mobile Boost and notification changes after commit `9b69cea` are **uncommitted**. Migrations `20261031120000_seller_notifications`, `20261031130000_remove_seller_type` (applied on dev only) and `20261031140000_boost_follow_up` are **not applied to production**. Production order: notifications before the deploy, remove_seller_type after it (see [[2026-10-31 Remove Seller Type]]). Posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
+- Backend and mobile work (seller notifications, data freshness, seller type removal) is merged to `main` (PR #57). Migrations `20261031120000_seller_notifications`, `20261031130000_remove_seller_type` (applied on dev only) and `20261031140000_boost_follow_up` are **not applied to production**. Production order: notifications before the deploy, remove_seller_type after it (see [[2026-10-31 Remove Seller Type]]). Boost posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
+- Branch `ui-enhancements` carries the buyer website (`web/`) landing, splash and Why Choose work. The landing page is refined; browser checks cover the reveal only, and the remaining layout checks are still open.
 
 ## Active architectural decisions
 
 - **Splash lifecycle** (`web/src/components/sections/SplashScreen.tsx`, `web/src/lib/motion.ts`): the splash plays once per tab session using the `agrivive-splash-seen` sessionStorage key. The key is set when the timeline starts. Reduced motion skips it.
 - **Pre-paint classes** (`web/app/layout.tsx`): an inline head script sets `splash-skip` or `splash-pending` on `<html>` before first paint, so the logo never flashes in its final position.
 - **GSAP scoping**: `gsap.context` with `ctx.revert()` on cleanup. No `@gsap/react` dependency was added.
-- **Landing reveals** (`web/src/hooks/useRevealOnScroll.ts`): one IntersectionObserver over `[data-reveal]` elements, replacing per-section ScrollTriggers. Each element reveals once. Reduced motion registers nothing.
+- **Landing reveals** (`web/src/hooks/useRevealOnScroll.ts`): one IntersectionObserver over `[data-reveal]` elements, wired once in `web/src/components/sections/Features.tsx`. Each element reveals once. `data-reveal="pop"` is the house card motion for other sections; the Why Choose section uses plain `data-reveal`. Reduced motion registers nothing.
 - **Fonts**: all four faces are vendored in `web/src/fonts/` and loaded with `next/font/local` (no build-time network). Poppins, Lato and MD Nichrome are fallbacks only.
 - **Header and anchors**: the two-row header is kept. Anchor offset is 112px in both `scroll-margin-top` and the Lenis hook.
 
 ## Recently modified files
 
-- `web/src/lib/gsap/timelines.ts`: splash timing and easing (real seconds, `speed` 1).
-- `web/src/components/sections/SplashScreen.tsx`: asset gate, session marking, `gsap.context` cleanup.
-- `web/src/lib/gsap/hero-entrance.ts`: hero entrance order and easing.
-- `web/src/lib/motion.ts`: `waitForSplashAssets`.
+- `web/src/features/home/components/HomeWhySurplus.tsx`, `HomeWhySurplusCard.tsx`: card reveal and hover zoom.
+- `web/src/lib/gsap/timelines.ts`, `SplashScreen.tsx`, `hero-entrance.ts`, `web/src/lib/motion.ts`: splash and hero.
 - `web/src/hooks/useRevealOnScroll.ts` (new), `web/src/components/sections/Features.tsx`.
-- `web/src/components/sections/Hero.tsx`, `HeroFloatingSlices.tsx`.
-- `web/src/features/home/components/`: categories, featured produce, how it works, why surplus and its card, FAQ, final CTA, footer, header.
+- `web/src/features/home/components/`: categories, featured produce, how it works, FAQ, final CTA, footer, header.
 - `web/app/layout.tsx`, `web/app/globals.css`, `web/tailwind.config.ts`: fonts, pre-paint script, type scale.
-- `web/src/hooks/useLenis.ts`: anchor offset.
 
 Many other `web/` files show as modified in git from earlier sessions. Those were not reviewed in the latest work.
 
 ## Completed implementations (recent)
 
-- Splash: asset gate, session marking, lifecycle cleanup, pacing (see [[2026-10-30 Splash Pacing Three-Second Sequence]]; the earlier [[2026-10-30 Splash Timing and Wave Refinement]] is superseded).
+- Why Choose: card reveal matches the other blocks; hover photo zoom removed ([[2026-10-30 Why Choose Scroll Reveal]]).
+- Landing navbar glass, logo size, hero pill removal, Process timeline ([[2026-10-30 Landing Navbar and Sections Redesign]]).
+- Splash: asset gate, session marking, lifecycle cleanup, pacing ([[2026-10-30 Splash Pacing Three-Second Sequence]]; the earlier [[2026-10-30 Splash Timing and Wave Refinement]] is superseded).
 - Landing: fonts self-hosted, type scale, reveal system, categories grid, hero composition, FAQ accessibility, header focus states.
-- Also in the vault today, by another record: [[2026-10-30 Web Landing Audit Fixes]] (status: code complete, manual testing pending).
+- Also in the vault today: [[2026-10-30 Web Landing Audit Fixes]] (status: code complete, manual testing pending).
 
 ## Unresolved issues
 
 - Mobile freshness: owner to check on a development build that lists update after a push, nothing is fetched while backgrounded, and chat reconnects after an API restart.
 - Seller notifications: owner must apply the migration, test `GET /seller/notifications`, the read routes and `/seller/notification-settings`, and walk each trigger on a development build (reserve, cancel, expire, scan, stock low and zero, price drop, Boost result).
 - Boost: owner must apply the follow-up migration, import `agrivive-visibility-boost.json` with credentials, set the two env vars, and test the popup, one post per boost, the 6-hour follow-up from the worker, and the 3-hour gap. A stuck `pending` row in `fb_post_logs` needs a manual Page check. The Boost Visibility screen is unchanged and still uses the social-publishing workflow.
-
-- No browser check yet: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, reveal behavior, and Core Web Vitals.
+- No browser check yet for: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, and Core Web Vitals. The Why Choose reveal was checked in a browser, but not with reduced motion on.
+- Port 3001 was held by another process during the web work, so the dev server ran on 3002.
 - The splash length is estimated from timeline math (about 3.04 s to hand-off), not measured.
 - Parkinsans has no size-matched fallback metrics, so the wordmark may shift slightly while the font loads.
-- Nothing is committed. The diff is large, so review it before committing.
+- The `ui-enhancements` web diff is large, so review it before merging to `main`.
 
 ## Next development task
 
-Open the buyer site in a browser (`bun run dev` in `web/`, port 3001). Check the splash on first visit, internal navigation, reload, and reduced motion. Then check the landing page at phone, tablet and desktop widths. Then decide whether to commit.
+Check the buyer site in a browser (`bun run dev` in `web/`). Turn on reduced motion in the OS and confirm the Why Choose section shows at once. Then check the splash on first visit, and the landing page at phone, tablet and desktop widths. Then decide whether to commit.
 
 ## Historical changelog
 
 - Latest entry: [[2026-10-31 Remove Seller Type]]
+- Latest web landing entry: [[2026-10-30 Why Choose Scroll Reveal]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].

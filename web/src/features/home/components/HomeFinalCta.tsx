@@ -41,35 +41,30 @@ export function HomeFinalCta() {
   };
 
   return (
-    <section className="bg-white py-16 sm:py-24 border-b border-neutral-200/80">
+    <section className="bg-white py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Modern Elevated Botanical Card */}
-        <div data-reveal className="relative overflow-hidden rounded-[32px] sm:rounded-[40px] bg-[#457D00] px-6 py-14 sm:px-12 sm:py-24 text-center text-white shadow-2xl border border-[#386600]">
-          {/* Subtle Ambient Radial Lighting */}
-          <div className="pointer-events-none absolute -right-20 -top-20 size-96 rounded-full bg-[#457D00]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -left-20 -bottom-20 size-96 rounded-full bg-[#FEA938]/10 blur-3xl" />
+        <div
+          data-reveal
+          className="relative overflow-hidden rounded-3xl bg-[#457D00] bg-[url(/brand/final-cta-pattern.webp)] bg-cover bg-center text-white sm:rounded-[32px]"
+        >
+          <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 py-14 text-center sm:px-12 sm:py-20">
+            <h2 className="type-section font-heading text-white tracking-tight">Start Shopping Today’s Surplus</h2>
 
-          <div className="relative z-10 mx-auto max-w-3xl">
-            {/* Headline */}
-            <h2 className="type-section font-heading text-white">
-              Start Shopping Today’s Harvest
-            </h2>
-
-            {/* Subtitle */}
-            <p className="type-lede mx-auto mt-4 max-w-xl text-white/90">
-              Join Davao buyers who save on fresh surplus produce straight from neighborhood stalls.
+            <p className="type-lede mt-4 max-w-xl text-white/85">
+              Join Davao buyers who save on surplus produce straight from neighborhood stalls.
             </p>
 
-            {/* Integrated Search Bar (Matching Navbar Style) */}
+            {/* Search Bar (Fitts's Law: 48px primary action) */}
             <form
               onSubmit={handleSearchSubmit}
-              className="mt-8 sm:mt-10 mx-auto flex w-full max-w-2xl items-center rounded-full bg-white p-1.5 pl-5 shadow-2xl transition-all focus-within:ring-4 focus-within:ring-[#B8EB5E]/30"
+              className="mt-8 flex w-full max-w-2xl items-center rounded-full bg-white p-1.5 pl-5 text-left transition-shadow focus-within:ring-4 focus-within:ring-[#B8EB5E]/40 sm:mt-10"
             >
               <Search className="size-5 shrink-0 text-neutral-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search surplus vegetables"
                 placeholder="Search surplus vegetables (e.g. tomatoes, eggplant)..."
                 className="min-w-0 w-full bg-transparent px-3 text-sm text-neutral-900 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
               />
@@ -79,6 +74,7 @@ export function HomeFinalCta() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
+                  aria-label="Product category"
                   className="appearance-none bg-transparent pr-6 text-xs font-semibold text-neutral-700 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none cursor-pointer"
                 >
                   {searchCategories.map((cat) => (
@@ -93,46 +89,46 @@ export function HomeFinalCta() {
               {/* Search Action Button */}
               <button
                 type="submit"
-                className="flex items-center gap-1.5 rounded-full bg-[#457D00] px-5 sm:px-6 py-3 font-heading text-xs sm:text-sm font-bold text-white shadow-xs transition hover:bg-[#386600] active:scale-95 cursor-pointer shrink-0"
+                className="flex h-12 items-center gap-1.5 rounded-full bg-[#1F4D3A] px-5 sm:px-7 font-heading text-sm font-bold text-white transition hover:bg-[#173A2B] active:scale-95 cursor-pointer shrink-0"
               >
                 <span>Search</span>
-                <ArrowRight className="size-3.5" />
+                <ArrowRight className="size-4" />
               </button>
             </form>
 
             {/* Popular Search Chips (Recognition Over Recall) */}
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
               <span className="font-semibold text-white">Popular:</span>
               {popularSearches.map((item) => (
                 <button
                   key={item.label}
                   type="button"
                   onClick={() => handleQuickSearch(item.query)}
-                  className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-xs hover:bg-white/20 transition cursor-pointer border border-white/10"
+                  className="min-h-9 rounded-full border border-white/25 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white/15 cursor-pointer"
                 >
                   {item.label}
                 </button>
               ))}
             </div>
 
-            {/* Secondary Action & Trust Assurances */}
-            <div className="mt-10 pt-8 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-white">
+            {/* Trust assurances and catalog link */}
+            <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-black/10 px-5 py-4 sm:flex-row sm:justify-center sm:gap-6">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/90">
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="size-4 text-[#B8EB5E]" /> 24-Hour QR Holds
+                  <ShieldCheck className="size-4 text-[#B8EB5E]" aria-hidden="true" /> 24-Hour QR Holds
                 </span>
-                <span>•</span>
+                <span aria-hidden="true">•</span>
                 <span>Direct Stall Pickup</span>
-                <span>•</span>
+                <span aria-hidden="true">•</span>
                 <span>Zero Upfront Payments</span>
               </div>
 
               <Link
                 href="/marketplace"
-                className="inline-flex items-center gap-1.5 font-heading text-xs sm:text-sm font-bold text-white hover:text-[#E2FD56] transition underline underline-offset-4"
+                className="inline-flex items-center gap-1.5 font-heading text-sm font-bold text-white underline underline-offset-4 transition hover:text-[#E2FD56]"
               >
                 <span>Browse Full Marketplace Catalog</span>
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
           </div>

@@ -51,7 +51,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
 
         timelineRef.current = tl;
         tl.play();
-      }, container);
+      }, document.body); // body scope: the timeline also animates the header and hero, which sit outside the overlay
     });
 
     return () => {

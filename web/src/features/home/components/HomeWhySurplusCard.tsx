@@ -5,87 +5,35 @@ interface BenefitCardProps {
   tag: string;
   headline: string;
   description: string;
-  bgType: "image" | "cream" | "sage";
   imageSrc?: string;
   icon?: ReactNode;
-  className?: string;
-  revealed?: boolean;
 }
 
-export function HomeWhySurplusBenefitCard({
-  tag,
-  headline,
-  description,
-  bgType,
-  imageSrc,
-  icon,
-  className = "",
-  revealed = false,
-}: BenefitCardProps) {
-  const revealProps = revealed ? { "data-reveal": true } : {};
-  if (bgType === "image" && imageSrc) {
-    return (
-      <div
-        {...revealProps}
-        className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] p-7 text-white shadow-sm transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-xl ${className}`}
-      >
-        <Image
-          src={imageSrc}
-          alt={headline}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-settle group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
-
-        <div className="relative z-10">
-          <span className="inline-flex items-center rounded-xl bg-white/20 px-3.5 py-1.5 font-heading text-xs font-bold text-white shadow-xs backdrop-blur-md border border-white/20">
-            {tag}
-          </span>
-        </div>
-
-        <div className="relative z-10 mt-16 sm:mt-24">
-          <h3 className="type-card font-heading text-white">
-            {headline}
-          </h3>
-          <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-white/85">
-            {description}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const isCream = bgType === "cream";
-  const bgStyles = isCream
-    ? "bg-[#FFF9EE] border-[#F4E6CF] text-neutral-900"
-    : "bg-[#F0F7ED] border-[#CFECC0] text-neutral-900";
-  const tagStyles = isCream
-    ? "bg-[#FEF0D8] text-[#B45309] border-[#FDE68A]"
-    : "bg-[#E2F2D5] text-[#2E6B18] border-[#BBF7D0]";
-
+// One card shape for every benefit: a media panel on top (photo or icon tile), then the copy below
+export function HomeWhySurplusBenefitCard({ tag, headline, description, imageSrc, icon }: BenefitCardProps) {
   return (
-    <div
-      {...revealProps}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-[28px] border p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-lg ${bgStyles} ${className}`}
-    >
-      <div className="flex items-center justify-between">
-        <span
-          className={`inline-flex items-center rounded-xl px-3.5 py-1.5 font-heading text-xs font-bold border ${tagStyles}`}
-        >
-          {tag}
-        </span>
-        {icon && <div className="text-neutral-700">{icon}</div>}
+    <article className="flex h-full flex-col rounded-3xl border border-white/10 bg-white/[0.04] p-3 backdrop-blur-sm transition-[transform,background-color,border-color] duration-200 ease-settle hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.07]">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-[#1E3327]">
+        {imageSrc ? (
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <div className="grid size-14 place-items-center rounded-2xl bg-[#B8EB5E]/15 text-[#B8EB5E]">{icon}</div>
+          </div>
+        )}
       </div>
 
-      <div className="mt-14 sm:mt-20">
-        <h3 className="type-card font-heading text-neutral-900">
-          {headline}
-        </h3>
-        <p className="mt-2 text-sm sm:text-[15px] leading-relaxed text-neutral-600">
-          {description}
-        </p>
+      <div className="flex flex-1 flex-col p-4 pt-5">
+        <span className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-[#B8EB5E]">{tag}</span>
+        <h3 className="type-card mt-2 font-heading text-white">{headline}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-white/70">{description}</p>
       </div>
-    </div>
+    </article>
   );
 }

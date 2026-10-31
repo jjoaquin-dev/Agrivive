@@ -29,7 +29,7 @@ export function LandingHeaderMobileDrawer({
     <div
       id="landing-mobile-nav"
       data-lenis-prevent
-      className="pointer-events-auto mx-auto mt-2 max-h-[calc(100dvh-6rem)] max-w-7xl overflow-y-auto overscroll-contain rounded-3xl border border-neutral-200/80 bg-white/95 p-4 shadow-lg backdrop-blur-md md:hidden"
+      className="pointer-events-auto mx-auto mt-2 max-h-[calc(100dvh-6rem)] max-w-7xl overflow-y-auto overscroll-contain rounded-3xl border border-neutral-200/80 bg-white/95 p-4 shadow-lg backdrop-blur-md lg:hidden"
     >
       <form onSubmit={onSearchSubmit} className="mb-4 flex items-center rounded-full border border-neutral-200 bg-neutral-50 p-1 pl-3">
         <input

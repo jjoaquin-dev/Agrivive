@@ -1,44 +1,60 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import Image from "next/image";
+import { Carrot, HandHeart, QrCode, Sprout } from "lucide-react";
+import { gsap } from "@/src/lib/gsap";
+import { prefersReducedMotion } from "@/src/lib/motion";
 
 const steps = [
-  {
-    step: "01",
-    title: "SOURCE",
-    description:
-      "Discover surplus produce from local growers and market sellers across Davao. Good vegetables deserve a second chance.",
-    image: "/how-it-works/step-1-source.jpg",
-    alt: "Local farmer holding a wooden harvest crate full of fresh carrots, tomatoes, and greens",
-  },
-  {
-    step: "02",
-    title: "DISCOVER",
-    description:
-      "Browse available surplus produce, check stock, and find options that fit your needs.",
-    image: "/how-it-works/step-2-discover.png",
-    alt: "Agrivive digital marketplace browsing interface with seasonal produce categories",
-  },
-  {
-    step: "03",
-    title: "COLLECT",
-    description:
-      "Present your reservation QR code to the seller and collect your produce with ease.",
-    image: "/how-it-works/step-3-collect.jpg",
-    alt: "Customer and seller scanning reservation QR code at public market produce stall",
-  },
+  { title: "Rescue Vegetables", text: "Fresh vegetables find a buyer instead of going to waste.", Icon: Sprout, bg: "#EEF9C8", ink: "#3D6B00" },
+  { title: "Surplus Produce", text: "Reserve extra harvest from verified local stalls in Davao City.", Icon: Carrot, bg: "#FDE8DC", ink: "#9A3B14" },
+  { title: "24-hour QR code", text: "Reserve now, then show your QR code at pickup.", Icon: QrCode, bg: "#D8F2DF", ink: "#1F5A3A" },
+  { title: "Help Local Sellers", text: "Every pickup supports a local stall and helps cut food waste.", Icon: HandHeart, bg: "#FFF1C6", ink: "#7A5A00" },
 ];
 
+// Each card sticks a little lower than the one before, so earlier cards peek out above the newest one.
+const PEEK = 14;
+
 export function HomeHowItWorks() {
+  const listRef = useRef<HTMLOListElement>(null);
+
+  // As the next card slides over a card, that card shrinks and tilts back a little (scrubbed to scroll).
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || prefersReducedMotion()) return;
+    const cards = Array.from(list.children) as HTMLElement[];
+    const ctx = gsap.context(() => {
+      cards.slice(0, -1).forEach((card, i) => {
+        gsap.to(card.firstElementChild, {
+          scale: 0.94,
+          rotate: i % 2 ? 1.2 : -1.2,
+          transformOrigin: "50% 0%",
+          ease: "none",
+          scrollTrigger: { trigger: cards[i + 1], start: "top bottom", end: "top 35%", scrub: true },
+        });
+      });
+    }, list);
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section id="how-it-works" className="bg-[#FAF9F5] py-16 sm:py-24 border-b border-neutral-200/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section Header with One-Line Subheader & Styled Agrivive Word */}
-        <div data-reveal className="mx-auto max-w-3xl lg:max-w-4xl text-center">
-          <span className="type-eyebrow text-[#457D00]">
-            The Process
-          </span>
-          <h2 className="type-section mt-3 font-heading text-neutral-900">
+    <section id="how-it-works" className="relative bg-neutral-900 px-4 pb-24 pt-16 sm:px-6 sm:pb-32 sm:pt-24 lg:px-[4vw]">
+      {/* Market photo stays put while the cards scroll over it (no overflow-hidden here: it would stop the sticky) */}
+      <div aria-hidden="true" className="absolute inset-0">
+        <div className="sticky top-0 h-dvh w-full">
+          <Image src="/how-it-works/market-background.webp" alt="" fill sizes="100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-black/10" />
+        </div>
+      </div>
+
+      <div className="relative mx-auto max-w-5xl">
+        {/* Header: eyebrow, title with the Agrivive accent, one supporting line */}
+        <div data-reveal className="mx-auto max-w-3xl text-center">
+          <span className="type-eyebrow text-[#E2FD56]">The Process</span>
+          <h2 className="type-section mt-3 font-heading text-white">
             How{" "}
-            <span className="relative inline-block text-[#457D00]">
+            <span className="relative inline-block text-[#E2FD56]">
               Agrivive
               <svg
                 viewBox="0 0 120 16"
@@ -47,62 +63,37 @@ export function HomeHowItWorks() {
                 className="absolute -bottom-2 left-0 w-full h-3 sm:h-3.5 text-[#FEA938] overflow-visible pointer-events-none"
                 preserveAspectRatio="none"
               >
-                <path
-                  d="M3 13 C 35 3, 85 3, 117 13"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
+                <path d="M3 13 C 35 3, 85 3, 117 13" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
               </svg>
             </span>{" "}
             Works
           </h2>
-          <p className="type-lede mx-auto mt-4 max-w-2xl text-neutral-600">
+          <p className="type-lede mx-auto mt-4 max-w-2xl text-white/85">
             Three simple steps to rescue wholesome harvest, save money, and empower Davao local growers.
           </p>
         </div>
 
-        {/* 3 Modern Sequential Cards with Edge-to-Edge Image Headers */}
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:mt-16 md:grid-cols-3 lg:gap-8">
-          {steps.map((item) => (
-            <div
-              key={item.step}
-              data-reveal="pop"
-              className="group relative flex flex-col justify-between overflow-hidden rounded-[26px] border border-neutral-200/70 bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] transition-[transform,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_rgba(20,50,30,0.1)]"
-            >
-              {/* Full-Bleed Image Header (Flush horizontally and at the top) */}
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-100">
-                {/* 01, 02, 03 Frosted Badge */}
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="inline-flex items-center rounded-xl bg-white/95 px-3 py-1 font-heading text-xs sm:text-sm font-bold text-[#FEA938] shadow-xs backdrop-blur-md border border-neutral-200/60">
-                    {item.step}
-                  </span>
-                </div>
-
-                <Image
-                  src={item.image}
-                  alt={item.alt}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="h-full w-full object-cover transition-transform duration-500 ease-settle group-hover:scale-105"
-                />
-              </div>
-
-              {/* Text Content Stage with Dedicated Padding */}
-              <div className="flex flex-col p-6 sm:p-7">
-                <span className="font-heading text-xs font-bold tracking-widest text-[#FEA938] mb-1">
-                  {item.step}
+        <ol ref={listRef} className="mt-12 flex flex-col gap-[14vh] [--steps-top:96px] sm:mt-16 sm:[--steps-top:150px]">
+          {steps.map(({ title, text, Icon, bg, ink }, i) => (
+            <li key={title} className="sticky" style={{ top: `calc(var(--steps-top) + ${i * PEEK}px)` }}>
+              <article
+                className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-[2rem] px-6 py-12 text-center will-change-transform sm:min-h-[min(70dvh,520px)] sm:px-12"
+                style={{ backgroundColor: bg, color: ink }}
+              >
+                {/* Big step number behind the text */}
+                <span aria-hidden="true" className="pointer-events-none absolute -right-2 -top-10 select-none font-brand text-[22rem] font-bold leading-none opacity-[0.12] sm:text-[30rem]">
+                  {i + 1}
                 </span>
-                <h3 className="type-card font-heading text-neutral-900 transition-colors group-hover:text-[#457D00]">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-neutral-600">
-                  {item.description}
-                </p>
-              </div>
-            </div>
+                <p className="relative text-sm font-bold uppercase tracking-widest opacity-80">Step {i + 1} of {steps.length}</p>
+                <span className="relative mt-5 flex size-14 items-center justify-center rounded-full bg-white/70">
+                  <Icon className="size-7" aria-hidden="true" />
+                </span>
+                <h3 className="relative mt-5 font-brand text-4xl font-bold tracking-tight sm:text-6xl">{title}</h3>
+                <p className="relative mt-4 max-w-md font-body text-lg leading-relaxed sm:text-xl">{text}</p>
+              </article>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );
