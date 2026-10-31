@@ -3,6 +3,7 @@ import { db } from "../../../db";
 import { seller_social_campaigns, seller_social_campaign_posts } from "../../../db/schema";
 import { getPriorityPromotionEligibility } from "../../../utils/promotion-eligibility";
 import { OrderError } from "../../../utils/order-types";
+import { notifySocialCampaignResult } from "./integrations.social-publish-notify";
 
 export async function getSocialPublishContext(campaignId: string) {
   const [campaign] = await db.select().from(seller_social_campaigns)
@@ -19,6 +20,7 @@ export async function getSocialPublishContext(campaignId: string) {
     await db.update(seller_social_campaign_posts).set({
       status: "failed", lastError: "Listing is no longer eligible", completedAt: new Date(), updatedAt: new Date(),
     }).where(eq(seller_social_campaign_posts.campaignId, campaignId));
+    await notifySocialCampaignResult(campaignId, "failed");
     throw new OrderError(409, "Listing is no longer eligible for Priority Boost");
   }
   if (eligibility.cycleId && eligibility.cycleId !== campaign.listingCycleId) {

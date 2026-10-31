@@ -2,6 +2,7 @@ import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { notification_devices, notification_outbox } from "../db/schema";
 import { sendPushNotificationBatch, type PushNotificationMessage } from "../utils/push-notifications";
+import { sellerAlertContent } from "../utils/seller-notifications/push-content";
 
 const batchLimit = 50;
 const deviceBatchSize = 500;
@@ -9,8 +10,9 @@ const maxAttempts = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4)
 
 type OutboxJob = typeof notification_outbox.$inferSelect;
 
-function notificationContent(job: OutboxJob) {
+function notificationContent(job: OutboxJob): { title: string; body: string; path: string; channel?: string } {
   const payload = job.payload ?? {};
+  if (job.type === "seller_alert") return sellerAlertContent(payload, job.itemCount, job.referenceId);
   if (job.type === "seller_listing") {
     const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
     const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
@@ -46,12 +48,14 @@ function notificationContent(job: OutboxJob) {
       title: "New Reservation Received",
       body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
       path: `/(app)/orders/${String(payload.orderId)}`,
+      channel: "orders",
     };
   }
   return {
     title: "New buyer messages",
     body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,
     path: "/messages",
+    channel: payload.channel === "updates" ? "updates" : "orders",
   };
 }
 
@@ -151,6 +155,7 @@ async function deliverJob(job: OutboxJob) {
       referenceId: job.referenceId ?? "",
       path: content.path,
       collapseKey: job.aggregationKey,
+      channelId: content.channel ?? "default",
     },
   }));
 

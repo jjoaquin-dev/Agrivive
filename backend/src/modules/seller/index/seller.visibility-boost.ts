@@ -1,6 +1,7 @@
 import Elysia, { t } from "elysia";
 import { sessionAuth } from "../../auth/services/auth.session";
 import { OrderError } from "../../../utils/order-types";
+import { deliverSellerVisibilityBoosts } from "../../../jobs/deliver-seller-visibility-boosts";
 import { queueSellerVisibilityBoost } from "../services/seller.visibility-boost.queue";
 import { readSellerVisibilityBoost } from "../services/seller.visibility-boost.read";
 import { listSellerVisibilityBoostHistory } from "../services/seller.visibility-boost.history.list";
@@ -28,7 +29,10 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
   }, { role: ["seller"], params })
   .post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
     try {
-      return await queueSellerVisibilityBoost(session.userId, routeParams.id);
+      const queued = await queueSellerVisibilityBoost(session.userId, routeParams.id);
+      // Send it to n8n now; the worker's next pass is the safety net.
+      void deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
+      return queued;
     } catch (error) {
       return failure(error, status);
     }

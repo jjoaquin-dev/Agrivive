@@ -1,9 +1,7 @@
 import { sql } from "drizzle-orm";
 import { notification_outbox } from "../../../db/schema";
-
-type TransactionLike = {
-  insert: (table: typeof notification_outbox) => any;
-};
+import type { OrderTransaction } from "../../../utils/order-types";
+import { sellerMessageChannel } from "../../../utils/seller-notifications";
 
 const aggregationWindowMs = () => {
   const seconds = Number(process.env.PUSH_MESSAGE_WINDOW_SECONDS ?? 60);
@@ -11,7 +9,7 @@ const aggregationWindowMs = () => {
 };
 
 export async function enqueueConversationNotification(
-  tx: TransactionLike,
+  tx: OrderTransaction,
   recipientUserId: string,
   conversationId: string,
   type: "seller_message" | "buyer_message",
@@ -21,6 +19,7 @@ export async function enqueueConversationNotification(
   const windowStart = new Date(Math.floor(createdAt.getTime() / windowMs) * windowMs);
   const dedupeKey = `${recipientUserId}:${type}:${windowStart.toISOString()}`;
   const availableAt = new Date(createdAt.getTime() + windowMs);
+  const channel = type === "seller_message" ? await sellerMessageChannel(tx, recipientUserId) : undefined;
 
   await tx.insert(notification_outbox).values({
     recipientUserId,
@@ -29,7 +28,7 @@ export async function enqueueConversationNotification(
     dedupeKey,
     referenceId: conversationId,
     itemCount: 1,
-    payload: { conversationId, type },
+    payload: { conversationId, type, ...(channel ? { channel } : {}) },
     availableAt,
     createdAt,
     updatedAt: createdAt,

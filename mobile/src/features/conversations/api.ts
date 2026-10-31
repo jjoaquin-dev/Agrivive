@@ -69,9 +69,14 @@ export async function uploadConversationAttachment(imageUri: string): Promise<{ 
 
 export async function openConversationSocket(
   conversationId: string,
-  onMessage: (message: ConversationMessage) => void,
-  onError: () => void,
+  handlers: {
+    onMessage: (message: ConversationMessage) => void;
+    onConnected?: () => void;
+    onClose: () => void;
+    onError: () => void;
+  },
 ) {
+  const { onMessage, onConnected, onClose, onError } = handlers;
   const cookie = await authClient.getCookie().catch(() => "");
   const session = await authClient.getSession();
   const token = session.data?.session?.token;
@@ -86,11 +91,13 @@ export async function openConversationSocket(
   socket.onmessage = (event) => {
     try {
       const payload = JSON.parse(String(event.data)) as { type?: string; message?: ConversationMessage };
+      if (payload.type === "conversation.connected") onConnected?.();
       if (payload.type === "conversation.message.created" && payload.message) onMessage(payload.message);
     } catch {
       onError();
     }
   };
   socket.onerror = onError;
+  socket.onclose = onClose;
   return socket;
 }

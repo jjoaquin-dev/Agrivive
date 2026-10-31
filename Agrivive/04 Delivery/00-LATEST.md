@@ -15,15 +15,15 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Added the Boost / Not now popup after a seller lists a product (mobile) and rebuilt the n8n workflow around the existing confirmed Boost. Details: [[2026-10-31 Boost Popup and Confirmed Boost Workflow]]. This supersedes [[2026-10-31 n8n Seller Flow Hardening]].
+Boost review hardening: the 6-hour wait now lives in our database and the worker fires it (n8n has no Wait node), each Facebook post saves a `pending` row first so a crash cannot cause a double post, and a boost again after a price drop uses reminder wording and waits 3 hours. Details: [[2026-10-31 Boost Review Hardening]]. It builds on [[2026-10-31 Boost Straight to n8n With 6-Hour Price Cut]].
 
-Validation: backend `bunx tsc --noEmit` and both builds, mobile `bun run typecheck`. Not tested on a device or against n8n/Meta.
+Validation: backend and mobile typechecks, drizzle check, scratch builds. `dist/` not rebuilt. Not tested against n8n, Groq or Meta.
 
 ## Current project status
 
 - Branch `development`; last commit `a058dc3`. Web landing and splash work is **uncommitted**.
 - Buyer website (`web/`) landing page is refined but not yet visually verified in a browser.
-- Backend and mobile Boost changes and the rebuilt `dist/` are **uncommitted**. Boost posting uses `N8N_VISIBILITY_BOOST_*`; `/integrations/visibility-boosts/:id/context|facebook-post` need its Bearer token.
+- Backend and mobile Boost and notification changes after commit `9b69cea` are **uncommitted**. Migrations `20261031120000_seller_notifications` and `20261031140000_boost_follow_up` are **not applied**. Posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
 
 ## Active architectural decisions
 
@@ -56,7 +56,9 @@ Many other `web/` files show as modified in git from earlier sessions. Those wer
 
 ## Unresolved issues
 
-- Boost: owner must test the popup, `POST /seller/products/:id/boost`, the two integration routes (401 without token, one post per boost), and import `agrivive-visibility-boost.json` with credentials.
+- Mobile freshness: owner to check on a development build that lists update after a push, nothing is fetched while backgrounded, and chat reconnects after an API restart.
+- Seller notifications: owner must apply the migration, test `GET /seller/notifications`, the read routes and `/seller/notification-settings`, and walk each trigger on a development build (reserve, cancel, expire, scan, stock low and zero, price drop, Boost result).
+- Boost: owner must apply the follow-up migration, import `agrivive-visibility-boost.json` with credentials, set the two env vars, and test the popup, one post per boost, the 6-hour follow-up from the worker, and the 3-hour gap. A stuck `pending` row in `fb_post_logs` needs a manual Page check. The Boost Visibility screen is unchanged and still uses the social-publishing workflow.
 
 - No browser check yet: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, reveal behavior, and Core Web Vitals.
 - The splash length is estimated from timeline math (about 3.04 s to hand-off), not measured.
@@ -69,5 +71,5 @@ Open the buyer site in a browser (`bun run dev` in `web/`, port 3001). Check the
 
 ## Historical changelog
 
-- Latest entry: [[2026-10-31 Boost Popup and Confirmed Boost Workflow]]
+- Latest entry: [[2026-10-31 Mobile Data Freshness]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].

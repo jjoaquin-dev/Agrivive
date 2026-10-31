@@ -6,6 +6,7 @@ import { getSocialChannelAvailability } from "../../../utils/social-publishing";
 import { OrderError } from "../../../utils/order-types";
 import { publishFacebookPagePhoto } from "./integrations.social-publish-facebook";
 import { publishInstagramPhoto } from "./integrations.social-publish-instagram";
+import { notifySocialCampaignResult } from "./integrations.social-publish-notify";
 
 type SupportedPlatform = "facebook" | "instagram";
 
@@ -24,6 +25,7 @@ async function refreshCampaignStatus(campaignId: string) {
     lastError: status === "failed" || status === "partial" ? "One or more channels need attention" : null,
     updatedAt: new Date(),
   }).where(eq(seller_social_campaigns.id, campaignId));
+  if (done) await notifySocialCampaignResult(campaignId, status);
   return status;
 }
 

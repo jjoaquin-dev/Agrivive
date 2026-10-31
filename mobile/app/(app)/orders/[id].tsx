@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  AppState,
   Alert,
   Modal,
   Pressable,
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
+import { useLiveSellerOrder } from "../../../src/features/orders/hooks/useLiveSellerOrder";
 import { AlertTriangle, Camera, X } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { CardComponent } from "../../../src/components/CardComponent";
@@ -54,58 +54,7 @@ export default function SellerOrderDetailScreen() {
 
   useFocusEffect(useCallback(() => { void loadOrder(); }, [loadOrder]));
 
-  useEffect(() => {
-    if (!isFocused || !id || !order || order.status !== "pending") return;
-    let active = true;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let delay = 10_000;
-    let controller: AbortController | undefined;
-
-    const schedule = () => {
-      if (active) timer = setTimeout(() => void refresh(), delay);
-    };
-
-    const refresh = async () => {
-      if (!active || AppState.currentState !== "active") {
-        schedule();
-        return;
-      }
-      controller = new AbortController();
-      try {
-        const latest = await fetchSellerOrder(id, controller.signal);
-        if (!active) return;
-        setOrder(latest);
-        setLastUpdated(new Date());
-        setError(null);
-        delay = 10_000;
-      } catch (err: any) {
-        if (!active || controller.signal.aborted) return;
-        if ([401, 403, 404].includes(err?.statusCode)) {
-          setError(err?.message || "Could not refresh this order.");
-          return;
-        }
-        setError(err?.message || "Could not refresh this order. Retrying soon.");
-        delay = Math.min(delay * 2, 60_000);
-      }
-      schedule();
-    };
-
-    const handleAppState = (nextState: string) => {
-      if (nextState !== "active") return;
-      if (timer) clearTimeout(timer);
-      delay = 10_000;
-      void refresh();
-    };
-
-    const subscription = AppState.addEventListener("change", handleAppState);
-    timer = setTimeout(() => void refresh(), delay);
-    return () => {
-      active = false;
-      if (timer) clearTimeout(timer);
-      controller?.abort();
-      subscription.remove();
-    };
-  }, [id, isFocused, order?.status]);
+  useLiveSellerOrder({ id, order, isFocused, setOrder, setLastUpdated, setError });
 
   const handleCancel = async () => {
     if (!order || cancelReason.trim().length < 5) return;

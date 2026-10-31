@@ -24,12 +24,11 @@ export default function CreateProductScreen() {
     : undefined;
 
   const openProduct = (productId: string) => router.replace(`/(app)/inventory/${productId}`);
-
   const startBoost = async (productId: string) => {
     setLoading(true);
     try {
       await requestSellerVisibilityBoost(productId);
-      Alert.alert("Boost Started", "We will post your product on the Agrivive Facebook Page soon.", [
+      Alert.alert("Boost Started", "We are posting your product on the Agrivive Facebook Page now.", [
         { text: "OK", onPress: () => openProduct(productId) },
       ], { cancelable: false });
     } catch (err: any) {
@@ -53,11 +52,11 @@ export default function CreateProductScreen() {
         return;
       }
       const priceDrop = Number(data.priceReductionPercent) > 0
-        ? `\n\nIf it has not sold out after 12 hours, its price goes down by ${data.priceReductionPercent}% (never below your lowest price). Then we ask if you want to boost again.`
+        ? `\n\nAfter 6 hours, if it has not sold out, the price goes down by ${data.priceReductionPercent}% (never below your lowest price) and we post again with the new price.`
         : "";
       Alert.alert(
         `Boost "${product.productName}"?`,
-        `Your product is listed. Boost posts it on the Agrivive Facebook Page with a link, so buyers can tap it and open your product page.${priceDrop}`,
+        `Your product is listed. Boost posts it on the Agrivive Facebook Page right away. We write the title and description for you, and the post has a link so buyers can open your product page. It is a free post, not a paid ad.${priceDrop}`,
         [
           { text: "Not now", style: "cancel", onPress: () => openProduct(product.id) },
           { text: "Boost", onPress: () => void startBoost(product.id) },

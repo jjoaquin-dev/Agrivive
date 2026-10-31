@@ -28468,7 +28468,8 @@ var notification_type_enum = pgEnum2("notification_type", [
   "seller_message",
   "buyer_message",
   "seller_listing",
-  "seller_boost"
+  "seller_boost",
+  "seller_alert"
 ]);
 var user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -29104,6 +29105,28 @@ var fb_post_logs = pgTable("fb_post_logs", {
 }, (table) => [
   index("fb_post_logs_product_idx").on(table.productId, table.postedAt)
 ]);
+var seller_notifications = pgTable("seller_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => sellers_product.id, { onDelete: "cascade" }),
+  payload: jsonb("payload").$type().notNull().default(sql`'{}'::jsonb`),
+  dedupeKey: text("dedupe_key").notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("seller_notifications_dedupe_unique").on(table.dedupeKey),
+  index("seller_notifications_seller_created_idx").on(table.sellerId, table.createdAt.desc())
+]);
+var seller_notification_settings = pgTable("seller_notification_settings", {
+  sellerId: text("seller_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+  stockPrice: boolean("stock_price").default(true).notNull(),
+  boost: boolean("boost").default(true).notNull(),
+  account: boolean("account").default(true).notNull(),
+  nightMode: boolean("night_mode").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
+});
 
 // src/utils/order-stock/index.ts
 async function restoreOrderStock(tx, orderId) {
@@ -29121,12 +29144,332 @@ async function restoreOrderStock(tx, orderId) {
   }
 }
 
+// src/utils/seller-notifications/messages.ts
+var text3 = (value, fallback) => typeof value === "string" && value.trim() ? value : fallback;
+var code = (p) => text3(p.code, "Your reservation");
+var product = (p) => text3(p.productName, "Your listing");
+var sellerNoticeDefs = {
+  new_reservation: {
+    title: "New Reservation",
+    plural: "New Reservations",
+    body: (p) => text3(p.summary, "A buyer reserved produce from your stall"),
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order",
+    nightExempt: true
+  },
+  reservation_ending: {
+    title: "Reservation Ends Soon",
+    plural: "Reservations End Soon",
+    body: (p) => `${code(p)} has about an hour left. The buyer has not picked up yet.`,
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order",
+    nightExempt: true
+  },
+  reservation_ended: {
+    title: "Reservation Ended",
+    plural: "Reservations Ended",
+    body: (p) => `${code(p)} was not picked up in time. The stock went back to your listing.`,
+    level: "silent",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  buyer_cancelled: {
+    title: "Buyer Cancelled",
+    plural: "Buyers Cancelled",
+    body: (p) => `${code(p)} was cancelled by the buyer. The stock went back to your listing.`,
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  pickup_done: {
+    title: "Pickup Done",
+    plural: "Pickups Done",
+    body: (p) => `${code(p)} was picked up. Pickup confirmed.`,
+    level: "feed",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  listing_live: {
+    title: "Listing Is Live",
+    plural: "Listings Are Live",
+    body: (p) => `${product(p)} is now on sale.`,
+    level: "feed",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  running_low: {
+    title: "Running Low",
+    plural: "Running Low",
+    body: (p) => `${product(p)} is running low. ${text3(p.left, "A little")} left.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  sold_out: {
+    title: "Sold Out",
+    plural: "Sold Out",
+    body: (p) => `${product(p)} is sold out.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  price_lowered: {
+    title: "Price Lowered",
+    plural: "Prices Lowered",
+    body: (p) => `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_posted: {
+    title: "Boost Posted",
+    plural: "Boosts Posted",
+    body: (p) => `${product(p)} was posted to Facebook.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_failed: {
+    title: "Boost Did Not Post",
+    plural: "Boosts Did Not Post",
+    body: (p) => `We could not post ${product(p)}. Please try again later.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  seller_cancellation_warning: {
+    title: "Cancellation Warning",
+    plural: "Cancellation Warnings",
+    body: (p) => `You cancelled ${code(p)}. This is saved in your record.`,
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_event_corrected: {
+    title: "Record Fixed",
+    plural: "Records Fixed",
+    body: () => "We checked your record again and removed a mistake.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_action_warning: {
+    title: "Account Warning",
+    plural: "Account Warnings",
+    body: () => "Your record reached the warning level. Please reply to buyers on time.",
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_action_restriction: {
+    title: "Account Limited",
+    plural: "Account Limited",
+    body: () => "Your account has a short limit. It ends by itself.",
+    level: "sound",
+    topic: "account",
+    category: "trust",
+    target: "trust",
+    nightExempt: true
+  },
+  trust_action_blocked: {
+    title: "Account Blocked",
+    plural: "Account Blocked",
+    body: () => "Your account is blocked. Open Agrivive to get it back.",
+    level: "sound",
+    topic: "account",
+    category: "trust",
+    target: "trust",
+    nightExempt: true
+  },
+  trust_action_expired: {
+    title: "Limit Lifted",
+    plural: "Limits Lifted",
+    body: () => "Your short limit has ended. You can use Agrivive again.",
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inactivity_3w_warning: {
+    title: "We Miss You",
+    plural: "We Miss You",
+    body: () => "You have not opened Agrivive for 3 weeks. Please log in soon.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inactivity_1m_blocked: {
+    title: "Account Paused",
+    plural: "Account Paused",
+    body: () => "Your account was paused after 30 days away. Follow the steps to get it back.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inquiry_12h_reminder: {
+    title: "Buyer Is Waiting",
+    plural: "Buyers Are Waiting",
+    body: () => "A buyer has waited 12 hours for your reply.",
+    level: "sound",
+    topic: "orders",
+    category: "messages",
+    target: "order"
+  },
+  inquiry_24h_warning: {
+    title: "Buyer Still Waiting",
+    plural: "Buyers Still Waiting",
+    body: () => "A buyer has waited 24 hours for your reply.",
+    level: "sound",
+    topic: "orders",
+    category: "messages",
+    target: "order"
+  }
+};
+function getSellerNoticeDef(kind) {
+  return sellerNoticeDefs[kind];
+}
+function sellerNoticePath(target, orderId) {
+  if (target === "order" && orderId)
+    return `/(app)/orders/${orderId}`;
+  if (target === "listing")
+    return "/(app)/(tabs)/inventory";
+  if (target === "trust")
+    return "/(app)/trust";
+  if (target === "messages")
+    return "/(app)/(tabs)/messages";
+  return "/(app)/notifications";
+}
+function sellerOrderCode(orderId) {
+  return `RSV-${orderId.slice(0, 4).toUpperCase()}`;
+}
+
+// src/utils/seller-notifications/night.ts
+var timeZone = "Asia/Manila";
+function inNightHours(now = new Date) {
+  const hour = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    hourCycle: "h23"
+  }).format(now));
+  return hour >= 21 || hour < 6;
+}
+
+// src/utils/seller-notifications/enqueue.ts
+var windowMs = () => {
+  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 60);
+  return Math.max(10, Math.min(seconds, 600)) * 1000;
+};
+async function readSellerAlertSettings(tx, sellerId) {
+  const [row] = await tx.select().from(seller_notification_settings).where(eq(seller_notification_settings.sellerId, sellerId)).limit(1);
+  return {
+    stockPrice: row?.stockPrice ?? true,
+    boost: row?.boost ?? true,
+    account: row?.account ?? true,
+    nightMode: row?.nightMode ?? false
+  };
+}
+async function enqueueSellerAlert(tx, input) {
+  const def = getSellerNoticeDef(input.kind);
+  if (!def || def.level === "feed")
+    return;
+  const settings = await readSellerAlertSettings(tx, input.sellerId);
+  if (def.topic !== "orders") {
+    const topicOn = def.topic === "stock_price" ? settings.stockPrice : def.topic === "boost" ? settings.boost : settings.account;
+    if (!topicOn)
+      return;
+  }
+  const channel = def.level === "sound" && !(settings.nightMode && inNightHours() && !def.nightExempt) ? "orders" : "updates";
+  const group = channel === "orders" ? input.kind : "updates";
+  const createdAt = input.createdAt ?? new Date;
+  const size = windowMs();
+  const windowStart = new Date(Math.floor(createdAt.getTime() / size) * size);
+  const availableAt = new Date(windowStart.getTime() + size);
+  const countPath = `{counts,${input.kind}}`;
+  await tx.insert(notification_outbox).values({
+    recipientUserId: input.sellerId,
+    type: "seller_alert",
+    aggregationKey: `seller-alert:${input.sellerId}:${group}`,
+    dedupeKey: `${input.sellerId}:alert:${group}:${windowStart.toISOString()}`,
+    referenceId: input.orderId ?? null,
+    itemCount: 1,
+    payload: { ...input.payload, kind: input.kind, channel, counts: { [input.kind]: 1 } },
+    availableAt,
+    createdAt,
+    updatedAt: createdAt
+  }).onConflictDoUpdate({
+    target: notification_outbox.dedupeKey,
+    set: {
+      itemCount: sql`${notification_outbox.itemCount} + 1`,
+      payload: sql`jsonb_set(${notification_outbox.payload}, ${countPath}::text[], to_jsonb(coalesce((${notification_outbox.payload}->'counts'->>${input.kind}::text)::int, 0) + 1))`,
+      updatedAt: createdAt
+    }
+  });
+}
+
+// src/utils/seller-notifications/index.ts
+async function createSellerNotification(tx, input) {
+  const payload = {
+    ...input.orderId ? { code: sellerOrderCode(input.orderId) } : {},
+    ...input.payload
+  };
+  const [row] = await tx.insert(seller_notifications).values({
+    sellerId: input.sellerId,
+    kind: input.kind,
+    orderId: input.orderId ?? null,
+    productId: input.productId ?? null,
+    payload,
+    dedupeKey: input.dedupeKey
+  }).onConflictDoNothing({ target: seller_notifications.dedupeKey }).returning();
+  if (!row)
+    return null;
+  await enqueueSellerAlert(tx, {
+    sellerId: input.sellerId,
+    kind: input.kind,
+    orderId: input.orderId,
+    payload,
+    createdAt: row.createdAt
+  });
+  return row;
+}
+async function alertSellerOfTrustNotice(tx, notice) {
+  const [recipient] = await tx.select({ id: user.id }).from(user).where(sql`${user.id} = ${notice.recipientId} and 'seller'::"role" = any(${user.role})`).limit(1);
+  if (!recipient)
+    return;
+  await enqueueSellerAlert(tx, {
+    sellerId: notice.recipientId,
+    kind: notice.kind,
+    orderId: notice.orderId,
+    payload: notice.orderId ? { code: sellerOrderCode(notice.orderId) } : {}
+  });
+}
+
 // src/utils/trust/index.ts
 function recordTrustEvent(tx, input) {
   return tx.insert(trust_events).values(input).onConflictDoNothing({ target: trust_events.eventKey }).returning();
 }
-function queueTrustNotice(tx, input) {
-  return tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+async function queueTrustNotice(tx, input) {
+  const rows = await tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+  if (rows.length)
+    await alertSellerOfTrustNotice(tx, input);
+  return rows;
 }
 async function recordInquiryDeadlines(tx, inquiry, now) {
   const hours = (now.getTime() - inquiry.createdAt.getTime()) / 3600000;
@@ -29339,6 +29682,12 @@ async function expirePendingOrders(limit = 100) {
         recipientId: updated.buyersId,
         orderId: updated.id,
         kind: "buyer_failed_reservation_warning"
+      });
+      await createSellerNotification(tx, {
+        sellerId: updated.sellersId,
+        kind: "reservation_ended",
+        dedupeKey: `reservation-ended:${updated.id}`,
+        orderId: updated.id
       });
       return { buyerId: updated.buyersId, orderId: updated.id, eventKey };
     });
@@ -29732,17 +30081,6 @@ async function applySellerPromotionPriceReduction(tx, productId, now = new Date)
   return updated ? { before: current.productPrice, after: updated.productPrice } : null;
 }
 
-// src/utils/marketplace-url/index.ts
-function marketplaceUrl(productId) {
-  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
-  const path = `/marketplace/${productId}`;
-  try {
-    return base ? new URL(path, base).toString() : path;
-  } catch {
-    return path;
-  }
-}
-
 // src/utils/ahp-topsis/index.ts
 var criterionCount = 4;
 var consistencyRandomIndex = 0.9;
@@ -29949,6 +30287,15 @@ async function loadEligibleVisibilityCandidates(evaluatedAt) {
 }
 
 // src/utils/promotion-eligibility/index.ts
+function marketplaceUrl(productId) {
+  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
+  const path = `/marketplace/${productId}`;
+  try {
+    return base ? new URL(path, base).toString() : path;
+  } catch {
+    return path;
+  }
+}
 async function getPriorityPromotionEligibility(listingCycleId, options) {
   const evaluatedAt = new Date;
   const [target] = await db.select({
@@ -30328,7 +30675,7 @@ async function sendPushNotificationBatch(messages) {
       android: {
         priority: "high",
         collapseKey: first.data.collapseKey,
-        notification: { channelId: "default" }
+        notification: { channelId: first.data.channelId || "default" }
       },
       apns: {
         headers: first.data.collapseKey ? { "apns-collapse-id": first.data.collapseKey } : undefined
@@ -30354,12 +30701,46 @@ async function sendPushNotificationBatch(messages) {
   }
 }
 
+// src/utils/seller-notifications/push-content.ts
+function countsOf(payload) {
+  const counts = payload.counts ?? {};
+  return Object.entries(counts).filter(([kind]) => getSellerNoticeDef(kind));
+}
+function sellerAlertContent(payload, itemCount, referenceId) {
+  const kind = String(payload.kind ?? "");
+  const def = getSellerNoticeDef(kind);
+  const channel = payload.channel === "updates" ? "updates" : "orders";
+  if (!def) {
+    return { title: "Agrivive update", body: "Open Agrivive to see what is new.", path: "/(app)/notifications", channel };
+  }
+  if (itemCount <= 1) {
+    return {
+      title: def.title,
+      body: def.body(payload),
+      path: sellerNoticePath(def.target, referenceId),
+      channel
+    };
+  }
+  if (channel === "orders") {
+    return {
+      title: `${itemCount} ${def.plural}`,
+      body: "Open Agrivive to see them.",
+      path: "/(app)/notifications",
+      channel
+    };
+  }
+  const parts = countsOf(payload).map(([countKind, count]) => `${count > 1 ? `${count} ` : ""}${count > 1 ? getSellerNoticeDef(countKind).plural : getSellerNoticeDef(countKind).title}`);
+  return { title: `${itemCount} Updates`, body: parts.join(" \xB7 "), path: "/(app)/notifications", channel };
+}
+
 // src/jobs/deliver-push-notifications.ts
 var batchLimit = 50;
 var deviceBatchSize = 500;
 var maxAttempts2 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
 function notificationContent(job) {
   const payload = job.payload ?? {};
+  if (job.type === "seller_alert")
+    return sellerAlertContent(payload, job.itemCount, job.referenceId);
   if (job.type === "seller_listing") {
     const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
     const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
@@ -30394,13 +30775,15 @@ function notificationContent(job) {
     return {
       title: "New Reservation Received",
       body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
-      path: `/(app)/orders/${String(payload.orderId)}`
+      path: `/(app)/orders/${String(payload.orderId)}`,
+      channel: "orders"
     };
   }
   return {
     title: "New buyer messages",
     body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,
-    path: "/messages"
+    path: "/messages",
+    channel: payload.channel === "updates" ? "updates" : "orders"
   };
 }
 function retryDelay2(attempt) {
@@ -30478,7 +30861,8 @@ async function deliverJob(job) {
       notificationId: job.id,
       referenceId: job.referenceId ?? "",
       path: content.path,
-      collapseKey: job.aggregationKey
+      collapseKey: job.aggregationKey,
+      channelId: content.channel ?? "default"
     }
   }));
   let lastError;
@@ -30580,6 +30964,13 @@ async function applySellerPriceReductions() {
       const updated = await applySellerProductPriceReduction(tx, product.id);
       if (!updated || updated.priceReductionPeriodsApplied <= before.priceReductionPeriodsApplied || Number(updated.productPrice ?? 0) >= Number(before.productPrice ?? 0))
         return { reduced: false, prompt: false };
+      await createSellerNotification(tx, {
+        sellerId: before.userId,
+        kind: "price_lowered",
+        dedupeKey: `price-lowered:${product.id}:${updated.priceReductionPeriodsApplied}`,
+        productId: product.id,
+        payload: { productName: before.productName, priceAfter: updated.productPrice }
+      });
       const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(eq(listing_cycles.productId, product.id)).orderBy(desc(listing_cycles.startedAt)).limit(1);
       if (!cycle)
         return { reduced: true, prompt: false };
@@ -30600,20 +30991,6 @@ async function applySellerPriceReductions() {
       });
       if (!prompt)
         return { reduced: true, prompt: false };
-      await tx.insert(notification_outbox).values({
-        recipientUserId: before.userId,
-        type: "seller_boost",
-        aggregationKey: `seller-boost:${before.userId}`,
-        dedupeKey: `${before.userId}:seller-boost:${boostKey}`,
-        referenceId: prompt.id,
-        payload: {
-          boostId: prompt.id,
-          productId: product.id,
-          productName: before.productName,
-          priceBefore: before.productPrice,
-          priceAfter: updated.productPrice
-        }
-      }).onConflictDoNothing({ target: notification_outbox.dedupeKey });
       return { reduced: true, prompt: true };
     });
     if (result === null)
@@ -30722,9 +31099,29 @@ async function deliverSellerVisibilityBoosts() {
   return { configured: true, queued: due.length, sent, failed };
 }
 
+// src/jobs/send-reservation-ending-notices.ts
+var warningWindowMs = 60 * 60 * 1000;
+async function sendReservationEndingNotices(limit = 100) {
+  const now = new Date;
+  const due = await db.select({ id: orders.id, sellerId: orders.sellersId }).from(orders).where(and(eq(orders.status, "pending"), gt(orders.expiresAt, now), lte(orders.expiresAt, new Date(now.getTime() + warningWindowMs)), sql`not exists (select 1 from ${seller_notifications} where ${seller_notifications.dedupeKey} = 'reservation-ending:' || ${orders.id}::text)`)).orderBy(asc(orders.expiresAt)).limit(limit);
+  let created = 0;
+  for (const order of due) {
+    const row = await db.transaction((tx) => createSellerNotification(tx, {
+      sellerId: order.sellerId,
+      kind: "reservation_ending",
+      dedupeKey: `reservation-ending:${order.id}`,
+      orderId: order.id
+    }));
+    if (row)
+      created++;
+  }
+  return created;
+}
+
 // src/jobs/run-scheduled.ts
 async function runScheduledJobs() {
   const expiredOrders = await expirePendingOrders();
+  const reservationEndingNotices = await sendReservationEndingNotices();
   const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
@@ -30735,7 +31132,7 @@ async function runScheduledJobs() {
   const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
+  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
 }
 
 // src/worker.ts
