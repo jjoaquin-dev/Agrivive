@@ -1,13 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { ChevronRight } from "lucide-react-native";
 import { useInventory } from "../../src/features/inventory/hooks/useInventory";
 import { useSellerAnalytics } from "../../src/features/analytics/hooks/useSellerAnalytics";
-import {
-  fetchSellerWeightedVisibility,
-  type SellerVisibilityItem,
-} from "../../src/features/analytics/api/seller-visibility";
 import { AnalyticsHeader } from "../../src/features/analytics/components/AnalyticsHeader";
 import { AnalyticsFilterRow } from "../../src/features/analytics/components/AnalyticsFilterRow";
 import { AnalyticsMetricsGrid } from "../../src/features/analytics/components/AnalyticsMetricsGrid";
@@ -15,9 +12,7 @@ import { AnalyticsMovementChart } from "../../src/features/analytics/components/
 import { AnalyticsUnitDistribution } from "../../src/features/analytics/components/AnalyticsUnitDistribution";
 import { AnalyticsOrderOutcomes } from "../../src/features/analytics/components/AnalyticsOrderOutcomes";
 import { AnalyticsProductPerformance } from "../../src/features/analytics/components/AnalyticsProductPerformance";
-import { VisibilityBreakdownCard } from "../../src/features/analytics/components/VisibilityBreakdownCard";
 import { AnalyticsDescriptiveSummary } from "../../src/features/analytics/components/AnalyticsDescriptiveSummary";
-import { PaginationControl } from "../../src/components/PaginationControl";
 import type { AnalyticsUnit } from "../../src/features/analytics/types";
 import { colors, fonts, spacing } from "../../src/theme";
 
@@ -29,38 +24,11 @@ export default function SellerAnalyticsScreen() {
   const [unit, setUnit] = useState<AnalyticsUnit | undefined>();
 
   const { analytics, loading, refreshing, error, refresh } = useSellerAnalytics(days, productId, unit);
-  const [visibilityList, setVisibilityList] = useState<SellerVisibilityItem[]>([]);
-  const [guidePageSize, setGuidePageSize] = useState(3);
-  const [guidePage, setGuidePage] = useState(1);
-
-  useEffect(() => { setGuidePage(1); }, [productId]);
-
-  useEffect(() => {
-    fetchSellerWeightedVisibility()
-      .then((res) => setVisibilityList(res.weightedSurplus || []))
-      .catch(() => {});
-  }, [refreshing]);
 
   const handleFullRefresh = () => {
     refresh();
     refreshInventory();
   };
-
-  const filteredVisibility = useMemo(() => {
-    let list = visibilityList;
-    if (productId) list = list.filter((v) => v.productId === productId);
-    return [...list].sort((a, b) => {
-      const scoreA = a.score ?? -1;
-      const scoreB = b.score ?? -1;
-      if (scoreB !== scoreA) return scoreB - scoreA;
-      return (a.rank ?? 999) - (b.rank ?? 999);
-    });
-  }, [visibilityList, productId]);
-
-  const paginatedVisibility = useMemo(() => {
-    const start = (guidePage - 1) * guidePageSize;
-    return filteredVisibility.slice(start, start + guidePageSize);
-  }, [filteredVisibility, guidePage, guidePageSize]);
 
   if (loading && !refreshing && !analytics) {
     return (
@@ -122,39 +90,18 @@ export default function SellerAnalyticsScreen() {
 
             <AnalyticsProductPerformance products={products} />
 
-            <View style={styles.visibilitySection}>
-              <View style={styles.visibilityHeader}>
-                <Text style={styles.sectionTitle}>Marketplace Visibility Guide</Text>
-                <Text style={styles.sectionSubtitle}>Placement scores evaluated by AHP-TOPSIS</Text>
+            <Pressable
+              onPress={() => router.push("/(app)/marketing?section=visibility")}
+              accessibilityRole="button"
+              accessibilityLabel="Open the Visibility Guide in Marketing"
+              style={styles.guideLink}
+            >
+              <View style={styles.guideCopy}>
+                <Text style={styles.sectionTitle}>Visibility Guide</Text>
+                <Text style={styles.sectionSubtitle}>How high your listings show to buyers</Text>
               </View>
-
-              {filteredVisibility.length === 0 ? (
-                <View style={styles.emptyVisibility}>
-                  <Text style={styles.emptyText}>No visibility ranking data recorded yet.</Text>
-                </View>
-              ) : (
-                <>
-                  {paginatedVisibility.map((item) => (
-                    <VisibilityBreakdownCard
-                      key={item.productId}
-                      item={item}
-                      product={products.find((p) => p.id === item.productId)}
-                      productName={products.find((p) => p.id === item.productId)?.productName}
-                      onBoost={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: item.productId } })}
-                    />
-                  ))}
-                  <PaginationControl
-                    currentPage={guidePage}
-                    totalItems={filteredVisibility.length}
-                    pageSize={guidePageSize}
-                    pageSizeOptions={[3, 5, 10]}
-                    onPageChange={setGuidePage}
-                    onPageSizeChange={setGuidePageSize}
-                    itemLabel="items"
-                  />
-                </>
-              )}
-            </View>
+              <ChevronRight size={20} color={colors.textMuted} />
+            </Pressable>
 
             <AnalyticsDescriptiveSummary summary={analytics.summary} />
           </>
@@ -183,11 +130,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.base,
   },
   errorText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.error },
-  visibilitySection: { marginBottom: spacing.base },
-  visibilityHeader: { marginBottom: spacing.sm },
+  guideLink: { flexDirection: "row", alignItems: "center", minHeight: 56, marginBottom: spacing.base, paddingHorizontal: spacing.base, backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
+  guideCopy: { flex: 1 },
   sectionTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   sectionSubtitle: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  emptyVisibility: { paddingVertical: spacing.md, alignItems: "center" },
   empty: { alignItems: "center", paddingVertical: spacing.xxxl },
   emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text, marginBottom: spacing.xs },
   emptyText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },

@@ -12,6 +12,8 @@ import {
 } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import type { Product } from "../types";
+import { BoostChip } from "../../marketing/components/BoostChip";
+import { hasActiveBoost } from "../../marketing/types";
 
 interface ProductCardProps {
   product: Product;
@@ -105,11 +107,15 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             {reductionPercent > 0 ? (
               <View style={[styles.badge, styles.badgeBoost]}>
                 <Text style={[styles.badgeText, styles.badgeTextBoost]}>
-                  {reductionPercent}% Discount
+                  {basePrice != null && basePrice > price
+                    ? `${Math.round((1 - price / basePrice) * 100)}% Off`
+                    : `Drops ${reductionPercent}% / 6 hrs`}
                 </Text>
               </View>
             ) : null}
           </View>
+
+          <BoostChip boost={product.boost} />
 
           {/* Price */}
           <View style={styles.priceRow}>
@@ -199,16 +205,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           )}
         </Pressable>
 
-        {reductionPercent > 0 || (basePrice != null && basePrice > price) ? (
+        {!isArchived && !isOutOfStock ? (
           <Pressable
-            onPress={() => router.push({ pathname: "/(app)/boost/[productId]", params: { productId: product.id } })}
+            onPress={() => router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: product.id } })}
             style={styles.boostButton}
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel={`Preview post for ${product.productName}`}
+            accessibilityLabel={`Boost ${product.productName}`}
           >
             <Sparkles size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.boostButtonText}>Preview Post</Text>
+            <Text style={styles.boostButtonText}>{hasActiveBoost(product.boost) ? "View Boost" : "Boost"}</Text>
           </Pressable>
         ) : null}
 

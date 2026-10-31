@@ -81,12 +81,12 @@ export const sellerNoticeDefs = {
   },
   boost_posted: {
     title: "Boost Posted", plural: "Boosts Posted",
-    body: (p) => `${product(p)} was posted to the Agrivive pages.`,
+    body: (p) => `${product(p)} was posted on the Agrivive Facebook Page.`,
     level: "silent", topic: "boost", category: "listings", target: "notifications",
   },
   boost_failed: {
     title: "Boost Did Not Post", plural: "Boosts Did Not Post",
-    body: (p) => `We could not post ${product(p)}. Please try again later.`,
+    body: (p) => `${product(p)} did not post on the Agrivive Facebook Page. Open Boost to try again.`,
     level: "silent", topic: "boost", category: "listings", target: "notifications",
   },
   // Trust notices (stored in trust_notices, shown here with plain wording).

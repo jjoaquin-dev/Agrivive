@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { StyleSheet, View, Text, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ProductForm } from "../../../src/features/inventory/components/ProductForm";
-import { requestSellerVisibilityBoost } from "../../../src/features/boost/api/visibility-boosts";
+import { BoostIntroSheet } from "../../../src/features/marketing/components/BoostIntroSheet";
 import { createSellerProduct } from "../../../src/features/inventory/api/products";
 import type { CreateProductInput, ProductScalingType } from "../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../src/theme";
@@ -11,6 +11,7 @@ export default function CreateProductScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ catalogId?: string; unit?: ProductScalingType; name?: string }>();
   const [loading, setLoading] = useState(false);
+  const [boostFor, setBoostFor] = useState<{ id: string; percent: number } | null>(null);
 
   const initialProduct = params.catalogId
     ? ({
@@ -24,20 +25,15 @@ export default function CreateProductScreen() {
     : undefined;
 
   const openProduct = (productId: string) => router.replace(`/(app)/inventory/${productId}`);
-  const startBoost = async (productId: string) => {
-    setLoading(true);
-    try {
-      await requestSellerVisibilityBoost(productId);
-      Alert.alert("Boost Started", "We are posting your product on the Agrivive Facebook Page now.", [
-        { text: "OK", onPress: () => openProduct(productId) },
-      ], { cancelable: false });
-    } catch (err: any) {
-      Alert.alert("Could Not Boost", err?.message || "Your product is listed, but the boost did not start. You can try again from the product.", [
-        { text: "OK", onPress: () => openProduct(productId) },
-      ], { cancelable: false });
-    } finally {
-      setLoading(false);
-    }
+  const closeBoostSheet = () => {
+    if (!boostFor) return;
+    setBoostFor(null);
+    openProduct(boostFor.id);
+  };
+  const previewBoost = () => {
+    if (!boostFor) return;
+    setBoostFor(null);
+    router.replace(`/(app)/marketing/${boostFor.id}`);
   };
 
   const handleCreate = async (data: any) => {
@@ -51,18 +47,7 @@ export default function CreateProductScreen() {
         ], { cancelable: false });
         return;
       }
-      const priceDrop = Number(data.priceReductionPercent) > 0
-        ? `\n\nAfter 6 hours, if it has not sold out, the price goes down by ${data.priceReductionPercent}% (never below your lowest price) and we post again with the new price.`
-        : "";
-      Alert.alert(
-        `Boost "${product.productName}"?`,
-        `Your product is listed. Boost posts it on the Agrivive Facebook Page right away. We write the title and description for you, and the post has a link so buyers can open your product page. It is a free post, not a paid ad.${priceDrop}`,
-        [
-          { text: "Not now", style: "cancel", onPress: () => openProduct(product.id) },
-          { text: "Boost", onPress: () => void startBoost(product.id) },
-        ],
-        { cancelable: false },
-      );
+      setBoostFor({ id: product.id, percent: Number(data.priceReductionPercent) || 0 });
     } catch (err: any) {
       Alert.alert("Error", err?.message || "Failed to add product to inventory.");
     } finally {
@@ -79,6 +64,7 @@ export default function CreateProductScreen() {
         </Text>
       </View>
       <ProductForm mode="create" initialProduct={initialProduct} onSubmit={handleCreate} loading={loading} />
+      <BoostIntroSheet visible={boostFor !== null} priceReductionPercent={boostFor?.percent ?? 0} onPreview={previewBoost} onClose={closeBoostSheet} />
     </View>
   );
 }

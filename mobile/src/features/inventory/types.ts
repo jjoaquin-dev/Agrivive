@@ -1,3 +1,4 @@
+import type { ProductBoostChip } from "../marketing/types";
 export type ProductCategory =
   | "Leafy Greens"
   | "Root Vegetables"
@@ -46,6 +47,7 @@ export interface Product {
   vegetableCatalogId?: string | null;
   imagUrl?: string | null;
   displayImageUrl?: string | null;
+  boost?: ProductBoostChip | null;
   productPrice: string | number;
   basePrice?: string | number | null;
   priceReductionPercent?: string | number;

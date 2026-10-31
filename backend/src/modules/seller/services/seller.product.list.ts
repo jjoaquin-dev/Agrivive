@@ -4,6 +4,7 @@ import { sellers_product } from "../../../db/schema";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 import { applySellerProductPriceReduction } from "./seller.product.price-reduction";
+import { readProductBoostChips } from "./seller.product.list.boost";
 
 export async function listSellerProducts(sellerId: string, limit = 20, cursor?: string) {
   return db.transaction(async (tx) => {
@@ -50,12 +51,14 @@ export async function listSellerProducts(sellerId: string, limit = 20, cursor?: 
       .from(sellers_product)
       .where(eq(sellers_product.userId, sellerId));
 
+    const boostChips = await readProductBoostChips(tx, updatedProducts.flatMap((product) => (product ? [product.id] : [])));
     const items = await Promise.all(
       updatedProducts
         .filter((product): product is NonNullable<typeof product> => product !== null)
         .map(async (product) => ({
           ...product,
           displayImageUrl: await getProductImageDisplayUrl(product.imagUrl, sellerId),
+          boost: boostChips.get(product.id) ?? null,
         })),
     );
 

@@ -1,0 +1,36 @@
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Tag } from "lucide-react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
+
+interface Props {
+  percent: number;
+  lowestPrice?: number | null;
+  stage: "initial" | "price_reduction";
+  currentPrice: number;
+}
+
+/** The price drop rule, read from the product's own settings. */
+export function BoostPriceDropCard({ percent, lowestPrice, stage, currentPrice }: Props) {
+  const text = stage === "price_reduction"
+    ? `This post shares your new price of ₱${currentPrice.toFixed(2)}.`
+    : percent > 0 && lowestPrice
+      ? `If your produce hasn't sold after 6 hours, the price drops by ${percent}%, without going below ₱${lowestPrice.toFixed(2)}. This repeats every 6 hours.`
+      : "Your price stays the same.";
+  return (
+    <View style={styles.card}>
+      <Tag size={22} color={colors.primary} />
+      <View style={styles.copy}>
+        <Text style={styles.title}>Price drop</Text>
+        <Text style={styles.text}>{text}</Text>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: { flexDirection: "row", gap: spacing.md, backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.primaryLight, padding: spacing.base, marginTop: spacing.base },
+  copy: { flex: 1 },
+  title: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
+  text: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted, marginTop: 2 },
+});

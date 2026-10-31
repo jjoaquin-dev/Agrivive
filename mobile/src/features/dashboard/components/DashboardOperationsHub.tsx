@@ -16,7 +16,7 @@ interface DashboardOperationsHubProps {
   onPressInventory: () => void;
   onPressMessages: () => void;
   onAnalytics: () => void;
-  onBoosts: () => void;
+  onMarketing: () => void;
   onActivity: () => void;
   onAdvisories: () => void;
 }
@@ -27,7 +27,7 @@ export const DashboardOperationsHub: React.FC<DashboardOperationsHubProps> = ({
   onPressInventory,
   onPressMessages,
   onAnalytics,
-  onBoosts,
+  onMarketing,
   onActivity,
   onAdvisories,
 }) => {
@@ -57,12 +57,12 @@ export const DashboardOperationsHub: React.FC<DashboardOperationsHubProps> = ({
       onPress: onAnalytics,
     },
     {
-      id: "boosts",
-      label: "Boosts",
+      id: "marketing",
+      label: "Marketing",
       icon: <TrendingUp size={22} color="#EA580C" />,
       bg: "#FFF7ED",
       textColor: "#EA580C",
-      onPress: onBoosts,
+      onPress: onMarketing,
     },
     {
       id: "activity",

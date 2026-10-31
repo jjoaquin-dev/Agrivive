@@ -109,7 +109,7 @@ export default function HomeScreen() {
         onPressInventory={() => router.push("/(app)/(tabs)/inventory")}
         onPressMessages={() => router.push("/(app)/(tabs)/messages")}
         onAnalytics={() => router.push("/(app)/analytics")}
-        onBoosts={() => router.push("/(app)/boosts")}
+        onMarketing={() => router.push("/(app)/marketing")}
         onActivity={() => router.push("/(app)/activity")}
         onAdvisories={() => router.push("/(app)/advisories")}
       />

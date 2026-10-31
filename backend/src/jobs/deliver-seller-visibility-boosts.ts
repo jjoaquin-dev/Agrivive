@@ -10,9 +10,17 @@ function retryDelay(attempt: number) {
   return Math.min(30 * 60_000, 30_000 * (2 ** Math.max(0, attempt - 1)));
 }
 
+let warnedNotConfigured = false;
+
 export async function deliverSellerVisibilityBoosts() {
   const webhook = getBoostWebhookTarget();
-  if (!webhook) return { configured: false, queued: 0, sent: 0, failed: 0 };
+  if (!webhook) {
+    if (!warnedNotConfigured) {
+      warnedNotConfigured = true;
+      console.warn("Boosts are waiting: set N8N_VISIBILITY_BOOST_WEBHOOK_URL (https) and N8N_VISIBILITY_BOOST_SERVICE_TOKEN");
+    }
+    return { configured: false, queued: 0, sent: 0, failed: 0 };
+  }
   const { target, serviceToken } = webhook;
 
   const now = new Date();

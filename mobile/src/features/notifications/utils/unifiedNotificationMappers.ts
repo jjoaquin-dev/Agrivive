@@ -1,8 +1,6 @@
-import { Share } from "react-native";
 import { type useRouter } from "expo-router";
-import { markSellerBoostPromptRead } from "../../boost/api/visibility-boosts";
-import { getSellerPromotionShare } from "../api/seller-promotions";
-import type { SellerBoostPrompt, SellerNotification, SellerPromotion, UnifiedNotificationItem } from "../types";
+import { markSellerBoostPromptRead } from "../../marketing/api/visibility-boosts";
+import type { SellerBoostPrompt, SellerNotification, UnifiedNotificationItem } from "../types";
 import type { Conversation } from "../../conversations/types";
 import { mapSellerNotice } from "./sellerNoticeMapper";
 
@@ -30,12 +28,11 @@ export function formatRelativeTime(date: Date): string {
 export function mapUnifiedNotificationItems(input: {
   conversations: Conversation[];
   notices: SellerNotification[];
-  promotions: SellerPromotion[];
   boosts: SellerBoostPrompt[];
   router: RouterInstance;
   markedReadIds: Set<string>;
 }): UnifiedNotificationItem[] {
-  const { conversations, notices, promotions, boosts, router, markedReadIds } = input;
+  const { conversations, notices, boosts, router, markedReadIds } = input;
   const list: UnifiedNotificationItem[] = [];
 
   // Conversations
@@ -61,42 +58,23 @@ export function mapUnifiedNotificationItems(input: {
     }
   }
 
-  // Promotions
-  for (const promo of promotions || []) {
-    if (promo && promo.id) {
-      const date = parseDate(promo.readyAt || promo.createdAt);
-      list.push({
-        id: `promo:${promo.id}`, category: "listings", kind: "promotion_ready", title: "Promotional Content Ready",
-        subtitle: promo.headline || `Ready-to-share social caption for ${promo.productName}.`,
-        timestamp: formatRelativeTime(date), rawDate: date, read: Boolean(promo.readAt), urgent: false, iconType: "megaphone",
-        primaryAction: {
-          label: "Share Product",
-          onPress: async () => {
-            try {
-              const payload = await getSellerPromotionShare(promo.id);
-              await Share.share({ message: `${payload.title}\n${payload.message}\n${payload.shareUrl}` });
-            } catch {}
-          },
-        },
-      });
-    }
-  }
-
   // Boosts
   for (const boost of boosts || []) {
     if (boost && boost.id) {
       const date = parseDate(boost.createdAt);
       const isRead = Boolean(boost.readAt) || markedReadIds.has(`boost:${boost.id}`);
       list.push({
-        id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Priority Visibility Boost",
-        subtitle: `${boost.productName} is eligible for priority boost promotion.`,
+        id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Boost Again?",
+        subtitle: boost.priceBefore && boost.priceAfter
+          ? `${boost.productName} went from ₱${Number(boost.priceBefore).toFixed(2)} to ₱${Number(boost.priceAfter).toFixed(2)}. Post the new price.`
+          : `${boost.productName} has a new price. Post it on the Agrivive Facebook Page.`,
         timestamp: formatRelativeTime(date), rawDate: date, read: isRead, urgent: false, iconType: "megaphone",
         primaryAction: {
-          label: "Preview Post",
+          label: "Boost Again",
           onPress: () => {
             markedReadIds.add(`boost:${boost.id}`);
             void markSellerBoostPromptRead(boost.id);
-            router.push({ pathname: "/(app)/boost/[productId]", params: { productId: boost.productId, promptId: boost.id } });
+            router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: boost.productId, promptId: boost.id } });
           },
         },
       });

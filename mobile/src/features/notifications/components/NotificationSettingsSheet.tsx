@@ -15,7 +15,7 @@ interface Props {
 
 const rows: { key: keyof SellerNotificationSettings; label: string; hint: string }[] = [
   { key: "stockPrice", label: "Stock and Price", hint: "Running low, sold out, price lowered" },
-  { key: "boost", label: "Boost", hint: "Boost posted or not posted" },
+  { key: "boost", label: "Boost", hint: "Boost started and posts that did not go out" },
   { key: "account", label: "Account", hint: "Warnings and limits on your account" },
   { key: "nightMode", label: "Night Mode (9 PM – 6 AM)", hint: "Messages and reminders arrive quietly at night" },
 ];
