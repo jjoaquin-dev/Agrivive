@@ -85,7 +85,6 @@ function MarketplaceBrowserContent() {
     hasLocation,
     Boolean(filters.productType),
     Boolean(filters.unit),
-    Boolean(filters.sellerType),
     Boolean(filters.minPrice || filters.maxPrice),
     Boolean(filters.minQuantity || filters.maxQuantity),
   ].filter(Boolean).length;

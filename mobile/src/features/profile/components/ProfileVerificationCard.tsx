@@ -5,7 +5,6 @@ import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface ProfileVerificationCardProps {
   isVerified: boolean;
-  sellerType: string;
   verifiedSince: string;
   isActive: boolean;
   onRequestReview: () => void;
@@ -13,7 +12,6 @@ interface ProfileVerificationCardProps {
 
 export const ProfileVerificationCard: React.FC<ProfileVerificationCardProps> = ({
   isVerified,
-  sellerType,
   verifiedSince,
   isActive,
   onRequestReview,
@@ -47,12 +45,6 @@ export const ProfileVerificationCard: React.FC<ProfileVerificationCardProps> = (
 
       {/* Field Rows */}
       <View style={styles.row}>
-        <Text style={styles.label}>Classification</Text>
-        <Text style={styles.value}>{`${sellerType.charAt(0).toUpperCase() + sellerType.slice(1)}-Vendor`}</Text>
-      </View>
-      <View style={styles.divider} />
-
-      <View style={styles.row}>
         <Text style={styles.label}>Verified Since</Text>
         <Text style={styles.value}>{verifiedSince}</Text>
       </View>
@@ -65,17 +57,13 @@ export const ProfileVerificationCard: React.FC<ProfileVerificationCardProps> = (
         </Text>
       </View>
 
-      <Text style={styles.footerNote}>
-        Your seller classification was approved during account verification and cannot be changed directly.
-      </Text>
-
       <Pressable
         onPress={onRequestReview}
         accessibilityRole="button"
-        accessibilityLabel="Request classification review"
+        accessibilityLabel="Request trust review"
         style={styles.reviewLink}
       >
-        <Text style={styles.reviewLinkText}>Request Trust & Classification Review</Text>
+        <Text style={styles.reviewLinkText}>Request Trust Review</Text>
         <ArrowRight size={13} color="#16A34A" />
       </Pressable>
     </View>
@@ -173,13 +161,6 @@ const styles = StyleSheet.create({
   },
   inactiveStatus: {
     color: "#DC2626",
-  },
-  footerNote: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    lineHeight: 16,
-    color: "#94A3B8",
-    marginTop: spacing.sm,
   },
   reviewLink: {
     flexDirection: "row",

@@ -76201,7 +76201,6 @@ __export(exports_schema, {
   seller_scan_grace: () => seller_scan_grace,
   seller_social_campaign_posts: () => seller_social_campaign_posts,
   seller_social_campaigns: () => seller_social_campaigns,
-  seller_type_enum: () => seller_type_enum,
   seller_visibility_boosts: () => seller_visibility_boosts,
   sellers_product: () => sellers_product,
   sellers_profile: () => sellers_profile,
@@ -116378,11 +116377,6 @@ var twoFactor = pgTable("two_factor", {
   failedVerificationCount: integer2("failed_verification_count").default(0).notNull(),
   lockedUntil: timestamp("locked_until")
 }, (table) => [index("two_factor_user_id_idx").on(table.userId)]);
-var seller_type_enum = pgEnum2("seller_type", [
-  "supplier",
-  "supplier_vendor",
-  "retail_vendor"
-]);
 var sellers_profile = pgTable("sellers_profile", {
   id: uuid2("id").defaultRandom().primaryKey().notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -116391,7 +116385,6 @@ var sellers_profile = pgTable("sellers_profile", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
-  sellerType: seller_type_enum("seller_type").default("supplier").notNull(),
   pickupInstructions: text("pickup_instructions"),
   isCurrent: boolean4("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -116700,6 +116693,8 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
   readAt: timestamp("read_at", { withTimezone: true }),
+  followUpDueAt: timestamp("follow_up_due_at", { withTimezone: true }),
+  followUpAttempts: integer2("follow_up_attempts").default(0).notNull(),
   priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -116709,6 +116704,7 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
 ]);
@@ -135762,16 +135758,25 @@ var sellerNoticeDefs = {
   price_lowered: {
     title: "Price Lowered",
     plural: "Prices Lowered",
-    body: (p) => `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
+    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. ${p.waitHours ? `You can boost it again in ${p.waitHours} hours.` : "Tap to boost it again."}` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
     level: "silent",
     topic: "stock_price",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_started: {
+    title: "Boost Started",
+    plural: "Boosts Started",
+    body: (p) => p.willLowerPrice ? `${product(p)} was posted. In 6 hours we lower the price if it has not sold out.` : `${product(p)} was posted on the Agrivive Facebook Page.`,
+    level: "silent",
+    topic: "boost",
     category: "listings",
     target: "notifications"
   },
   boost_posted: {
     title: "Boost Posted",
     plural: "Boosts Posted",
-    body: (p) => `${product(p)} was posted to Facebook.`,
+    body: (p) => `${product(p)} was posted to the Agrivive pages.`,
     level: "silent",
     topic: "boost",
     category: "listings",
@@ -136102,7 +136107,6 @@ var sellerProfileModel = t.Object({
   latitude: t.Number({ minimum: -90, maximum: 90 }),
   longitude: t.Number({ minimum: -180, maximum: 180 }),
   phoneNumber: t.String({ minLength: 7, maxLength: 30, pattern: "\\S" }),
-  sellerType: t.Optional(t.UnionEnum(["supplier", "supplier_vendor", "retail_vendor"])),
   pickupInstructions: t.Optional(t.Nullable(t.String({ maxLength: 500 })))
 }, { additionalProperties: false });
 
@@ -136126,7 +136130,6 @@ async function createSellerProfile(userId, body) {
       latitude: body.latitude,
       longitude: body.longitude,
       phoneNumber,
-      sellerType: body.sellerType ?? "supplier",
       pickupInstructions: body.pickupInstructions?.trim() || null,
       userId
     }).returning();
@@ -136768,7 +136771,6 @@ function updateSellerProfile(sellerId, body) {
       ...body.latitude !== undefined ? { latitude: body.latitude } : {},
       ...body.longitude !== undefined ? { longitude: body.longitude } : {},
       ...phoneNumber !== undefined ? { phoneNumber } : {},
-      ...body.sellerType !== undefined ? { sellerType: body.sellerType } : {},
       ...pickupInstructions !== undefined ? { pickupInstructions: pickupInstructions || null } : {},
       updatedAt: new Date
     }).where(and(eq(sellers_profile.userId, sellerId), eq(sellers_profile.isCurrent, true))).returning();
@@ -139848,7 +139850,126 @@ var sellerVegetableCatalogRoute = new Elysia().use(sessionAuth).get("/vegetable-
   }
 }, { role: ["seller"], query: sellerVegetableCatalogQuery });
 
+// src/jobs/boost-webhook-target.ts
+function getBoostWebhookTarget() {
+  const webhookUrl = process.env.N8N_VISIBILITY_BOOST_WEBHOOK_URL?.trim();
+  const serviceToken = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
+  if (!webhookUrl || !serviceToken)
+    return null;
+  try {
+    const target = new URL(webhookUrl);
+    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname))
+      return null;
+    return { target, serviceToken };
+  } catch {
+    return null;
+  }
+}
+
+// src/jobs/deliver-seller-visibility-boosts.ts
+var maxAttempts = 5;
+var batchSize = 50;
+function retryDelay(attempt) {
+  return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
+}
+async function deliverSellerVisibilityBoosts() {
+  const webhook = getBoostWebhookTarget();
+  if (!webhook)
+    return { configured: false, queued: 0, sent: 0, failed: 0 };
+  const { target, serviceToken } = webhook;
+  const now = new Date;
+  const due = await db2.select({
+    id: seller_visibility_boosts.id,
+    reason: seller_visibility_boosts.reason,
+    retryCount: seller_visibility_boosts.retryCount
+  }).from(seller_visibility_boosts).where(and(or(eq(seller_visibility_boosts.status, "queued"), eq(seller_visibility_boosts.status, "sent")), lte(seller_visibility_boosts.nextAttemptAt, now), or(isNull2(seller_visibility_boosts.leaseUntil), lte(seller_visibility_boosts.leaseUntil, now)))).limit(batchSize);
+  let sent = 0;
+  let failed = 0;
+  for (const boost of due) {
+    const [claimed] = await db2.update(seller_visibility_boosts).set({
+      leaseUntil: new Date(now.getTime() + 15000)
+    }).where(and(eq(seller_visibility_boosts.id, boost.id), or(eq(seller_visibility_boosts.status, "queued"), eq(seller_visibility_boosts.status, "sent")), lte(seller_visibility_boosts.nextAttemptAt, now), or(isNull2(seller_visibility_boosts.leaseUntil), lte(seller_visibility_boosts.leaseUntil, now)))).returning({ id: seller_visibility_boosts.id });
+    if (!claimed)
+      continue;
+    try {
+      const response = await fetch(target, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ boostId: boost.id, reason: boost.reason }),
+        signal: AbortSignal.timeout(12000)
+      });
+      const attempt = boost.retryCount + 1;
+      if (!response.ok) {
+        const responseBody = await response.text().catch(() => "");
+        const exhausted = attempt >= maxAttempts;
+        console.error("Visibility boost webhook rejected", {
+          boostId: boost.id,
+          status: response.status,
+          response: responseBody.slice(0, 500)
+        });
+        await db2.update(seller_visibility_boosts).set({
+          status: exhausted ? "failed" : "queued",
+          retryCount: attempt,
+          leaseUntil: null,
+          nextAttemptAt: new Date(now.getTime() + retryDelay(attempt)),
+          lastError: `n8n visibility boost webhook returned HTTP ${response.status}`,
+          updatedAt: now
+        }).where(eq(seller_visibility_boosts.id, boost.id));
+        if (exhausted)
+          failed++;
+        continue;
+      }
+      await db2.update(seller_visibility_boosts).set({
+        status: "sent",
+        retryCount: attempt,
+        leaseUntil: null,
+        sentAt: now,
+        nextAttemptAt: new Date("2099-01-01T00:00:00.000Z"),
+        lastError: null,
+        updatedAt: now
+      }).where(eq(seller_visibility_boosts.id, boost.id));
+      sent++;
+    } catch (error) {
+      const attempt = boost.retryCount + 1;
+      const exhausted = attempt >= maxAttempts;
+      console.error("Visibility boost webhook delivery failed", { boostId: boost.id, error });
+      await db2.update(seller_visibility_boosts).set({
+        status: exhausted ? "failed" : "queued",
+        retryCount: attempt,
+        leaseUntil: null,
+        nextAttemptAt: new Date(now.getTime() + retryDelay(attempt)),
+        lastError: "n8n visibility boost webhook delivery failed",
+        updatedAt: now
+      }).where(eq(seller_visibility_boosts.id, boost.id));
+      if (exhausted)
+        failed++;
+    }
+  }
+  return { configured: true, queued: due.length, sent, failed };
+}
+
+// src/utils/boost-cooldown/index.ts
+var priceDropPostGapHours = 3;
+async function getPriceDropPostCooldownEnd(executor, productId, before) {
+  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "second_post"), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+  if (!last)
+    return null;
+  const end = new Date(last.postedAt.getTime() + priceDropPostGapHours * 3600000);
+  return end.getTime() > Date.now() ? end : null;
+}
+
 // src/modules/seller/services/seller.visibility-boost.queue.ts
+async function requirePriceDropGap(tx, productId) {
+  const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
+  if (!waitUntil)
+    return;
+  const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
+  throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+}
 async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial", promptId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
@@ -139868,6 +139989,8 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
       const [prompt] = await tx.select().from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId), eq(seller_visibility_boosts.status, "prompt"))).for("update").limit(1);
       if (!prompt)
         throw new OrderError(404, "Boost prompt not found");
+      if (prompt.reason === "price_reduction")
+        await requirePriceDropGap(tx, productId);
       const [queued] = await tx.update(seller_visibility_boosts).set({
         status: "queued",
         readAt: now,
@@ -139883,6 +140006,8 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
     const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
     const boostKey = currentPeriod === 0 ? `${cycle.id}:initial` : `${cycle.id}:reduction:${currentPeriod}`;
     const boostReason = currentPeriod === 0 ? "initial" : "price_reduction";
+    if (boostReason === "price_reduction")
+      await requirePriceDropGap(tx, productId);
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
       productId,
@@ -140155,7 +140280,9 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
   }
 }, { role: ["seller"], params }).post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
   try {
-    return await queueSellerVisibilityBoost(session.userId, routeParams.id);
+    const queued = await queueSellerVisibilityBoost(session.userId, routeParams.id);
+    deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
+    return queued;
   } catch (error) {
     return failure2(error, status);
   }
@@ -141345,7 +141472,6 @@ async function listBuyerWishlist(buyerId) {
     sellerId: sellers_profile.userId,
     sellerName: user.name,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -141368,7 +141494,6 @@ async function listBuyerWishlist(buyerId) {
       id: row.sellerId,
       name: row.sellerName,
       shopName: row.shopName,
-      sellerType: row.sellerType,
       detailAddress: row.detailAddress,
       pickupInstructions: row.pickupInstructions,
       latitude: row.latitude,
@@ -141807,17 +141932,11 @@ var marketplaceUnit = t.Union([
   t.Literal("kilo"),
   t.Literal("pile")
 ]);
-var marketplaceSellerType = t.Union([
-  t.Literal("supplier"),
-  t.Literal("supplier_vendor"),
-  t.Literal("retail_vendor")
-]);
 var marketplaceProductsQuery = t.Object({
   sellerId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
   search: t.Optional(t.String({ maxLength: 120 })),
   productType: t.Optional(marketplaceProductType),
   unit: t.Optional(marketplaceUnit),
-  sellerType: t.Optional(marketplaceSellerType),
   minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
@@ -142004,7 +142123,6 @@ async function getMarketplaceProduct(productId) {
       name: detail.user.name,
       image: await getAvatarDisplayUrl(detail.user.image),
       shopName: profile.shopName,
-      sellerType: profile.sellerType,
       detailAddress: profile.detailAddress,
       pickupInstructions: profile.pickupInstructions,
       latitude: profile.latitude,
@@ -142021,7 +142139,6 @@ async function getMarketplaceSeller(sellerId) {
     id: sellers_profile.userId,
     image: user.image,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -142160,7 +142277,6 @@ function serializeProduct(row, imageUrl, distanceKm, rating, policyVersion, calc
       id: row.sellerId,
       name: row.sellerName,
       shopName: row.shopName,
-      sellerType: row.sellerType,
       detailAddress: row.detailAddress,
       pickupInstructions: row.pickupInstructions,
       latitude: row.latitude,
@@ -142198,8 +142314,6 @@ async function listMarketplaceProducts(query) {
     conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit)
     conditions.push(eq(sellers_product.scalingType, query.unit));
-  if (query.sellerType)
-    conditions.push(eq(sellers_profile.sellerType, query.sellerType));
   if (query.minPrice !== undefined)
     conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
   if (query.maxPrice !== undefined)
@@ -142236,7 +142350,6 @@ async function listMarketplaceProducts(query) {
     sellerId: sellers_profile.userId,
     sellerName: user.name,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -142347,7 +142460,6 @@ var marketplaceSellersMapQuery = t.Object({
   search: t.Optional(t.String({ maxLength: 120 })),
   productType: t.Optional(marketplaceProductType),
   unit: t.Optional(marketplaceUnit),
-  sellerType: t.Optional(marketplaceSellerType),
   minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999.99 })),
   minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99999999 })),
@@ -142388,8 +142500,6 @@ function matchingProductConditions(query) {
     conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit)
     conditions.push(eq(sellers_product.scalingType, query.unit));
-  if (query.sellerType)
-    conditions.push(eq(sellers_profile.sellerType, query.sellerType));
   if (query.minPrice !== undefined)
     conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
   if (query.maxPrice !== undefined)
@@ -142421,7 +142531,6 @@ async function listMarketplaceSellersMap(query) {
     name: user.name,
     image: user.image,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -142430,7 +142539,7 @@ async function listMarketplaceSellersMap(query) {
     productCount: count(sellers_product.id).as("product_count"),
     rating: sellerRatings.averageRating,
     reviewCount: sellerRatings.reviewCount
-  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.sellerType, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude, sellerRatings.averageRating, sellerRatings.reviewCount).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
+  }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).leftJoin(sellerRatings, eq(sellerRatings.sellerId, user.id)).where(and(...mappedConditions)).groupBy(user.id, user.name, user.image, sellers_profile.shopName, sellers_profile.detailAddress, sellers_profile.pickupInstructions, sellers_profile.latitude, sellers_profile.longitude, sellerRatings.averageRating, sellerRatings.reviewCount).orderBy(distanceKm ? asc(distanceKm) : asc(sellers_profile.shopName));
   const unmappedRows = await db2.select({
     count: sql3`count(distinct ${sellers_profile.userId})::int`
   }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).leftJoin(vegetable_catalog, eq(vegetable_catalog.id, sellers_product.vegetableCatalogId)).where(and(...conditions, or(isNull2(sellers_profile.latitude), isNull2(sellers_profile.longitude))));
@@ -142443,7 +142552,6 @@ async function listMarketplaceSellersMap(query) {
     name: row.name,
     image: await getAvatarDisplayUrl(row.image),
     shopName: row.shopName,
-    sellerType: row.sellerType,
     detailAddress: row.detailAddress,
     pickupInstructions: row.pickupInstructions,
     latitude: row.latitude,
@@ -143125,8 +143233,16 @@ var integrationsSocialPublishRoute = new Elysia().get("/integrations/social-camp
   headers: t.Object({ authorization: t.Optional(t.String()) })
 });
 
-// src/modules/integrations/index/integrations.visibility-boost.ts
+// src/modules/integrations/services/integrations.visibility-boost.authorize.ts
 import { timingSafeEqual as timingSafeEqual5 } from "crypto";
+function isVisibilityBoostAuthorized(authorization) {
+  const expected = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
+  if (!expected || !authorization?.startsWith("Bearer "))
+    return false;
+  const provided = Buffer.from(authorization.slice(7).trim());
+  const expectedBytes = Buffer.from(expected);
+  return provided.length > 0 && provided.length === expectedBytes.length && timingSafeEqual5(provided, expectedBytes);
+}
 
 // src/modules/integrations/services/integrations.visibility-boost.context.ts
 function publicUrl(base, path) {
@@ -143159,7 +143275,8 @@ async function getVisibilityBoostContext(boostId) {
     sellerVerified: user.emailVerified,
     sellerRoles: user.role,
     shopName: sellers_profile.shopName,
-    listingCycleId: seller_visibility_boosts.listingCycleId
+    listingCycleId: seller_visibility_boosts.listingCycleId,
+    priceBefore: seller_visibility_boosts.priceBefore
   }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, seller_visibility_boosts.sellerId), eq(sellers_profile.isCurrent, true))).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!row)
     throw new OrderError(404, "Visibility boost not found");
@@ -143176,6 +143293,7 @@ async function getVisibilityBoostContext(boostId) {
   return {
     boostId: row.boostId,
     reason: row.reason,
+    previousPrice: row.priceBefore ? Number(row.priceBefore) : null,
     product: {
       id: row.productId,
       name: row.productName,
@@ -143195,16 +143313,8 @@ async function getVisibilityBoostContext(boostId) {
 }
 
 // src/modules/integrations/index/integrations.visibility-boost.ts
-function isAuthorized(authorization) {
-  const expected = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
-  if (!expected || !authorization?.startsWith("Bearer "))
-    return false;
-  const provided = Buffer.from(authorization.slice(7).trim());
-  const expectedBytes = Buffer.from(expected);
-  return provided.length > 0 && provided.length === expectedBytes.length && timingSafeEqual5(provided, expectedBytes);
-}
 var integrationsVisibilityBoostRoute = new Elysia().get("/integrations/visibility-boosts/:id/context", async ({ headers, params, status }) => {
-  if (!isAuthorized(headers.authorization))
+  if (!isVisibilityBoostAuthorized(headers.authorization))
     return status(401, { message: "Visibility boost authentication required" });
   try {
     return await getVisibilityBoostContext(params.id);
@@ -143218,6 +143328,347 @@ var integrationsVisibilityBoostRoute = new Elysia().get("/integrations/visibilit
   params: t.Object({ id: t.String({ format: "uuid" }) }),
   headers: t.Object({ authorization: t.Optional(t.String()) })
 });
+
+// src/modules/integrations/model/integrations.visibility-boost.ts
+var visibilityBoostParams = t.Object({ id: t.String({ format: "uuid" }) });
+var visibilityBoostHeaders = t.Object({ authorization: t.Optional(t.String()) });
+var visibilityBoostFacebookPostBody = t.Object({
+  postType: t.Union([t.Literal("first_post"), t.Literal("second_post")]),
+  caption: t.String({ minLength: 1, maxLength: 2000 })
+});
+
+// src/modules/integrations/services/integrations.visibility-boost.post-claim.ts
+var stillSendingMs = 5 * 60000;
+async function claimFacebookPost(input) {
+  return db2.transaction(async (tx) => {
+    await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${`fb-post:${input.productId}:${input.postType}`}))`);
+    const rows = await tx.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, input.productId), eq(fb_post_logs.postType, input.postType), inArray(fb_post_logs.status, ["success", "pending"]), gte(fb_post_logs.postedAt, input.since))).orderBy(desc(fb_post_logs.postedAt));
+    const saved = rows.find((row) => row.status === "success");
+    if (saved)
+      return { saved, logId: null };
+    const pending = rows[0];
+    if (pending) {
+      const sending = Date.now() - pending.postedAt.getTime() < stillSendingMs;
+      throw new OrderError(409, sending ? "This post is still being sent" : "An earlier try may have reached Facebook. Check the Page before trying again");
+    }
+    const [log] = await tx.insert(fb_post_logs).values({
+      productId: input.productId,
+      postType: input.postType,
+      price: input.price,
+      status: "pending"
+    }).returning({ id: fb_post_logs.id });
+    return { saved: null, logId: log.id };
+  });
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.post-finish.ts
+async function finishFacebookPost(logId, result) {
+  const [log] = await db2.update(fb_post_logs).set({
+    status: result.status,
+    facebookPostId: result.status === "success" ? result.facebookPostId : null,
+    postedAt: new Date
+  }).where(eq(fb_post_logs.id, logId)).returning();
+  return log;
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.schedule.ts
+var followUpDelayMs = 6 * 3600000;
+async function scheduleBoostFollowUp(boostId, firstPostAt) {
+  try {
+    const [row] = await db2.select({
+      reason: seller_visibility_boosts.reason,
+      percent: sellers_product.priceReductionPercent,
+      minimumPrice: sellers_product.minimumPrice
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!row || row.reason !== "initial" || Number(row.percent ?? 0) <= 0 || row.minimumPrice === null)
+      return;
+    await db2.update(seller_visibility_boosts).set({
+      followUpDueAt: new Date(firstPostAt.getTime() + followUpDelayMs)
+    }).where(and(eq(seller_visibility_boosts.id, boostId), isNull2(seller_visibility_boosts.followUpDueAt), sql3`${seller_visibility_boosts.followUpAttempts} = 0`));
+  } catch (error) {
+    console.error("Boost follow-up schedule failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.finish.ts
+async function finishBoostFollowUp(boostId) {
+  try {
+    await db2.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boostId));
+  } catch (error) {
+    console.error("Boost follow-up finish failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.notify-price-lowered.ts
+async function notifyBoostPriceLowered(boostId) {
+  try {
+    const [boost] = await db2.select().from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!boost)
+      return;
+    const [product] = await db2.select({
+      name: sellers_product.productName,
+      price: sellers_product.productPrice,
+      periods: sellers_product.priceReductionPeriodsApplied
+    }).from(sellers_product).where(eq(sellers_product.id, boost.productId)).limit(1);
+    const [firstPost] = await db2.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, "first_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    if (!product?.price || !firstPost || product.periods < 1 || Number(product.price) >= Number(firstPost.price))
+      return;
+    await db2.transaction(async (tx) => {
+      await tx.insert(seller_visibility_boosts).values({
+        listingCycleId: boost.listingCycleId,
+        productId: boost.productId,
+        sellerId: boost.sellerId,
+        reason: "price_reduction",
+        reductionPeriod: product.periods,
+        boostKey: `${boost.listingCycleId}:reduction:${product.periods}`,
+        status: "prompt",
+        nextAttemptAt: new Date,
+        priceBefore: firstPost.price,
+        priceAfter: product.price
+      }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey });
+      await createSellerNotification(tx, {
+        sellerId: boost.sellerId,
+        kind: "price_lowered",
+        dedupeKey: `price-lowered:${boost.productId}:${product.periods}`,
+        productId: boost.productId,
+        payload: { productName: product.name, priceBefore: firstPost.price, priceAfter: product.price, waitHours: priceDropPostGapHours }
+      });
+    });
+  } catch (error) {
+    console.error("Price lowered notification failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.notify-started.ts
+async function notifyBoostStarted(boostId) {
+  try {
+    const [row] = await db2.select({
+      sellerId: seller_visibility_boosts.sellerId,
+      productId: seller_visibility_boosts.productId,
+      productName: sellers_product.productName,
+      percent: sellers_product.priceReductionPercent,
+      minimumPrice: sellers_product.minimumPrice
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!row)
+      return;
+    await db2.transaction((tx) => createSellerNotification(tx, {
+      sellerId: row.sellerId,
+      kind: "boost_started",
+      dedupeKey: `boost-started:${boostId}`,
+      productId: row.productId,
+      payload: {
+        productName: row.productName,
+        willLowerPrice: Number(row.percent ?? 0) > 0 && row.minimumPrice !== null
+      }
+    }));
+  } catch (error) {
+    console.error("Boost started notification failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.facebook-post.ts
+function mentionsPrice(caption, price) {
+  return [price, String(Number(price))].some((form) => new RegExp(`\u20B1\\s?${form.replace(".", "\\.")}(?!\\d|\\.\\d)`).test(caption));
+}
+function templateCaption(context, postType, price, previous) {
+  const per = context.product.unit ? ` per ${context.product.unit}` : "";
+  if (postType === "first_post") {
+    return `Fresh ${context.product.name} is now available at \u20B1${price}${per} from ${context.seller.shopName}!`;
+  }
+  const was = previous ? ` (was \u20B1${previous.toFixed(2)})` : "";
+  if (context.reason === "price_reduction") {
+    return `Still available: ${context.product.name} at \u20B1${price}${per}${was} from ${context.seller.shopName}. Order before it sells out!`;
+  }
+  return `Price drop! ${context.product.name} is now \u20B1${price}${per}${was} at ${context.seller.shopName}. Get yours before it sells out!`;
+}
+async function postVisibilityBoostToFacebook(boostId, body) {
+  const context = await getVisibilityBoostContext(boostId);
+  if (context.reason === "price_reduction" && body.postType !== "second_post") {
+    throw new OrderError(400, "A price drop boost can only make the second post");
+  }
+  const productId = context.product.id;
+  const [boost] = await db2.select({ createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+  if (!boost)
+    throw new OrderError(404, "Visibility boost not found");
+  const findPosted = async (postType) => {
+    const [row] = await db2.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    return row;
+  };
+  if (context.reason === "price_reduction") {
+    const waitUntil = await getPriceDropPostCooldownEnd(db2, productId, boost.createdAt);
+    if (waitUntil) {
+      throw new OrderError(409, `A price drop post went out less than ${priceDropPostGapHours} hours ago`);
+    }
+  }
+  let previous = null;
+  if (body.postType === "second_post") {
+    if (context.reason === "initial") {
+      const first = await findPosted("first_post");
+      if (!first)
+        throw new OrderError(409, "The first post has not been published yet");
+      previous = Number(first.price);
+    } else {
+      previous = context.previousPrice;
+    }
+  }
+  const price = context.product.price.toFixed(2);
+  const written = body.caption.replace(/https?:\/\/\S+/g, "").replace(/[ \t]+\n/g, `
+`).trim();
+  const text = written && mentionsPrice(written, price) ? written : templateCaption(context, body.postType, price, previous);
+  const campaign = body.postType === "first_post" ? "boost" : "price_drop";
+  const caption = `${text}
+
+Order here: ${context.product.listingUrl}` + `?utm_source=facebook&utm_medium=social&utm_campaign=${campaign}`;
+  const claim = await claimFacebookPost({ productId, postType: body.postType, price, since: boost.createdAt });
+  if (claim.saved) {
+    if (body.postType === "first_post")
+      await scheduleBoostFollowUp(boostId, claim.saved.postedAt);
+    return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: claim.saved.facebookPostId };
+  }
+  let result;
+  try {
+    result = await publishFacebookPagePhoto(context.product.imageUrl, caption);
+  } catch (error) {
+    await finishFacebookPost(claim.logId, { status: "failed" }).catch((logError) => console.error("Failed to store facebook post log", logError));
+    if (error instanceof OrderError)
+      throw error;
+    throw new OrderError(502, "Facebook could not publish this post");
+  }
+  const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId });
+  if (context.reason === "initial") {
+    if (body.postType === "first_post") {
+      await scheduleBoostFollowUp(boostId, log.postedAt);
+      await notifyBoostStarted(boostId);
+    } else {
+      await finishBoostFollowUp(boostId);
+      await notifyBoostPriceLowered(boostId);
+    }
+  }
+  return {
+    posted: true,
+    alreadyPosted: false,
+    postType: body.postType,
+    facebookPostId: result.postId,
+    postUrl: result.postUrl
+  };
+}
+
+// src/modules/integrations/index/integrations.visibility-boost.facebook-post.ts
+var integrationsVisibilityBoostFacebookPostRoute = new Elysia().post("/integrations/visibility-boosts/:id/facebook-post", async ({ body, headers, params, status }) => {
+  if (!isVisibilityBoostAuthorized(headers.authorization)) {
+    return status(401, { message: "Visibility boost authentication required" });
+  }
+  try {
+    return await postVisibilityBoostToFacebook(params.id, body);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error("Visibility boost Facebook post failed", error);
+    return status(500, { message: "Could not publish the Facebook post" });
+  }
+}, { params: visibilityBoostParams, headers: visibilityBoostHeaders, body: visibilityBoostFacebookPostBody });
+
+// src/modules/seller/services/seller.product.price-reduction.followup.ts
+function cents2(value) {
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
+  if (!match)
+    throw new Error("Invalid price amount");
+  return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+}
+function decimal5(value) {
+  return `${value / 100n}.${(value % 100n).toString().padStart(2, "0")}`;
+}
+async function applySellerPromotionPriceReduction(tx, productId, now = new Date) {
+  const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
+  if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 || !current.productPrice || !current.minimumPrice || Number(current.priceReductionPercent ?? 0) <= 0)
+    return null;
+  const currentCents = cents2(current.productPrice);
+  const floor = cents2(current.minimumPrice);
+  if (currentCents <= floor)
+    return null;
+  const basisPoints = BigInt(Math.round(Number(current.priceReductionPercent) * 100));
+  const reducedCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
+  const nextCents = reducedCents < floor ? floor : reducedCents;
+  if (nextCents >= currentCents)
+    return null;
+  const [updated] = await tx.update(sellers_product).set({
+    productPrice: decimal5(nextCents),
+    priceReductionPeriodsApplied: current.priceReductionPeriodsApplied + 1,
+    updatedAt: now
+  }).where(eq(sellers_product.id, productId)).returning({
+    productPrice: sellers_product.productPrice
+  });
+  if (updated && updated.productPrice && current.productPrice) {
+    await queueSellerListingEvent(tx, productId, "price_drop", {
+      oldPrice: current.productPrice,
+      newPrice: updated.productPrice
+    });
+  }
+  return updated ? { before: current.productPrice, after: updated.productPrice } : null;
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.reduce-price.ts
+async function reduceVisibilityBoostPrice(boostId) {
+  const context = await getVisibilityBoostContext(boostId);
+  if (context.reason !== "initial")
+    throw new OrderError(409, "Only the first boost lowers the price");
+  const productId = context.product.id;
+  const result = await db2.transaction(async (tx) => {
+    const [boost] = await tx.select({ createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!boost)
+      throw new OrderError(404, "Visibility boost not found");
+    const [product] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
+    if (!product)
+      throw new OrderError(404, "Product not found");
+    const [firstPost] = await tx.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "first_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+    if (!firstPost)
+      throw new OrderError(409, "The first post has not been published yet");
+    const currentPrice = product.productPrice ?? "0.00";
+    const base = {
+      productId,
+      productName: product.productName,
+      discountPercent: Number(product.priceReductionPercent ?? 0)
+    };
+    const unchanged = (reason) => ({
+      ...base,
+      reduced: false,
+      reason,
+      originalPrice: currentPrice,
+      newPrice: currentPrice
+    });
+    if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0) {
+      return unchanged("unavailable");
+    }
+    if (Number(currentPrice) < Number(firstPost.price)) {
+      return { ...base, reduced: true, originalPrice: firstPost.price, newPrice: currentPrice };
+    }
+    if (Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice) {
+      return unchanged("not_enabled");
+    }
+    const result = await applySellerPromotionPriceReduction(tx, productId);
+    if (!result)
+      return unchanged("at_floor");
+    return { ...base, reduced: true, originalPrice: result.before, newPrice: result.after };
+  });
+  if (!result.reduced)
+    await finishBoostFollowUp(boostId);
+  return result;
+}
+
+// src/modules/integrations/index/integrations.visibility-boost.reduce-price.ts
+var integrationsVisibilityBoostReducePriceRoute = new Elysia().post("/integrations/visibility-boosts/:id/reduce-price", async ({ headers, params, status }) => {
+  if (!isVisibilityBoostAuthorized(headers.authorization)) {
+    return status(401, { message: "Visibility boost authentication required" });
+  }
+  try {
+    return await reduceVisibilityBoostPrice(params.id);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error("Visibility boost price reduction failed", error);
+    return status(500, { message: "Could not apply the price reduction" });
+  }
+}, { params: visibilityBoostParams, headers: visibilityBoostHeaders });
 
 // src/modules/conversations/services/conversation.error.ts
 class ConversationError extends Error {
@@ -144088,7 +144539,7 @@ function sellerAlertContent(payload, itemCount, referenceId) {
 // src/jobs/deliver-push-notifications.ts
 var batchLimit = 50;
 var deviceBatchSize = 500;
-var maxAttempts = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
+var maxAttempts2 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
 function notificationContent(job) {
   const payload = job.payload ?? {};
   if (job.type === "seller_alert")
@@ -144138,7 +144589,7 @@ function notificationContent(job) {
     channel: payload.channel === "updates" ? "updates" : "orders"
   };
 }
-function retryDelay(attempt) {
+function retryDelay2(attempt) {
   return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
 }
 async function claimJobs() {
@@ -144174,13 +144625,13 @@ async function finishJob(job, status, message) {
 }
 async function rescheduleJob(job, message) {
   const now = new Date;
-  if (job.attemptCount >= maxAttempts()) {
+  if (job.attemptCount >= maxAttempts2()) {
     await finishJob(job, "failed", message);
     return;
   }
   await db2.update(notification_outbox).set({
     status: "pending",
-    availableAt: new Date(now.getTime() + retryDelay(job.attemptCount)),
+    availableAt: new Date(now.getTime() + retryDelay2(job.attemptCount)),
     lockedAt: null,
     lastError: message,
     updatedAt: now
@@ -144262,7 +144713,7 @@ var configuredWebOrigins = (process.env.WEB_TRUSTED_ORIGINS ?? "").split(",").ma
 var localWebOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$/;
 var webCorsOrigin = configuredWebOrigins.length ? isDev ? [...configuredWebOrigins, localWebOrigin] : configuredWebOrigins : localWebOrigin;
 var openapiPlugin = isDev ? index_default() : new Elysia({ name: "noop-openapi" });
-var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
+var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors({ origin: webCorsOrigin, credentials: true })).use(openapiPlugin).mount(auth.handler).use(authPasswordRoute).use(authRoleRegisterRoute).use(buyerRoute).use(sellerRoute2).use(adminRoute).use(marketplaceRoute).use(stakeholderRoute).use(conversationsRoute).use(notificationsRoute).use(trustRoute).use(integrationsRoute).use(integrationsSocialProductImageRoute).use(integrationsSocialPublishRoute).use(integrationsVisibilityBoostRoute).use(integrationsVisibilityBoostFacebookPostRoute).use(integrationsVisibilityBoostReducePriceRoute).get("/", () => "Hello Elysia").get("/health", () => ({ status: "ok" })).get("/health/ready", async ({ status }) => {
   try {
     await db2.execute(sql3`select 1`);
     return { status: "ready" };

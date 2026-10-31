@@ -10,14 +10,12 @@ export type MarketplaceProductType =
   | "Seed Vegetables";
 
 export type MarketplaceUnit = "sack" | "kilo" | "pile";
-export type MarketplaceSellerType = "supplier" | "supplier_vendor" | "retail_vendor";
 
 export type MarketplaceSeller = {
   id: string;
   name: string;
   image?: string | null;
   shopName: string;
-  sellerType: MarketplaceSellerType;
   detailAddress: string;
   pickupInstructions: string | null;
   latitude: number | null;
@@ -30,7 +28,6 @@ export type MarketplaceSellerMapResult = {
   name: string;
   image: string | null;
   shopName: string;
-  sellerType: MarketplaceSellerType;
   detailAddress: string;
   pickupInstructions: string | null;
   latitude: number;
@@ -48,7 +45,7 @@ export type MarketplaceSellerMapResponse = {
 
 export type MarketplaceSellerProfile = Pick<
   MarketplaceSeller,
-  "id" | "shopName" | "sellerType" | "detailAddress" | "pickupInstructions" | "latitude" | "longitude"
+  "id" | "shopName" | "detailAddress" | "pickupInstructions" | "latitude" | "longitude"
 > & {
   image: string | null;
 };

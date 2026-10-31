@@ -18,18 +18,11 @@ export const marketplaceUnit = t.Union([
   t.Literal("pile"),
 ]);
 
-export const marketplaceSellerType = t.Union([
-  t.Literal("supplier"),
-  t.Literal("supplier_vendor"),
-  t.Literal("retail_vendor"),
-]);
-
 export const marketplaceProductsQuery = t.Object({
   sellerId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
   search: t.Optional(t.String({ maxLength: 120 })),
   productType: t.Optional(marketplaceProductType),
   unit: t.Optional(marketplaceUnit),
-  sellerType: t.Optional(marketplaceSellerType),
   minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99_999_999.99 })),
   maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99_999_999.99 })),
   minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99_999_999 })),

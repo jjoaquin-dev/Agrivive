@@ -1,7 +1,6 @@
 import { t } from "elysia";
 import {
   marketplaceProductType,
-  marketplaceSellerType,
   marketplaceUnit,
 } from "./marketplace.products";
 
@@ -9,7 +8,6 @@ export const marketplaceSellersMapQuery = t.Object({
   search: t.Optional(t.String({ maxLength: 120 })),
   productType: t.Optional(marketplaceProductType),
   unit: t.Optional(marketplaceUnit),
-  sellerType: t.Optional(marketplaceSellerType),
   minPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99_999_999.99 })),
   maxPrice: t.Optional(t.Numeric({ minimum: 0, maximum: 99_999_999.99 })),
   minQuantity: t.Optional(t.Numeric({ minimum: 0, maximum: 99_999_999 })),

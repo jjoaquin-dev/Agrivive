@@ -41,7 +41,6 @@ function matchingProductConditions(query: MarketplaceSellersMapQuery) {
   }
   if (query.productType) conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit) conditions.push(eq(sellers_product.scalingType, query.unit));
-  if (query.sellerType) conditions.push(eq(sellers_profile.sellerType, query.sellerType));
   if (query.minPrice !== undefined) conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
   if (query.maxPrice !== undefined) conditions.push(lte(sellers_product.productPrice, query.maxPrice.toString()));
   if (query.minQuantity !== undefined) conditions.push(gte(sellers_product.productQty, query.minQuantity.toString()));
@@ -78,7 +77,6 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
     name: user.name,
     image: user.image,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,
@@ -98,7 +96,6 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
       user.name,
       user.image,
       sellers_profile.shopName,
-      sellers_profile.sellerType,
       sellers_profile.detailAddress,
       sellers_profile.pickupInstructions,
       sellers_profile.latitude,
@@ -127,7 +124,6 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
         name: row.name,
         image: await getAvatarDisplayUrl(row.image),
         shopName: row.shopName,
-        sellerType: row.sellerType,
         detailAddress: row.detailAddress,
         pickupInstructions: row.pickupInstructions,
         latitude: row.latitude,

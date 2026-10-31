@@ -95,7 +95,7 @@ function serializeProduct(row: any, imageUrl: string | null, distanceKm: number 
     reviewCount: rating.count,
     seller: {
       id: row.sellerId, name: row.sellerName, shopName: row.shopName,
-      sellerType: row.sellerType, detailAddress: row.detailAddress,
+      detailAddress: row.detailAddress,
       pickupInstructions: row.pickupInstructions, latitude: row.latitude,
       longitude: row.longitude, distanceKm,
     },
@@ -129,7 +129,6 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   }
   if (query.productType) conditions.push(eq(sellers_product.productType, query.productType));
   if (query.unit) conditions.push(eq(sellers_product.scalingType, query.unit));
-  if (query.sellerType) conditions.push(eq(sellers_profile.sellerType, query.sellerType));
   if (query.minPrice !== undefined) conditions.push(gte(sellers_product.productPrice, query.minPrice.toString()));
   if (query.maxPrice !== undefined) conditions.push(lte(sellers_product.productPrice, query.maxPrice.toString()));
   if (query.minQuantity !== undefined) conditions.push(gte(sellers_product.productQty, query.minQuantity.toString()));
@@ -153,7 +152,7 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
       where ${order_reviews.sellerId} = ${sellers_product.userId}
     ), 0.5)` : sql<number>`0.5`,
     sellerId: sellers_profile.userId, sellerName: user.name, shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType, detailAddress: sellers_profile.detailAddress,
+    detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions, latitude: sellers_profile.latitude,
     longitude: sellers_profile.longitude, distanceKm: distanceKm ?? sql<null>`null`,
   }).from(sellers_product).innerJoin(user, eq(user.id, sellers_product.userId))

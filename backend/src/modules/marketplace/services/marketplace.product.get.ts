@@ -94,7 +94,6 @@ export async function getMarketplaceProduct(productId: string) {
       name: detail.user.name,
       image: await getAvatarDisplayUrl(detail.user.image),
       shopName: profile.shopName,
-      sellerType: profile.sellerType,
       detailAddress: profile.detailAddress,
       pickupInstructions: profile.pickupInstructions,
       latitude: profile.latitude,

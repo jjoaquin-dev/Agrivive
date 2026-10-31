@@ -15,15 +15,17 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Boost review hardening: the 6-hour wait now lives in our database and the worker fires it (n8n has no Wait node), each Facebook post saves a `pending` row first so a crash cannot cause a double post, and a boost again after a price drop uses reminder wording and waits 3 hours. Details: [[2026-10-31 Boost Review Hardening]]. It builds on [[2026-10-31 Boost Straight to n8n With 6-Hour Price Cut]].
+Seller type removed from the database, backend, mobile and web, which also fixed the `/seller/notifications` 500 on the dev database (the column was gone but the code still read it). Details and the required production order: [[2026-10-31 Remove Seller Type]].
 
-Validation: backend and mobile typechecks, drizzle check, scratch builds. `dist/` not rebuilt. Not tested against n8n, Groq or Meta.
+Validation: backend typecheck, drizzle check and both builds; mobile typecheck; web typecheck and build. Not checked in a browser or on a device.
+
+Earlier the same day: [[2026-10-31 Mobile Data Freshness]], [[2026-10-31 Seller Notifications]].
 
 ## Current project status
 
 - Branch `development`; last commit `a058dc3`. Web landing and splash work is **uncommitted**.
 - Buyer website (`web/`) landing page is refined but not yet visually verified in a browser.
-- Backend and mobile Boost and notification changes after commit `9b69cea` are **uncommitted**. Migrations `20261031120000_seller_notifications` and `20261031140000_boost_follow_up` are **not applied**. Posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
+- Backend and mobile Boost and notification changes after commit `9b69cea` are **uncommitted**. Migrations `20261031120000_seller_notifications`, `20261031130000_remove_seller_type` (applied on dev only) and `20261031140000_boost_follow_up` are **not applied to production**. Production order: notifications before the deploy, remove_seller_type after it (see [[2026-10-31 Remove Seller Type]]). Posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
 
 ## Active architectural decisions
 
@@ -71,5 +73,5 @@ Open the buyer site in a browser (`bun run dev` in `web/`, port 3001). Check the
 
 ## Historical changelog
 
-- Latest entry: [[2026-10-31 Mobile Data Freshness]]
+- Latest entry: [[2026-10-31 Remove Seller Type]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].

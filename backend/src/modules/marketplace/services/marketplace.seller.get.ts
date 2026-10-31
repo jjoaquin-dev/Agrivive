@@ -12,7 +12,6 @@ export async function getMarketplaceSeller(sellerId: string) {
     id: sellers_profile.userId,
     image: user.image,
     shopName: sellers_profile.shopName,
-    sellerType: sellers_profile.sellerType,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude,

@@ -43,7 +43,6 @@ export function OrderSellerCard({ product }: OrderSellerCardProps) {
               </div>
               <div>
                 <p className="text-[15px] font-bold text-[#14231A]">{product.seller.shopName}</p>
-                <p className="text-[12px] capitalize text-neutral-500">{product.seller.sellerType.replaceAll("_", " ")}</p>
               </div>
             </div>
 
