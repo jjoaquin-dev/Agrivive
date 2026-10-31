@@ -1,12 +1,10 @@
 import { Field, FieldLabel, FieldSet, FieldLegend } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { MarketplaceSellerType, MarketplaceUnit } from "../types";
-import { sellerTypeLabel } from "../marketplace-labels";
+import type { MarketplaceUnit } from "../types";
 
 export type MarketplaceFilterValues = {
   productType: string;
   unit: string;
-  sellerType: string;
   minPrice: string;
   maxPrice: string;
   minQuantity: string;
@@ -25,30 +23,22 @@ type MarketplaceFiltersProps = {
 };
 
 const units: MarketplaceUnit[] = ["kilo", "pile", "sack"];
-const sellerTypes: MarketplaceSellerType[] = ["supplier", "supplier_vendor", "retail_vendor"];
 const selectClass = "h-12 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground transition-colors focus-visible:border-agrivive-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30";
 
 export function MarketplaceFilters({ values, onChange, idPrefix, hasLocation, locationStatus, locationError, onUseLocation }: MarketplaceFiltersProps) {
   const fieldId = (name: string) => `${idPrefix}-${name}`;
 
   return (
-    <div className="grid gap-3 rounded-[20px] border border-border/80 bg-white/90 p-4 shadow-[0_8px_24px_rgba(31,77,58,0.04)] sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-[1.1fr_1fr_1fr_1.2fr_1.2fr_1.55fr] sm:p-5">
+    <div className="grid gap-3 rounded-[20px] border border-border/80 bg-white/90 p-4 shadow-[0_8px_24px_rgba(31,77,58,0.04)] sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-[1.1fr_1fr_1.2fr_1.2fr_1.55fr] sm:p-5">
       <div className="pb-1">
         <h2 className="font-heading text-base font-bold">Filter listings</h2>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">Narrow by unit, seller, price, or amount.</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Narrow by unit, price, or amount.</p>
       </div>
       <Field>
         <FieldLabel htmlFor={fieldId("unit")} className="text-xs font-semibold text-foreground/80">Selling unit</FieldLabel>
         <select id={fieldId("unit")} value={values.unit} onChange={(event) => onChange("unit", event.target.value)} className={selectClass}>
           <option value="">All units</option>
           {units.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
-        </select>
-      </Field>
-      <Field>
-        <FieldLabel htmlFor={fieldId("seller")} className="text-xs font-semibold text-foreground/80">Seller type</FieldLabel>
-        <select id={fieldId("seller")} value={values.sellerType} onChange={(event) => onChange("sellerType", event.target.value)} className={selectClass}>
-          <option value="">All sellers</option>
-          {sellerTypes.map((type) => <option key={type} value={type}>{sellerTypeLabel(type)}</option>)}
         </select>
       </Field>
       <FieldSet className="gap-1.5">

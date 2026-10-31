@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { isTrustAccessMessage } from "@/src/lib/api";
 import { getDirectionsUrl } from "@/src/lib/maps";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
-import { sellerTypeLabel } from "../marketplace-labels";
 import type { MarketplaceProduct } from "../types";
 import { MessageSellerButton } from "./MessageSellerButton";
 
@@ -98,10 +97,6 @@ export function ProductInfoCard({
               </p>
             </div>
             <MessageSellerButton context="product" id={product.id} compact />
-          </div>
-          <div className="pt-1">
-            <span className="text-[12px] text-muted-foreground">Seller type</span>
-            <p className="font-semibold text-foreground">{sellerTypeLabel(product.seller.sellerType)}</p>
           </div>
         </div>
 

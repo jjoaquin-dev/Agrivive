@@ -28526,11 +28526,6 @@ var twoFactor = pgTable("two_factor", {
   failedVerificationCount: integer("failed_verification_count").default(0).notNull(),
   lockedUntil: timestamp("locked_until")
 }, (table) => [index("two_factor_user_id_idx").on(table.userId)]);
-var seller_type_enum = pgEnum2("seller_type", [
-  "supplier",
-  "supplier_vendor",
-  "retail_vendor"
-]);
 var sellers_profile = pgTable("sellers_profile", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -28539,7 +28534,6 @@ var sellers_profile = pgTable("sellers_profile", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
-  sellerType: seller_type_enum("seller_type").default("supplier").notNull(),
   pickupInstructions: text("pickup_instructions"),
   isCurrent: boolean("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -28848,6 +28842,8 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
   readAt: timestamp("read_at", { withTimezone: true }),
+  followUpDueAt: timestamp("follow_up_due_at", { withTimezone: true }),
+  followUpAttempts: integer("follow_up_attempts").default(0).notNull(),
   priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -28857,6 +28853,7 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
 ]);
@@ -29226,16 +29223,25 @@ var sellerNoticeDefs = {
   price_lowered: {
     title: "Price Lowered",
     plural: "Prices Lowered",
-    body: (p) => `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
+    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. ${p.waitHours ? `You can boost it again in ${p.waitHours} hours.` : "Tap to boost it again."}` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
     level: "silent",
     topic: "stock_price",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_started: {
+    title: "Boost Started",
+    plural: "Boosts Started",
+    body: (p) => p.willLowerPrice ? `${product(p)} was posted. In 6 hours we lower the price if it has not sold out.` : `${product(p)} was posted on the Agrivive Facebook Page.`,
+    level: "silent",
+    topic: "boost",
     category: "listings",
     target: "notifications"
   },
   boost_posted: {
     title: "Boost Posted",
     plural: "Boosts Posted",
-    body: (p) => `${product(p)} was posted to Facebook.`,
+    body: (p) => `${product(p)} was posted to the Agrivive pages.`,
     level: "silent",
     topic: "boost",
     category: "listings",
@@ -31004,6 +31010,22 @@ async function applySellerPriceReductions() {
   return { checked, reduced, promptsCreated };
 }
 
+// src/jobs/boost-webhook-target.ts
+function getBoostWebhookTarget() {
+  const webhookUrl = process.env.N8N_VISIBILITY_BOOST_WEBHOOK_URL?.trim();
+  const serviceToken = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
+  if (!webhookUrl || !serviceToken)
+    return null;
+  try {
+    const target = new URL(webhookUrl);
+    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname))
+      return null;
+    return { target, serviceToken };
+  } catch {
+    return null;
+  }
+}
+
 // src/jobs/deliver-seller-visibility-boosts.ts
 var maxAttempts3 = 5;
 var batchSize4 = 50;
@@ -31011,19 +31033,10 @@ function retryDelay3(attempt) {
   return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
 }
 async function deliverSellerVisibilityBoosts() {
-  const webhookUrl = process.env.N8N_VISIBILITY_BOOST_WEBHOOK_URL?.trim();
-  const serviceToken = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
-  if (!webhookUrl || !serviceToken)
+  const webhook = getBoostWebhookTarget();
+  if (!webhook)
     return { configured: false, queued: 0, sent: 0, failed: 0 };
-  let target;
-  try {
-    target = new URL(webhookUrl);
-    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname)) {
-      return { configured: false, queued: 0, sent: 0, failed: 0 };
-    }
-  } catch {
-    return { configured: false, queued: 0, sent: 0, failed: 0 };
-  }
+  const { target, serviceToken } = webhook;
   const now = new Date;
   const due = await db.select({
     id: seller_visibility_boosts.id,
@@ -31099,6 +31112,48 @@ async function deliverSellerVisibilityBoosts() {
   return { configured: true, queued: due.length, sent, failed };
 }
 
+// src/jobs/deliver-seller-boost-follow-ups.ts
+var maxAttempts4 = 5;
+var retryAfterMs = 15 * 60000;
+var batchSize5 = 50;
+async function deliverSellerBoostFollowUps() {
+  const webhook = getBoostWebhookTarget();
+  if (!webhook)
+    return { configured: false, due: 0, sent: 0, failed: 0 };
+  const now = new Date;
+  const due = await db.select({ id: seller_visibility_boosts.id }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.reason, "initial"), inArray(seller_visibility_boosts.status, ["queued", "sent"]), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts4))).limit(batchSize5);
+  let sent = 0;
+  let failed = 0;
+  for (const boost of due) {
+    const [claimed] = await db.update(seller_visibility_boosts).set({
+      followUpDueAt: new Date(now.getTime() + retryAfterMs),
+      followUpAttempts: sql`${seller_visibility_boosts.followUpAttempts} + 1`
+    }).where(and(eq(seller_visibility_boosts.id, boost.id), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts4))).returning({ id: seller_visibility_boosts.id });
+    if (!claimed)
+      continue;
+    try {
+      const response = await fetch(webhook.target, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${webhook.serviceToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ boostId: boost.id, reason: "follow_up" }),
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!response.ok)
+        throw new Error(`n8n returned HTTP ${response.status}`);
+      sent++;
+    } catch (error) {
+      failed++;
+      console.error("Boost follow-up delivery failed", { boostId: boost.id, error });
+      await db.update(seller_visibility_boosts).set({ lastError: "n8n boost follow-up delivery failed" }).where(eq(seller_visibility_boosts.id, boost.id));
+    }
+  }
+  return { configured: true, due: due.length, sent, failed };
+}
+
 // src/jobs/send-reservation-ending-notices.ts
 var warningWindowMs = 60 * 60 * 1000;
 async function sendReservationEndingNotices(limit = 100) {
@@ -31131,8 +31186,9 @@ async function runScheduledJobs() {
   const sellerPromotionChecks = await checkSellerPromotionEligibility();
   const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
+  const sellerBoostFollowUps = await deliverSellerBoostFollowUps();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
+  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, sellerBoostFollowUps, pushNotifications };
 }
 
 // src/worker.ts

@@ -6,7 +6,6 @@ import { fonts, radii, spacing } from "../../../theme";
 interface ProfileHeroCardProps {
   shopName: string;
   sellerName: string;
-  sellerType: string;
   avatarUrl?: string | null;
   isVerified: boolean;
   memberSince: string;
@@ -21,7 +20,6 @@ interface ProfileHeroCardProps {
 export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
   shopName,
   sellerName,
-  sellerType,
   avatarUrl,
   isVerified,
   memberSince,
@@ -79,7 +77,7 @@ export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
           </View>
           <Text style={styles.sellerName}>{sellerName}</Text>
           <Text style={styles.subInfo} numberOfLines={1}>
-            {`${sellerType.toUpperCase()} · ${shopName}`}
+            {shopName}
           </Text>
         </View>
       </View>
