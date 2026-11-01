@@ -73,7 +73,7 @@ export function HomeFarmerFaq() {
                 <button
                   type="button"
                   onClick={() => setIsSocialModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-5 py-2.5 font-heading text-xs sm:text-sm font-bold text-neutral-800 shadow-xs hover:border-[#457D00] hover:text-[#457D00] hover:bg-neutral-50/80 transition-all duration-200 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-5 py-2.5 font-heading text-xs sm:text-sm font-bold text-neutral-800 shadow-sm hover:border-[#457D00] hover:text-[#457D00] hover:bg-neutral-50/80 transition-all duration-200 cursor-pointer"
                 >
                   Contact us <ArrowUpRight className="size-4" />
                 </button>
@@ -106,9 +106,9 @@ export function HomeFarmerFaq() {
                     </span>
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 group-hover:text-neutral-900 transition-colors">
                       {isOpen ? (
-                        <Minus className="size-5 stroke-[2.5]" />
+                        <Minus className="size-5" />
                       ) : (
-                        <Plus className="size-5 stroke-[2.5]" />
+                        <Plus className="size-5" />
                       )}
                     </span>
                   </button>

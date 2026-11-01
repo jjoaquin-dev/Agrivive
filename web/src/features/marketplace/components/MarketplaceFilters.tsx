@@ -29,7 +29,7 @@ export function MarketplaceFilters({ values, onChange, idPrefix, hasLocation, lo
   const fieldId = (name: string) => `${idPrefix}-${name}`;
 
   return (
-    <div className="grid gap-3 rounded-[20px] border border-border/80 bg-white/90 p-4 shadow-[0_8px_24px_rgba(31,77,58,0.04)] sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-[1.1fr_1fr_1.2fr_1.2fr_1.55fr] sm:p-5">
+    <div className="grid gap-3 rounded-2xl border border-border/80 bg-white/90 p-4 shadow-md sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-[1.1fr_1fr_1.2fr_1.2fr_1.55fr] sm:p-5">
       <div className="pb-1">
         <h2 className="font-heading text-base font-bold">Filter listings</h2>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">Narrow by unit, price, or amount.</p>

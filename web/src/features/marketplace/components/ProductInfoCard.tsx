@@ -10,10 +10,7 @@ import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNo
 import type { MarketplaceProduct } from "../types";
 import { MessageSellerButton } from "./MessageSellerButton";
 import { ProductListingActions } from "./ProductListingActions";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 interface ProductInfoCardProps {
   product: MarketplaceProduct;
@@ -48,12 +45,12 @@ export function ProductInfoCard({
   );
 
   return (
-    <div className="flex h-full flex-col justify-between space-y-5 rounded-[24px] border border-[#E5E2DA] bg-white p-6 shadow-xs lg:col-span-1">
+    <div className="flex h-full flex-col justify-between space-y-5 rounded-2xl border border-[#E5E2DA] bg-white p-6 shadow-sm lg:col-span-1">
       <div className="space-y-5">
         {/* Category & Title */}
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-2.5 py-0.5 text-[11px] font-semibold text-[#386600]">
+            <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-2.5 py-0.5 text-xs font-semibold text-[#457D00]">
               <ShoppingBasket className="size-3 text-[#457D00]" />
               {product.productType}
             </span>
@@ -81,9 +78,9 @@ export function ProductInfoCard({
             <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${
               soldOut
                 ? "border border-red-200 bg-red-50 text-red-700"
-                : "border border-[#D5E7C4] bg-[#F0F7EB] text-[#386600]"
+                : "border border-[#D5E7C4] bg-[#F0F7EB] text-[#457D00]"
             }`}>
-              {!soldOut && <Check className="size-3 stroke-[2.5] text-[#457D00]" />}
+              {!soldOut && <Check className="size-3 text-[#457D00]" />}
               {soldOut ? "Sold out" : `${Number(product.productQty).toLocaleString()} ${product.scalingType} available`}
             </span>
           </div>
@@ -113,7 +110,7 @@ export function ProductInfoCard({
                 href={directionsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#457D00] hover:text-[#386600] hover:underline"
+                className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#457D00] hover:text-[#457D00]/80 hover:underline"
               >
                 <Compass className="size-3.5 shrink-0" aria-hidden="true" />
                 <span>Get Direction</span>
@@ -171,7 +168,7 @@ export function ProductInfoCard({
             type="button"
             onClick={onBuyNow}
             disabled={soldOut || ordering}
-            className="h-10 min-h-[40px] rounded-xl bg-[#457D00] text-[14px] font-semibold text-white shadow-xs hover:bg-[#386600]"
+            className="h-10 min-h-[40px] rounded-xl bg-[#457D00] text-[14px] font-semibold text-white shadow-sm hover:bg-[#457D00]/90"
           >
             {ordering ? "Reserving…" : "Buy now"}
           </Button>

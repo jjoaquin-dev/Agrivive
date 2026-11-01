@@ -6,15 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
 import { OrderStatusBadge } from "./OrderStatusBadge";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-PH", {
@@ -52,7 +44,7 @@ export function OrderCard({
   const firstItem = order.items[0];
 
   return (
-    <Card className="min-h-[160px] overflow-hidden rounded-[16px] border border-[#E8E8E8] bg-white p-4 shadow-xs transition-shadow hover:shadow-md">
+    <Card className="min-h-[160px] overflow-hidden rounded-2xl border border-[#E8E8E8] bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-0">
         {/* Top Header Strip: 12px font size with 16px bottom separation */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#E8E8E8] mb-4 text-xs">
@@ -71,7 +63,7 @@ export function OrderCard({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1.2fr_1.2fr_auto] lg:items-center">
           {/* 1. Product Preview */}
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="relative size-[60px] shrink-0 overflow-hidden rounded-[10px] bg-[#F8F6F1] border border-[#E8E8E8]">
+            <div className="relative size-[60px] shrink-0 overflow-hidden rounded-xl bg-[#F8F6F1] border border-[#E8E8E8]">
               {firstItem ? (
                 <ProductImage
                   src={firstItem.imageUrl}
@@ -125,7 +117,7 @@ export function OrderCard({
               <>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#386600] text-white inline-flex items-center justify-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   <QrCode className="size-3.5" aria-hidden="true" />
                   <span>View Pass</span>
@@ -142,7 +134,7 @@ export function OrderCard({
               <>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs border border-[#E8E8E8] bg-white text-[#14231A] hover:bg-neutral-50 inline-flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs border border-[#E8E8E8] bg-white text-[#14231A] hover:bg-neutral-50 inline-flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   <span>View details</span>
                   <ArrowRight className="size-3.5 text-[#5F7367]" aria-hidden="true" />

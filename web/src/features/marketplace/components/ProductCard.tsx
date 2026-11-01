@@ -8,14 +8,7 @@ import { useCart } from "@/src/features/cart/CartProvider";
 import type { MarketplaceProduct } from "../types";
 import { ProductCardAction } from "./ProductCardAction";
 import { ProductCardMedia } from "./ProductCardMedia";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 function formatCategory(category: string) {
   if (!category) return "";
@@ -73,13 +66,12 @@ export function ProductCard({
 
   return (
     <Card
-      id={`seller-card-${product.seller.id}`}
       data-seller-id={product.seller.id}
       onClick={handleCardClick}
-      className={`group relative flex h-full w-full max-w-[300px] cursor-pointer flex-col justify-between overflow-hidden rounded-[28px] bg-white p-4 pb-4.5 transition-all duration-300 hover:-translate-y-1 ${
+      className={`group relative flex h-full w-full max-w-[300px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl bg-white p-4 pb-4.5 transition-all duration-300 hover:-translate-y-1 ${
         selected
-          ? "border-[1.5px] border-[#457D00] shadow-[0_8px_28px_rgba(69,125,0,0.14)]"
-          : "border-[1.5px] border-transparent shadow-[0_8px_26px_rgba(0,0,0,0.06),0_2px_6px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.09)]"
+          ? "border-[1.5px] border-[#457D00] shadow-md"
+          : "border-[1.5px] border-transparent shadow-md hover:shadow-md"
       }`}
     >
       <div className="flex flex-1 flex-col">
@@ -108,8 +100,8 @@ export function ProductCard({
               </button>
             </div>
 
-            {/* Product Title: 18px (1.125rem), Semi-bold (600), Dark Neutral (#111827), Line-height 1.35, 6px micro-gap */}
-            <h3 className="mt-1.5 line-clamp-2 font-heading text-[18px] font-semibold leading-[1.35] tracking-tight text-[#111827]">
+            {/* Product Title: 18px (1.125rem), Semi-bold (600), Dark Neutral (#14231A), Line-height 1.35, 6px micro-gap */}
+            <h3 className="mt-1.5 line-clamp-2 font-heading text-[18px] font-semibold leading-[1.35] tracking-tight text-[#14231A]">
               <Link
                 href={`/marketplace/${product.id}`}
                 className="transition-colors hover:text-[#457D00] focus-visible:underline focus-visible:outline-none"
@@ -136,7 +128,7 @@ export function ProductCard({
             </div>
 
             <div className="text-[13px] font-normal text-[#4B5563]">
-              <span className="font-semibold text-[#111827] tabular-nums">{Number(product.productQty).toLocaleString()}</span>
+              <span className="font-semibold text-[#14231A] tabular-nums">{Number(product.productQty).toLocaleString()}</span>
               <span> left</span>
             </div>
           </div>

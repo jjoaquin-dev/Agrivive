@@ -53,7 +53,7 @@ export function OrderCardItems({ items }: { items: BuyerOrderItem[] }) {
                     <p className="truncate text-xs font-semibold text-foreground">
                       {item.productName}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Quantity: {Number(item.quantity).toLocaleString()} {item.scalingType}
                     </p>
                   </div>

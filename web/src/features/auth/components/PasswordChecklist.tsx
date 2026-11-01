@@ -20,7 +20,6 @@ export function PasswordChecklist({
   const validCount = rules.filter((r) => r.valid).length;
   const matches = Boolean(password && confirmPassword && password === confirmPassword);
 
-  if (!password && !confirmPassword) return null;
 
   const strengthConfig = [
     { label: "Weak password", color: "bg-rose-500", textColor: "text-rose-600" },
@@ -34,7 +33,7 @@ export function PasswordChecklist({
 
   return (
     <div
-      className="mt-3 space-y-3 rounded-2xl border border-agrivive-border/80 bg-white/95 p-3.5 shadow-2xs"
+      className="mt-3 space-y-2.5 rounded-2xl border border-agrivive-border/80 bg-white/95 p-3 shadow-sm sm:p-3.5"
       aria-live="polite"
     >
       {/* 5-Segment Strength Bar */}
@@ -60,7 +59,7 @@ export function PasswordChecklist({
       </div>
 
       {/* Rules Checklist in a Clean Vertical List (One Line per Rule) */}
-      <div className="space-y-2 pt-1 text-xs">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-1 text-xs">
         {rules.map((rule) => (
           <div
             key={rule.label}
@@ -73,7 +72,7 @@ export function PasswordChecklist({
                 rule.valid ? "bg-emerald-600 text-white" : "bg-neutral-300 text-white"
               }`}
             >
-              <Check className="size-2.5 stroke-[3]" />
+              <Check className="size-2.5" />
             </span>
             <span>{rule.label}</span>
           </div>
@@ -89,7 +88,7 @@ export function PasswordChecklist({
                 matches ? "bg-emerald-600 text-white" : "bg-neutral-300 text-white"
               }`}
             >
-              <Check className="size-2.5 stroke-[3]" />
+              <Check className="size-2.5" />
             </span>
             <span>Passwords match</span>
           </div>

@@ -22,7 +22,7 @@ export function LoginRememberRow({
           type="checkbox"
           checked={rememberMe}
           onChange={(e) => onRememberMeChange(e.target.checked)}
-          className="size-4 rounded-[5px] border-agrivive-border text-[#457D00] accent-[#457D00] focus:ring-0 focus-visible:ring-0 focus-visible:outline-none transition-all cursor-pointer"
+          className="size-4 rounded-lg border-agrivive-border text-[#457D00] accent-[#457D00] focus:ring-0 focus-visible:ring-0 focus-visible:outline-none transition-all cursor-pointer"
         />
         <span>Remember me</span>
       </label>

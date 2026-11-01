@@ -78,7 +78,7 @@ export function ActiveFilters({
           type="button"
           onClick={chip.onRemove}
           aria-label={`Remove filter ${chip.label}`}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white px-2.5 text-xs font-semibold text-neutral-800 shadow-2xs transition hover:bg-neutral-50 hover:border-neutral-300 active:scale-95"
+          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white px-2.5 text-xs font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50 hover:border-neutral-300 active:scale-95"
         >
           <span>{chip.label}</span>
           <X aria-hidden="true" className="size-3 text-neutral-400 hover:text-neutral-700" />

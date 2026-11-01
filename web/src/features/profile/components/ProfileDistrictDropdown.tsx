@@ -55,13 +55,13 @@ export function ProfileDistrictDropdown({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className="relative flex h-11 w-full items-center justify-between rounded-full border border-neutral-200 bg-white pl-11 pr-4 text-xs font-semibold text-neutral-900 shadow-2xs transition-colors hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#386600]/15 cursor-pointer"
+        className="relative flex h-11 w-full items-center justify-between rounded-full border border-neutral-200 bg-white pl-11 pr-4 text-xs font-semibold text-neutral-900 shadow-sm transition-colors hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#457D00]/15 cursor-pointer"
       >
         <MapPin className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
         <span className="truncate">{selectedDistrict}</span>
         <ChevronDown
           className={`size-3.5 shrink-0 text-neutral-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#386600]" : ""
+            isOpen ? "rotate-180 text-[#457D00]" : ""
           }`}
         />
       </button>
@@ -71,7 +71,7 @@ export function ProfileDistrictDropdown({
         <div
           role="listbox"
           tabIndex={-1}
-          className="absolute left-0 top-full mt-2 w-full overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.08)] z-50 animate-in fade-in-0 zoom-in-95 duration-150 max-h-60 overflow-y-auto"
+          className="absolute left-0 top-full mt-2 w-full overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-md z-50 animate-in fade-in-0 zoom-in-95 duration-150 max-h-60 overflow-y-auto"
         >
           <div className="flex flex-col gap-0.5">
             {districts.map((d) => {

@@ -12,12 +12,12 @@ export function Hero() {
     <section
       ref={heroRef}
       id="hero"
-      className="relative overflow-hidden bg-white pt-[120px] sm:pt-[168px] text-[#111827] min-h-[92dvh] sm:min-h-dvh flex flex-col pb-10 lg:pb-0"
+      className="relative overflow-hidden bg-white pt-[120px] sm:pt-[168px] text-[#14231A] min-h-[92dvh] sm:min-h-dvh flex flex-col pb-10 lg:pb-0"
     >
       {/* Real Content */}
       <div className="relative z-10 mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8">
         <div className="relative z-10 flex flex-col items-center text-center lg:items-start lg:self-center lg:pb-16 lg:text-left">
-          <h1 id="hero-title" className="type-display hero-title-line mt-0 font-brand text-[#111827]">
+          <h1 id="hero-title" className="type-display hero-title-line mt-0 font-heading text-[#14231A]">
             <span>
               Rescue{" "}
               <span className="relative isolate inline-block text-[#457D00]">

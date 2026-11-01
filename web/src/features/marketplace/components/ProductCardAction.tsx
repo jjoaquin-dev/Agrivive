@@ -39,12 +39,12 @@ export function ProductCardAction({
 
   if (quantityInCart > 0) {
     return (
-      <div className="flex h-[42px] w-full items-center justify-between rounded-full border border-agrivive-primary/20 bg-agrivive-background px-2 py-1 shadow-2xs">
+      <div className="flex h-[42px] w-full items-center justify-between rounded-full border border-agrivive-primary/20 bg-agrivive-background px-2 py-1 shadow-sm">
         <button
           type="button"
           onClick={onDecrement}
           aria-label="Decrease quantity"
-          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50"
+          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50"
         >
           <Minus className="size-3" />
         </button>
@@ -56,7 +56,7 @@ export function ProductCardAction({
           onClick={onIncrement}
           disabled={quantityInCart >= maxStock}
           aria-label="Increase quantity"
-          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-40"
+          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-40"
         >
           <Plus className="size-3" />
         </button>
@@ -66,7 +66,7 @@ export function ProductCardAction({
 
   return (
     <div className="flex w-full items-center gap-2">
-      <div className="flex h-[42px] w-[84px] shrink-0 items-center justify-between rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-2xs">
+      <div className="flex h-[42px] w-[84px] shrink-0 items-center justify-between rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-sm">
         <button
           type="button"
           onClick={(e) => {
@@ -76,7 +76,7 @@ export function ProductCardAction({
           }}
           disabled={selectedQty <= 1}
           aria-label="Decrease quantity"
-          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
+          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
         >
           <Minus className="size-3" />
         </button>
@@ -92,7 +92,7 @@ export function ProductCardAction({
           }}
           disabled={selectedQty >= maxStock}
           aria-label="Increase quantity"
-          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
+          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
         >
           <Plus className="size-3" />
         </button>
@@ -105,9 +105,9 @@ export function ProductCardAction({
           e.stopPropagation();
           onAddToCart(selectedQty);
         }}
-        className="group flex min-h-[42px] flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#386600] px-6 py-2.5 text-xs font-semibold tracking-wide text-white shadow-2xs transition-all active:scale-95 cursor-pointer"
+        className="group flex min-h-[42px] flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#457D00]/90 px-6 py-2.5 text-xs font-semibold tracking-wide text-white shadow-sm transition-all active:scale-95 cursor-pointer"
       >
-        <ShoppingCart className="cart-wiggle-on-hover size-4 stroke-[2] shrink-0 text-white" />
+        <ShoppingCart className="cart-wiggle-on-hover size-4 shrink-0 text-white" />
         <span className="truncate font-semibold">Add to Cart</span>
       </button>
     </div>

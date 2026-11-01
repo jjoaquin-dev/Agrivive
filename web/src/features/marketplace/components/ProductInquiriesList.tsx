@@ -19,13 +19,13 @@ export function ProductInquiriesList({ loading, inquiries }: ProductInquiriesLis
           <div className="h-20 animate-pulse rounded-2xl bg-card" />
         </div>
       ) : inquiries.length === 0 ? (
-        <div className="mt-3 rounded-[20px] border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        <div className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           You haven’t asked any questions about this listing yet.
         </div>
       ) : (
         <div className="mt-3 space-y-3">
           {inquiries.map((inquiry) => (
-            <Card key={inquiry.id} className="gap-2 rounded-[18px] border-border/80 p-4 shadow-xs">
+            <Card key={inquiry.id} className="gap-2 rounded-2xl border-border/80 p-4 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-medium text-foreground">
                   <span className="font-semibold text-primary">You:</span> {inquiry.question}
@@ -46,7 +46,7 @@ export function ProductInquiriesList({ loading, inquiries }: ProductInquiriesLis
                   </div>
                   <p className="mt-1 text-sm text-foreground">{inquiry.reply}</p>
                   {inquiry.repliedAt ? (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Answered on{" "}
                       {new Date(inquiry.repliedAt).toLocaleDateString([], {
                         month: "short",

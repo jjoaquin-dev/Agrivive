@@ -68,7 +68,7 @@ export function ConversationInput({
         <p className="text-xs text-[#7A8875]">Sign in to chat with this vendor.</p>
         <Link
           href="/login?next=%2Fmessages"
-          className="mt-2 inline-flex h-9 items-center rounded-xl bg-[#386600] px-4 text-xs font-semibold text-white shadow-xs hover:bg-[#2F5400]"
+          className="mt-2 inline-flex h-9 items-center rounded-xl bg-[#457D00] px-4 text-xs font-semibold text-white shadow-sm hover:bg-[#14231A]"
         >
           Sign in to message
         </Link>
@@ -85,7 +85,7 @@ export function ConversationInput({
       ) : null}
 
       {uploading && (
-        <div className="mb-2 flex items-center gap-2 rounded-xl bg-[#EEF5E3] px-3 py-1.5 text-xs text-[#386600]">
+        <div className="mb-2 flex items-center gap-2 rounded-xl bg-[#EEF5E3] px-3 py-1.5 text-xs text-[#457D00]">
           <Loader2 className="size-3.5 animate-spin" />
           <span>Uploading attachment...</span>
         </div>
@@ -110,7 +110,7 @@ export function ConversationInput({
 
       <form
         onSubmit={handleSend}
-        className="rounded-2xl border border-[#ECEEE2] bg-[#FAF9F3] p-3 shadow-2xs transition-colors focus-within:border-[#D5DACB]"
+        className="rounded-2xl border border-[#ECEEE2] bg-[#FAF9F3] p-3 shadow-sm transition-colors focus-within:border-[#D5DACB]"
       >
         <textarea
           id="conversation-message-input"
@@ -121,7 +121,7 @@ export function ConversationInput({
           maxLength={2000}
           rows={2}
           disabled={sending}
-          className="w-full resize-none rounded-xl border-[0.5px] border-[#DCDED5] bg-white px-3 py-2 text-xs text-[#202E1B] shadow-2xs outline-none transition-colors placeholder:text-[#6B736B] focus:border-[#C4C9BC] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
+          className="w-full resize-none rounded-xl border-[0.5px] border-[#DCDED5] bg-white px-3 py-2 text-xs text-[#202E1B] shadow-sm outline-none transition-colors placeholder:text-[#6B736B] focus:border-[#C4C9BC] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:opacity-50"
         />
         <input
           type="file"
@@ -162,7 +162,7 @@ export function ConversationInput({
           <button
             type="submit"
             disabled={sending || uploading || (!draft.trim() && !attachment)}
-            className="flex items-center gap-1.5 rounded-xl bg-[#386600] px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-[#2E5400] active:scale-95 disabled:opacity-40"
+            className="flex items-center gap-1.5 rounded-xl bg-[#457D00] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[#2E5400] active:scale-95 disabled:opacity-40"
           >
             <Send className="size-3" />
             <span>Send</span>

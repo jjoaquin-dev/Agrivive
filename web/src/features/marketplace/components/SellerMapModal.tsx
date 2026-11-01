@@ -47,12 +47,12 @@ export function SellerMapModal({ isOpen, onClose, ...mapProps }: SellerMapModalP
       />
 
       {/* Modal Card */}
-      <div className="relative z-10 flex h-[90vh] max-h-[720px] w-full max-w-5xl flex-col overflow-hidden rounded-[24px] border border-neutral-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative z-10 flex h-[90vh] max-h-[720px] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-neutral-200/80 px-5 py-3.5 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#457D00]">
+              <p className="type-eyebrow text-[#457D00]">
                 Explore Local Stalls
               </p>
               <h2 className="font-heading text-lg sm:text-xl font-bold text-[#14231A]">

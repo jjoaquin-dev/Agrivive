@@ -24,7 +24,7 @@ export function MarketplaceDealsRow() {
     return (
       <div className="flex gap-4 overflow-hidden sm:grid sm:grid-cols-2 xl:grid-cols-4">
         {[1, 2, 3, 4].map((item) => (
-          <Skeleton key={item} className="h-80 w-[78vw] max-w-[300px] shrink-0 rounded-[18px] sm:w-auto" />
+          <Skeleton key={item} className="h-80 w-[78vw] max-w-[300px] shrink-0 rounded-2xl sm:w-auto" />
         ))}
       </div>
     );
@@ -35,7 +35,7 @@ export function MarketplaceDealsRow() {
   return (
     <section aria-labelledby="priority-deals-heading">
       <div className="mb-4">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-[#457D00]">Priority deals</p>
+        <p className="type-eyebrow text-[#457D00]">Priority deals</p>
         <h2 id="priority-deals-heading" className="mt-1 font-heading text-2xl font-bold tracking-tight text-[#14231A]">
           Lowest prices with priority picks
         </h2>

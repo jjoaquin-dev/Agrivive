@@ -62,17 +62,17 @@ export function ConfirmationModalComponent({
   const variantStyles = {
     positive: {
       badgeBg: "bg-[#EAF7E2] text-[#2F6819]",
-      defaultIcon: <Check className="size-5 stroke-[2.5]" />,
+      defaultIcon: <Check className="size-5" />,
       buttonBg: "bg-[#245914] text-white hover:bg-[#1C470F]",
     },
     destructive: {
       badgeBg: "bg-[#FDE8E8] text-[#991B1B]",
-      defaultIcon: <LogOut className="size-5 stroke-[2.5]" />,
+      defaultIcon: <LogOut className="size-5" />,
       buttonBg: "bg-[#880E16] text-white hover:bg-[#720B12]",
     },
     neutral: {
       badgeBg: "bg-[#F1F3F5] text-[#374151]",
-      defaultIcon: <Ban className="size-5 stroke-[2.5]" />,
+      defaultIcon: <Ban className="size-5" />,
       buttonBg: "bg-[#2E3438] text-white hover:bg-[#1F2327]",
     },
   }[variant];
@@ -88,7 +88,7 @@ export function ConfirmationModalComponent({
         if (e.target === e.currentTarget && !loading) onClose();
       }}
     >
-      <div className="relative w-full max-w-[400px] rounded-[24px] border border-black/5 bg-white p-6 sm:p-7 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.18)] text-center animate-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-[400px] rounded-2xl border border-black/5 bg-white p-6 sm:p-7 shadow-md text-center animate-in zoom-in-95 duration-150">
         <button
           type="button"
           onClick={onClose}

@@ -9,7 +9,7 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
   const directionsUrl = getDirectionsUrl(seller.latitude, seller.longitude);
 
   return (
-    <header className="rounded-[24px] border border-[#E8E8E8] bg-white p-6 shadow-sm flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
+    <header className="rounded-2xl border border-[#E8E8E8] bg-white p-6 shadow-sm flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
       {/* Left Column: Avatar & Vendor Identity */}
       <div className="flex items-start gap-4 sm:gap-5 flex-1 min-w-0">
         <SellerProfileAvatar imageUrl={seller.image} shopName={seller.shopName} />

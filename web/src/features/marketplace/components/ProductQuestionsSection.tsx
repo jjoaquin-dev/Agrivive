@@ -4,7 +4,7 @@ import { MessageSellerButton } from "./MessageSellerButton";
 export function ProductQuestionsSection({ productId, productName }: { productId: string; productName: string }) {
   return (
     <section aria-labelledby="product-message-heading">
-      <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-4">
+      <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm sm:flex sm:items-center sm:justify-between sm:gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <MessageCircle className="size-5 text-[#457D00]" aria-hidden="true" />

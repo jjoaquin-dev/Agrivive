@@ -141,7 +141,7 @@ export function BuyerOrders() {
             <input
               type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by ID, produce name, status…"
-              className="h-10 min-h-[40px] w-full rounded-full border border-[#E8E8E8] bg-white pl-10 pr-4 text-xs sm:text-sm text-[#14231A] shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
+              className="h-10 min-h-[40px] w-full rounded-full border border-[#E8E8E8] bg-white pl-10 pr-4 text-xs sm:text-sm text-[#14231A] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
             />
           </div>
           <OrderSortDropdown value={sortBy} onChange={setSortBy} />
@@ -149,18 +149,20 @@ export function BuyerOrders() {
 
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-40 rounded-[16px] bg-white border border-[#E8E8E8]" />)}
+            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-40 rounded-2xl bg-white border border-[#E8E8E8]" />)}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <Empty className="rounded-[16px] border border-[#E8E8E8] bg-white p-8 shadow-xs">
+          <Empty className="rounded-2xl border border-[#E8E8E8] bg-white p-8 shadow-sm">
             <EmptyHeader>
               <EmptyMedia variant="icon"><ShoppingBag className="text-[#457D00]" /></EmptyMedia>
-              <EmptyTitle className="text-base font-bold text-[#14231A]">No orders match</EmptyTitle>
+              <EmptyTitle className="text-base font-bold text-[#14231A]">{counts.all === 0 ? "No reservations yet" : "No orders match"}</EmptyTitle>
               <EmptyDescription className="text-xs text-[#5F7367]">
-                {searchQuery ? "Try a different search query or clear your search." : "No orders found in this category."}
+                {counts.all === 0
+                  ? "Reserve fresh surplus from local stalls and it will show here."
+                  : searchQuery ? "Try a different search query or clear your search." : "No orders found in this category."}
               </EmptyDescription>
             </EmptyHeader>
-            <Link href="/marketplace" className="h-10 min-h-[40px] px-5 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#386600] text-white inline-flex items-center gap-2 shadow-xs transition active:scale-95">
+            <Link href="/marketplace" className="h-10 min-h-[40px] px-5 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center gap-2 shadow-sm transition active:scale-95">
               Browse marketplace
             </Link>
           </Empty>

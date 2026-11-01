@@ -14,7 +14,7 @@ export const StakeholderPrintLayoutComponent = ({ data }: Props) => {
         <p className="mt-1 text-xs text-gray-800">
           City Agriculturist&apos;s Office (CAO) &bull; City Economic Enterprises Office (CEEO)
         </p>
-        <p className="mt-1 text-[10px] text-gray-600">
+        <p className="mt-1 text-xs text-gray-600">
           Snapshot: {new Date(data.generatedAt).toLocaleString()} &bull; Doc Ref: AGRIVIVE-MKT-STAT
         </p>
       </div>
@@ -85,7 +85,7 @@ export const StakeholderPrintLayoutComponent = ({ data }: Props) => {
         </table>
       </div>
 
-      <div className="mt-8 border-t border-gray-400 pt-4 text-[10px] text-gray-600">
+      <div className="mt-8 border-t border-gray-400 pt-4 text-xs text-gray-600">
         <p className="font-bold text-gray-800">Republic Act No. 10173 (Data Privacy Act of 2012) Compliance Statement:</p>
         <p>This report contains aggregated non-personally identifiable marketplace statistics pursuant to Agrivive System Specification Section 1.4 & 2.2.1. No individual buyer or vendor identities, contact numbers, or stall identifiers are disclosed.</p>
       </div>

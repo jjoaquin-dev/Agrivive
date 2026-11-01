@@ -22,6 +22,9 @@ export type Conversation = {
   sellerShopName: string | null;
   lastMessageBody: string | null;
   unreadCount: number;
+  archivedAt?: string | null;
+  myBlockedAt?: string | null;
+  blocked?: boolean;
 };
 
 export type ConversationMessage = {
@@ -35,8 +38,8 @@ export type ConversationMessage = {
 
 type ConversationResult = { conversation: Conversation; message: ConversationMessage };
 
-export async function listConversations(signal?: AbortSignal): Promise<Conversation[]> {
-  const res = await apiRequest<Conversation[] | { items: Conversation[]; nextCursor: string | null }>("/conversations?limit=100", { signal });
+export async function listConversations(signal?: AbortSignal, archived = false): Promise<Conversation[]> {
+  const res = await apiRequest<Conversation[] | { items: Conversation[]; nextCursor: string | null }>(`/conversations?limit=100&archived=${archived}`, { signal });
   return Array.isArray(res) ? res : res.items;
 }
 
@@ -52,6 +55,12 @@ export function createConversation(input: {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export type ConversationStateAction = "archive" | "unarchive" | "block" | "unblock";
+
+export function setConversationState(conversationId: string, action: ConversationStateAction) {
+  return apiRequest<{ ok: boolean }>(`/conversations/${encodeURIComponent(conversationId)}/${action}`, { method: "POST" });
 }
 
 export function listConversationMessages(conversationId: string, signal?: AbortSignal) {

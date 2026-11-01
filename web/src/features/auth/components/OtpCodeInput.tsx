@@ -105,7 +105,7 @@ export function OtpCodeInput({
             onPaste={handlePaste}
             onFocus={(e) => e.target.select()}
             className={cn(
-              "h-12 w-11 sm:h-14 sm:w-12 rounded-[14px] border border-agrivive-border/80 bg-white text-center font-mono text-xl sm:text-2xl font-bold text-[#14231A] shadow-2xs transition-all",
+              "h-12 w-11 sm:h-14 sm:w-12 rounded-xl border border-agrivive-border/80 bg-white text-center font-mono text-xl sm:text-2xl font-bold text-[#14231A] shadow-sm transition-all",
               "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#457D00]/20",
               isFilled && "border-[#457D00]/40 bg-[#FBFDFB]",
               error && "border-destructive/80 text-destructive focus:border-destructive focus:ring-destructive/20",

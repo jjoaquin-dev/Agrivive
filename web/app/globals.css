@@ -344,26 +344,35 @@ section[id] {
   to { transform: scaleX(0); }
 }
 
-/* Header buttons take the landing Register lime on the green marketplace header. */
-[data-tone="green"] .buyer-account-pill,
-[data-tone="green"] .buyer-header-cta,
+/* Register button takes the landing lime on the green marketplace header. */
 [data-tone="green"] .buyer-guest-register {
   background-color: #e2fd56;
   border-color: #e2fd56;
-  color: #111827;
+  color: #14231A;
 }
 
-/* Account pill and Cart button: white with a green outline. */
-[data-tone="green"] .buyer-account-pill,
+/* Cart button: white with a green outline. */
 [data-tone="green"] .buyer-header-cta {
   background-color: #fff;
   border-color: #457d00;
-  color: #111827;
+  color: #14231A;
 }
 
-[data-tone="green"] .buyer-header-cta:hover,
-[data-tone="green"] .buyer-account-pill:hover {
+[data-tone="green"] .buyer-header-cta:hover {
   background-color: #f3f8e8;
+}
+
+/* Account pill: outline only from tablet up. On phone it is a plain avatar. */
+@media (min-width: 640px) {
+  [data-tone="green"] .buyer-account-pill {
+    background-color: #fff;
+    border-color: #457d00;
+    color: #14231A;
+  }
+
+  [data-tone="green"] .buyer-account-pill:hover {
+    background-color: #f3f8e8;
+  }
 }
 
 [data-tone="green"] .buyer-guest-register:hover {
@@ -428,4 +437,15 @@ section[id] {
   .toast-progress {
     animation: none;
   }
+}
+
+/* One visible focus ring for keyboard users on every control, even where a utility removed the outline. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #457d00 !important;
+  outline-offset: 2px;
 }

@@ -6,7 +6,7 @@ export type BreadcrumbItem = { label: string; href?: string };
 // Top-left trail on inner pages. The last item is the current page and is not a link.
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   return (
-    <nav aria-label="Breadcrumb" className="min-w-0">
+    <nav aria-label="Breadcrumb" className="mb-6 min-w-0">
       <ol className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium text-neutral-500">
         <li>
           <Link href="/" className="transition-colors hover:text-[#457D00]">Home</Link>

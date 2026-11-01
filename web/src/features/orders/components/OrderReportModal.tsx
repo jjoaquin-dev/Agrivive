@@ -87,7 +87,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div data-lenis-prevent className="relative w-full max-w-lg rounded-[24px] border border-border/80 bg-card p-6 shadow-[0_24px_60px_rgba(31,77,58,0.14)] max-h-[90vh] overflow-y-auto">
+      <div data-lenis-prevent className="relative w-full max-w-lg rounded-2xl border border-border/80 bg-card p-6 shadow-md max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           disabled={submitting}
@@ -128,7 +128,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
                     />
                     <div>
                       <p className="font-semibold text-foreground">{r.label}</p>
-                      <p className="text-muted-foreground text-[11px]">{r.description}</p>
+                      <p className="text-muted-foreground text-xs">{r.description}</p>
                     </div>
                   </label>
                 ))}
@@ -146,7 +146,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
                 rows={3}
                 className="w-full rounded-xl border border-input bg-background p-2.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
               />
-              <p className="text-[11px] text-muted-foreground text-right">{details.length}/2000</p>
+              <p className="text-xs text-muted-foreground text-right">{details.length}/2000</p>
             </div>
 
             <div className="space-y-2">

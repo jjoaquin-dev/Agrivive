@@ -2,13 +2,7 @@
 
 import { Calendar, PiggyBank } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 interface OrderSummaryHeaderProps {
   order: BuyerOrder;
@@ -41,7 +35,7 @@ export function OrderSummaryHeader({ order }: OrderSummaryHeaderProps) {
           </span>
         </div>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-[#16A34A] shadow-2xs">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-[#16A34A] shadow-sm">
           <PiggyBank className="size-3.5 text-[#16A34A]" aria-hidden="true" />
           <span>You saved {money(estimatedSavings)}</span>
         </span>

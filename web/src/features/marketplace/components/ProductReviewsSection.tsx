@@ -71,15 +71,15 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
       </div>
 
       {eligibility.kind === "loading" ? (
-        <Skeleton className="h-32 rounded-[16px] border border-[#E8E8E8] bg-white" aria-label="Checking review access" />
+        <Skeleton className="h-32 rounded-2xl border border-[#E8E8E8] bg-white" aria-label="Checking review access" />
       ) : eligibility.kind === "guest" ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
           <div>
             <p className="text-[14px] font-semibold text-foreground">Bought this produce?</p>
             <p className="mt-1 text-[12px] text-muted-foreground">Sign in to leave a rating and comment after pickup is complete.</p>
           </div>
           <Link
-            className="inline-flex h-10 min-h-[40px] items-center rounded-xl bg-[#457D00] px-4 text-[14px] font-semibold text-white shadow-xs hover:bg-[#386600]"
+            className="inline-flex h-10 min-h-[40px] items-center rounded-xl bg-[#457D00] px-4 text-[14px] font-semibold text-white shadow-sm hover:bg-[#457D00]/90"
             href={`/login?next=${encodeURIComponent(`/marketplace/${productId}#product-reviews`)}`}
           >
             Sign in to review
@@ -100,7 +100,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
           ))}
         </div>
       ) : (
-        <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
           <p className="text-[14px] font-semibold text-foreground">Reviews are open to buyers after pickup</p>
           <p className="mt-1 text-[12px] text-muted-foreground">Once you complete a pickup for this product, you can leave a rating and comment here.</p>
         </div>
@@ -108,8 +108,8 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
 
       {loading ? (
         <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)]" aria-label="Loading product reviews">
-          <Skeleton className="h-44 rounded-[16px] border border-[#E8E8E8] bg-white" />
-          <Skeleton className="h-44 rounded-[16px] border border-[#E8E8E8] bg-white" />
+          <Skeleton className="h-44 rounded-2xl border border-[#E8E8E8] bg-white" />
+          <Skeleton className="h-44 rounded-2xl border border-[#E8E8E8] bg-white" />
         </div>
       ) : error ? (
         <Alert variant="destructive" className="rounded-xl">
@@ -123,11 +123,11 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
           <ReviewSummaryCard average={data.average} count={data.count} breakdown={data.breakdown} singular="rating" />
           <div className="space-y-4">
             {data.reviews.map((review) => (
-              <div key={review.id} className="rounded-[16px] border border-[#E8E8E8] bg-white p-4 shadow-sm">
+              <div key={review.id} className="rounded-2xl border border-[#E8E8E8] bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-semibold text-foreground">{review.buyerName}</span>
-                    <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2 py-0.5 text-[10px] font-semibold text-[#386600]">
+                    <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2 py-0.5 text-xs font-semibold text-[#457D00]">
                       Verified purchase
                     </span>
                   </div>
@@ -142,7 +142,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
           </div>
         </div>
       ) : (
-        <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-6 text-center shadow-sm">
+        <div className="rounded-2xl border border-[#E8E8E8] bg-white p-6 text-center shadow-sm">
           <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-[#F0F7EB] text-[#457D00]">
             <MessageSquare className="size-5" />
           </div>

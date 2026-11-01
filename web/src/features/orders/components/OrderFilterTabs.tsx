@@ -33,7 +33,7 @@ export function OrderFilterTabs({ activeTab, onTabChange, counts }: OrderFilterT
               onClick={() => onTabChange(tab.id)}
               className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all cursor-pointer ${
                 active
-                  ? "bg-white text-[#202E1B] shadow-2xs"
+                  ? "bg-white text-[#202E1B] shadow-sm"
                   : "text-[#7A8875] hover:text-[#202E1B]"
               }`}
             >

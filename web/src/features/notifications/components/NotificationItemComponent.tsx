@@ -90,7 +90,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
     >
       <div className="relative shrink-0">
         <div
-          className={`flex size-10 items-center justify-center rounded-full font-heading text-sm font-bold border border-neutral-200/80 shadow-2xs ${
+          className={`flex size-10 items-center justify-center rounded-full font-heading text-sm font-bold border border-neutral-200/80 shadow-sm ${
             isRestriction
               ? "bg-rose-50 text-rose-600"
               : isWarning
@@ -111,7 +111,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
           )}
         </div>
         <span
-          className={`absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-white shadow-2xs ${
+          className={`absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-white shadow-sm ${
             isRestriction ? "bg-rose-600" : isWarning ? "bg-amber-500" : "bg-[#457D00]"
           }`}
         >
@@ -137,7 +137,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
           )}
         </div>
 
-        <div className="mt-0.5 flex items-center justify-between text-[11px] text-neutral-400">
+        <div className="mt-0.5 flex items-center justify-between text-xs text-neutral-400">
           <span>{formatDateTime(notice.createdAt)}</span>
           <span className="font-medium text-neutral-500">{formatRelativeTime(notice.createdAt)}</span>
         </div>
@@ -153,8 +153,8 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
               e.stopPropagation();
               onSelect(notice);
             }}
-            className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition-transform active:scale-95 ${
-              isRestriction ? "bg-rose-600 hover:bg-rose-700" : isWarning ? "bg-amber-600 hover:bg-amber-700" : "bg-[#457D00] hover:bg-[#386600]"
+            className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-transform active:scale-95 ${
+              isRestriction ? "bg-rose-600 hover:bg-rose-700" : isWarning ? "bg-amber-600 hover:bg-amber-700" : "bg-[#457D00] hover:bg-[#457D00]/90"
             }`}
           >
             {isTrustNotice ? "View orders" : isProduce ? "View produce" : isCancellation ? "View order" : "Details"}

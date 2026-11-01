@@ -7,14 +7,7 @@ import { useCart } from "@/src/features/cart/CartProvider";
 import { useBuyerWishlist } from "@/src/features/wishlist/WishlistProvider";
 import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
 import type { MarketplaceProduct } from "@/src/features/marketplace/types";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProduct }) {
   const { items, addItem, setDrawerOpen } = useCart();
@@ -42,10 +35,10 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
   }
 
   return (
-    <div className="group relative flex flex-col justify-between overflow-hidden rounded-[22px] border border-neutral-200/70 bg-white p-3.5 shadow-[0_4px_20px_-2px_rgba(20,40,25,0.04)] transition-all duration-200 ease-settle hover:-translate-y-1 hover:shadow-[0_16px_36px_-6px_rgba(20,60,35,0.12)]">
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-neutral-200/70 bg-white p-3.5 shadow-md transition-all duration-200 ease-settle hover:-translate-y-1 hover:shadow-md">
       <div>
         {/* Seamless Image Container */}
-        <div className="relative h-48 w-full overflow-hidden rounded-[18px] bg-white p-1">
+        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-white p-1">
           <Link
             href={`/marketplace/${product.id}`}
             className="relative flex h-full w-full items-center justify-center"
@@ -64,11 +57,11 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
           {/* Top-Left: Golden Amber Discount Badge */}
           <div className="pointer-events-none absolute left-3 top-3 z-10">
             {discountPct > 0 ? (
-              <span className="inline-flex items-center rounded-full bg-[#FEA938] px-2.5 py-0.5 text-[11px] font-bold text-neutral-950 shadow-2xs">
+              <span className="inline-flex items-center rounded-full bg-[#FEA938] px-2.5 py-0.5 text-xs font-bold text-neutral-950 shadow-sm">
                 {discountPct}% OFF
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-[#EBF3E6] px-2.5 py-0.5 text-[11px] font-bold text-[#457D00] shadow-2xs">
+              <span className="inline-flex items-center rounded-full bg-[#EBF3E6] px-2.5 py-0.5 text-xs font-bold text-[#457D00] shadow-sm">
                 Fresh Surplus
               </span>
             )}
@@ -84,7 +77,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
             }}
             disabled={saving}
             aria-label={isFav ? "Remove from saved items" : "Save item"}
-            className={`absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full border shadow-2xs backdrop-blur-md transition active:scale-95 ${
+            className={`absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition active:scale-95 ${
               isFav
                 ? "border-red-400 bg-red-500 text-white"
                 : "border-neutral-200/80 bg-white/90 text-neutral-600 hover:bg-white hover:text-red-500"
@@ -99,7 +92,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
 
         {/* Identity & Metadata Zone */}
         <div className="flex flex-col gap-2 pt-3">
-          <div className="flex items-center justify-between gap-1 text-[11px]">
+          <div className="flex items-center justify-between gap-1 text-xs">
             <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-700">
               {product.productType}
             </span>
@@ -138,13 +131,13 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
 
       {/* Action Zone: Quantity Selector + Cart CTA */}
       <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center gap-2">
-        <div className="flex h-10 items-center rounded-full border border-neutral-200/80 bg-neutral-100/80 p-0.5 shadow-2xs">
+        <div className="flex h-10 items-center rounded-full border border-neutral-200/80 bg-neutral-100/80 p-0.5 shadow-sm">
           <button
             type="button"
             onClick={() => setSelectedQty((prev) => Math.max(1, prev - 1))}
             disabled={selectedQty <= 1 || soldOut}
             aria-label="Decrease quantity"
-            className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
+            className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
           >
             <Minus className="size-3" />
           </button>
@@ -156,7 +149,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
             onClick={() => setSelectedQty((prev) => Math.min(maxQty, prev + 1))}
             disabled={selectedQty >= maxQty || soldOut}
             aria-label="Increase quantity"
-            className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xs transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
+            className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
           >
             <Plus className="size-3" />
           </button>
@@ -166,18 +159,18 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
           type="button"
           onClick={handleAdd}
           disabled={soldOut}
-          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#457D00] hover:bg-[#386600] px-4 text-xs font-bold text-white shadow-2xs transition-all active:scale-95 cursor-pointer disabled:bg-neutral-300 disabled:cursor-not-allowed"
+          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#457D00] hover:bg-[#457D00]/90 px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 cursor-pointer disabled:bg-neutral-300 disabled:cursor-not-allowed"
         >
           {soldOut ? (
             <span>Sold out</span>
           ) : inCart > 0 ? (
             <>
-              <Check className="size-3.5 stroke-[3] text-white" />
+              <Check className="size-3.5 text-white" />
               <span>{inCart} in cart</span>
             </>
           ) : (
             <>
-              <ShoppingCart className="size-3.5 stroke-[2.5] text-white" />
+              <ShoppingCart className="size-3.5 text-white" />
               <span>Add to Cart</span>
             </>
           )}

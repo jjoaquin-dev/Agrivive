@@ -46,9 +46,9 @@ export function BuyerSiteHeader() {
   }, [notificationsOpen]);
 
   return (
-    <header data-tone={onGreen ? "green" : "light"} className="sticky top-0 z-40 border-b border-neutral-200/80 bg-white/95 backdrop-blur shadow-xs">
+    <header data-tone={onGreen ? "green" : "light"} className="sticky top-0 z-40 border-b border-neutral-200/80 bg-white/95 backdrop-blur shadow-sm">
       {/* Top Main Bar */}
-      <div className={`border-b py-2.5 ${onGreen ? "border-[#386600] bg-[#457D00]" : "border-neutral-100"}`}>
+      <div className={`border-b py-2.5 ${onGreen ? "border-[#457D00] bg-[#457D00]" : "border-neutral-100"}`}>
         <PageContainer className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="group -ml-3 flex shrink-0 items-center gap-1.5" aria-label="Agrivive home">
@@ -57,7 +57,7 @@ export function BuyerSiteHeader() {
               alt="Agrivive"
               width={130}
               height={36}
-              className="h-[36px] w-auto object-contain transition-transform group-hover:scale-105"
+              className="h-[30px] w-auto object-contain transition-transform group-hover:scale-105 sm:h-[36px]"
               priority
             />
           </Link>
@@ -68,7 +68,7 @@ export function BuyerSiteHeader() {
           </Suspense>
 
           {/* User & Marketplace Actions */}
-          <div className="-mr-3 flex items-center gap-3">
+          <div className="-mr-3 flex shrink-0 items-center gap-2 sm:gap-3">
             {/* Messages & Notifications (left side of profile avatar) */}
             <Link
               href="/messages"
@@ -90,7 +90,7 @@ export function BuyerSiteHeader() {
               >
                 <Bell className="icon-shake-on-hover size-5" />
                 {unreadCount > 0 ? (
-                  <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold text-white shadow-2xs">
+                  <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white shadow-sm">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 ) : null}
@@ -116,7 +116,7 @@ export function BuyerSiteHeader() {
               <ShoppingCart aria-hidden="true" className="cart-wiggle-on-hover size-4 text-[#457D00]" />
               <span className="hidden sm:inline">Cart</span>
               {cartReady && itemCount > 0 ? (
-                <span key={itemCount} className="cart-count-bump inline-flex size-5 items-center justify-center rounded-full bg-[#457D00] text-[10px] font-bold text-white">
+                <span key={itemCount} className="cart-count-bump inline-flex size-5 items-center justify-center rounded-full bg-[#457D00] text-xs font-bold text-white">
                   {itemCount}
                 </span>
               ) : null}
@@ -126,7 +126,7 @@ export function BuyerSiteHeader() {
               type="button"
               variant="outline"
               size="icon"
-              className="size-10 min-h-10 min-w-10 rounded-xl md:hidden"
+              className="size-10 min-h-10 min-w-10 rounded-xl lg:hidden"
               aria-label={menuOpen ? "Close menu" : "Open menu"}
               onClick={() => setMenuOpen((open) => !open)}
             >

@@ -36,7 +36,7 @@ export function ProductCardMedia({
 
   return (
     <div
-      className={`relative w-full shrink-0 overflow-hidden rounded-[20px] bg-neutral-100 ${
+      className={`relative w-full shrink-0 overflow-hidden rounded-2xl bg-[#F4F7EE] ${
         tall ? "h-64" : "h-[196px]"
       }`}
     >
@@ -60,12 +60,12 @@ export function ProductCardMedia({
         {soldOut ? (
           <Badge
             variant="destructive"
-            className="flex h-[28px] items-center rounded-full px-3 text-[11px] font-bold uppercase shadow-2xs"
+            className="flex h-[28px] items-center rounded-full px-3 text-xs font-bold uppercase shadow-sm"
           >
             Sold out
           </Badge>
         ) : isReduced ? (
-          <span className="inline-flex h-[28px] items-center rounded-full bg-[#FEC878] px-3 text-[11px] font-bold text-white shadow-2xs">
+          <span className="inline-flex h-[28px] items-center rounded-full bg-[#FEC878] px-3 text-xs font-bold text-white shadow-sm">
             {discountPct}% OFF
           </span>
         ) : null}
@@ -85,7 +85,7 @@ export function ProductCardMedia({
           }
           aria-pressed={isSaved}
           aria-busy={saving}
-          className={`flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-2xs transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
+          className={`flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
             isSaved
               ? "text-[#FEA938]"
               : "text-[#14231A] hover:bg-neutral-50"
@@ -95,7 +95,7 @@ export function ProductCardMedia({
             <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
           ) : (
             <Heart
-              className={`size-5 stroke-[1.75] ${
+              className={`size-5 ${
                 isSaved ? "fill-[#FEA938] text-[#FEA938]" : "fill-transparent text-[#14231A]"
               }`}
               aria-hidden="true"
@@ -106,7 +106,7 @@ export function ProductCardMedia({
         {/* Floating Tooltip */}
         <div
           role="tooltip"
-          className="pointer-events-none absolute right-0 top-full mt-1.5 hidden whitespace-nowrap rounded-lg bg-neutral-900/90 px-2.5 py-1 text-[11px] font-medium text-white shadow-lg backdrop-blur-xs transition group-hover/heart:block sm:block sm:opacity-0 sm:group-hover/heart:opacity-100"
+          className="pointer-events-none absolute right-0 top-full mt-1.5 hidden whitespace-nowrap rounded-lg bg-neutral-900/90 px-2.5 py-1 text-xs font-medium text-white shadow-lg backdrop-blur-xs transition group-hover/heart:block sm:block sm:opacity-0 sm:group-hover/heart:opacity-100"
         >
           {isSaved ? "Remove from favorites" : "Add to favorites"}
         </div>

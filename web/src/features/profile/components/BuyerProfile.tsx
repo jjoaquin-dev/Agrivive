@@ -40,7 +40,7 @@ export function BuyerProfile() {
     return (
       <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] py-8">
         <PageContainer>
-          <div className="h-64 animate-pulse rounded-3xl bg-neutral-100" />
+          <div className="h-64 animate-pulse rounded-2xl bg-neutral-100" />
         </PageContainer>
       </main>
     );
@@ -53,7 +53,7 @@ export function BuyerProfile() {
     <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] py-6 text-foreground sm:py-10">
       <PageContainer>
         {/* Top Back Navigation Link */}
-        <div className="mb-6">
+        <div>
           <Breadcrumbs items={[{ label: "Settings" }]} />
         </div>
 
@@ -82,11 +82,11 @@ export function BuyerProfile() {
             onClick={() => setActiveTab("profile")}
             className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs transition-all cursor-pointer ${
               activeTab === "profile"
-                ? "bg-white text-neutral-900 font-bold shadow-2xs"
+                ? "bg-white text-neutral-900 font-bold shadow-sm"
                 : "text-neutral-600 font-semibold hover:text-neutral-900"
             }`}
           >
-            <User className={`size-3.5 ${activeTab === "profile" ? "text-[#386600]" : "text-neutral-400"}`} />
+            <User className={`size-3.5 ${activeTab === "profile" ? "text-[#457D00]" : "text-neutral-400"}`} />
             <span>Profile</span>
           </button>
           <button
@@ -94,11 +94,11 @@ export function BuyerProfile() {
             onClick={() => setActiveTab("security")}
             className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs transition-all cursor-pointer ${
               activeTab === "security"
-                ? "bg-white text-neutral-900 font-bold shadow-2xs"
+                ? "bg-white text-neutral-900 font-bold shadow-sm"
                 : "text-neutral-600 font-semibold hover:text-neutral-900"
             }`}
           >
-            <KeyRound className={`size-3.5 ${activeTab === "security" ? "text-[#386600]" : "text-neutral-400"}`} />
+            <KeyRound className={`size-3.5 ${activeTab === "security" ? "text-[#457D00]" : "text-neutral-400"}`} />
             <span>Security</span>
           </button>
           <button
@@ -106,11 +106,11 @@ export function BuyerProfile() {
             onClick={() => setActiveTab("notifications")}
             className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs transition-all cursor-pointer ${
               activeTab === "notifications"
-                ? "bg-white text-neutral-900 font-bold shadow-2xs"
+                ? "bg-white text-neutral-900 font-bold shadow-sm"
                 : "text-neutral-600 font-semibold hover:text-neutral-900"
             }`}
           >
-            <Bell className={`size-3.5 ${activeTab === "notifications" ? "text-[#386600]" : "text-neutral-400"}`} />
+            <Bell className={`size-3.5 ${activeTab === "notifications" ? "text-[#457D00]" : "text-neutral-400"}`} />
             <span>Notifications</span>
           </button>
         </div>

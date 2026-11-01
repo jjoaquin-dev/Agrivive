@@ -24,7 +24,7 @@ export function OrderCancelToast({ notice, onDismiss }: OrderCancelToastProps) {
       aria-live="polite"
       className="fixed top-20 right-4 z-50 w-full max-w-sm sm:right-6 animate-in fade-in slide-in-from-top-3 duration-200"
     >
-      <Alert className="relative flex items-center gap-3 overflow-hidden py-3.5 pl-3.5 pr-10 shadow-[0_12px_28px_rgba(0,0,0,0.08)] backdrop-blur-md">
+      <Alert className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-10 shadow-md backdrop-blur-md">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
             <CheckCircle2 className="size-4" />

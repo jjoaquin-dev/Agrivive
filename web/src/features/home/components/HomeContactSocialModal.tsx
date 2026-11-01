@@ -83,7 +83,7 @@ export function HomeContactSocialModal({ isOpen, onClose }: HomeContactSocialMod
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-[30px] bg-white p-6 sm:p-8 shadow-2xl border border-neutral-200/80 overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg rounded-2xl bg-white p-6 sm:p-8 shadow-lg border border-neutral-200/80 overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
@@ -125,7 +125,7 @@ export function HomeContactSocialModal({ isOpen, onClose }: HomeContactSocialMod
               className={`group flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-neutral-50/70 p-4 transition-all duration-200 ${channel.cardHover} hover:bg-white hover:shadow-md cursor-pointer`}
             >
               <div className="flex items-center gap-3.5">
-                <div className={`flex size-11 shrink-0 items-center justify-center rounded-xl shadow-xs ${channel.iconBg}`}>
+                <div className={`flex size-11 shrink-0 items-center justify-center rounded-xl shadow-sm ${channel.iconBg}`}>
                   {channel.icon}
                 </div>
                 <div>
@@ -133,15 +133,15 @@ export function HomeContactSocialModal({ isOpen, onClose }: HomeContactSocialMod
                     <span className="font-heading text-sm font-bold text-neutral-900 group-hover:text-[#457D00] transition-colors">
                       {channel.name}
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold border shadow-2xs ${channel.badgeStyle}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold border shadow-sm ${channel.badgeStyle}`}>
                       {channel.badge}
                     </span>
                   </div>
                   <p className="text-xs font-semibold text-[#457D00]">{channel.handle}</p>
-                  <p className="text-[11px] text-neutral-500">{channel.description}</p>
+                  <p className="text-xs text-neutral-500">{channel.description}</p>
                 </div>
               </div>
-              <div className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-neutral-400 ${channel.actionHover} transition-all shadow-2xs border border-neutral-200/50`}>
+              <div className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-white text-neutral-400 ${channel.actionHover} transition-all shadow-sm border border-neutral-200/50`}>
                 <ArrowUpRight className="size-4" />
               </div>
             </a>
