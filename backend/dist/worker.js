@@ -28850,12 +28850,17 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   lastError: text("last_error"),
+  priorityScore: decimal("priority_score", { precision: 5, scale: 4 }),
+  priorityTier: text("priority_tier"),
+  priceDropSetupAt: timestamp("price_drop_setup_at", { withTimezone: true }),
+  priceDropSetupNotifiedAt: timestamp("price_drop_setup_notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
   index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
+  index("seller_visibility_boosts_setup_idx").on(table.priceDropSetupAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
 ]);
@@ -28988,6 +28993,8 @@ var conversation_participants = pgTable("conversation_participants", {
   conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   lastReadAt: timestamp("last_read_at", { withTimezone: true }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  blockedAt: timestamp("blocked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   uniqueIndex("conversation_participants_conversation_user_unique").on(table.conversationId, table.userId),
@@ -29261,6 +29268,15 @@ var sellerNoticeDefs = {
     topic: "boost",
     category: "listings",
     target: "notifications"
+  },
+  price_drop_setup: {
+    title: "Set Your Price Drop",
+    plural: "Set Your Price Drops",
+    body: (p) => `${product(p)} is a Priority Boost listing. Set how much the price drops every 6 hours, and your final price.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "listing"
   },
   boost_posted: {
     title: "Boost Posted",
@@ -30495,6 +30511,43 @@ async function deliverSellerBoostFollowUps() {
   return { configured: true, due: due.length, sent, failed };
 }
 
+// src/jobs/send-price-drop-setup-notices.ts
+async function sendPriceDropSetupNotices(limit = 25) {
+  const now = new Date;
+  const due = await db.select({
+    id: seller_visibility_boosts.id,
+    sellerId: seller_visibility_boosts.sellerId,
+    productId: seller_visibility_boosts.productId,
+    productName: sellers_product.productName,
+    enabled: sellers_product.priceReductionEnabled,
+    amount: sellers_product.priceReductionAmount,
+    minimumPrice: sellers_product.minimumPrice
+  }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(isNotNull(seller_visibility_boosts.priceDropSetupAt), lte(seller_visibility_boosts.priceDropSetupAt, now), isNull(seller_visibility_boosts.priceDropSetupNotifiedAt))).limit(limit);
+  let sent = 0;
+  for (const boost of due) {
+    const alreadySet = boost.enabled && Number(boost.amount ?? 0) > 0 && boost.minimumPrice !== null;
+    try {
+      await db.transaction(async (tx) => {
+        if (!alreadySet) {
+          await createSellerNotification(tx, {
+            sellerId: boost.sellerId,
+            kind: "price_drop_setup",
+            dedupeKey: `price-drop-setup:${boost.id}`,
+            productId: boost.productId,
+            payload: { productName: boost.productName }
+          });
+        }
+        await tx.update(seller_visibility_boosts).set({ priceDropSetupNotifiedAt: now }).where(eq(seller_visibility_boosts.id, boost.id));
+      });
+      if (!alreadySet)
+        sent++;
+    } catch (error) {
+      console.error("Price drop setup notice failed", { boostId: boost.id, error });
+    }
+  }
+  return { due: due.length, sent };
+}
+
 // src/jobs/send-reservation-ending-notices.ts
 var warningWindowMs = 60 * 60 * 1000;
 async function sendReservationEndingNotices(limit = 100) {
@@ -30525,8 +30578,9 @@ async function runScheduledJobs() {
   const sellerListingNotices = await sendSellerListingNotices();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const sellerBoostFollowUps = await deliverSellerBoostFollowUps();
+  const priceDropSetupNotices = await sendPriceDropSetupNotices();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerVisibilityBoosts, sellerBoostFollowUps, pushNotifications };
+  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, pushNotifications };
 }
 
 // src/worker.ts

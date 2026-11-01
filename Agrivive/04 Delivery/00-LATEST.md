@@ -15,7 +15,11 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Fixed the Boost retry showing the old failure: a retried boost kept its old `sentAt` and old failed post logs, so the next screen said "did not post" while the list said "Posting now". Retry now clears `sentAt` and channels count only logs from the latest send. Typecheck, 33 tests and builds passed; no device check. Rebuild and recreate the API. See [[2026-11-02 Boost Retry Shows Old Failure]].
+The post after adding produce is now a normal post for any listing; only Priority Boost listings (score 0.60 or higher, checked once when the first post is saved) get the 6-hour price drops. 6 hours after the post the seller is asked to set the peso drop and final price, and saving it runs the first drop. Add Produce no longer asks for the drop. New migration `20261102120000_boost_priority_price_drop_setup` is not applied anywhere yet. Backend typecheck, 33 tests, builds, drizzle check and mobile typecheck and Android export passed; no device check. Rebuild and recreate the API and worker. See [[2026-11-02 Normal First Post and Priority Price Drops]].
+
+Earlier: Boost retry fix (stale "did not post" after a retry); see [[2026-11-02 Boost Retry Shows Old Failure]].
+
+Earlier: Fixed the Boost retry showing the old failure: a retried boost kept its old `sentAt` and old failed post logs, so the next screen said "did not post" while the list said "Posting now". Retry now clears `sentAt` and channels count only logs from the latest send. Typecheck, 33 tests and builds passed; no device check. Rebuild and recreate the API. See [[2026-11-02 Boost Retry Shows Old Failure]].
 
 Earlier: Buyer Messages empty state ("Choose a conversation") shows the new green chat-bubble illustration with its background removed (`web/public/brand/empty-chat-bubble.png`). Details: [[2026-11-02 Messages Empty State Chat Image]]. Validation: typecheck passed; seen in the browser pane at desktop width. Not checked: phone width.
 

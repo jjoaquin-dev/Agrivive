@@ -13,9 +13,11 @@ export async function reduceVisibilityBoostPrice(boostId: string) {
   const productId = context.product.id;
 
   const result = await db.transaction(async (tx) => {
-    const [boost] = await tx.select({ createdAt: seller_visibility_boosts.createdAt })
+    const [boost] = await tx.select({ createdAt: seller_visibility_boosts.createdAt, tier: seller_visibility_boosts.priorityTier })
       .from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
     if (!boost) throw new OrderError(404, "Visibility boost not found");
+    // Only a Priority Boost first post gets the 6-hour price drops. Boosts saved before the tier was recorded keep working.
+    if (boost.tier && boost.tier !== "Priority Boost") throw new OrderError(409, "Price drops need Priority Boost");
     const [product] = await tx.select().from(sellers_product)
       .where(eq(sellers_product.id, productId)).for("update").limit(1);
     if (!product) throw new OrderError(404, "Product not found");

@@ -16,6 +16,7 @@ const icons: Record<string, IconType> = {
   sold_out: "cross",
   price_lowered: "megaphone",
   final_price_reached: "check",
+  price_drop_setup: "megaphone",
   boost_started: "megaphone",
   boost_posted: "celebration",
   boost_failed: "cross",
@@ -41,6 +42,10 @@ function actionFor(notice: SellerNotification, router: RouterInstance) {
       label: notice.category === "messages" ? "Reply" : "View Reservation",
       onPress: () => router.push({ pathname: "/(app)/orders/[id]", params: { id: orderId } }),
     };
+  }
+  if (notice.productId && notice.kind === "price_drop_setup") {
+    const productId = notice.productId;
+    return { label: "Set Price Drop", onPress: () => router.push(`/(app)/marketing/${productId}`) };
   }
   if (notice.productId) {
     return { label: "View Listing", onPress: () => router.push("/(app)/(tabs)/inventory") };

@@ -7,33 +7,30 @@ import { PlatformBadge } from "./PlatformBadge";
 
 interface Props {
   visible: boolean;
-  priceReductionAmount: number;
   onPreview: () => void;
   onClose: () => void;
 }
 
-const benefits = (dropAmount: number) => [
+const benefits = [
   { title: "Reach more buyers", text: "Get your produce seen by more people." },
   {
-    title: "Lower the price if needed",
-    text: dropAmount > 0
-      ? `If it has not sold, the price drops ₱${dropAmount.toFixed(2)} every 6 hours, down to your final price.`
-      : "Your price stays the same unless you set a price drop.",
+    title: "Price drops for Priority listings",
+    text: "If your produce is Priority Boost when it posts, we ask you 6 hours later how much to drop the price every 6 hours. Otherwise the price stays the same.",
   },
   { title: "Share on Facebook and Instagram", text: "Your product can appear on both Agrivive pages." },
 ];
 
-/** The first Boost step: a short bottom sheet (Hick's Law: three choices to read, two actions). */
-export function BoostIntroSheet({ visible, priceReductionAmount, onPreview, onClose }: Props) {
+/** Asked once after produce is added: a short bottom sheet (Hick's Law: three points to read, two actions). */
+export function BoostIntroSheet({ visible, onPreview, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <View style={styles.sheet} accessibilityViewIsModal>
         <View style={styles.handle} />
         <View style={styles.iconWrap}><Megaphone size={34} color={colors.primary} /></View>
-        <Text style={styles.title}>Boost this produce?</Text>
-        <Text style={styles.text}>Reach more buyers by sharing your product on the Agrivive Facebook and Instagram pages.</Text>
-        {benefits(priceReductionAmount).map((item, index) => (
+        <Text style={styles.title}>Post it on Facebook and Instagram?</Text>
+        <Text style={styles.text}>Share your new produce on the Agrivive Facebook and Instagram pages. It is free, and you can skip it.</Text>
+        {benefits.map((item, index) => (
           <View key={item.title} style={styles.row}>
             <View style={styles.number}><Text style={styles.numberText}>{index + 1}</Text></View>
             <View style={styles.rowCopy}>

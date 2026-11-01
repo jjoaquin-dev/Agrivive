@@ -491,12 +491,18 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   lastError: text("last_error"),
+  // AHP-TOPSIS result saved when the first post went out. Only Priority Boost listings get the 6-hour price drops.
+  priorityScore: decimal("priority_score", { precision: 5, scale: 4 }),
+  priorityTier: text("priority_tier"),
+  priceDropSetupAt: timestamp("price_drop_setup_at", { withTimezone: true }),
+  priceDropSetupNotifiedAt: timestamp("price_drop_setup_notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
   index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
+  index("seller_visibility_boosts_setup_idx").on(table.priceDropSetupAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
 ]);

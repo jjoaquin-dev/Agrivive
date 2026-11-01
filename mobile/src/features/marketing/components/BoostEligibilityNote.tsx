@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { CheckCircle2, Clock3 } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 
-/** Says up front whether the seller can boost, so a "no" is never found out after tapping. */
+/** Says up front whether the seller can post, so a "no" is never found out after tapping. */
 export function BoostEligibilityNote({ canBoost, headline, message }: { canBoost: boolean; headline: string; message: string }) {
   const Icon = canBoost ? CheckCircle2 : Clock3;
   const tone = canBoost ? colors.success : colors.warning;
@@ -12,7 +12,7 @@ export function BoostEligibilityNote({ canBoost, headline, message }: { canBoost
       <Icon size={26} color={tone} />
       <View style={styles.copy}>
         <Text style={styles.title}>{canBoost ? "You're all set!" : headline}</Text>
-        <Text style={styles.text}>{canBoost ? "You can boost this product." : message}</Text>
+        <Text style={styles.text}>{canBoost ? "You can post this product." : message}</Text>
       </View>
     </View>
   );

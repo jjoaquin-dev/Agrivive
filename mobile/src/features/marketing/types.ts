@@ -60,6 +60,16 @@ export interface SellerVisibilityBoost {
   lowestPrice?: number | null;
 }
 
+/** Where the 6-hour price drops stand once the first post is out. Priority Boost is decided when it posts. */
+export interface PriceDropRule {
+  state: "waiting_6h" | "set_up_now" | "on" | "not_priority" | "ended" | "off";
+  /** AHP-TOPSIS closeness, 0 to 1. Null on boosts saved before it was recorded. */
+  score: number | null;
+  tier: string | null;
+  setupAt: string | null;
+  nextDropAt: string | null;
+}
+
 export interface SellerProductBoostResponse {
   product: {
     id: string;
@@ -93,6 +103,7 @@ export interface SellerProductBoostResponse {
     /** Can the seller bring the next 6-hour price drop forward to now? */
     priceDrop?: { available: boolean; message: string | null; waitUntil: string | null };
   };
+  priceDropRule: PriceDropRule | null;
   boost: SellerVisibilityBoost | null;
 }
 

@@ -64,10 +64,11 @@ export function fetchPriceDropHistory(cursor?: string) {
   return apiFetch<PriceDropHistoryResponse>(`/seller/price-drops${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`);
 }
 
-export function setAutoPriceDropEnabled(productId: string, enabled: boolean) {
-  return apiFetch<{ productId: string; enabled: boolean }>(`/seller/products/${productId}/price-reduction`, {
+/** Turns the 6-hour price drops on or off. A drop amount and final price can be saved in the same call. */
+export function setAutoPriceDropEnabled(productId: string, enabled: boolean, setup?: { amount: number; minimumPrice: number }) {
+  return apiFetch<{ productId: string; enabled: boolean; dropNow: boolean }>(`/seller/products/${productId}/price-reduction`, {
     method: "PATCH",
-    body: JSON.stringify({ enabled }),
+    body: JSON.stringify({ enabled, ...(setup ?? {}) }),
   });
 }
 

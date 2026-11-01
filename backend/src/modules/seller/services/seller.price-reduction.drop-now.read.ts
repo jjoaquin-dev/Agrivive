@@ -28,7 +28,9 @@ export async function readPriceDropNow(tx: OrderTransaction, sellerId: string, p
   if (!cycle) return no("Boost this listing first");
 
   // The boost whose 6-hour rule is running, and it must already have its first post out.
-  const [boost] = await tx.select({ id: seller_visibility_boosts.id, createdAt: seller_visibility_boosts.createdAt })
+  const [boost] = await tx.select({
+    id: seller_visibility_boosts.id, createdAt: seller_visibility_boosts.createdAt, tier: seller_visibility_boosts.priorityTier,
+  })
     .from(seller_visibility_boosts).where(and(
       eq(seller_visibility_boosts.productId, productId),
       eq(seller_visibility_boosts.listingCycleId, cycle.id),
@@ -36,6 +38,7 @@ export async function readPriceDropNow(tx: OrderTransaction, sellerId: string, p
       eq(seller_visibility_boosts.status, "sent"),
     )).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
   if (!boost) return no("Boost this listing first");
+  if (boost.tier && boost.tier !== "Priority Boost") return no("Price drops need Priority Boost");
   const [firstPost] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(
     eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "first_post"),
     eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt), isNotNull(fb_post_logs.facebookPostId),

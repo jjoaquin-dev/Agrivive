@@ -22,7 +22,12 @@ export const sellerPriceReductionRoute = new Elysia().use(sessionAuth)
   }, { role: ["seller"], query: sellerPriceDropHistoryQuery })
   .patch("/products/:id/price-reduction", async ({ session, params, body, status }) => {
     try {
-      return await setSellerPriceReductionEnabled(session.userId, params.id, body.enabled);
+      const saved = await setSellerPriceReductionEnabled(session.userId, params.id, body.enabled, {
+        amount: body.amount, minimumPrice: body.minimumPrice,
+      });
+      // The first drop is due right away: send it now; the worker's next pass is the safety net.
+      if (saved.dropNow) void deliverSellerBoostFollowUps().catch((error) => console.error("Immediate price drop delivery failed", error));
+      return saved;
     } catch (error) { return sellerProductFailure(error, status); }
   }, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody })
   .post("/products/:id/price-drop", async ({ session, params, status }) => {

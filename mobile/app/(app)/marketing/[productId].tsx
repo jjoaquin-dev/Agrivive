@@ -12,6 +12,8 @@ import { BoostProductHeader } from "../../../src/features/marketing/components/B
 import { BoostPostPreview } from "../../../src/features/marketing/components/BoostPostPreview";
 import { BoostPriceDropCard } from "../../../src/features/marketing/components/BoostPriceDropCard";
 import { BoostStatusCard } from "../../../src/features/marketing/components/BoostStatusCard";
+import { PriceDropRuleCard } from "../../../src/features/marketing/components/PriceDropRuleCard";
+import { PriceDropSetupSheet } from "../../../src/features/marketing/components/PriceDropSetupSheet";
 import type { SellerProductBoostResponse } from "../../../src/features/marketing/types";
 import { colors, fonts, spacing } from "../../../src/theme";
 
@@ -20,13 +22,14 @@ export default function PreviewBoostScreen() {
   const { productId } = useLocalSearchParams<{ productId: string }>();
   const [data, setData] = useState<SellerProductBoostResponse | null>(null);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [setupOpen, setSetupOpen] = useState(false);
   const sending = useRef(false);
 
   const load = useCallback(async () => {
     if (!productId) return;
     setLoading(true);
     try { setData(await fetchSellerProductBoost(productId)); setError(""); }
-    catch (reason: any) { setError(reason?.message || "Could not load the boost. Check your connection and try again."); }
+    catch (reason: any) { setError(reason?.message || "Could not load the post. Check your connection and try again."); }
     finally { setLoading(false); }
   }, [productId]);
 
@@ -42,7 +45,7 @@ export default function PreviewBoostScreen() {
       await requestSellerVisibilityBoost(productId);
       router.replace(`/(app)/marketing/started?productId=${productId}`);
     } catch (reason: any) {
-      setError(reason?.message || "Could not start the boost. Check your connection and try again.");
+      setError(reason?.message || "Could not post. Check your connection and try again.");
       sending.current = false;
       setBusy(false);
     }
@@ -61,13 +64,16 @@ export default function PreviewBoostScreen() {
     {product && data && !canBoost ? <BoostProductHeader name={product.productName} imageUrl={product.imageUrl} price={product.currentPrice} unit={product.unit} /> : null}
     {data ? <BoostEligibilityNote canBoost={canBoost} headline={data.eligibility.headline} message={data.eligibility.message} /> : null}
     {!canBoost && data?.boost ? <BoostStatusCard boost={data.boost} /> : null}
+    {data?.priceDropRule ? <PriceDropRuleCard rule={data.priceDropRule} onSetUp={() => setSetupOpen(true)} /> : null}
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
   </ScrollView>
   <View style={styles.bar}>
-    {data ? <ButtonComponent title={waitHours > 0 ? `Boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}` : "Boost on Facebook & Instagram"} onPress={() => void boost()} loading={busy} disabled={!canBoost} icon={<Megaphone size={18} color={colors.white} />} style={styles.action} /> : null}
+    {data ? <ButtonComponent title={waitHours > 0 ? `Post again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}` : "Post on Facebook & Instagram"} onPress={() => void boost()} loading={busy} disabled={!canBoost} icon={<Megaphone size={18} color={colors.white} />} style={styles.action} /> : null}
     {!data && error ? <ButtonComponent title="Try Again" variant="secondary" onPress={() => void load()} style={styles.action} /> : null}
     <Pressable onPress={() => router.push("/(app)/(tabs)/marketing?section=history")} accessibilityRole="button" style={styles.historyLink}><Text style={styles.historyLinkText}>See boost history</Text></Pressable>
-  </View></SafeAreaView>;
+  </View>
+  {product ? <PriceDropSetupSheet visible={setupOpen} productId={product.id} price={product.currentPrice} onClose={() => setSetupOpen(false)} onSaved={() => { setSetupOpen(false); void load(); }} /> : null}
+  </SafeAreaView>;
 }
 
 const styles = StyleSheet.create({

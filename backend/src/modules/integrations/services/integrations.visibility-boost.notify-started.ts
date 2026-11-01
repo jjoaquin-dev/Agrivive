@@ -10,9 +10,7 @@ export async function notifyBoostStarted(boostId: string) {
       sellerId: seller_visibility_boosts.sellerId,
       productId: seller_visibility_boosts.productId,
       productName: sellers_product.productName,
-      amount: sellers_product.priceReductionAmount,
-      minimumPrice: sellers_product.minimumPrice,
-      enabled: sellers_product.priceReductionEnabled,
+      followUpDueAt: seller_visibility_boosts.followUpDueAt,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
       .where(eq(seller_visibility_boosts.id, boostId)).limit(1);
@@ -24,7 +22,8 @@ export async function notifyBoostStarted(boostId: string) {
       productId: row.productId,
       payload: {
         productName: row.productName,
-        willLowerPrice: row.enabled && Number(row.amount ?? 0) > 0 && row.minimumPrice !== null,
+        // Set when the first post was saved: only a Priority Boost listing with a drop set up has a timer.
+        willLowerPrice: row.followUpDueAt !== null,
       },
     }));
   } catch (error) {
