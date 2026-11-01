@@ -12,9 +12,6 @@ import { publishInstagramPhoto } from "./integrations.social-publish-instagram";
 /** Posts one Boost photo to the Agrivive Instagram account. The result is kept apart from Facebook's. */
 export async function postVisibilityBoostToInstagram(boostId: string, body: VisibilityBoostFacebookPostBody) {
   const context = await getVisibilityBoostContext(boostId);
-  if (context.reason === "price_reduction" && body.postType !== "second_post") {
-    throw new OrderError(400, "A price drop boost can only make the second post");
-  }
   const [boost] = await db.select({ createdAt: seller_visibility_boosts.createdAt })
     .from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!boost) throw new OrderError(404, "Visibility boost not found");

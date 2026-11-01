@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import {
   fetchConversation,
@@ -10,16 +10,22 @@ import {
 import { useConversationSocket } from "./useConversationSocket";
 import type { Conversation, ConversationMessage } from "../types";
 
+/** A message that did not go out. It keeps its id, so sending it again can never post it twice. */
+export type FailedMessage = { body: string; clientMessageId: string; message: string };
+
 export function useConversationDetail(id?: string) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [draft, setDraft] = useState("");
+  const [photo, setPhoto] = useState<{ uri: string; filename: string } | null>(null);
   const [attachment, setAttachment] = useState<{ url: string; filename: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState<string | null>(null);
-  const [failedPayload, setFailedPayload] = useState<{ body: string; id: string } | null>(null);
+  const [failed, setFailed] = useState<FailedMessage | null>(null);
+  const uploadAbort = useRef<AbortController | null>(null);
 
   const addMessage = useCallback((m: ConversationMessage) => {
     setMessages((curr) => (curr.some((i) => i.id === m.id) ? curr : [...curr, m]));
@@ -36,7 +42,7 @@ export function useConversationDetail(id?: string) {
         void markConversationRead(id);
       })
       .catch((err: any) => {
-        if (active) setSendError(err?.message || "Could not load conversation.");
+        if (active) setLoadError(err?.message || "Could not load conversation.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -52,32 +58,44 @@ export function useConversationDetail(id?: string) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") return;
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
-    if (res.canceled || !res.assets?.[0]?.uri) return;
+    const asset = res.assets?.[0];
+    if (res.canceled || !asset?.uri) return;
+    const controller = new AbortController();
+    uploadAbort.current = controller;
+    setPhoto({ uri: asset.uri, filename: asset.fileName || asset.uri.split("/").pop() || "photo.jpg" });
+    setAttachment(null);
     setUploading(true);
-    setSendError(null);
+    setUploadError(null);
     try {
-      const up = await uploadConversationAttachment(res.assets[0].uri);
-      setAttachment(up);
+      setAttachment(await uploadConversationAttachment(asset.uri, controller.signal));
     } catch (err: any) {
-      setSendError(err?.message || "Failed to upload photo.");
+      if (!controller.signal.aborted) {
+        setPhoto(null);
+        setUploadError(err?.message || "Failed to upload photo.");
+      }
     } finally {
+      if (uploadAbort.current === controller) uploadAbort.current = null;
       setUploading(false);
     }
   };
 
-  const executeSend = async (body: string, clientMsgId: string) => {
+  /** Cancels a photo that is still uploading, or removes one that is ready. */
+  const removePhoto = () => {
+    uploadAbort.current?.abort();
+    uploadAbort.current = null;
+    setPhoto(null);
+    setAttachment(null);
+    setUploading(false);
+  };
+
+  const execute = async (body: string, clientMessageId: string) => {
     if (!id) return;
     setSending(true);
-    setSendError(null);
     try {
-      const sent = await sendConversationMessage(id, body, clientMsgId);
-      addMessage(sent);
-      setDraft("");
-      setAttachment(null);
-      setFailedPayload(null);
+      addMessage(await sendConversationMessage(id, body, clientMessageId));
+      setFailed(null);
     } catch (err: any) {
-      setSendError(err?.message || "Could not send message.");
-      setFailedPayload({ body, id: clientMsgId });
+      setFailed({ body, clientMessageId, message: err?.message || "Could not send message." });
     } finally {
       setSending(false);
     }
@@ -87,27 +105,32 @@ export function useConversationDetail(id?: string) {
     let body = draft.trim();
     if (attachment) body = body ? `${body}\n${attachment.url}` : attachment.url;
     if (!body) return;
-    const clientMsgId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    void executeSend(body, clientMsgId);
+    setDraft("");
+    setPhoto(null);
+    setAttachment(null);
+    setUploadError(null);
+    void execute(body, `${Date.now()}-${Math.random().toString(36).slice(2)}`);
   };
 
   const retrySend = () => {
-    if (!failedPayload) return;
-    void executeSend(failedPayload.body, failedPayload.id);
+    if (failed) void execute(failed.body, failed.clientMessageId);
   };
 
   return {
     conversation,
     messages,
     loading,
+    loadError,
     paused,
     draft,
     setDraft,
-    attachment,
-    setAttachment,
+    photo,
+    photoReady: attachment !== null,
+    removePhoto,
     uploading,
+    uploadError,
     sending,
-    sendError,
+    failed,
     pickImage,
     send,
     retrySend,

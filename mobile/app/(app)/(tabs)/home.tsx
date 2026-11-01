@@ -91,10 +91,11 @@ export default function HomeScreen() {
         sellerName={sellerName}
         shopName={shopName}
         isVerified={isVerified}
+        avatarUrl={setup?.account?.image || session?.user?.image}
         unreadCount={unreadCount}
         openMessageCount={openMessageCount}
         onPressNotifications={() => router.push("/(app)/notifications")}
-        onPressProfile={() => router.push("/(app)/(tabs)/profile")}
+        onPressProfile={() => router.push("/(app)/profile")}
       />
 
       <DashboardTwinActions
@@ -144,7 +145,7 @@ export default function HomeScreen() {
 
       <DashboardOperationsHub
         onAnalytics={() => router.push("/(app)/analytics")}
-        onMarketing={() => router.push("/(app)/marketing")}
+        onMarketing={() => router.push("/(app)/(tabs)/marketing")}
         onActivity={() => router.push("/(app)/activity")}
         onAdvisories={() => router.push("/(app)/advisories")}
       />

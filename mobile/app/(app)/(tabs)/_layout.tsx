@@ -7,7 +7,7 @@ import {
   MessageCircle,
   MessageCircleMore,
   CalendarDays,
-  User,
+  Megaphone,
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
 import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
@@ -120,13 +120,13 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 5. Stall Profile */}
+      {/* 5. Boost (the profile opens from the picture on Home) */}
       <Tabs.Screen
-        name="profile"
+        name="marketing"
         options={{
-          title: "Profile",
+          title: "Boost",
           tabBarIcon: ({ color, size }) => (
-            <User color={color} size={size || 22} />
+            <Megaphone color={color} size={size || 22} />
           ),
         }}
       />

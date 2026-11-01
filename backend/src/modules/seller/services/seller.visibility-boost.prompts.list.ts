@@ -1,7 +1,6 @@
 import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { seller_visibility_boosts, sellers_product } from "../../../db/schema";
-import { getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 
 export async function listSellerVisibilityBoostPrompts(sellerId: string, limit = 20, cursor?: string) {
@@ -37,13 +36,7 @@ export async function listSellerVisibilityBoostPrompts(sellerId: string, limit =
       .limit(limit + 1);
 
     const hasMore = rows.length > limit;
-    const page = hasMore ? rows.slice(0, limit) : rows;
-    const waits = new Map<string, string | null>();
-    for (const productId of new Set(page.map((row) => row.productId))) {
-      const end = await getPriceDropPostCooldownEnd(tx, productId);
-      waits.set(productId, end ? end.toISOString() : null);
-    }
-    const items = page.map((row) => ({ ...row, waitUntil: row.reason === "price_reduction" ? waits.get(row.productId) ?? null : null }));
+    const items = hasMore ? rows.slice(0, limit) : rows;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
 
     const [unread] = await tx.select({ count: sql<number>`count(*)::int` })

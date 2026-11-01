@@ -13,10 +13,6 @@ function templateCaption(context: Context, postType: string, price: string, prev
     return `Fresh ${context.product.name} is now available at ₱${price}${per} from ${context.seller.shopName}!`;
   }
   const was = previous ? ` (was ₱${previous.toFixed(2)})` : "";
-  // A boost again after a price drop is a reminder, not a second flash sale.
-  if (context.reason === "price_reduction") {
-    return `Still available: ${context.product.name} at ₱${price}${per}${was} from ${context.seller.shopName}. Order before it sells out!`;
-  }
   return `Price drop! ${context.product.name} is now ₱${price}${per}${was} at ${context.seller.shopName}. Get yours before it sells out!`;
 }
 

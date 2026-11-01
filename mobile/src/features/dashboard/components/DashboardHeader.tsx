@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import { Image, StyleSheet, View, Text, Pressable } from "react-native";
 import { Bell, Store, Check } from "lucide-react-native";
 import { colors, fonts, radii, spacing, touchTargets, typography } from "../../../theme";
 
@@ -7,6 +7,7 @@ interface DashboardHeaderProps {
   sellerName: string;
   shopName?: string | null;
   isVerified?: boolean;
+  avatarUrl?: string | null;
   unreadCount: number;
   openMessageCount: number;
   onPressNotifications: () => void;
@@ -17,6 +18,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   sellerName,
   shopName,
   isVerified = false,
+  avatarUrl,
   unreadCount,
   onPressNotifications,
   onPressProfile,
@@ -45,7 +47,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         accessibilityLabel={isVerified ? "Seller Profile, verified" : "Seller Profile"}
         style={styles.avatarButton}
       >
-        <Text style={styles.avatarText}>{initials}</Text>
+        {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.avatarImage} accessibilityIgnoresInvertColors /> : <Text style={styles.avatarText}>{initials}</Text>}
         {isVerified ? (
           <View style={styles.verifiedBadge}>
             <Check size={10} color={colors.white} strokeWidth={3} />
@@ -80,6 +82,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.base },
   avatarButton: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  avatarImage: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full },
   avatarText: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.primaryPressed },
   verifiedBadge: { position: "absolute", right: -2, bottom: -2, width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, borderWidth: 1.5, borderColor: colors.white, alignItems: "center", justifyContent: "center" },
   identity: { flex: 1 },

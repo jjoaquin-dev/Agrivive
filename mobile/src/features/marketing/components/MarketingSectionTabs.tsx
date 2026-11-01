@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 
 export type MarketingSection = "active" | "drops" | "history" | "visibility";
@@ -10,7 +10,7 @@ interface Props {
   onChange: (value: MarketingSection) => void;
 }
 
-/** Three activity tabs of the Marketing hub as underlined tabs with room between them, like other social apps (Jakob's Law). */
+/** Three activity tabs of the Marketing hub, equal width and centered, underlined with room between them, like other social apps (Jakob's Law). */
 export function MarketingSectionTabs({ value, activeCount = 0, onChange }: Props) {
   const sections: { value: MarketingSection; label: string; count?: number }[] = [
     { value: "active", label: "Running", count: activeCount > 0 ? activeCount : undefined },
@@ -19,7 +19,7 @@ export function MarketingSectionTabs({ value, activeCount = 0, onChange }: Props
   ];
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityRole="tablist" style={styles.scroll} contentContainerStyle={styles.container}>
+    <View accessibilityRole="tablist" style={styles.container}>
       {sections.map((section) => {
         const selected = value === section.value;
         return (
@@ -39,14 +39,13 @@ export function MarketingSectionTabs({ value, activeCount = 0, onChange }: Props
           </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 0, marginTop: spacing.base, marginBottom: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
-  container: { gap: spacing.xl },
-  tab: { minHeight: 48, flexDirection: "row", alignItems: "center", gap: 6, borderBottomWidth: 3, borderBottomColor: colors.transparent },
+  container: { flexDirection: "row", marginTop: spacing.base, marginBottom: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
+  tab: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderBottomWidth: 3, borderBottomColor: colors.transparent, marginBottom: -1 },
   tabSelected: { borderBottomColor: colors.primary },
   text: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.textMuted },
   textSelected: { color: colors.text, fontFamily: fonts.body.semiBold },

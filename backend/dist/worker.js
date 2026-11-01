@@ -30432,15 +30432,40 @@ async function deliverSellerVisibilityBoosts() {
 var maxAttempts3 = 5;
 var retryAfterMs = 15 * 60000;
 var batchSize2 = 50;
+async function endedReason(boost) {
+  if (!boost.enabled || !boost.active || !boost.marketable || Number(boost.quantity ?? 0) <= 0)
+    return "unavailable";
+  if (Number(boost.amount ?? 0) <= 0 || boost.minimumPrice === null)
+    return "not_enabled";
+  if (Number(boost.price ?? 0) <= Number(boost.minimumPrice))
+    return "at_floor";
+  const [cycle] = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, boost.productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  return !cycle || cycle.id !== boost.listingCycleId ? "new_cycle" : null;
+}
 async function deliverSellerBoostFollowUps() {
   const webhook = getBoostWebhookTarget();
   if (!webhook)
     return { configured: false, due: 0, sent: 0, failed: 0 };
   const now = new Date;
-  const due = await db.select({ id: seller_visibility_boosts.id }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.reason, "initial"), inArray(seller_visibility_boosts.status, ["queued", "sent"]), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts3))).limit(batchSize2);
+  const due = await db.select({
+    id: seller_visibility_boosts.id,
+    listingCycleId: seller_visibility_boosts.listingCycleId,
+    productId: seller_visibility_boosts.productId,
+    enabled: sellers_product.priceReductionEnabled,
+    active: sellers_product.isActive,
+    marketable: sellers_product.isMarketable,
+    quantity: sellers_product.productQty,
+    amount: sellers_product.priceReductionAmount,
+    minimumPrice: sellers_product.minimumPrice,
+    price: sellers_product.productPrice
+  }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.reason, "initial"), inArray(seller_visibility_boosts.status, ["queued", "sent"]), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts3))).limit(batchSize2);
   let sent = 0;
   let failed = 0;
   for (const boost of due) {
+    if (await endedReason(boost)) {
+      await db.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boost.id));
+      continue;
+    }
     const [claimed] = await db.update(seller_visibility_boosts).set({
       followUpDueAt: new Date(now.getTime() + retryAfterMs),
       followUpAttempts: sql`${seller_visibility_boosts.followUpAttempts} + 1`

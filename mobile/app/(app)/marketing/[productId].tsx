@@ -5,7 +5,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import {
-  acceptSellerBoostPrompt, fetchSellerProductBoost, markSellerBoostPromptRead, requestSellerVisibilityBoost,
+  fetchSellerProductBoost, requestSellerVisibilityBoost,
 } from "../../../src/features/marketing/api/visibility-boosts";
 import { BoostEligibilityNote } from "../../../src/features/marketing/components/BoostEligibilityNote";
 import { BoostProductHeader } from "../../../src/features/marketing/components/BoostProductHeader";
@@ -17,7 +17,7 @@ import { colors, fonts, spacing } from "../../../src/theme";
 
 export default function PreviewBoostScreen() {
   const router = useRouter();
-  const { productId, promptId } = useLocalSearchParams<{ productId: string; promptId?: string }>();
+  const { productId } = useLocalSearchParams<{ productId: string }>();
   const [data, setData] = useState<SellerProductBoostResponse | null>(null);
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const sending = useRef(false);
@@ -31,7 +31,6 @@ export default function PreviewBoostScreen() {
   }, [productId]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-  useEffect(() => { if (promptId) void markSellerBoostPromptRead(promptId); }, [promptId]);
 
   const boost = async () => {
     // A second tap while the first is still going must not start a second boost.
@@ -40,9 +39,7 @@ export default function PreviewBoostScreen() {
     setBusy(true);
     setError("");
     try {
-      const activePromptId = promptId || (data?.boost?.status === "prompt" ? data.boost.id : null);
-      if (activePromptId) await acceptSellerBoostPrompt(activePromptId);
-      else await requestSellerVisibilityBoost(productId);
+      await requestSellerVisibilityBoost(productId);
       router.replace(`/(app)/marketing/started?productId=${productId}`);
     } catch (reason: any) {
       setError(reason?.message || "Could not start the boost. Check your connection and try again.");
@@ -60,7 +57,7 @@ export default function PreviewBoostScreen() {
   return <SafeAreaView style={styles.safe} edges={["bottom"]}><ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
     {loading && !data ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
     {product && canBoost ? <BoostPostPreview name={product.productName} imageUrl={product.imageUrl} price={product.currentPrice} quantity={product.quantity} unit={product.unit} /> : null}
-    {product && data && canBoost ? <BoostPriceDropCard dropAmount={product.priceReductionAmount} lowestPrice={product.lowestPrice} stage={data.eligibility.stage} currentPrice={product.currentPrice} /> : null}
+    {product && data && canBoost ? <BoostPriceDropCard dropAmount={product.priceReductionAmount} lowestPrice={product.lowestPrice} /> : null}
     {product && data && !canBoost ? <BoostProductHeader name={product.productName} imageUrl={product.imageUrl} price={product.currentPrice} unit={product.unit} /> : null}
     {data ? <BoostEligibilityNote canBoost={canBoost} headline={data.eligibility.headline} message={data.eligibility.message} /> : null}
     {!canBoost && data?.boost ? <BoostStatusCard boost={data.boost} /> : null}
@@ -69,7 +66,7 @@ export default function PreviewBoostScreen() {
   <View style={styles.bar}>
     {data ? <ButtonComponent title={waitHours > 0 ? `Boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}` : "Boost on Facebook & Instagram"} onPress={() => void boost()} loading={busy} disabled={!canBoost} icon={<Megaphone size={18} color={colors.white} />} style={styles.action} /> : null}
     {!data && error ? <ButtonComponent title="Try Again" variant="secondary" onPress={() => void load()} style={styles.action} /> : null}
-    <Pressable onPress={() => router.push("/(app)/marketing?section=history")} accessibilityRole="button" style={styles.historyLink}><Text style={styles.historyLinkText}>See boost history</Text></Pressable>
+    <Pressable onPress={() => router.push("/(app)/(tabs)/marketing?section=history")} accessibilityRole="button" style={styles.historyLink}><Text style={styles.historyLinkText}>See boost history</Text></Pressable>
   </View></SafeAreaView>;
 }
 

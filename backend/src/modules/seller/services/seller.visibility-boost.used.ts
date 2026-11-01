@@ -8,12 +8,12 @@ export const boostResendAfterMs = 5 * 60_000;
 /** True when the boost reached n8n a while ago but no post (or post in progress) was saved for it. */
 export async function isBoostStuck(
   tx: OrderTransaction,
-  boost: { productId: string; reason: "initial" | "price_reduction"; createdAt: Date; sentAt: Date | null },
+  boost: { productId: string; createdAt: Date; sentAt: Date | null },
 ) {
   if (!boost.sentAt || Date.now() - boost.sentAt.getTime() <= boostResendAfterMs) return false;
   const [post] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(
     eq(fb_post_logs.productId, boost.productId),
-    eq(fb_post_logs.postType, boost.reason === "initial" ? "first_post" : "second_post"),
+    eq(fb_post_logs.postType, "first_post"),
     inArray(fb_post_logs.status, ["success", "pending"]),
     gte(fb_post_logs.postedAt, boost.createdAt),
   )).limit(1);

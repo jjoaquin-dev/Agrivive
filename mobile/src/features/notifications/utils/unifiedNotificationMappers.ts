@@ -74,7 +74,7 @@ export function mapUnifiedNotificationItems(input: {
           onPress: () => {
             markedReadIds.add(`boost:${boost.id}`);
             void markSellerBoostPromptRead(boost.id);
-            router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: boost.productId, promptId: boost.id } });
+            router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: boost.productId } });
           },
         },
       });
