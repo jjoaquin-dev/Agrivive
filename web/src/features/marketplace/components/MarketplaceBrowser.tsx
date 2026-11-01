@@ -7,6 +7,7 @@ import { useMarketplaceBrowser } from "../hooks/useMarketplaceBrowser";
 import { ActiveFilters } from "./ActiveFilters";
 import { MarketplaceHero } from "./MarketplaceHero";
 import { MarketplaceDealsRow } from "./MarketplaceDealsRow";
+import { MarketplaceCategories } from "./MarketplaceCategories";
 import { MarketplaceSellerSection } from "./MarketplaceSellerSection";
 import { MarketplaceProductGrid } from "./MarketplaceProductGrid";
 import { MarketplaceFooter } from "./MarketplaceFooter";
@@ -84,7 +85,10 @@ function MarketplaceBrowserContent() {
             onSearchSubmit={handleSearch}
           />
 
-          {/* 2. Priority deals (hidden when there are none) */}
+          {/* 2. Categories */}
+          <MarketplaceCategories />
+
+          {/* 3. Priority deals (hidden when there are none) */}
           <MarketplaceDealsRow />
 
           {/* 5. Results */}
@@ -94,7 +98,7 @@ function MarketplaceBrowserContent() {
                 Today&apos;s selection
               </p>
               <h2 className="mt-1 font-heading text-2xl font-bold tracking-tight text-[#14231A]">
-                Fresh produce near you
+                Surplus produce near you
               </h2>
               <p className="mt-0.5 text-xs text-[#5F7367]">
                 {products.length} {products.length === 1 ? "listing" : "listings"} available
