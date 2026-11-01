@@ -1,6 +1,7 @@
 import { and, asc, eq, gte, inArray } from "drizzle-orm";
 import { fb_post_logs } from "../../../db/schema";
 import type { OrderTransaction } from "../../../utils/order-types";
+import { getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { isBoostStuck } from "./seller.visibility-boost.used";
 
 export type BoostState =
@@ -25,6 +26,8 @@ export async function readBoostProgress(tx: OrderTransaction, rows: BoostRow[]) 
     state: BoostState;
     roundsDone: number;
     nextDropAt: string | null;
+    /** A price drop prompt cannot be boosted until then. */
+    waitUntil: string | null;
     posts: { type: "first_post" | "second_post"; price: number; postedAt: string; postUrl: string | null; caption: string | null }[];
   }>();
   if (rows.length === 0) return progress;
@@ -48,9 +51,12 @@ export async function readBoostProgress(tx: OrderTransaction, rows: BoostRow[]) 
       caption: log.caption,
     }));
 
+    // A prompt right after a price drop post is not the seller's to answer yet.
+    const promptWait = row.status === "prompt" ? await getPriceDropPostCooldownEnd(tx, row.productId) : null;
+
     let state: BoostState;
     if (row.status === "failed") state = "failed";
-    else if (row.status === "prompt") state = "needs_choice";
+    else if (row.status === "prompt") state = promptWait ? "posted" : "needs_choice";
     else if (row.status === "dismissed") state = "dismissed";
     else if (posts.length === 0) {
       state = row.status === "sent" && await isBoostStuck(tx, row) ? "not_posted" : "posting";
@@ -63,6 +69,7 @@ export async function readBoostProgress(tx: OrderTransaction, rows: BoostRow[]) 
       state,
       roundsDone: initial ? Math.max(0, posts.length - 1) : 0,
       nextDropAt: initial && state === "running" && row.followUpDueAt ? row.followUpDueAt.toISOString() : null,
+      waitUntil: promptWait ? promptWait.toISOString() : null,
       posts,
     });
   }

@@ -221,6 +221,8 @@ export const sellers_product = pgTable("sellers_product", {
   /** Pesos taken off every 6 hours after the first Boost post, down to minimumPrice. */
   priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  /** The seller can pause the automatic 6-hour drops without losing the amount or final price. */
+  priceReductionEnabled: boolean("price_reduction_enabled").default(true).notNull(),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {

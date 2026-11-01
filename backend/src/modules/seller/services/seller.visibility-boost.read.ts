@@ -26,6 +26,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
       quantity: sellers_product.productQty,
       unit: sellers_product.scalingType,
       priceReductionAmount: sellers_product.priceReductionAmount,
+      priceReductionEnabled: sellers_product.priceReductionEnabled,
       priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
     }).from(sellers_product).where(and(
       eq(sellers_product.id, productId),
@@ -73,7 +74,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
 
-    const dropAmount = Number(product.priceReductionAmount ?? 0);
+    const dropAmount = product.priceReductionEnabled ? Number(product.priceReductionAmount ?? 0) : 0;
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
     const headline = waitUntil ? "Almost Time" : periodsApplied === 0
       ? canBoost ? "Ready to Boost" : "Boost Is Running"

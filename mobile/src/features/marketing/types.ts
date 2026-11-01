@@ -17,6 +17,8 @@ export interface BoostProgress {
   state: BoostState;
   roundsDone: number;
   nextDropAt: string | null;
+  /** A price drop prompt cannot be boosted until then. */
+  waitUntil?: string | null;
   posts: BoostPostEntry[];
 }
 
@@ -130,6 +132,12 @@ export function boostReasonLabel(reason: SellerBoostReason) {
   return reason === "price_reduction" ? "After price change" : "First boost";
 }
 
+/** "about 2 hours" for a wait that ends at `value`. */
+export function waitText(value: string) {
+  const hours = Math.max(1, Math.ceil((new Date(value).getTime() - Date.now()) / 3_600_000));
+  return `about ${hours} hour${hours === 1 ? "" : "s"}`;
+}
+
 export function formatBoostTime(value: string) {
   return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
@@ -142,4 +150,22 @@ export function productCode(productId: string) {
 /** True when the listing already has a boost that was sent, so the card button opens it instead of starting one. */
 export function hasActiveBoost(boost?: ProductBoostChip | null) {
   return boost ? ["posting", "posted", "running", "finished"].includes(boost.state) : false;
+}
+
+/** One Facebook post that announced a lower price. */
+export interface PriceDropHistoryItem {
+  id: string;
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  caption: string | null;
+  priceBefore: number;
+  priceAfter: number;
+  postedAt: string;
+  postUrl: string | null;
+}
+
+export interface PriceDropHistoryResponse {
+  items: PriceDropHistoryItem[];
+  nextCursor: string | null;
 }

@@ -8,6 +8,7 @@ import {
   acceptSellerBoostPrompt, fetchSellerProductBoost, markSellerBoostPromptRead, requestSellerVisibilityBoost,
 } from "../../../src/features/marketing/api/visibility-boosts";
 import { BoostEligibilityNote } from "../../../src/features/marketing/components/BoostEligibilityNote";
+import { BoostProductHeader } from "../../../src/features/marketing/components/BoostProductHeader";
 import { BoostPostPreview } from "../../../src/features/marketing/components/BoostPostPreview";
 import { BoostPriceDropCard } from "../../../src/features/marketing/components/BoostPriceDropCard";
 import { BoostStatusCard } from "../../../src/features/marketing/components/BoostStatusCard";
@@ -52,17 +53,21 @@ export default function PreviewBoostScreen() {
 
   const product = data?.product;
   const canBoost = data?.eligibility.canBoost ?? false;
+  const waitHours = data?.eligibility.waitUntil
+    ? Math.max(1, Math.ceil((new Date(data.eligibility.waitUntil).getTime() - Date.now()) / 3_600_000))
+    : 0;
 
   return <SafeAreaView style={styles.safe} edges={["bottom"]}><ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
     {loading && !data ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
-    {product ? <BoostPostPreview name={product.productName} imageUrl={product.imageUrl} price={product.currentPrice} quantity={product.quantity} unit={product.unit} /> : null}
-    {product && data ? <BoostPriceDropCard dropAmount={product.priceReductionAmount} lowestPrice={product.lowestPrice} stage={data.eligibility.stage} currentPrice={product.currentPrice} /> : null}
+    {product && canBoost ? <BoostPostPreview name={product.productName} imageUrl={product.imageUrl} price={product.currentPrice} quantity={product.quantity} unit={product.unit} /> : null}
+    {product && data && canBoost ? <BoostPriceDropCard dropAmount={product.priceReductionAmount} lowestPrice={product.lowestPrice} stage={data.eligibility.stage} currentPrice={product.currentPrice} /> : null}
+    {product && data && !canBoost ? <BoostProductHeader name={product.productName} imageUrl={product.imageUrl} price={product.currentPrice} unit={product.unit} /> : null}
     {data ? <BoostEligibilityNote canBoost={canBoost} headline={data.eligibility.headline} message={data.eligibility.message} /> : null}
     {!canBoost && data?.boost ? <BoostStatusCard boost={data.boost} /> : null}
     {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
   </ScrollView>
   <View style={styles.bar}>
-    {data ? <ButtonComponent title="Boost on Facebook & Instagram" onPress={() => void boost()} loading={busy} disabled={!canBoost} icon={<Megaphone size={18} color={colors.white} />} style={styles.action} /> : null}
+    {data ? <ButtonComponent title={waitHours > 0 ? `Boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}` : "Boost on Facebook & Instagram"} onPress={() => void boost()} loading={busy} disabled={!canBoost} icon={<Megaphone size={18} color={colors.white} />} style={styles.action} /> : null}
     {!data && error ? <ButtonComponent title="Try Again" variant="secondary" onPress={() => void load()} style={styles.action} /> : null}
     <Pressable onPress={() => router.push("/(app)/marketing?section=history")} accessibilityRole="button" style={styles.historyLink}><Text style={styles.historyLinkText}>See boost history</Text></Pressable>
   </View></SafeAreaView>;

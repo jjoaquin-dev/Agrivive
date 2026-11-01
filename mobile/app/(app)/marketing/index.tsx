@@ -4,11 +4,12 @@ import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useInventory } from "../../../src/features/inventory/hooks/useInventory";
 import { ActiveBoostsSection } from "../../../src/features/marketing/components/ActiveBoostsSection";
-import { PriceDropsSection } from "../../../src/features/marketing/components/PriceDropsSection";
-import { fetchSellerBoostPrompts } from "../../../src/features/marketing/api/visibility-boosts";
 import { BoostHistorySection } from "../../../src/features/marketing/components/BoostHistorySection";
 import { MarketingSectionTabs, type MarketingSection } from "../../../src/features/marketing/components/MarketingSectionTabs";
 import { SocialHubBanner } from "../../../src/features/marketing/components/SocialHubBanner";
+import { PriceDropsSection } from "../../../src/features/marketing/components/PriceDropsSection";
+import { AutoPriceDropSheet } from "../../../src/features/marketing/components/AutoPriceDropSheet";
+import { MarketingToolbar } from "../../../src/features/marketing/components/MarketingToolbar";
 import { VisibilityGuideSection } from "../../../src/features/marketing/components/VisibilityGuideSection";
 import { useBoostHistory } from "../../../src/features/marketing/hooks/useBoostHistory";
 import { boostState } from "../../../src/features/marketing/types";
@@ -24,15 +25,11 @@ export default function MarketingScreen() {
   const params = useLocalSearchParams<{ section?: string }>();
   const [section, setSection] = useState<MarketingSection>(sectionFrom(params.section));
   const [refreshSignal, setRefreshSignal] = useState(0);
-  const [dropCount, setDropCount] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const history = useBoostHistory();
   const { products, refresh: refreshProducts } = useInventory();
 
   useEffect(() => { setSection(sectionFrom(params.section)); }, [params.section]);
-
-  useEffect(() => {
-    fetchSellerBoostPrompts().then((response) => setDropCount(response.items.length)).catch(() => {});
-  }, [refreshSignal, section]);
 
   useFocusEffect(useCallback(() => {
     void history.reload();
@@ -55,12 +52,18 @@ export default function MarketingScreen() {
       >
         <SocialHubBanner />
 
-        <MarketingSectionTabs value={section} activeCount={activeCount} dropCount={dropCount} onChange={setSection} />
+        <MarketingToolbar
+          guideOpen={section === "visibility"}
+          onSettings={() => setSettingsOpen(true)}
+          onGuide={() => setSection(section === "visibility" ? "active" : "visibility")}
+        />
+
+        <MarketingSectionTabs value={section} activeCount={activeCount} onChange={setSection} />
 
         {section === "active" ? (
           <ActiveBoostsSection items={history.items} loading={history.loading} />
         ) : null}
-        {section === "drops" ? <PriceDropsSection refreshSignal={refreshSignal} count={dropCount} /> : null}
+        {section === "drops" ? <PriceDropsSection refreshSignal={refreshSignal} /> : null}
         {section === "history" ? (
           <BoostHistorySection
             items={history.items}
@@ -74,6 +77,7 @@ export default function MarketingScreen() {
         ) : null}
         {section === "visibility" ? <VisibilityGuideSection products={products} /> : null}
       </ScrollView>
+      <AutoPriceDropSheet visible={settingsOpen} products={products} onClose={() => setSettingsOpen(false)} />
     </SafeAreaView>
   );
 }

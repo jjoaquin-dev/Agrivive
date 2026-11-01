@@ -47,7 +47,7 @@ export async function reduceVisibilityBoostPrice(boostId: string) {
     if (Number(currentPrice) < Number(firstPost.price)) {
       return { ...base, reduced: true, discountPercent: percentOff(firstPost.price, currentPrice), originalPrice: firstPost.price, newPrice: currentPrice };
     }
-    if (Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice) {
+    if (!product.priceReductionEnabled || Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice) {
       return unchanged("not_enabled");
     }
 

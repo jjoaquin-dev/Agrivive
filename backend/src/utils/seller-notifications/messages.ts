@@ -67,10 +67,9 @@ export const sellerNoticeDefs = {
   price_lowered: {
     title: "Price Lowered", plural: "Prices Lowered",
     body: (p) => p.priceBefore
-      ? `${product(p)} went from ₱${text(p.priceBefore, "?")} to ₱${text(p.priceAfter, "?")}. ${
-        p.waitHours ? `You can boost it again in ${p.waitHours} hours.` : "Tap to boost it again."}`
-      : `${product(p)} is now ₱${text(p.priceAfter, "lower")}. You can boost it from your list.`,
-    level: "silent", topic: "stock_price", category: "listings", target: "notifications",
+      ? `${product(p)} went from ₱${text(p.priceBefore, "?")} to ₱${text(p.priceAfter, "?")}. The new price was posted on the Agrivive Facebook Page.`
+      : `${product(p)} is now ₱${text(p.priceAfter, "lower")}. The new price was posted on the Agrivive Facebook Page.`,
+    level: "silent", topic: "boost", category: "listings", target: "notifications",
   },
   final_price_reached: {
     title: "Final Price Reached", plural: "Final Prices Reached",

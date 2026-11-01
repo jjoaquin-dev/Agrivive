@@ -116460,6 +116460,7 @@ var sellers_product = pgTable("sellers_product", {
   priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
   priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  priceReductionEnabled: boolean4("price_reduction_enabled").default(true).notNull(),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer2("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
@@ -135774,9 +135775,9 @@ var sellerNoticeDefs = {
   price_lowered: {
     title: "Price Lowered",
     plural: "Prices Lowered",
-    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. ${p.waitHours ? `You can boost it again in ${p.waitHours} hours.` : "Tap to boost it again."}` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
+    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. The new price was posted on the Agrivive Facebook Page.` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. The new price was posted on the Agrivive Facebook Page.`,
     level: "silent",
-    topic: "stock_price",
+    topic: "boost",
     category: "listings",
     target: "notifications"
   },
@@ -136908,6 +136909,19 @@ async function readSellerProductPriceDrop(tx, productId) {
   return { ...product, nextPriceReductionAt: next?.dueAt ? next.dueAt.toISOString() : null };
 }
 
+// src/utils/boost-cooldown/index.ts
+var priceDropPostGapHours = 3;
+var firstPostGapHours = 3;
+async function getPostCooldownEnd(executor, productId, postType, gapHours, before) {
+  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+  if (!last)
+    return null;
+  const end = new Date(last.postedAt.getTime() + gapHours * 3600000);
+  return end.getTime() > Date.now() ? end : null;
+}
+var getPriceDropPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "second_post", priceDropPostGapHours, before);
+var getFirstPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
+
 // src/modules/seller/services/seller.visibility-boost.used.ts
 var boostResendAfterMs = 5 * 60000;
 async function isBoostStuck(tx, boost) {
@@ -136951,11 +136965,12 @@ async function readBoostProgress(tx, rows) {
       postUrl: log.facebookPostId ? `https://www.facebook.com/${log.facebookPostId}` : null,
       caption: log.caption
     }));
+    const promptWait = row.status === "prompt" ? await getPriceDropPostCooldownEnd(tx, row.productId) : null;
     let state;
     if (row.status === "failed")
       state = "failed";
     else if (row.status === "prompt")
-      state = "needs_choice";
+      state = promptWait ? "posted" : "needs_choice";
     else if (row.status === "dismissed")
       state = "dismissed";
     else if (posts.length === 0) {
@@ -136971,6 +136986,7 @@ async function readBoostProgress(tx, rows) {
       state,
       roundsDone: initial ? Math.max(0, posts.length - 1) : 0,
       nextDropAt: initial && state === "running" && row.followUpDueAt ? row.followUpDueAt.toISOString() : null,
+      waitUntil: promptWait ? promptWait.toISOString() : null,
       posts
     });
   }
@@ -139485,19 +139501,6 @@ async function deliverSellerVisibilityBoosts() {
   return { configured: true, queued: due.length, sent, failed };
 }
 
-// src/utils/boost-cooldown/index.ts
-var priceDropPostGapHours = 3;
-var firstPostGapHours = 3;
-async function getPostCooldownEnd(executor, productId, postType, gapHours, before) {
-  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
-  if (!last)
-    return null;
-  const end = new Date(last.postedAt.getTime() + gapHours * 3600000);
-  return end.getTime() > Date.now() ? end : null;
-}
-var getPriceDropPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "second_post", priceDropPostGapHours, before);
-var getFirstPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
-
 // src/modules/seller/services/seller.visibility-boost.queue.ts
 async function requirePriceDropGap(tx, productId) {
   const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
@@ -139657,6 +139660,7 @@ async function readSellerVisibilityBoost(sellerId, productId) {
       quantity: sellers_product.productQty,
       unit: sellers_product.scalingType,
       priceReductionAmount: sellers_product.priceReductionAmount,
+      priceReductionEnabled: sellers_product.priceReductionEnabled,
       priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied
     }).from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
     if (!product)
@@ -139686,7 +139690,7 @@ async function readSellerVisibilityBoost(sellerId, productId) {
     const currentPriceNum = Number(product.currentPrice ?? 0);
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
-    const dropAmount = Number(product.priceReductionAmount ?? 0);
+    const dropAmount = product.priceReductionEnabled ? Number(product.priceReductionAmount ?? 0) : 0;
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
     const headline = waitUntil ? "Almost Time" : periodsApplied === 0 ? canBoost ? "Ready to Boost" : "Boost Is Running" : canBoost ? "Price Dropped" : "New Price Posted";
     const message = waitUntil ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.` : periodsApplied === 0 ? canBoost ? "Post this listing on the Agrivive Facebook Page." : dropsOn ? "Your listing was posted. The price drops every 6 hours until it reaches your final price." : "Your listing was posted on the Agrivive Facebook Page." : canBoost ? `The price went from \u20B1${basePriceNum.toFixed(2)} to \u20B1${currentPriceNum.toFixed(2)}. Post the new price.` : "Your new price was posted. The next drop comes by itself.";
@@ -139809,7 +139813,13 @@ async function listSellerVisibilityBoostPrompts(sellerId, limit = 20, cursor) {
       readAt: seller_visibility_boosts.readAt
     }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(...conditions)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(limit + 1);
     const hasMore = rows.length > limit;
-    const items = hasMore ? rows.slice(0, limit) : rows;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const waits = new Map;
+    for (const productId of new Set(page.map((row) => row.productId))) {
+      const end = await getPriceDropPostCooldownEnd(tx, productId);
+      waits.set(productId, end ? end.toISOString() : null);
+    }
+    const items = page.map((row) => ({ ...row, waitUntil: row.reason === "price_reduction" ? waits.get(row.productId) ?? null : null }));
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
     const [unread] = await tx.select({ count: sql3`count(*)::int` }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"), isNull2(seller_visibility_boosts.readAt)));
     return { items, unreadCount: Number(unread?.count ?? 0), nextCursor };
@@ -139931,8 +139941,135 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
   }
 }, { role: ["seller"], params });
 
+// src/modules/seller/model/seller.price-reduction.ts
+var sellerPriceReductionToggleBody = t.Object({ enabled: t.Boolean() });
+var sellerPriceDropHistoryQuery = t.Optional(t.Object({
+  limit: t.Optional(t.Integer({ minimum: 1, maximum: 50 })),
+  cursor: t.Optional(t.String())
+}));
+
+// src/modules/seller/services/seller.price-reduction.history.list.ts
+async function listSellerPriceDropHistory(sellerId, limit = 20, cursor) {
+  await db2.transaction((tx) => requireVerifiedSeller(tx, sellerId));
+  const cursorDate = cursor ? new Date(cursor) : null;
+  const before = cursorDate && !isNaN(cursorDate.getTime()) ? sql3`and d.posted_at < ${cursorDate.toISOString()}` : sql3``;
+  const result = await db2.execute(sql3`
+    select d.id, d.product_id, p.product_name, p.image_url, d.caption, d.facebook_post_id,
+      d.previous_price as price_before, d.price as price_after, d.posted_at
+    from (
+      select l.id, l.product_id, l.caption, l.facebook_post_id, l.price, l.post_type, l.posted_at,
+        lag(l.price) over (partition by l.product_id order by l.posted_at) as previous_price
+      from fb_post_logs l
+      inner join sellers_product sp on sp.id = l.product_id
+      where sp.user_id = ${sellerId} and l.status = 'success'
+    ) d
+    inner join sellers_product p on p.id = d.product_id
+    where d.post_type = 'second_post' and d.previous_price is not null and d.price < d.previous_price ${before}
+    order by d.posted_at desc
+    limit ${limit + 1}
+  `);
+  const rows = result.rows;
+  const page = rows.slice(0, limit);
+  const items = page.map((row) => ({
+    id: row.id,
+    productId: row.product_id,
+    productName: row.product_name,
+    imageUrl: row.image_url,
+    caption: row.caption,
+    priceBefore: Number(row.price_before),
+    priceAfter: Number(row.price_after),
+    postedAt: new Date(row.posted_at).toISOString(),
+    postUrl: row.facebook_post_id ? `https://www.facebook.com/${row.facebook_post_id}` : null
+  }));
+  const nextCursor = rows.length > limit ? items[items.length - 1].postedAt : null;
+  return { items, nextCursor };
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.schedule.ts
+var followUpDelayMs = 6 * 3600000;
+async function scheduleBoostFollowUp(boostId, firstPostAt) {
+  try {
+    const [row] = await db2.select({
+      reason: seller_visibility_boosts.reason,
+      amount: sellers_product.priceReductionAmount,
+      minimumPrice: sellers_product.minimumPrice,
+      enabled: sellers_product.priceReductionEnabled
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!row || !row.enabled || row.reason !== "initial" || Number(row.amount ?? 0) <= 0 || row.minimumPrice === null)
+      return;
+    await db2.update(seller_visibility_boosts).set({
+      followUpDueAt: new Date(firstPostAt.getTime() + followUpDelayMs)
+    }).where(and(eq(seller_visibility_boosts.id, boostId), isNull2(seller_visibility_boosts.followUpDueAt), sql3`${seller_visibility_boosts.followUpAttempts} = 0`));
+  } catch (error) {
+    console.error("Boost follow-up schedule failed", { boostId, error });
+  }
+}
+
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.rearm.ts
+async function rearmBoostFollowUp(boostId) {
+  try {
+    const [row] = await db2.select({
+      price: sellers_product.productPrice,
+      minimumPrice: sellers_product.minimumPrice,
+      enabled: sellers_product.priceReductionEnabled,
+      amount: sellers_product.priceReductionAmount,
+      quantity: sellers_product.productQty,
+      active: sellers_product.isActive,
+      marketable: sellers_product.isMarketable
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
+    if (!row)
+      return;
+    const canCutAgain = row.enabled && row.active && row.marketable && Number(row.quantity ?? 0) > 0 && Number(row.amount ?? 0) > 0 && row.minimumPrice !== null && Number(row.price ?? 0) > Number(row.minimumPrice);
+    await db2.update(seller_visibility_boosts).set({
+      followUpDueAt: canCutAgain ? new Date(Date.now() + followUpDelayMs) : null,
+      followUpAttempts: 0
+    }).where(eq(seller_visibility_boosts.id, boostId));
+  } catch (error) {
+    console.error("Boost follow-up rearm failed", { boostId, error });
+  }
+}
+
+// src/modules/seller/services/seller.price-reduction.toggle.ts
+async function setSellerPriceReductionEnabled(sellerId, productId, enabled) {
+  const result = await db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [product] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).for("update").limit(1);
+    if (!product)
+      throw new OrderError(404, "Product not found");
+    if (enabled && (Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice)) {
+      throw new OrderError(409, "Set a drop amount and a final price in Edit Listing first");
+    }
+    await tx.update(sellers_product).set({ priceReductionEnabled: enabled, updatedAt: new Date }).where(eq(sellers_product.id, productId));
+    if (!enabled) {
+      await tx.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(and(eq(seller_visibility_boosts.productId, productId), isNotNull(seller_visibility_boosts.followUpDueAt)));
+      return { productId, enabled, boostId: null };
+    }
+    const [boost] = await tx.select({ id: seller_visibility_boosts.id }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.productId, productId), eq(seller_visibility_boosts.reason, "initial"), eq(seller_visibility_boosts.status, "sent"), isNull2(seller_visibility_boosts.followUpDueAt), sql3`exists (select 1 from ${fb_post_logs} where ${fb_post_logs.productId} = ${productId}
+        and ${fb_post_logs.status} = 'success' and ${fb_post_logs.postedAt} >= ${seller_visibility_boosts.createdAt})`)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
+    return { productId, enabled, boostId: boost?.id ?? null };
+  });
+  if (result.boostId)
+    await rearmBoostFollowUp(result.boostId);
+  return { productId: result.productId, enabled: result.enabled };
+}
+
+// src/modules/seller/index/seller.price-reduction.ts
+var sellerPriceReductionRoute = new Elysia().use(sessionAuth).get("/price-drops", async ({ session, query, status }) => {
+  try {
+    return await listSellerPriceDropHistory(session.userId, query?.limit, query?.cursor);
+  } catch (error) {
+    return sellerProductFailure(error, status);
+  }
+}, { role: ["seller"], query: sellerPriceDropHistoryQuery }).patch("/products/:id/price-reduction", async ({ session, params, body, status }) => {
+  try {
+    return await setSellerPriceReductionEnabled(session.userId, params.id, body.enabled);
+  } catch (error) {
+    return sellerProductFailure(error, status);
+  }
+}, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody });
+
 // src/modules/seller/index.ts
-var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerNotificationSettingsRoute).use(sellerVisibilityBoostRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
+var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerNotificationSettingsRoute).use(sellerVisibilityBoostRoute).use(sellerPriceReductionRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
 
 // src/modules/buyer/model/buyer.order.create.ts
 var orderModel = t.Object({
@@ -142431,25 +142568,6 @@ async function finishFacebookPost(logId, result) {
   return log;
 }
 
-// src/modules/integrations/services/integrations.visibility-boost.follow-up.schedule.ts
-var followUpDelayMs = 6 * 3600000;
-async function scheduleBoostFollowUp(boostId, firstPostAt) {
-  try {
-    const [row] = await db2.select({
-      reason: seller_visibility_boosts.reason,
-      amount: sellers_product.priceReductionAmount,
-      minimumPrice: sellers_product.minimumPrice
-    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
-    if (!row || row.reason !== "initial" || Number(row.amount ?? 0) <= 0 || row.minimumPrice === null)
-      return;
-    await db2.update(seller_visibility_boosts).set({
-      followUpDueAt: new Date(firstPostAt.getTime() + followUpDelayMs)
-    }).where(and(eq(seller_visibility_boosts.id, boostId), isNull2(seller_visibility_boosts.followUpDueAt), sql3`${seller_visibility_boosts.followUpAttempts} = 0`));
-  } catch (error) {
-    console.error("Boost follow-up schedule failed", { boostId, error });
-  }
-}
-
 // src/modules/integrations/services/integrations.visibility-boost.notify-failed.ts
 async function notifyBoostFailed(boostId, postType) {
   try {
@@ -142472,29 +142590,6 @@ async function notifyBoostFailed(boostId, postType) {
   }
 }
 
-// src/modules/integrations/services/integrations.visibility-boost.follow-up.rearm.ts
-async function rearmBoostFollowUp(boostId) {
-  try {
-    const [row] = await db2.select({
-      price: sellers_product.productPrice,
-      minimumPrice: sellers_product.minimumPrice,
-      amount: sellers_product.priceReductionAmount,
-      quantity: sellers_product.productQty,
-      active: sellers_product.isActive,
-      marketable: sellers_product.isMarketable
-    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
-    if (!row)
-      return;
-    const canCutAgain = row.active && row.marketable && Number(row.quantity ?? 0) > 0 && Number(row.amount ?? 0) > 0 && row.minimumPrice !== null && Number(row.price ?? 0) > Number(row.minimumPrice);
-    await db2.update(seller_visibility_boosts).set({
-      followUpDueAt: canCutAgain ? new Date(Date.now() + followUpDelayMs) : null,
-      followUpAttempts: 0
-    }).where(eq(seller_visibility_boosts.id, boostId));
-  } catch (error) {
-    console.error("Boost follow-up rearm failed", { boostId, error });
-  }
-}
-
 // src/modules/integrations/services/integrations.visibility-boost.notify-price-lowered.ts
 async function notifyBoostPriceLowered(boostId) {
   try {
@@ -142510,24 +142605,12 @@ async function notifyBoostPriceLowered(boostId) {
     if (!product?.price || !previousPost || product.periods < 1 || Number(product.price) >= Number(previousPost.price))
       return;
     await db2.transaction(async (tx) => {
-      await tx.insert(seller_visibility_boosts).values({
-        listingCycleId: boost.listingCycleId,
-        productId: boost.productId,
-        sellerId: boost.sellerId,
-        reason: "price_reduction",
-        reductionPeriod: product.periods,
-        boostKey: `${boost.listingCycleId}:reduction:${product.periods}`,
-        status: "prompt",
-        nextAttemptAt: new Date,
-        priceBefore: previousPost.price,
-        priceAfter: product.price
-      }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey });
       await createSellerNotification(tx, {
         sellerId: boost.sellerId,
         kind: "price_lowered",
         dedupeKey: `price-lowered:${boost.productId}:${product.periods}`,
         productId: boost.productId,
-        payload: { productName: product.name, priceBefore: previousPost.price, priceAfter: product.price, waitHours: priceDropPostGapHours }
+        payload: { productName: product.name, priceBefore: previousPost.price, priceAfter: product.price }
       });
     });
   } catch (error) {
@@ -142543,7 +142626,8 @@ async function notifyBoostStarted(boostId) {
       productId: seller_visibility_boosts.productId,
       productName: sellers_product.productName,
       amount: sellers_product.priceReductionAmount,
-      minimumPrice: sellers_product.minimumPrice
+      minimumPrice: sellers_product.minimumPrice,
+      enabled: sellers_product.priceReductionEnabled
     }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
     if (!row)
       return;
@@ -142554,7 +142638,7 @@ async function notifyBoostStarted(boostId) {
       productId: row.productId,
       payload: {
         productName: row.productName,
-        willLowerPrice: Number(row.amount ?? 0) > 0 && row.minimumPrice !== null
+        willLowerPrice: row.enabled && Number(row.amount ?? 0) > 0 && row.minimumPrice !== null
       }
     }));
   } catch (error) {
@@ -142876,7 +142960,7 @@ function decimal4(value) {
 }
 async function applySellerPromotionPriceReduction(tx, productId, now = new Date) {
   const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
-  if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 || !current.productPrice || !current.minimumPrice || Number(current.priceReductionAmount ?? 0) <= 0)
+  if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 || !current.productPrice || !current.minimumPrice || !current.priceReductionEnabled || Number(current.priceReductionAmount ?? 0) <= 0)
     return null;
   const currentCents = cents(current.productPrice);
   const floor = cents(current.minimumPrice);
@@ -142956,7 +143040,7 @@ async function reduceVisibilityBoostPrice(boostId) {
     if (Number(currentPrice) < Number(firstPost.price)) {
       return { ...base, reduced: true, discountPercent: percentOff(firstPost.price, currentPrice), originalPrice: firstPost.price, newPrice: currentPrice };
     }
-    if (Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice) {
+    if (!product.priceReductionEnabled || Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice) {
       return unchanged("not_enabled");
     }
     const result = await applySellerPromotionPriceReduction(tx, productId);

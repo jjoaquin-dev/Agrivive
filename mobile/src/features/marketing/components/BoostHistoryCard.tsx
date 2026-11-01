@@ -2,7 +2,7 @@ import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { CheckCircle2, ChevronRight, Clock3, RotateCcw, XCircle } from "lucide-react-native";
 import {
-  boostReasonLabel, boostState, boostStateLabel, formatBoostTime, productCode, type SellerVisibilityBoost,
+  boostReasonLabel, boostState, boostStateLabel, formatBoostTime, productCode, waitText, type SellerVisibilityBoost,
 } from "../types";
 import { BoostTimeline } from "./BoostTimeline";
 import { PlatformBadge } from "./PlatformBadge";
@@ -59,6 +59,7 @@ export function BoostHistoryCard({ item, onOpen }: Props) {
       </View>
 
       {item.progress ? <BoostTimeline progress={item.progress} limit={2} /> : null}
+      {item.progress?.waitUntil ? <Text style={styles.metaText}>You can boost this lower price again in {waitText(item.progress.waitUntil)}.</Text> : null}
       {item.errorMessage ? <View style={styles.errorRow}><XCircle size={14} color={colors.error} /><Text style={styles.error}>{item.errorMessage}</Text></View> : null}
 
       <Pressable onPress={onOpen} accessibilityRole="button" style={({ pressed }) => [styles.actionBtn, bad && styles.actionBad, pressed && styles.pressed]}>
