@@ -1,3 +1,4 @@
+/** New boosts are always "initial". "price_reduction" only appears on boosts made before that kind was removed. */
 export type SellerBoostReason = "initial" | "price_reduction";
 export type SellerVisibilityBoostStatus = "prompt" | "queued" | "sent" | "failed" | "dismissed";
 
@@ -17,8 +18,6 @@ export interface BoostProgress {
   state: BoostState;
   roundsDone: number;
   nextDropAt: string | null;
-  /** A price drop prompt cannot be boosted until then. */
-  waitUntil?: string | null;
   posts: BoostPostEntry[];
 }
 
@@ -88,7 +87,6 @@ export interface SellerProductBoostResponse {
     hasInitialBoost: boolean;
     usedPosts: number;
     maxAllowedPosts: number;
-    stage: "initial" | "price_reduction";
     headline: string;
     message: string;
     badge: "available" | "boosted";
@@ -130,12 +128,6 @@ export function boostStateLabel(state: BoostState) {
 
 export function boostReasonLabel(reason: SellerBoostReason) {
   return reason === "price_reduction" ? "After price change" : "First boost";
-}
-
-/** "about 2 hours" for a wait that ends at `value`. */
-export function waitText(value: string) {
-  const hours = Math.max(1, Math.ceil((new Date(value).getTime() - Date.now()) / 3_600_000));
-  return `about ${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
 export function formatBoostTime(value: string) {

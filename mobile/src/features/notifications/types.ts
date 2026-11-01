@@ -34,8 +34,6 @@ export interface SellerBoostPrompt {
   priceAfter: string | null;
   createdAt: string;
   readAt: string | null;
-  /** Set while a price drop post went out too recently to boost again. */
-  waitUntil?: string | null;
 }
 
 export interface SellerBoostPromptsResponse {

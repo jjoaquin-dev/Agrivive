@@ -136909,25 +136909,12 @@ async function readSellerProductPriceDrop(tx, productId) {
   return { ...product, nextPriceReductionAt: next?.dueAt ? next.dueAt.toISOString() : null };
 }
 
-// src/utils/boost-cooldown/index.ts
-var priceDropPostGapHours = 3;
-var firstPostGapHours = 3;
-async function getPostCooldownEnd(executor, productId, postType, gapHours, before) {
-  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
-  if (!last)
-    return null;
-  const end = new Date(last.postedAt.getTime() + gapHours * 3600000);
-  return end.getTime() > Date.now() ? end : null;
-}
-var getPriceDropPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "second_post", priceDropPostGapHours, before);
-var getFirstPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
-
 // src/modules/seller/services/seller.visibility-boost.used.ts
 var boostResendAfterMs = 5 * 60000;
 async function isBoostStuck(tx, boost) {
   if (!boost.sentAt || Date.now() - boost.sentAt.getTime() <= boostResendAfterMs)
     return false;
-  const [post] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, boost.reason === "initial" ? "first_post" : "second_post"), inArray(fb_post_logs.status, ["success", "pending"]), gte(fb_post_logs.postedAt, boost.createdAt))).limit(1);
+  const [post] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, "first_post"), inArray(fb_post_logs.status, ["success", "pending"]), gte(fb_post_logs.postedAt, boost.createdAt))).limit(1);
   return !post;
 }
 async function countUsedBoosts(tx, productId, listingCycleId) {
@@ -136955,9 +136942,7 @@ async function readBoostProgress(tx, rows) {
   const oldest = new Date(Math.min(...rows.map((row) => row.createdAt.getTime())));
   const logs = await tx.select().from(fb_post_logs).where(and(inArray(fb_post_logs.productId, [...new Set(rows.map((row) => row.productId))]), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, oldest))).orderBy(asc(fb_post_logs.postedAt));
   for (const row of rows) {
-    let own = logs.filter((log) => log.productId === row.productId && log.postedAt >= row.createdAt);
-    if (row.reason === "price_reduction")
-      own = own.slice(0, 1);
+    const own = logs.filter((log) => log.productId === row.productId && log.postedAt >= row.createdAt);
     const posts = own.map((log) => ({
       type: log.postType,
       price: Number(log.price),
@@ -136965,19 +136950,16 @@ async function readBoostProgress(tx, rows) {
       postUrl: log.facebookPostId ? `https://www.facebook.com/${log.facebookPostId}` : null,
       caption: log.caption
     }));
-    const promptWait = row.status === "prompt" ? await getPriceDropPostCooldownEnd(tx, row.productId) : null;
     let state;
     if (row.status === "failed")
       state = "failed";
     else if (row.status === "prompt")
-      state = promptWait ? "posted" : "needs_choice";
+      state = "needs_choice";
     else if (row.status === "dismissed")
       state = "dismissed";
     else if (posts.length === 0) {
       state = row.status === "sent" && await isBoostStuck(tx, row) ? "not_posted" : "posting";
-    } else if (row.reason === "price_reduction")
-      state = "posted";
-    else if (row.followUpDueAt)
+    } else if (row.followUpDueAt)
       state = "running";
     else
       state = posts.length > 1 ? "finished" : "posted";
@@ -136986,7 +136968,6 @@ async function readBoostProgress(tx, rows) {
       state,
       roundsDone: initial ? Math.max(0, posts.length - 1) : 0,
       nextDropAt: initial && state === "running" && row.followUpDueAt ? row.followUpDueAt.toISOString() : null,
-      waitUntil: promptWait ? promptWait.toISOString() : null,
       posts
     });
   }
@@ -139501,14 +139482,18 @@ async function deliverSellerVisibilityBoosts() {
   return { configured: true, queued: due.length, sent, failed };
 }
 
-// src/modules/seller/services/seller.visibility-boost.queue.ts
-async function requirePriceDropGap(tx, productId) {
-  const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
-  if (!waitUntil)
-    return;
-  const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
-  throw new OrderError(409, `You just boosted the lower price of this product. Please wait about ${hours} hour${hours === 1 ? "" : "s"} before you boost it again.`);
+// src/utils/boost-cooldown/index.ts
+var firstPostGapHours = 3;
+async function getPostCooldownEnd(executor, productId, postType, gapHours, before) {
+  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+  if (!last)
+    return null;
+  const end = new Date(last.postedAt.getTime() + gapHours * 3600000);
+  return end.getTime() > Date.now() ? end : null;
 }
+var getFirstPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
+
+// src/modules/seller/services/seller.visibility-boost.queue.ts
 async function requireFirstPostGap(tx, productId) {
   const waitUntil = await getFirstPostCooldownEnd(tx, productId);
   if (!waitUntil)
@@ -139516,7 +139501,7 @@ async function requireFirstPostGap(tx, productId) {
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
   throw new OrderError(409, `You just boosted this product. Please wait about ${hours} hour${hours === 1 ? "" : "s"} before you boost it again.`);
 }
-async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial", promptId) {
+async function queueSellerVisibilityBoost(sellerId, productId) {
   return db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const now = new Date;
@@ -139531,34 +139516,13 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
     const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, productId), lte(listing_cycles.startedAt, now))).orderBy(desc(listing_cycles.startedAt)).limit(1);
     if (!cycle)
       throw new OrderError(409, "This listing cycle is not ready to boost");
-    if (promptId) {
-      const [prompt] = await tx.select().from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId), eq(seller_visibility_boosts.status, "prompt"))).for("update").limit(1);
-      if (!prompt)
-        throw new OrderError(404, "Boost prompt not found");
-      if (prompt.reason === "price_reduction")
-        await requirePriceDropGap(tx, productId);
-      const [queued] = await tx.update(seller_visibility_boosts).set({
-        status: "queued",
-        readAt: now,
-        nextAttemptAt: now,
-        leaseUntil: null,
-        lastError: null,
-        updatedAt: now
-      }).where(and(eq(seller_visibility_boosts.id, prompt.id), eq(seller_visibility_boosts.status, "prompt"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
-      if (!queued)
-        throw new OrderError(409, "This boost prompt was already handled");
-      return { boostId: queued.id, status: queued.status, reason: prompt.reason, productId };
-    }
     const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
-    const boostKey = currentPeriod === 0 ? `${cycle.id}:initial` : `${cycle.id}:reduction:${currentPeriod}`;
-    const boostReason = currentPeriod === 0 ? "initial" : "price_reduction";
-    if (boostReason === "price_reduction")
-      await requirePriceDropGap(tx, productId);
+    const boostKey = `${cycle.id}:initial`;
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
       productId,
       sellerId,
-      reason: boostReason,
+      reason: "initial",
       reductionPeriod: currentPeriod,
       boostKey,
       status: "queued",
@@ -139569,9 +139533,8 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
       status: seller_visibility_boosts.status
     });
     if (created) {
-      if (boostReason === "initial")
-        await requireFirstPostGap(tx, productId);
-      return { boostId: created.id, status: created.status, reason: boostReason, productId };
+      await requireFirstPostGap(tx, productId);
+      return { boostId: created.id, status: created.status, reason: "initial", productId };
     }
     const [existing] = await tx.select({
       id: seller_visibility_boosts.id,
@@ -139591,9 +139554,9 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
         updatedAt: now
       }).where(and(eq(seller_visibility_boosts.id, existing.id), eq(seller_visibility_boosts.status, "failed"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
       if (retried)
-        return { boostId: retried.id, status: retried.status, reason: boostReason, productId };
+        return { boostId: retried.id, status: retried.status, reason: "initial", productId };
     }
-    if (existing.status === "sent" && await isBoostStuck(tx, { productId, reason: boostReason, createdAt: existing.createdAt, sentAt: existing.sentAt })) {
+    if (existing.status === "sent" && await isBoostStuck(tx, { productId, createdAt: existing.createdAt, sentAt: existing.sentAt })) {
       const [resent] = await tx.update(seller_visibility_boosts).set({
         status: "queued",
         retryCount: 0,
@@ -139603,21 +139566,9 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
         updatedAt: now
       }).where(and(eq(seller_visibility_boosts.id, existing.id), eq(seller_visibility_boosts.status, "sent"))).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
       if (resent)
-        return { boostId: resent.id, status: resent.status, reason: boostReason, productId };
+        return { boostId: resent.id, status: resent.status, reason: "initial", productId };
     }
-    if (existing.status === "prompt") {
-      const [accepted] = await tx.update(seller_visibility_boosts).set({
-        status: "queued",
-        readAt: now,
-        nextAttemptAt: now,
-        leaseUntil: null,
-        lastError: null,
-        updatedAt: now
-      }).where(eq(seller_visibility_boosts.id, existing.id)).returning({ id: seller_visibility_boosts.id, status: seller_visibility_boosts.status });
-      if (accepted)
-        return { boostId: accepted.id, status: accepted.status, reason: boostReason, productId };
-    }
-    return { boostId: existing.id, status: existing.status, reason: boostReason, productId };
+    return { boostId: existing.id, status: existing.status, reason: "initial", productId };
   });
 }
 
@@ -139632,7 +139583,7 @@ function channelOf(row, stuck, postUrl) {
   return { status: Date.now() - row.postedAt.getTime() > boostResendAfterMs ? "failed" : "posting", postUrl: null };
 }
 async function readBoostChannels(tx, boost) {
-  const postType = boost.reason === "initial" ? "first_post" : "second_post";
+  const postType = "first_post";
   const [facebook] = await tx.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, postType), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
   const [instagram] = await tx.select().from(instagram_post_logs).where(and(eq(instagram_post_logs.productId, boost.productId), eq(instagram_post_logs.postType, postType), gte(instagram_post_logs.postedAt, boost.createdAt))).orderBy(desc(instagram_post_logs.postedAt)).limit(1);
   const stuck = boost.sentAt !== null && Date.now() - boost.sentAt.getTime() > boostResendAfterMs;
@@ -139682,9 +139633,8 @@ async function readSellerVisibilityBoost(sellerId, productId) {
     }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.productId, productId))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
     const usedPosts = cycle ? await countUsedBoosts(tx, productId, cycle.id) : 0;
     const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
-    const maxAllowed = periodsApplied + 1;
-    const hasRoom = usedPosts < maxAllowed;
-    const waitUntil = !hasRoom ? null : periodsApplied > 0 ? await getPriceDropPostCooldownEnd(tx, productId) : boost ? null : await getFirstPostCooldownEnd(tx, productId);
+    const hasRoom = usedPosts < 1;
+    const waitUntil = hasRoom && !boost ? await getFirstPostCooldownEnd(tx, productId) : null;
     const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000)) : 0;
     const canBoost = hasRoom && !waitUntil;
     const currentPriceNum = Number(product.currentPrice ?? 0);
@@ -139692,8 +139642,8 @@ async function readSellerVisibilityBoost(sellerId, productId) {
     const hasDiscount = currentPriceNum < basePriceNum;
     const dropAmount = product.priceReductionEnabled ? Number(product.priceReductionAmount ?? 0) : 0;
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
-    const headline = waitUntil ? "Almost Time" : periodsApplied === 0 ? canBoost ? "Ready to Boost" : "Boost Is Running" : canBoost ? "Price Dropped" : "New Price Posted";
-    const message = waitUntil ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.` : periodsApplied === 0 ? canBoost ? "Post this listing on the Agrivive Facebook Page." : dropsOn ? "Your listing was posted. The price drops every 6 hours until it reaches your final price." : "Your listing was posted on the Agrivive Facebook Page." : canBoost ? `The price went from \u20B1${basePriceNum.toFixed(2)} to \u20B1${currentPriceNum.toFixed(2)}. Post the new price.` : "Your new price was posted. The next drop comes by itself.";
+    const headline = waitUntil ? "Almost Time" : canBoost ? "Ready to Boost" : "Boost Is Running";
+    const message = waitUntil ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.` : canBoost ? "Post this listing on the Agrivive Facebook Page." : dropsOn ? "Your listing was posted. The price drops every 6 hours until it reaches your final price." : "Your listing was posted on the Agrivive Facebook Page.";
     const progress = boost ? (await readBoostProgress(tx, [boost])).get(boost.id) ?? null : null;
     const channels = boost ? await readBoostChannels(tx, boost) : null;
     return {
@@ -139721,8 +139671,7 @@ async function readSellerVisibilityBoost(sellerId, productId) {
         canBoost,
         hasInitialBoost: usedPosts >= 1,
         usedPosts,
-        maxAllowedPosts: maxAllowed,
-        stage: periodsApplied > 0 ? "price_reduction" : "initial",
+        maxAllowedPosts: 1,
         headline,
         message,
         badge: canBoost ? "available" : "boosted",
@@ -139813,13 +139762,7 @@ async function listSellerVisibilityBoostPrompts(sellerId, limit = 20, cursor) {
       readAt: seller_visibility_boosts.readAt
     }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(...conditions)).orderBy(desc(seller_visibility_boosts.createdAt)).limit(limit + 1);
     const hasMore = rows.length > limit;
-    const page = hasMore ? rows.slice(0, limit) : rows;
-    const waits = new Map;
-    for (const productId of new Set(page.map((row) => row.productId))) {
-      const end = await getPriceDropPostCooldownEnd(tx, productId);
-      waits.set(productId, end ? end.toISOString() : null);
-    }
-    const items = page.map((row) => ({ ...row, waitUntil: row.reason === "price_reduction" ? waits.get(row.productId) ?? null : null }));
+    const items = hasMore ? rows.slice(0, limit) : rows;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
     const [unread] = await tx.select({ count: sql3`count(*)::int` }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"), isNull2(seller_visibility_boosts.readAt)));
     return { items, unreadCount: Number(unread?.count ?? 0), nextCursor };
@@ -139867,18 +139810,6 @@ async function dismissSellerVisibilityBoostPrompt(sellerId, promptId) {
   });
 }
 
-// src/modules/seller/services/seller.visibility-boost.prompt.accept.ts
-async function acceptSellerVisibilityBoostPrompt(sellerId, promptId) {
-  const prompt = await db2.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
-    const [row] = await tx.select({ productId: seller_visibility_boosts.productId }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.id, promptId), eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.status, "prompt"))).limit(1);
-    if (!row)
-      throw new OrderError(404, "Boost prompt not found");
-    return row;
-  });
-  return queueSellerVisibilityBoost(sellerId, prompt.productId, "price_reduction", promptId);
-}
-
 // src/modules/seller/index/seller.visibility-boost.ts
 var params = t.Object({ id: t.String({ format: "uuid" }) });
 function failure(error, status) {
@@ -139919,15 +139850,7 @@ var sellerVisibilityBoostRoute = new Elysia().use(sessionAuth).get("/products/:i
   } catch (error) {
     return failure(error, status);
   }
-}, { role: ["seller"] }).post("/boost-prompts/:id/boost", async ({ session, params: routeParams, status }) => {
-  try {
-    const accepted = await acceptSellerVisibilityBoostPrompt(session.userId, routeParams.id);
-    deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
-    return accepted;
-  } catch (error) {
-    return failure(error, status);
-  }
-}, { role: ["seller"], params }).post("/boost-prompts/:id/read", async ({ session, params: routeParams, status }) => {
+}, { role: ["seller"] }).post("/boost-prompts/:id/read", async ({ session, params: routeParams, status }) => {
   try {
     return await readSellerVisibilityBoostPrompt(session.userId, routeParams.id);
   } catch (error) {
@@ -142437,6 +142360,15 @@ function isVisibilityBoostAuthorized(authorization) {
   return provided.length > 0 && provided.length === expectedBytes.length && timingSafeEqual3(provided, expectedBytes);
 }
 
+// src/modules/integrations/services/integrations.visibility-boost.follow-up.finish.ts
+async function finishBoostFollowUp(boostId) {
+  try {
+    await db2.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boostId));
+  } catch (error) {
+    console.error("Boost follow-up finish failed", { boostId, error });
+  }
+}
+
 // src/modules/integrations/services/integrations.visibility-boost.context.ts
 function publicUrl(base, path) {
   const origin = base?.trim().replace(/\/$/, "");
@@ -142474,6 +142406,8 @@ async function getVisibilityBoostContext(boostId) {
   }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, seller_visibility_boosts.sellerId), eq(sellers_profile.isCurrent, true))).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!row)
     throw new OrderError(404, "Visibility boost not found");
+  if (row.reason !== "initial")
+    throw new OrderError(409, "This boost type is no longer used");
   if (row.status !== "queued" && row.status !== "sent") {
     throw new OrderError(409, "Visibility boost is not ready for posting");
   }
@@ -142481,9 +142415,11 @@ async function getVisibilityBoostContext(boostId) {
     throw new OrderError(409, "Listing facts are no longer complete for posting");
   }
   const [cycle] = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, row.productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  if (!cycle || cycle.id !== row.listingCycleId)
+  if (!cycle || cycle.id !== row.listingCycleId) {
+    await finishBoostFollowUp(boostId);
     throw new OrderError(409, "Listing cycle is no longer current");
-  const [savedPost] = await db2.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, row.productId), eq(fb_post_logs.postType, row.reason === "initial" ? "first_post" : "second_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, row.boostCreatedAt))).limit(1);
+  }
+  const [savedPost] = await db2.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, row.productId), eq(fb_post_logs.postType, "first_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, row.boostCreatedAt))).limit(1);
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL ?? process.env.BETTER_AUTH_URL;
   return {
     boostId: row.boostId,
@@ -142656,9 +142592,6 @@ function templateCaption(context, postType, price, previous) {
     return `Fresh ${context.product.name} is now available at \u20B1${price}${per} from ${context.seller.shopName}!`;
   }
   const was = previous ? ` (was \u20B1${previous.toFixed(2)})` : "";
-  if (context.reason === "price_reduction") {
-    return `Still available: ${context.product.name} at \u20B1${price}${per}${was} from ${context.seller.shopName}. Order before it sells out!`;
-  }
   return `Price drop! ${context.product.name} is now \u20B1${price}${per}${was} at ${context.seller.shopName}. Get yours before it sells out!`;
 }
 function boostCaptionText(context, postType, caption, previous) {
@@ -142715,9 +142648,6 @@ async function publishFacebookPagePhoto(imageUrl, caption) {
 // src/modules/integrations/services/integrations.visibility-boost.facebook-post.ts
 async function postVisibilityBoostToFacebook(boostId, body) {
   const context = await getVisibilityBoostContext(boostId);
-  if (context.reason === "price_reduction" && body.postType !== "second_post") {
-    throw new OrderError(400, "A price drop boost can only make the second post");
-  }
   const productId = context.product.id;
   const [boost] = await db2.select({ createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!boost)
@@ -142726,27 +142656,17 @@ async function postVisibilityBoostToFacebook(boostId, body) {
     const [row] = await db2.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
     return row;
   };
-  if (context.reason === "price_reduction") {
-    const waitUntil = await getPriceDropPostCooldownEnd(db2, productId, boost.createdAt);
-    if (waitUntil) {
-      throw new OrderError(409, `A price drop post went out less than ${priceDropPostGapHours} hours ago`);
-    }
-  }
   let previous = null;
   let since = boost.createdAt;
   if (body.postType === "second_post") {
-    if (context.reason === "initial") {
-      const last = await findLastPost();
-      if (!last)
-        throw new OrderError(409, "The first post has not been published yet");
-      if (context.product.price >= Number(last.price)) {
-        return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: last.facebookPostId };
-      }
-      previous = Number(last.price);
-      since = new Date(last.postedAt.getTime() + 1);
-    } else {
-      previous = context.previousPrice;
+    const last = await findLastPost();
+    if (!last)
+      throw new OrderError(409, "The first post has not been published yet");
+    if (context.product.price >= Number(last.price)) {
+      return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: last.facebookPostId };
     }
+    previous = Number(last.price);
+    since = new Date(last.postedAt.getTime() + 1);
   }
   const price = context.product.price.toFixed(2);
   const text = boostCaptionText(context, body.postType, body.caption, previous);
@@ -142771,14 +142691,12 @@ Order here: ${context.product.listingUrl}` + `?utm_source=facebook&utm_medium=so
     throw new OrderError(502, "Facebook could not publish this post");
   }
   const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId, caption });
-  if (context.reason === "initial") {
-    if (body.postType === "first_post") {
-      await scheduleBoostFollowUp(boostId, log.postedAt);
-      await notifyBoostStarted(boostId);
-    } else {
-      await notifyBoostPriceLowered(boostId);
-      await rearmBoostFollowUp(boostId);
-    }
+  if (body.postType === "first_post") {
+    await scheduleBoostFollowUp(boostId, log.postedAt);
+    await notifyBoostStarted(boostId);
+  } else {
+    await notifyBoostPriceLowered(boostId);
+    await rearmBoostFollowUp(boostId);
   }
   return {
     posted: true,
@@ -142882,9 +142800,6 @@ async function publishInstagramPhoto(imageUrl, caption) {
 // src/modules/integrations/services/integrations.visibility-boost.instagram-post.ts
 async function postVisibilityBoostToInstagram(boostId, body) {
   const context = await getVisibilityBoostContext(boostId);
-  if (context.reason === "price_reduction" && body.postType !== "second_post") {
-    throw new OrderError(400, "A price drop boost can only make the second post");
-  }
   const [boost] = await db2.select({ createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!boost)
     throw new OrderError(404, "Visibility boost not found");
@@ -142993,15 +142908,6 @@ async function applySellerPromotionPriceReduction(tx, productId, now = new Date)
     });
   }
   return updated ? { before: current.productPrice, after: updated.productPrice } : null;
-}
-
-// src/modules/integrations/services/integrations.visibility-boost.follow-up.finish.ts
-async function finishBoostFollowUp(boostId) {
-  try {
-    await db2.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boostId));
-  } catch (error) {
-    console.error("Boost follow-up finish failed", { boostId, error });
-  }
 }
 
 // src/modules/integrations/services/integrations.visibility-boost.reduce-price.ts

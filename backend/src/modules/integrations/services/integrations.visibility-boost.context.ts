@@ -2,6 +2,7 @@ import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "../../../db";
 import { fb_post_logs, listing_cycles, seller_visibility_boosts, sellers_product, sellers_profile, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { finishBoostFollowUp } from "./integrations.visibility-boost.follow-up.finish";
 
 function publicUrl(base: string | undefined, path: string) {
   const origin = base?.trim().replace(/\/$/, "");
@@ -42,6 +43,8 @@ export async function getVisibilityBoostContext(boostId: string) {
     ))
     .where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!row) throw new OrderError(404, "Visibility boost not found");
+  // Boosts made after a price change are no longer used. An old one must not post.
+  if (row.reason !== "initial") throw new OrderError(409, "This boost type is no longer used");
   if (row.status !== "queued" && row.status !== "sent") {
     throw new OrderError(409, "Visibility boost is not ready for posting");
   }
@@ -55,12 +58,16 @@ export async function getVisibilityBoostContext(boostId: string) {
     eq(listing_cycles.productId, row.productId),
     lte(listing_cycles.startedAt, new Date()),
   )).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  if (!cycle || cycle.id !== row.listingCycleId) throw new OrderError(409, "Listing cycle is no longer current");
+  if (!cycle || cycle.id !== row.listingCycleId) {
+    // The listing started over (sold out and restocked, or archived and listed again): its 6-hour rule is over too.
+    await finishBoostFollowUp(boostId);
+    throw new OrderError(409, "Listing cycle is no longer current");
+  }
 
-  // The post this boost makes first (first post, or the second post of a price drop) may already be saved.
+  // The first post may already be saved.
   const [savedPost] = await db.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(
     eq(fb_post_logs.productId, row.productId),
-    eq(fb_post_logs.postType, row.reason === "initial" ? "first_post" : "second_post"),
+    eq(fb_post_logs.postType, "first_post"),
     eq(fb_post_logs.status, "success"),
     gte(fb_post_logs.postedAt, row.boostCreatedAt),
   )).limit(1);

@@ -1,120 +1,84 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { useRouter } from "expo-router";
 import { ChevronRight, Sprout } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { getProductStatus } from "../../inventory/productStatus";
+import type { Product } from "../../inventory/types";
+import type { SellerOrder } from "../../orders/types";
 import type { Conversation } from "../types";
-import type { SellerOrder, SellerOrderStatus } from "../../orders/types";
+import { orderPill, peso, unitShort } from "../utils/chatFormat";
 
-interface ConversationContextBannerProps {
+interface Props {
   conversation: Conversation;
   order?: SellerOrder | null;
+  product?: Product | null;
+  onPress?: () => void;
 }
 
-function getStatusPill(status?: SellerOrderStatus) {
-  switch (status) {
-    case "completed":
-      return { text: "Picked Up", bg: "#DCFCE7", color: colors.success };
-    case "cancelled":
-      return { text: "Cancelled", bg: "#FEE2E2", color: colors.error };
-    case "expired":
-      return { text: "Expired", bg: colors.border, color: colors.textMuted };
-    case "pending":
-    default:
-      return { text: "Waiting for Pickup", bg: "#FEF3C7", color: colors.warning };
-  }
+function Thumb({ uri }: { uri?: string | null }) {
+  return (
+    <View style={styles.thumbBox}>
+      {uri ? <Image source={{ uri }} style={styles.thumb} /> : <Sprout size={20} color={colors.primary} />}
+    </View>
+  );
 }
 
-export function ConversationContextBanner({ conversation, order }: ConversationContextBannerProps) {
-  const router = useRouter();
-  const isOrder = Boolean(conversation.orderId);
+/** What the chat is about: the reservation, or the listing with its price and stock. */
+export function ConversationContextBanner({ conversation, order, product, onPress }: Props) {
+  let title: string;
+  let detail: string;
+  let pill: { text: string; bg: string; color: string } | null = null;
 
-  const handlePress = () => {
-    if (conversation.orderId) {
-      router.push({ pathname: "/(app)/orders/[id]", params: { id: conversation.orderId } });
-    } else if (conversation.productId) {
-      router.push({ pathname: "/(app)/inventory/[id]", params: { id: conversation.productId } });
+  if (conversation.orderId) {
+    const first = order?.items?.[0];
+    const more = (order?.items?.length ?? 0) - 1;
+    const quantity = first ? `${Number(first.quantity ?? 1)} ${unitShort(first.scalingType, Number(first.quantity ?? 2))}`.trim() : "";
+    title = `${first?.productName || conversation.productName || "Reservation"}${quantity ? ` • ${quantity}` : ""}${more > 0 ? ` +${more} more` : ""}`;
+    detail = order ? `Total ${peso(order.totalAmount)}` : "Reservation";
+    pill = orderPill(order?.status);
+  } else {
+    title = conversation.productName || "Listing";
+    if (product) {
+      const qty = Number(product.productQty ?? 0);
+      detail = `${peso(product.productPrice)} / ${unitShort(product.scalingType, 1)} · ${qty} ${unitShort(product.scalingType, qty)} in stock`;
+      const status = getProductStatus(product);
+      pill = { text: status.label, bg: status.background, color: status.color };
+    } else {
+      detail = "Listing";
     }
-  };
-
-  if (isOrder) {
-    const produceName = order?.items?.[0]?.productName || conversation.productName || "Reservation";
-    const pill = getStatusPill(order?.status);
-
-    return (
-      <Pressable
-        onPress={handlePress}
-        accessibilityRole="button"
-        accessibilityLabel={`Reservation: ${produceName}, ${pill.text}`}
-        style={({ pressed }) => [styles.banner, pressed && styles.bannerPressed]}
-      >
-        <View style={styles.contentRow}>
-          <Text style={styles.produceName} numberOfLines={1}>
-            {produceName}
-          </Text>
-          <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
-            <Text style={[styles.statusPillText, { color: pill.color }]}>{pill.text}</Text>
-          </View>
-        </View>
-        <ChevronRight size={18} color={colors.textMuted} />
-      </Pressable>
-    );
   }
-
-  const produceName = conversation.productName || "Listing";
 
   return (
     <Pressable
-      onPress={handlePress}
+      onPress={onPress}
+      disabled={!onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Produce listing: ${produceName}`}
-      style={({ pressed }) => [styles.banner, pressed && styles.bannerPressed]}
+      accessibilityLabel={`${title}. ${detail}${pill ? `. ${pill.text}` : ""}`}
+      style={({ pressed }) => [styles.banner, pressed && styles.pressed]}
     >
-      <View style={styles.thumbBox}>
-        {conversation.productImageUrl ? (
-          <Image source={{ uri: conversation.productImageUrl }} style={styles.thumb} />
-        ) : (
-          <Sprout size={20} color={colors.primary} />
-        )}
-      </View>
+      <Thumb uri={conversation.productImageUrl} />
       <View style={styles.textColumn}>
-        <Text style={styles.produceName} numberOfLines={1}>
-          {produceName}
-        </Text>
-        <Text style={styles.listingLabel}>Listing</Text>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <Text style={styles.detail} numberOfLines={1}>{detail}</Text>
       </View>
-      <ChevronRight size={18} color={colors.textMuted} />
+      {pill ? (
+        <View style={[styles.pill, { backgroundColor: pill.bg }]}>
+          <Text style={[styles.pillText, { color: pill.color }]} numberOfLines={1}>{pill.text}</Text>
+        </View>
+      ) : null}
+      {onPress ? <ChevronRight size={18} color={colors.textMuted} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
-    minHeight: 52,
-  },
-  bannerPressed: { backgroundColor: colors.surfaceMuted },
-  thumbBox: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.sm,
-    backgroundColor: colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    marginRight: spacing.md,
-  },
-  thumb: { width: 40, height: 40 },
-  textColumn: { flex: 1, marginRight: spacing.sm },
-  produceName: { fontFamily: fonts.heading.bold, fontSize: 14, color: colors.text, flexShrink: 1 },
-  listingLabel: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 1 },
-  contentRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.sm, marginRight: spacing.sm },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
-  statusPillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
+  banner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: spacing.base, paddingVertical: spacing.sm, minHeight: 64 },
+  pressed: { backgroundColor: colors.surfaceMuted },
+  thumbBox: { width: 48, height: 48, borderRadius: radii.sm + 2, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  thumb: { width: 48, height: 48 },
+  textColumn: { flex: 1 },
+  title: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
+  detail: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
+  pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radii.full, maxWidth: 130 },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
 });

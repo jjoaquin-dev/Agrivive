@@ -23,7 +23,7 @@ function matches(item: SellerVisibilityBoost, filter: Filter) {
     case "all": return true;
     case "running": return state === "posting" || state === "running";
     case "posted": return state === "posted" || state === "finished" || state === "running";
-    case "dropped": return (item.progress?.roundsDone ?? 0) > 0 || item.reason === "price_reduction";
+    case "dropped": return (item.progress?.roundsDone ?? 0) > 0;
     case "not_posted": return state === "not_posted" || state === "failed";
   }
 }

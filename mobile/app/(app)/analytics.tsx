@@ -86,7 +86,7 @@ export default function SellerAnalyticsScreen() {
               <AnalyticsProductPerformance products={products} />
 
               <Pressable
-                onPress={() => router.push("/(app)/marketing?section=visibility")}
+                onPress={() => router.push("/(app)/(tabs)/marketing?section=visibility")}
                 accessibilityRole="button"
                 accessibilityLabel="Open the Visibility Guide in Marketing"
                 style={styles.guideLink}

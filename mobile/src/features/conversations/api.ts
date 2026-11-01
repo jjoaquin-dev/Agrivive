@@ -65,13 +65,14 @@ export function markAllConversationsRead() {
   return apiFetch<{ updatedCount: number }>("/conversations/read-all", { method: "POST" });
 }
 
-export async function uploadConversationAttachment(imageUri: string): Promise<{ url: string; filename: string }> {
+export async function uploadConversationAttachment(imageUri: string, signal?: AbortSignal): Promise<{ url: string; filename: string }> {
   const formData = new FormData();
   formData.append("file", new File(imageUri));
 
   return apiFetch<{ url: string; filename: string }>("/conversations/attachment", {
     method: "POST",
     body: formData,
+    signal,
   });
 }
 

@@ -9,7 +9,6 @@ import { listSellerVisibilityBoostPrompts } from "../services/seller.visibility-
 import { readSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.read";
 import { readAllSellerVisibilityBoostPrompts } from "../services/seller.visibility-boost.prompts.read-all";
 import { dismissSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.dismiss";
-import { acceptSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.accept";
 
 const params = t.Object({ id: t.String({ format: "uuid" }) });
 
@@ -58,16 +57,6 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
       return failure(error, status);
     }
   }, { role: ["seller"] })
-  .post("/boost-prompts/:id/boost", async ({ session, params: routeParams, status }) => {
-    try {
-      const accepted = await acceptSellerVisibilityBoostPrompt(session.userId, routeParams.id);
-      // Send it to n8n now; the worker's next pass is the safety net.
-      void deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
-      return accepted;
-    } catch (error) {
-      return failure(error, status);
-    }
-  }, { role: ["seller"], params })
   .post("/boost-prompts/:id/read", async ({ session, params: routeParams, status }) => {
     try {
       return await readSellerVisibilityBoostPrompt(session.userId, routeParams.id);

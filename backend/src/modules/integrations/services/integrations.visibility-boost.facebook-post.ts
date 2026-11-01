@@ -3,7 +3,6 @@ import { db } from "../../../db";
 import { fb_post_logs, seller_visibility_boosts } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import type { VisibilityBoostFacebookPostBody } from "../model/integrations.visibility-boost";
-import { getPriceDropPostCooldownEnd, priceDropPostGapHours } from "../../../utils/boost-cooldown";
 import { claimFacebookPost } from "./integrations.visibility-boost.post-claim";
 import { finishFacebookPost } from "./integrations.visibility-boost.post-finish";
 import { scheduleBoostFollowUp } from "./integrations.visibility-boost.follow-up.schedule";
@@ -18,9 +17,6 @@ import { publishFacebookPagePhoto } from "./integrations.social-publish-facebook
 export async function postVisibilityBoostToFacebook(boostId: string, body: VisibilityBoostFacebookPostBody) {
   // Re-checks the boost, the seller and the listing before anything is posted.
   const context = await getVisibilityBoostContext(boostId);
-  if (context.reason === "price_reduction" && body.postType !== "second_post") {
-    throw new OrderError(400, "A price drop boost can only make the second post");
-  }
   const productId = context.product.id;
   const [boost] = await db.select({ createdAt: seller_visibility_boosts.createdAt })
     .from(seller_visibility_boosts).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
@@ -36,29 +32,17 @@ export async function postVisibilityBoostToFacebook(boostId: string, body: Visib
     return row;
   };
 
-  // Backstop for the seller route: no second price drop post right after the last one.
-  if (context.reason === "price_reduction") {
-    const waitUntil = await getPriceDropPostCooldownEnd(db, productId, boost.createdAt);
-    if (waitUntil) {
-      throw new OrderError(409, `A price drop post went out less than ${priceDropPostGapHours} hours ago`);
-    }
-  }
-
   let previous: number | null = null;
   let since = boost.createdAt;
   if (body.postType === "second_post") {
-    if (context.reason === "initial") {
-      const last = await findLastPost();
-      if (!last) throw new OrderError(409, "The first post has not been published yet");
-      // The price has not dropped since the last post, so this round was already posted (a repeated call).
-      if (context.product.price >= Number(last.price)) {
-        return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: last.facebookPostId };
-      }
-      previous = Number(last.price);
-      since = new Date(last.postedAt.getTime() + 1);
-    } else {
-      previous = context.previousPrice;
+    const last = await findLastPost();
+    if (!last) throw new OrderError(409, "The first post has not been published yet");
+    // The price has not dropped since the last post, so this round was already posted (a repeated call).
+    if (context.product.price >= Number(last.price)) {
+      return { posted: false, alreadyPosted: true, postType: body.postType, facebookPostId: last.facebookPostId };
     }
+    previous = Number(last.price);
+    since = new Date(last.postedAt.getTime() + 1);
   }
 
   // The backend owns the price and the link: drop any link the model wrote and add the right one.
@@ -88,14 +72,12 @@ export async function postVisibilityBoostToFacebook(boostId: string, body: Visib
 
   // If saving fails here the row stays "pending", so a retry stops instead of posting twice.
   const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId, caption });
-  if (context.reason === "initial") {
-    if (body.postType === "first_post") {
-      await scheduleBoostFollowUp(boostId, log.postedAt);
-      await notifyBoostStarted(boostId);
-    } else {
-      await notifyBoostPriceLowered(boostId);
-      await rearmBoostFollowUp(boostId);
-    }
+  if (body.postType === "first_post") {
+    await scheduleBoostFollowUp(boostId, log.postedAt);
+    await notifyBoostStarted(boostId);
+  } else {
+    await notifyBoostPriceLowered(boostId);
+    await rearmBoostFollowUp(boostId);
   }
   return {
     posted: true, alreadyPosted: false, postType: body.postType,

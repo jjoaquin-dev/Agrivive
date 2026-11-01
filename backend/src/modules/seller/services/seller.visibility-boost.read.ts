@@ -2,7 +2,7 @@ import { and, desc, eq, lte } from "drizzle-orm";
 import { db } from "../../../db";
 import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
-import { getFirstPostCooldownEnd, getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
+import { getFirstPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { countUsedBoosts } from "./seller.visibility-boost.used";
 import { readBoostProgress } from "./seller.visibility-boost.progress";
 import { readBoostChannels } from "./seller.visibility-boost.channels";
@@ -62,12 +62,10 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     const usedPosts = cycle ? await countUsedBoosts(tx, productId, cycle.id) : 0;
 
     const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
-    const maxAllowed = periodsApplied + 1;
-    const hasRoom = usedPosts < maxAllowed;
-    // Posting is blocked for a few hours after the last post. Say so up front instead of failing on tap.
-    const waitUntil = !hasRoom ? null
-      : periodsApplied > 0 ? await getPriceDropPostCooldownEnd(tx, productId)
-      : boost ? null : await getFirstPostCooldownEnd(tx, productId);
+    // One manual Boost per listing. Price drops after it are the 6-hour rule's job.
+    const hasRoom = usedPosts < 1;
+    // Posting is blocked for a few hours after the last first post. Say so up front instead of failing on tap.
+    const waitUntil = hasRoom && !boost ? await getFirstPostCooldownEnd(tx, productId) : null;
     const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000)) : 0;
     const canBoost = hasRoom && !waitUntil;
     const currentPriceNum = Number(product.currentPrice ?? 0);
@@ -76,21 +74,15 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
 
     const dropAmount = product.priceReductionEnabled ? Number(product.priceReductionAmount ?? 0) : 0;
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
-    const headline = waitUntil ? "Almost Time" : periodsApplied === 0
-      ? canBoost ? "Ready to Boost" : "Boost Is Running"
-      : canBoost ? "Price Dropped" : "New Price Posted";
+    const headline = waitUntil ? "Almost Time" : canBoost ? "Ready to Boost" : "Boost Is Running";
 
     const message = waitUntil
       ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.`
-      : periodsApplied === 0
-      ? canBoost
+      : canBoost
         ? "Post this listing on the Agrivive Facebook Page."
         : dropsOn
           ? "Your listing was posted. The price drops every 6 hours until it reaches your final price."
-          : "Your listing was posted on the Agrivive Facebook Page."
-      : canBoost
-        ? `The price went from ₱${basePriceNum.toFixed(2)} to ₱${currentPriceNum.toFixed(2)}. Post the new price.`
-        : "Your new price was posted. The next drop comes by itself.";
+          : "Your listing was posted on the Agrivive Facebook Page.";
 
     const progress = boost ? (await readBoostProgress(tx, [boost])).get(boost.id) ?? null : null;
 
@@ -121,8 +113,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
         canBoost,
         hasInitialBoost: usedPosts >= 1,
         usedPosts,
-        maxAllowedPosts: maxAllowed,
-        stage: periodsApplied > 0 ? ("price_reduction" as const) : ("initial" as const),
+        maxAllowedPosts: 1,
         headline,
         message,
         badge: canBoost ? ("available" as const) : ("boosted" as const),

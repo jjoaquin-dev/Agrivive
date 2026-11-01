@@ -29,13 +29,6 @@ export function fetchSellerBoostPrompts(params: { limit?: number; cursor?: strin
   return apiFetch<SellerBoostPromptsResponse>(`/seller/boost-prompts${query ? `?${query}` : ""}`);
 }
 
-export function acceptSellerBoostPrompt(promptId: string) {
-  return apiFetch<{ boostId: string; status: string; reason: string; productId: string }>(
-    `/seller/boost-prompts/${promptId}/boost`,
-    { method: "POST" },
-  );
-}
-
 export function dismissSellerBoostPrompt(promptId: string) {
   return apiFetch<{ id: string; status: string }>(
     `/seller/boost-prompts/${promptId}/dismiss`,

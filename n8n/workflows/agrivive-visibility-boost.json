@@ -52,7 +52,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { model: 'openai/gpt-oss-20b', temperature: 0.4, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'You are Agrivive social media copywriter. Return a JSON object with a single caption field. Write a short, friendly Facebook post using only the facts given. Do not change any number. Do not write any link; the system adds the product link. If reason is initial, announce the fresh produce with its price. If reason is price_reduction, write a calm reminder that the produce is still available at its lower price. Give the current price, and the previous price only if previous_price_php is given. Do not call it a flash sale or use urgent wording.' }, { role: 'user', content: JSON.stringify({ reason: $json.reason, product: $json.product.name, unit: $json.product.unit, price_php: $json.product.price, previous_price_php: $json.previousPrice, shop: $json.seller.shopName }) } ] } }}"
+        "jsonBody": "={{ { model: 'openai/gpt-oss-20b', temperature: 0.4, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'You are Agrivive social media copywriter. Return a JSON object with a single caption field. Write a short, friendly Facebook post using only the facts given. Do not change any number. Do not write any link; the system adds the product link. Announce the fresh produce with its price. Give the current price. Do not use urgent wording.' }, { role: 'user', content: JSON.stringify({ product: $json.product.name, unit: $json.product.unit, price_php: $json.product.price, shop: $json.seller.shopName }) } ] } }}"
       },
       "id": "11111111-0003-4000-8000-000000000003",
       "name": "4. Write Caption (Groq)",
@@ -66,7 +66,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const ctx = $('3. Get Boost Context').first().json;\nconst price = Number(ctx.product.price).toFixed(2);\nlet caption = ctx.reason === 'initial'\n  ? `Fresh ${ctx.product.name} is now available at ₱${price} from ${ctx.seller.shopName}!`\n  : `Still available: ${ctx.product.name} at ₱${price} from ${ctx.seller.shopName}. Order before it sells out!`;\ntry {\n  const parsed = JSON.parse($input.first().json.choices[0].message.content);\n  if (typeof parsed.caption === 'string' && parsed.caption.trim()) caption = parsed.caption.trim();\n} catch (e) {}\nreturn [{ json: { boostId: ctx.boostId, reason: ctx.reason, caption, postType: ctx.reason === 'initial' ? 'first_post' : 'second_post' } }];"
+        "jsCode": "const ctx = $('3. Get Boost Context').first().json;\nconst price = Number(ctx.product.price).toFixed(2);\nlet caption = `Fresh ${ctx.product.name} is now available at \\u20b1${price} from ${ctx.seller.shopName}!`;\ntry {\n  const parsed = JSON.parse($input.first().json.choices[0].message.content);\n  if (typeof parsed.caption === 'string' && parsed.caption.trim()) caption = parsed.caption.trim();\n} catch (e) {}\nreturn [{ json: { boostId: ctx.boostId, reason: ctx.reason, caption, postType: 'first_post' } }];"
       },
       "id": "11111111-0004-4000-8000-000000000004",
       "name": "5. Format Caption",
