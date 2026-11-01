@@ -73,7 +73,8 @@ export function marketplaceVisibilityScoreSql(evaluatedAt: Date, since: Date) {
       and prior_cycle.started_at <= ${evaluatedAt}
       and prior_cycle.id is distinct from ${currentCycleId}
   )`;
-  return sql<number | null>`(case
+  // Rounded to 9 decimals so the page cursor (which the driver returns with 15 digits) compares equal to the stored score on ties.
+  return sql<number | null>`round((case
     when ${sellers_product.originalQty} is null
       or ${sellers_product.originalQty} <= 0 or ${sellers_product.publishedAt} is null
       or ${sellers_product.publishedAt} > ${evaluatedAt} then null
@@ -81,7 +82,7 @@ export function marketplaceVisibilityScoreSql(evaluatedAt: Date, since: Date) {
       .40 * least(1, greatest(0, extract(epoch from (${evaluatedAt}::timestamptz - ${sellers_product.publishedAt})) / 43200.0))
       + .40 * least(1, greatest(0, ${sellers_product.productQty} / nullif(${sellers_product.originalQty}, 0)))
       + .20 * least(1, greatest(0, ${priorCycles} / 3.0))
-  end)::double precision`;
+  end)::numeric, 9)::double precision`;
 }
 
 export function marketplacePriorCyclesSql(evaluatedAt: Date, since: Date) {

@@ -15,7 +15,9 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-All 13 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Profile** flow: F1 (Profile tab verified & good standing), F2 (New seller setup checklist), F3 (Warning/limited standing), F4 (Avatar action sheet & uploading spinner), F5 (Edit Profile filled with phone error & sticky Save bar), F6 (Edit Profile leave-without-saving dialog), F7 (Setup step 2 pin not moved error & auto-scroll), F8 (Sign-in Safety password + Sign-in Code off), F9 (Sign-in Code step 2 QR & key), F9b (Sign-in Code step 3 6-digit boxes & invalid code error), F10 (Sign-in Code step 4 backup codes & copied badge), F11 (Sign-in Code on with in-card turn-off confirm), and F12 (Log Out confirmation dialog). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
+Fixed the baseline marketplace paging bug (page 2 repeated page 1 when scores tied; the score is now rounded to 9 decimals in the query). Moved the policy choice into `utils/visibility-ranking/policy.ts`. Added tests: 29 pass (AHP-TOPSIS engine, WSV-008 paging, WSV-010 policy switch) and a `bun test` step in backend CI. Verified read-only on the dev database for both policies; the running API needs a restart. See [[2026-11-01 Baseline Paging Fix and Policy Tests]] and [[2026-11-01 AHP-TOPSIS Test Cases]].
+
+Earlier: All 13 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Profile** flow: F1 (Profile tab verified & good standing), F2 (New seller setup checklist), F3 (Warning/limited standing), F4 (Avatar action sheet & uploading spinner), F5 (Edit Profile filled with phone error & sticky Save bar), F6 (Edit Profile leave-without-saving dialog), F7 (Setup step 2 pin not moved error & auto-scroll), F8 (Sign-in Safety password + Sign-in Code off), F9 (Sign-in Code step 2 QR & key), F9b (Sign-in Code step 3 6-digit boxes & invalid code error), F10 (Sign-in Code step 4 backup codes & copied badge), F11 (Sign-in Code on with in-card turn-off confirm), and F12 (Log Out confirmation dialog). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
 
 Earlier: 12 high-fidelity mobile UI mockups generated in Google Stitch covering the complete seller **Messages** flow: F1 (All filter), F2 (Unread + search 'Kamatis'), F3 (New seller empty state), F3b (Loading skeleton 6 rows), F4 (Sort sheet modal), F5 (Questions waiting + expanded answer composer), F6 (Questions all + answered card & inline send error), F7 (Order context chat with Jose Reyes & reservation pass card), F8 (Product context chat with Maria Santos & photo upload preview), F9 (Reconnecting banner & send error retry), F10 (Closed chat state with Carlo Mendoza & replaced bar), and F11 (Full-screen photo viewer lightbox). See [[2026-11-01 Stitch Seller Messages Redesign Frames]].
 
@@ -72,6 +74,7 @@ Earlier: 5 high-fidelity mobile dashboard frames generated in Google Stitch cove
 
 ## Unresolved issues
 
+- `VISIBILITY_POLICY` unset means the baseline policy, not AHP-TOPSIS. WSV-006 (sold out) and WSV-009 (Boost) are still manual tests.
 - Mobile freshness: owner to check on a development build that lists update after a push, nothing is fetched while backgrounded, and chat reconnects after an API restart.
 - Seller notifications: owner must apply the migration, test `GET /seller/notifications`, the read routes and `/seller/notification-settings`, and walk each trigger on a development build.
 - Marketing hub: Boost, History, Active and the Visibility Guide now live in one Marketing hub ([[2026-10-31 Marketing Hub]]).
@@ -84,7 +87,9 @@ Owner manual testing of the seller mobile app with real device builds, verifying
 
 ## Historical changelog
 
-- Latest entry: [[2026-11-01 Stitch Seller Messages Redesign Frames]]
+- Latest entry: [[2026-11-01 Baseline Paging Fix and Policy Tests]]
+- Earlier entry: [[2026-11-01 AHP-TOPSIS Test Cases]]
+- Earlier entry: [[2026-11-01 Stitch Seller Messages Redesign Frames]]
 - Earlier entry: [[2026-11-01 Boost Screen Shorter When Blocked]]
 - Earlier entry: [[2026-11-01 Messages Flow Cleanup]]
 - Earlier entries: the dated notes in this folder.

@@ -191,6 +191,12 @@
   },
   "active": "92b5c31836f9f735",
   "lastOpenFiles": [
+    "04 Delivery/2026-11-01 Baseline Paging Fix and Policy Tests.md",
+    "04 Delivery/2026-11-01 AHP-TOPSIS Test Cases.md",
+    "docs/WSV-AHP-TOPSIS-test-sheet.md",
+    "docs/WSV-AHP-TOPSIS-test-results.md",
+    "docs/CAPSTONE 2 FILES - BARTIQUIEN, JARA, MARUNDAN.pdf",
+    "docs",
     "04 Delivery/2026-11-01 Old Boost Prompts Retired.md",
     "04 Delivery/2026-11-01 Price Drops Apart From Running.md",
     "04 Delivery/2026-11-01 Lower Price Now Button.md",
@@ -213,10 +219,6 @@
     "04 Delivery/2026-11-01 Messages Flow Cleanup.md",
     "04 Delivery/2026-11-01 Boost Wait Time Shown Up Front.md",
     "04 Delivery/2026-11-01 Chat Unread Count and Question Answers in Chat.md",
-    "04 Delivery/2026-11-01 Low Stock Notice On Take Away.md",
-    "04 Delivery/2026-11-01 Notifications Applied From Stitch.md",
-    "04 Delivery/2026-11-01 Low Stock Alert Field Restored.md",
-    "04 Delivery/2026-11-01 Sales Report Applied From Stitch.md",
     "Untitled 1.canvas",
     "Untitled.canvas",
     "04 Delivery/2026-10-30 Splash Screen Refinement.md.tmp.11289.6355cc5c447e",
@@ -226,7 +228,6 @@
     "04 Delivery/2026-10-30 Web Landing Audit Fixes.md.tmp.410.07d0fe2baf62",
     "04 Delivery",
     "03 Intelligence",
-    "02 Product",
-    "01 Foundation"
+    "02 Product"
   ]
 }
