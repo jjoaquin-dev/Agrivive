@@ -22,6 +22,7 @@ interface OrderReportModalProps {
 const REASONS: { value: ReportReason; label: string; description: string }[] = [
   { value: "pickup_problem", label: "Pickup Problem", description: "Seller was absent or produce unavailable." },
   { value: "listing_inaccurate", label: "Listing Inaccurate", description: "Produce quality or quantity differed from description." },
+  { value: "qr_misuse", label: "QR Code Misuse", description: "Someone used or shared a pickup QR code the wrong way." },
   { value: "conduct", label: "Seller Conduct", description: "Unprofessional or inappropriate behavior." },
   { value: "other", label: "Other Issue", description: "Any other problem with this transaction." },
 ];

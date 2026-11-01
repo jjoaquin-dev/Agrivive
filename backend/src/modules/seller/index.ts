@@ -15,6 +15,7 @@ import { sellerProductAdjustStockRoute } from "./index/seller.product.adjust-sto
 import { sellerCancelOrderRoute } from "./index/seller.order.cancel";
 import { sellerInquiryRoute } from "./index/seller.order.inquiry";
 import { sellerReviewRoute } from "./index/seller.order.review";
+import { sellerProductReviewRoute } from "./index/seller.product-review";
 import { sellerReportRoute } from "./index/seller.order.report";
 import { sellerTrustRoute } from "./index/seller.trust";
 import { sellerSetupRoute } from "./index/seller.setup";
@@ -55,6 +56,7 @@ export const sellerRoute = new Elysia({ prefix: "/seller" })
   .use(sellerProductInquiryRoute)
   .use(sellerProductShareRoute)
   .use(sellerReviewRoute)
+  .use(sellerProductReviewRoute)
   .use(sellerReportRoute)
   .use(sellerTrustRoute)
   .use(sellerNotificationsRoute)

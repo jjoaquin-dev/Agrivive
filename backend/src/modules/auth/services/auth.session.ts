@@ -4,7 +4,7 @@ import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "../../../db";
 import { trust_actions, user as users } from "../../../db/schema";
 import { touchUserActivity } from "../../../utils/user-activity";
-import { formatRemainingTime } from "../../../utils/trust/access";
+import { blockedMessage, pausedMessage } from "../../../utils/trust/access";
 import { STATUS_CACHE_TTL_MS, userStatusCache } from "../../../utils/user-status-cache";
 
 export type Rtype = "admin" | "buyer" | "seller" | "stakeholder";
@@ -44,7 +44,6 @@ export const sessionAuth = new Elysia()
                 actionType: trust_actions.actionType,
                 reason: trust_actions.reason,
                 endsAt: trust_actions.endsAt,
-                weightedPoints: trust_actions.weightedPoints,
               })
               .from(trust_actions)
               .where(
@@ -58,16 +57,9 @@ export const sessionAuth = new Elysia()
               .limit(1);
 
             if (activeAction) {
-              const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
-              const remainingText = formatRemainingTime(diffMs);
-              const durationLabel =
-                activeAction.weightedPoints >= 10
-                  ? "3 days"
-                  : activeAction.weightedPoints >= 8
-                    ? "24 hours"
-                    : "12 hours";
-
-              blockReason = `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}. Please come back in ${remainingText}.`;
+              blockReason = activeAction.actionType === "blocked"
+                ? blockedMessage(activeAction.reason)
+                : pausedMessage(activeAction.reason, activeAction.endsAt);
             } else {
               blockReason = "Your account is paused. Please restore your account to continue.";
             }

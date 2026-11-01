@@ -1,6 +1,6 @@
 import { apiRequest } from "@/src/lib/api";
 
-export type ReportReason = "pickup_problem" | "conduct" | "listing_inaccurate" | "other";
+export type ReportReason = "pickup_problem" | "conduct" | "listing_inaccurate" | "qr_misuse" | "other";
 
 export interface OrderReport {
   id: string;

@@ -62,7 +62,7 @@ export async function expirePendingOrders(limit = 100) {
 
     if (expired) {
       expiredCount++;
-      await evaluateTrustAction(expired.buyerId, expired.orderId, expired.eventKey);
+      await evaluateTrustAction(expired.buyerId, expired.orderId, expired.eventKey, "buyer_failed_reservation");
     }
   }
   return expiredCount;

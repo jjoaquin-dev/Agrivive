@@ -9,6 +9,9 @@ export async function checkUserInactivity(limit = 100) {
   const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 3_600_000);
   const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 3_600_000);
 
+  // Only buyer and seller accounts follow the inactivity rule. Admin and stakeholder accounts are staff accounts.
+  const isMarketplaceUser = sql`('buyer'::"role" = any(${user.role}) or 'seller'::"role" = any(${user.role}))`;
+
   let warningsIssued = 0;
   let accountsBlocked = 0;
 
@@ -16,7 +19,7 @@ export async function checkUserInactivity(limit = 100) {
   const blockCandidates = await db
     .select({ id: user.id })
     .from(user)
-    .where(and(eq(user.isActive, true), lt(user.lastActiveAt, oneMonthAgo)))
+    .where(and(eq(user.isActive, true), isMarketplaceUser, lt(user.lastActiveAt, oneMonthAgo)))
     .limit(limit);
 
   for (const candidate of blockCandidates) {
@@ -52,6 +55,7 @@ export async function checkUserInactivity(limit = 100) {
     .where(
       and(
         eq(user.isActive, true),
+        isMarketplaceUser,
         lt(user.lastActiveAt, threeWeeksAgo),
         sql`${user.lastActiveAt} >= ${oneMonthAgo}`,
       ),

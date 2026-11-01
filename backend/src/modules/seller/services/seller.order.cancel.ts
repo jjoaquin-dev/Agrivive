@@ -35,6 +35,6 @@ export async function cancelSellerOrder(sellerId: string, orderId: string, reaso
     await queueTrustNotice(tx, { noticeKey: `seller-cancel-buyer:${orderId}`, recipientId: cancelled.buyerId,
       orderId, kind: "seller_cancellation_buyer" });
   });
-  await evaluateTrustAction(sellerId, orderId, `seller-cancel:${orderId}`);
+  await evaluateTrustAction(sellerId, orderId, `seller-cancel:${orderId}`, "seller_cancellation");
   return getOrder(orderId, sellerId, "seller");
 }

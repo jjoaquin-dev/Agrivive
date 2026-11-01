@@ -1,4 +1,4 @@
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, eq, gt, gte, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { orders, trust_actions } from "../../../db/schema";
 import { restoreOrderStock } from "../../../utils/order-stock";
@@ -9,7 +9,7 @@ import {
   resolveCancellationRestrictionMessage,
   resolveCancellationWarning,
 } from "../../../utils/trust/cancellation-policy";
-import { trustPolicyVersion } from "../../../utils/trust/policy";
+import { trustPolicyVersion, trustScoreWindowStart } from "../../../utils/trust/policy";
 import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function cancelBuyerOrder(orderId: string, buyerId: string) {
@@ -49,7 +49,8 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
       orderId: cancelled.id,
     });
 
-    // Count all buyer cancellations to apply 5 (warning), 7 (12h), 9 (24h), 10 (3d) cooldown policy
+    // Count recent buyer cancellations (same window as the score) to apply 5 (warning), 7 (12h), 9 (24h), 10 (3d) cooldown policy
+    const windowStart = trustScoreWindowStart();
     const [cancelRow] = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(orders)
@@ -58,6 +59,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
           eq(orders.buyersId, buyerId),
           eq(orders.status, "cancelled"),
           eq(orders.cancelledBy, "buyer"),
+          windowStart ? gte(orders.cancelledAt, windowStart) : undefined,
         ),
       );
     const cancelCount = Number(cancelRow?.count ?? 0);
@@ -66,7 +68,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
     if (cooldownHours > 0) {
       const endsAt = new Date(Date.now() + cooldownHours * 3600000);
       const { message } = resolveCancellationRestrictionMessage(cancelCount, endsAt);
-      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}`;
+      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}:${cancelled.id}`;
 
       await tx.insert(trust_actions).values({
         actionKey,
@@ -81,7 +83,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
     } else if (cancelCount >= 5) {
       const warningMessage = resolveCancellationWarning(cancelCount);
       if (warningMessage) {
-        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}`;
+        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}:${cancelled.id}`;
         await tx.insert(trust_actions).values({
           actionKey,
           subjectId: buyerId,

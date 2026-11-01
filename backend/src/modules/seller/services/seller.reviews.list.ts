@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { order_reviews, ordered_items, user } from "../../../db/schema";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { formatReviewBuyerName } from "../../../utils/review-format";
 
 export interface SellerReviewsQueryOptions {
   filter?: "all" | "unanswered" | "replied";
@@ -80,14 +81,6 @@ export async function readSellerReviewsList(
   }
 
   const reviews = rows.map((r) => {
-    let formattedName = "Verified buyer";
-    if (r.buyerName) {
-      const parts = r.buyerName.trim().split(/\s+/);
-      const firstName = parts[0];
-      const lastInitial = parts[1]?.[0] ? ` ${parts[1][0]}.` : "";
-      formattedName = `${firstName}${lastInitial}`;
-    }
-
     return {
       id: r.id,
       orderId: r.orderId,
@@ -95,7 +88,7 @@ export async function readSellerReviewsList(
       review: r.review,
       sellerResponse: r.sellerResponse,
       createdAt: r.createdAt.toISOString(),
-      buyerName: formattedName,
+      buyerName: formatReviewBuyerName(r.buyerName),
       items: itemsByOrder.get(r.orderId) ?? [],
     };
   });

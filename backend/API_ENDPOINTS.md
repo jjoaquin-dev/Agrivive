@@ -180,6 +180,12 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | PATCH | `/seller/notification-settings` | `backend/src/modules/seller/index/seller.notification-settings.ts` |
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
+| GET | `/seller/product-reviews` | `backend/src/modules/seller/index/seller.product-review.ts` |
+| POST | `/seller/product-reviews/:id/reply` | `backend/src/modules/seller/index/seller.product-review.ts` |
+
+`GET /seller/product-reviews` (same query as `GET /seller/reviews`: `filter` = `all|unanswered|replied`, `rating` 1-5, `limit`, `offset`) returns `{ "summary": { "count", "average", "breakdown", "unansweredCount" }, "reviews": [{ "id", "orderId", "rating", "review", "sellerResponse", "createdAt", "buyerName", "items": ["<product name>"] }] }` for single-product reviews. `POST /seller/product-reviews/:id/reply` (body `{ "response": "Thank you!" }`) answers one review once; a second answer returns 404. `GET /marketplace/products/:id/reviews` now includes `sellerResponse` on each review.
+
+Reports (`POST /buyer/orders/:id/report` and `POST /seller/orders/:id/report`) accept the reasons `pickup_problem`, `conduct`, `listing_inaccurate`, `qr_misuse` and `other`. When different people report the same reason about the same person, it becomes a confirmed violation: `listing_inaccurate` = misleading product information, `conduct` = inappropriate communication, `qr_misuse` = QR-code misuse (serious: blocks the account). `pickup_problem` and `other` never count by themselves.
 
 `GET /seller/product-inquiries` returns `{ "items": [...], "nextCursor": null, "openCount": 4 }`. Each item includes `buyerName` and `buyerImage` (a ready-to-open photo link, or `null`). `openCount` is every unanswered product question of this seller, whatever the `status` filter is.
 

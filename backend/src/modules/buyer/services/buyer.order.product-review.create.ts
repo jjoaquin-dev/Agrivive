@@ -52,6 +52,7 @@ export async function createBuyerProductReview(
     if (!review) throw new OrderError(409, "This product has already been reviewed for this order");
     return review;
   });
-  await evaluateTrustAction(review.sellerId, review.orderId);
+  // Only a low rating can change the score, so a good review never restarts a pause.
+  if (review.rating <= 2) await evaluateTrustAction(review.sellerId, review.orderId, undefined, "low_rating");
   return review;
 }

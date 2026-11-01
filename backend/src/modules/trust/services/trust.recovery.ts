@@ -69,7 +69,8 @@ export async function verifyTrustRecovery(input: TrustRecoveryVerifyBody) {
       inArray(trust_actions.actionType, recoveryActionTypes),
       isNull(trust_actions.revokedAt),
     ));
-    await tx.update(user).set({ isActive: true }).where(eq(user.id, candidate.id));
+    // Restarts the inactivity clock; otherwise the daily job would block an inactive account again within a minute.
+    await tx.update(user).set({ isActive: true, lastActiveAt: restoredAt }).where(eq(user.id, candidate.id));
     return candidate.id;
   });
   forgetUserStatus(restored);

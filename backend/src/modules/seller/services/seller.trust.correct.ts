@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../../../db";
-import { order_inquiries, orders, trust_corrections, trust_events } from "../../../db/schema";
+import { orders, trust_corrections, trust_events } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { queueTrustNotice } from "../../../utils/trust";
+import { isUnansweredTooLong } from "../../../utils/trust/verify-non-response";
 
 export function correctSellerTrustEvent(sellerId: string, eventId: string, reason: string) {
   return db.transaction(async (tx) => {
@@ -19,11 +20,8 @@ export function correctSellerTrustEvent(sellerId: string, eventId: string, reaso
       const [order] = await tx.select({ status: orders.status, cancelledBy: orders.cancelledBy })
         .from(orders).where(eq(orders.id, event.orderId)).limit(1);
       valid = order?.status === "cancelled" && order.cancelledBy === "seller";
-    } else if (event.kind === "inquiry_non_response" && event.sourceId) {
-      const [inquiry] = await tx.select().from(order_inquiries)
-        .where(eq(order_inquiries.id, event.sourceId)).limit(1);
-      valid = !!inquiry && inquiry.orderId === event.orderId &&
-        (!inquiry.repliedAt || inquiry.repliedAt.getTime() - inquiry.createdAt.getTime() >= 48 * 3_600_000);
+    } else if (event.kind === "inquiry_non_response") {
+      valid = await isUnansweredTooLong(tx, event);
     } else {
       throw new OrderError(400, "This event cannot be corrected automatically");
     }
