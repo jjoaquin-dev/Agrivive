@@ -37,7 +37,7 @@ export function MarketplaceDealsRow() {
       <div className="mb-4">
         <p className="type-eyebrow text-[#457D00]">Priority deals</p>
         <h2 id="priority-deals-heading" className="mt-1 font-heading text-2xl font-bold tracking-tight text-[#14231A]">
-          Lowest prices with priority picks
+          Lowest prices for you
         </h2>
         <p className="mt-0.5 text-xs text-[#5F7367]">
           Priced 30% or more below normal, ranked by freshness, stock, seller reliability and past listings.
