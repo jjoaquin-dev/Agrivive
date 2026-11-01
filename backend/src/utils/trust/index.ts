@@ -28,35 +28,6 @@ export async function queueTrustNotice(tx: OrderTransaction, input: {
   return rows;
 }
 
-export async function recordInquiryDeadlines(tx: OrderTransaction, inquiry: {
-  id: string;
-  orderId: string;
-  buyerId: string;
-  sellerId: string;
-  createdAt: Date;
-}, now: Date) {
-  const hours = (now.getTime() - inquiry.createdAt.getTime()) / 3_600_000;
-  if (hours >= 12) await queueTrustNotice(tx, {
-    noticeKey: `inquiry-reminder:${inquiry.id}`, recipientId: inquiry.sellerId,
-    orderId: inquiry.orderId, kind: "inquiry_12h_reminder",
-  });
-  if (hours >= 24) {
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-warning:${inquiry.id}`, recipientId: inquiry.sellerId,
-      orderId: inquiry.orderId, kind: "inquiry_24h_warning",
-    });
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-buyer:${inquiry.id}`, recipientId: inquiry.buyerId,
-      orderId: inquiry.orderId, kind: "inquiry_24h_buyer_notice",
-    });
-  }
-  if (hours >= 48) await recordTrustEvent(tx, {
-    eventKey: `inquiry-unanswered:${inquiry.id}`, orderId: inquiry.orderId,
-    subjectId: inquiry.sellerId, kind: "inquiry_non_response",
-    classification: "verified", sourceId: inquiry.id,
-  });
-}
-
 export async function listOrderInquiries(userId: string, orderId: string, side: OrderSide) {
   const owner = side === "buyer" ? orders.buyersId : orders.sellersId;
   const [order] = await db.select({ id: orders.id }).from(orders)

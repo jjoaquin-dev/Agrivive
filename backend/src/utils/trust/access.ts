@@ -2,6 +2,21 @@ import { and, desc, eq, gt, isNull, or } from "drizzle-orm";
 import { trust_actions } from "../../db/schema";
 import { OrderError, type OrderTransaction } from "../order-types";
 
+/** The stored reason may already end with "Please come back in ...". Drop that part so the time shown is always fresh. */
+const comeBackSentence = /\s*Please come back in .*$/i;
+const restoreSentence = /\s*(?:Verify your email to restore|Please restore) your account.*$/i;
+
+/** Paused: the reason that was stored when the pause began, plus how long is left. */
+export function pausedMessage(reason: string, endsAt: Date | null): string {
+  const remaining = formatRemainingTime(endsAt ? endsAt.getTime() - Date.now() : 0);
+  return `${reason.replace(comeBackSentence, "")} Please come back in ${remaining}.`;
+}
+
+/** Blocked: the stored reason plus the way back. The app tells "blocked" from "paused" by the restore sentence. */
+export function blockedMessage(reason: string): string {
+  return `${reason.replace(restoreSentence, "").replace(comeBackSentence, "")} Please restore your account to continue.`;
+}
+
 export function formatRemainingTime(diffMs: number): string {
   if (diffMs <= 0) return "a few moments";
   const hours = Math.ceil(diffMs / (1000 * 60 * 60));
@@ -17,7 +32,6 @@ export async function requireNoActiveTrustRestriction(tx: OrderTransaction, user
     .select({
       id: trust_actions.id,
       endsAt: trust_actions.endsAt,
-      weightedPoints: trust_actions.weightedPoints,
       reason: trust_actions.reason,
     })
     .from(trust_actions)
@@ -32,19 +46,5 @@ export async function requireNoActiveTrustRestriction(tx: OrderTransaction, user
     .orderBy(desc(trust_actions.createdAt))
     .limit(1);
 
-  if (restriction) {
-    const diffMs = restriction.endsAt ? restriction.endsAt.getTime() - Date.now() : 0;
-    const remainingText = formatRemainingTime(diffMs);
-    const durationText =
-      restriction.weightedPoints >= 10
-        ? "3 days"
-        : restriction.weightedPoints >= 8
-          ? "24 hours"
-          : "12 hours";
-
-    throw new OrderError(
-      403,
-      `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationText}. Please come back in ${remainingText}.`,
-    );
-  }
+  if (restriction) throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt));
 }

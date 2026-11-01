@@ -29,6 +29,7 @@ export async function listMarketplaceProductReviews(productId: string) {
       id: product_reviews.id,
       rating: product_reviews.rating,
       review: product_reviews.review,
+      sellerResponse: product_reviews.sellerResponse,
       createdAt: product_reviews.createdAt,
       buyerName: user.name,
     })
@@ -47,6 +48,7 @@ export async function listMarketplaceProductReviews(productId: string) {
       id: row.id,
       rating: row.rating,
       review: row.review,
+      sellerResponse: row.sellerResponse,
       createdAt: row.createdAt.toISOString(),
       buyerName,
     };

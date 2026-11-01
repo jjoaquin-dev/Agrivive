@@ -128,6 +128,13 @@ export async function createConversation(buyerId: string, input: CreateConversat
       ]);
     }
 
+    // Product and order chats are timed through their question rows. A direct chat starts waiting on its own.
+    if (input.contextType === "seller" && !activeConversation.awaitingReplySince) {
+      const [waiting] = await tx.update(conversations).set({ awaitingReplySince: now, deadlineStage: 0 })
+        .where(eq(conversations.id, activeConversation.id)).returning();
+      activeConversation = waiting;
+    }
+
     const [message] = await tx.insert(conversation_messages).values({
       conversationId: activeConversation.id,
       senderId: buyerId,

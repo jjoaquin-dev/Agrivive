@@ -76196,19 +76196,11 @@ __export(exports_schema, {
   seller_listing_events: () => seller_listing_events,
   seller_notification_settings: () => seller_notification_settings,
   seller_notifications: () => seller_notifications,
-  seller_promotion_jobs: () => seller_promotion_jobs,
-  seller_promotion_stage: () => seller_promotion_stage,
-  seller_promotion_status: () => seller_promotion_status,
   seller_scan_grace: () => seller_scan_grace,
-  seller_social_campaign_posts: () => seller_social_campaign_posts,
-  seller_social_campaigns: () => seller_social_campaigns,
   seller_visibility_boosts: () => seller_visibility_boosts,
   sellers_product: () => sellers_product,
   sellers_profile: () => sellers_profile,
   session: () => session,
-  social_campaign_post_status: () => social_campaign_post_status,
-  social_campaign_status: () => social_campaign_status,
-  social_platform: () => social_platform,
   trust_actions: () => trust_actions,
   trust_corrections: () => trust_corrections,
   trust_events: () => trust_events,
@@ -110017,6 +110009,12 @@ var CONSTANTS = {
 function count(expression) {
   return sql3`count(${expression || sql3.raw("*")})`.mapWith(Number);
 }
+function countDistinct(expression) {
+  return sql3`count(distinct ${expression})`.mapWith(Number);
+}
+function min(expression) {
+  return sql3`min(${expression})`.mapWith(is(expression, Column) ? expression : String);
+}
 // node_modules/better-auth/node_modules/@better-auth/drizzle-adapter/dist/query-builders-CBLMSM7v.mjs
 function buildRelationKeysByModel(relationRegistry) {
   const relationKeysByModel = /* @__PURE__ */ new Map;
@@ -116575,103 +116573,6 @@ var listing_cycles = pgTable("listing_cycles", {
   index("listing_cycles_catalog_unit_started_idx").on(table.vegetableCatalogId, table.scalingType, table.startedAt),
   index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt)
 ]);
-var seller_promotion_stage = pgEnum2("seller_promotion_stage", [
-  "initial",
-  "followup"
-]);
-var seller_promotion_status = pgEnum2("seller_promotion_status", [
-  "waiting",
-  "queued",
-  "sent",
-  "ready",
-  "skipped",
-  "failed"
-]);
-var seller_promotion_jobs = pgTable("seller_promotion_jobs", {
-  id: uuid2("id").defaultRandom().primaryKey(),
-  listingCycleId: uuid2("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
-  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  stage: seller_promotion_stage().notNull(),
-  status: seller_promotion_status().default("waiting").notNull(),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
-  retryCount: integer2("retry_count").default(0).notNull(),
-  leaseUntil: timestamp("lease_until", { withTimezone: true }),
-  headline: text("headline"),
-  caption: text("caption"),
-  visibilityPolicyVersion: text("visibility_policy_version"),
-  visibilityScore: decimal("visibility_score", { precision: 5, scale: 4 }),
-  visibilityTier: text("visibility_tier"),
-  visibilityRank: integer2("visibility_rank"),
-  evaluatedAt: timestamp("evaluated_at", { withTimezone: true }),
-  readyAt: timestamp("ready_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  readAt: timestamp("read_at", { withTimezone: true }),
-  lastError: text("last_error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
-}, (table) => [
-  uniqueIndex("seller_promotion_jobs_cycle_stage_unique").on(table.listingCycleId, table.stage),
-  index("seller_promotion_jobs_due_idx").on(table.status, table.nextCheckAt),
-  index("seller_promotion_jobs_seller_created_idx").on(table.sellerId, table.createdAt),
-  index("seller_promotion_jobs_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
-]);
-var social_platform = pgEnum2("social_platform", ["facebook", "instagram", "tiktok", "x"]);
-var social_campaign_status = pgEnum2("social_campaign_status", [
-  "draft",
-  "queued",
-  "publishing",
-  "processing",
-  "published",
-  "partial",
-  "failed"
-]);
-var social_campaign_post_status = pgEnum2("social_campaign_post_status", [
-  "queued",
-  "processing",
-  "published",
-  "failed"
-]);
-var seller_social_campaigns = pgTable("seller_social_campaigns", {
-  id: uuid2("id").defaultRandom().primaryKey(),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
-  listingCycleId: uuid2("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
-  status: social_campaign_status().default("draft").notNull(),
-  posts: jsonb("posts").$type().notNull(),
-  selectedPlatforms: social_platform("selected_platforms").array().default([]).notNull(),
-  tiktokPrivacyLevel: text("tiktok_privacy_level"),
-  tiktokAllowComment: boolean4("tiktok_allow_comment"),
-  tiktokBrandOrganic: boolean4("tiktok_brand_organic"),
-  tiktokBrandContent: boolean4("tiktok_brand_content"),
-  tiktokConsentAt: timestamp("tiktok_consent_at", { withTimezone: true }),
-  approvedAt: timestamp("approved_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  retryCount: integer2("retry_count").default(0).notNull(),
-  leaseUntil: timestamp("lease_until", { withTimezone: true }),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
-  lastError: text("last_error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
-}, (table) => [
-  index("seller_social_campaigns_seller_created_idx").on(table.sellerId, table.createdAt),
-  index("seller_social_campaigns_due_idx").on(table.status, table.nextCheckAt, table.leaseUntil)
-]);
-var seller_social_campaign_posts = pgTable("seller_social_campaign_posts", {
-  id: uuid2("id").defaultRandom().primaryKey(),
-  campaignId: uuid2("campaign_id").notNull().references(() => seller_social_campaigns.id, { onDelete: "cascade" }),
-  platform: social_platform().notNull(),
-  status: social_campaign_post_status().default("queued").notNull(),
-  platformPostId: text("platform_post_id"),
-  postUrl: text("post_url"),
-  lastError: text("last_error"),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
-}, (table) => [
-  uniqueIndex("seller_social_campaign_posts_campaign_platform_unique").on(table.campaignId, table.platform),
-  index("seller_social_campaign_posts_campaign_idx").on(table.campaignId, table.status)
-]);
 var seller_boost_reason_enum = pgEnum2("seller_boost_reason", [
   "initial",
   "price_reduction"
@@ -116814,6 +116715,7 @@ var product_inquiries = pgTable("product_inquiries", {
   question: text("question").notNull(),
   reply: text("reply"),
   repliedAt: timestamp("replied_at", { withTimezone: true }),
+  deadlineStage: smallint("deadline_stage").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   uniqueIndex("product_inquiries_one_open_per_buyer_product_idx").on(table.productId, table.buyerId).where(sql3`${table.repliedAt} is null`),
@@ -116832,9 +116734,12 @@ var conversations = pgTable("conversations", {
   orderId: uuid2("order_id").references(() => orders.id, { onDelete: "cascade" }),
   status: conversation_status_enum().default("open").notNull(),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).defaultNow().notNull(),
+  awaitingReplySince: timestamp("awaiting_reply_since", { withTimezone: true }),
+  deadlineStage: smallint("deadline_stage").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 }, (table) => [
+  index("conversations_awaiting_reply_idx").on(table.awaitingReplySince).where(sql3`${table.awaitingReplySince} is not null`),
   index("conversations_buyer_last_message_idx").on(table.buyerId, table.lastMessageAt),
   index("conversations_seller_last_message_idx").on(table.sellerId, table.lastMessageAt),
   index("conversations_product_idx").on(table.productId),
@@ -116948,6 +116853,7 @@ var product_reviews = pgTable("product_reviews", {
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   rating: smallint("rating").notNull(),
   review: text("review"),
+  sellerResponse: text("seller_response"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
@@ -119666,6 +119572,15 @@ class OrderError extends Error {
 }
 
 // src/utils/trust/access.ts
+var comeBackSentence = /\s*Please come back in .*$/i;
+var restoreSentence = /\s*(?:Verify your email to restore|Please restore) your account.*$/i;
+function pausedMessage(reason, endsAt) {
+  const remaining = formatRemainingTime(endsAt ? endsAt.getTime() - Date.now() : 0);
+  return `${reason.replace(comeBackSentence, "")} Please come back in ${remaining}.`;
+}
+function blockedMessage(reason) {
+  return `${reason.replace(restoreSentence, "").replace(comeBackSentence, "")} Please restore your account to continue.`;
+}
 function formatRemainingTime(diffMs) {
   if (diffMs <= 0)
     return "a few moments";
@@ -119680,15 +119595,10 @@ async function requireNoActiveTrustRestriction(tx, userId) {
   const [restriction] = await tx.select({
     id: trust_actions.id,
     endsAt: trust_actions.endsAt,
-    weightedPoints: trust_actions.weightedPoints,
     reason: trust_actions.reason
   }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
-  if (restriction) {
-    const diffMs = restriction.endsAt ? restriction.endsAt.getTime() - Date.now() : 0;
-    const remainingText = formatRemainingTime(diffMs);
-    const durationText = restriction.weightedPoints >= 10 ? "3 days" : restriction.weightedPoints >= 8 ? "24 hours" : "12 hours";
-    throw new OrderError(403, `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationText}. Please come back in ${remainingText}.`);
-  }
+  if (restriction)
+    throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt));
 }
 
 // src/utils/user-status-cache/index.ts
@@ -119721,14 +119631,10 @@ var sessionAuth = new Elysia().macro({
           const [activeAction] = await db2.select({
             actionType: trust_actions.actionType,
             reason: trust_actions.reason,
-            endsAt: trust_actions.endsAt,
-            weightedPoints: trust_actions.weightedPoints
+            endsAt: trust_actions.endsAt
           }).from(trust_actions).where(and(eq(trust_actions.subjectId, authSession.user.id), inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]), isNull2(trust_actions.revokedAt))).orderBy(desc(trust_actions.createdAt)).limit(1);
           if (activeAction) {
-            const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
-            const remainingText = formatRemainingTime(diffMs);
-            const durationLabel = activeAction.weightedPoints >= 10 ? "3 days" : activeAction.weightedPoints >= 8 ? "24 hours" : "12 hours";
-            blockReason = `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}. Please come back in ${remainingText}.`;
+            blockReason = activeAction.actionType === "blocked" ? blockedMessage(activeAction.reason) : pausedMessage(activeAction.reason, activeAction.endsAt);
           } else {
             blockReason = "Your account is paused. Please restore your account to continue.";
           }
@@ -137485,39 +137391,6 @@ async function queueTrustNotice(tx, input) {
     await alertSellerOfTrustNotice(tx, input);
   return rows;
 }
-async function recordInquiryDeadlines(tx, inquiry, now) {
-  const hours = (now.getTime() - inquiry.createdAt.getTime()) / 3600000;
-  if (hours >= 12)
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-reminder:${inquiry.id}`,
-      recipientId: inquiry.sellerId,
-      orderId: inquiry.orderId,
-      kind: "inquiry_12h_reminder"
-    });
-  if (hours >= 24) {
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-warning:${inquiry.id}`,
-      recipientId: inquiry.sellerId,
-      orderId: inquiry.orderId,
-      kind: "inquiry_24h_warning"
-    });
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-buyer:${inquiry.id}`,
-      recipientId: inquiry.buyerId,
-      orderId: inquiry.orderId,
-      kind: "inquiry_24h_buyer_notice"
-    });
-  }
-  if (hours >= 48)
-    await recordTrustEvent(tx, {
-      eventKey: `inquiry-unanswered:${inquiry.id}`,
-      orderId: inquiry.orderId,
-      subjectId: inquiry.sellerId,
-      kind: "inquiry_non_response",
-      classification: "verified",
-      sourceId: inquiry.id
-    });
-}
 async function listOrderInquiries(userId, orderId, side) {
   const owner = side === "buyer" ? orders.buyersId : orders.sellersId;
   const [order] = await db2.select({ id: orders.id }).from(orders).where(and(eq(orders.id, orderId), eq(owner, userId))).limit(1);
@@ -137526,26 +137399,68 @@ async function listOrderInquiries(userId, orderId, side) {
   return db2.select().from(order_inquiries).where(eq(order_inquiries.orderId, orderId));
 }
 
+// src/utils/trust/action-reason.ts
+var restrictionReasons = {
+  buyer_failed_reservation: (d) => `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${d}.`,
+  inquiry_non_response: (d) => `Your account is paused for ${d} because buyer questions were not answered in time. Please reply to buyers within 12 hours.`,
+  seller_cancellation: (d) => `Your account is paused for ${d} because you cancelled several buyer reservations.`,
+  low_rating: (d) => `Your account is paused for ${d} because buyers gave low ratings on completed pickups.`,
+  misleading_product_info: (d) => `Your account is paused for ${d} because several buyers reported that your listings did not match what they received.`,
+  inappropriate_communication: (d) => `Your account is paused for ${d} because several people reported inappropriate messages from your account.`,
+  qr_misuse: (d) => `Your account is paused for ${d} because several people reported misuse of a pickup QR code.`
+};
+var warningReasons = {
+  buyer_failed_reservation: "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.",
+  inquiry_non_response: "Buyer questions went unanswered for too long. Please reply to buyers on time to avoid a pause on your account.",
+  seller_cancellation: "You cancelled several buyer reservations. Please avoid cancelling to prevent a pause on your account.",
+  low_rating: "Buyers gave low ratings on completed pickups. Please improve your service to avoid a pause on your account.",
+  misleading_product_info: "Several buyers reported that your listings did not match what they received. Please keep listings accurate to avoid a pause on your account.",
+  inappropriate_communication: "Several people reported inappropriate messages from your account. Please keep chats respectful to avoid a pause on your account.",
+  qr_misuse: "Several people reported misuse of a pickup QR code. Please follow the pickup steps to avoid a block on your account."
+};
+function trustActionReason(actionType, triggerKind, durationLabel) {
+  const kind = triggerKind ?? "";
+  if (actionType === "blocked") {
+    return "Your account is blocked because your trust record reached the blocking level.";
+  }
+  if (actionType === "warning") {
+    return warningReasons[kind] ?? "Your trust record reached the warning level. Please keep your transactions on time and accurate.";
+  }
+  return restrictionReasons[kind]?.(durationLabel) ?? `Your account is paused for ${durationLabel} because your trust record reached the pause level.`;
+}
+
 // src/utils/trust/policy.ts
 var trustPolicyVersion = "monitoring-v3";
 var trustPolicyWeights = {
   inquiry_non_response: 1,
   seller_cancellation: 2,
   low_rating: 1,
-  buyer_failed_reservation: 2
+  buyer_failed_reservation: 2,
+  misleading_product_info: 2,
+  inappropriate_communication: 2,
+  qr_misuse: 3
 };
+var trustSeriousKinds = ["qr_misuse"];
+var trustReportConfirmCount = Math.max(2, Number.isInteger(Number(process.env.TRUST_REPORT_CONFIRM_COUNT)) ? Number(process.env.TRUST_REPORT_CONFIRM_COUNT) : 2);
 function configuredInteger(name, fallback) {
   const value = Number(process.env[name]);
   return Number.isInteger(value) && value >= 0 ? value : fallback;
+}
+var tier3Threshold = configuredInteger("TRUST_TIER3_THRESHOLD", 10);
+var configuredBlock = configuredInteger("TRUST_BLOCK_THRESHOLD", 12);
+var blockedThreshold = configuredBlock > tier3Threshold ? configuredBlock : tier3Threshold + 2;
+var trustScoreWindowDays = configuredInteger("TRUST_SCORE_WINDOW_DAYS", 90);
+function trustScoreWindowStart(now = new Date) {
+  return trustScoreWindowDays > 0 ? new Date(now.getTime() - trustScoreWindowDays * 86400000) : null;
 }
 var trustActionPolicy = {
   enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
   warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 4),
   tier1Threshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
   tier2Threshold: configuredInteger("TRUST_TIER2_THRESHOLD", 8),
-  tier3Threshold: configuredInteger("TRUST_TIER3_THRESHOLD", 10),
+  tier3Threshold,
   restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 6),
-  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 10)
+  blockedThreshold
 };
 function resolveTrustDurationHours(weightedPoints) {
   if (weightedPoints >= trustActionPolicy.tier3Threshold)
@@ -137556,7 +137471,9 @@ function resolveTrustDurationHours(weightedPoints) {
     return 12;
   return 0;
 }
-function resolveTrustAction(weightedPoints) {
+function resolveTrustAction(weightedPoints, hasSeriousViolation = false) {
+  if (hasSeriousViolation || weightedPoints >= trustActionPolicy.blockedThreshold)
+    return "blocked";
   if (weightedPoints >= trustActionPolicy.tier1Threshold)
     return "temporary_restriction";
   if (weightedPoints >= trustActionPolicy.warningThreshold)
@@ -137566,22 +137483,24 @@ function resolveTrustAction(weightedPoints) {
 
 // src/utils/trust/score.ts
 async function readTrustMonitoringScore(subjectId) {
+  const windowStart = trustScoreWindowStart();
+  const reviewSince = windowStart ? sql3`and review.created_at >= ${windowStart.toISOString()}::timestamptz` : sql3``;
   const [rows, ratingResult, feedbackResult] = await Promise.all([
     db2.select({
       kind: trust_events.kind,
       classification: trust_events.classification,
       count: sql3`count(*)::int`
-    }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull2(trust_events.invalidatedAt))).groupBy(trust_events.kind, trust_events.classification),
+    }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull2(trust_events.invalidatedAt), windowStart ? gte(trust_events.createdAt, windowStart) : undefined)).groupBy(trust_events.kind, trust_events.classification),
     db2.execute(sql3`
     select count(distinct order_id)::int as count from (
       select review.order_id from order_reviews as review
       inner join orders as purchase on purchase.id = review.order_id
-      where purchase.status = 'completed' and review.rating <= 2
+      where purchase.status = 'completed' and review.rating <= 2 ${reviewSince}
         ${subjectId ? sql3`and review.seller_id = ${subjectId}` : sql3``}
       union
       select review.order_id from product_reviews as review
       inner join orders as purchase on purchase.id = review.order_id
-      where purchase.status = 'completed' and review.rating <= 2
+      where purchase.status = 'completed' and review.rating <= 2 ${reviewSince}
         ${subjectId ? sql3`and review.seller_id = ${subjectId}` : sql3``}
     ) as low_ratings
   `),
@@ -137594,6 +137513,8 @@ async function readTrustMonitoringScore(subjectId) {
     )::int as count
   `)
   ]);
+  const [restored] = subjectId ? await db2.select({ at: sql3`max(${trust_actions.revokedAt})` }).from(trust_actions).where(and(eq(trust_actions.subjectId, subjectId), eq(trust_actions.actionType, "blocked"))) : [];
+  const seriousRows = restored?.at ? await db2.select({ count: sql3`count(*)::int` }).from(trust_events).where(and(eq(trust_events.subjectId, subjectId), eq(trust_events.classification, "verified"), isNull2(trust_events.invalidatedAt), inArray(trust_events.kind, [...trustSeriousKinds]), gt(trust_events.createdAt, new Date(restored.at)))) : null;
   const verified = rows.filter((row) => row.classification === "verified");
   const allegations = rows.filter((row) => row.classification === "allegation");
   const components = verified.map((row) => ({
@@ -137602,12 +137523,14 @@ async function readTrustMonitoringScore(subjectId) {
     weight: trustPolicyWeights[row.kind] ?? 0,
     points: Number(row.count) * (trustPolicyWeights[row.kind] ?? 0)
   }));
+  const seriousViolations = seriousRows ? Number(seriousRows[0]?.count ?? 0) : verified.filter((row) => trustSeriousKinds.includes(row.kind)).reduce((total, row) => total + Number(row.count), 0);
   const ratingSignals = Number(ratingResult.rows[0]?.count ?? 0);
   const verifiedEventPoints = components.reduce((total, item) => total + item.points, 0);
   return {
     policyVersion: trustPolicyVersion,
     weightedPoints: verifiedEventPoints + ratingSignals * trustPolicyWeights.low_rating,
     verifiedEventPoints,
+    seriousViolations,
     ratingSignals,
     writtenFeedbackCount: Number(feedbackResult.rows[0]?.count ?? 0),
     verifiedEvents: components.reduce((total, item) => total + item.count, 0),
@@ -137627,11 +137550,11 @@ var actionNoticeKinds = {
   temporary_restriction: "trust_action_restriction",
   blocked: "trust_action_blocked"
 };
-async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
+async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, triggerKind) {
   if (!trustActionPolicy.enabled)
     return null;
   const monitoring = await readTrustMonitoringScore(subjectId);
-  const actionType = resolveTrustAction(monitoring.weightedPoints);
+  const actionType = resolveTrustAction(monitoring.weightedPoints, monitoring.seriousViolations > 0);
   if (!actionType)
     return null;
   const eventConditions = [
@@ -137641,18 +137564,23 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
     sourceEventKey ? eq(trust_events.eventKey, sourceEventKey) : undefined,
     !sourceEventKey && sourceOrderId ? eq(trust_events.orderId, sourceOrderId) : undefined
   ];
-  const [sourceEvent] = await db2.select({ id: trust_events.id, orderId: trust_events.orderId }).from(trust_events).where(and(...eventConditions)).orderBy(desc(trust_events.createdAt)).limit(1);
+  const [sourceEvent] = await db2.select({ id: trust_events.id, orderId: trust_events.orderId, kind: trust_events.kind }).from(trust_events).where(and(...eventConditions)).orderBy(desc(trust_events.createdAt)).limit(1);
   const orderId = sourceOrderId ?? sourceEvent?.orderId ?? null;
   const sourceKey = sourceEventKey ?? sourceOrderId ?? "score";
   const actionKey = `${trustPolicyVersion}:${subjectId}:${actionType}:${sourceKey}`;
   const durationHours = resolveTrustDurationHours(monitoring.weightedPoints);
   const endsAt = actionType === "temporary_restriction" && durationHours > 0 ? new Date(Date.now() + durationHours * 3600000) : null;
   const durationLabel = durationHours >= 72 ? "3 days" : durationHours >= 24 ? "24 hours" : "12 hours";
-  const reasonText = actionType === "warning" ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account." : `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}.`;
+  const reasonText = trustActionReason(actionType, triggerKind ?? sourceEvent?.kind, durationLabel);
   return db2.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
     if (existing)
       return existing;
+    if (actionType === "blocked") {
+      const [alreadyBlocked] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, subjectId), eq(trust_actions.actionType, "blocked"), isNull2(trust_actions.revokedAt))).limit(1);
+      if (alreadyBlocked)
+        return alreadyBlocked;
+    }
     const [action] = await tx.insert(trust_actions).values({
       actionKey,
       subjectId,
@@ -137724,7 +137652,7 @@ async function cancelSellerOrder(sellerId, orderId, reason) {
       kind: "seller_cancellation_buyer"
     });
   });
-  await evaluateTrustAction(sellerId, orderId, `seller-cancel:${orderId}`);
+  await evaluateTrustAction(sellerId, orderId, `seller-cancel:${orderId}`, "seller_cancellation");
   return getOrder(orderId, sellerId, "seller");
 }
 
@@ -137791,11 +137719,49 @@ async function listSellerInquiries(sellerId, query = {}) {
   });
 }
 
+// src/utils/trust/response-deadlines.ts
+async function recordReplyDeadlines(tx, pending, now) {
+  const hours = (now.getTime() - pending.since.getTime()) / 3600000;
+  if (hours >= 12)
+    await queueTrustNotice(tx, {
+      noticeKey: `inquiry-reminder:${pending.key}`,
+      recipientId: pending.sellerId,
+      orderId: pending.orderId,
+      kind: "inquiry_12h_reminder"
+    });
+  if (hours >= 24) {
+    await queueTrustNotice(tx, {
+      noticeKey: `inquiry-warning:${pending.key}`,
+      recipientId: pending.sellerId,
+      orderId: pending.orderId,
+      kind: "inquiry_24h_warning"
+    });
+    await queueTrustNotice(tx, {
+      noticeKey: `inquiry-buyer:${pending.key}`,
+      recipientId: pending.buyerId,
+      orderId: pending.orderId,
+      kind: "inquiry_24h_buyer_notice"
+    });
+  }
+  const flagged = hours >= 48;
+  if (flagged)
+    await recordTrustEvent(tx, {
+      eventKey: `inquiry-unanswered:${pending.key}`,
+      orderId: pending.orderId,
+      subjectId: pending.sellerId,
+      kind: "inquiry_non_response",
+      classification: "verified",
+      sourceId: pending.sourceId
+    });
+  const stage = flagged ? 3 : hours >= 24 ? 2 : 1;
+  return { stage, flagged, eventKey: `inquiry-unanswered:${pending.key}` };
+}
+
 // src/modules/seller/services/seller.order.inquiry.reply.ts
-function replySellerInquiry(sellerId, inquiryId, reply) {
+async function replySellerInquiry(sellerId, inquiryId, reply) {
   if (!reply.trim())
     throw new OrderError(400, "Reply is required");
-  return db2.transaction(async (tx) => {
+  const { updated, flagged } = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [inquiry] = await tx.select().from(order_inquiries).where(and(eq(order_inquiries.id, inquiryId), eq(order_inquiries.sellerId, sellerId))).for("update").limit(1);
     if (!inquiry)
@@ -137803,10 +137769,20 @@ function replySellerInquiry(sellerId, inquiryId, reply) {
     if (inquiry.repliedAt)
       throw new OrderError(409, "Inquiry already answered");
     const now = new Date;
-    await recordInquiryDeadlines(tx, inquiry, now);
+    const deadlines = await recordReplyDeadlines(tx, {
+      key: inquiry.id,
+      orderId: inquiry.orderId,
+      buyerId: inquiry.buyerId,
+      sellerId: inquiry.sellerId,
+      since: inquiry.createdAt,
+      sourceId: inquiry.id
+    }, now);
     const [updated] = await tx.update(order_inquiries).set({ reply: reply.trim(), repliedAt: now }).where(and(eq(order_inquiries.id, inquiryId), isNull2(order_inquiries.repliedAt))).returning();
-    return updated;
+    return { updated, flagged: deadlines.flagged ? { orderId: inquiry.orderId, eventKey: deadlines.eventKey } : null };
   });
+  if (flagged)
+    await evaluateTrustAction(sellerId, flagged.orderId, flagged.eventKey, "inquiry_non_response");
+  return updated;
 }
 
 // src/modules/seller/index/seller.order.inquiry.ts
@@ -137883,6 +137859,16 @@ function respondSellerReviewById(sellerId, reviewId, response) {
   });
 }
 
+// src/utils/review-format/index.ts
+function formatReviewBuyerName(name) {
+  if (!name)
+    return "Verified buyer";
+  const parts = name.trim().split(/\s+/);
+  if (!parts[0])
+    return "Verified buyer";
+  return `${parts[0]}${parts[1]?.[0] ? ` ${parts[1][0]}.` : ""}`;
+}
+
 // src/modules/seller/services/seller.reviews.list.ts
 async function readSellerReviewsList(sellerId, options = {}) {
   await db2.transaction((tx) => requireVerifiedSeller(tx, sellerId));
@@ -137932,13 +137918,6 @@ async function readSellerReviewsList(sellerId, options = {}) {
     }
   }
   const reviews = rows.map((r) => {
-    let formattedName = "Verified buyer";
-    if (r.buyerName) {
-      const parts = r.buyerName.trim().split(/\s+/);
-      const firstName = parts[0];
-      const lastInitial = parts[1]?.[0] ? ` ${parts[1][0]}.` : "";
-      formattedName = `${firstName}${lastInitial}`;
-    }
     return {
       id: r.id,
       orderId: r.orderId,
@@ -137946,7 +137925,7 @@ async function readSellerReviewsList(sellerId, options = {}) {
       review: r.review,
       sellerResponse: r.sellerResponse,
       createdAt: r.createdAt.toISOString(),
-      buyerName: formattedName,
+      buyerName: formatReviewBuyerName(r.buyerName),
       items: itemsByOrder.get(r.orderId) ?? []
     };
   });
@@ -138006,18 +137985,132 @@ var sellerReviewRoute = new Elysia().use(sessionAuth).get("/reviews", async ({ s
   }
 }, { role: ["seller"], params: sellerReviewParams, body: sellerReviewResponseBody });
 
+// src/modules/seller/model/seller.product-review.ts
+var sellerProductReviewParams = t.Object({ id: t.String({ format: "uuid" }) });
+var sellerProductReviewResponseBody = t.Object({ response: t.String({ minLength: 1, maxLength: 2000 }) });
+
+// src/modules/seller/services/seller.product-review.reply.ts
+function respondSellerProductReview(sellerId, reviewId, response) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const [review] = await tx.update(product_reviews).set({ sellerResponse: response.trim() }).where(and(eq(product_reviews.id, reviewId), eq(product_reviews.sellerId, sellerId), isNull2(product_reviews.sellerResponse))).returning();
+    if (!review)
+      throw new OrderError(404, "Unanswered review not found");
+    return review;
+  });
+}
+
+// src/modules/seller/services/seller.product-reviews.list.ts
+async function readSellerProductReviewsList(sellerId, options = {}) {
+  await db2.transaction((tx) => requireVerifiedSeller(tx, sellerId));
+  const limit = options.limit ?? 20;
+  const offset = options.offset ?? 0;
+  const mine = eq(product_reviews.sellerId, sellerId);
+  const [summary] = await db2.select({
+    count: sql3`count(*)::int`,
+    average: sql3`round(avg(${product_reviews.rating})::numeric, 1)::text`,
+    star5: sql3`count(case when ${product_reviews.rating} = 5 then 1 end)::int`,
+    star4: sql3`count(case when ${product_reviews.rating} = 4 then 1 end)::int`,
+    star3: sql3`count(case when ${product_reviews.rating} = 3 then 1 end)::int`,
+    star2: sql3`count(case when ${product_reviews.rating} = 2 then 1 end)::int`,
+    star1: sql3`count(case when ${product_reviews.rating} = 1 then 1 end)::int`,
+    unansweredCount: sql3`count(case when ${product_reviews.sellerResponse} is null then 1 end)::int`
+  }).from(product_reviews).where(mine);
+  const conditions = [mine];
+  if (options.filter === "unanswered")
+    conditions.push(sql3`${product_reviews.sellerResponse} is null`);
+  else if (options.filter === "replied")
+    conditions.push(sql3`${product_reviews.sellerResponse} is not null`);
+  if (options.rating && options.rating >= 1 && options.rating <= 5)
+    conditions.push(eq(product_reviews.rating, options.rating));
+  const rows = await db2.select({
+    id: product_reviews.id,
+    orderId: product_reviews.orderId,
+    rating: product_reviews.rating,
+    review: product_reviews.review,
+    sellerResponse: product_reviews.sellerResponse,
+    createdAt: product_reviews.createdAt,
+    buyerName: user.name,
+    productName: sellers_product.productName
+  }).from(product_reviews).leftJoin(user, eq(user.id, product_reviews.buyerId)).leftJoin(sellers_product, eq(sellers_product.id, product_reviews.productId)).where(and(...conditions)).orderBy(desc(product_reviews.createdAt)).limit(limit).offset(offset);
+  return {
+    summary: {
+      count: summary?.count ?? 0,
+      average: summary?.average ?? null,
+      breakdown: {
+        5: summary?.star5 ?? 0,
+        4: summary?.star4 ?? 0,
+        3: summary?.star3 ?? 0,
+        2: summary?.star2 ?? 0,
+        1: summary?.star1 ?? 0
+      },
+      unansweredCount: summary?.unansweredCount ?? 0
+    },
+    reviews: rows.map((row) => ({
+      id: row.id,
+      orderId: row.orderId,
+      rating: row.rating,
+      review: row.review,
+      sellerResponse: row.sellerResponse,
+      createdAt: row.createdAt.toISOString(),
+      buyerName: formatReviewBuyerName(row.buyerName),
+      items: row.productName ? [row.productName] : []
+    }))
+  };
+}
+
+// src/modules/seller/index/seller.product-review.ts
+var sellerProductReviewRoute = new Elysia().use(sessionAuth).get("/product-reviews", async ({ session, query, status }) => {
+  try {
+    return await readSellerProductReviewsList(session.userId, query);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to read product reviews" });
+  }
+}, { role: ["seller"], query: sellerReviewsQuery }).post("/product-reviews/:id/reply", async ({ session, params, body, status }) => {
+  try {
+    return await respondSellerProductReview(session.userId, params.id, body.response);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Failed to respond to product review" });
+  }
+}, { role: ["seller"], params: sellerProductReviewParams, body: sellerProductReviewResponseBody });
+
 // src/modules/seller/model/seller.order.report.ts
 var sellerReportParams = t.Object({ id: t.String({ format: "uuid" }) });
 var sellerReportBody = t.Object({
-  reason: t.UnionEnum(["pickup_problem", "conduct", "listing_inaccurate", "other"]),
+  reason: t.UnionEnum(["pickup_problem", "conduct", "listing_inaccurate", "qr_misuse", "other"]),
   details: t.String({ minLength: 5, maxLength: 2000 })
 });
 
+// src/utils/trust/confirm-report.ts
+var reportViolationKinds = {
+  listing_inaccurate: "misleading_product_info",
+  conduct: "inappropriate_communication",
+  qr_misuse: "qr_misuse"
+};
+async function confirmReportedViolation(tx, subjectId, reason) {
+  const kind = reportViolationKinds[reason];
+  if (!kind)
+    return null;
+  const [row] = await tx.select({ reporters: countDistinct(order_reports.reporterId) }).from(order_reports).where(and(eq(order_reports.subjectId, subjectId), eq(order_reports.reason, reason)));
+  const groups = Math.floor(Number(row?.reporters ?? 0) / trustReportConfirmCount);
+  if (groups < 1)
+    return null;
+  const eventKey = `report-confirmed:${subjectId}:${reason}:${groups}`;
+  const [event] = await recordTrustEvent(tx, { eventKey, subjectId, kind, classification: "verified" });
+  return event ? { eventKey, kind } : null;
+}
+
 // src/utils/trust/report.ts
-function createOrderReport(reporterId, orderId, side, reason, details) {
+async function createOrderReport(reporterId, orderId, side, reason, details) {
   if (details.trim().length < 5)
     throw new OrderError(400, "Report details are required");
-  return db2.transaction(async (tx) => {
+  const { report, confirmed } = await db2.transaction(async (tx) => {
     await requireActiveUser(tx, reporterId, side);
     const owner = side === "buyer" ? orders.buyersId : orders.sellersId;
     const [order] = await tx.select().from(orders).where(and(eq(orders.id, orderId), eq(owner, reporterId))).limit(1);
@@ -138041,8 +138134,12 @@ function createOrderReport(reporterId, orderId, side, reason, details) {
       classification: "allegation",
       sourceId: report.id
     });
-    return report;
+    const confirmed = await confirmReportedViolation(tx, subjectId, reason);
+    return { report, confirmed: confirmed ? { ...confirmed, subjectId } : null };
   });
+  if (confirmed)
+    await evaluateTrustAction(confirmed.subjectId, null, confirmed.eventKey, confirmed.kind);
+  return report;
 }
 
 // src/modules/seller/services/seller.order.report.ts
@@ -138198,6 +138295,27 @@ async function listSellerTrustEvents(sellerId) {
   return { events, notices, actions, monitoring };
 }
 
+// src/utils/trust/verify-non-response.ts
+var FORTY_EIGHT_HOURS = 48 * 3600000;
+var answeredLate = (since, repliedAt) => !repliedAt || repliedAt.getTime() - since.getTime() >= FORTY_EIGHT_HOURS;
+async function isUnansweredTooLong(tx, event) {
+  if (!event.sourceId)
+    return false;
+  const [orderQuestion] = await tx.select().from(order_inquiries).where(eq(order_inquiries.id, event.sourceId)).limit(1);
+  if (orderQuestion)
+    return orderQuestion.orderId === event.orderId && answeredLate(orderQuestion.createdAt, orderQuestion.repliedAt);
+  const [productQuestion] = await tx.select().from(product_inquiries).where(eq(product_inquiries.id, event.sourceId)).limit(1);
+  if (productQuestion)
+    return answeredLate(productQuestion.createdAt, productQuestion.repliedAt);
+  const [chat] = await tx.select().from(conversations).where(eq(conversations.id, event.sourceId)).limit(1);
+  const waitStartedAt = Number(/-(\d+)$/.exec(event.eventKey)?.[1]);
+  if (!chat || !Number.isFinite(waitStartedAt))
+    return false;
+  const since = new Date(waitStartedAt);
+  const [reply] = await tx.select({ at: min(conversation_messages.createdAt) }).from(conversation_messages).where(and(eq(conversation_messages.conversationId, chat.id), eq(conversation_messages.senderId, chat.sellerId), gt(conversation_messages.createdAt, since)));
+  return answeredLate(since, reply?.at ?? null);
+}
+
 // src/modules/seller/services/seller.trust.correct.ts
 function correctSellerTrustEvent(sellerId, eventId, reason) {
   return db2.transaction(async (tx) => {
@@ -138211,9 +138329,8 @@ function correctSellerTrustEvent(sellerId, eventId, reason) {
         throw new OrderError(400, "Cancellation event missing order");
       const [order] = await tx.select({ status: orders.status, cancelledBy: orders.cancelledBy }).from(orders).where(eq(orders.id, event.orderId)).limit(1);
       valid = order?.status === "cancelled" && order.cancelledBy === "seller";
-    } else if (event.kind === "inquiry_non_response" && event.sourceId) {
-      const [inquiry] = await tx.select().from(order_inquiries).where(eq(order_inquiries.id, event.sourceId)).limit(1);
-      valid = !!inquiry && inquiry.orderId === event.orderId && (!inquiry.repliedAt || inquiry.repliedAt.getTime() - inquiry.createdAt.getTime() >= 48 * 3600000);
+    } else if (event.kind === "inquiry_non_response") {
+      valid = await isUnansweredTooLong(tx, event);
     } else {
       throw new OrderError(400, "This event cannot be corrected automatically");
     }
@@ -139276,6 +139393,7 @@ async function replySellerProductInquiry(sellerId, inquiryId, reply) {
       contextType: "product",
       productId: inquiry.productId
     });
+    await tx.update(conversations).set({ awaitingReplySince: null, deadlineStage: 0 }).where(eq(conversations.id, conversation.id));
     const clientMessageId = `inquiry-answer:${inquiry.id}`;
     const [duplicate] = await tx.select({ id: conversation_messages.id }).from(conversation_messages).where(and(eq(conversation_messages.conversationId, conversation.id), eq(conversation_messages.clientMessageId, clientMessageId))).limit(1);
     let message;
@@ -140290,7 +140408,7 @@ var sellerPriceReductionRoute = new Elysia().use(sessionAuth).get("/price-drops/
 }, { role: ["seller"], params: sellerProductId });
 
 // src/modules/seller/index.ts
-var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerNotificationSettingsRoute).use(sellerVisibilityBoostRoute).use(sellerPriceReductionRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
+var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerProductReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerNotificationSettingsRoute).use(sellerVisibilityBoostRoute).use(sellerPriceReductionRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
 
 // src/modules/buyer/model/buyer.order.create.ts
 var orderModel = t.Object({
@@ -140539,13 +140657,14 @@ async function cancelBuyerOrder(orderId, buyerId) {
       dedupeKey: `buyer-cancelled:${cancelled.id}`,
       orderId: cancelled.id
     });
-    const [cancelRow] = await tx.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, buyerId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer")));
+    const windowStart = trustScoreWindowStart();
+    const [cancelRow] = await tx.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, buyerId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer"), windowStart ? gte(orders.cancelledAt, windowStart) : undefined));
     const cancelCount = Number(cancelRow?.count ?? 0);
     const cooldownHours = resolveCancellationCooldownHours(cancelCount);
     if (cooldownHours > 0) {
       const endsAt = new Date(Date.now() + cooldownHours * 3600000);
       const { message } = resolveCancellationRestrictionMessage(cancelCount, endsAt);
-      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}`;
+      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}:${cancelled.id}`;
       await tx.insert(trust_actions).values({
         actionKey,
         subjectId: buyerId,
@@ -140559,7 +140678,7 @@ async function cancelBuyerOrder(orderId, buyerId) {
     } else if (cancelCount >= 5) {
       const warningMessage = resolveCancellationWarning(cancelCount);
       if (warningMessage) {
-        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}`;
+        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}:${cancelled.id}`;
         await tx.insert(trust_actions).values({
           actionKey,
           subjectId: buyerId,
@@ -140678,7 +140797,8 @@ async function createBuyerReview(buyerId, orderId, body) {
       throw new OrderError(409, "Order already reviewed");
     return review;
   });
-  await evaluateTrustAction(review.sellerId, review.orderId);
+  if (review.rating <= 2)
+    await evaluateTrustAction(review.sellerId, review.orderId, undefined, "low_rating");
   return review;
 }
 
@@ -140711,7 +140831,8 @@ async function createBuyerProductReview(buyerId, orderId, itemId, body) {
       throw new OrderError(409, "This product has already been reviewed for this order");
     return review;
   });
-  await evaluateTrustAction(review.sellerId, review.orderId);
+  if (review.rating <= 2)
+    await evaluateTrustAction(review.sellerId, review.orderId, undefined, "low_rating");
   return review;
 }
 
@@ -140875,7 +140996,7 @@ var buyerReviewRoute = new Elysia().use(sessionAuth).get("/sellers/:id/rating", 
 // src/modules/buyer/model/buyer.order.report.ts
 var buyerReportParams = t.Object({ id: t.String({ format: "uuid" }) });
 var buyerReportBody = t.Object({
-  reason: t.UnionEnum(["pickup_problem", "conduct", "listing_inaccurate", "other"]),
+  reason: t.UnionEnum(["pickup_problem", "conduct", "listing_inaccurate", "qr_misuse", "other"]),
   details: t.String({ minLength: 5, maxLength: 2000 })
 });
 
@@ -141297,6 +141418,7 @@ var buyerProductInquiryRoute = new Elysia().use(sessionAuth).get("/products/:id/
 
 // src/modules/buyer/services/buyer.profile.read.ts
 async function getBuyerProfile(userId) {
+  const windowStart = trustScoreWindowStart();
   const [account, monitoring, cancelRow] = await Promise.all([
     db2.select({
       id: user.id,
@@ -141305,7 +141427,7 @@ async function getBuyerProfile(userId) {
       image: user.image
     }).from(user).where(eq(user.id, userId)).limit(1).then((rows) => rows[0]),
     readTrustMonitoringScore(userId),
-    db2.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, userId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer"))).then((rows) => Number(rows[0]?.count ?? 0))
+    db2.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, userId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer"), windowStart ? gte(orders.cancelledAt, windowStart) : undefined)).then((rows) => Number(rows[0]?.count ?? 0))
   ]);
   if (!account)
     throw new OrderError(404, "Buyer profile not found");
@@ -142416,6 +142538,7 @@ async function listMarketplaceProductReviews(productId) {
     id: product_reviews.id,
     rating: product_reviews.rating,
     review: product_reviews.review,
+    sellerResponse: product_reviews.sellerResponse,
     createdAt: product_reviews.createdAt,
     buyerName: user.name
   }).from(product_reviews).leftJoin(user, eq(user.id, product_reviews.buyerId)).where(eq(product_reviews.productId, productId)).orderBy(desc(product_reviews.createdAt)).limit(10);
@@ -142426,6 +142549,7 @@ async function listMarketplaceProductReviews(productId) {
       id: row.id,
       rating: row.rating,
       review: row.review,
+      sellerResponse: row.sellerResponse,
       createdAt: row.createdAt.toISOString(),
       buyerName
     };
@@ -143439,6 +143563,10 @@ async function createConversation(buyerId, input) {
         { conversationId: activeConversation.id, userId: sellerId }
       ]);
     }
+    if (input.contextType === "seller" && !activeConversation.awaitingReplySince) {
+      const [waiting] = await tx.update(conversations).set({ awaitingReplySince: now, deadlineStage: 0 }).where(eq(conversations.id, activeConversation.id)).returning();
+      activeConversation = waiting;
+    }
     const [message] = await tx.insert(conversation_messages).values({
       conversationId: activeConversation.id,
       senderId: buyerId,
@@ -143510,24 +143638,40 @@ async function createConversationMessage(userId, conversationId, input) {
       updatedAt: now
     }).where(eq(conversations.id, conversationId));
     await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(eq(conversation_participants.conversationId, conversationId), eq(conversation_participants.userId, userId)));
-    if (input.productId && userId === conversation.buyerId) {
-      await tx.insert(product_inquiries).values({
-        productId: input.productId,
-        buyerId: userId,
-        sellerId: conversation.sellerId,
-        question: body
-      }).onConflictDoNothing();
+    if (userId === conversation.buyerId) {
+      const productId = input.productId ?? (conversation.contextType === "product" ? conversation.productId : null);
+      let timedByQuestion = false;
+      if (productId) {
+        await tx.insert(product_inquiries).values({
+          productId,
+          buyerId: userId,
+          sellerId: conversation.sellerId,
+          question: body
+        }).onConflictDoNothing();
+        timedByQuestion = true;
+      } else if (conversation.contextType === "order" && conversation.orderId) {
+        const [order] = await tx.select({ status: orders.status, expiresAt: orders.expiresAt }).from(orders).where(eq(orders.id, conversation.orderId)).limit(1);
+        if (order?.status === "pending" && order.expiresAt && order.expiresAt > now) {
+          await tx.insert(order_inquiries).values({
+            orderId: conversation.orderId,
+            buyerId: userId,
+            sellerId: conversation.sellerId,
+            question: body
+          }).onConflictDoNothing();
+          timedByQuestion = true;
+        }
+      }
+      if (!timedByQuestion && !conversation.awaitingReplySince) {
+        await tx.update(conversations).set({ awaitingReplySince: now, deadlineStage: 0 }).where(eq(conversations.id, conversationId));
+      }
     }
     const recipientUserId = userId === conversation.sellerId ? conversation.buyerId : conversation.sellerId;
     const notificationType = userId === conversation.sellerId ? "buyer_message" : "seller_message";
     await enqueueConversationNotification(tx, recipientUserId, conversationId, notificationType, now);
     if (userId === conversation.sellerId) {
-      if (conversation.contextType === "order" && conversation.orderId) {
-        await tx.update(order_inquiries).set({ reply: body, repliedAt: now }).where(and(eq(order_inquiries.orderId, conversation.orderId), eq(order_inquiries.sellerId, userId), isNull2(order_inquiries.repliedAt)));
-      }
-      if (conversation.contextType === "product" && conversation.productId) {
-        await tx.update(product_inquiries).set({ reply: body, repliedAt: now }).where(and(eq(product_inquiries.productId, conversation.productId), eq(product_inquiries.buyerId, conversation.buyerId), eq(product_inquiries.sellerId, userId), isNull2(product_inquiries.repliedAt)));
-      }
+      await tx.update(order_inquiries).set({ reply: body, repliedAt: now }).where(and(eq(order_inquiries.buyerId, conversation.buyerId), eq(order_inquiries.sellerId, userId), isNull2(order_inquiries.repliedAt)));
+      await tx.update(product_inquiries).set({ reply: body, repliedAt: now }).where(and(eq(product_inquiries.buyerId, conversation.buyerId), eq(product_inquiries.sellerId, userId), isNull2(product_inquiries.repliedAt)));
+      await tx.update(conversations).set({ awaitingReplySince: null, deadlineStage: 0 }).where(eq(conversations.id, conversationId));
     }
     return { conversation, message, duplicate: false };
   });
@@ -144011,7 +144155,7 @@ async function verifyTrustRecovery(input) {
       revokedBy: candidate.id,
       revocationReason: "Restored after email OTP verification"
     }).where(and(eq(trust_actions.subjectId, candidate.id), inArray(trust_actions.actionType, recoveryActionTypes), isNull2(trust_actions.revokedAt)));
-    await tx.update(user).set({ isActive: true }).where(eq(user.id, candidate.id));
+    await tx.update(user).set({ isActive: true, lastActiveAt: restoredAt }).where(eq(user.id, candidate.id));
     return candidate.id;
   });
   forgetUserStatus(restored);
@@ -144019,9 +144163,27 @@ async function verifyTrustRecovery(input) {
 }
 
 // src/modules/trust/index/trust.recovery.ts
-var trustRecoveryRoute = new Elysia({ name: "trust.recovery" }).post("/recovery/request", ({ body }) => requestTrustRecovery(body), {
+var trustRecoveryRoute = new Elysia({ name: "trust.recovery" }).post("/recovery/request", async ({ body, status }) => {
+  try {
+    return await requestTrustRecovery(body);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Could not send the recovery code" });
+  }
+}, {
   body: trustRecoveryRequestBody
-}).post("/recovery/verify", ({ body }) => verifyTrustRecovery(body), {
+}).post("/recovery/verify", async ({ body, status }) => {
+  try {
+    return await verifyTrustRecovery(body);
+  } catch (error) {
+    if (error instanceof OrderError)
+      return status(error.statusCode, { message: error.message });
+    console.error(error);
+    return status(500, { message: "Could not restore the account" });
+  }
+}, {
   body: trustRecoveryVerifyBody
 });
 

@@ -28723,103 +28723,6 @@ var listing_cycles = pgTable("listing_cycles", {
   index("listing_cycles_catalog_unit_started_idx").on(table.vegetableCatalogId, table.scalingType, table.startedAt),
   index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt)
 ]);
-var seller_promotion_stage = pgEnum2("seller_promotion_stage", [
-  "initial",
-  "followup"
-]);
-var seller_promotion_status = pgEnum2("seller_promotion_status", [
-  "waiting",
-  "queued",
-  "sent",
-  "ready",
-  "skipped",
-  "failed"
-]);
-var seller_promotion_jobs = pgTable("seller_promotion_jobs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
-  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  stage: seller_promotion_stage().notNull(),
-  status: seller_promotion_status().default("waiting").notNull(),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
-  retryCount: integer("retry_count").default(0).notNull(),
-  leaseUntil: timestamp("lease_until", { withTimezone: true }),
-  headline: text("headline"),
-  caption: text("caption"),
-  visibilityPolicyVersion: text("visibility_policy_version"),
-  visibilityScore: decimal("visibility_score", { precision: 5, scale: 4 }),
-  visibilityTier: text("visibility_tier"),
-  visibilityRank: integer("visibility_rank"),
-  evaluatedAt: timestamp("evaluated_at", { withTimezone: true }),
-  readyAt: timestamp("ready_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  readAt: timestamp("read_at", { withTimezone: true }),
-  lastError: text("last_error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
-}, (table) => [
-  uniqueIndex("seller_promotion_jobs_cycle_stage_unique").on(table.listingCycleId, table.stage),
-  index("seller_promotion_jobs_due_idx").on(table.status, table.nextCheckAt),
-  index("seller_promotion_jobs_seller_created_idx").on(table.sellerId, table.createdAt),
-  index("seller_promotion_jobs_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
-]);
-var social_platform = pgEnum2("social_platform", ["facebook", "instagram", "tiktok", "x"]);
-var social_campaign_status = pgEnum2("social_campaign_status", [
-  "draft",
-  "queued",
-  "publishing",
-  "processing",
-  "published",
-  "partial",
-  "failed"
-]);
-var social_campaign_post_status = pgEnum2("social_campaign_post_status", [
-  "queued",
-  "processing",
-  "published",
-  "failed"
-]);
-var seller_social_campaigns = pgTable("seller_social_campaigns", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
-  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
-  status: social_campaign_status().default("draft").notNull(),
-  posts: jsonb("posts").$type().notNull(),
-  selectedPlatforms: social_platform("selected_platforms").array().default([]).notNull(),
-  tiktokPrivacyLevel: text("tiktok_privacy_level"),
-  tiktokAllowComment: boolean("tiktok_allow_comment"),
-  tiktokBrandOrganic: boolean("tiktok_brand_organic"),
-  tiktokBrandContent: boolean("tiktok_brand_content"),
-  tiktokConsentAt: timestamp("tiktok_consent_at", { withTimezone: true }),
-  approvedAt: timestamp("approved_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  retryCount: integer("retry_count").default(0).notNull(),
-  leaseUntil: timestamp("lease_until", { withTimezone: true }),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
-  lastError: text("last_error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
-}, (table) => [
-  index("seller_social_campaigns_seller_created_idx").on(table.sellerId, table.createdAt),
-  index("seller_social_campaigns_due_idx").on(table.status, table.nextCheckAt, table.leaseUntil)
-]);
-var seller_social_campaign_posts = pgTable("seller_social_campaign_posts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campaignId: uuid("campaign_id").notNull().references(() => seller_social_campaigns.id, { onDelete: "cascade" }),
-  platform: social_platform().notNull(),
-  status: social_campaign_post_status().default("queued").notNull(),
-  platformPostId: text("platform_post_id"),
-  postUrl: text("post_url"),
-  lastError: text("last_error"),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date).notNull()
-}, (table) => [
-  uniqueIndex("seller_social_campaign_posts_campaign_platform_unique").on(table.campaignId, table.platform),
-  index("seller_social_campaign_posts_campaign_idx").on(table.campaignId, table.status)
-]);
 var seller_boost_reason_enum = pgEnum2("seller_boost_reason", [
   "initial",
   "price_reduction"
@@ -28962,6 +28865,7 @@ var product_inquiries = pgTable("product_inquiries", {
   question: text("question").notNull(),
   reply: text("reply"),
   repliedAt: timestamp("replied_at", { withTimezone: true }),
+  deadlineStage: smallint("deadline_stage").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   uniqueIndex("product_inquiries_one_open_per_buyer_product_idx").on(table.productId, table.buyerId).where(sql`${table.repliedAt} is null`),
@@ -28980,9 +28884,12 @@ var conversations = pgTable("conversations", {
   orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   status: conversation_status_enum().default("open").notNull(),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).defaultNow().notNull(),
+  awaitingReplySince: timestamp("awaiting_reply_since", { withTimezone: true }),
+  deadlineStage: smallint("deadline_stage").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 }, (table) => [
+  index("conversations_awaiting_reply_idx").on(table.awaitingReplySince).where(sql`${table.awaitingReplySince} is not null`),
   index("conversations_buyer_last_message_idx").on(table.buyerId, table.lastMessageAt),
   index("conversations_seller_last_message_idx").on(table.sellerId, table.lastMessageAt),
   index("conversations_product_idx").on(table.productId),
@@ -29096,6 +29003,7 @@ var product_reviews = pgTable("product_reviews", {
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   rating: smallint("rating").notNull(),
   review: text("review"),
+  sellerResponse: text("seller_response"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 }, (table) => [
   index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
@@ -29517,38 +29425,35 @@ async function queueTrustNotice(tx, input) {
     await alertSellerOfTrustNotice(tx, input);
   return rows;
 }
-async function recordInquiryDeadlines(tx, inquiry, now) {
-  const hours = (now.getTime() - inquiry.createdAt.getTime()) / 3600000;
-  if (hours >= 12)
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-reminder:${inquiry.id}`,
-      recipientId: inquiry.sellerId,
-      orderId: inquiry.orderId,
-      kind: "inquiry_12h_reminder"
-    });
-  if (hours >= 24) {
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-warning:${inquiry.id}`,
-      recipientId: inquiry.sellerId,
-      orderId: inquiry.orderId,
-      kind: "inquiry_24h_warning"
-    });
-    await queueTrustNotice(tx, {
-      noticeKey: `inquiry-buyer:${inquiry.id}`,
-      recipientId: inquiry.buyerId,
-      orderId: inquiry.orderId,
-      kind: "inquiry_24h_buyer_notice"
-    });
+
+// src/utils/trust/action-reason.ts
+var restrictionReasons = {
+  buyer_failed_reservation: (d) => `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${d}.`,
+  inquiry_non_response: (d) => `Your account is paused for ${d} because buyer questions were not answered in time. Please reply to buyers within 12 hours.`,
+  seller_cancellation: (d) => `Your account is paused for ${d} because you cancelled several buyer reservations.`,
+  low_rating: (d) => `Your account is paused for ${d} because buyers gave low ratings on completed pickups.`,
+  misleading_product_info: (d) => `Your account is paused for ${d} because several buyers reported that your listings did not match what they received.`,
+  inappropriate_communication: (d) => `Your account is paused for ${d} because several people reported inappropriate messages from your account.`,
+  qr_misuse: (d) => `Your account is paused for ${d} because several people reported misuse of a pickup QR code.`
+};
+var warningReasons = {
+  buyer_failed_reservation: "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.",
+  inquiry_non_response: "Buyer questions went unanswered for too long. Please reply to buyers on time to avoid a pause on your account.",
+  seller_cancellation: "You cancelled several buyer reservations. Please avoid cancelling to prevent a pause on your account.",
+  low_rating: "Buyers gave low ratings on completed pickups. Please improve your service to avoid a pause on your account.",
+  misleading_product_info: "Several buyers reported that your listings did not match what they received. Please keep listings accurate to avoid a pause on your account.",
+  inappropriate_communication: "Several people reported inappropriate messages from your account. Please keep chats respectful to avoid a pause on your account.",
+  qr_misuse: "Several people reported misuse of a pickup QR code. Please follow the pickup steps to avoid a block on your account."
+};
+function trustActionReason(actionType, triggerKind, durationLabel) {
+  const kind = triggerKind ?? "";
+  if (actionType === "blocked") {
+    return "Your account is blocked because your trust record reached the blocking level.";
   }
-  if (hours >= 48)
-    await recordTrustEvent(tx, {
-      eventKey: `inquiry-unanswered:${inquiry.id}`,
-      orderId: inquiry.orderId,
-      subjectId: inquiry.sellerId,
-      kind: "inquiry_non_response",
-      classification: "verified",
-      sourceId: inquiry.id
-    });
+  if (actionType === "warning") {
+    return warningReasons[kind] ?? "Your trust record reached the warning level. Please keep your transactions on time and accurate.";
+  }
+  return restrictionReasons[kind]?.(durationLabel) ?? `Your account is paused for ${durationLabel} because your trust record reached the pause level.`;
 }
 
 // src/utils/trust/policy.ts
@@ -29557,20 +29462,32 @@ var trustPolicyWeights = {
   inquiry_non_response: 1,
   seller_cancellation: 2,
   low_rating: 1,
-  buyer_failed_reservation: 2
+  buyer_failed_reservation: 2,
+  misleading_product_info: 2,
+  inappropriate_communication: 2,
+  qr_misuse: 3
 };
+var trustSeriousKinds = ["qr_misuse"];
+var trustReportConfirmCount = Math.max(2, Number.isInteger(Number(process.env.TRUST_REPORT_CONFIRM_COUNT)) ? Number(process.env.TRUST_REPORT_CONFIRM_COUNT) : 2);
 function configuredInteger(name, fallback) {
   const value = Number(process.env[name]);
   return Number.isInteger(value) && value >= 0 ? value : fallback;
+}
+var tier3Threshold = configuredInteger("TRUST_TIER3_THRESHOLD", 10);
+var configuredBlock = configuredInteger("TRUST_BLOCK_THRESHOLD", 12);
+var blockedThreshold = configuredBlock > tier3Threshold ? configuredBlock : tier3Threshold + 2;
+var trustScoreWindowDays = configuredInteger("TRUST_SCORE_WINDOW_DAYS", 90);
+function trustScoreWindowStart(now = new Date) {
+  return trustScoreWindowDays > 0 ? new Date(now.getTime() - trustScoreWindowDays * 86400000) : null;
 }
 var trustActionPolicy = {
   enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
   warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 4),
   tier1Threshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
   tier2Threshold: configuredInteger("TRUST_TIER2_THRESHOLD", 8),
-  tier3Threshold: configuredInteger("TRUST_TIER3_THRESHOLD", 10),
+  tier3Threshold,
   restrictionThreshold: configuredInteger("TRUST_RESTRICTION_THRESHOLD", 6),
-  blockedThreshold: configuredInteger("TRUST_BLOCK_THRESHOLD", 10)
+  blockedThreshold
 };
 function resolveTrustDurationHours(weightedPoints) {
   if (weightedPoints >= trustActionPolicy.tier3Threshold)
@@ -29581,7 +29498,9 @@ function resolveTrustDurationHours(weightedPoints) {
     return 12;
   return 0;
 }
-function resolveTrustAction(weightedPoints) {
+function resolveTrustAction(weightedPoints, hasSeriousViolation = false) {
+  if (hasSeriousViolation || weightedPoints >= trustActionPolicy.blockedThreshold)
+    return "blocked";
   if (weightedPoints >= trustActionPolicy.tier1Threshold)
     return "temporary_restriction";
   if (weightedPoints >= trustActionPolicy.warningThreshold)
@@ -29591,22 +29510,24 @@ function resolveTrustAction(weightedPoints) {
 
 // src/utils/trust/score.ts
 async function readTrustMonitoringScore(subjectId) {
+  const windowStart = trustScoreWindowStart();
+  const reviewSince = windowStart ? sql`and review.created_at >= ${windowStart.toISOString()}::timestamptz` : sql``;
   const [rows, ratingResult, feedbackResult] = await Promise.all([
     db.select({
       kind: trust_events.kind,
       classification: trust_events.classification,
       count: sql`count(*)::int`
-    }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull(trust_events.invalidatedAt))).groupBy(trust_events.kind, trust_events.classification),
+    }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull(trust_events.invalidatedAt), windowStart ? gte(trust_events.createdAt, windowStart) : undefined)).groupBy(trust_events.kind, trust_events.classification),
     db.execute(sql`
     select count(distinct order_id)::int as count from (
       select review.order_id from order_reviews as review
       inner join orders as purchase on purchase.id = review.order_id
-      where purchase.status = 'completed' and review.rating <= 2
+      where purchase.status = 'completed' and review.rating <= 2 ${reviewSince}
         ${subjectId ? sql`and review.seller_id = ${subjectId}` : sql``}
       union
       select review.order_id from product_reviews as review
       inner join orders as purchase on purchase.id = review.order_id
-      where purchase.status = 'completed' and review.rating <= 2
+      where purchase.status = 'completed' and review.rating <= 2 ${reviewSince}
         ${subjectId ? sql`and review.seller_id = ${subjectId}` : sql``}
     ) as low_ratings
   `),
@@ -29619,6 +29540,8 @@ async function readTrustMonitoringScore(subjectId) {
     )::int as count
   `)
   ]);
+  const [restored] = subjectId ? await db.select({ at: sql`max(${trust_actions.revokedAt})` }).from(trust_actions).where(and(eq(trust_actions.subjectId, subjectId), eq(trust_actions.actionType, "blocked"))) : [];
+  const seriousRows = restored?.at ? await db.select({ count: sql`count(*)::int` }).from(trust_events).where(and(eq(trust_events.subjectId, subjectId), eq(trust_events.classification, "verified"), isNull(trust_events.invalidatedAt), inArray(trust_events.kind, [...trustSeriousKinds]), gt(trust_events.createdAt, new Date(restored.at)))) : null;
   const verified = rows.filter((row) => row.classification === "verified");
   const allegations = rows.filter((row) => row.classification === "allegation");
   const components = verified.map((row) => ({
@@ -29627,12 +29550,14 @@ async function readTrustMonitoringScore(subjectId) {
     weight: trustPolicyWeights[row.kind] ?? 0,
     points: Number(row.count) * (trustPolicyWeights[row.kind] ?? 0)
   }));
+  const seriousViolations = seriousRows ? Number(seriousRows[0]?.count ?? 0) : verified.filter((row) => trustSeriousKinds.includes(row.kind)).reduce((total, row) => total + Number(row.count), 0);
   const ratingSignals = Number(ratingResult.rows[0]?.count ?? 0);
   const verifiedEventPoints = components.reduce((total, item) => total + item.points, 0);
   return {
     policyVersion: trustPolicyVersion,
     weightedPoints: verifiedEventPoints + ratingSignals * trustPolicyWeights.low_rating,
     verifiedEventPoints,
+    seriousViolations,
     ratingSignals,
     writtenFeedbackCount: Number(feedbackResult.rows[0]?.count ?? 0),
     verifiedEvents: components.reduce((total, item) => total + item.count, 0),
@@ -29652,11 +29577,11 @@ var actionNoticeKinds = {
   temporary_restriction: "trust_action_restriction",
   blocked: "trust_action_blocked"
 };
-async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
+async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, triggerKind) {
   if (!trustActionPolicy.enabled)
     return null;
   const monitoring = await readTrustMonitoringScore(subjectId);
-  const actionType = resolveTrustAction(monitoring.weightedPoints);
+  const actionType = resolveTrustAction(monitoring.weightedPoints, monitoring.seriousViolations > 0);
   if (!actionType)
     return null;
   const eventConditions = [
@@ -29666,18 +29591,23 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey) {
     sourceEventKey ? eq(trust_events.eventKey, sourceEventKey) : undefined,
     !sourceEventKey && sourceOrderId ? eq(trust_events.orderId, sourceOrderId) : undefined
   ];
-  const [sourceEvent] = await db.select({ id: trust_events.id, orderId: trust_events.orderId }).from(trust_events).where(and(...eventConditions)).orderBy(desc(trust_events.createdAt)).limit(1);
+  const [sourceEvent] = await db.select({ id: trust_events.id, orderId: trust_events.orderId, kind: trust_events.kind }).from(trust_events).where(and(...eventConditions)).orderBy(desc(trust_events.createdAt)).limit(1);
   const orderId = sourceOrderId ?? sourceEvent?.orderId ?? null;
   const sourceKey = sourceEventKey ?? sourceOrderId ?? "score";
   const actionKey = `${trustPolicyVersion}:${subjectId}:${actionType}:${sourceKey}`;
   const durationHours = resolveTrustDurationHours(monitoring.weightedPoints);
   const endsAt = actionType === "temporary_restriction" && durationHours > 0 ? new Date(Date.now() + durationHours * 3600000) : null;
   const durationLabel = durationHours >= 72 ? "3 days" : durationHours >= 24 ? "24 hours" : "12 hours";
-  const reasonText = actionType === "warning" ? "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account." : `Your account is paused because previous reservations were not picked up before they expired. To help avoid food waste, reservations are temporarily paused for ${durationLabel}.`;
+  const reasonText = trustActionReason(actionType, triggerKind ?? sourceEvent?.kind, durationLabel);
   return db.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
     if (existing)
       return existing;
+    if (actionType === "blocked") {
+      const [alreadyBlocked] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, subjectId), eq(trust_actions.actionType, "blocked"), isNull(trust_actions.revokedAt))).limit(1);
+      if (alreadyBlocked)
+        return alreadyBlocked;
+    }
     const [action] = await tx.insert(trust_actions).values({
       actionKey,
       subjectId,
@@ -29739,7 +29669,7 @@ async function expirePendingOrders(limit = 100) {
     });
     if (expired) {
       expiredCount++;
-      await evaluateTrustAction(expired.buyerId, expired.orderId, expired.eventKey);
+      await evaluateTrustAction(expired.buyerId, expired.orderId, expired.eventKey, "buyer_failed_reservation");
     }
   }
   return expiredCount;
@@ -29750,9 +29680,10 @@ async function checkUserInactivity(limit = 100) {
   const now = new Date;
   const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 3600000);
   const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 3600000);
+  const isMarketplaceUser = sql`('buyer'::"role" = any(${user.role}) or 'seller'::"role" = any(${user.role}))`;
   let warningsIssued = 0;
   let accountsBlocked = 0;
-  const blockCandidates = await db.select({ id: user.id }).from(user).where(and(eq(user.isActive, true), lt(user.lastActiveAt, oneMonthAgo))).limit(limit);
+  const blockCandidates = await db.select({ id: user.id }).from(user).where(and(eq(user.isActive, true), isMarketplaceUser, lt(user.lastActiveAt, oneMonthAgo))).limit(limit);
   for (const candidate of blockCandidates) {
     await db.transaction(async (tx) => {
       await tx.update(user).set({ isActive: false }).where(eq(user.id, candidate.id));
@@ -29773,7 +29704,7 @@ async function checkUserInactivity(limit = 100) {
     });
     accountsBlocked++;
   }
-  const warnCandidates = await db.select({ id: user.id }).from(user).where(and(eq(user.isActive, true), lt(user.lastActiveAt, threeWeeksAgo), sql`${user.lastActiveAt} >= ${oneMonthAgo}`)).limit(limit);
+  const warnCandidates = await db.select({ id: user.id }).from(user).where(and(eq(user.isActive, true), isMarketplaceUser, lt(user.lastActiveAt, threeWeeksAgo), sql`${user.lastActiveAt} >= ${oneMonthAgo}`)).limit(limit);
   for (const candidate of warnCandidates) {
     const actionKey = `${trustPolicyVersion}:${candidate.id}:warning:inactivity-21d`;
     await db.transaction(async (tx) => {
@@ -29799,29 +29730,129 @@ async function checkUserInactivity(limit = 100) {
   return { warningsIssued, accountsBlocked };
 }
 
-// src/utils/trust/process-inquiries.ts
-async function processInquiryDeadlines(limit = 100) {
-  const now = new Date;
-  const dueCondition = or(and(eq(order_inquiries.deadlineStage, 0), lte(order_inquiries.createdAt, new Date(now.getTime() - 12 * 3600000))), and(eq(order_inquiries.deadlineStage, 1), lte(order_inquiries.createdAt, new Date(now.getTime() - 24 * 3600000))), and(eq(order_inquiries.deadlineStage, 2), lte(order_inquiries.createdAt, new Date(now.getTime() - 48 * 3600000))));
-  const due = await db.select().from(order_inquiries).where(and(isNull(order_inquiries.repliedAt), dueCondition)).limit(limit);
+// src/utils/trust/response-deadlines.ts
+async function recordReplyDeadlines(tx, pending, now) {
+  const hours = (now.getTime() - pending.since.getTime()) / 3600000;
+  if (hours >= 12)
+    await queueTrustNotice(tx, {
+      noticeKey: `inquiry-reminder:${pending.key}`,
+      recipientId: pending.sellerId,
+      orderId: pending.orderId,
+      kind: "inquiry_12h_reminder"
+    });
+  if (hours >= 24) {
+    await queueTrustNotice(tx, {
+      noticeKey: `inquiry-warning:${pending.key}`,
+      recipientId: pending.sellerId,
+      orderId: pending.orderId,
+      kind: "inquiry_24h_warning"
+    });
+    await queueTrustNotice(tx, {
+      noticeKey: `inquiry-buyer:${pending.key}`,
+      recipientId: pending.buyerId,
+      orderId: pending.orderId,
+      kind: "inquiry_24h_buyer_notice"
+    });
+  }
+  const flagged = hours >= 48;
+  if (flagged)
+    await recordTrustEvent(tx, {
+      eventKey: `inquiry-unanswered:${pending.key}`,
+      orderId: pending.orderId,
+      subjectId: pending.sellerId,
+      kind: "inquiry_non_response",
+      classification: "verified",
+      sourceId: pending.sourceId
+    });
+  const stage = flagged ? 3 : hours >= 24 ? 2 : 1;
+  return { stage, flagged, eventKey: `inquiry-unanswered:${pending.key}` };
+}
+
+// src/utils/trust/process-chats.ts
+var hoursAgo = (now, hours) => new Date(now.getTime() - hours * 3600000);
+async function processChatDeadlines(now, limit) {
+  const dueCondition = or(and(eq(conversations.deadlineStage, 0), lte(conversations.awaitingReplySince, hoursAgo(now, 12))), and(eq(conversations.deadlineStage, 1), lte(conversations.awaitingReplySince, hoursAgo(now, 24))), and(eq(conversations.deadlineStage, 2), lte(conversations.awaitingReplySince, hoursAgo(now, 48))));
+  const eligible = and(eq(conversations.status, "open"), isNotNull(conversations.awaitingReplySince), dueCondition, notExists(db.select({ id: conversation_participants.id }).from(conversation_participants).where(and(eq(conversation_participants.conversationId, conversations.id), isNotNull(conversation_participants.blockedAt)))), exists(db.select({ one: user.id }).from(user).where(and(eq(user.id, conversations.sellerId), eq(user.isActive, true)))), notExists(db.select({ one: order_inquiries.id }).from(order_inquiries).where(and(eq(order_inquiries.buyerId, conversations.buyerId), eq(order_inquiries.sellerId, conversations.sellerId), isNull(order_inquiries.repliedAt)))), notExists(db.select({ one: product_inquiries.id }).from(product_inquiries).where(and(eq(product_inquiries.buyerId, conversations.buyerId), eq(product_inquiries.sellerId, conversations.sellerId), isNull(product_inquiries.repliedAt)))));
+  const due = await db.select({ id: conversations.id }).from(conversations).where(eligible).limit(limit);
   for (const row of due) {
-    const actionInput = await db.transaction(async (tx) => {
+    const flagged = await db.transaction(async (tx) => {
+      const [current] = await tx.select().from(conversations).where(and(eq(conversations.id, row.id), eligible)).for("update").limit(1);
+      if (!current?.awaitingReplySince)
+        return null;
+      const result = await recordReplyDeadlines(tx, {
+        key: `chat-${current.id}-${current.awaitingReplySince.getTime()}`,
+        orderId: null,
+        buyerId: current.buyerId,
+        sellerId: current.sellerId,
+        since: current.awaitingReplySince,
+        sourceId: current.id
+      }, now);
+      await tx.update(conversations).set({ deadlineStage: result.stage }).where(eq(conversations.id, current.id));
+      return result.flagged ? { sellerId: current.sellerId, eventKey: result.eventKey } : null;
+    });
+    if (flagged)
+      await evaluateTrustAction(flagged.sellerId, null, flagged.eventKey, "inquiry_non_response");
+  }
+  return due.length;
+}
+
+// src/utils/trust/process-inquiries.ts
+var hoursAgo2 = (now, hours) => new Date(now.getTime() - hours * 3600000);
+var activeSeller = (sellerId) => exists(db.select({ one: user.id }).from(user).where(and(eq(user.id, sellerId), eq(user.isActive, true))));
+async function processOrderInquiries(now, limit) {
+  const dueCondition = or(and(eq(order_inquiries.deadlineStage, 0), lte(order_inquiries.createdAt, hoursAgo2(now, 12))), and(eq(order_inquiries.deadlineStage, 1), lte(order_inquiries.createdAt, hoursAgo2(now, 24))), and(eq(order_inquiries.deadlineStage, 2), lte(order_inquiries.createdAt, hoursAgo2(now, 48))));
+  const due = await db.select().from(order_inquiries).where(and(isNull(order_inquiries.repliedAt), activeSeller(order_inquiries.sellerId), dueCondition)).limit(limit);
+  for (const row of due) {
+    const flagged = await db.transaction(async (tx) => {
       const [current] = await tx.select().from(order_inquiries).where(and(eq(order_inquiries.id, row.id), isNull(order_inquiries.repliedAt), dueCondition)).for("update").limit(1);
       if (!current)
         return null;
-      await recordInquiryDeadlines(tx, current, now);
-      const age = (now.getTime() - current.createdAt.getTime()) / 3600000;
-      await tx.update(order_inquiries).set({ deadlineStage: age >= 48 ? 3 : age >= 24 ? 2 : 1 }).where(eq(order_inquiries.id, current.id));
-      return age >= 48 ? {
-        sellerId: current.sellerId,
+      const result = await recordReplyDeadlines(tx, {
+        key: current.id,
         orderId: current.orderId,
-        eventKey: `inquiry-unanswered:${current.id}`
-      } : null;
+        buyerId: current.buyerId,
+        sellerId: current.sellerId,
+        since: current.createdAt,
+        sourceId: current.id
+      }, now);
+      await tx.update(order_inquiries).set({ deadlineStage: result.stage }).where(eq(order_inquiries.id, current.id));
+      return result.flagged ? { sellerId: current.sellerId, orderId: current.orderId, eventKey: result.eventKey } : null;
     });
-    if (actionInput)
-      await evaluateTrustAction(actionInput.sellerId, actionInput.orderId, actionInput.eventKey);
+    if (flagged)
+      await evaluateTrustAction(flagged.sellerId, flagged.orderId, flagged.eventKey, "inquiry_non_response");
   }
   return due.length;
+}
+async function processProductInquiries(now, limit) {
+  const dueCondition = or(and(eq(product_inquiries.deadlineStage, 0), lte(product_inquiries.createdAt, hoursAgo2(now, 12))), and(eq(product_inquiries.deadlineStage, 1), lte(product_inquiries.createdAt, hoursAgo2(now, 24))), and(eq(product_inquiries.deadlineStage, 2), lte(product_inquiries.createdAt, hoursAgo2(now, 48))));
+  const due = await db.select().from(product_inquiries).where(and(isNull(product_inquiries.repliedAt), activeSeller(product_inquiries.sellerId), dueCondition)).limit(limit);
+  for (const row of due) {
+    const flagged = await db.transaction(async (tx) => {
+      const [current] = await tx.select().from(product_inquiries).where(and(eq(product_inquiries.id, row.id), isNull(product_inquiries.repliedAt), dueCondition)).for("update").limit(1);
+      if (!current)
+        return null;
+      const result = await recordReplyDeadlines(tx, {
+        key: current.id,
+        orderId: null,
+        buyerId: current.buyerId,
+        sellerId: current.sellerId,
+        since: current.createdAt,
+        sourceId: current.id
+      }, now);
+      await tx.update(product_inquiries).set({ deadlineStage: result.stage }).where(eq(product_inquiries.id, current.id));
+      return result.flagged ? { sellerId: current.sellerId, eventKey: result.eventKey } : null;
+    });
+    if (flagged)
+      await evaluateTrustAction(flagged.sellerId, null, flagged.eventKey, "inquiry_non_response");
+  }
+  return due.length;
+}
+async function processInquiryDeadlines(limit = 100) {
+  const now = new Date;
+  const orders = await processOrderInquiries(now, limit);
+  const products = await processProductInquiries(now, limit);
+  const chats = await processChatDeadlines(now, limit);
+  return orders + products + chats;
 }
 
 // src/utils/email/index.ts

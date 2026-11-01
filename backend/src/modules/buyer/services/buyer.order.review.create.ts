@@ -18,6 +18,7 @@ export async function createBuyerReview(buyerId: string, orderId: string, body: 
     if (!review) throw new OrderError(409, "Order already reviewed");
     return review;
   });
-  await evaluateTrustAction(review.sellerId, review.orderId);
+  // Only a low rating can change the score, so a good review never restarts a pause.
+  if (review.rating <= 2) await evaluateTrustAction(review.sellerId, review.orderId, undefined, "low_rating");
   return review;
 }

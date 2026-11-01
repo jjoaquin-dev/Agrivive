@@ -366,100 +366,6 @@ export const listing_cycles = pgTable("listing_cycles", {
   index("listing_cycles_vegetable_started_idx").on(table.vegetableKey, table.startedAt),
 ]);
 
-export const seller_promotion_stage = pgEnum("seller_promotion_stage", [
-  "initial",
-  "followup",
-]);
-
-export const seller_promotion_status = pgEnum("seller_promotion_status", [
-  "waiting",
-  "queued",
-  "sent",
-  "ready",
-  "skipped",
-  "failed",
-]);
-
-export const seller_promotion_jobs = pgTable("seller_promotion_jobs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
-  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  stage: seller_promotion_stage().notNull(),
-  status: seller_promotion_status().default("waiting").notNull(),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
-  retryCount: integer("retry_count").default(0).notNull(),
-  leaseUntil: timestamp("lease_until", { withTimezone: true }),
-  headline: text("headline"),
-  caption: text("caption"),
-  visibilityPolicyVersion: text("visibility_policy_version"),
-  visibilityScore: decimal("visibility_score", { precision: 5, scale: 4 }),
-  visibilityTier: text("visibility_tier"),
-  visibilityRank: integer("visibility_rank"),
-  evaluatedAt: timestamp("evaluated_at", { withTimezone: true }),
-  readyAt: timestamp("ready_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  readAt: timestamp("read_at", { withTimezone: true }),
-  lastError: text("last_error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
-}, (table) => [
-  uniqueIndex("seller_promotion_jobs_cycle_stage_unique").on(table.listingCycleId, table.stage),
-  index("seller_promotion_jobs_due_idx").on(table.status, table.nextCheckAt),
-  index("seller_promotion_jobs_seller_created_idx").on(table.sellerId, table.createdAt),
-  index("seller_promotion_jobs_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
-]);
-
-export const social_platform = pgEnum("social_platform", ["facebook", "instagram", "tiktok", "x"]);
-export const social_campaign_status = pgEnum("social_campaign_status", [
-  "draft", "queued", "publishing", "processing", "published", "partial", "failed",
-]);
-export const social_campaign_post_status = pgEnum("social_campaign_post_status", [
-  "queued", "processing", "published", "failed",
-]);
-
-export const seller_social_campaigns = pgTable("seller_social_campaigns", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
-  listingCycleId: uuid("listing_cycle_id").notNull().references(() => listing_cycles.id, { onDelete: "cascade" }),
-  status: social_campaign_status().default("draft").notNull(),
-  posts: jsonb("posts").$type<Record<string, string>>().notNull(),
-  selectedPlatforms: social_platform("selected_platforms").array().default([]).notNull(),
-  tiktokPrivacyLevel: text("tiktok_privacy_level"),
-  tiktokAllowComment: boolean("tiktok_allow_comment"),
-  tiktokBrandOrganic: boolean("tiktok_brand_organic"),
-  tiktokBrandContent: boolean("tiktok_brand_content"),
-  tiktokConsentAt: timestamp("tiktok_consent_at", { withTimezone: true }),
-  approvedAt: timestamp("approved_at", { withTimezone: true }),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  retryCount: integer("retry_count").default(0).notNull(),
-  leaseUntil: timestamp("lease_until", { withTimezone: true }),
-  nextCheckAt: timestamp("next_check_at", { withTimezone: true }).defaultNow().notNull(),
-  lastError: text("last_error"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
-}, (table) => [
-  index("seller_social_campaigns_seller_created_idx").on(table.sellerId, table.createdAt),
-  index("seller_social_campaigns_due_idx").on(table.status, table.nextCheckAt, table.leaseUntil),
-]);
-
-export const seller_social_campaign_posts = pgTable("seller_social_campaign_posts", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campaignId: uuid("campaign_id").notNull().references(() => seller_social_campaigns.id, { onDelete: "cascade" }),
-  platform: social_platform().notNull(),
-  status: social_campaign_post_status().default("queued").notNull(),
-  platformPostId: text("platform_post_id"),
-  postUrl: text("post_url"),
-  lastError: text("last_error"),
-  completedAt: timestamp("completed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => new Date()).notNull(),
-}, (table) => [
-  uniqueIndex("seller_social_campaign_posts_campaign_platform_unique").on(table.campaignId, table.platform),
-  index("seller_social_campaign_posts_campaign_idx").on(table.campaignId, table.status),
-]);
-
 export const seller_boost_reason_enum = pgEnum("seller_boost_reason", [
   "initial",
   "price_reduction",
@@ -631,6 +537,7 @@ export const product_inquiries = pgTable("product_inquiries", {
   question: text("question").notNull(),
   reply: text("reply"),
   repliedAt: timestamp("replied_at", { withTimezone: true }),
+  deadlineStage: smallint("deadline_stage").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("product_inquiries_one_open_per_buyer_product_idx")
@@ -653,12 +560,16 @@ export const conversations = pgTable("conversations", {
   orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   status: conversation_status_enum().default("open").notNull(),
   lastMessageAt: timestamp("last_message_at", { withTimezone: true }).defaultNow().notNull(),
+  /** Set while a buyer message in a direct chat is waiting for the seller's reply. Drives the 12h/24h/48h trust timers. */
+  awaitingReplySince: timestamp("awaiting_reply_since", { withTimezone: true }),
+  deadlineStage: smallint("deadline_stage").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 }, (table) => [
+  index("conversations_awaiting_reply_idx").on(table.awaitingReplySince).where(sql`${table.awaitingReplySince} is not null`),
   index("conversations_buyer_last_message_idx").on(table.buyerId, table.lastMessageAt),
   index("conversations_seller_last_message_idx").on(table.sellerId, table.lastMessageAt),
   index("conversations_product_idx").on(table.productId),
@@ -788,6 +699,7 @@ export const product_reviews = pgTable("product_reviews", {
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   rating: smallint("rating").notNull(),
   review: text("review"),
+  sellerResponse: text("seller_response"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("product_reviews_product_created_idx").on(table.productId, table.createdAt),

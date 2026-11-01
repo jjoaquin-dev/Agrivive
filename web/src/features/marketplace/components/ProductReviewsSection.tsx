@@ -137,6 +137,12 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
                 </div>
                 <div className="mt-2"><RatingStars rating={review.rating} /></div>
                 {review.review ? <p className="mt-2 text-[14px] leading-relaxed text-foreground/90">{review.review}</p> : null}
+                {review.sellerResponse ? (
+                  <div className="mt-3 rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3 text-[12px]">
+                    <div className="font-semibold text-[#457D00]">Seller response</div>
+                    <p className="mt-1 leading-relaxed text-muted-foreground">{review.sellerResponse}</p>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

@@ -5,6 +5,7 @@ import {
   conversation_participants,
   conversations,
   order_inquiries,
+  orders,
   product_inquiries,
 } from "../../../db/schema";
 import type { SendConversationMessageBody } from "../model/conversation";
@@ -55,13 +56,36 @@ export async function createConversationMessage(userId: string, conversationId: 
       eq(conversation_participants.userId, userId),
     ));
 
-    if (input.productId && userId === conversation.buyerId) {
-      await tx.insert(product_inquiries).values({
-        productId: input.productId,
-        buyerId: userId,
-        sellerId: conversation.sellerId,
-        question: body,
-      }).onConflictDoNothing();
+    if (userId === conversation.buyerId) {
+      // Every buyer message must be waiting on a timer (12h reminder, 24h warning, 48h non-responsive).
+      // A question row times product and order chats; any other message makes the chat itself wait.
+      const productId = input.productId ?? (conversation.contextType === "product" ? conversation.productId : null);
+      let timedByQuestion = false;
+      if (productId) {
+        await tx.insert(product_inquiries).values({
+          productId,
+          buyerId: userId,
+          sellerId: conversation.sellerId,
+          question: body,
+        }).onConflictDoNothing();
+        timedByQuestion = true;
+      } else if (conversation.contextType === "order" && conversation.orderId) {
+        const [order] = await tx.select({ status: orders.status, expiresAt: orders.expiresAt }).from(orders)
+          .where(eq(orders.id, conversation.orderId)).limit(1);
+        if (order?.status === "pending" && order.expiresAt && order.expiresAt > now) {
+          await tx.insert(order_inquiries).values({
+            orderId: conversation.orderId,
+            buyerId: userId,
+            sellerId: conversation.sellerId,
+            question: body,
+          }).onConflictDoNothing();
+          timedByQuestion = true;
+        }
+      }
+      if (!timedByQuestion && !conversation.awaitingReplySince) {
+        await tx.update(conversations).set({ awaitingReplySince: now, deadlineStage: 0 })
+          .where(eq(conversations.id, conversationId));
+      }
     }
 
     const recipientUserId = userId === conversation.sellerId
@@ -79,21 +103,20 @@ export async function createConversationMessage(userId: string, conversationId: 
     );
 
     if (userId === conversation.sellerId) {
-      if (conversation.contextType === "order" && conversation.orderId) {
-        await tx.update(order_inquiries).set({ reply: body, repliedAt: now }).where(and(
-          eq(order_inquiries.orderId, conversation.orderId),
-          eq(order_inquiries.sellerId, userId),
-          isNull(order_inquiries.repliedAt),
-        ));
-      }
-      if (conversation.contextType === "product" && conversation.productId) {
-        await tx.update(product_inquiries).set({ reply: body, repliedAt: now }).where(and(
-          eq(product_inquiries.productId, conversation.productId),
-          eq(product_inquiries.buyerId, conversation.buyerId),
-          eq(product_inquiries.sellerId, userId),
-          isNull(product_inquiries.repliedAt),
-        ));
-      }
+      // One thread per buyer and seller, so a reply answers everything this buyer has asked that is still open.
+      // (The thread's context can change after a question was asked, so it is not used here.)
+      await tx.update(order_inquiries).set({ reply: body, repliedAt: now }).where(and(
+        eq(order_inquiries.buyerId, conversation.buyerId),
+        eq(order_inquiries.sellerId, userId),
+        isNull(order_inquiries.repliedAt),
+      ));
+      await tx.update(product_inquiries).set({ reply: body, repliedAt: now }).where(and(
+        eq(product_inquiries.buyerId, conversation.buyerId),
+        eq(product_inquiries.sellerId, userId),
+        isNull(product_inquiries.repliedAt),
+      ));
+      await tx.update(conversations).set({ awaitingReplySince: null, deadlineStage: 0 })
+        .where(eq(conversations.id, conversationId));
     }
     return { conversation, message, duplicate: false };
   });

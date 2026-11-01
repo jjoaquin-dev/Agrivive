@@ -15,7 +15,18 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Restore Account screen rebuilt to match the other sign-in screens (one header, errors under the code, exactly 6 digits, success step with Continue or Sign In), and a restored seller is no longer stuck as "paused" for 30 seconds (status cache cleared on restore). Backend typecheck and builds and mobile typecheck passed; no phone check. Rebuild the API. See [[2026-11-02 Restore Account Screen Redesign]].
+Trust alignment re-checked against a real PostgreSQL: one queue bug fixed, all other flows confirmed. See [[2026-11-02 Trust Alignment Verification]].
+Trust score now fades old violations after 90 days (`TRUST_SCORE_WINDOW_DAYS`), buyer cancel counter uses it too, env example defaults actions on. See [[2026-11-02 Trust Score Window and Defaults]].
+Trust numbers stay as own prototype settings; research (2022-2025) backs only the structure. See [[2026-11-02 Trust Numbers and Research Sources]].
+Account recovery restarts the inactivity clock and returns real error statuses. See [[2026-11-02 Account Recovery Restarts Inactivity Clock]], [[2026-11-02 Recovery Route Error Statuses]].
+
+Earlier: Trust and Rating module aligned with the paper: blocking by score, reply timers for all questions and chats, confirmed report violations, seller answers to product reviews, correct pause and block messages. Details in [[2026-11-02 Trust and Rating Paper Alignment]].
+
+Earlier: Old promotion and social campaign tables removed from the schema, with a migration for the owner to run. Details in [[2026-11-02 Drop Old Promotion and Social Tables]].
+
+Earlier: Onboarding slides now use the new market photos. Details in [[2026-11-02 Onboarding Images]].
+
+Earlier: Restore Account screen rebuilt to match the other sign-in screens (one header, errors under the code, exactly 6 digits, success step with Continue or Sign In), and a restored seller is no longer stuck as "paused" for 30 seconds (status cache cleared on restore). Backend typecheck and builds and mobile typecheck passed; no phone check. Rebuild the API. See [[2026-11-02 Restore Account Screen Redesign]].
 
 Earlier: Mobile now uses the web's fonts, colours and logo; real password reset screen; sender photos on Messages questions; duplicate headers removed. Details in [[2026-11-02 Web Look, Password Reset and Messages Photos]].
 

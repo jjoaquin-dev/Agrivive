@@ -1,13 +1,15 @@
-import { and, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNull, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { orders, trust_actions, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { formatRemainingTime } from "../../../utils/trust/access";
+import { trustScoreWindowStart } from "../../../utils/trust/policy";
 import { readTrustMonitoringScore } from "../../../utils/trust/score";
 import { resolveCancellationWarning } from "../../../utils/trust/cancellation-policy";
 
 export async function getBuyerProfile(userId: string) {
+  const windowStart = trustScoreWindowStart();
   const [account, monitoring, cancelRow] = await Promise.all([
     db
       .select({
@@ -29,6 +31,7 @@ export async function getBuyerProfile(userId: string) {
           eq(orders.buyersId, userId),
           eq(orders.status, "cancelled"),
           eq(orders.cancelledBy, "buyer"),
+          windowStart ? gte(orders.cancelledAt, windowStart) : undefined,
         ),
       )
       .then((rows) => Number(rows[0]?.count ?? 0)),

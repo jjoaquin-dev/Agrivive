@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db";
-import { conversation_messages, conversation_participants, product_inquiries, sellers_product } from "../../../db/schema";
+import { conversation_messages, conversation_participants, conversations, product_inquiries, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { findOrCreateDirectConversation } from "../../conversations/services/conversation.direct.find-or-create";
@@ -34,6 +34,9 @@ export async function replySellerProductInquiry(sellerId: string, inquiryId: str
     const conversation = await findOrCreateDirectConversation(tx, {
       buyerId: inquiry.buyerId, sellerId, contextType: "product", productId: inquiry.productId,
     });
+
+    await tx.update(conversations).set({ awaitingReplySince: null, deadlineStage: 0 })
+      .where(eq(conversations.id, conversation.id));
 
     const clientMessageId = `inquiry-answer:${inquiry.id}`;
     const [duplicate] = await tx.select({ id: conversation_messages.id }).from(conversation_messages).where(and(

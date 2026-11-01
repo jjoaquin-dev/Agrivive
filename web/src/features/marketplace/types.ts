@@ -126,6 +126,7 @@ export type ProductReviewItem = {
   id: string;
   rating: number;
   review: string | null;
+  sellerResponse: string | null;
   createdAt: string;
   buyerName: string;
 };
