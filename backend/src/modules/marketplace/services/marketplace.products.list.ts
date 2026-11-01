@@ -2,6 +2,7 @@ import { and, desc, eq, gt, gte, ilike, inArray, isNotNull, lte, or, sql } from 
 import { db } from "../../../db";
 import { order_reviews, product_reviews, sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
 import { ahpTopsisPolicyVersion } from "../../../utils/ahp-topsis";
+import { resolveVisibilityPolicy, scoreTier, type MarketplaceVisibilityPolicy } from "../../../utils/visibility-ranking/policy";
 import { OrderError } from "../../../utils/order-types";
 import { marketplaceVisibilityScoreSql } from "../../../utils/visibility-score";
 import { marketplacePriorCyclesSql } from "../../../utils/visibility-score";
@@ -12,7 +13,6 @@ import { marketplaceSellerVisibility } from "./marketplace.visibility";
 import { rankMarketplaceProductsWithAHP } from "./marketplace.products.visibility";
 
 type MarketplaceCursor = { evaluatedAt: Date; score: number | null; publishedAt: Date; id: string };
-type MarketplaceVisibilityPolicy = "visibility-v4" | typeof ahpTopsisPolicyVersion;
 const ahpCandidateLimit = 500;
 
 function encodeCursor(value: MarketplaceCursor) {
@@ -51,12 +51,6 @@ function validateRanges(query: MarketplaceProductsQuery) {
   if (hasLocation && (query.latitude === undefined || query.longitude === undefined || query.radiusKm === undefined)) {
     throw new OrderError(400, "Latitude, longitude, and radiusKm are required together");
   }
-}
-
-function scoreTier(score: number | null, policyVersion: MarketplaceVisibilityPolicy) {
-  if (score === null) return null;
-  const priorityThreshold = policyVersion === ahpTopsisPolicyVersion ? .60 : .70;
-  return score >= priorityThreshold ? "priority" : score >= .40 ? "standard" : "basic";
 }
 
 function cursorCondition(scoreSql: ReturnType<typeof marketplaceVisibilityScoreSql>, cursor: MarketplaceCursor) {
@@ -107,8 +101,8 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   const cursor = query.cursor ? decodeCursor(query.cursor) : null;
   const evaluatedAt = cursor?.evaluatedAt ?? new Date();
   const since = new Date(evaluatedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const useAHP = process.env.VISIBILITY_POLICY?.trim().toLowerCase() === ahpTopsisPolicyVersion;
-  const policyVersion: MarketplaceVisibilityPolicy = useAHP ? ahpTopsisPolicyVersion : "visibility-v4";
+  const policyVersion = resolveVisibilityPolicy(process.env.VISIBILITY_POLICY);
+  const useAHP = policyVersion === ahpTopsisPolicyVersion;
   const visibilityScore = marketplaceVisibilityScoreSql(evaluatedAt, since);
   const conditions = [
     eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true),
