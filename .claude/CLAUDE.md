@@ -46,7 +46,7 @@ Monorepo, one app per top-level directory, each with its own `bun.lock` and CI w
 - `web/` — Next.js 15 App Router buyer website (Tailwind 3, GSAP/Lenis, Leaflet, Base UI, shadcn config in `components.json`).
 - `mobile/` — Expo / React Native seller-facing app (expo-router).
 - `n8n/workflows/` — exported n8n workflows (promotion drafts, social publishing); contain no credentials.
-- `deploy/` + root `docker-compose.yml` — VPS deployment (Caddy, API, worker, web). See `deploy/README.md`.
+- Root `docker-compose.yml`, `Caddyfile` and `.env` — VPS deployment (Caddy, API, worker, web). `scripts/vps-release.sh` is used by the manual CD workflows.
 - `Agrivive/` — Obsidian vault of project notes; `.claude/` — design systems (`design/web-design`, `design/mobile-design`) and local skills.
 
 ## Commands

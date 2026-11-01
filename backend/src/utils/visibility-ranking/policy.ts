@@ -4,9 +4,9 @@ export const baselinePolicyVersion = "visibility-v4" as const;
 
 export type MarketplaceVisibilityPolicy = typeof baselinePolicyVersion | typeof ahpTopsisPolicyVersion;
 
-// Anything other than the exact AHP-TOPSIS value (including unset) means the baseline formula.
+// AHP-TOPSIS is the default. Only the exact baseline value (any case, spaces ignored) rolls back to the old formula.
 export function resolveVisibilityPolicy(setting: string | undefined): MarketplaceVisibilityPolicy {
-  return setting?.trim().toLowerCase() === ahpTopsisPolicyVersion ? ahpTopsisPolicyVersion : baselinePolicyVersion;
+  return setting?.trim().toLowerCase() === baselinePolicyVersion ? baselinePolicyVersion : ahpTopsisPolicyVersion;
 }
 
 export function scoreTier(score: number | null, policyVersion: MarketplaceVisibilityPolicy) {
