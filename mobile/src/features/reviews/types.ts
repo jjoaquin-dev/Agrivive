@@ -30,3 +30,6 @@ export interface SellerReviewsResponse {
 }
 
 export type ReviewFilter = "all" | "unanswered" | "replied";
+
+/** "pickup" reviews rate a whole collected order. "product" reviews rate one item in it. */
+export type ReviewKind = "pickup" | "product";

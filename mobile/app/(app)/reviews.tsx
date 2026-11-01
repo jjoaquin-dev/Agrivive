@@ -14,6 +14,7 @@ import { colors, fonts, radii, spacing } from "../../src/theme";
 import { RatingSummaryCard } from "../../src/features/reviews/components/RatingSummaryCard";
 import { ReviewFilterTabs } from "../../src/features/reviews/components/ReviewFilterTabs";
 import { ReviewCard } from "../../src/features/reviews/components/ReviewCard";
+import { ReviewKindTabs } from "../../src/features/reviews/components/ReviewKindTabs";
 import { useSellerReviews } from "../../src/features/reviews/hooks/useSellerReviews";
 
 export default function SellerReviewsScreen() {
@@ -23,6 +24,8 @@ export default function SellerReviewsScreen() {
     loading,
     refreshing,
     error,
+    kind,
+    setKind,
     filter,
     setFilter,
     selectedRating,
@@ -68,6 +71,8 @@ export default function SellerReviewsScreen() {
           </View>
         ) : null}
 
+        <ReviewKindTabs kind={kind} onSelect={setKind} />
+
         <RatingSummaryCard summary={summary} />
 
         <ReviewFilterTabs
@@ -87,7 +92,9 @@ export default function SellerReviewsScreen() {
             <Text style={styles.emptySubtitle}>
               {filter === "unanswered"
                 ? "You have replied to all customer feedback!"
-                : "Customer reviews and feedback will appear here after orders are collected."}
+                : kind === "product"
+                  ? "Reviews of single products will appear here after orders are collected."
+                  : "Customer reviews and feedback will appear here after orders are collected."}
             </Text>
           </View>
         ) : (

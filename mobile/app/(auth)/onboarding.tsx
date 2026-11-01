@@ -30,21 +30,21 @@ const SLIDES: OnboardingSlide[] = [
     title: "Sell your extra vegetables",
     description:
       "List what you have left. Buyers nearby can reserve it and pick it up at your stall.",
-    image: require("../../assets/onboarding/onboarding-1.png"),
+    image: require("../../assets/onboarding/onboarding-1.jpg"),
   },
   {
     id: "2",
     title: "Keep track of orders",
     description:
       "We save the vegetables for each buyer, so you know what to pack before they come.",
-    image: require("../../assets/onboarding/onboarding-2.png"),
+    image: require("../../assets/onboarding/onboarding-2.jpg"),
   },
   {
     id: "3",
     title: "Easy pickup",
     description:
       "Scan the buyer's QR code at your stall to finish the handover.",
-    image: require("../../assets/onboarding/onboarding-3.png"),
+    image: require("../../assets/onboarding/onboarding-3.jpg"),
   },
 ];
 

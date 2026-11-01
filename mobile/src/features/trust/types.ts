@@ -1,6 +1,7 @@
 export interface SellerTrustEvent {
   id: string;
-  orderId: string;
+  /** Empty when the record comes from a product question, a chat or a report instead of an order. */
+  orderId: string | null;
   kind: string;
   policyVersion: string;
   createdAt: string;
@@ -8,7 +9,8 @@ export interface SellerTrustEvent {
 
 export interface SellerTrustNotice {
   id: string;
-  orderId: string;
+  /** Empty when the record comes from a product question, a chat or a report instead of an order. */
+  orderId: string | null;
   kind: string;
   createdAt: string;
   sentAt: string | null;

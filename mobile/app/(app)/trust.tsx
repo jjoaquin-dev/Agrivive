@@ -101,7 +101,7 @@ export default function SellerTrustScreen() {
             <View style={styles.cardIcon}><CheckCircle2 size={19} color={colors.success} /></View>
             <View style={styles.cardBody}>
               <Text style={styles.cardTitle}>{trustLabel(event.kind)}</Text>
-              <Text style={styles.cardMeta}>Order {event.orderId.slice(0, 8)} · {dateLabel(event.createdAt)}</Text>
+              <Text style={styles.cardMeta}>{event.orderId ? `Order ${event.orderId.slice(0, 8)} · ` : ""}{dateLabel(event.createdAt)}</Text>
               <Pressable onPress={() => { setSelectedEvent(event); setReasonError(null); }} accessibilityRole="button" accessibilityLabel={`Request a correction for ${trustLabel(event.kind)}`} style={styles.correctionButton}>
                 <Text style={styles.correctionText}>Request correction</Text>
               </Pressable>
@@ -117,7 +117,7 @@ export default function SellerTrustScreen() {
             <View style={styles.cardIcon}><AlertCircle size={19} color={colors.warning} /></View>
             <View style={styles.cardBody}>
               <Text style={styles.cardTitle}>{trustLabel(notice.kind)}</Text>
-              <Text style={styles.cardMeta}>Order {notice.orderId.slice(0, 8)} · {dateLabel(notice.createdAt)}</Text>
+              <Text style={styles.cardMeta}>{notice.orderId ? `Order ${notice.orderId.slice(0, 8)} · ` : ""}{dateLabel(notice.createdAt)}</Text>
             </View>
           </View>
         ))}

@@ -3,7 +3,7 @@ import {
   fetchSellerReviewsList,
   replyToReview,
 } from "../api/seller-reviews";
-import type { ReviewFilter, ReviewItem, ReviewsSummary } from "../types";
+import type { ReviewFilter, ReviewItem, ReviewKind, ReviewsSummary } from "../types";
 
 export function useSellerReviews() {
   const [summary, setSummary] = useState<ReviewsSummary>({
@@ -16,6 +16,7 @@ export function useSellerReviews() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [kind, setKind] = useState<ReviewKind>("pickup");
   const [filter, setFilter] = useState<ReviewFilter>("all");
   const [selectedRating, setSelectedRating] = useState<number | undefined>(undefined);
 
@@ -26,6 +27,7 @@ export function useSellerReviews() {
 
     try {
       const res = await fetchSellerReviewsList({
+        kind,
         filter,
         rating: selectedRating,
       });
@@ -37,14 +39,14 @@ export function useSellerReviews() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filter, selectedRating]);
+  }, [kind, filter, selectedRating]);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
 
   const submitReply = async (reviewId: string, replyText: string) => {
-    const res = await replyToReview(reviewId, replyText);
+    const res = await replyToReview(reviewId, replyText, kind);
     setReviews((prev) =>
       prev.map((r) => (r.id === reviewId ? { ...r, sellerResponse: res.sellerResponse } : r)),
     );
@@ -60,6 +62,8 @@ export function useSellerReviews() {
     loading,
     refreshing,
     error,
+    kind,
+    setKind,
     filter,
     setFilter,
     selectedRating,

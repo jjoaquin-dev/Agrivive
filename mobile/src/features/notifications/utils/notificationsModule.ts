@@ -1,8 +1,10 @@
 import { Platform } from "react-native";
 import Constants, { ExecutionEnvironment } from "expo-constants";
+import { isRunningInExpoGo } from "expo";
 
 export function isExpoGo(): boolean {
   return (
+    isRunningInExpoGo() ||
     Constants.executionEnvironment === ExecutionEnvironment.StoreClient ||
     (Constants as any).appOwnership === "expo"
   );
