@@ -19,7 +19,7 @@ export function HomeWhySurplus() {
                 viewBox="0 0 120 16"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="absolute -bottom-2 left-0 w-full h-3 sm:h-3.5 text-[#EBA635] overflow-visible pointer-events-none"
+                className="absolute -bottom-2 left-0 w-full h-3 sm:h-3.5 text-[#E2FD56] overflow-visible pointer-events-none"
                 preserveAspectRatio="none"
               >
                 <path d="M3 13 C 35 3, 85 3, 117 13" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
@@ -35,7 +35,7 @@ export function HomeWhySurplus() {
         {/* Headline proof: the two buyer-trust figures in one calm panel */}
         <div data-reveal className="mt-12 flex flex-col gap-8 rounded-3xl border border-white/10 bg-white/[0.04] p-6 sm:mt-16 sm:p-10 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
           <div className="max-w-xl">
-            <span className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-[#FEA938]">Visual &amp; Verified Transparency</span>
+            <span className="font-heading text-[11px] font-bold uppercase tracking-[0.14em] text-[#E2FD56]">Visual &amp; Verified Transparency</span>
             <h3 className="type-card mt-3 font-heading text-white">Real-Time Photos and Verified Sellers</h3>
             <p className="mt-2 text-sm leading-relaxed text-white/70 sm:text-[15px]">
               See recent product photos (wanted by 95.1% of buyers) and seller verification (wanted by 97.6%) before you travel or buy.

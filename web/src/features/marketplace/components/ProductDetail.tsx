@@ -1,5 +1,6 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -124,13 +125,7 @@ export function ProductDetail() {
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Top Back Navigation Link */}
         <div>
-          <Link
-            href="/marketplace"
-            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>Back to Marketplace</span>
-          </Link>
+          <Breadcrumbs items={[{ label: "Product", href: "/marketplace" }, { label: product.productName }]} />
         </div>
 
         {/* Main Product Section: 2:1 Responsive Layout */}

@@ -66,7 +66,7 @@ function cursorCondition(scoreSql: ReturnType<typeof marketplaceVisibilityScoreS
   )!;
 }
 
-function serializeProduct(row: any, imageUrl: string | null, distanceKm: number | null,
+export function serializeProduct(row: any, imageUrl: string | null, distanceKm: number | null,
   rating: { average: string | null; count: number }, policyVersion: MarketplaceVisibilityPolicy,
   calculatedScore?: number | null) {
   const rawScore = calculatedScore === undefined ? row.visibilityScore : calculatedScore;

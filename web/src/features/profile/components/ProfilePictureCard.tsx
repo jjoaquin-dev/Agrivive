@@ -65,16 +65,16 @@ export function ProfilePictureCard({
   }
 
   return (
-    <Card className="flex flex-col items-center rounded-[24px] border border-neutral-200/80 bg-white p-6 text-center shadow-2xs sm:p-7">
-      <h2 className="self-start font-heading text-lg font-bold text-neutral-900">
-        Profile Picture
-      </h2>
-      <p className="mb-6 self-start text-xs text-neutral-500">
-        Your picture helps market stall vendors recognize you during pickup.
-      </p>
+    <Card className="flex flex-col items-center rounded-[20px] border border-neutral-200/80 bg-white p-6 text-center shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+      <div className="w-full border-b border-border/70 pb-4 text-left">
+        <h2 className="font-heading text-lg font-bold text-neutral-900">Profile Picture</h2>
+        <p className="text-sm text-neutral-500">
+          Your picture helps market stall vendors recognize you during pickup.
+        </p>
+      </div>
 
       {/* Circular Avatar */}
-      <div className="relative mb-6 size-32 overflow-hidden rounded-full border-2 border-neutral-200/80 bg-[#F4F6EE] shadow-inner sm:size-36">
+      <div className="relative mt-6 mb-6 size-32 overflow-hidden rounded-full border-2 border-neutral-200/80 bg-[#F4F6EE] shadow-inner sm:size-36">
         {imageUrl ? (
           <Image
             src={imageUrl}

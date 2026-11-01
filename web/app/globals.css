@@ -314,3 +314,118 @@ section[id] {
   box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.16), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
   border-color: rgba(69, 125, 0, 0.25) !important;
 }
+
+/* Cart and toast motion. Each class is disabled under reduced motion below. */
+@keyframes cart-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  50% { transform: rotate(10deg); }
+  75% { transform: rotate(-6deg); }
+}
+
+@keyframes cart-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes cart-bump {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cart-item-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Header buttons take the landing Register lime on the green marketplace header. */
+[data-tone="green"] .buyer-account-pill,
+[data-tone="green"] .buyer-header-cta,
+[data-tone="green"] .buyer-guest-register {
+  background-color: #e2fd56;
+  border-color: #e2fd56;
+  color: #111827;
+}
+
+/* Account pill and Cart button: white with a green outline. */
+[data-tone="green"] .buyer-account-pill,
+[data-tone="green"] .buyer-header-cta {
+  background-color: #fff;
+  border-color: #457d00;
+  color: #111827;
+}
+
+[data-tone="green"] .buyer-header-cta:hover,
+[data-tone="green"] .buyer-account-pill:hover {
+  background-color: #f3f8e8;
+}
+
+[data-tone="green"] .buyer-guest-register:hover {
+  background-color: #d4f244;
+}
+
+/* Guest Sign in text stays readable on the green header. */
+[data-tone="green"] .buyer-guest-signin {
+  color: #fff;
+}
+
+/* Header icons turn white on the green marketplace header. */
+[data-tone="green"] .buyer-header-icon {
+  color: #fff;
+}
+
+[data-tone="green"] .buyer-header-icon:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.group:hover .cart-wiggle-on-hover {
+  animation: cart-wiggle 600ms ease-in-out;
+}
+
+@keyframes icon-shake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(9deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(3deg); }
+}
+
+.group:hover .icon-shake-on-hover {
+  animation: icon-shake 500ms ease-in-out;
+  transform-origin: top center;
+}
+
+.cart-float {
+  animation: cart-float 3s ease-in-out infinite;
+}
+
+.cart-count-bump {
+  animation: cart-bump 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.cart-item-enter {
+  animation: cart-item-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.toast-progress {
+  transform-origin: left;
+  animation: toast-progress linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .cart-wiggle-on-hover,
+  .group:hover .icon-shake-on-hover,
+  .cart-float,
+  .cart-count-bump,
+  .cart-item-enter,
+  .toast-progress {
+    animation: none;
+  }
+}

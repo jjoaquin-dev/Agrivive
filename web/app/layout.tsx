@@ -95,7 +95,7 @@ export const metadata: Metadata = {
 
 // Runs before first paint: hides the splash when it will be skipped, and holds its stage back until the
 // GSAP timeline sets the start frame, so the logo never flashes in its final position.
-const splashSkipScript = `try{var d=document.documentElement;if(sessionStorage.getItem("${SPLASH_KEY}")==="1"||matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("splash-skip");else d.classList.add("splash-pending")}catch(e){}`;
+const splashSkipScript = `try{var d=document.documentElement;if(sessionStorage.getItem("${SPLASH_KEY}")==="1"||matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("splash-skip");else if(location.pathname==="/")d.classList.add("splash-pending")}catch(e){}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

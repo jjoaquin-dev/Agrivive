@@ -3,15 +3,15 @@ import { AlertTriangle, KeyRound } from "lucide-react";
 
 export function TrustAccessNotice({ message }: { message: string }) {
   return (
-    <div className="mb-6 rounded-2xl border border-rose-200/80 bg-white p-4 shadow-xs sm:p-5">
+    <div className="mb-6 rounded-2xl border border-rose-200/80 bg-rose-50/70 p-4 shadow-[0_8px_24px_rgba(31,77,58,0.06)] sm:p-5">
       <div className="flex items-start gap-3.5">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 ring-4 ring-rose-50/60">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-600 shadow-xs">
           <AlertTriangle className="size-5" />
         </div>
 
         <div className="flex-1 min-w-0 space-y-2">
           <div className="flex items-center gap-2">
-            <h2 className="font-heading text-sm font-bold text-neutral-900 sm:text-[15px]">
+            <h2 className="font-heading text-sm font-bold text-rose-950 sm:text-[15px]">
               Reservations Temporarily Paused
             </h2>
             <span className="inline-flex items-center rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[11px] font-semibold text-rose-800">

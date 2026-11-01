@@ -15,8 +15,6 @@ import { MarketplaceOverviewKpiComponent } from "@/src/features/marketplace/comp
 import { MarketplaceTopProduceChartComponent } from "@/src/features/marketplace/components/MarketplaceTopProduceChartComponent";
 import { MarketplaceActivityTrendComponent } from "@/src/features/marketplace/components/MarketplaceActivityTrendComponent";
 import { MarketplaceCategoryBreakdownComponent } from "@/src/features/marketplace/components/MarketplaceCategoryBreakdownComponent";
-import { MarketplaceSellerStallsComponent } from "@/src/features/marketplace/components/MarketplaceSellerStallsComponent";
-import { MarketplaceBuyerImpactComponent } from "@/src/features/marketplace/components/MarketplaceBuyerImpactComponent";
 import { MarketplaceOverviewPrintComponent } from "@/src/features/marketplace/components/MarketplaceOverviewPrintComponent";
 
 export default function MarketplaceOverviewPage() {
@@ -94,6 +92,11 @@ export default function MarketplaceOverviewPage() {
 
                 <MarketplaceOverviewKpiComponent kpis={data.kpis} range={range} />
 
+                <MarketplaceActivityTrendComponent
+                  trends={data.activityTrends}
+                  range={range}
+                />
+
                 <div className="grid gap-6 lg:grid-cols-12 items-start">
                   <div className="lg:col-span-7">
                     <MarketplaceTopProduceChartComponent
@@ -101,23 +104,10 @@ export default function MarketplaceOverviewPage() {
                       range={range}
                     />
                   </div>
-                  <div className="lg:col-span-5 space-y-6">
-                    <MarketplaceActivityTrendComponent
-                      trends={data.activityTrends}
-                      range={range}
-                    />
+                  <div className="lg:col-span-5">
                     <MarketplaceCategoryBreakdownComponent
                       categories={data.categoryBreakdown}
                     />
-                  </div>
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-12 items-start">
-                  <div className="lg:col-span-7">
-                    <MarketplaceSellerStallsComponent stalls={data.sellerStalls} />
-                  </div>
-                  <div className="lg:col-span-5">
-                    <MarketplaceBuyerImpactComponent summary={data.buyerSummary} />
                   </div>
                 </div>
               </div>

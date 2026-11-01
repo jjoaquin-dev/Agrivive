@@ -1,17 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ApiError, isAbortError } from "@/src/lib/api";
 import { listMarketplaceProducts } from "../api/marketplace";
 import { listMarketplaceSellersMap } from "../api/seller-map";
 import type { MarketplaceProduct, MarketplaceSellerMapResponse } from "../types";
-import type { MarketplaceFilterValues } from "../components/MarketplaceFilters";
-import { useMarketplaceLocation } from "./useMarketplaceLocation";
+import { useMarketplaceFilterParams } from "./useMarketplaceFilterParams";
 
 export function useMarketplaceBrowser() {
-  const router = useRouter();
-  const pathname = usePathname() ?? "/marketplace";
   const searchParams = useSearchParams() ?? new URLSearchParams();
   const searchKey = searchParams.toString();
   const [products, setProducts] = useState<MarketplaceProduct[]>([]);
@@ -77,31 +74,18 @@ export function useMarketplaceBrowser() {
     return () => { active = false; controller.abort(); };
   }, [searchParams.get("latitude"), searchParams.get("longitude"), searchParams.get("radiusKm"), sellerMapRetryKey]);
 
-  const filters = useMemo<MarketplaceFilterValues>(() => {
-    const params = new URLSearchParams(searchKey);
-    return {
-      productType: params.get("productType") ?? "",
-      unit: params.get("unit") ?? "",
-      minPrice: params.get("minPrice") ?? "",
-      maxPrice: params.get("maxPrice") ?? "",
-      minQuantity: params.get("minQuantity") ?? "",
-      maxQuantity: params.get("maxQuantity") ?? "",
-      radiusKm: params.get("radiusKm") ?? "",
-    };
-  }, [searchKey]);
-
-  function navigateWithParams(params: URLSearchParams) {
-    const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }
-
   const {
+    filters,
+    hasLocation,
+    navigateWithParams,
+    handleFilterChange,
+    clearFilters,
     locationStatus,
     locationError,
     handleRemoveLocation,
     handleUseLocation,
     handleUseCoordinates,
-  } = useMarketplaceLocation(searchKey, navigateWithParams);
+  } = useMarketplaceFilterParams();
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,35 +95,10 @@ export function useMarketplaceBrowser() {
     navigateWithParams(params);
   }
 
-  function handleFilterChange(key: keyof MarketplaceFilterValues, value: string) {
-    if (key === "radiusKm") {
-      if (!value) {
-        handleRemoveLocation();
-        return;
-      }
-      if (!searchParams.get("latitude") || !searchParams.get("longitude")) {
-        handleUseLocation(value);
-        return;
-      }
-    }
-    const params = new URLSearchParams(searchKey);
-    if (value) params.set(key, value);
-    else params.delete(key);
-    params.delete("cursor");
-    navigateWithParams(params);
-  }
-
   function handleRemoveSearch() {
     setSearchInput("");
     const params = new URLSearchParams(searchKey);
     params.delete("search");
-    navigateWithParams(params);
-  }
-
-  function clearFilters() {
-    const params = new URLSearchParams();
-    const search = searchParams.get("search");
-    if (search) params.set("search", search);
     navigateWithParams(params);
   }
 

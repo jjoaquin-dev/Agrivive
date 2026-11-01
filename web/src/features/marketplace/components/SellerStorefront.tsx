@@ -1,9 +1,10 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Store } from "lucide-react";
+import { Store } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -114,13 +115,7 @@ export function SellerStorefront() {
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
         <div className="mb-6">
-          <Link
-            href="/marketplace"
-            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>Back to Marketplace</span>
-          </Link>
+          <Breadcrumbs items={[{ label: "Marketplace", href: "/marketplace" }, { label: seller?.shopName ?? "Stall" }]} />
         </div>
 
         {!seller ? (

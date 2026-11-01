@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, RefreshCw, ShoppingCart } from "lucide-react";
+import { AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -119,14 +120,15 @@ export function CartDrawer() {
               <div key={shopName} className="space-y-2.5">
                 <CartSellerHeaderComponent shopName={shopName} />
                 <div className="space-y-3">
-                  {sellerItems.map((item) => (
-                    <CartItemComponent
-                      key={item.id}
-                      item={item}
-                      onUpdateQuantity={(quantity) => updateQuantity(item.id, quantity)}
-                      onRemove={() => removeItem(item.id)}
-                      onNavigate={() => setDrawerOpen(false)}
-                    />
+                  {sellerItems.map((item, index) => (
+                    <div key={item.id} className="cart-item-enter" style={{ animationDelay: `${index * 70}ms` }}>
+                      <CartItemComponent
+                        item={item}
+                        onUpdateQuantity={(quantity) => updateQuantity(item.id, quantity)}
+                        onRemove={() => removeItem(item.id)}
+                        onNavigate={() => setDrawerOpen(false)}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -134,9 +136,7 @@ export function CartDrawer() {
           </div>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-            <span className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-[0_8px_20px_rgba(31,77,58,0.06)]">
-              <ShoppingCart aria-hidden="true" className="size-8 text-agrivive-primary" />
-            </span>
+            <Image src="/brand/empty-cart-trolley.png" alt="" width={465} height={507} sizes="160px" className="h-auto w-40 max-w-full" />
             <h3 className="mt-4 font-heading text-lg font-bold">Your cart is empty</h3>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">Reserve fresh surplus produce from Davao public markets.</p>
             <Button render={<Link href="/marketplace" />} nativeButton={false} onClick={() => setDrawerOpen(false)} className="mt-5 min-h-12 rounded-xl px-6">
@@ -165,9 +165,9 @@ export function CartDrawer() {
               type="button"
               onClick={() => setShowReserveModal(true)}
               disabled={checkingOut || !isReady || Boolean(trustRestriction)}
-              className="min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
+              className="group min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
             >
-              {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" />
+              {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" className="transition-transform duration-200 group-hover:translate-x-1" />
             </Button>
             <p className="pt-2 text-center text-[11px] text-muted-foreground">
               Direct pickup payment at stall. No upfront card required.
