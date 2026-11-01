@@ -20,19 +20,26 @@ function channelOf(row: Row | undefined, stuck: boolean, postUrl: string | null)
 /** What Facebook and Instagram each answered for this boost's own post. Each one is read from its own log. */
 export async function readBoostChannels(
   tx: OrderTransaction,
-  boost: { productId: string; reason: "initial" | "price_reduction"; createdAt: Date; sentAt: Date | null },
+  boost: { productId: string; reason: "initial" | "price_reduction"; status: string; createdAt: Date; sentAt: Date | null },
 ): Promise<BoostChannels> {
+  const failedAll: BoostChannel = { status: "failed", postUrl: null };
+  const waitingAll: BoostChannel = { status: "waiting", postUrl: null };
+  // Not delivered to n8n yet (a new boost or a retry), so any earlier post rows belong to an older try.
+  if (boost.sentAt === null) {
+    const channel = boost.status === "failed" ? failedAll : waitingAll;
+    return { facebook: channel, instagram: channel };
+  }
   // Boosts made before the price change kind was removed posted the second post.
   const postType = boost.reason === "initial" ? "first_post" : "second_post";
   const [facebook] = await tx.select().from(fb_post_logs).where(and(
-    eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, postType), gte(fb_post_logs.postedAt, boost.createdAt),
+    eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, postType), gte(fb_post_logs.postedAt, boost.sentAt),
   )).orderBy(desc(fb_post_logs.postedAt)).limit(1);
   const [instagram] = await tx.select().from(instagram_post_logs).where(and(
-    eq(instagram_post_logs.productId, boost.productId), eq(instagram_post_logs.postType, postType), gte(instagram_post_logs.postedAt, boost.createdAt),
+    eq(instagram_post_logs.productId, boost.productId), eq(instagram_post_logs.postType, postType), gte(instagram_post_logs.postedAt, boost.sentAt),
   )).orderBy(desc(instagram_post_logs.postedAt)).limit(1);
 
   // No row long after n8n accepted the boost means that platform never got a post, even if the other one did.
-  const stuck = boost.sentAt !== null && Date.now() - boost.sentAt.getTime() > boostResendAfterMs;
+  const stuck = Date.now() - boost.sentAt.getTime() > boostResendAfterMs;
   return {
     facebook: channelOf(facebook, stuck, facebook?.facebookPostId ? `https://www.facebook.com/${facebook.facebookPostId}` : null),
     instagram: channelOf(instagram, stuck, instagram?.postUrl ?? null),

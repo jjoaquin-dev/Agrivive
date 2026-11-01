@@ -79,6 +79,7 @@ export async function queueSellerVisibilityBoost(sellerId: string, productId: st
         status: "queued",
         retryCount: 0,
         nextAttemptAt: now,
+        sentAt: null,
         leaseUntil: null,
         lastError: null,
         updatedAt: now,
@@ -92,7 +93,7 @@ export async function queueSellerVisibilityBoost(sellerId: string, productId: st
     // Sent to n8n a while ago but nothing was posted (and no post is in progress): send it again.
     if (existing.status === "sent" && await isBoostStuck(tx, { productId, reason: "initial", createdAt: existing.createdAt, sentAt: existing.sentAt })) {
       const [resent] = await tx.update(seller_visibility_boosts).set({
-        status: "queued", retryCount: 0, nextAttemptAt: now, leaseUntil: null, lastError: null, updatedAt: now,
+        status: "queued", retryCount: 0, nextAttemptAt: now, sentAt: null, leaseUntil: null, lastError: null, updatedAt: now,
       }).where(and(
         eq(seller_visibility_boosts.id, existing.id),
         eq(seller_visibility_boosts.status, "sent"),
