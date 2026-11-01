@@ -6,13 +6,14 @@ import { followUpDelayMs } from "./integrations.visibility-boost.follow-up.sched
 /**
  * Called after each 6-hour price cut and its post are saved. The rule listens again:
  * the next check is due in 6 hours, until the price reaches the seller's lowest price
- * (or the product is gone, or the seller turned price drops off). Never fails the post.
+ * (or the product is gone, or the seller paused price drops). Never fails the post.
  */
 export async function rearmBoostFollowUp(boostId: string) {
   try {
     const [row] = await db.select({
       price: sellers_product.productPrice,
       minimumPrice: sellers_product.minimumPrice,
+      enabled: sellers_product.priceReductionEnabled,
       amount: sellers_product.priceReductionAmount,
       quantity: sellers_product.productQty,
       active: sellers_product.isActive,
@@ -22,7 +23,7 @@ export async function rearmBoostFollowUp(boostId: string) {
       .where(eq(seller_visibility_boosts.id, boostId)).limit(1);
     if (!row) return;
 
-    const canCutAgain = row.active && row.marketable && Number(row.quantity ?? 0) > 0 &&
+    const canCutAgain = row.enabled && row.active && row.marketable && Number(row.quantity ?? 0) > 0 &&
       Number(row.amount ?? 0) > 0 && row.minimumPrice !== null &&
       Number(row.price ?? 0) > Number(row.minimumPrice);
 

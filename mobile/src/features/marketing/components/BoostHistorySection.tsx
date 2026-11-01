@@ -4,23 +4,29 @@ import { useRouter } from "expo-router";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { PaginationControl } from "../../../components/PaginationControl";
 import { colors, fonts, radii, spacing } from "../../../theme";
-import { boostState, type BoostState, type SellerVisibilityBoost } from "../types";
+import { boostState, type SellerVisibilityBoost } from "../types";
 import { BoostHistoryCard } from "./BoostHistoryCard";
 
-type Filter = "all" | "running" | "posted" | "needs_choice" | "not_posted";
+type Filter = "all" | "running" | "posted" | "dropped" | "not_posted";
 const filters: { value: Filter; label: string }[] = [
-  { value: "all", label: "All" },
+  { value: "all", label: "All activity" },
   { value: "running", label: "Running" },
   { value: "posted", label: "Posted" },
-  { value: "needs_choice", label: "Needs your choice" },
+  { value: "dropped", label: "Price dropped" },
   { value: "not_posted", label: "Did not post" },
 ];
 
-// Which seller-facing filter a boost belongs to.
-const filterOf: Record<BoostState, Filter | null> = {
-  posting: "running", running: "running", posted: "posted", finished: "posted",
-  needs_choice: "needs_choice", not_posted: "not_posted", failed: "not_posted", dismissed: null,
-};
+/** What happened to a boost, in the seller's words. A boost can be in more than one group. */
+function matches(item: SellerVisibilityBoost, filter: Filter) {
+  const state = boostState(item);
+  switch (filter) {
+    case "all": return true;
+    case "running": return state === "posting" || state === "running";
+    case "posted": return state === "posted" || state === "finished" || state === "running";
+    case "dropped": return (item.progress?.roundsDone ?? 0) > 0 || item.reason === "price_reduction";
+    case "not_posted": return state === "not_posted" || state === "failed";
+  }
+}
 
 interface Props {
   items: SellerVisibilityBoost[];
@@ -40,9 +46,10 @@ export function BoostHistorySection({ items, nextCursor, loading, loadingMore, e
 
   useEffect(() => { setPage(1); }, [filter]);
 
-  const visible = useMemo(
-    () => (filter === "all" ? items : items.filter((item) => filterOf[boostState(item)] === filter)),
-    [filter, items],
+  const visible = useMemo(() => items.filter((item) => matches(item, filter)), [filter, items]);
+  const counts = useMemo(
+    () => Object.fromEntries(filters.map((entry) => [entry.value, items.filter((item) => matches(item, entry.value)).length])),
+    [items],
   );
   const pageItems = visible.slice((page - 1) * pageSize, page * pageSize);
 
@@ -62,7 +69,7 @@ export function BoostHistorySection({ items, nextCursor, loading, loadingMore, e
             accessibilityState={{ selected: filter === item.value }}
             style={[styles.filter, filter === item.value && styles.filterSelected]}
           >
-            <Text style={[styles.filterText, filter === item.value && styles.filterTextSelected]}>{item.label}</Text>
+            <Text style={[styles.filterText, filter === item.value && styles.filterTextSelected]}>{item.label}{counts[item.value] > 0 && item.value !== "all" ? ` · ${counts[item.value]}` : ""}</Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -83,7 +90,7 @@ export function BoostHistorySection({ items, nextCursor, loading, loadingMore, e
       {!loading && !error && visible.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>{items.length === 0 ? "No boosts yet" : "No boosts in this group"}</Text>
-          <Text style={styles.emptyText}>{items.length === 0 ? "Boost a listing to see it here." : "Choose another status to see more boosts."}</Text>
+          <Text style={styles.emptyText}>{items.length === 0 ? "Boost a listing to see it here." : "Choose another activity to see more boosts."}</Text>
         </View>
       ) : null}
       {loadingMore ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
@@ -103,7 +110,7 @@ export function BoostHistorySection({ items, nextCursor, loading, loadingMore, e
 }
 
 const styles = StyleSheet.create({
-  filters: { gap: spacing.sm, paddingBottom: spacing.md },
+  filters: { gap: spacing.sm, paddingBottom: spacing.md, paddingRight: spacing.base },
   filter: { minHeight: 40, paddingHorizontal: spacing.md, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },

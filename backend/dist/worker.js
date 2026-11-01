@@ -28608,6 +28608,7 @@ var sellers_product = pgTable("sellers_product", {
   priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
   priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  priceReductionEnabled: boolean("price_reduction_enabled").default(true).notNull(),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
@@ -29237,9 +29238,9 @@ var sellerNoticeDefs = {
   price_lowered: {
     title: "Price Lowered",
     plural: "Prices Lowered",
-    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. ${p.waitHours ? `You can boost it again in ${p.waitHours} hours.` : "Tap to boost it again."}` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. You can boost it from your list.`,
+    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. The new price was posted on the Agrivive Facebook Page.` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. The new price was posted on the Agrivive Facebook Page.`,
     level: "silent",
-    topic: "stock_price",
+    topic: "boost",
     category: "listings",
     target: "notifications"
   },

@@ -52,6 +52,8 @@ export interface Product {
   basePrice?: string | number | null;
   priceReductionAmount?: string | number;
   minimumPrice?: string | number | null;
+  /** False when the seller paused the automatic 6-hour drops. */
+  priceReductionEnabled?: boolean;
   priceScheduleStartedAt?: string | null;
   nextPriceReductionAt?: string | null;
   productQty: string | number;

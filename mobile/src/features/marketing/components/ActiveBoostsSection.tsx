@@ -13,26 +13,39 @@ interface Props {
   loading: boolean;
 }
 
-/** Boosts still going out or needing the seller. Price drops waiting for a boost have their own tab. */
+const groups: { title: string; states: string[] }[] = [
+  { title: "Needs attention", states: ["not_posted", "failed", "needs_choice"] },
+  { title: "Posting now", states: ["posting"] },
+  { title: "Running", states: ["running"] },
+];
+
+/** Boosts still going out, grouped by what they are doing now: problems first, then posting, then waiting for the next price drop. */
 export function ActiveBoostsSection({ items, loading }: Props) {
   const router = useRouter();
   const active = items.filter((item) => activeStates.includes(boostState(item)));
 
   return (
     <View>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Running boosts ({active.length})</Text>
-      </View>
-
       {loading && items.length === 0 ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
 
-      {active.map((item) => (
-        <BoostHistoryCard
-          key={item.id}
-          item={item}
-          onOpen={() => router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: item.productId } })}
-        />
-      ))}
+      {groups.map((group) => {
+        const rows = active.filter((item) => group.states.includes(boostState(item)));
+        if (rows.length === 0) return null;
+        return (
+          <View key={group.title}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{group.title} ({rows.length})</Text>
+            </View>
+            {rows.map((item) => (
+              <BoostHistoryCard
+                key={item.id}
+                item={item}
+                onOpen={() => router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: item.productId } })}
+              />
+            ))}
+          </View>
+        );
+      })}
 
       {!loading && active.length === 0 ? (
         <View style={styles.empty}>
@@ -54,7 +67,7 @@ export function ActiveBoostsSection({ items, loading }: Props) {
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    marginTop: spacing.xs,
+    marginTop: spacing.base,
     marginBottom: spacing.xs,
   },
   sectionTitle: {

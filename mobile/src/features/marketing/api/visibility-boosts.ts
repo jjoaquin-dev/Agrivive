@@ -1,6 +1,6 @@
 import { apiFetch } from "../../../api/client";
 import type { SellerBoostPromptsResponse } from "../../notifications/types";
-import type { SellerBoostHistoryResponse, SellerProductBoostResponse } from "../types";
+import type { PriceDropHistoryResponse, SellerBoostHistoryResponse, SellerProductBoostResponse } from "../types";
 
 export function fetchSellerProductBoost(productId: string) {
   return apiFetch<SellerProductBoostResponse>(`/seller/products/${productId}/boost`);
@@ -65,4 +65,15 @@ export async function markAllSellerBoostPromptsRead() {
       return { updatedCount: 0 };
     }
   }
+}
+
+export function fetchPriceDropHistory(cursor?: string) {
+  return apiFetch<PriceDropHistoryResponse>(`/seller/price-drops${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`);
+}
+
+export function setAutoPriceDropEnabled(productId: string, enabled: boolean) {
+  return apiFetch<{ productId: string; enabled: boolean }>(`/seller/products/${productId}/price-reduction`, {
+    method: "PATCH",
+    body: JSON.stringify({ enabled }),
+  });
 }

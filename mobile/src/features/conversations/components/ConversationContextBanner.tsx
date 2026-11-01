@@ -1,20 +1,35 @@
 import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Sprout } from "lucide-react-native";
-import { fonts, radii, spacing } from "../../../theme";
+import { ChevronRight, Sprout } from "lucide-react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import type { Conversation } from "../types";
+import type { SellerOrder, SellerOrderStatus } from "../../orders/types";
 
-export function ConversationContextBanner({ conversation }: { conversation: Conversation }) {
+interface ConversationContextBannerProps {
+  conversation: Conversation;
+  order?: SellerOrder | null;
+}
+
+function getStatusPill(status?: SellerOrderStatus) {
+  switch (status) {
+    case "completed":
+      return { text: "Picked Up", bg: "#DCFCE7", color: colors.success };
+    case "cancelled":
+      return { text: "Cancelled", bg: "#FEE2E2", color: colors.error };
+    case "expired":
+      return { text: "Expired", bg: colors.border, color: colors.textMuted };
+    case "pending":
+    default:
+      return { text: "Waiting for Pickup", bg: "#FEF3C7", color: colors.warning };
+  }
+}
+
+export function ConversationContextBanner({ conversation, order }: ConversationContextBannerProps) {
   const router = useRouter();
-  const title = conversation.productName || "Surplus Produce";
-  const refCode = conversation.orderId
-    ? `ORD-${conversation.orderId.slice(0, 8).toUpperCase()}`
-    : conversation.productId
-    ? `PRD-${conversation.productId.slice(0, 8).toUpperCase()}`
-    : "Direct Chat";
+  const isOrder = Boolean(conversation.orderId);
 
-  const handleAction = () => {
+  const handlePress = () => {
     if (conversation.orderId) {
       router.push({ pathname: "/(app)/orders/[id]", params: { id: conversation.orderId } });
     } else if (conversation.productId) {
@@ -22,25 +37,54 @@ export function ConversationContextBanner({ conversation }: { conversation: Conv
     }
   };
 
+  if (isOrder) {
+    const produceName = order?.items?.[0]?.productName || conversation.productName || "Reservation";
+    const pill = getStatusPill(order?.status);
+
+    return (
+      <Pressable
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={`Reservation: ${produceName}, ${pill.text}`}
+        style={({ pressed }) => [styles.banner, pressed && styles.bannerPressed]}
+      >
+        <View style={styles.contentRow}>
+          <Text style={styles.produceName} numberOfLines={1}>
+            {produceName}
+          </Text>
+          <View style={[styles.statusPill, { backgroundColor: pill.bg }]}>
+            <Text style={[styles.statusPillText, { color: pill.color }]}>{pill.text}</Text>
+          </View>
+        </View>
+        <ChevronRight size={18} color={colors.textMuted} />
+      </Pressable>
+    );
+  }
+
+  const produceName = conversation.productName || "Listing";
+
   return (
-    <View style={styles.banner}>
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`Produce listing: ${produceName}`}
+      style={({ pressed }) => [styles.banner, pressed && styles.bannerPressed]}
+    >
       <View style={styles.thumbBox}>
         {conversation.productImageUrl ? (
           <Image source={{ uri: conversation.productImageUrl }} style={styles.thumb} />
         ) : (
-          <Sprout size={18} color="#16A34A" />
+          <Sprout size={20} color={colors.primary} />
         )}
       </View>
       <View style={styles.textColumn}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
+        <Text style={styles.produceName} numberOfLines={1}>
+          {produceName}
         </Text>
-        <Text style={styles.refCode}>{refCode}</Text>
+        <Text style={styles.listingLabel}>Listing</Text>
       </View>
-      <Pressable onPress={handleAction} style={styles.actionBtn}>
-        <Text style={styles.actionBtnText}>{conversation.orderId ? "View Order" : "View Listing"}</Text>
-      </Pressable>
-    </View>
+      <ChevronRight size={18} color={colors.textMuted} />
+    </Pressable>
   );
 }
 
@@ -48,28 +92,29 @@ const styles = StyleSheet.create({
   banner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F0FDF4",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#DCFCE7",
+    borderBottomColor: colors.border,
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.sm,
+    minHeight: 52,
   },
+  bannerPressed: { backgroundColor: colors.surfaceMuted },
   thumbBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#DCFCE7",
+    width: 40,
+    height: 40,
+    borderRadius: radii.sm,
+    backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    marginRight: spacing.sm,
+    marginRight: spacing.md,
   },
-  thumb: { width: 36, height: 36 },
+  thumb: { width: 40, height: 40 },
   textColumn: { flex: 1, marginRight: spacing.sm },
-  title: { fontFamily: fonts.heading.bold, fontSize: 13, color: "#166534" },
-  refCode: { fontFamily: fonts.body.regular, fontSize: 11, color: "#15803D" },
-  actionBtn: { backgroundColor: "#16A34A", borderRadius: radii.sm, paddingHorizontal: 12, paddingVertical: 6 },
-  actionBtnText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: "#FFFFFF" },
+  produceName: { fontFamily: fonts.heading.bold, fontSize: 14, color: colors.text, flexShrink: 1 },
+  listingLabel: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 1 },
+  contentRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.sm, marginRight: spacing.sm },
+  statusPill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
+  statusPillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
 });

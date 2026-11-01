@@ -22,7 +22,7 @@ export async function applySellerPromotionPriceReduction(
   const [current] = await tx.select().from(sellers_product)
     .where(eq(sellers_product.id, productId)).for("update").limit(1);
   if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 ||
-    !current.productPrice || !current.minimumPrice || Number(current.priceReductionAmount ?? 0) <= 0) return null;
+    !current.productPrice || !current.minimumPrice || !current.priceReductionEnabled || Number(current.priceReductionAmount ?? 0) <= 0) return null;
 
   const currentCents = cents(current.productPrice);
   const floor = cents(current.minimumPrice);

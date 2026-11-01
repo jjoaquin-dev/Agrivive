@@ -1,35 +1,54 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ChevronLeft, MoreVertical } from "lucide-react-native";
-import { fonts, spacing } from "../../../theme";
+import { ChevronLeft } from "lucide-react-native";
+import { colors, fonts, spacing } from "../../../theme";
 import { safeBack } from "../../../utils/safeBack";
 
 interface ConversationHeaderBarProps {
   senderName: string;
   avatarBg: string;
   initials: string;
+  buyerImage?: string | null;
 }
 
-export function ConversationHeaderBar({ senderName, avatarBg, initials }: ConversationHeaderBarProps) {
+export function ConversationHeaderBar({
+  senderName,
+  avatarBg,
+  initials,
+  buyerImage,
+}: ConversationHeaderBarProps) {
   const router = useRouter();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <View style={styles.navBar}>
-      <Pressable onPress={() => safeBack(router)} style={styles.iconBtn}>
-        <ChevronLeft size={22} color="#111827" />
+      <Pressable
+        onPress={() => safeBack(router)}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        style={styles.backButton}
+      >
+        <ChevronLeft size={22} color={colors.text} />
       </Pressable>
+
       <View style={[styles.avatarBox, { backgroundColor: avatarBg }]}>
-        <Text style={styles.initialsText}>{initials}</Text>
-        <View style={styles.onlineDot} />
+        {buyerImage && !imgError ? (
+          <Image
+            source={{ uri: buyerImage }}
+            style={styles.avatarImage}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <Text style={styles.initialsText}>{initials}</Text>
+        )}
       </View>
+
       <View style={styles.headerInfo}>
-        <Text style={styles.senderTitle}>{senderName}</Text>
-        <Text style={styles.onlineStatus}>● Online</Text>
+        <Text style={styles.senderTitle} numberOfLines={1}>
+          {senderName}
+        </Text>
       </View>
-      <Pressable style={styles.iconBtn}>
-        <MoreVertical size={20} color="#374151" />
-      </Pressable>
     </View>
   );
 }
@@ -41,16 +60,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-    backgroundColor: "#FFFFFF",
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.surfaceMuted,
   },
   avatarBox: {
     width: 40,
@@ -59,21 +78,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginLeft: spacing.sm,
-    position: "relative",
+    overflow: "hidden",
   },
-  initialsText: { fontFamily: fonts.heading.bold, fontSize: 14, color: "#FFFFFF" },
-  onlineDot: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#22C55E",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
-  headerInfo: { flex: 1, marginLeft: spacing.sm },
-  senderTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: "#111827" },
-  onlineStatus: { fontFamily: fonts.body.regular, fontSize: 12, color: "#16A34A" },
+  initialsText: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 14,
+    color: colors.white,
+  },
+  headerInfo: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  senderTitle: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 16,
+    color: colors.text,
+  },
 });

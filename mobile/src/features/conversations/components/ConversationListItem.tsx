@@ -23,8 +23,8 @@ function getWaitingInfo(lastMessageAt: string) {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
   const label = diffHours < 1 ? `Waiting ${Math.max(1, diffMins)} min` : `Waiting ${diffHours} hrs`;
-  let color = colors.textMuted;
-  let bg = colors.surfaceMuted;
+  let color: string = colors.textMuted;
+  let bg: string = colors.surfaceMuted;
 
   if (diffHours >= 24) {
     color = colors.error;
