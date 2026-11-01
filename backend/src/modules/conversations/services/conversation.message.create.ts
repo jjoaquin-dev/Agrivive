@@ -1,4 +1,4 @@
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "../../../db";
 import {
   conversation_messages,
@@ -24,6 +24,12 @@ export async function createConversationMessage(userId: string, conversationId: 
     )).limit(1).for("update");
     if (!conversation) throw new ConversationError(404, "Conversation not found");
     if (conversation.status === "closed") throw new ConversationError(409, "Conversation is closed");
+
+    const [blockedRow] = await tx.select({ id: conversation_participants.id }).from(conversation_participants).where(and(
+      eq(conversation_participants.conversationId, conversationId),
+      isNotNull(conversation_participants.blockedAt),
+    )).limit(1);
+    if (blockedRow) throw new ConversationError(403, "This chat is blocked");
 
     const [duplicate] = await tx.select().from(conversation_messages).where(and(
       eq(conversation_messages.conversationId, conversationId),

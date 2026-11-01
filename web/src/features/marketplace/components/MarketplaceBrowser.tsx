@@ -90,7 +90,7 @@ function MarketplaceBrowserContent() {
           {/* 5. Results */}
           <section>
             <div className="mb-4">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#457D00]">
+              <p className="type-eyebrow text-[#457D00]">
                 Today&apos;s selection
               </p>
               <h2 className="mt-1 font-heading text-2xl font-bold tracking-tight text-[#14231A]">

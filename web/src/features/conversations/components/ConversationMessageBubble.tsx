@@ -49,7 +49,7 @@ export function ConversationMessageBubble({
                 onError={() => setAvatarFailed(true)}
               />
             ) : (
-              <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-[10px] font-bold text-[#386600]">
+              <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-xs font-bold text-[#457D00]">
                 <Store className="size-3.5" />
               </div>
             )}
@@ -57,10 +57,10 @@ export function ConversationMessageBubble({
         )}
 
         {isGalleryCard ? (
-          <div className="w-full rounded-2xl bg-[#386018] p-3 text-white shadow-xs">
-            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-white/90">
+          <div className="w-full rounded-2xl bg-[#386018] p-3 text-white shadow-sm">
+            <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-white/90">
               <span>Stall Product Gallery</span>
-              <span className="text-[10px] text-white/75">3 Items</span>
+              <span className="text-xs text-white/75">3 Items</span>
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2">
               <div className="h-20 overflow-hidden rounded-xl bg-black/20">
@@ -76,9 +76,9 @@ export function ConversationMessageBubble({
           </div>
         ) : (
           <div
-            className={`rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-2xs ${
+            className={`rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
               isMine
-                ? "rounded-br-xs bg-[#386600] text-white"
+                ? "rounded-br-xs bg-[#457D00] text-white"
                 : "rounded-bl-xs border border-[#ECEEE4] bg-white text-[#202E1B]"
             }`}
           >
@@ -92,12 +92,12 @@ export function ConversationMessageBubble({
                       className="max-h-60 w-full rounded-xl object-cover transition-opacity hover:opacity-90"
                       onError={() => setImageFailed(true)}
                     />
-                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-xs">
+                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-lg bg-black/60 px-1.5 py-0.5 text-xs text-white backdrop-blur-xs">
                       <ExternalLink className="size-2.5" /> Full size
                     </span>
                   </a>
                 ) : (
-                  <div className="flex h-28 flex-col items-center justify-center gap-1 text-[11px] text-neutral-400">
+                  <div className="flex h-28 flex-col items-center justify-center gap-1 text-xs text-neutral-400">
                     <ImageOff className="size-4" />
                     <span>Could not load image</span>
                   </div>
@@ -109,9 +109,9 @@ export function ConversationMessageBubble({
         )}
       </div>
 
-      <div className={`mt-1 flex items-center gap-1 px-1 text-[10px] text-[#9EA899] ${isMine ? "justify-end" : "justify-start ml-9"}`}>
+      <div className={`mt-1 flex items-center gap-1 px-1 text-xs text-[#9EA899] ${isMine ? "justify-end" : "justify-start ml-9"}`}>
         <span>{formatMessageTime(item.createdAt)}</span>
-        {isMine ? <CheckCheck className="size-3 text-[#386600]" aria-label="Delivered" /> : null}
+        {isMine ? <CheckCheck className="size-3 text-[#457D00]" aria-label="Delivered" /> : null}
       </div>
     </div>
   );

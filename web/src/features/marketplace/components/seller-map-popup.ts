@@ -80,7 +80,7 @@ export function sellerMapPopupContent(seller: MarketplaceSellerMapResult) {
 
     <div class="mt-3 flex items-center gap-2 pt-3 border-t border-[#E5E2DA]">
       <a
-        class="inline-flex h-10 flex-1 items-center justify-center rounded-[12px] bg-[#457D00] px-3 text-xs font-semibold text-white shadow-xs transition hover:bg-[#386600] active:scale-[0.98]"
+        class="inline-flex h-10 flex-1 items-center justify-center rounded-[12px] bg-[#457D00] px-3 text-xs font-semibold text-white shadow-xs transition hover:bg-[#457D00]/90 active:scale-[0.98]"
         style="color: #ffffff !important; text-decoration: none !important;"
         href="/sellers/${encodeURIComponent(seller.id)}"
       >

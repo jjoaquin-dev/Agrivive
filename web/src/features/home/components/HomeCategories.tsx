@@ -82,7 +82,7 @@ export function HomeCategories() {
               <div className="category-lift">
               <Link
                 href={cat.href}
-                className={`group relative flex aspect-[4/5] flex-col items-center justify-between overflow-hidden rounded-[24px] border border-neutral-200/70 bg-white p-4 transition-[transform,border-color,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-[0_12px_28px_-12px_rgba(20,50,30,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF9F5] ${cat.hoverBorder}`}
+                className={`group relative flex aspect-[4/5] flex-col items-center justify-between overflow-hidden rounded-2xl border border-neutral-200/70 bg-[#F4F7EE] p-4 transition-[transform,border-color,box-shadow] duration-200 ease-settle hover:-translate-y-1 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF9F5] ${cat.hoverBorder}`}
               >
                 {/* Soft wash behind the produce */}
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b ${cat.topGradient}`} />

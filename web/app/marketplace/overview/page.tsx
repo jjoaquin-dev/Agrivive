@@ -22,6 +22,7 @@ export default function MarketplaceOverviewPage() {
   const [data, setData] = useState<MarketplaceOverviewResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -39,7 +40,7 @@ export default function MarketplaceOverviewPage() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [range]);
+  }, [range, retryKey]);
 
   const handlePrint = () => {
     window.print();
@@ -67,13 +68,16 @@ export default function MarketplaceOverviewPage() {
               </div>
             </div>
           ) : error && !data ? (
-            <div className="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-xs">
+            <div className="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
               <AlertCircle className="mx-auto size-8 text-red-600" />
               <p className="mt-2 text-sm font-semibold text-red-700">{error}</p>
               <button
                 type="button"
-                onClick={() => setRange(range)}
-                className="mt-4 rounded-xl bg-[#457D00] px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#386600]"
+                onClick={() => {
+                  setError(null);
+                  setRetryKey((key) => key + 1);
+                }}
+                className="mt-4 rounded-xl bg-[#457D00] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#457D00]/90"
               >
                 Retry
               </button>

@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowUpRight, Heart, MapPin } from "lucide-react";
 
 export function MarketplaceFooter() {
   return (
-    <footer className="relative mt-16 overflow-hidden bg-agrivive-primary font-brand text-white">
+    <footer className="relative mt-16 overflow-hidden bg-agrivive-primary font-heading text-white">
       {/* Top Grid: Brand & Categorized Navigation Links */}
       <div className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-20 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">

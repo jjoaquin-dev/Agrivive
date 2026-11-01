@@ -109,7 +109,7 @@ export function OrderPickupStepper({ status, createdAt, expiresAt, shopName, can
   const ExplanationIcon = explanation.icon;
 
   return (
-    <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-6 shadow-sm" aria-label="Pickup progress">
+    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-6 shadow-sm" aria-label="Pickup progress">
       <div className="relative flex items-center justify-between">
         {/* Connecting track lines */}
         <div className="absolute left-8 right-8 top-5 -translate-y-1/2 h-0.5 bg-[#E8E8E8]" aria-hidden="true" />
@@ -150,7 +150,7 @@ export function OrderPickupStepper({ status, createdAt, expiresAt, shopName, can
       </div>
 
       {/* Explanation Banner matching Photo 2 */}
-      <div className={`mt-5 flex items-start gap-3 rounded-[14px] p-4 ${explanation.container}`}>
+      <div className={`mt-5 flex items-start gap-3 rounded-xl p-4 ${explanation.container}`}>
         <ExplanationIcon className={`size-5 shrink-0 mt-0.5 ${explanation.iconColor}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className={`text-[13px] font-bold sm:text-[14px] ${explanation.titleColor}`}>

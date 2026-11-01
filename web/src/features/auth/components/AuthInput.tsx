@@ -42,7 +42,7 @@ export function AuthInput({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
           className={cn(
-            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white text-sm font-medium text-[#14231A] shadow-2xs transition-all placeholder:text-[#5F7367]",
+            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white text-sm font-medium text-[#14231A] shadow-sm transition-all placeholder:text-[#5F7367]",
             "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40 focus-visible:ring-offset-0",
             icon ? "pl-11 pr-5" : "px-5",
             error && "border-destructive/80 focus:border-destructive focus-visible:ring-destructive/40",

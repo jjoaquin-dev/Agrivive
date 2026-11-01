@@ -17,10 +17,7 @@ import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalCo
 import { getBuyerProfile } from "@/src/features/profile/api/profile";
 import { CartSellerHeaderComponent } from "./CartSellerHeaderComponent";
 import { CartItemComponent } from "./CartItemComponent";
-
-function money(value: number) {
-  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value);
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 export function CartDrawer() {
   const pathname = usePathname();
@@ -94,7 +91,7 @@ export function CartDrawer() {
       <SheetContent side="right" className="flex flex-col gap-0 bg-agrivive-background sm:max-w-lg p-0">
         <SheetHeader className="border-b border-border/80 bg-white p-5 pr-14 text-left">
           <SheetTitle className="font-heading text-xl font-bold text-foreground">
-            Your cart <span className="font-sans text-sm font-medium text-muted-foreground">({itemCount} items)</span>
+            Your cart <span className="font-body text-sm font-medium text-muted-foreground">({itemCount} items)</span>
           </SheetTitle>
           <SheetDescription className="text-xs text-muted-foreground">
             Review produce from local stalls. Each store receives its own pickup pass.
@@ -102,7 +99,7 @@ export function CartDrawer() {
         </SheetHeader>
 
         {!isReady ? (
-          <div className="m-6 h-40 animate-pulse rounded-[20px] bg-white" aria-label="Loading cart" />
+          <div className="m-6 h-40 animate-pulse rounded-2xl bg-white" aria-label="Loading cart" />
         ) : items.length > 0 ? (
           <div data-lenis-prevent className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-5">
             {trustWarning ? (
@@ -169,7 +166,7 @@ export function CartDrawer() {
             >
               {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" className="transition-transform duration-200 group-hover:translate-x-1" />
             </Button>
-            <p className="pt-2 text-center text-[11px] text-muted-foreground">
+            <p className="pt-2 text-center text-xs text-muted-foreground">
               Direct pickup payment at stall. No upfront card required.
             </p>
           </SheetFooter>

@@ -106,7 +106,7 @@ export function OrderDetail() {
   });
 
   if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) {
-    return <main className="min-h-screen bg-[#FDFDFD] p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-[16px] border border-[#E8E8E8] bg-white" /></div></main>;
+    return <main className="min-h-screen bg-[#FDFDFD] p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-2xl border border-[#E8E8E8] bg-white" /></div></main>;
   }
   if (error && !order) {
     return (

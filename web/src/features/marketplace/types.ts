@@ -63,6 +63,7 @@ export type MarketplaceProduct = {
   availability: "available" | "sold_out";
   averageRating: string | null;
   reviewCount: number;
+  visibilityTier?: "Priority Boost" | "Standard Exposure" | "Basic/Hold" | null;
   seller: MarketplaceSeller;
 };
 

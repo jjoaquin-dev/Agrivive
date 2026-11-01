@@ -123,7 +123,7 @@ export function MarketplacePriceSlider({
       </div>
 
       {/* Tick Marks */}
-      <div className="flex justify-between px-0.5 text-[10px] font-semibold text-neutral-400 select-none">
+      <div className="flex justify-between px-0.5 text-xs font-semibold text-neutral-400 select-none">
         {ticks.map((tick) => (
           <span key={tick}>{tick}</span>
         ))}

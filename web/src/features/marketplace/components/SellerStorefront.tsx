@@ -20,7 +20,7 @@ function StorefrontLoading() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 lg:py-8" aria-label="Loading seller page" aria-busy="true">
       <PageContainer>
-        <Skeleton className="h-40 rounded-[20px]" />
+        <Skeleton className="h-40 rounded-2xl" />
         <Skeleton className="mt-8 h-8 w-56" />
         <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((item) => <Skeleton key={item} className="h-[380px] rounded-2xl" />)}
@@ -114,7 +114,7 @@ export function SellerStorefront() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
-        <div className="mb-6">
+        <div>
           <Breadcrumbs items={[{ label: "Marketplace", href: "/marketplace" }, { label: seller?.shopName ?? "Stall" }]} />
         </div>
 

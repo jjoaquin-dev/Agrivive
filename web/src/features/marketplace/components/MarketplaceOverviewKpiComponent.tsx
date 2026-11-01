@@ -43,7 +43,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
         return (
           <div
             key={card.title}
-            className="flex flex-col justify-between rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-xs transition hover:shadow-md"
+            className="flex flex-col justify-between rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-sm transition hover:shadow-md"
           >
             <div>
               <div className="flex items-center justify-between">
@@ -60,7 +60,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
+            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
               <span className="font-semibold text-neutral-700">{card.badge}</span>
               <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
                 <TrendingUp className="size-3" /> Live Database

@@ -33,7 +33,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
     <div
       role="dialog"
       aria-label="Notifications"
-      className="absolute right-0 top-full mt-2.5 w-[380px] sm:w-[420px] max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#E5E2DA] bg-white shadow-[0_20px_50px_rgba(31,77,58,0.14)] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      className="absolute right-0 top-full mt-2.5 w-[380px] sm:w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[#E5E2DA] bg-white shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
     >
       {/* Top Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
@@ -44,9 +44,9 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
           type="button"
           onClick={() => void markAllRead()}
           disabled={!unreadCount || saving}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#457D00] hover:text-[#386600] disabled:text-neutral-400 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#457D00] hover:text-[#457D00]/80 disabled:text-neutral-400 disabled:cursor-not-allowed transition-colors"
         >
-          <Check className="size-3.5 stroke-[2.2]" />
+          <Check className="size-3.5" />
           {saving ? "Saving…" : "Mark all as read"}
         </button>
       </div>
@@ -63,13 +63,13 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-white text-[#202E1B] shadow-2xs"
+                    ? "bg-white text-[#202E1B] shadow-sm"
                     : "text-[#7A8875] hover:text-[#202E1B]"
                 }`}
               >
                 <span>{tab.label}</span>
                 <span
-                  className={`inline-flex size-[18px] shrink-0 items-center justify-center rounded-full text-[10px] font-bold leading-none ${
+                  className={`inline-flex size-[18px] shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none ${
                     isActive
                       ? "bg-[#D2E794] text-[#244218]"
                       : "bg-[#EAECE0] text-[#7A8875]"
@@ -127,7 +127,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
         <Link
           href="/notifications"
           onClick={onClose}
-          className="inline-flex items-center justify-center rounded-xl bg-[#457D00] px-4 py-2 text-xs font-semibold tracking-wide text-white shadow-2xs hover:bg-[#386600] active:scale-95 transition-all"
+          className="inline-flex items-center justify-center rounded-xl bg-[#457D00] px-4 py-2 text-xs font-semibold tracking-wide text-white shadow-sm hover:bg-[#457D00]/90 active:scale-95 transition-all"
         >
           View all notifications
         </Link>

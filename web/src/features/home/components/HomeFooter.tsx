@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowUpRight, Heart, MapPin } from "lucide-react";
 
 export function HomeFooter() {
   return (
-    <footer className="relative overflow-hidden bg-agrivive-primary font-brand text-white">
+    <footer className="relative overflow-hidden bg-agrivive-primary font-heading text-white">
       {/* Top Grid: Brand & Categorized Navigation Links */}
       <div className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-24 lg:px-8">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-5 lg:gap-10">
@@ -30,12 +30,12 @@ export function HomeFooter() {
           <div>
             <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">Categories</p>
             <ul className="mt-5 space-y-3 text-[15px] text-emerald-50/80">
-              <li><Link href="/marketplace?productType=Leafy+Greens" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Leafy Greens</Link></li>
-              <li><Link href="/marketplace?productType=Fruit+Vegetables" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Fruit Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Root+Vegetables" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Root Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Pod+Vegetables" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Pod Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Tuber+Vegetables" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Tuber Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Bulb+Vegetables" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Bulb Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Leafy+Greens" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Leafy Greens</Link></li>
+              <li><Link href="/marketplace?productType=Fruit+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Fruit Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Root+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Root Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Pod+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Pod Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Tuber+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Tuber Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Bulb+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Bulb Vegetables</Link></li>
             </ul>
           </div>
 
@@ -43,11 +43,11 @@ export function HomeFooter() {
           <div>
             <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">Explore</p>
             <ul className="mt-5 space-y-3 text-[15px] text-emerald-50/80">
-              <li><a href="#categories" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Categories</a></li>
-              <li><a href="#live-inventory" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Live Surplus</a></li>
-              <li><a href="#how-it-works" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">How It Works</a></li>
-              <li><a href="#why-agrivive" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Why Surplus?</a></li>
-              <li><a href="#faq" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">FAQ</a></li>
+              <li><a href="#categories" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Categories</a></li>
+              <li><a href="#live-inventory" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Live Surplus</a></li>
+              <li><a href="#how-it-works" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">How It Works</a></li>
+              <li><a href="#why-agrivive" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Why Surplus?</a></li>
+              <li><a href="#faq" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">FAQ</a></li>
             </ul>
           </div>
 
@@ -55,8 +55,8 @@ export function HomeFooter() {
           <div>
             <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">Get Started</p>
             <ul className="mt-5 space-y-3 text-[15px] text-emerald-50/80">
-              <li><Link href="/login" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Sign In</Link></li>
-              <li><Link href="/signup" className="rounded-sm transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Create Account</Link></li>
+              <li><Link href="/login" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Sign In</Link></li>
+              <li><Link href="/signup" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Create Account</Link></li>
               <li><Link href="/marketplace" className="inline-flex items-center gap-1 text-[#FCEC9A] hover:underline">Market Map <ArrowUpRight className="size-3.5" /></Link></li>
               <li>
                 <a

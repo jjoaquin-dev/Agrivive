@@ -36,7 +36,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-agrivive-border/80 bg-white/95 shadow-[0_1px_0_rgba(31,77,58,0.03)] backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-agrivive-border/80 bg-white/95 shadow-md backdrop-blur">
       <PageContainer className="flex min-h-[68px] items-center justify-between gap-5">
         <Link
           href="/"
@@ -55,21 +55,21 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-2 text-sm font-semibold md:flex" aria-label="Primary navigation">
           <Link href="/marketplace" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-agrivive-background px-3 text-agrivive-primary hover:bg-agrivive-sage/25">
-            <Store aria-hidden="true" size={18} strokeWidth={1.8} /> Marketplace
+            <Store aria-hidden="true" size={18} /> Marketplace
           </Link>
           <Link href="/marketplace/overview" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
-            <BarChart3 aria-hidden="true" size={18} strokeWidth={1.8} /> Overview
+            <BarChart3 aria-hidden="true" size={18} /> Overview
           </Link>
           <Link href="/orders" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
-            <ClipboardList aria-hidden="true" size={18} strokeWidth={1.8} /> Orders
+            <ClipboardList aria-hidden="true" size={18} /> Orders
           </Link>
           {session?.user ? (
             <Link href="/notifications" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
-              <Bell aria-hidden="true" size={18} strokeWidth={1.8} /> Updates
+              <Bell aria-hidden="true" size={18} /> Updates
             </Link>
           ) : null}
           <Link href="/cart" className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary" aria-label={`Cart, ${cartReady ? itemCount : 0} items`}>
-            <ShoppingCart aria-hidden="true" size={18} strokeWidth={1.8} /> Cart
+            <ShoppingCart aria-hidden="true" size={18} /> Cart
             {cartReady && itemCount ? (
               <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-agrivive-primary px-1.5 text-xs text-white">
                 {itemCount}
@@ -81,7 +81,7 @@ export function SiteHeader() {
         <div className="relative hidden items-center gap-3 md:flex">
           {isPending ? (
             <span
-              className="h-11 w-28 animate-pulse rounded-[10px] bg-agrivive-background"
+              className="h-11 w-28 animate-pulse rounded-xl bg-agrivive-background"
               aria-label="Checking account"
             />
           ) : session?.user ? (
@@ -92,16 +92,16 @@ export function SiteHeader() {
                 aria-expanded={profileOpen}
                 aria-haspopup="menu"
                 aria-label={`Open profile for ${userName}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-[10px] px-3 text-sm font-semibold text-agrivive-primary hover:bg-agrivive-background"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-agrivive-primary hover:bg-agrivive-background"
               >
-                <UserCircle aria-hidden="true" size={20} strokeWidth={1.8} />
+                <UserCircle aria-hidden="true" size={20} />
                 <span>Profile</span>
                 <span className="max-w-36 truncate">{userName}</span>
               </button>
               {profileOpen ? (
                 <div
                   role="menu"
-                  className="absolute right-0 top-14 z-20 w-64 rounded-2xl border border-agrivive-border bg-white p-2 shadow-[0_16px_40px_rgba(31,77,58,0.14)]"
+                  className="absolute right-0 top-14 z-20 w-64 rounded-2xl border border-agrivive-border bg-white p-2 shadow-md"
                 >
                   <div className="border-b border-agrivive-border px-3 py-2">
                     <p className="text-xs text-agrivive-muted">Signed in as</p>
@@ -147,7 +147,7 @@ export function SiteHeader() {
               <Link href="/login" className="inline-flex min-h-10 items-center rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary">
                 Sign in
               </Link>
-              <Link href="/signup" className="inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]">
+              <Link href="/signup" className="inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-sm transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]">
                 Register
               </Link>
             </>
@@ -162,7 +162,7 @@ export function SiteHeader() {
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((current) => !current)}
         >
-          {menuOpen ? <X aria-hidden="true" size={20} strokeWidth={2} /> : <Menu aria-hidden="true" size={20} strokeWidth={2} />}
+          {menuOpen ? <X aria-hidden="true" size={20} /> : <Menu aria-hidden="true" size={20} />}
         </button>
       </PageContainer>
 

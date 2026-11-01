@@ -35,7 +35,7 @@ export function MarketplaceProductGrid({
     return (
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {[1, 2, 3, 4, 5, 6].map((item) => (
-          <Skeleton key={item} className="h-80 rounded-[18px]" />
+          <Skeleton key={item} className="h-80 rounded-2xl" />
         ))}
       </div>
     );

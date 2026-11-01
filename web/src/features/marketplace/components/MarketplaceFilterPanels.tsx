@@ -6,7 +6,7 @@ import { MarketplacePriceSlider } from "./MarketplacePriceSlider";
 const distances = ["1km", "3km", "5km", "10km"];
 
 const choiceBase = "flex cursor-pointer select-none items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457d00]/30";
-const choiceSelected = "border-[#457d00]/50 bg-[#457d00]/8 font-bold text-[#2F5400]";
+const choiceSelected = "border-[#457d00]/50 bg-[#457d00]/8 font-bold text-[#14231A]";
 const choiceIdle = "border-neutral-200/80 bg-white font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50";
 
 type FilterChange = (key: keyof MarketplaceFilterValues, value: string) => void;
@@ -14,7 +14,7 @@ type FilterChange = (key: keyof MarketplaceFilterValues, value: string) => void;
 export function PriceFilterPanel({ values, onChange }: { values: MarketplaceFilterValues; onChange: FilterChange }) {
   return (
     <div>
-      <span className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-[#5F7367]">Price range (PHP)</span>
+      <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#5F7367]">Price range (PHP)</span>
       <MarketplacePriceSlider
         minPrice={values.minPrice}
         maxPrice={values.maxPrice}
@@ -44,12 +44,12 @@ export function DistanceFilterPanel({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-[#5F7367]">Seller distance</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-[#5F7367]">Seller distance</span>
         {hasLocation ? (
           <button
             type="button"
             onClick={() => onChange("radiusKm", "")}
-            className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 cursor-pointer"
+            className="rounded-full px-2 py-0.5 text-xs font-semibold text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 cursor-pointer"
           >
             Clear
           </button>
@@ -72,7 +72,7 @@ export function DistanceFilterPanel({
         })}
       </div>
 
-      <div className="mt-2.5 text-[11px] leading-relaxed">
+      <div className="mt-2.5 text-xs leading-relaxed">
         {locationStatus === "loading" ? (
           <p className="animate-pulse font-medium text-[#457d00]">Finding your location…</p>
         ) : locationStatus === "error" ? (

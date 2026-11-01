@@ -103,7 +103,7 @@ export function ProfileTwoFactorSetupWizard({
         <Button
           type="submit"
           disabled={loading || !password}
-          className="h-11 rounded-full bg-[#386600] px-5 text-xs font-bold text-white hover:bg-[#386600]/90"
+          className="h-11 rounded-full bg-[#457D00] px-5 text-xs font-bold text-white hover:bg-[#457D00]/90/90"
         >
           {loading && <Loader2 className="size-3.5 animate-spin" />}
           <span>Continue</span>

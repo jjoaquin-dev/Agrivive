@@ -12,7 +12,7 @@ export function ReviewSummaryCard({ average, count, breakdown, singular }: Revie
   const averageNumber = Number(average ?? 0);
 
   return (
-    <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
       <div className="text-center">
         <p className="font-heading text-[36px] font-bold leading-tight text-[#14231A]">
           {averageNumber.toFixed(1)}

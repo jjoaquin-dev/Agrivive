@@ -86,7 +86,7 @@ export function ProductListingActions({ productId, productName }: { productId: s
           <MoreHorizontal className="size-4" />
         </button>
         {menuOpen ? (
-          <div role="menu" className="absolute right-0 top-12 z-20 w-44 overflow-hidden rounded-2xl border border-[#E5E2DA] bg-white p-1.5 shadow-[0_12px_28px_rgba(31,77,58,0.12)]">
+          <div role="menu" className="absolute right-0 top-12 z-20 w-44 overflow-hidden rounded-2xl border border-[#E5E2DA] bg-white p-1.5 shadow-md">
             <button
               type="button"
               role="menuitem"

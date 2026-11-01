@@ -62,7 +62,7 @@ export function ProfileTwoFactorBackupCodes({
         {backupCodes.map((code, index) => (
           <div
             key={index}
-            className="flex items-center justify-center rounded-xl border border-border/60 bg-white px-3 py-2 text-center font-mono text-xs font-semibold text-neutral-800 shadow-2xs"
+            className="flex items-center justify-center rounded-xl border border-border/60 bg-white px-3 py-2 text-center font-mono text-xs font-semibold text-neutral-800 shadow-sm"
           >
             {code}
           </div>
@@ -106,7 +106,7 @@ export function ProfileTwoFactorBackupCodes({
         <Button
           type="button"
           onClick={onFinish}
-          className="h-11 w-full rounded-full bg-[#386600] px-5 text-xs font-bold text-white hover:bg-[#386600]/90"
+          className="h-11 w-full rounded-full bg-[#457D00] px-5 text-xs font-bold text-white hover:bg-[#457D00]/90/90"
         >
           <ShieldCheck className="size-4" />
           <span>I Have Saved My Backup Codes</span>

@@ -14,7 +14,7 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
   });
 
   return (
-    <div className="hidden print:block p-8 font-sans text-neutral-900 bg-white">
+    <div className="hidden print:block p-8 font-body text-neutral-900 bg-white">
       {/* Official Header */}
       <div className="border-b-2 border-neutral-900 pb-4 mb-6">
         <div className="flex items-center justify-between">
@@ -36,15 +36,15 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
       {/* KPI Summary Grid */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="border border-neutral-300 p-3 rounded-lg">
-          <p className="text-[10px] font-bold uppercase text-neutral-500">Total Food Rescued</p>
+          <p className="text-xs font-bold uppercase text-neutral-500">Total Food Rescued</p>
           <p className="text-xl font-black mt-1">{data.kpis.totalRescuedQty.toLocaleString()} kg</p>
         </div>
         <div className="border border-neutral-300 p-3 rounded-lg">
-          <p className="text-[10px] font-bold uppercase text-neutral-500">Active Surplus Listings</p>
+          <p className="text-xs font-bold uppercase text-neutral-500">Active Surplus Listings</p>
           <p className="text-xl font-black mt-1">{data.kpis.activeListings}</p>
         </div>
         <div className="border border-neutral-300 p-3 rounded-lg">
-          <p className="text-[10px] font-bold uppercase text-neutral-500">Pickup Fulfillment Rate</p>
+          <p className="text-xs font-bold uppercase text-neutral-500">Pickup Fulfillment Rate</p>
           <p className="text-xl font-black mt-1">{data.kpis.fulfillmentRate}%</p>
         </div>
       </div>
@@ -87,7 +87,7 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
         </h2>
         <div className="grid grid-cols-2 gap-1.5">
           {data.categoryBreakdown.map((c) => (
-            <div key={c.category} className="border border-neutral-200 p-2 rounded flex justify-between text-xs">
+            <div key={c.category} className="border border-neutral-200 p-2 rounded-lg flex justify-between text-xs">
               <span className="font-bold">{c.category}</span>
               <span>{c.activeCount} active listings ({c.percentage}%)</span>
             </div>
@@ -96,7 +96,7 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
       </div>
 
       {/* Document Footer */}
-      <div className="border-t border-neutral-400 pt-3 text-[10px] text-neutral-500 flex justify-between">
+      <div className="border-t border-neutral-400 pt-3 text-xs text-neutral-500 flex justify-between">
         <span>Agrivive Open Agricultural Intelligence Platform</span>
         <span>Verified Public Overview Record</span>
       </div>

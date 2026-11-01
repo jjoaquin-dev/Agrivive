@@ -13,7 +13,7 @@ export const NotificationEmptyStateComponent = ({
   onClearFilter,
 }: NotificationEmptyStateComponentProps) => {
   return (
-    <div className="relative overflow-hidden rounded-[24px] border border-[#E5E2DA] bg-white p-8 sm:p-12 text-center shadow-[0_16px_40px_-12px_rgba(31,77,58,0.08)]">
+    <div className="relative overflow-hidden rounded-2xl border border-[#E5E2DA] bg-white p-8 sm:p-12 text-center shadow-md">
       {/* Ambient warm background glow */}
       <div
         className="pointer-events-none absolute -top-24 left-1/2 size-72 -translate-x-1/2 rounded-full bg-[#457D00]/5 blur-3xl"
@@ -21,9 +21,9 @@ export const NotificationEmptyStateComponent = ({
       />
 
       {/* Center Icon Badge */}
-      <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl bg-[#457D00]/10 text-[#457D00] ring-8 ring-[#457D00]/5 shadow-2xs">
-        <Bell className="size-8 stroke-[1.8]" />
-        <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#457D00] text-white shadow-2xs">
+      <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl bg-[#457D00]/10 text-[#457D00] ring-8 ring-[#457D00]/5 shadow-sm">
+        <Bell className="size-8" />
+        <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#457D00] text-white shadow-sm">
           <Sparkles className="size-3" />
         </span>
       </div>
@@ -52,7 +52,7 @@ export const NotificationEmptyStateComponent = ({
 
         <Link
           href="/marketplace"
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#457D00] px-5 text-xs font-semibold tracking-wide text-white shadow-2xs transition-all hover:bg-[#386600] active:scale-95"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#457D00] px-5 text-xs font-semibold tracking-wide text-white shadow-sm transition-all hover:bg-[#457D00]/90 active:scale-95"
         >
           Explore Surplus Produce
           <ArrowRight className="size-4" />
@@ -75,7 +75,7 @@ export const NotificationEmptyStateComponent = ({
           </span>
           <div>
             <p className="text-xs font-semibold text-neutral-900">Morning Produce Drops</p>
-            <p className="mt-0.5 text-[11px] text-neutral-500">
+            <p className="mt-0.5 text-xs text-neutral-500">
               Follow stalls to get alerted when fresh crates are listed at discounted rates.
             </p>
           </div>
@@ -87,7 +87,7 @@ export const NotificationEmptyStateComponent = ({
           </span>
           <div>
             <p className="text-xs font-semibold text-neutral-900">Hold Expirations</p>
-            <p className="mt-0.5 text-[11px] text-neutral-500">
+            <p className="mt-0.5 text-xs text-neutral-500">
               Timely reminders before your 24-hour reservation pickup pass window closes.
             </p>
           </div>
@@ -99,7 +99,7 @@ export const NotificationEmptyStateComponent = ({
           </span>
           <div>
             <p className="text-xs font-semibold text-neutral-900">Stall Pickup Alerts</p>
-            <p className="mt-0.5 text-[11px] text-neutral-500">
+            <p className="mt-0.5 text-xs text-neutral-500">
               Instant confirmations when market sellers verify your digital QR pickup pass.
             </p>
           </div>

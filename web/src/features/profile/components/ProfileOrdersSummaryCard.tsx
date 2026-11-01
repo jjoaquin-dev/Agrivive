@@ -17,7 +17,7 @@ interface ProfileOrdersSummaryCardProps {
 
 export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: ProfileOrdersSummaryCardProps) {
   return (
-    <Card className="rounded-[22px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)] sm:p-7">
+    <Card className="rounded-2xl border border-border/80 bg-white p-6 shadow-md sm:p-7">
       <div className="flex items-center justify-between border-b border-border/70 pb-4">
         <div className="flex items-center gap-2.5">
           <ClipboardList className="size-5 text-agrivive-primary" />

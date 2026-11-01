@@ -9,7 +9,7 @@ interface MarketplaceHeroProps {
 
 export function MarketplaceHero(_props: MarketplaceHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-neutral-800/40 font-brand shadow-xs">
+    <section className="relative overflow-hidden rounded-2xl border border-neutral-800/40 font-heading shadow-sm">
       {/* Full Card Background Image */}
       <Image
         src="/brand/marketplace-hero-farm-stall.jpg"
@@ -29,10 +29,10 @@ export function MarketplaceHero(_props: MarketplaceHeroProps) {
           <p className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#FCEC9A]">
             Surplus Today, Value for Everyone
           </p>
-          <h1 className="mt-2.5 font-heading text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[44px] drop-shadow-xs">
+          <h1 className="mt-2.5 font-heading text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-[44px] drop-shadow-sm">
             Your local connection to affordable, marketable vegetables
           </h1>
-          <p className="mt-3.5 max-w-lg text-base sm:text-lg font-medium leading-relaxed text-white/90 drop-shadow-xs">
+          <p className="mt-3.5 max-w-lg text-base sm:text-lg font-medium leading-relaxed text-white/90 drop-shadow-sm">
             Discover surplus vegetables from local vendors at prices that work for you.
           </p>
         </div>

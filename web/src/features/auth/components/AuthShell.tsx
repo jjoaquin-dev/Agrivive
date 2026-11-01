@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 function AuthVideoPanel() {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[28px] bg-[#F2F3F0]">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-[#F2F3F0]">
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <video
           src="/brand/sign-in-video.mp4"
@@ -92,7 +92,7 @@ export function AuthShell({
 
   // Video column -------------------------------------------------------------
   const videoColumn = (
-    <div className="hidden py-5 pl-24 pr-5 lg:flex lg:h-[80vh] lg:flex-col lg:self-center">
+    <div className="hidden py-5 pl-24 pr-5 lg:sticky lg:top-10 lg:flex lg:h-[80vh] lg:flex-col lg:self-start">
       <AuthVideoPanel />
     </div>
   );

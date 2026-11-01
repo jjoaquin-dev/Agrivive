@@ -77,18 +77,18 @@ export function HomeHowItWorks() {
           {steps.map(({ title, text, Icon, bg, ink }, i) => (
             <li key={title} className="sticky" style={{ top: `calc(var(--steps-top) + ${i * PEEK}px)` }}>
               <article
-                className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-[2rem] px-6 py-12 text-center will-change-transform sm:min-h-[min(70dvh,520px)] sm:px-12"
+                className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl px-6 py-12 text-center will-change-transform sm:min-h-[min(70dvh,520px)] sm:px-12"
                 style={{ backgroundColor: bg, color: ink }}
               >
                 {/* Big step number behind the text */}
-                <span aria-hidden="true" className="pointer-events-none absolute -right-2 -top-10 select-none font-brand text-[22rem] font-bold leading-none opacity-[0.12] sm:text-[30rem]">
+                <span aria-hidden="true" className="pointer-events-none absolute -right-2 -top-10 select-none font-heading text-[22rem] font-bold leading-none opacity-[0.12] sm:text-[30rem]">
                   {i + 1}
                 </span>
                 <p className="relative text-sm font-bold uppercase tracking-widest opacity-80">Step {i + 1} of {steps.length}</p>
                 <span className="relative mt-5 flex size-14 items-center justify-center rounded-full bg-white/70">
                   <Icon className="size-7" aria-hidden="true" />
                 </span>
-                <h3 className="relative mt-5 font-brand text-4xl font-bold tracking-tight sm:text-6xl">{title}</h3>
+                <h3 className="relative mt-5 font-heading text-4xl font-bold tracking-tight sm:text-6xl">{title}</h3>
                 <p className="relative mt-4 max-w-md font-body text-lg leading-relaxed sm:text-xl">{text}</p>
               </article>
             </li>

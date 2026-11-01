@@ -4,19 +4,13 @@ import Link from "next/link";
 import { ShoppingBasket } from "lucide-react";
 import type { BuyerOrderItem } from "@/src/features/marketplace/types";
 import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 export function OrderItemsCard({ items, status = "pending" }: { items: BuyerOrderItem[]; status?: string }) {
   const badgeLabel = status === "completed" ? "Picked up" : status === "expired" ? "Expired" : status === "cancelled" ? "Cancelled" : "Ready at stall";
 
   return (
-    <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2">
         <ShoppingBasket className="size-5 text-[#457D00]" aria-hidden="true" />
         <h2 className="text-[18px] font-semibold text-[#14231A]">
@@ -33,7 +27,7 @@ export function OrderItemsCard({ items, status = "pending" }: { items: BuyerOrde
           >
             {/* Produce thumbnail & Info */}
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-[12px] border border-[#E8E8E8] bg-[#F8F6F1]">
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-[#F8F6F1]">
                 <ProductImage
                   src={item.imageUrl}
                   alt={item.productName}

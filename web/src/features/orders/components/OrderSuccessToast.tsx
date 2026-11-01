@@ -31,8 +31,8 @@ export function OrderSuccessToast({
       aria-live="polite"
       className="fixed top-20 right-4 z-50 w-full max-w-sm sm:right-6 animate-in fade-in slide-in-from-top-3 duration-200"
     >
-      <Alert variant="success" className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-10 shadow-[0_12px_28px_rgba(0,0,0,0.08)] backdrop-blur-md">
-        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-xs">
+      <Alert variant="success" className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-10 shadow-md backdrop-blur-md">
+        <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
           <CheckCircle2 className="size-4" />
         </span>
         <div className="flex-1 min-w-0">

@@ -52,7 +52,7 @@ export function ProfilePersonalCard({ user }: ProfilePersonalCardProps) {
   }
 
   return (
-    <Card className="rounded-[20px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+    <Card className="rounded-2xl border border-border/80 bg-white p-6 shadow-md">
       <div className="border-b border-border/70 pb-4">
         <h2 className="font-heading text-lg font-bold">Personal Information</h2>
         <p className="text-sm text-muted-foreground">

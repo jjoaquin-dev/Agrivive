@@ -22,7 +22,7 @@ export function BuyerTrustBanner({ trustRestriction, trustWarning }: Props) {
   const isCancellation = Boolean(cancelCount || trustWarning.toLowerCase().includes("cancel"));
 
   return (
-    <div className="mb-6 rounded-2xl border border-amber-200/80 bg-white p-4 shadow-xs sm:p-5">
+    <div className="mb-6 rounded-2xl border border-amber-200/80 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-start gap-3.5">
         {/* Visual Anchor Icon Badge */}
         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 ring-4 ring-amber-50/60">
@@ -36,7 +36,7 @@ export function BuyerTrustBanner({ trustRestriction, trustWarning }: Props) {
               <h2 className="font-heading text-sm font-bold text-neutral-900 sm:text-[15px]">
                 {isCancellation ? "Cancellation Advisory" : "Account Notice"}
               </h2>
-              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
                 Advisory
               </span>
             </div>

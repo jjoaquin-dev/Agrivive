@@ -58,7 +58,7 @@ const mdNichrome = localFont({
       style: "normal",
     },
   ],
-  variable: "--font-brand",
+  variable: "--font-heading",
   display: "swap",
   preload: false,
 });

@@ -17,7 +17,7 @@ export const CartRemoveButtonComponent = ({
       onClick={onRemove}
       aria-label={`Remove ${productName} from cart`}
       title={`Remove ${productName} from cart`}
-      className="p-1 text-neutral-400 hover:text-red-500 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 rounded-md"
+      className="p-1 text-neutral-400 hover:text-red-500 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 rounded-lg"
     >
       <Trash2 className="size-4.5" aria-hidden="true" />
     </button>

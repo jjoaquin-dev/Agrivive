@@ -24,9 +24,9 @@ export function Button({
 
   const variantStyles = {
     primary:
-      "bg-[#457D00] text-white hover:bg-[#386600] shadow-md hover:shadow-lg active:bg-[#2e5200]",
+      "bg-[#457D00] text-white hover:bg-[#457D00]/90 shadow-md hover:shadow-lg active:bg-[#2e5200]",
     accent:
-      "bg-[#E2FD56] text-[#111827] hover:bg-[#d4f244] shadow-md hover:shadow-xl font-black",
+      "bg-[#E2FD56] text-[#14231A] hover:bg-[#E2FD56]/90 shadow-md hover:shadow-lg font-black",
     outline:
       "border border-neutral-300 bg-white/90 text-neutral-800 hover:bg-neutral-50 hover:border-[#457D00] backdrop-blur-sm",
     ghost: "bg-transparent text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900",
