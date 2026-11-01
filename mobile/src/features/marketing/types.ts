@@ -90,6 +90,7 @@ export interface SellerProductBoostResponse {
     headline: string;
     message: string;
     badge: "available" | "boosted";
+    waitUntil?: string | null;
   };
   boost: SellerVisibilityBoost | null;
 }

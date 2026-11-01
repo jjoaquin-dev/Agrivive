@@ -4,6 +4,8 @@ import { ConversationError } from "../services/conversation.error";
 import { createConversation } from "../services/conversation.create";
 import { createConversationMessage } from "../services/conversation.message.create";
 import { listConversationMessages } from "../services/conversation.messages.list";
+import { getConversation } from "../services/conversation.get";
+import { getConversationUnreadCount } from "../services/conversation.unread-count";
 import { listConversations } from "../services/conversation.list";
 import { markConversationRead } from "../services/conversation.read";
 import { markAllConversationsRead } from "../services/conversation.read-all";
@@ -32,6 +34,14 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     try { return await listConversations(session.userId, query.limit, query.cursor); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], query: conversationListQuery })
+  .get("/conversations/unread-count", async ({ session, status }) => {
+    try { return await getConversationUnreadCount(session.userId); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"] })
+  .get("/conversations/:id", async ({ session, params, status }) => {
+    try { return await getConversation(session.userId, params.id); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"], params: conversationParams })
   .get("/conversations/:id/messages", async ({ session, params, status }) => {
     try { return await listConversationMessages(session.userId, params.id); }
     catch (error) { return failure(error, status); }

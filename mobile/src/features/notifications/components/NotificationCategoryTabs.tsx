@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { colors, fonts, radii, spacing, typography } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import type { NotificationCategory } from "../types";
 
 interface Props {
@@ -14,16 +14,12 @@ const TABS: { id: NotificationCategory; label: string }[] = [
   { id: "reservations", label: "Reservations" },
   { id: "messages", label: "Messages" },
   { id: "listings", label: "Listings" },
-  { id: "trust", label: "Trust" },
+  { id: "trust", label: "Account" },
 ];
 
 export function NotificationCategoryTabs({ selected, onSelect, counts }: Props) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-    >
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.container}>
       {TABS.map((tab) => {
         const isSelected = selected === tab.id;
         const count = counts[tab.id] ?? 0;
@@ -35,9 +31,12 @@ export function NotificationCategoryTabs({ selected, onSelect, counts }: Props) 
             accessibilityState={{ selected: isSelected }}
             style={[styles.pill, isSelected ? styles.pillActive : styles.pillInactive]}
           >
-            <Text style={[styles.pillText, isSelected ? styles.pillTextActive : styles.pillTextInactive]}>
-              {count > 0 ? `${tab.label} (${count})` : tab.label}
-            </Text>
+            <Text style={[styles.pillText, { color: isSelected ? colors.white : colors.text }]}>{tab.label}</Text>
+            {count > 0 ? (
+              <View style={[styles.badge, { backgroundColor: isSelected ? colors.white : colors.primary }]}>
+                <Text style={[styles.badgeText, { color: isSelected ? colors.primary : colors.white }]}>{count}</Text>
+              </View>
+            ) : null}
           </Pressable>
         );
       })}
@@ -46,11 +45,11 @@ export function NotificationCategoryTabs({ selected, onSelect, counts }: Props) 
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: "row", gap: spacing.sm, paddingVertical: spacing.xs },
-  pill: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radii.full, flexDirection: "row", alignItems: "center", borderWidth: 1 },
+  container: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
+  pill: { height: 40, paddingHorizontal: spacing.md + 2, borderRadius: radii.full, flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1 },
   pillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   pillInactive: { backgroundColor: colors.surface, borderColor: colors.border },
-  pillText: { ...typography.labelSmall },
-  pillTextActive: { fontFamily: fonts.body.semiBold, color: colors.white },
-  pillTextInactive: { color: colors.text },
+  pillText: { fontFamily: fonts.body.medium, fontSize: 14 },
+  badge: { minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" },
+  badgeText: { fontFamily: fonts.heading.bold, fontSize: 11 },
 });

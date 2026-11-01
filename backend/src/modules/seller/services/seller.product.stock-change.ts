@@ -6,6 +6,7 @@ import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { queueFirstPublicListing, queueSellerListingEvent } from "../../../utils/seller-listing-event";
+import { notifyStockLevel } from "../../../utils/seller-notifications/stock-level";
 import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
 
 const maxHundredths = 9_999_999_999n;
@@ -91,6 +92,9 @@ export async function changeSellerProductStock(
       afterQty: toDecimal(after),
       reason: cleanReason,
     });
+    if (signedChange < 0n && updatedProduct.isActive) {
+      await notifyStockLevel(tx, updatedProduct, Number(change) / 100);
+    }
     if (before === 0n && after > 0n) {
       await queueSellerListingEvent(tx, updatedProduct.id, "restock", {
         stock: toDecimal(after),

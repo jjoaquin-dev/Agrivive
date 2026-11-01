@@ -1,10 +1,10 @@
+import { colors } from "../../../theme";
+
 const AVATAR_PALETTE = [
-  "#7C3AED", // Purple (Maria Santos)
-  "#0284C7", // Cyan / Sky (Jose Reyes)
-  "#0D9488", // Teal (Anna Cruz)
-  "#DC2626", // Red (Carlo Mendoza)
-  "#16A34A", // Forest Green (Agrivive System)
-  "#D97706", // Amber
+  colors.primary,
+  colors.terracotta,
+  colors.sage,
+  colors.textMuted,
 ];
 
 export function getAvatarColor(nameOrId: string = "Buyer"): string {

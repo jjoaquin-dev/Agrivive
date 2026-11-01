@@ -2,6 +2,7 @@ import { and, desc, eq, lte } from "drizzle-orm";
 import { db } from "../../../db";
 import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { getFirstPostCooldownEnd, getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { countUsedBoosts } from "./seller.visibility-boost.used";
 import { readBoostProgress } from "./seller.visibility-boost.progress";
 import { readBoostChannels } from "./seller.visibility-boost.channels";
@@ -61,18 +62,26 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
 
     const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
     const maxAllowed = periodsApplied + 1;
-    const canBoost = usedPosts < maxAllowed;
+    const hasRoom = usedPosts < maxAllowed;
+    // Posting is blocked for a few hours after the last post. Say so up front instead of failing on tap.
+    const waitUntil = !hasRoom ? null
+      : periodsApplied > 0 ? await getPriceDropPostCooldownEnd(tx, productId)
+      : boost ? null : await getFirstPostCooldownEnd(tx, productId);
+    const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000)) : 0;
+    const canBoost = hasRoom && !waitUntil;
     const currentPriceNum = Number(product.currentPrice ?? 0);
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
 
     const dropAmount = Number(product.priceReductionAmount ?? 0);
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
-    const headline = periodsApplied === 0
+    const headline = waitUntil ? "Almost Time" : periodsApplied === 0
       ? canBoost ? "Ready to Boost" : "Boost Is Running"
       : canBoost ? "Price Dropped" : "New Price Posted";
 
-    const message = periodsApplied === 0
+    const message = waitUntil
+      ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.`
+      : periodsApplied === 0
       ? canBoost
         ? "Post this listing on the Agrivive Facebook Page."
         : dropsOn
@@ -116,6 +125,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
         headline,
         message,
         badge: canBoost ? ("available" as const) : ("boosted" as const),
+        waitUntil: waitUntil ? waitUntil.toISOString() : null,
       },
       boost: boost ? { ...boost, errorMessage: errorMessage(boost.status), progress, channels } : null,
     };

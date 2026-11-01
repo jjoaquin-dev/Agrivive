@@ -15,7 +15,23 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-All 23 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Listings** flow: Listings tab (`inventory.tsx`: L1 all listings, L2 expanded card, L3 running low, L4 category bottom sheet, L5 no listings empty, L6 no search results, L7 skeleton, L8 error recovery), Add Produce flow (`create.tsx`: C1 empty form, C2 catalog picker, C3 filled with price drop ON, C4 inline validation errors, C5 upload progress, C6 Boost intro sheet), Product Details (`[id]/index.tsx`: D1 active/boosted Kamatis, D2 running low Talong, D3 archived Repolyo, D4 archive confirmation sheet), Edit Product (`[id]/edit.tsx`: E1 locked selling unit), and Change Amount flow (`[id]/stock.tsx`: S1 Add More tab, S2 Take Away tab with excess stock error, S3 freshness warning for >12h batches, S4 celebratory in-sheet saved state). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Listings Redesign Frames]].
+Boost screen now shows the 3-hour wait up front ("Almost Time", button disabled, `eligibility.waitUntil`) instead of failing with "A price drop post just went out" after a tap. Typechecks and build passed; owner test pending. See [[2026-11-01 Boost Wait Time Shown Up Front]].
+
+Earlier: Backend: `GET /conversations/unread-count`, `GET /conversations/:id`, `openCount` on `GET /seller/product-inquiries`, and answers to product-page questions now post into the buyer chat (find-or-create chat, notice and live update). No migration. Typecheck, builds and drizzle check passed; owner tests pending. Mobile still needs to use the new endpoints. See [[2026-11-01 Chat Unread Count and Question Answers in Chat]].
+
+Earlier: Low-stock notice now also fires when a seller uses Take Away and the amount reaches the alert amount (before, only buyer reservations did). Shared helper `utils/seller-notifications/stock-level.ts`. Typecheck and build passed; owner to test. See [[2026-11-01 Low Stock Notice On Take Away]].
+
+Earlier: Notifications screen applied from the Stitch frames (flat rows, summary line, count chips, Filter sheet, Phone Alerts sheet, skeleton and empty states). Typecheck passed; no device check. See [[2026-11-01 Notifications Applied From Stitch]].
+
+Earlier: Low-stock alert field restored on Add Produce and Edit Product; the backend already sends the "running low" notice. Typecheck passed; no device check. See [[2026-11-01 Low Stock Alert Field Restored]].
+
+Earlier: Sales Report screen applied from the Stitch frames (header with date range, sticky filters, Sold and How Much Sold cards, Pickup Results, Stock Right Now, Your Produce, Summary, skeleton and error states). Our own gifted-charts bar chart and bar rows were kept and restyled. Typecheck passed; no device check. See [[2026-11-01 Sales Report Applied From Stitch]].
+
+Earlier: Eight Stitch Listings frames applied to the mobile seller app: Listings, Add Produce, Product Details, Archive sheet, Edit Product, Change Amount sheet, Freshness sheet and the in-sheet Saved state. Look only; current rules kept (peso drop every 6 hours, Final price, no low-stock field). New "Selling" filter and shared `productStatus.ts`. Typecheck passed; no device check. See [[2026-11-01 Listings Flow Applied From Stitch]].
+
+Earlier: 7 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Sales Report** screen (`app/(app)/analytics.tsx`): F1 (Kilos, 30 Days above fold), F1b (Kilos, 30 Days scrolled lower view covering sections 8–11), F2 ('All' units selected with mixed-units warning banner), F3 (Zero-data state for fresh seller with honest explanation), F4 (Produce picker bottom sheet modal with all/individual produce selection and unit tags), F5 (Loading skeleton shimmer state with interactive filters), and F6 (Inline error recovery state with friendly message and retry CTA). Element-to-codebase mapping table connecting every single UI component to backend/mobile lines, copy changes list (plain words for Davao vegetable farmers and market vendors), and behavioral changes documented in [[2026-11-01 Stitch Seller Sales Report Redesign Frames]].
+
+Earlier: All 23 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Listings** flow: Listings tab (`inventory.tsx`: L1 all listings, L2 expanded card, L3 running low, L4 category bottom sheet, L5 no listings empty, L6 no search results, L7 skeleton, L8 error recovery), Add Produce flow (`create.tsx`: C1 empty form, C2 catalog picker, C3 filled with price drop ON, C4 inline validation errors, C5 upload progress, C6 Boost intro sheet), Product Details (`[id]/index.tsx`: D1 active/boosted Kamatis, D2 running low Talong, D3 archived Repolyo, D4 archive confirmation sheet), Edit Product (`[id]/edit.tsx`: E1 locked selling unit), and Change Amount flow (`[id]/stock.tsx`: S1 Add More tab, S2 Take Away tab with excess stock error, S3 freshness warning for >12h batches, S4 celebratory in-sheet saved state). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Listings Redesign Frames]].
 
 Earlier: Price drop is now a peso amount every 6 hours with a final price (form preview shows the final price and when it gets there); the low-stock alert field is removed and sellers get a "Final Price Reached" notice instead. Owner must apply migrations `20261101150000_fb_post_caption` and `20261101160000_price_reduction_amount` ([[2026-11-01 Peso Price Drop and Final Price Alert]]). Checks passed; no device test.
 
@@ -110,6 +126,6 @@ Check the buyer site in a browser (`bun run dev` in `web/`). Turn on reduced mot
 
 ## Historical changelog
 
-- Latest entry: [[2026-11-01 Peso Price Drop and Final Price Alert]]
+- Latest entry: [[2026-11-01 Boost Wait Time Shown Up Front]]
 - Latest web landing entry: [[2026-10-30 Why Choose Scroll Reveal]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].

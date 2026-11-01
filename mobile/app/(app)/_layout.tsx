@@ -1,7 +1,16 @@
 import React from "react";
+import { Pressable, Text } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts } from "../../src/theme";
+
+function CancelButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Cancel" hitSlop={8} style={{ minHeight: 44, justifyContent: "center" }}>
+      <Text style={{ fontFamily: fonts.body.medium, fontSize: 15, color: colors.textMuted }}>Cancel</Text>
+    </Pressable>
+  );
+}
 
 export default function AppLayout() {
   const { session, setup, isSessionPending, loadingSetup } = useAuth();
@@ -41,11 +50,13 @@ export default function AppLayout() {
       />
       <Stack.Screen
         name="inventory/create"
-        options={{
+        options={({ navigation }) => ({
           presentation: "modal",
           animation: "slide_from_bottom",
           title: "Add Produce",
-        }}
+          headerTitleAlign: "center",
+          headerLeft: () => <CancelButton onPress={navigation.goBack} />,
+        })}
       />
       <Stack.Screen
         name="inventory/[id]/stock"
@@ -58,12 +69,20 @@ export default function AppLayout() {
 
       {/* Hierarchical Detail Pages */}
       <Stack.Screen name="inventory/[id]/index" options={{ title: "Product Details" }} />
-      <Stack.Screen name="inventory/[id]/edit" options={{ title: "Edit Product" }} />
+      <Stack.Screen
+        name="inventory/[id]/edit"
+        options={({ navigation }) => ({
+          title: "Edit Product",
+          headerTitleAlign: "center",
+          headerBackVisible: false,
+          headerLeft: () => <CancelButton onPress={navigation.goBack} />,
+        })}
+      />
       <Stack.Screen name="orders/[id]" options={{ title: "Reservation" }} />
       <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
       <Stack.Screen name="conversations/[id]" options={{ title: "Conversation" }} />
       <Stack.Screen name="activity" options={{ title: "Change History" }} />
-      <Stack.Screen name="analytics" options={{ title: "Analytics" }} />
+      <Stack.Screen name="analytics" options={{ title: "Sales Report", headerShown: false }} />
       <Stack.Screen name="marketing/index" options={{ title: "Boost" }} />
       <Stack.Screen name="marketing/[productId]" options={{ title: "Preview Boost" }} />
       <Stack.Screen name="marketing/started" options={{ headerShown: false, gestureEnabled: false }} />

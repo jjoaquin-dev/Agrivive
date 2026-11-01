@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, Alert } from "react-native";
+import { StyleSheet, View, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ProductForm } from "../../../src/features/inventory/components/ProductForm";
 import { BoostIntroSheet } from "../../../src/features/marketing/components/BoostIntroSheet";
 import { createSellerProduct } from "../../../src/features/inventory/api/products";
 import type { CreateProductInput, ProductScalingType } from "../../../src/features/inventory/types";
-import { colors, fonts, spacing } from "../../../src/theme";
+import { colors } from "../../../src/theme";
 
 export default function CreateProductScreen() {
   const router = useRouter();
@@ -57,12 +57,6 @@ export default function CreateProductScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Add Fresh Produce</Text>
-        <Text style={styles.subtitle}>
-          List your marketable vegetable surplus with pricing, quantity, and optional low-stock alert.
-        </Text>
-      </View>
       <ProductForm mode="create" initialProduct={initialProduct} onSubmit={handleCreate} loading={loading} />
       <BoostIntroSheet visible={boostFor !== null} priceReductionAmount={boostFor?.dropAmount ?? 0} onPreview={previewBoost} onClose={closeBoostSheet} />
     </View>
@@ -73,22 +67,5 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.xs,
-  },
-  title: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 22,
-    color: colors.text,
-  },
-  subtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 4,
-    lineHeight: 18,
   },
 });

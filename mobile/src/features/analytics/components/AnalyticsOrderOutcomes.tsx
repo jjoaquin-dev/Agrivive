@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, fonts, radii, spacing } from "../../../theme";
+import { colors, fonts, spacing } from "../../../theme";
+import { cardStyles } from "../analyticsCard";
 import type { AnalyticsUnit, SellerAnalyticsMetrics } from "../types";
 
 interface AnalyticsOrderOutcomesProps {
@@ -8,109 +9,52 @@ interface AnalyticsOrderOutcomesProps {
   unit?: AnalyticsUnit;
 }
 
-export function AnalyticsOrderOutcomes({ metrics, unit }: AnalyticsOrderOutcomesProps) {
+function Row({ label, percent, color, note }: { label: string; percent: number; color: string; note?: string }) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.labels}>
+        <Text style={styles.name}>{label}</Text>
+        <Text style={[styles.value, { color }]}>{percent.toFixed(1)}%</Text>
+      </View>
+      <View style={styles.track}>
+        <View style={[styles.fill, { width: `${Math.min(100, percent)}%`, backgroundColor: color }]} />
+      </View>
+      {note ? <Text style={styles.note}>{note}</Text> : null}
+    </View>
+  );
+}
+
+/** Our bar rows: of the orders that ended, how many were picked up and how many were not. */
+export function AnalyticsOrderOutcomes({ metrics }: AnalyticsOrderOutcomesProps) {
   const completed = Number(metrics.completedQuantity) || 0;
-  const reserved = Number(metrics.reservedQuantity) || 0;
   const cancelled = Number(metrics.cancelledQuantity) || 0;
   const expired = Number(metrics.expiredQuantity) || 0;
-  const totalOutcomes = completed + cancelled + expired;
-
-  const handoverRate = totalOutcomes > 0 ? (completed / totalOutcomes) * 100 : 0;
-  const unclaimedRate = totalOutcomes > 0 ? ((cancelled + expired) / totalOutcomes) * 100 : 0;
-  const unitSuffix = unit === "kilo" ? "kg" : unit ? `${unit}s` : "units";
+  const total = completed + cancelled + expired;
+  const pickedUp = total > 0 ? (completed / total) * 100 : 0;
+  const notPickedUp = total > 0 ? ((cancelled + expired) / total) * 100 : 0;
 
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Pickup & Order Outcomes</Text>
-        <Text style={styles.subtitle}>Disposition of reserved surplus volume</Text>
-      </View>
-
-      <View style={styles.boxGrid}>
-        {/* Completed */}
-        <View style={[styles.box, { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" }]}>
-          <Text style={[styles.boxValue, { color: "#065F46" }]}>{completed.toFixed(0)}</Text>
-          <Text style={[styles.boxLabel, { color: "#047857" }]}>Completed</Text>
-          <Text style={[styles.boxSub, { color: "#065F46" }]}>Handed over</Text>
+    <View style={cardStyles.card}>
+      <Text style={cardStyles.title}>Pickup Results</Text>
+      {total > 0 ? (
+        <View style={styles.list}>
+          <Row label="Picked Up" percent={pickedUp} color={colors.primary} />
+          <Row label="Not Picked Up" percent={notPickedUp} color={colors.error} note={`${cancelled.toFixed(2)} cancelled · ${expired.toFixed(2)} expired`} />
         </View>
-
-        {/* Reserved */}
-        <View style={[styles.box, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-          <Text style={[styles.boxValue, { color: "#1E40AF" }]}>{reserved.toFixed(0)}</Text>
-          <Text style={[styles.boxLabel, { color: "#1D4ED8" }]}>Reserved</Text>
-          <Text style={[styles.boxSub, { color: "#1E40AF" }]}>Pending pass</Text>
-        </View>
-
-        {/* Cancelled */}
-        <View style={[styles.box, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
-          <Text style={[styles.boxValue, { color: "#991B1B" }]}>{cancelled.toFixed(0)}</Text>
-          <Text style={[styles.boxLabel, { color: "#B91C1C" }]}>Cancelled</Text>
-          <Text style={[styles.boxSub, { color: "#991B1B" }]}>Voided orders</Text>
-        </View>
-
-        {/* Expired */}
-        <View style={[styles.box, { backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }]}>
-          <Text style={[styles.boxValue, { color: "#92400E" }]}>{expired.toFixed(0)}</Text>
-          <Text style={[styles.boxLabel, { color: "#B45309" }]}>Expired</Text>
-          <Text style={[styles.boxSub, { color: "#92400E" }]}>Grace elapsed</Text>
-        </View>
-      </View>
-
-      <View style={styles.ratiosContainer}>
-        <View style={styles.ratioRow}>
-          <View style={styles.ratioLabels}>
-            <Text style={styles.ratioName}>Handover Fulfillment Rate</Text>
-            <Text style={[styles.ratioValue, { color: "#059669" }]}>{handoverRate.toFixed(1)}%</Text>
-          </View>
-          <View style={styles.ratioBarBg}>
-            <View style={[styles.ratioBarFill, { width: `${Math.min(100, handoverRate)}%`, backgroundColor: "#10B981" }]} />
-          </View>
-        </View>
-
-        <View style={styles.ratioRow}>
-          <View style={styles.ratioLabels}>
-            <Text style={styles.ratioName}>Unclaimed / Waste Rate</Text>
-            <Text style={[styles.ratioValue, { color: "#DC2626" }]}>{unclaimedRate.toFixed(1)}%</Text>
-          </View>
-          <View style={styles.ratioBarBg}>
-            <View style={[styles.ratioBarFill, { width: `${Math.min(100, unclaimedRate)}%`, backgroundColor: "#EF4444" }]} />
-          </View>
-        </View>
-      </View>
+      ) : (
+        <Text style={styles.note}>No finished pickups in these days yet.</Text>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.base,
-    marginBottom: spacing.base,
-  },
-  header: { marginBottom: spacing.md },
-  title: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  boxGrid: { flexDirection: "row", gap: spacing.xs, marginBottom: spacing.md },
-  box: {
-    flex: 1,
-    borderRadius: radii.input,
-    borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  boxValue: { fontFamily: fonts.heading.bold, fontSize: 16 },
-  boxLabel: { fontFamily: fonts.body.semiBold, fontSize: 11, marginTop: 1 },
-  boxSub: { fontFamily: fonts.body.regular, fontSize: 9, marginTop: 1 },
-  ratiosContainer: { gap: spacing.sm, paddingTop: spacing.xs },
-  ratioRow: { gap: 4 },
-  ratioLabels: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  ratioName: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.text },
-  ratioValue: { fontFamily: fonts.body.semiBold, fontSize: 12 },
-  ratioBarBg: { height: 6, backgroundColor: colors.surfaceMuted, borderRadius: radii.full, overflow: "hidden" },
-  ratioBarFill: { height: "100%", borderRadius: radii.full },
+  list: { gap: spacing.md, marginTop: spacing.md },
+  row: { gap: 6 },
+  labels: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  name: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
+  value: { fontFamily: fonts.body.semiBold, fontSize: 14 },
+  track: { height: 10, borderRadius: 4, backgroundColor: "#F3F4F6", overflow: "hidden" },
+  fill: { height: "100%", borderRadius: 4 },
+  note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
 });

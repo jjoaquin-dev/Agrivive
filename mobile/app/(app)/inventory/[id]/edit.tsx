@@ -46,12 +46,6 @@ export default function EditProductScreen() {
 
   return (
     <View style={styles.screen}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Edit Product</Text>
-        <Text style={styles.subtitle}>
-          Update price, photo, or details. Selling unit remains fixed; use Add More or Take Away to change the amount.
-        </Text>
-      </View>
       <ProductForm
         mode="edit"
         initialProduct={product}
@@ -67,23 +61,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.xs,
-  },
-  title: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 22,
-    color: colors.text,
-  },
-  subtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 4,
-    lineHeight: 18,
   },
   centerContainer: {
     flex: 1,

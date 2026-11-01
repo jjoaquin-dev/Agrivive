@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, ScrollView, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { CalendarDays, CircleAlert, QrCode, RefreshCw } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { PaginationControl } from "../../../src/components/PaginationControl";
@@ -42,7 +43,7 @@ export default function OrdersScreen() {
   );
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["top"]}>
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.title}>Reservations</Text>
@@ -153,7 +154,7 @@ export default function OrdersScreen() {
           )
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

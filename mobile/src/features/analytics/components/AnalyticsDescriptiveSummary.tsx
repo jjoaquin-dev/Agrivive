@@ -1,49 +1,28 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Sparkles } from "lucide-react-native";
+import { FileText } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { cardStyles } from "../analyticsCard";
 
-interface AnalyticsDescriptiveSummaryProps {
-  summary: string | null;
-}
-
-export function AnalyticsDescriptiveSummary({ summary }: AnalyticsDescriptiveSummaryProps) {
+export function AnalyticsDescriptiveSummary({ summary }: { summary: string | null }) {
   return (
-    <View style={styles.summaryCard}>
-      <View style={styles.summaryHeader}>
-        <View style={styles.sparkleCircle}>
-          <Sparkles size={16} color={colors.primary} />
+    <View style={cardStyles.card}>
+      <View style={styles.header}>
+        <View style={styles.icon}><FileText size={16} color={colors.primary} /></View>
+        <View>
+          <Text style={styles.title}>Summary</Text>
+          <Text style={cardStyles.subtitle}>Made from your numbers</Text>
         </View>
-        <Text style={styles.summaryTitle}>Descriptive Summary</Text>
       </View>
-      {summary ? (
-        <Text style={styles.summaryBody}>{summary}</Text>
-      ) : (
-        <Text style={styles.summaryEmpty}>No descriptive summary available for this period.</Text>
-      )}
+      <Text style={summary ? styles.body : styles.empty}>{summary ?? "No summary for these days yet."}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.base,
-    marginBottom: spacing.base,
-  },
-  summaryHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.sm },
-  sparkleCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: radii.full,
-    backgroundColor: "rgba(15, 146, 15, 0.1)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  summaryTitle: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
-  summaryBody: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.text },
-  summaryEmpty: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
+  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 2, paddingBottom: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  icon: { width: 32, height: 32, borderRadius: radii.input, backgroundColor: colors.primarySurface, alignItems: "center", justifyContent: "center" },
+  title: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text },
+  body: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.text, marginTop: spacing.sm + 2 },
+  empty: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.sm + 2 },
 });
