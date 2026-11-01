@@ -2,6 +2,9 @@ import { and, desc, eq, lt } from "drizzle-orm";
 import { db } from "../../db";
 import { fb_post_logs } from "../../db/schema";
 
+/** Hours between two price drop posts for the same product. */
+export const priceDropPostGapHours = 3;
+
 /** Hours between two first posts for the same product. */
 export const firstPostGapHours = 3;
 
@@ -28,3 +31,7 @@ async function getPostCooldownEnd(
 /** When the product may get another first post, or null if it may now. */
 export const getFirstPostCooldownEnd = (executor: Executor, productId: string, before?: Date) =>
   getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
+
+/** When the product may get another price drop post, or null if it may now. */
+export const getPriceDropPostCooldownEnd = (executor: Executor, productId: string, before?: Date) =>
+  getPostCooldownEnd(executor, productId, "second_post", priceDropPostGapHours, before);

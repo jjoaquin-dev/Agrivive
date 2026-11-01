@@ -15,7 +15,7 @@ import { useBoostHistory } from "../../../src/features/marketing/hooks/useBoostH
 import { boostState } from "../../../src/features/marketing/types";
 import { colors, spacing } from "../../../src/theme";
 
-const activeStates = ["posting", "running", "needs_choice", "not_posted", "failed"];
+const activeStates = ["posting", "running", "not_posted", "failed"];
 
 const sectionFrom = (value?: string): MarketingSection =>
   value === "history" || value === "visibility" || value === "drops" ? value : "active";

@@ -48,7 +48,8 @@ export async function readBoostProgress(tx: OrderTransaction, rows: BoostRow[]) 
 
     let state: BoostState;
     if (row.status === "failed") state = "failed";
-    else if (row.status === "prompt") state = "needs_choice";
+    // Old "boost again" prompts are not used any more; they show as skipped.
+    else if (row.status === "prompt") state = "dismissed";
     else if (row.status === "dismissed") state = "dismissed";
     else if (posts.length === 0) {
       state = row.status === "sent" && await isBoostStuck(tx, row) ? "not_posted" : "posting";
