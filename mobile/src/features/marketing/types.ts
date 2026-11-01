@@ -26,7 +26,6 @@ export interface ProductBoostChip {
   state: BoostState;
   nextDropAt: string | null;
   roundsDone: number;
-  priceDropPrompt: boolean;
 }
 
 export type BoostChannelStatus = "waiting" | "posting" | "posted" | "failed";
@@ -91,6 +90,8 @@ export interface SellerProductBoostResponse {
     message: string;
     badge: "available" | "boosted";
     waitUntil?: string | null;
+    /** Can the seller bring the next 6-hour price drop forward to now? */
+    priceDrop?: { available: boolean; message: string | null; waitUntil: string | null };
   };
   boost: SellerVisibilityBoost | null;
 }
@@ -160,4 +161,19 @@ export interface PriceDropHistoryItem {
 export interface PriceDropHistoryResponse {
   items: PriceDropHistoryItem[];
   nextCursor: string | null;
+}
+
+/** A listing whose automatic price drop is running, and whether the next drop can come now. */
+export interface RunningPriceDrop {
+  boostId: string;
+  productId: string;
+  productName: string;
+  imageUrl: string | null;
+  currentPrice: number;
+  lowestPrice: number | null;
+  dropAmount: number;
+  nextDropAt: string | null;
+  available: boolean;
+  message: string | null;
+  waitUntil: string | null;
 }

@@ -136914,7 +136914,7 @@ var boostResendAfterMs = 5 * 60000;
 async function isBoostStuck(tx, boost) {
   if (!boost.sentAt || Date.now() - boost.sentAt.getTime() <= boostResendAfterMs)
     return false;
-  const [post] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, "first_post"), inArray(fb_post_logs.status, ["success", "pending"]), gte(fb_post_logs.postedAt, boost.createdAt))).limit(1);
+  const [post] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, boost.reason === "initial" ? "first_post" : "second_post"), inArray(fb_post_logs.status, ["success", "pending"]), gte(fb_post_logs.postedAt, boost.createdAt))).limit(1);
   return !post;
 }
 async function countUsedBoosts(tx, productId, listingCycleId) {
@@ -136954,7 +136954,7 @@ async function readBoostProgress(tx, rows) {
     if (row.status === "failed")
       state = "failed";
     else if (row.status === "prompt")
-      state = "needs_choice";
+      state = "dismissed";
     else if (row.status === "dismissed")
       state = "dismissed";
     else if (posts.length === 0) {
@@ -136987,13 +136987,10 @@ async function readProductBoostChips(tx, productIds) {
     createdAt: seller_visibility_boosts.createdAt,
     sentAt: seller_visibility_boosts.sentAt,
     followUpDueAt: seller_visibility_boosts.followUpDueAt
-  }).from(seller_visibility_boosts).where(and(inArray(seller_visibility_boosts.productId, productIds), inArray(seller_visibility_boosts.status, ["queued", "sent", "prompt"]))).orderBy(desc(seller_visibility_boosts.createdAt));
+  }).from(seller_visibility_boosts).where(and(inArray(seller_visibility_boosts.productId, productIds), inArray(seller_visibility_boosts.status, ["queued", "sent"]))).orderBy(desc(seller_visibility_boosts.createdAt));
   const firstBoosts = new Map;
-  const prompts = new Set;
   for (const row of rows) {
-    if (row.status === "prompt")
-      prompts.add(row.productId);
-    else if (row.reason === "initial" && !firstBoosts.has(row.productId))
+    if (row.reason === "initial" && !firstBoosts.has(row.productId))
       firstBoosts.set(row.productId, row);
   }
   const progress = await readBoostProgress(tx, [...firstBoosts.values()]);
@@ -137001,12 +136998,7 @@ async function readProductBoostChips(tx, productIds) {
     const item = progress.get(row.id);
     if (!item)
       continue;
-    chips.set(productId, {
-      state: item.state,
-      nextDropAt: item.nextDropAt,
-      roundsDone: item.roundsDone,
-      priceDropPrompt: prompts.has(productId)
-    });
+    chips.set(productId, { state: item.state, nextDropAt: item.nextDropAt, roundsDone: item.roundsDone });
   }
   return chips;
 }
@@ -139483,6 +139475,7 @@ async function deliverSellerVisibilityBoosts() {
 }
 
 // src/utils/boost-cooldown/index.ts
+var priceDropPostGapHours = 3;
 var firstPostGapHours = 3;
 async function getPostCooldownEnd(executor, productId, postType, gapHours, before) {
   const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
@@ -139492,6 +139485,7 @@ async function getPostCooldownEnd(executor, productId, postType, gapHours, befor
   return end.getTime() > Date.now() ? end : null;
 }
 var getFirstPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
+var getPriceDropPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "second_post", priceDropPostGapHours, before);
 
 // src/modules/seller/services/seller.visibility-boost.queue.ts
 async function requireFirstPostGap(tx, productId) {
@@ -139556,7 +139550,7 @@ async function queueSellerVisibilityBoost(sellerId, productId) {
       if (retried)
         return { boostId: retried.id, status: retried.status, reason: "initial", productId };
     }
-    if (existing.status === "sent" && await isBoostStuck(tx, { productId, createdAt: existing.createdAt, sentAt: existing.sentAt })) {
+    if (existing.status === "sent" && await isBoostStuck(tx, { productId, reason: "initial", createdAt: existing.createdAt, sentAt: existing.sentAt })) {
       const [resent] = await tx.update(seller_visibility_boosts).set({
         status: "queued",
         retryCount: 0,
@@ -139568,8 +139562,41 @@ async function queueSellerVisibilityBoost(sellerId, productId) {
       if (resent)
         return { boostId: resent.id, status: resent.status, reason: "initial", productId };
     }
+    if (existing.status === "sent") {
+      throw new OrderError(409, "This listing is already boosted. Lower the price from the Price Drops tab.");
+    }
     return { boostId: existing.id, status: existing.status, reason: "initial", productId };
   });
+}
+
+// src/modules/seller/services/seller.price-reduction.drop-now.read.ts
+var no = (message, waitUntil = null) => ({ available: false, boostId: null, message, waitUntil: waitUntil ? waitUntil.toISOString() : null });
+async function readPriceDropNow(tx, sellerId, productId) {
+  const [product] = await tx.select().from(sellers_product).where(and(eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId))).limit(1);
+  if (!product)
+    return no("Product not found");
+  if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0)
+    return no("This listing is not available");
+  if (!product.priceReductionEnabled || Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice) {
+    return no("Automatic price drops are off for this listing");
+  }
+  if (Number(product.productPrice ?? 0) <= Number(product.minimumPrice))
+    return no("The price is already at your final price");
+  const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  if (!cycle)
+    return no("Boost this listing first");
+  const [boost] = await tx.select({ id: seller_visibility_boosts.id, createdAt: seller_visibility_boosts.createdAt }).from(seller_visibility_boosts).where(and(eq(seller_visibility_boosts.productId, productId), eq(seller_visibility_boosts.listingCycleId, cycle.id), eq(seller_visibility_boosts.reason, "initial"), eq(seller_visibility_boosts.status, "sent"))).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
+  if (!boost)
+    return no("Boost this listing first");
+  const [firstPost] = await tx.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "first_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, boost.createdAt), isNotNull(fb_post_logs.facebookPostId))).limit(1);
+  if (!firstPost)
+    return no("Wait for your first post to go out");
+  const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
+  if (waitUntil) {
+    const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
+    return no(`A lower price was just posted. You can lower it again in about ${hours} hour${hours === 1 ? "" : "s"}.`, waitUntil);
+  }
+  return { available: true, boostId: boost.id, message: null, waitUntil: null };
 }
 
 // src/modules/seller/services/seller.visibility-boost.channels.ts
@@ -139583,7 +139610,7 @@ function channelOf(row, stuck, postUrl) {
   return { status: Date.now() - row.postedAt.getTime() > boostResendAfterMs ? "failed" : "posting", postUrl: null };
 }
 async function readBoostChannels(tx, boost) {
-  const postType = "first_post";
+  const postType = boost.reason === "initial" ? "first_post" : "second_post";
   const [facebook] = await tx.select().from(fb_post_logs).where(and(eq(fb_post_logs.productId, boost.productId), eq(fb_post_logs.postType, postType), gte(fb_post_logs.postedAt, boost.createdAt))).orderBy(desc(fb_post_logs.postedAt)).limit(1);
   const [instagram] = await tx.select().from(instagram_post_logs).where(and(eq(instagram_post_logs.productId, boost.productId), eq(instagram_post_logs.postType, postType), gte(instagram_post_logs.postedAt, boost.createdAt))).orderBy(desc(instagram_post_logs.postedAt)).limit(1);
   const stuck = boost.sentAt !== null && Date.now() - boost.sentAt.getTime() > boostResendAfterMs;
@@ -139644,6 +139671,7 @@ async function readSellerVisibilityBoost(sellerId, productId) {
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
     const headline = waitUntil ? "Almost Time" : canBoost ? "Ready to Boost" : "Boost Is Running";
     const message = waitUntil ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.` : canBoost ? "Post this listing on the Agrivive Facebook Page." : dropsOn ? "Your listing was posted. The price drops every 6 hours until it reaches your final price." : "Your listing was posted on the Agrivive Facebook Page.";
+    const priceDrop = await readPriceDropNow(tx, sellerId, productId);
     const progress = boost ? (await readBoostProgress(tx, [boost])).get(boost.id) ?? null : null;
     const channels = boost ? await readBoostChannels(tx, boost) : null;
     return {
@@ -139675,7 +139703,8 @@ async function readSellerVisibilityBoost(sellerId, productId) {
         headline,
         message,
         badge: canBoost ? "available" : "boosted",
-        waitUntil: waitUntil ? waitUntil.toISOString() : null
+        waitUntil: waitUntil ? waitUntil.toISOString() : null,
+        priceDrop: { available: priceDrop.available, message: priceDrop.message, waitUntil: priceDrop.waitUntil }
       },
       boost: boost ? { ...boost, errorMessage: errorMessage(boost.status), progress, channels } : null
     };
@@ -139976,8 +140005,128 @@ async function setSellerPriceReductionEnabled(sellerId, productId, enabled) {
   return { productId: result.productId, enabled: result.enabled };
 }
 
+// src/modules/seller/services/seller.price-reduction.running.list.ts
+async function listSellerRunningPriceDrops(sellerId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const rows = await tx.select({
+      boostId: seller_visibility_boosts.id,
+      productId: sellers_product.id,
+      productName: sellers_product.productName,
+      imageUrl: sellers_product.imagUrl,
+      currentPrice: sellers_product.productPrice,
+      lowestPrice: sellers_product.minimumPrice,
+      dropAmount: sellers_product.priceReductionAmount,
+      nextDropAt: seller_visibility_boosts.followUpDueAt
+    }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.sellerId, sellerId), eq(seller_visibility_boosts.reason, "initial"), eq(seller_visibility_boosts.status, "sent"), isNotNull(seller_visibility_boosts.followUpDueAt), eq(sellers_product.isActive, true), eq(sellers_product.priceReductionEnabled, true))).orderBy(asc(seller_visibility_boosts.followUpDueAt));
+    const items = [];
+    for (const row of rows) {
+      const now = await readPriceDropNow(tx, sellerId, row.productId);
+      items.push({
+        boostId: row.boostId,
+        productId: row.productId,
+        productName: row.productName,
+        imageUrl: row.imageUrl,
+        currentPrice: Number(row.currentPrice ?? 0),
+        lowestPrice: row.lowestPrice ? Number(row.lowestPrice) : null,
+        dropAmount: Number(row.dropAmount ?? 0),
+        nextDropAt: row.nextDropAt ? row.nextDropAt.toISOString() : null,
+        available: now.available,
+        message: now.message,
+        waitUntil: now.waitUntil
+      });
+    }
+    return { items };
+  });
+}
+
+// src/modules/seller/services/seller.price-reduction.drop-now.ts
+async function requestSellerPriceDropNow(sellerId, productId) {
+  return db2.transaction(async (tx) => {
+    await requireVerifiedSeller(tx, sellerId);
+    const check = await readPriceDropNow(tx, sellerId, productId);
+    if (!check.available)
+      throw new OrderError(check.message === "Product not found" ? 404 : 409, check.message);
+    await tx.update(seller_visibility_boosts).set({ followUpDueAt: new Date, followUpAttempts: 0 }).where(eq(seller_visibility_boosts.id, check.boostId));
+    return { boostId: check.boostId, productId };
+  });
+}
+
+// src/jobs/deliver-seller-boost-follow-ups.ts
+var maxAttempts2 = 5;
+var retryAfterMs = 15 * 60000;
+var batchSize2 = 50;
+async function endedReason(boost) {
+  if (!boost.enabled || !boost.active || !boost.marketable || Number(boost.quantity ?? 0) <= 0)
+    return "unavailable";
+  if (Number(boost.amount ?? 0) <= 0 || boost.minimumPrice === null)
+    return "not_enabled";
+  if (Number(boost.price ?? 0) <= Number(boost.minimumPrice))
+    return "at_floor";
+  const [cycle] = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, boost.productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  return !cycle || cycle.id !== boost.listingCycleId ? "new_cycle" : null;
+}
+async function deliverSellerBoostFollowUps() {
+  const webhook = getBoostWebhookTarget();
+  if (!webhook)
+    return { configured: false, due: 0, sent: 0, failed: 0 };
+  const now = new Date;
+  const due = await db2.select({
+    id: seller_visibility_boosts.id,
+    listingCycleId: seller_visibility_boosts.listingCycleId,
+    productId: seller_visibility_boosts.productId,
+    enabled: sellers_product.priceReductionEnabled,
+    active: sellers_product.isActive,
+    marketable: sellers_product.isMarketable,
+    quantity: sellers_product.productQty,
+    amount: sellers_product.priceReductionAmount,
+    minimumPrice: sellers_product.minimumPrice,
+    price: sellers_product.productPrice
+  }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.reason, "initial"), inArray(seller_visibility_boosts.status, ["queued", "sent"]), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts2))).limit(batchSize2);
+  let sent = 0;
+  let failed = 0;
+  for (const boost of due) {
+    if (await endedReason(boost)) {
+      await db2.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boost.id));
+      continue;
+    }
+    const [claimed] = await db2.update(seller_visibility_boosts).set({
+      followUpDueAt: new Date(now.getTime() + retryAfterMs),
+      followUpAttempts: sql3`${seller_visibility_boosts.followUpAttempts} + 1`
+    }).where(and(eq(seller_visibility_boosts.id, boost.id), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts2))).returning({ id: seller_visibility_boosts.id });
+    if (!claimed)
+      continue;
+    try {
+      const response = await fetch(webhook.target, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${webhook.serviceToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ boostId: boost.id, reason: "follow_up" }),
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!response.ok)
+        throw new Error(`n8n returned HTTP ${response.status}`);
+      sent++;
+    } catch (error) {
+      failed++;
+      console.error("Boost follow-up delivery failed", { boostId: boost.id, error });
+      await db2.update(seller_visibility_boosts).set({ lastError: "n8n boost follow-up delivery failed" }).where(eq(seller_visibility_boosts.id, boost.id));
+    }
+  }
+  return { configured: true, due: due.length, sent, failed };
+}
+
 // src/modules/seller/index/seller.price-reduction.ts
-var sellerPriceReductionRoute = new Elysia().use(sessionAuth).get("/price-drops", async ({ session, query, status }) => {
+var sellerPriceReductionRoute = new Elysia().use(sessionAuth).get("/price-drops/running", async ({ session, status }) => {
+  try {
+    return await listSellerRunningPriceDrops(session.userId);
+  } catch (error) {
+    return sellerProductFailure(error, status);
+  }
+}, { role: ["seller"] }).get("/price-drops", async ({ session, query, status }) => {
   try {
     return await listSellerPriceDropHistory(session.userId, query?.limit, query?.cursor);
   } catch (error) {
@@ -139989,7 +140138,15 @@ var sellerPriceReductionRoute = new Elysia().use(sessionAuth).get("/price-drops"
   } catch (error) {
     return sellerProductFailure(error, status);
   }
-}, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody });
+}, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody }).post("/products/:id/price-drop", async ({ session, params, status }) => {
+  try {
+    const queued = await requestSellerPriceDropNow(session.userId, params.id);
+    deliverSellerBoostFollowUps().catch((error) => console.error("Immediate price drop delivery failed", error));
+    return queued;
+  } catch (error) {
+    return sellerProductFailure(error, status);
+  }
+}, { role: ["seller"], params: sellerProductId });
 
 // src/modules/seller/index.ts
 var sellerRoute2 = new Elysia({ prefix: "/seller" }).use(sellerSetupRoute).use(sellerProfileCreateRoute).use(sellerProfileAvatarRoute).use(sellerProductCreateRoute).use(sellerVegetableCatalogRoute).use(sellerProductImageRoute).use(sellerStockAdjustmentListRoute).use(sellerWeightedVisiblityRoute).use(sellerOrdersRoute).use(sellerProfileReadRoute).use(sellerProfileUpdateRoute).use(sellerProfileDeleteRoute).use(sellerProductsRoute).use(sellerProductGetRoute).use(sellerProductArchiveRoute).use(sellerProductReactivateRoute).use(sellerProductAdjustStockRoute).use(sellerCancelOrderRoute).use(sellerInquiryRoute).use(sellerProductInquiryRoute).use(sellerProductShareRoute).use(sellerReviewRoute).use(sellerReportRoute).use(sellerTrustRoute).use(sellerNotificationsRoute).use(sellerNotificationSettingsRoute).use(sellerVisibilityBoostRoute).use(sellerPriceReductionRoute).use(sellerAnalyticsRoute).use(sellerAdvisoriesRoute);
@@ -143811,7 +143968,7 @@ function sellerAlertContent(payload, itemCount, referenceId) {
 // src/jobs/deliver-push-notifications.ts
 var batchLimit = 50;
 var deviceBatchSize = 500;
-var maxAttempts2 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
+var maxAttempts3 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
 function notificationContent(job) {
   const payload = job.payload ?? {};
   if (job.type === "seller_alert")
@@ -143897,7 +144054,7 @@ async function finishJob(job, status, message) {
 }
 async function rescheduleJob(job, message) {
   const now = new Date;
-  if (job.attemptCount >= maxAttempts2()) {
+  if (job.attemptCount >= maxAttempts3()) {
     await finishJob(job, "failed", message);
     return;
   }

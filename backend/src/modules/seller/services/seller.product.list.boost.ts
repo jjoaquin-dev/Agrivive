@@ -7,8 +7,6 @@ export type ProductBoostChip = {
   state: BoostState;
   nextDropAt: string | null;
   roundsDone: number;
-  /** A price drop is waiting for the seller to boost it again. */
-  priceDropPrompt: boolean;
 };
 
 /** The newest first boost of each product, with its state, for the small chip on listing cards. */
@@ -26,23 +24,19 @@ export async function readProductBoostChips(tx: OrderTransaction, productIds: st
     followUpDueAt: seller_visibility_boosts.followUpDueAt,
   }).from(seller_visibility_boosts).where(and(
     inArray(seller_visibility_boosts.productId, productIds),
-    inArray(seller_visibility_boosts.status, ["queued", "sent", "prompt"]),
+    inArray(seller_visibility_boosts.status, ["queued", "sent"]),
   )).orderBy(desc(seller_visibility_boosts.createdAt));
 
   const firstBoosts = new Map<string, (typeof rows)[number]>();
-  const prompts = new Set<string>();
   for (const row of rows) {
-    if (row.status === "prompt") prompts.add(row.productId);
-    else if (row.reason === "initial" && !firstBoosts.has(row.productId)) firstBoosts.set(row.productId, row);
+    if (row.reason === "initial" && !firstBoosts.has(row.productId)) firstBoosts.set(row.productId, row);
   }
 
   const progress = await readBoostProgress(tx, [...firstBoosts.values()]);
   for (const [productId, row] of firstBoosts) {
     const item = progress.get(row.id);
     if (!item) continue;
-    chips.set(productId, {
-      state: item.state, nextDropAt: item.nextDropAt, roundsDone: item.roundsDone, priceDropPrompt: prompts.has(productId),
-    });
+    chips.set(productId, { state: item.state, nextDropAt: item.nextDropAt, roundsDone: item.roundsDone });
   }
   return chips;
 }

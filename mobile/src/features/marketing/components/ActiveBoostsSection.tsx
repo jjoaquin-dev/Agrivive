@@ -6,7 +6,7 @@ import { colors, fonts, radii, spacing } from "../../../theme";
 import { boostState, type SellerVisibilityBoost } from "../types";
 import { BoostHistoryCard } from "./BoostHistoryCard";
 
-const activeStates = ["posting", "running", "needs_choice", "not_posted", "failed"];
+const activeStates = ["posting", "running", "not_posted", "failed"];
 
 interface Props {
   items: SellerVisibilityBoost[];
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const groups: { title: string; states: string[] }[] = [
-  { title: "Needs attention", states: ["not_posted", "failed", "needs_choice"] },
+  { title: "Needs attention", states: ["not_posted", "failed"] },
   { title: "Posting now", states: ["posting"] },
   { title: "Running", states: ["running"] },
 ];

@@ -15,6 +15,17 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
+Boost now opens only for Priority Boost listings (paper rule, owner choice), Add More keeps the cycle's original stock in sync with a repair migration (applied to dev, not yet on the VPS), and the seller Boost list shows official tier names. 33 tests pass. Rebuild the API; run migration `20261101190000_sync_cycle_original_qty` on the VPS when ready. See [[2026-11-01 Boost Rule and Stock Sync]].
+
+Earlier: Boost screen "Amount left" now uses the same original stock as the Listings screen and buyer feed (it showed 98% for a listing with 6 of 50 kg left). Rebuild and recreate the API on the VPS. See [[2026-11-01 Boost Amount Left Matches Feed]].
+
+Earlier: The `deploy/` folder is removed: `Caddyfile` is at the repo root, `scripts/vps-release.sh` kept for the CD workflows, and all env keys are in the root `.env.example`. See [[2026-11-01 Deploy Folder Removed]].
+
+Earlier: AHP-TOPSIS is now the default marketplace policy (unset or unknown `VISIBILITY_POLICY` uses it; only `visibility-v4` rolls back). The VPS `.env` and container still need updating. See [[2026-11-01 AHP-TOPSIS Default Policy]].
+
+Earlier: Fixed the baseline marketplace paging bug (page 2 repeated page 1 when scores tied; the score is now rounded to 9 decimals in the query). Moved the policy choice into `utils/visibility-ranking/policy.ts`. Added tests: 29 pass (AHP-TOPSIS engine, WSV-008 paging, WSV-010 policy switch) and a `bun test` step in backend CI. Verified read-only on the dev database for both policies; the running API needs a restart. See [[2026-11-01 Baseline Paging Fix and Policy Tests]] and [[2026-11-01 AHP-TOPSIS Test Cases]].
+
+Earlier: All 13 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Profile** flow: F1 (Profile tab verified & good standing), F2 (New seller setup checklist), F3 (Warning/limited standing), F4 (Avatar action sheet & uploading spinner), F5 (Edit Profile filled with phone error & sticky Save bar), F6 (Edit Profile leave-without-saving dialog), F7 (Setup step 2 pin not moved error & auto-scroll), F8 (Sign-in Safety password + Sign-in Code off), F9 (Sign-in Code step 2 QR & key), F9b (Sign-in Code step 3 6-digit boxes & invalid code error), F10 (Sign-in Code step 4 backup codes & copied badge), F11 (Sign-in Code on with in-card turn-off confirm), and F12 (Log Out confirmation dialog). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
 Priority deals row added under the marketplace hero (`GET /marketplace/products/deals`: AHP "Priority Boost" tier and at least 30% below base price). The marketplace was reordered so the products come before the seller map, and dead footer sort links and three unused components were removed. Details: [[2026-11-01 Priority Deals Row and Marketplace Reorder]]. Validation: backend typecheck and bundle passed, web typecheck and build passed. Not checked: the deals data path (backend not running) and the desktop and phone layout of the row.
 
 Previous task: Sign-in and sign-up side panel now plays the uploaded video (`web/public/brand/sign-in-video.mp4`) instead of the photo carousel, and it is shorter (80vh). Details: [[2026-10-31 Auth Video Panel]]. Follow-up: the video column was shifted right with more left padding ([[2026-10-31 Auth Video Shifted Right]]). Validation: `bun run typecheck` in `web/` passed. Not checked in a browser.
@@ -58,6 +69,7 @@ Earlier on `main`: Stitch frames for Messages, Boost, Notifications, Listings, S
 
 ## Unresolved issues
 
+- VPS: set `VISIBILITY_POLICY=visibility-ahptopsis-v1` in its `.env` and recreate the API container.
 - Mobile freshness: owner to check on a development build that lists update after a push, nothing is fetched while backgrounded, and chat reconnects after an API restart.
 - Seller notifications: owner must apply the migration, test `GET /seller/notifications`, the read routes and `/seller/notification-settings`, and walk each trigger on a development build.
 - Marketing hub: Boost, History, Active and the Visibility Guide now live in one Marketing hub ([[2026-10-31 Marketing Hub]]).
@@ -70,7 +82,13 @@ Owner manual testing of the seller mobile app with real device builds, verifying
 
 ## Historical changelog
 
-- Latest entry: [[2026-11-01 Stitch Seller Messages Redesign Frames]]
+- Latest entry: [[2026-11-01 Boost Rule and Stock Sync]]
+- Earlier entry: [[2026-11-01 Boost Amount Left Matches Feed]]
+- Earlier entry: [[2026-11-01 Deploy Folder Removed]]
+- Earlier entry: [[2026-11-01 AHP-TOPSIS Default Policy]]
+- Earlier entry: [[2026-11-01 Baseline Paging Fix and Policy Tests]]
+- Earlier entry: [[2026-11-01 AHP-TOPSIS Test Cases]]
+- Earlier entry: [[2026-11-01 Stitch Seller Messages Redesign Frames]]
 - Earlier entry: [[2026-11-01 Boost Screen Shorter When Blocked]]
 - Earlier entry: [[2026-11-01 Messages Flow Cleanup]]
 - Earlier entries: the dated notes in this folder.
@@ -86,3 +104,6 @@ Owner manual testing of the seller mobile app with real device builds, verifying
 - n8n boost webhook sends only initial and follow_up; price_reduction boost, prompt-accept route and 3-hour price-drop gap removed. See 2026-11-01 Boost Reasons Only Initial And Follow Up.
 - A listing that starts a new cycle ends its old boost's 6-hour rule (context route clears the timer). See 2026-11-01 Follow Up Stops When Listing Starts Over.
 - Worker ends the 6-hour rule without calling n8n when no cut is possible (sold out, archived, paused, at floor, new cycle). See 2026-11-01 Follow Up Not Sent When Rule Has Ended.
+- Boost screen has Lower Price Now (manual follow_up round); old price_reduction boosts show correct post status. See 2026-11-01 Lower Price Now Button.
+- Running tab = running boosts only; Price Drops tab = waiting drops (Lower Price Now sends follow_up) + history. See 2026-11-01 Price Drops Apart From Running.
+- Leftover boost-again prompts show as skipped; migration 20261101180000 dismisses them; Boost on an already boosted listing answers 409. See 2026-11-01 Old Boost Prompts Retired.

@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { PriceDropHistoryList } from "./PriceDropHistoryList";
+import { RunningPriceDropList } from "./RunningPriceDropList";
 
-/** Every lower price that was posted. The on/off switches live behind the Settings button. */
+/** Price drops, apart from running boosts: the ones waiting for their next drop, then every lower price that was posted. */
 export function PriceDropsSection({ refreshSignal }: { refreshSignal: number }) {
-  return <PriceDropHistoryList refreshSignal={refreshSignal} />;
+  const [changed, setChanged] = useState(0);
+  return (
+    <View>
+      <RunningPriceDropList refreshSignal={refreshSignal} onChanged={() => setChanged((value) => value + 1)} />
+      <PriceDropHistoryList refreshSignal={refreshSignal + changed} />
+    </View>
+  );
 }
