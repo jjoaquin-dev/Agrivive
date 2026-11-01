@@ -2,18 +2,20 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 
-export type MarketingSection = "active" | "history" | "visibility";
+export type MarketingSection = "active" | "drops" | "history" | "visibility";
 
 interface Props {
   value: MarketingSection;
   activeCount?: number;
+  dropCount?: number;
   onChange: (value: MarketingSection) => void;
 }
 
-/** Three sections of the Marketing hub as a standard social mobile segmented control (Jakob's Law). */
-export function MarketingSectionTabs({ value, activeCount = 0, onChange }: Props) {
+/** Four sections of the Marketing hub as a standard social mobile segmented control (Jakob's Law). */
+export function MarketingSectionTabs({ value, activeCount = 0, dropCount = 0, onChange }: Props) {
   const sections: { value: MarketingSection; label: string; count?: number }[] = [
     { value: "active", label: "Running", count: activeCount > 0 ? activeCount : undefined },
+    { value: "drops", label: "Price Drops", count: dropCount > 0 ? dropCount : undefined },
     { value: "history", label: "History" },
     { value: "visibility", label: "How Buyers Find You" },
   ];
@@ -84,7 +86,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: fonts.body.medium,
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textMuted,
   },
   textSelected: {

@@ -1,6 +1,6 @@
-import { and, desc, eq, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "../../../db";
-import { listing_cycles, seller_visibility_boosts, sellers_product, sellers_profile, user } from "../../../db/schema";
+import { fb_post_logs, listing_cycles, seller_visibility_boosts, sellers_product, sellers_profile, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 
 function publicUrl(base: string | undefined, path: string) {
@@ -32,6 +32,7 @@ export async function getVisibilityBoostContext(boostId: string) {
     shopName: sellers_profile.shopName,
     listingCycleId: seller_visibility_boosts.listingCycleId,
     priceBefore: seller_visibility_boosts.priceBefore,
+    boostCreatedAt: seller_visibility_boosts.createdAt,
   }).from(seller_visibility_boosts)
     .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
     .innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId))
@@ -56,10 +57,19 @@ export async function getVisibilityBoostContext(boostId: string) {
   )).orderBy(desc(listing_cycles.startedAt)).limit(1);
   if (!cycle || cycle.id !== row.listingCycleId) throw new OrderError(409, "Listing cycle is no longer current");
 
+  // The post this boost makes first (first post, or the second post of a price drop) may already be saved.
+  const [savedPost] = await db.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(
+    eq(fb_post_logs.productId, row.productId),
+    eq(fb_post_logs.postType, row.reason === "initial" ? "first_post" : "second_post"),
+    eq(fb_post_logs.status, "success"),
+    gte(fb_post_logs.postedAt, row.boostCreatedAt),
+  )).limit(1);
+
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL ?? process.env.BETTER_AUTH_URL;
   return {
     boostId: row.boostId,
     reason: row.reason,
+    alreadyPosted: Boolean(savedPost),
     previousPrice: row.priceBefore ? Number(row.priceBefore) : null,
     product: {
       id: row.productId,
