@@ -2,7 +2,7 @@ import { and, desc, eq, lte } from "drizzle-orm";
 import { db } from "../../../db";
 import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
-import { getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
+import { getFirstPostCooldownEnd, getPriceDropPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { isBoostStuck } from "./seller.visibility-boost.used";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 
@@ -14,6 +14,14 @@ async function requirePriceDropGap(tx: Parameters<typeof getPriceDropPostCooldow
   if (!waitUntil) return;
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000));
   throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+}
+
+// A second first post soon after the last one looks like spam on the Page.
+async function requireFirstPostGap(tx: Parameters<typeof getFirstPostCooldownEnd>[0], productId: string) {
+  const waitUntil = await getFirstPostCooldownEnd(tx, productId);
+  if (!waitUntil) return;
+  const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000));
+  throw new OrderError(409, `This listing was just posted. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
 }
 
 export async function queueSellerVisibilityBoost(
@@ -84,7 +92,11 @@ export async function queueSellerVisibilityBoost(
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status,
     });
-    if (created) return { boostId: created.id, status: created.status, reason: boostReason, productId };
+    if (created) {
+      // Throwing here rolls the new boost back, so nothing is queued.
+      if (boostReason === "initial") await requireFirstPostGap(tx, productId);
+      return { boostId: created.id, status: created.status, reason: boostReason, productId };
+    }
 
     const [existing] = await tx.select({
       id: seller_visibility_boosts.id,

@@ -5,25 +5,21 @@ import { useRouter } from "expo-router";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { boostState, type SellerVisibilityBoost } from "../types";
 import { BoostHistoryCard } from "./BoostHistoryCard";
-import { PriceDropPromptList } from "./PriceDropPromptList";
 
 const activeStates = ["posting", "running", "needs_choice", "not_posted", "failed"];
 
 interface Props {
   items: SellerVisibilityBoost[];
   loading: boolean;
-  refreshSignal: number;
 }
 
-/** What needs the seller now: price drops waiting for a boost, then boosts still running. */
-export function ActiveBoostsSection({ items, loading, refreshSignal }: Props) {
+/** Boosts still going out or needing the seller. Price drops waiting for a boost have their own tab. */
+export function ActiveBoostsSection({ items, loading }: Props) {
   const router = useRouter();
   const active = items.filter((item) => activeStates.includes(boostState(item)));
 
   return (
     <View>
-      <PriceDropPromptList refreshSignal={refreshSignal} />
-
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Running boosts ({active.length})</Text>
       </View>

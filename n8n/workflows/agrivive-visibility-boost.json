@@ -59,7 +59,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        860,
+        970,
         460
       ]
     },
@@ -73,7 +73,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1080,
+        1190,
         460
       ]
     },
@@ -107,7 +107,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1300,
+        1410,
         460
       ]
     },
@@ -285,6 +285,40 @@
         420,
         300
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c3",
+              "leftValue": "={{$json.alreadyPosted}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "boost-already-posted-if",
+      "name": "3b. Already Posted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        750,
+        460
+      ]
     }
   ],
   "connections": {
@@ -321,7 +355,7 @@
       "main": [
         [
           {
-            "node": "4. Write Caption (Groq)",
+            "node": "3b. Already Posted?",
             "type": "main",
             "index": 0
           }
@@ -399,6 +433,18 @@
         [
           {
             "node": "12. Post Flash-Sale to Facebook (Backend Saves the Record)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3b. Already Posted?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "4. Write Caption (Groq)",
             "type": "main",
             "index": 0
           }

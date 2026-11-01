@@ -139333,13 +139333,16 @@ async function deliverSellerVisibilityBoosts() {
 
 // src/utils/boost-cooldown/index.ts
 var priceDropPostGapHours = 3;
-async function getPriceDropPostCooldownEnd(executor, productId, before) {
-  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, "second_post"), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
+var firstPostGapHours = 3;
+async function getPostCooldownEnd(executor, productId, postType, gapHours, before) {
+  const [last] = await executor.select({ postedAt: fb_post_logs.postedAt }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, productId), eq(fb_post_logs.postType, postType), eq(fb_post_logs.status, "success"), before ? lt(fb_post_logs.postedAt, before) : undefined)).orderBy(desc(fb_post_logs.postedAt)).limit(1);
   if (!last)
     return null;
-  const end = new Date(last.postedAt.getTime() + priceDropPostGapHours * 3600000);
+  const end = new Date(last.postedAt.getTime() + gapHours * 3600000);
   return end.getTime() > Date.now() ? end : null;
 }
+var getPriceDropPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "second_post", priceDropPostGapHours, before);
+var getFirstPostCooldownEnd = (executor, productId, before) => getPostCooldownEnd(executor, productId, "first_post", firstPostGapHours, before);
 
 // src/modules/seller/services/seller.visibility-boost.queue.ts
 async function requirePriceDropGap(tx, productId) {
@@ -139348,6 +139351,13 @@ async function requirePriceDropGap(tx, productId) {
     return;
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
   throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+}
+async function requireFirstPostGap(tx, productId) {
+  const waitUntil = await getFirstPostCooldownEnd(tx, productId);
+  if (!waitUntil)
+    return;
+  const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
+  throw new OrderError(409, `This listing was just posted. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
 }
 async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial", promptId) {
   return db2.transaction(async (tx) => {
@@ -139401,8 +139411,11 @@ async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status
     });
-    if (created)
+    if (created) {
+      if (boostReason === "initial")
+        await requireFirstPostGap(tx, productId);
       return { boostId: created.id, status: created.status, reason: boostReason, productId };
+    }
     const [existing] = await tx.select({
       id: seller_visibility_boosts.id,
       status: seller_visibility_boosts.status,
@@ -142177,7 +142190,8 @@ async function getVisibilityBoostContext(boostId) {
     sellerRoles: user.role,
     shopName: sellers_profile.shopName,
     listingCycleId: seller_visibility_boosts.listingCycleId,
-    priceBefore: seller_visibility_boosts.priceBefore
+    priceBefore: seller_visibility_boosts.priceBefore,
+    boostCreatedAt: seller_visibility_boosts.createdAt
   }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).innerJoin(user, eq(user.id, seller_visibility_boosts.sellerId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, seller_visibility_boosts.sellerId), eq(sellers_profile.isCurrent, true))).where(eq(seller_visibility_boosts.id, boostId)).limit(1);
   if (!row)
     throw new OrderError(404, "Visibility boost not found");
@@ -142190,10 +142204,12 @@ async function getVisibilityBoostContext(boostId) {
   const [cycle] = await db2.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, row.productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
   if (!cycle || cycle.id !== row.listingCycleId)
     throw new OrderError(409, "Listing cycle is no longer current");
+  const [savedPost] = await db2.select({ id: fb_post_logs.id }).from(fb_post_logs).where(and(eq(fb_post_logs.productId, row.productId), eq(fb_post_logs.postType, row.reason === "initial" ? "first_post" : "second_post"), eq(fb_post_logs.status, "success"), gte(fb_post_logs.postedAt, row.boostCreatedAt))).limit(1);
   const apiBase = process.env.SOCIAL_PUBLIC_API_URL ?? process.env.BETTER_AUTH_URL;
   return {
     boostId: row.boostId,
     reason: row.reason,
+    alreadyPosted: Boolean(savedPost),
     previousPrice: row.priceBefore ? Number(row.priceBefore) : null,
     product: {
       id: row.productId,
