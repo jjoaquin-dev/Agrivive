@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "02 Product/Feature Map.md",
+                "file": "docs/WSV-AHP-TOPSIS-test-results.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Feature Map"
+              "title": "WSV-AHP-TOPSIS-test-results"
             }
           }
         ]
@@ -55,7 +55,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "chr",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -79,8 +79,7 @@
               "title": "Bookmarks"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -189,8 +188,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "92b5c31836f9f735",
+  "active": "f0baab3ce27963fa",
   "lastOpenFiles": [
+    "04 Delivery/2026-11-01 Deploy Folder Removed.md",
+    "04 Delivery/2026-11-01 AHP-TOPSIS Default Policy.md",
+    "02 Product/Feature Map.md",
     "04 Delivery/2026-11-01 Baseline Paging Fix and Policy Tests.md",
     "04 Delivery/2026-11-01 AHP-TOPSIS Test Cases.md",
     "docs/WSV-AHP-TOPSIS-test-sheet.md",
@@ -216,9 +218,6 @@
     "04 Delivery/2026-11-01 Stitch Seller Messages Redesign Frames.md",
     "04 Delivery/2026-11-01 Marketing Price Drops Merged Into Running.md",
     "04 Delivery/2026-11-01 Boost Screen Shorter When Blocked.md",
-    "04 Delivery/2026-11-01 Messages Flow Cleanup.md",
-    "04 Delivery/2026-11-01 Boost Wait Time Shown Up Front.md",
-    "04 Delivery/2026-11-01 Chat Unread Count and Question Answers in Chat.md",
     "Untitled 1.canvas",
     "Untitled.canvas",
     "04 Delivery/2026-10-30 Splash Screen Refinement.md.tmp.11289.6355cc5c447e",
