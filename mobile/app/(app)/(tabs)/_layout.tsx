@@ -10,7 +10,7 @@ import {
   User,
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
-import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
+import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
 import { useRefreshOnSignal } from "../../../src/hooks/useRefreshOnSignal";
 
 export default function TabsLayout() {
@@ -18,8 +18,8 @@ export default function TabsLayout() {
 
   const checkUnread = useCallback(async () => {
     try {
-      const res = await fetchSellerMessages({ status: "open", limit: 1 });
-      setUnreadCount(res.openCount || 0);
+      const res = await fetchConversationUnreadCount();
+      setUnreadCount(res.unreadMessages ?? 0);
     } catch {}
   }, []);
 
@@ -77,6 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="orders"
         options={{
+          headerShown: false,
           title: "Reservations",
           tabBarIcon: ({ color, size }) => (
             <CalendarDays color={color} size={size || 22} />
@@ -88,6 +89,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="inventory"
         options={{
+          headerShown: false,
           title: "Listings",
           tabBarIcon: ({ color, size }) => (
             <LayoutGrid color={color} size={size || 22} />
@@ -99,6 +101,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="messages"
         options={{
+          headerShown: false,
           title: "Messages",
           tabBarBadge:
             unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : undefined,

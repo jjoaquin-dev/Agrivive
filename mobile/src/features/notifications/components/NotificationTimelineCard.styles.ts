@@ -1,25 +1,22 @@
 import { StyleSheet } from "react-native";
-import { colors, fonts, radii, spacing, typography } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 
 export const styles = StyleSheet.create({
-  card: { paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
-  cardUrgent: { backgroundColor: "#FFFBF7" },
-  // The blue dot sits in the left gutter, so unread rows are found by scanning down one edge.
-  gutterDot: { position: "absolute", left: -12, top: 28, width: 8, height: 8, borderRadius: 4, backgroundColor: "#3B82F6" },
-  topRow: { flexDirection: "row", alignItems: "flex-start" },
-  iconWrap: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
-  headerContent: { flex: 1 },
-  titleLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { flex: 1, ...typography.bodyLarge, fontFamily: fonts.heading.semiBold, color: colors.text, marginRight: spacing.sm },
-  titleUrgent: { color: "#C2410C" },
-  timeWrap: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-  timeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#D1D5DB" },
-  timeText: { ...typography.labelSmall, color: colors.textMuted },
-  subtitle: { ...typography.body, color: colors.textMuted, marginTop: 2 },
-  actionsRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm, marginLeft: 44 + spacing.md },
-  actionBtn: { minHeight: 40, paddingVertical: spacing.sm, paddingHorizontal: spacing.base, borderRadius: radii.full },
-  actionBtnOrange: { borderColor: colors.terracotta },
-  actionBtnText: { fontSize: 13 },
-  actionBtnTextOrange: { color: colors.terracotta },
-  actionBtnGrayText: { fontSize: 13, color: colors.text },
+  row: { backgroundColor: colors.surface, paddingTop: 14, paddingBottom: spacing.md, paddingHorizontal: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
+  urgentBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: 3, backgroundColor: colors.warning },
+  topRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
+  gutter: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingTop: 4 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  content: { flex: 1, minWidth: 0 },
+  titleLine: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing.sm },
+  title: { flex: 1, fontSize: 15, color: colors.text },
+  time: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  body: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: 4 },
+  pill: { alignSelf: "flex-start", marginTop: 10, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.full, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA" },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
+  actions: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md },
+  primary: { minHeight: 44, paddingHorizontal: spacing.base, borderRadius: radii.button, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
+  ghost: { minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radii.button, alignItems: "center", justifyContent: "center" },
+  actionText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.primary },
 });

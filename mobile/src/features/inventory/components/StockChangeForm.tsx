@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from "react";
-import { ScrollView, KeyboardAvoidingView, Platform, View, Text } from "react-native";
-import { AlertTriangle, Check } from "lucide-react-native";
+import { ScrollView, KeyboardAvoidingView, Platform, View } from "react-native";
+import { Check } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { colors } from "../../../theme";
 import { InputComponent } from "../../../components/InputComponent";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { StockActionTabs, type StockActionType } from "./StockActionTabs";
+import { StockQuickAmounts } from "./StockQuickAmounts";
 import { StockProjectionCard } from "./StockProjectionCard";
 import { StockReasonSelector, TAKE_AWAY_REASONS } from "./StockReasonSelector";
 import { StockFreshnessWarningModal } from "./StockFreshnessWarningModal";
@@ -42,13 +43,13 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
   const unitLabel = product.scalingType === "kilo" ? "kg" : product.scalingType;
   const inputQty = parseFloat(quantityStr) || 0;
 
-  const isAgingBatch = useMemo(() => {
-    if (actionType !== "in" || currentQty <= 0 || !product.publishedAt) return false;
-    const publishedTime = new Date(product.publishedAt).getTime();
-    if (isNaN(publishedTime)) return false;
-    const hoursElapsed = (Date.now() - publishedTime) / (1000 * 60 * 60);
-    return hoursElapsed >= 12;
-  }, [actionType, currentQty, product.publishedAt]);
+  const hoursOld = useMemo(() => {
+    const publishedTime = product.publishedAt ? new Date(product.publishedAt).getTime() : NaN;
+    return isNaN(publishedTime) ? 0 : (Date.now() - publishedTime) / (1000 * 60 * 60);
+  }, [product.publishedAt]);
+  const isAgingBatch = actionType === "in" && currentQty > 0 && hoursOld >= 12;
+  const currentPrice = parseFloat(product.productPrice as string) || 0;
+  const startPrice = product.basePrice != null ? parseFloat(product.basePrice as string) || currentPrice : currentPrice;
 
   const projectedQty = useMemo(() => {
     if (isNaN(inputQty) || inputQty <= 0) return currentQty;
@@ -131,32 +132,33 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
       >
         <StockActionTabs actionType={actionType} onChange={handleTypeChange} />
 
-        <StockProjectionCard
-          currentQty={currentQty}
-          projectedQty={projectedQty}
-          unitLabel={unitLabel}
-          isExcessStockOut={isExcessStockOut}
-        />
-
-        {isAgingBatch ? (
-          <View style={styles.agingBanner}>
-            <AlertTriangle size={16} color={colors.terracotta} />
-            <Text style={styles.agingBannerText}>
-              This batch is over 12 hours old (0% Freshness). Adding produce here will keep the old batch age and discounted price.
-            </Text>
-          </View>
-        ) : null}
-
         <InputComponent
-          label={`${actionType === "in" ? "Quantity to Add" : "Quantity to Deduct"} (${unitLabel})`}
+          label={`${actionType === "in" ? "How much to add?" : "How much to take away?"} (${unitLabel})`}
           placeholder="0.00"
           keyboardType="decimal-pad"
           value={quantityStr}
           error={error && !error.includes("reason") ? error : undefined}
+          inputWrapperStyle={styles.quantityInput}
+          containerStyle={styles.quantityField}
           onChangeText={(text) => {
             setQuantityStr(text);
             if (error) setError(null);
           }}
+        />
+        <StockQuickAmounts
+          actionType={actionType}
+          unitLabel={unitLabel}
+          value={inputQty}
+          onPick={(amount) => { setQuantityStr(String(amount)); setError(null); }}
+        />
+
+        <StockProjectionCard
+          actionType={actionType}
+          currentQty={currentQty}
+          changeQty={inputQty > 0 ? inputQty : 0}
+          projectedQty={projectedQty}
+          unitLabel={unitLabel}
+          isExcessStockOut={isExcessStockOut}
         />
 
         <StockReasonSelector
@@ -168,32 +170,30 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
           error={error}
           clearError={() => setError(null)}
         />
-
+      </ScrollView>
+      <View style={styles.footer}>
         <ButtonComponent
-          title={
-            loading
-              ? "Saving..."
-              : actionType === "in"
-              ? "Save Added Amount"
-              : "Save Removed Amount"
-          }
+          title={loading ? "Saving..." : "Update Amount"}
           variant={actionType === "out" ? "destructive" : "primary"}
           icon={<Check size={18} color={colors.white} />}
           onPress={handleConfirm}
           loading={loading}
           disabled={loading || isExcessStockOut}
           style={styles.submitButton}
+          textStyle={styles.submitText}
         />
-
-        <StockFreshnessWarningModal
-          visible={showAgingModal}
-          productName={product.productName}
-          onPostNewHarvest={handlePostNewHarvest}
-          onProceedAnyway={executeSubmit}
-          onCancel={() => setShowAgingModal(false)}
-          loading={loading}
-        />
-      </ScrollView>
+      </View>
+      <StockFreshnessWarningModal
+        visible={showAgingModal}
+        productName={product.productName}
+        hoursOld={hoursOld}
+        startPrice={startPrice}
+        currentPrice={currentPrice}
+        onPostNewHarvest={handlePostNewHarvest}
+        onProceedAnyway={executeSubmit}
+        onCancel={() => setShowAgingModal(false)}
+        loading={loading}
+      />
     </KeyboardAvoidingView>
   );
 };

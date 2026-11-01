@@ -32,4 +32,5 @@ export interface SellerProductInquiryItem {
 export interface SellerProductInquiriesResponse {
   items: SellerProductInquiryItem[];
   nextCursor: string | null;
+  openCount: number;
 }

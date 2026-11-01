@@ -8,7 +8,7 @@ import { useInventory } from "../../../src/features/inventory/hooks/useInventory
 import { fetchStockAdjustments } from "../../../src/features/inventory/api/stock-adjustments";
 import type { StockAdjustment } from "../../../src/features/inventory/types";
 import { fetchSellerNotifications } from "../../../src/features/notifications/api/seller-notifications";
-import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
+import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
 import { DashboardHeader } from "../../../src/features/dashboard/components/DashboardHeader";
 import { DashboardTwinActions } from "../../../src/features/dashboard/components/DashboardTwinActions";
 import { DashboardMetrics } from "../../../src/features/dashboard/components/DashboardMetrics";
@@ -50,10 +50,10 @@ export default function HomeScreen() {
     try {
       const [notifRes, msgRes] = await Promise.all([
         fetchSellerNotifications({ limit: 1 }),
-        fetchSellerMessages({ status: "open", limit: 1 }),
+        fetchConversationUnreadCount(),
       ]);
       setUnreadCount(notifRes.unreadCount);
-      setOpenMessageCount(msgRes.openCount);
+      setOpenMessageCount(msgRes.unreadMessages ?? 0);
     } catch (err) {
       console.error("Failed to load notification/message count", err);
     }

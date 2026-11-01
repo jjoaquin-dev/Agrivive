@@ -28,6 +28,14 @@ export function fetchConversationMessages(conversationId: string) {
   return apiFetch<ConversationMessage[]>(`/conversations/${encodeURIComponent(conversationId)}/messages`);
 }
 
+export function fetchConversation(id: string) {
+  return apiFetch<Conversation>(`/conversations/${encodeURIComponent(id)}`);
+}
+
+export function fetchConversationUnreadCount() {
+  return apiFetch<{ unreadMessages: number; unreadConversations: number }>("/conversations/unread-count");
+}
+
 export function createConversation(input: {
   contextType: ConversationContext;
   productId?: string;

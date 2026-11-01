@@ -13,7 +13,7 @@ async function requirePriceDropGap(tx: Parameters<typeof getPriceDropPostCooldow
   const waitUntil = await getPriceDropPostCooldownEnd(tx, productId);
   if (!waitUntil) return;
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000));
-  throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+  throw new OrderError(409, `You just boosted the lower price of this product. Please wait about ${hours} hour${hours === 1 ? "" : "s"} before you boost it again.`);
 }
 
 // A second first post soon after the last one looks like spam on the Page.
@@ -21,7 +21,7 @@ async function requireFirstPostGap(tx: Parameters<typeof getFirstPostCooldownEnd
   const waitUntil = await getFirstPostCooldownEnd(tx, productId);
   if (!waitUntil) return;
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000));
-  throw new OrderError(409, `This listing was just posted. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+  throw new OrderError(409, `You just boosted this product. Please wait about ${hours} hour${hours === 1 ? "" : "s"} before you boost it again.`);
 }
 
 export async function queueSellerVisibilityBoost(

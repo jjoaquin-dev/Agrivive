@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
+import { and, count, desc, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "../../../db";
 import { product_inquiries, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
@@ -37,8 +37,11 @@ export async function listSellerProductInquiries(sellerId: string, query: Seller
         openOnly ? isNull(product_inquiries.repliedAt) : undefined,
         before,
       )).orderBy(desc(product_inquiries.createdAt), desc(product_inquiries.id)).limit(limit + 1);
+    const [open] = await tx.select({ value: count() }).from(product_inquiries).where(and(
+      eq(product_inquiries.sellerId, sellerId), isNull(product_inquiries.repliedAt),
+    ));
     const page = rows.slice(0, limit);
     const last = page[page.length - 1];
-    return { items: page, nextCursor: rows.length > limit ? last?.id ?? null : null };
+    return { items: page, nextCursor: rows.length > limit ? last?.id ?? null : null, openCount: open?.value ?? 0 };
   });
 }

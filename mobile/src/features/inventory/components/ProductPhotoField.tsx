@@ -110,7 +110,7 @@ export const ProductPhotoField: React.FC<ProductPhotoFieldProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      {displayUri ? <Text style={styles.label}>{label}</Text> : null}
 
       {displayUri ? (
         <View style={styles.previewContainer}>
@@ -129,7 +129,7 @@ export const ProductPhotoField: React.FC<ProductPhotoFieldProps> = ({
                 style={styles.changeButton}
               >
                 <Camera size={16} color={colors.white} />
-                <Text style={styles.changeButtonText}>Change</Text>
+                <Text style={styles.changeButtonText}>Change Photo</Text>
               </Pressable>
               {onImageRemoved ? (
                 <Pressable
@@ -163,8 +163,8 @@ export const ProductPhotoField: React.FC<ProductPhotoFieldProps> = ({
               <View style={styles.iconCircle}>
                 <Camera size={24} color={colors.primary} />
               </View>
-              <Text style={styles.uploadPrompt}>Tap to add produce photo</Text>
-              <Text style={styles.uploadSubtext}>JPEG, PNG, or WEBP (up to 5MB)</Text>
+              <Text style={styles.uploadPrompt}>Add Produce Photo</Text>
+              <Text style={styles.uploadSubtext}>Take a photo or choose from library · Max 5 MB</Text>
             </>
           )}
         </Pressable>
@@ -188,18 +188,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   uploadBox: {
-    height: 140,
-    backgroundColor: colors.surface,
+    height: 130,
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: colors.border,
-    borderRadius: radii.card,
+    borderColor: "#D1D5DB",
+    borderRadius: radii.card - 4,
     justifyContent: "center",
     alignItems: "center",
     padding: spacing.base,
   },
   uploadBoxPressed: {
-    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.primary,
   },
   uploadBoxError: {
     borderColor: colors.error,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   uploadPrompt: {
     fontFamily: fonts.body.semiBold,
     fontSize: 14,
-    color: colors.primary,
+    color: colors.text,
   },
   uploadSubtext: {
     fontFamily: fonts.body.regular,

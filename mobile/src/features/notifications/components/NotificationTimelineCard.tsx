@@ -1,100 +1,57 @@
 import React from "react";
-import { Text, View } from "react-native";
-import { ButtonComponent } from "../../../components/ButtonComponent";
-import {
-  Package,
-  Clock,
-  MessageCircle,
-  Thermometer,
-  CheckCircle2,
-  XCircle,
-  PartyPopper,
-  Megaphone,
-  ShieldAlert,
-} from "lucide-react-native";
+import { Pressable, Text, View } from "react-native";
+import { Package, Clock, MessageCircle, Thermometer, CheckCircle2, XCircle, PartyPopper, Megaphone, ShieldAlert } from "lucide-react-native";
+import { colors, fonts } from "../../../theme";
 import type { UnifiedNotificationItem } from "../types";
 import { styles } from "./NotificationTimelineCard.styles";
 
-function renderIcon(type: UnifiedNotificationItem["iconType"], urgent: boolean) {
-  const size = 20;
-  switch (type) {
-    case "clock": return <Clock size={size} color="#FFFFFF" />;
-    case "message": return <MessageCircle size={size} color="#FFFFFF" />;
-    case "thermometer": return <Thermometer size={size} color="#FFFFFF" />;
-    case "check": return <CheckCircle2 size={size} color="#FFFFFF" />;
-    case "cross": return <XCircle size={size} color="#FFFFFF" />;
-    case "celebration": return <PartyPopper size={size} color="#FFFFFF" />;
-    case "megaphone": return <Megaphone size={size} color="#FFFFFF" />;
-    case "shield": return <ShieldAlert size={size} color="#FFFFFF" />;
-    default: return <Package size={size} color="#FFFFFF" />;
-  }
-}
+const ICONS = {
+  package: Package, clock: Clock, message: MessageCircle, thermometer: Thermometer, check: CheckCircle2,
+  cross: XCircle, celebration: PartyPopper, megaphone: Megaphone, shield: ShieldAlert,
+} as const;
 
-function getIconBg(type: UnifiedNotificationItem["iconType"], urgent: boolean) {
-  if (urgent) return "#F97316";
-  switch (type) {
-    case "message": return "#3B82F6";
-    case "thermometer":
-    case "megaphone": return "#F5A83C";
-    case "cross": return "#EF4444";
-    case "celebration": return "#10B981";
-    case "clock":
-    case "shield": return "#F97316";
-    default: return "#16A34A";
-  }
+function tone(item: UnifiedNotificationItem) {
+  if (item.urgent) return { fg: colors.warning, bg: "#FFF7ED" };
+  if (item.iconType === "cross") return { fg: colors.error, bg: "#FEF2F2" };
+  return { fg: colors.primary, bg: colors.primaryLight };
 }
 
 export function NotificationTimelineCard({ item }: { item: UnifiedNotificationItem }) {
-  const isUrgent = item.urgent;
-  const isUnread = !item.read;
+  const unread = !item.read;
+  const Icon = ICONS[item.iconType] ?? Package;
+  const { fg, bg } = tone(item);
 
   return (
-    <View
-      style={[styles.card, isUrgent && styles.cardUrgent]}
-    >
-      {isUnread && <View style={styles.gutterDot} accessibilityLabel="Unread" />}
+    <View style={styles.row}>
+      {item.urgent ? <View style={styles.urgentBar} /> : null}
       <View style={styles.topRow}>
-        <View style={[styles.iconWrap, { backgroundColor: getIconBg(item.iconType, isUrgent) }]}>
-          {renderIcon(item.iconType, isUrgent)}
+        <View style={styles.gutter}>
+          <View style={[styles.dot, { backgroundColor: unread ? colors.primary : "transparent" }]} accessibilityLabel={unread ? "Unread" : undefined} />
+          <View style={[styles.iconWrap, { backgroundColor: bg }]}><Icon size={20} color={fg} /></View>
         </View>
-
-        <View style={styles.headerContent}>
+        <View style={styles.content}>
           <View style={styles.titleLine}>
-            <Text style={[styles.title, isUrgent && styles.titleUrgent]} numberOfLines={1}>
-              {item.title}
-            </Text>
-            <View style={styles.timeWrap}>
-              <View style={styles.timeDot} />
-              <Text style={styles.timeText}>{item.timestamp}</Text>
-            </View>
+            <Text style={[styles.title, { fontFamily: unread ? fonts.heading.semiBold : fonts.body.medium }]} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.time}>{item.timestamp}</Text>
           </View>
-          <Text style={styles.subtitle}>{item.subtitle}</Text>
+          <Text style={styles.body}>{item.subtitle}</Text>
+          {item.urgent ? <View style={styles.pill}><Text style={styles.pillText}>Needs action</Text></View> : null}
+          {item.primaryAction || item.secondaryAction ? (
+            <View style={styles.actions}>
+              {item.primaryAction ? (
+                <Pressable onPress={item.primaryAction.onPress} accessibilityRole="button" style={styles.primary}>
+                  <Text style={styles.actionText}>{item.primaryAction.label}</Text>
+                </Pressable>
+              ) : null}
+              {item.secondaryAction ? (
+                <Pressable onPress={item.secondaryAction.onPress} accessibilityRole="button" style={styles.ghost}>
+                  <Text style={styles.actionText}>{item.secondaryAction.label}</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </View>
-
-      {(item.primaryAction || item.secondaryAction) && (
-        <View style={styles.actionsRow}>
-          {item.primaryAction && (
-            <ButtonComponent
-              title={item.primaryAction.label}
-              variant="secondary"
-              onPress={item.primaryAction.onPress}
-              style={[styles.actionBtn, (item.primaryAction.variant === "warning" || isUrgent) && styles.actionBtnOrange]}
-              textStyle={[styles.actionBtnText, (item.primaryAction.variant === "warning" || isUrgent) && styles.actionBtnTextOrange]}
-            />
-          )}
-
-          {item.secondaryAction && (
-            <ButtonComponent
-              title={item.secondaryAction.label}
-              variant="secondary"
-              onPress={item.secondaryAction.onPress}
-              style={styles.actionBtn}
-              textStyle={styles.actionBtnGrayText}
-            />
-          )}
-        </View>
-      )}
     </View>
   );
 }

@@ -137145,6 +137145,24 @@ async function updateSellerProduct(sellerId, productId, body) {
   return updated;
 }
 
+// src/utils/seller-notifications/stock-level.ts
+async function notifyStockLevel(tx, product, removed) {
+  const after = Number(product.productQty ?? 0);
+  const before = after + removed;
+  const threshold = product.lowStockThreshold === null ? null : Number(product.lowStockThreshold);
+  const soldOut = after <= 0 && before > 0;
+  const runningLow = !soldOut && threshold !== null && threshold > 0 && before > threshold && after <= threshold;
+  if (!soldOut && !runningLow)
+    return;
+  await createSellerNotification(tx, {
+    sellerId: product.userId,
+    kind: soldOut ? "sold_out" : "running_low",
+    dedupeKey: `${soldOut ? "sold-out" : "running-low"}:${product.id}:${crypto.randomUUID()}`,
+    productId: product.id,
+    payload: { productName: product.productName, left: `${after} ${product.scalingType}` }
+  });
+}
+
 // src/modules/seller/services/seller.product.stock-change.ts
 var maxHundredths = 9999999999n;
 function fromDecimal(value) {
@@ -137219,6 +137237,9 @@ async function changeSellerProductStock(sellerId, productId, delta, reason) {
       afterQty: toDecimal(after),
       reason: cleanReason
     });
+    if (signedChange < 0n && updatedProduct.isActive) {
+      await notifyStockLevel(tx, updatedProduct, Number(change) / 100);
+    }
     if (before === 0n && after > 0n) {
       await queueSellerListingEvent(tx, updatedProduct.id, "restock", {
         stock: toDecimal(after)
@@ -139095,29 +139116,162 @@ async function listSellerProductInquiries(sellerId, query) {
       repliedAt: product_inquiries.repliedAt,
       createdAt: product_inquiries.createdAt
     }).from(product_inquiries).innerJoin(sellers_product, eq(product_inquiries.productId, sellers_product.id)).where(and(eq(product_inquiries.sellerId, sellerId), openOnly ? isNull2(product_inquiries.repliedAt) : undefined, before)).orderBy(desc(product_inquiries.createdAt), desc(product_inquiries.id)).limit(limit + 1);
+    const [open] = await tx.select({ value: count() }).from(product_inquiries).where(and(eq(product_inquiries.sellerId, sellerId), isNull2(product_inquiries.repliedAt)));
     const page = rows.slice(0, limit);
     const last = page[page.length - 1];
-    return { items: page, nextCursor: rows.length > limit ? last?.id ?? null : null };
+    return { items: page, nextCursor: rows.length > limit ? last?.id ?? null : null, openCount: open?.value ?? 0 };
+  });
+}
+
+// src/modules/conversations/services/conversation.direct.find-or-create.ts
+async function findOrCreateDirectConversation(tx, input) {
+  const contextKey = `direct:${input.buyerId}:${input.sellerId}`;
+  const now = new Date;
+  const [existing] = await tx.select().from(conversations).where(eq(conversations.contextKey, contextKey)).for("update").limit(1);
+  if (existing) {
+    const [updated] = await tx.update(conversations).set({
+      contextType: input.contextType,
+      productId: input.productId ?? existing.productId,
+      orderId: input.orderId ?? existing.orderId,
+      status: "open",
+      lastMessageAt: now,
+      updatedAt: now
+    }).where(eq(conversations.id, existing.id)).returning();
+    return updated;
+  }
+  const [created] = await tx.insert(conversations).values({
+    contextType: input.contextType,
+    contextKey,
+    buyerId: input.buyerId,
+    sellerId: input.sellerId,
+    productId: input.productId ?? undefined,
+    orderId: input.orderId ?? undefined,
+    lastMessageAt: now
+  }).returning();
+  await tx.insert(conversation_participants).values([
+    { conversationId: created.id, userId: input.buyerId },
+    { conversationId: created.id, userId: input.sellerId }
+  ]);
+  return created;
+}
+
+// src/modules/conversations/services/conversation.realtime.ts
+var subscriptions = new Map;
+var socketConversations = new WeakMap;
+function subscribeConversation(socket, conversationId) {
+  let sockets = subscriptions.get(conversationId);
+  if (!sockets) {
+    sockets = new Set;
+    subscriptions.set(conversationId, sockets);
+  }
+  sockets.add(socket);
+  let conversations = socketConversations.get(socket);
+  if (!conversations) {
+    conversations = new Set;
+    socketConversations.set(socket, conversations);
+  }
+  conversations.add(conversationId);
+}
+function unsubscribeConversation(socket) {
+  const conversations = socketConversations.get(socket);
+  if (!conversations)
+    return;
+  for (const conversationId of conversations) {
+    const sockets = subscriptions.get(conversationId);
+    sockets?.delete(socket);
+    if (sockets?.size === 0)
+      subscriptions.delete(conversationId);
+  }
+  socketConversations.delete(socket);
+}
+function publishConversationMessage(conversationId, message) {
+  const sockets = subscriptions.get(conversationId);
+  if (!sockets)
+    return;
+  const payload = JSON.stringify({ type: "conversation.message.created", conversationId, message });
+  for (const socket of sockets)
+    socket.send(payload);
+}
+
+// src/modules/notifications/services/notifications.outbox.enqueue-conversation.ts
+var aggregationWindowMs = () => {
+  const seconds = Number(process.env.PUSH_MESSAGE_WINDOW_SECONDS ?? 60);
+  return Math.max(10, Math.min(seconds, 3600)) * 1000;
+};
+async function enqueueConversationNotification(tx, recipientUserId, conversationId, type, createdAt) {
+  const windowMs = aggregationWindowMs();
+  const windowStart = new Date(Math.floor(createdAt.getTime() / windowMs) * windowMs);
+  const dedupeKey = `${recipientUserId}:${type}:${windowStart.toISOString()}`;
+  const availableAt = new Date(createdAt.getTime() + windowMs);
+  const channel = type === "seller_message" ? await sellerMessageChannel(tx, recipientUserId) : undefined;
+  await tx.insert(notification_outbox).values({
+    recipientUserId,
+    type,
+    aggregationKey: `${type}:${recipientUserId}`,
+    dedupeKey,
+    referenceId: conversationId,
+    itemCount: 1,
+    payload: { conversationId, type, ...channel ? { channel } : {} },
+    availableAt,
+    createdAt,
+    updatedAt: createdAt
+  }).onConflictDoUpdate({
+    target: notification_outbox.dedupeKey,
+    set: {
+      itemCount: sql3`${notification_outbox.itemCount} + 1`,
+      referenceId: conversationId,
+      availableAt,
+      updatedAt: createdAt
+    }
   });
 }
 
 // src/modules/seller/services/seller.product.inquiry.reply.ts
+var maxQuestionLength = 200;
 async function replySellerProductInquiry(sellerId, inquiryId, reply) {
   const text = reply.trim();
   if (!text)
     throw new OrderError(400, "Reply is required");
-  return db2.transaction(async (tx) => {
+  const result = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, sellerId);
     const [inquiry] = await tx.select().from(product_inquiries).where(and(eq(product_inquiries.id, inquiryId), eq(product_inquiries.sellerId, sellerId))).for("update").limit(1);
     if (!inquiry)
       throw new OrderError(404, "Product inquiry not found");
     if (inquiry.repliedAt)
       throw new OrderError(409, "Product inquiry already answered");
-    const [updated] = await tx.update(product_inquiries).set({ reply: text, repliedAt: new Date }).where(and(eq(product_inquiries.id, inquiryId), eq(product_inquiries.sellerId, sellerId), isNull2(product_inquiries.repliedAt))).returning();
+    const now = new Date;
+    const [updated] = await tx.update(product_inquiries).set({ reply: text, repliedAt: now }).where(and(eq(product_inquiries.id, inquiryId), eq(product_inquiries.sellerId, sellerId), isNull2(product_inquiries.repliedAt))).returning();
     if (!updated)
       throw new OrderError(404, "Open product inquiry not found");
-    return updated;
+    const [product] = await tx.select({ name: sellers_product.productName }).from(sellers_product).where(eq(sellers_product.id, inquiry.productId)).limit(1);
+    const conversation = await findOrCreateDirectConversation(tx, {
+      buyerId: inquiry.buyerId,
+      sellerId,
+      contextType: "product",
+      productId: inquiry.productId
+    });
+    const clientMessageId = `inquiry-answer:${inquiry.id}`;
+    const [duplicate] = await tx.select({ id: conversation_messages.id }).from(conversation_messages).where(and(eq(conversation_messages.conversationId, conversation.id), eq(conversation_messages.clientMessageId, clientMessageId))).limit(1);
+    let message;
+    if (!duplicate) {
+      const question = inquiry.question.length > maxQuestionLength ? `${inquiry.question.slice(0, maxQuestionLength)}\u2026` : inquiry.question;
+      [message] = await tx.insert(conversation_messages).values({
+        conversationId: conversation.id,
+        senderId: sellerId,
+        clientMessageId,
+        body: `About your question on ${product?.name ?? "your product"}: "${question}"
+
+${text}`,
+        createdAt: now
+      }).returning();
+      await tx.update(conversation_participants).set({ lastReadAt: now }).where(and(eq(conversation_participants.conversationId, conversation.id), eq(conversation_participants.userId, sellerId)));
+      await enqueueConversationNotification(tx, inquiry.buyerId, conversation.id, "buyer_message", now);
+    }
+    return { inquiry: updated, conversationId: conversation.id, message };
   });
+  if (result.message)
+    publishConversationMessage(result.conversationId, result.message);
+  return { ...result.inquiry, conversationId: result.conversationId };
 }
 
 // src/modules/seller/index/seller.product.inquiry.ts
@@ -139350,14 +139504,14 @@ async function requirePriceDropGap(tx, productId) {
   if (!waitUntil)
     return;
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
-  throw new OrderError(409, `A price drop post just went out. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+  throw new OrderError(409, `You just boosted the lower price of this product. Please wait about ${hours} hour${hours === 1 ? "" : "s"} before you boost it again.`);
 }
 async function requireFirstPostGap(tx, productId) {
   const waitUntil = await getFirstPostCooldownEnd(tx, productId);
   if (!waitUntil)
     return;
   const hours = Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000));
-  throw new OrderError(409, `This listing was just posted. You can boost again in about ${hours} hour${hours === 1 ? "" : "s"}.`);
+  throw new OrderError(409, `You just boosted this product. Please wait about ${hours} hour${hours === 1 ? "" : "s"} before you boost it again.`);
 }
 async function queueSellerVisibilityBoost(sellerId, productId, reason = "initial", promptId) {
   return db2.transaction(async (tx) => {
@@ -139525,14 +139679,17 @@ async function readSellerVisibilityBoost(sellerId, productId) {
     const usedPosts = cycle ? await countUsedBoosts(tx, productId, cycle.id) : 0;
     const periodsApplied = product.priceReductionPeriodsApplied ?? 0;
     const maxAllowed = periodsApplied + 1;
-    const canBoost = usedPosts < maxAllowed;
+    const hasRoom = usedPosts < maxAllowed;
+    const waitUntil = !hasRoom ? null : periodsApplied > 0 ? await getPriceDropPostCooldownEnd(tx, productId) : boost ? null : await getFirstPostCooldownEnd(tx, productId);
+    const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3600000)) : 0;
+    const canBoost = hasRoom && !waitUntil;
     const currentPriceNum = Number(product.currentPrice ?? 0);
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
     const dropAmount = Number(product.priceReductionAmount ?? 0);
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
-    const headline = periodsApplied === 0 ? canBoost ? "Ready to Boost" : "Boost Is Running" : canBoost ? "Price Dropped" : "New Price Posted";
-    const message = periodsApplied === 0 ? canBoost ? "Post this listing on the Agrivive Facebook Page." : dropsOn ? "Your listing was posted. The price drops every 6 hours until it reaches your final price." : "Your listing was posted on the Agrivive Facebook Page." : canBoost ? `The price went from \u20B1${basePriceNum.toFixed(2)} to \u20B1${currentPriceNum.toFixed(2)}. Post the new price.` : "Your new price was posted. The next drop comes by itself.";
+    const headline = waitUntil ? "Almost Time" : periodsApplied === 0 ? canBoost ? "Ready to Boost" : "Boost Is Running" : canBoost ? "Price Dropped" : "New Price Posted";
+    const message = waitUntil ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.` : periodsApplied === 0 ? canBoost ? "Post this listing on the Agrivive Facebook Page." : dropsOn ? "Your listing was posted. The price drops every 6 hours until it reaches your final price." : "Your listing was posted on the Agrivive Facebook Page." : canBoost ? `The price went from \u20B1${basePriceNum.toFixed(2)} to \u20B1${currentPriceNum.toFixed(2)}. Post the new price.` : "Your new price was posted. The next drop comes by itself.";
     const progress = boost ? (await readBoostProgress(tx, [boost])).get(boost.id) ?? null : null;
     const channels = boost ? await readBoostChannels(tx, boost) : null;
     return {
@@ -139564,7 +139721,8 @@ async function readSellerVisibilityBoost(sellerId, productId) {
         stage: periodsApplied > 0 ? "price_reduction" : "initial",
         headline,
         message,
-        badge: canBoost ? "available" : "boosted"
+        badge: canBoost ? "available" : "boosted",
+        waitUntil: waitUntil ? waitUntil.toISOString() : null
       },
       boost: boost ? { ...boost, errorMessage: errorMessage(boost.status), progress, channels } : null
     };
@@ -139826,22 +139984,6 @@ async function unavailableProductError(tx, productId, buyerId) {
     return new OrderError(403, "You cannot reserve items from your own stall. Please select produce from another local seller.");
   }
   return new OrderError(409, "Product price or quantity is unavailable");
-}
-async function notifyStockLevel(tx, product, quantity) {
-  const after = Number(product.productQty ?? 0);
-  const before = after + quantity;
-  const threshold = product.lowStockThreshold === null ? null : Number(product.lowStockThreshold);
-  const soldOut = after <= 0 && before > 0;
-  const runningLow = !soldOut && threshold !== null && threshold > 0 && before > threshold && after <= threshold;
-  if (!soldOut && !runningLow)
-    return;
-  await createSellerNotification(tx, {
-    sellerId: product.userId,
-    kind: soldOut ? "sold_out" : "running_low",
-    dedupeKey: `${soldOut ? "sold-out" : "running-low"}:${product.id}:${crypto.randomUUID()}`,
-    productId: product.id,
-    payload: { productName: product.productName, left: `${after} ${product.scalingType}` }
-  });
 }
 async function reserveOrderItem(tx, buyerId, productId, quantity) {
   if (quantityToHundredths(quantity) === null) {
@@ -142946,77 +143088,6 @@ async function createConversation(buyerId, input) {
   });
 }
 
-// src/modules/conversations/services/conversation.realtime.ts
-var subscriptions = new Map;
-var socketConversations = new WeakMap;
-function subscribeConversation(socket, conversationId) {
-  let sockets = subscriptions.get(conversationId);
-  if (!sockets) {
-    sockets = new Set;
-    subscriptions.set(conversationId, sockets);
-  }
-  sockets.add(socket);
-  let conversations = socketConversations.get(socket);
-  if (!conversations) {
-    conversations = new Set;
-    socketConversations.set(socket, conversations);
-  }
-  conversations.add(conversationId);
-}
-function unsubscribeConversation(socket) {
-  const conversations = socketConversations.get(socket);
-  if (!conversations)
-    return;
-  for (const conversationId of conversations) {
-    const sockets = subscriptions.get(conversationId);
-    sockets?.delete(socket);
-    if (sockets?.size === 0)
-      subscriptions.delete(conversationId);
-  }
-  socketConversations.delete(socket);
-}
-function publishConversationMessage(conversationId, message) {
-  const sockets = subscriptions.get(conversationId);
-  if (!sockets)
-    return;
-  const payload = JSON.stringify({ type: "conversation.message.created", conversationId, message });
-  for (const socket of sockets)
-    socket.send(payload);
-}
-
-// src/modules/notifications/services/notifications.outbox.enqueue-conversation.ts
-var aggregationWindowMs = () => {
-  const seconds = Number(process.env.PUSH_MESSAGE_WINDOW_SECONDS ?? 60);
-  return Math.max(10, Math.min(seconds, 3600)) * 1000;
-};
-async function enqueueConversationNotification(tx, recipientUserId, conversationId, type, createdAt) {
-  const windowMs = aggregationWindowMs();
-  const windowStart = new Date(Math.floor(createdAt.getTime() / windowMs) * windowMs);
-  const dedupeKey = `${recipientUserId}:${type}:${windowStart.toISOString()}`;
-  const availableAt = new Date(createdAt.getTime() + windowMs);
-  const channel = type === "seller_message" ? await sellerMessageChannel(tx, recipientUserId) : undefined;
-  await tx.insert(notification_outbox).values({
-    recipientUserId,
-    type,
-    aggregationKey: `${type}:${recipientUserId}`,
-    dedupeKey,
-    referenceId: conversationId,
-    itemCount: 1,
-    payload: { conversationId, type, ...channel ? { channel } : {} },
-    availableAt,
-    createdAt,
-    updatedAt: createdAt
-  }).onConflictDoUpdate({
-    target: notification_outbox.dedupeKey,
-    set: {
-      itemCount: sql3`${notification_outbox.itemCount} + 1`,
-      referenceId: conversationId,
-      availableAt,
-      updatedAt: createdAt
-    }
-  });
-}
-
 // src/utils/s3-conversation/index.ts
 async function getConversationAttachmentDisplayUrl(urlOrKey) {
   const bucket = process.env.AWS_S3_BUCKET_NAME?.trim();
@@ -143120,17 +143191,10 @@ async function listConversationMessages(userId, conversationId) {
   })));
 }
 
-// src/modules/conversations/services/conversation.list.ts
-async function listConversations(userId, limit = 50, cursor) {
+// src/modules/conversations/services/conversation.select.ts
+function buildConversationSelect(userId) {
   const buyerUser = aliasedTable(user, "buyer_user");
-  let before;
-  if (cursor) {
-    const [anchor] = await db2.select({ id: conversations.id, lastMessageAt: conversations.lastMessageAt }).from(conversations).where(and(eq(conversations.id, cursor), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
-    if (anchor) {
-      before = or(lt(conversations.lastMessageAt, anchor.lastMessageAt), and(eq(conversations.lastMessageAt, anchor.lastMessageAt), lt(conversations.id, anchor.id)));
-    }
-  }
-  const rows = await db2.select({
+  return db2.select({
     id: conversations.id,
     contextType: conversations.contextType,
     productId: conversations.productId,
@@ -143189,14 +143253,48 @@ async function listConversations(userId, limit = 50, cursor) {
         and unread_message.sender_id <> ${userId}
         and unread_message.created_at > coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)
     )`
-  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).innerJoin(buyerUser, eq(buyerUser.id, conversations.buyerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId)).where(and(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)), before)).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit + 1);
-  const hasMore = rows.length > limit;
-  const page = hasMore ? rows.slice(0, limit) : rows;
-  const items = await Promise.all(page.map(async (row) => ({
+  }).from(conversations).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversations.id), eq(conversation_participants.userId, userId))).innerJoin(user, eq(user.id, conversations.sellerId)).innerJoin(buyerUser, eq(buyerUser.id, conversations.buyerId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, conversations.sellerId), eq(sellers_profile.isCurrent, true))).leftJoin(sellers_product, eq(sellers_product.id, conversations.productId));
+}
+
+// src/modules/conversations/services/conversation.present.ts
+async function presentConversationRow(row) {
+  return {
     ...row,
     sellerImage: await getAvatarDisplayUrl(row.sellerImage),
     buyerImage: await getAvatarDisplayUrl(row.buyerImage)
-  })));
+  };
+}
+
+// src/modules/conversations/services/conversation.get.ts
+async function getConversation(userId, conversationId) {
+  const [row] = await buildConversationSelect(userId).where(and(eq(conversations.id, conversationId), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+  if (!row)
+    throw new ConversationError(404, "Conversation not found");
+  return presentConversationRow(row);
+}
+
+// src/modules/conversations/services/conversation.unread-count.ts
+async function getConversationUnreadCount(userId) {
+  const [row] = await db2.select({
+    unreadMessages: sql3`count(*)::int`,
+    unreadConversations: sql3`count(distinct ${conversation_messages.conversationId})::int`
+  }).from(conversation_messages).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversation_messages.conversationId), eq(conversation_participants.userId, userId))).where(and(ne(conversation_messages.senderId, userId), gt(conversation_messages.createdAt, sql3`coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)`)));
+  return { unreadMessages: row?.unreadMessages ?? 0, unreadConversations: row?.unreadConversations ?? 0 };
+}
+
+// src/modules/conversations/services/conversation.list.ts
+async function listConversations(userId, limit = 50, cursor) {
+  let before;
+  if (cursor) {
+    const [anchor] = await db2.select({ id: conversations.id, lastMessageAt: conversations.lastMessageAt }).from(conversations).where(and(eq(conversations.id, cursor), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+    if (anchor) {
+      before = or(lt(conversations.lastMessageAt, anchor.lastMessageAt), and(eq(conversations.lastMessageAt, anchor.lastMessageAt), lt(conversations.id, anchor.id)));
+    }
+  }
+  const rows = await buildConversationSelect(userId).where(and(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)), before)).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit + 1);
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const items = await Promise.all(page.map(presentConversationRow));
   return {
     items,
     nextCursor: hasMore && page.length > 0 ? page[page.length - 1].id : null
@@ -143294,7 +143392,19 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["buyer", "seller"], query: conversationListQuery }).get("/conversations/:id/messages", async ({ session, params, status }) => {
+}, { role: ["buyer", "seller"], query: conversationListQuery }).get("/conversations/unread-count", async ({ session, status }) => {
+  try {
+    return await getConversationUnreadCount(session.userId);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["buyer", "seller"] }).get("/conversations/:id", async ({ session, params, status }) => {
+  try {
+    return await getConversation(session.userId, params.id);
+  } catch (error) {
+    return failure2(error, status);
+  }
+}, { role: ["buyer", "seller"], params: conversationParams }).get("/conversations/:id/messages", async ({ session, params, status }) => {
   try {
     return await listConversationMessages(session.userId, params.id);
   } catch (error) {

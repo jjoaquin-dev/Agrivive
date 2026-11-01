@@ -112,6 +112,22 @@ Follow routes require an active buyer session (cookie or bearer token). They acc
 
 For report evidence, first `POST /buyer/orders/:id/report` with the existing report body. Use the returned report ID in the evidence paths. Upload `multipart/form-data` with a `file` field (JPG, PNG, WebP, or PDF, up to 5 MB). Only the report creator can request its short-lived download links. Reports are allegation flags until supported by verified events; they do not add weighted trust points by themselves.
 
+## Conversations
+
+Buyer and seller chat. All routes need a signed-in buyer or seller (cookie or bearer token). Source: `backend/src/modules/conversations/index/conversation.routes.ts`.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/conversations` | The user's chats, newest first (`limit`, `cursor`). |
+| GET | `/conversations/unread-count` | `{ "unreadMessages": 3, "unreadConversations": 2 }`. Counts messages from the other person that came after the user's last read time. |
+| GET | `/conversations/:id` | One chat, same fields as an item in `GET /conversations` (including `unreadCount` and `lastMessageSenderId`). Another person's chat returns 404 `Conversation not found`. |
+| GET | `/conversations/:id/messages` | Messages of one chat. |
+| POST | `/conversations/:id/messages` | Send a message. |
+| POST | `/conversations/:id/read` | Mark one chat read. |
+| POST | `/conversations/read-all` | Mark all chats read. |
+
+`/conversations/unread-count` is registered before `/conversations/:id`, so it is never read as an id.
+
 ## Seller
 
 Seller routes require a signed-in seller; most listing and order routes also require active, verified seller status.
@@ -165,6 +181,10 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
 
+`GET /seller/product-inquiries` returns `{ "items": [...], "nextCursor": null, "openCount": 4 }`. `openCount` is every unanswered product question of this seller, whatever the `status` filter is.
+
+`POST /seller/product-inquiries/:id/reply` (body `{ "reply": "About 5 bundles per pile." }`) also posts the answer in the buyer's chat as a message from the seller: `About your question on <product>: "<question, cut at 200 characters>"` then a blank line and the reply. If the buyer has no chat yet, one is created. The buyer gets a `buyer_message` notification and an open chat updates live. Answering twice returns 409 and posts nothing more. The response is the answered question plus `conversationId`.
+
 `GET /seller/vegetable-catalog?search=kamatis` returns approved catalog records with `id`, Filipino wet-market name, English name, aliases, reference category, scientific name when available, and `sourceUrl`. Search accepts Filipino names, English names, and stored aliases. Fungi and mushrooms are not seeded or returned.
 
 `POST /seller/products` and the legacy `POST /seller/addproduct` alias require `catalogId` instead of a free-text product name or category. Example body:
@@ -199,7 +219,7 @@ The same call also posts to Instagram. The Instagram post is tried after Faceboo
 `GET /seller/products/:id/boost` now returns `product.quantity`, `product.unit` and `boost.channels` (`{ facebook, instagram }`, each `{ "status": "waiting|posting|posted|failed", "postUrl" }`) for the boost's own post. The mobile Boost Started screen polls it, so each platform shows its real answer.
 | POST | `/integrations/visibility-boosts/:id/reduce-price` | The 6-hour rule. Cuts the price once by the seller's `priceReductionAmount` (pesos), never below `minimumPrice` (the final price). When the cut lands on the final price, the seller gets a **Final Price Reached** notice (`final_price_reached`). `discountPercent` in the response is the real percent of that round's cut, for the n8n caption. First boost only, and needs the first post saved (`409` otherwise). Returns `reduced` plus `reason` (`not_enabled`, `at_floor`, `unavailable`) when nothing changed. A retry does not cut twice. When nothing was cut, the follow-up is closed. |
 
-The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due_at`), not in n8n. When it passes, the worker sends `{ "boostId": "<uuid>", "reason": "follow_up" }` to the same webhook. n8n then calls `context`, `reduce-price`, writes the flash-sale caption and calls `facebook-post` with `second_post`. If the post is not saved, the worker asks again every 15 minutes, up to 5 times. After each round is saved (cut, flash-sale post, **Price Lowered** push), the due time is set 6 hours ahead again, so the rule repeats until the price reaches the seller's `minimumPrice`. It also ends when `reduce-price` cuts nothing (`not_enabled`, `at_floor`, `unavailable`). These rounds are the only automatic price drops: there is no separate 12-hour schedule, so a listing that is not boosted keeps its price. Seller product create and update (`POST /seller/products`, `PATCH /seller/products/:id`) take `priceReductionAmount` (pesos, 0 to below the selling price, two decimals) instead of `priceReductionPercent`; a value above 0 needs `minimumPrice`. Example: `{ "productPrice": 60, "priceReductionAmount": 1.25, "minimumPrice": 5 }`. Migration `20261101160000_price_reduction_amount` adds the column and converts existing percents at the current price. Seller product reads (`GET /seller/products`, `GET /seller/products/:id`) return `nextPriceReductionAt` from the earliest pending `follow_up_due_at`, or `null`. Each saved Facebook post now keeps its text in `fb_post_logs.caption`, returned as `caption` on every `progress.posts[]` item of `GET /seller/products/:id/boost` and `GET /seller/boosts` (`null` for posts made before this change). Seller routes `POST /seller/products/:id/boost` and `POST /seller/boost-prompts/:id/boost` return `409` ("You can boost again in about N hours") for a price drop boost within 3 hours of the last price drop post, and for a new first boost (`POST /seller/products/:id/boost`) within 3 hours of the product's last first post ("This listing was just posted"). Apply `backend/drizzle/20261031140000_boost_follow_up` before testing.
+The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due_at`), not in n8n. When it passes, the worker sends `{ "boostId": "<uuid>", "reason": "follow_up" }` to the same webhook. n8n then calls `context`, `reduce-price`, writes the flash-sale caption and calls `facebook-post` with `second_post`. If the post is not saved, the worker asks again every 15 minutes, up to 5 times. After each round is saved (cut, flash-sale post, **Price Lowered** push), the due time is set 6 hours ahead again, so the rule repeats until the price reaches the seller's `minimumPrice`. It also ends when `reduce-price` cuts nothing (`not_enabled`, `at_floor`, `unavailable`). These rounds are the only automatic price drops: there is no separate 12-hour schedule, so a listing that is not boosted keeps its price. Seller product create and update (`POST /seller/products`, `PATCH /seller/products/:id`) take `priceReductionAmount` (pesos, 0 to below the selling price, two decimals) instead of `priceReductionPercent`; a value above 0 needs `minimumPrice`. Example: `{ "productPrice": 60, "priceReductionAmount": 1.25, "minimumPrice": 5 }`. Migration `20261101160000_price_reduction_amount` adds the column and converts existing percents at the current price. Seller product reads (`GET /seller/products`, `GET /seller/products/:id`) return `nextPriceReductionAt` from the earliest pending `follow_up_due_at`, or `null`. Each saved Facebook post now keeps its text in `fb_post_logs.caption`, returned as `caption` on every `progress.posts[]` item of `GET /seller/products/:id/boost` and `GET /seller/boosts` (`null` for posts made before this change). Seller routes `POST /seller/products/:id/boost` and `POST /seller/boost-prompts/:id/boost` return `409` ("You just boosted the lower price of this product. Please wait about N hours before you boost it again.") for a price drop boost within 3 hours of the last price drop post, and for a new first boost (`POST /seller/products/:id/boost`) within 3 hours of the product's last first post ("You just boosted this product. Please wait about N hours before you boost it again."). Apply `backend/drizzle/20261031140000_boost_follow_up` before testing.
 
 ### Boost progress for the app
 
