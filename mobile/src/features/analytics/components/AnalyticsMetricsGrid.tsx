@@ -31,7 +31,7 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
         <Text style={styles.big}>{metrics.completedQuantity} {word}</Text>
         <Text style={styles.earned}>{peso(metrics.completedSalesTotal)} earned from pickups</Text>
         {change !== null ? (
-          <View style={[styles.trend, { backgroundColor: up ? "#DCFCE7" : down ? "#FEF2F2" : "#F3F4F6" }]}>
+          <View style={[styles.trend, { backgroundColor: up ? "#DCFCE7" : down ? "#FEF2F2" : "#F3F1EA" }]}>
             <Text style={[styles.trendText, { color: up ? colors.success : down ? colors.error : colors.textMuted }]}>
               {up ? "▲" : down ? "▼" : "–"} {Math.abs(change).toFixed(1)}%{" "}
               <Text style={styles.trendNote}>vs {formatRange(previousPeriod.from, previousPeriod.to)}</Text>
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   earned: { fontFamily: fonts.body.medium, fontSize: 15, lineHeight: 22, color: colors.text, marginTop: 4 },
   trend: { alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 4, marginTop: spacing.sm },
   trendText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
-  trendNote: { fontFamily: fonts.body.medium, color: "#15803D" },
+  trendNote: { fontFamily: fonts.body.medium, color: "#386600" },
   rateRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm },
   rate: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.primary },
   rateNote: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },

@@ -14,7 +14,7 @@ const tones: Record<SellerOrderStatus, { fg: string; bg: string; border: string 
   pending: { fg: colors.warning, bg: "#FFF7ED", border: "#FED7AA" },
   completed: { fg: colors.success, bg: "rgba(22, 163, 74, 0.10)", border: "rgba(22, 163, 74, 0.25)" },
   cancelled: { fg: colors.error, bg: "#FEF2F2", border: "#FECACA" },
-  expired: { fg: colors.textMuted, bg: "#F3F4F6", border: colors.border },
+  expired: { fg: colors.textMuted, bg: "#F3F1EA", border: colors.border },
 };
 
 export function OrderStatusBadge({ status }: { status: SellerOrderStatus }) {

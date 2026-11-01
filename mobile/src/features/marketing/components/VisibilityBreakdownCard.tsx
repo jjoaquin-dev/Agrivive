@@ -29,7 +29,7 @@ function placement(item: SellerVisibilityItem) {
 const tones = {
   good: { bg: "rgba(22, 163, 74, 0.10)", fg: colors.success },
   warn: { bg: "#FFF7ED", fg: colors.warning },
-  quiet: { bg: "#F3F4F6", fg: colors.textMuted },
+  quiet: { bg: "#F3F1EA", fg: colors.textMuted },
 };
 
 export function VisibilityBreakdownCard({ item, productName, product, onBoost }: VisibilityBreakdownCardProps) {

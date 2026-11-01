@@ -4,7 +4,7 @@
 
 This guide applies to the **seller mobile app**. Agrivive empowers Davao City vegetable farmers and market vendors to list marketable surplus, manage live inventory, coordinate buyer reservations, scan digital pickup passes, and track surplus movement. Designed for React Native with Expo on Android 10+ and iOS, targeting a modern, responsive mobile viewport.
 
-The visual direction is clean, high-contrast, professional, and accessible. It uses a **Clean White (`#FFFFFF`)** background with vibrant **AgriVive Green (`#16A34A` / `#0F920F`)**, generous whitespace, scannable card groups, and familiar touch controls. Avoid heavy shadows, cluttered layouts, and non-standard gestures.
+The visual direction is clean, high-contrast, professional, and accessible. It uses the web's warm cream (`#F8F6F1`) background with white cards and **AgriVive Green (`#457D00`)**, generous whitespace, scannable card groups, and familiar touch controls. Avoid heavy shadows, cluttered layouts, and non-standard gestures.
 
 ## Brand Assets
 
@@ -18,34 +18,36 @@ These tokens are implemented in `mobile/src/theme/index.ts` and serve as the sin
 
 | Token | Value | Semantic Usage |
 |---|---|---|
-| `primary` | `#0F920F` | Primary CTAs, active tab accents, key action cards |
-| `primaryPressed` | `#0C770C` | Pressed button state (`:active` feedback) |
-| `primaryLight` | `rgba(15, 146, 15, 0.10)` | Light tinted icon backgrounds, subtle badge fills |
-| `primarySurface` | `rgba(15, 146, 15, 0.05)` | Card highlight backgrounds, subtle callout panels |
-| `background` | `#FFFFFF` | Global screen background (Clean White) |
+| `primary` | `#457D00` | Primary CTAs, active tab accents, key action cards (same as the web's `agrivive.primary`) |
+| `primaryPressed` | `#386600` | Pressed button state (`:active` feedback) |
+| `primaryLight` | `rgba(69, 125, 0, 0.10)` | Light tinted icon backgrounds, subtle badge fills |
+| `primarySurface` | `rgba(69, 125, 0, 0.05)` | Card highlight backgrounds, subtle callout panels |
+| `background` | `#F8F6F1` | Global screen background (warm cream, same as the web) |
 | `surface` | `#FFFFFF` | Cards, modal sheets, input backgrounds |
-| `surfaceMuted` | `#F9FAFB` | Inactive chips, disabled surfaces, table headers |
-| `text` | `#111827` | Headings, primary labels, values (Tailwind Gray 900) |
-| `textMuted` | `#6B7280` | Subtitles, helper text, timestamps (Tailwind Gray 500) |
-| `border` | `#E5E7EB` | Dividers, card borders, input borders (Gray 200) |
-| `sage` | `#A8BFA3` | Secondary botanical accents |
-| `terracotta` | `#C97850` | Marketing boost highlights |
-| `success` | `#16A34A` | Completed pickups, active stock, positive trends |
-| `warning` | `#D97706` | Low stock alerts, pending orders, advisory notices |
-| `error` | `#DC2626` | Depleted stock, cancelled/expired orders, errors |
+| `surfaceMuted` | `#F3F1EA` | Inactive chips, disabled surfaces, table headers |
+| `text` | `#202622` | Headings, primary labels, values |
+| `textMuted` | `#636B63` | Subtitles, helper text, timestamps |
+| `border` | `#E5E2DA` | Dividers, card borders, input borders |
+| `sage` | `#96B125` | Secondary botanical accents |
+| `olive` | `#C6C736` | Decorative accents |
+| `cream` | `#FCEC9A` | Soft highlights |
+| `terracotta` | `#FEA938` | Marketing boost highlights (the web's orange accent) |
+| `success` | `#457D00` | Completed pickups, active stock, positive trends |
+| `warning` | `#D97706` | Low stock alerts, pending orders, advisory notices. Darker than the web's `#FEA938` because it is also used for text |
+| `error` | `#B85450` | Depleted stock, cancelled/expired orders, errors |
 
 ## Typography and Spacing
 
-Use **Manrope** for screen and section headings and **Inter** for body text, form fields, numbers, and button labels.
+Use **Parkinsans** for screen and section headings and **Plus Jakarta Sans** for body text, form fields, numbers, and button labels. These are the same two faces the web uses (`web/app/layout.tsx`).
 
 | Role | Size | Weight | Line Height | Font Family |
 |---|---:|---:|---:|---|
-| Large Title | 28 | 700 (Bold) | 34 | Manrope |
-| Screen Title | 22 | 700 (Bold) | 28 | Manrope |
-| Section Heading | 16–18 | 600 (SemiBold) | 24 | Manrope |
-| Body Text | 14–15 | 400 (Regular) | 20–22 | Inter |
-| Labels / Medium Body | 12–13 | 500 (Medium) | 18 | Inter |
-| Captions / Badges | 10–11 | 600 (SemiBold) | 14 | Inter |
+| Large Title | 28 | 700 (Bold) | 34 | Parkinsans |
+| Screen Title | 22 | 700 (Bold) | 28 | Parkinsans |
+| Section Heading | 16–18 | 600 (SemiBold) | 24 | Parkinsans |
+| Body Text | 14–15 | 400 (Regular) | 20–22 | Plus Jakarta Sans |
+| Labels / Medium Body | 12–13 | 500 (Medium) | 18 | Plus Jakarta Sans |
+| Captions / Badges | 10–11 | 600 (SemiBold) | 14 | Plus Jakarta Sans |
 
 - **Spacing Grid:** 4 px base unit (4, 8, 12, 16, 20, 24, 32, 40 px).
 - **Border Radii:** `sm`: 6 px, `input`: 10 px, `button`: 14 px, `card`: 16 px, `sheet`: 20 px, `full`: 9999 px.
@@ -77,7 +79,7 @@ The app features a unified bottom tab dock configured in `mobile/app/(app)/(tabs
 
 1. **Home (`home.tsx`):** Operational dashboard summarizing active listings, twin action cards, 2×2 metric grid, and 3×2 attention tiles.
 2. **Listings (`inventory.tsx`):** Surplus inventory catalog with search, category filters, stock indicators, and quick stock updates.
-3. **Add Produce (`create.tsx`):** Elevated center green Floating Action Button (`#16A34A`, 48×48 px circle, white plus) navigating to `/(app)/inventory/create`.
+3. **Add Produce (`create.tsx`):** Elevated center green Floating Action Button (`#457D00`, 48×48 px circle, white plus) navigating to `/(app)/inventory/create`.
 4. **Messages (`messages.tsx`):** Real-time buyer-seller conversations with unread red badge counter (`#EF4444`).
 5. **Reservations / Orders (`orders.tsx`):** Buyer order status (`pending`, `completed`, `cancelled`, `expired`) and handover tracking.
 

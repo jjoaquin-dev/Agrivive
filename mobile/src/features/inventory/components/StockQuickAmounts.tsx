@@ -37,7 +37,7 @@ export function StockQuickAmounts({ actionType, unitLabel, value, onPick }: Prop
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm, marginTop: -spacing.xs, marginBottom: spacing.base },
   label: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  chip: { minHeight: 36, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: 8, backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "transparent" },
+  chip: { minHeight: 36, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: 8, backgroundColor: "#F3F1EA", borderWidth: 1, borderColor: "transparent" },
   chipSelected: { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" },
   chipText: { fontFamily: fonts.body.medium, fontSize: 12, color: "#374151" },
   chipTextSelected: { fontFamily: fonts.body.semiBold, color: colors.primary },

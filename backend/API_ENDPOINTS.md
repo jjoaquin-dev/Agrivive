@@ -181,7 +181,7 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
 
-`GET /seller/product-inquiries` returns `{ "items": [...], "nextCursor": null, "openCount": 4 }`. `openCount` is every unanswered product question of this seller, whatever the `status` filter is.
+`GET /seller/product-inquiries` returns `{ "items": [...], "nextCursor": null, "openCount": 4 }`. Each item includes `buyerName` and `buyerImage` (a ready-to-open photo link, or `null`). `openCount` is every unanswered product question of this seller, whatever the `status` filter is.
 
 `POST /seller/product-inquiries/:id/reply` (body `{ "reply": "About 5 bundles per pile." }`) also posts the answer in the buyer's chat as a message from the seller: `About your question on <product>: "<question, cut at 200 characters>"` then a blank line and the reply. If the buyer has no chat yet, one is created. The buyer gets a `buyer_message` notification and an open chat updates live. Answering twice returns 409 and posts nothing more. The response is the answered question plus `conversationId`.
 

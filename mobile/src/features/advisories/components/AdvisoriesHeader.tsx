@@ -1,183 +1,46 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Text, Pressable, Modal } from "react-native";
+import React from "react";
+import { StyleSheet, View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import { ChevronLeft, RotateCw, Info, X } from "lucide-react-native";
-import { colors, fonts, spacing } from "../../../theme";
+import { ArrowLeft, Info } from "lucide-react-native";
+import { colors, fonts, spacing, typography } from "../../../theme";
 import { safeBack } from "../../../utils/safeBack";
 
 interface AdvisoriesHeaderProps {
   generatedAt?: string;
-  refreshing: boolean;
-  onRefresh: () => void;
+  onOpenInfo: () => void;
 }
 
 function formatUpdated(timestamp?: string) {
-  if (!timestamp) return "Updated recently";
-  const date = new Date(timestamp);
-  const datePart = date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
-  const timePart = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  return `Updated ${datePart} · ${timePart}`;
+  if (!timestamp) return "Pull down to refresh";
+  const time = new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return `Updated ${time} · Pull down to refresh`;
 }
 
-export const AdvisoriesHeader: React.FC<AdvisoriesHeaderProps> = ({
-  generatedAt,
-  refreshing,
-  onRefresh,
-}) => {
+/** Back on the left, info on the right: the layout people already know from other apps (Jakob's Law, Nielsen). */
+export const AdvisoriesHeader: React.FC<AdvisoriesHeaderProps> = ({ generatedAt, onOpenInfo }) => {
   const router = useRouter();
-  const [showInfo, setShowInfo] = useState(false);
 
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable
-          onPress={() => safeBack(router)}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          style={styles.iconCircle}
-        >
-          <ChevronLeft size={20} color="#1E293B" />
+        <Pressable onPress={() => safeBack(router)} accessibilityRole="button" accessibilityLabel="Go back" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+          <ArrowLeft size={20} color={colors.text} />
         </Pressable>
-
-        <View style={styles.titleWrap}>
-          <Text style={styles.title}>Weather & Holiday Advisory</Text>
-          <Text style={styles.subtitle}>Local weather and upcoming holiday guidance</Text>
-        </View>
-
-        <View style={styles.rightActions}>
-          <Pressable
-            onPress={onRefresh}
-            disabled={refreshing}
-            accessibilityRole="button"
-            accessibilityLabel="Refresh advisories"
-            style={[styles.iconCircle, refreshing && styles.iconDisabled]}
-          >
-            <RotateCw size={17} color="#475569" />
-          </Pressable>
-
-          <Pressable
-            onPress={() => setShowInfo(true)}
-            accessibilityRole="button"
-            accessibilityLabel="Advisory information"
-            style={styles.iconCircle}
-          >
-            <Info size={17} color="#475569" />
-          </Pressable>
-        </View>
+        <Text style={styles.title} numberOfLines={1}>Weather & Holidays</Text>
+        <Pressable onPress={onOpenInfo} accessibilityRole="button" accessibilityLabel="About this page" style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}>
+          <Info size={20} color={colors.text} />
+        </Pressable>
       </View>
-
-      <View style={styles.timestampRow}>
-        <Text style={styles.timestampText}>{formatUpdated(generatedAt)}</Text>
-      </View>
-
-      {/* Info Modal */}
-      <Modal visible={showInfo} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>About Advisories</Text>
-              <Pressable onPress={() => setShowInfo(false)} style={styles.closeBtn}>
-                <X size={18} color="#64748B" />
-              </Pressable>
-            </View>
-            <Text style={styles.modalText}>
-              Weather data is provided by Open-Meteo based on your registered market stall coordinates. Philippine holidays are retrieved from official calendar schedules.
-            </Text>
-            <Text style={styles.modalText}>
-              Use these advisories to plan stall operations, protective produce covers, and buyer pickup schedules.
-            </Text>
-          </View>
-        </View>
-      </Modal>
+      <Text style={styles.caption}>{formatUpdated(generatedAt)}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.background,
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#F1F5F9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconDisabled: {
-    opacity: 0.5,
-  },
-  titleWrap: {
-    flex: 1,
-    marginHorizontal: spacing.sm,
-  },
-  title: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 16,
-    color: "#0F172A",
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    color: "#64748B",
-    marginTop: 1,
-  },
-  rightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  timestampRow: {
-    alignItems: "center",
-    marginTop: spacing.xs,
-  },
-  timestampText: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    color: "#64748B",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.base,
-  },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: spacing.base,
-    width: "100%",
-    maxWidth: 340,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  modalTitle: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 16,
-    color: "#0F172A",
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  modalText: {
-    fontFamily: fonts.body.regular,
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#334155",
-    marginBottom: spacing.xs,
-  },
+  container: { paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.sm, backgroundColor: colors.background },
+  topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  iconButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  pressed: { opacity: 0.7, transform: [{ scale: 0.96 }] },
+  title: { ...typography.screenTitle, flex: 1, textAlign: "center", marginHorizontal: spacing.sm, color: colors.text, letterSpacing: -0.3 },
+  caption: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
 });

@@ -6,7 +6,6 @@ export const styles = StyleSheet.create({
   title: { ...typography.screenTitle, color: colors.text },
   actions: { flexDirection: "row", alignItems: "center" },
   iconButton: { width: 44, height: 44, borderRadius: radii.full, alignItems: "center", justifyContent: "center" },
-  dot: { position: "absolute", top: 10, right: 11, width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.white },
   searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1.5, borderColor: colors.border, paddingHorizontal: spacing.md, height: touchTargets.min, marginBottom: spacing.sm + 2 },
   searchInput: { flex: 1, ...typography.body, color: colors.text, marginLeft: spacing.sm },
   categoryButton: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, height: 44, marginBottom: spacing.md },

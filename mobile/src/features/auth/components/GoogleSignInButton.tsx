@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.button,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#E5E2DA",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   pillPressed: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F3F1EA",
     transform: [{ scale: 0.985 }],
   },
   pillDisabled: {

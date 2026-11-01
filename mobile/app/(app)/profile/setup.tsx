@@ -1,32 +1,20 @@
 import React, { useState, useRef } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View, Text, ScrollView, KeyboardAvoidingView, Platform, Pressable } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../src/context/AuthContext";
-import {
-  createSellerProfile,
-  updateSellerPersonalName,
-} from "../../../src/api/seller";
+import { createSellerProfile, updateSellerPersonalName } from "../../../src/api/seller";
 import { colors, fonts, spacing } from "../../../src/theme";
-import { User, Store, Phone, MapPin, CheckCircle } from "lucide-react-native";
-import { CardComponent } from "../../../src/components/CardComponent";
+import { ArrowRight, ChevronLeft } from "lucide-react-native";
+import { SetupProgress } from "../../../src/features/profile/components/SetupProgress";
+import { profileColors } from "../../../src/features/profile/profileTokens";
 import { InputComponent } from "../../../src/components/InputComponent";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
-import {
-  MapPickerComponent,
-  Coordinates,
-  DAVAO_CITY_COORDINATES,
-} from "../../../src/components/MapPickerComponent";
+import { MapPickerComponent, Coordinates, DAVAO_CITY_COORDINATES } from "../../../src/components/MapPickerComponent";
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { session, refreshSetup } = useAuth();
   const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
 
@@ -132,200 +120,71 @@ export default function ProfileSetupScreen() {
     }
   };
 
+  const clear = (key: keyof typeof errors) => setErrors((prev) => ({ ...prev, [key]: undefined }));
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        style={styles.keyboardContainer}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-      >
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <KeyboardAvoidingView style={styles.keyboardContainer} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <View style={styles.topRow}>
+          {router.canGoBack() ? (
+            <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back" style={styles.back}>
+              <ChevronLeft size={22} color={colors.text} />
+            </Pressable>
+          ) : <View style={styles.back} />}
+          <Text style={styles.topTitle}>Agrivive Seller Setup</Text>
+          <View style={styles.back} />
+        </View>
+        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <View style={styles.header}>
-            <Text style={styles.stepBadge}>Step 3 of 3 • Profile Setup</Text>
-            <Text style={styles.title}>Complete Seller Profile</Text>
-            <Text style={styles.subtitle}>
-              Provide your stall details and location in Davao City to earn your Verified Seller badge.
-            </Text>
+            <Text style={styles.title}>Set Up Your Stall</Text>
+            <Text style={styles.subtitle}>Step 2 of 3 · Your Stall</Text>
+            <SetupProgress current={2} />
           </View>
 
-          {errors.general ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorBoxText}>{errors.general}</Text>
-            </View>
-          ) : null}
+          {errors.general ? <View style={styles.errorBox}><Text style={styles.errorBoxText}>{errors.general}</Text></View> : null}
 
-          {/* Card 1: Personal Contact */}
-          <CardComponent style={styles.card}>
-            <Text style={styles.cardTitle}>1. Personal Contact</Text>
-            <InputComponent
-              label="Your Full Name"
-              placeholder="e.g. Juan dela Cruz"
-              value={personName}
-              leftIcon={<User size={18} color={colors.textMuted} />}
-              error={errors.personName}
-              hint="Used for seller identity verification"
-              onChangeText={(text) => {
-                setPersonName(text);
-                if (errors.personName) setErrors((prev) => ({ ...prev, personName: undefined }));
-              }}
-            />
+          <InputComponent label="Your Full Name" placeholder="e.g. Juan dela Cruz" value={personName} error={errors.personName} hint="Used for seller identity verification"
+            onChangeText={(text) => { setPersonName(text); clear("personName"); }} />
+          <InputComponent label="Stall Name" placeholder="e.g. Dela Cruz Fresh Veggies" value={shopName} error={errors.shopName}
+            onChangeText={(text) => { setShopName(text); clear("shopName"); }} />
 
-            <InputComponent
-              label="Phone Number"
-              placeholder="09123456789"
-              keyboardType="phone-pad"
-              value={phoneNumber}
-              leftIcon={<Phone size={18} color={colors.textMuted} />}
-              error={errors.phoneNumber}
-              hint="Buyers contact you regarding reservations"
-              onChangeText={(text) => {
-                setPhoneNumber(text);
-                if (errors.phoneNumber) setErrors((prev) => ({ ...prev, phoneNumber: undefined }));
-              }}
-            />
-          </CardComponent>
-
-          {/* Card 2: Stall & Location */}
-          <CardComponent style={styles.card}>
-            <Text style={styles.cardTitle}>2. Stall & Market Location</Text>
-            <InputComponent
-              label="Shop or Stall Name"
-              placeholder="e.g. Dela Cruz Fresh Veggies"
-              value={shopName}
-              leftIcon={<Store size={18} color={colors.textMuted} />}
-              error={errors.shopName}
-              onChangeText={(text) => {
-                setShopName(text);
-                if (errors.shopName) setErrors((prev) => ({ ...prev, shopName: undefined }));
-              }}
-            />
-
-            <View style={styles.mapContainer}>
-              <Text style={styles.fieldLabel}>Stall Map Location (Davao City)</Text>
-              <Text style={styles.fieldHint}>
-                Select your public market below or tap the map to place your pin:
-              </Text>
-              <MapPickerComponent
-                initialCoordinates={coordinates}
-                error={errors.coordinates}
-                onCoordinatesChange={(newCoords, suggestedAddress) => {
-                  setCoordinates(newCoords);
-                  if (suggestedAddress && !detailAddress.trim()) {
-                    setDetailAddress(suggestedAddress);
-                  }
-                  if (errors.coordinates) setErrors((prev) => ({ ...prev, coordinates: undefined }));
-                }}
-              />
-            </View>
-
-            <InputComponent
-              label="Stall Address & Landmarks"
-              placeholder="e.g. Stall #14, Vegetable Section, Bankerohan"
-              multiline
-              numberOfLines={2}
-              value={detailAddress}
-              leftIcon={<MapPin size={18} color={colors.textMuted} />}
-              error={errors.detailAddress}
-              onChangeText={(text) => {
-                setDetailAddress(text);
-                if (errors.detailAddress) setErrors((prev) => ({ ...prev, detailAddress: undefined }));
-              }}
-            />
-          </CardComponent>
-
-          <ButtonComponent
-            title="Complete Setup & Get Verified"
-            icon={<CheckCircle size={18} color={colors.white} />}
-            onPress={handleSaveProfile}
-            loading={loading}
-            style={styles.submitButton}
-          />
+          <Text style={styles.fieldLabel}>Stall Location</Text>
+          <Text style={styles.fieldHint}>Pick your public market below, or tap the map to place your pin.</Text>
+          <MapPickerComponent initialCoordinates={coordinates} error={errors.coordinates}
+            onCoordinatesChange={(newCoords, suggestedAddress) => {
+              setCoordinates(newCoords);
+              if (suggestedAddress && !detailAddress.trim()) setDetailAddress(suggestedAddress);
+              clear("coordinates");
+            }} />
+          <View style={styles.afterMap}>
+            <InputComponent label="Address" placeholder="e.g. Stall #14, Vegetable Section, Bankerohan" multiline numberOfLines={2} value={detailAddress} error={errors.detailAddress}
+              hint="Shown on buyer reservations and pickup directions." onChangeText={(text) => { setDetailAddress(text); clear("detailAddress"); }} />
+          </View>
+          <InputComponent label="Phone Number" placeholder="09123456789" keyboardType="phone-pad" value={phoneNumber} error={errors.phoneNumber}
+            hint="Buyers contact you about reservations" onChangeText={(text) => { setPhoneNumber(text); clear("phoneNumber"); }} />
         </ScrollView>
+        <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+          <ButtonComponent title="Save and Continue" icon={<ArrowRight size={18} color={colors.white} />} onPress={handleSaveProfile} loading={loading} />
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  keyboardContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.sm,
-    paddingBottom: 140,
-  },
-  header: {
-    marginBottom: spacing.base,
-  },
-  stepBadge: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.primary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  title: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 22,
-    color: colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  card: {
-    marginBottom: spacing.base,
-    padding: spacing.base,
-  },
-  cardTitle: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 16,
-    color: colors.primary,
-    marginBottom: spacing.base,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text,
-    marginBottom: 2,
-  },
-  fieldHint: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  mapContainer: {
-    marginBottom: spacing.base,
-  },
-  errorBox: {
-    backgroundColor: "rgba(184, 84, 80, 0.1)",
-    borderWidth: 1,
-    borderColor: colors.error,
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.base,
-  },
-  errorBoxText: {
-    color: colors.error,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  submitButton: {
-    marginTop: spacing.xs,
-    marginBottom: spacing.xl,
-  },
+  safeArea: { flex: 1, backgroundColor: profileColors.cream },
+  keyboardContainer: { flex: 1 },
+  topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.sm, minHeight: 48 },
+  back: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  topTitle: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.textMuted },
+  scrollContent: { paddingHorizontal: spacing.base, paddingTop: spacing.xs, paddingBottom: spacing.xl },
+  header: { marginBottom: spacing.lg },
+  title: { fontFamily: fonts.heading.bold, fontSize: 28, color: colors.text },
+  subtitle: { fontFamily: fonts.body.regular, fontSize: 15, color: colors.textMuted, marginTop: 2 },
+  fieldLabel: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text, marginBottom: 2 },
+  fieldHint: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginBottom: spacing.sm },
+  afterMap: { marginTop: spacing.base },
+  errorBox: { backgroundColor: profileColors.redSoft, borderWidth: 1, borderColor: colors.error, borderRadius: 10, padding: spacing.md, marginBottom: spacing.base },
+  errorBoxText: { color: colors.error, fontSize: 13, fontFamily: fonts.body.medium },
+  bar: { paddingHorizontal: spacing.base, paddingTop: spacing.md, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: profileColors.border },
 });

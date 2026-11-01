@@ -18,6 +18,8 @@ import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { safeBack } from "../../src/utils/safeBack";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
+import { PasswordChecklist } from "../../src/features/auth/components/PasswordChecklist";
+import { validateNewPassword } from "../../src/features/auth/passwordRules";
 
 interface EmailCheckResult {
   exists: boolean;
@@ -97,8 +99,9 @@ export default function RegisterScreen() {
 
     if (!password) {
       newErrors.password = "Please enter a password.";
-    } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long.";
+    } else {
+      const passwordProblem = validateNewPassword(password);
+      if (passwordProblem) newErrors.password = passwordProblem;
     }
 
     if (!confirmPassword) {
@@ -237,7 +240,7 @@ export default function RegisterScreen() {
 
         <View style={styles.header}>
           <Image
-            source={require("../../assets/brand/agrivive-logo-icon.png")}
+            source={require("../../assets/brand/agrivive-logo-full.png")}
             style={styles.logoIcon}
             resizeMode="contain"
             accessibilityLabel="Agrivive"
@@ -282,11 +285,10 @@ export default function RegisterScreen() {
 
           <InputComponent
             label="Password"
-            placeholder="At least 8 characters"
+            placeholder="Create a strong password"
             isPassword
             autoCapitalize="none"
             value={password}
-            hint="Use 8 or more characters."
             leftIcon={<Lock size={18} color={colors.textMuted} />}
             error={errors.password}
             onChangeText={(text) => {
@@ -310,6 +312,8 @@ export default function RegisterScreen() {
               if (errors.general) setErrors((prev) => ({ ...prev, general: undefined }));
             }}
           />
+
+          <PasswordChecklist password={password} confirmPassword={confirmPassword} />
 
           <View style={styles.verificationNoteWrap}>
             <Text style={styles.verificationNoteText}>
@@ -366,8 +370,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logoIcon: {
-    width: 40,
-    height: 40,
+    width: 140,
+    height: 41,
     marginBottom: spacing.base,
   },
   header: {

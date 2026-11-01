@@ -39,7 +39,7 @@ export const DashboardOperationsHub: React.FC<DashboardOperationsHubProps> = ({
       id: "activity",
       label: "Change History",
       icon: <History size={18} color={colors.text} />,
-      iconBg: "#F3F4F6",
+      iconBg: "#F3F1EA",
       onPress: onActivity,
     },
     {

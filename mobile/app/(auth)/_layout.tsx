@@ -31,7 +31,7 @@ export default function AuthLayout() {
       />
       <Stack.Screen
         name="email-otp-login"
-        options={{ title: "Sign In With Email Code" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="register"
@@ -39,15 +39,19 @@ export default function AuthLayout() {
       />
       <Stack.Screen
         name="verify-email"
-        options={{ title: "Verify Email", headerBackVisible: false }}
+        options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
         name="two-factor"
-        options={{ title: "Two-Factor Authentication" }}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="forgot-password"
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="account-recovery"
-        options={{ title: "Restore Account" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="password-setup"

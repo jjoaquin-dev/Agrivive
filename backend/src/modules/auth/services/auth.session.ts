@@ -5,19 +5,9 @@ import { db } from "../../../db";
 import { trust_actions, user as users } from "../../../db/schema";
 import { touchUserActivity } from "../../../utils/user-activity";
 import { formatRemainingTime } from "../../../utils/trust/access";
+import { STATUS_CACHE_TTL_MS, userStatusCache } from "../../../utils/user-status-cache";
 
 export type Rtype = "admin" | "buyer" | "seller" | "stakeholder";
-
-interface CachedUserStatus {
-  isActive: boolean;
-  role: string[];
-  email: string;
-  blockReason?: string;
-  cachedAt: number;
-}
-
-const userStatusCache = new Map<string, CachedUserStatus>();
-const STATUS_CACHE_TTL_MS = 30_000;
 
 export const sellerRoute = new Elysia({ name: "auth.session" });
 

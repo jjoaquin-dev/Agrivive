@@ -33,20 +33,20 @@ export function NotificationRegistration() {
             name: "Agrivive Alerts",
             importance: Notifications.AndroidImportance.HIGH,
             vibrationPattern: [0, 250, 250, 250],
-            lightColor: "#1F4D3A",
+            lightColor: "#386600",
             sound: "default",
           });
           await Notifications.setNotificationChannelAsync("orders", {
             name: "Orders and Messages",
             importance: Notifications.AndroidImportance.HIGH,
             vibrationPattern: [0, 250, 250, 250],
-            lightColor: "#1F4D3A",
+            lightColor: "#386600",
             sound: "default",
           });
           await Notifications.setNotificationChannelAsync("updates", {
             name: "Updates",
             importance: Notifications.AndroidImportance.LOW,
-            lightColor: "#1F4D3A",
+            lightColor: "#386600",
           });
         }
 

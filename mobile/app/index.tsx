@@ -1,11 +1,12 @@
 import React from "react";
-import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useAuth } from "../src/context/AuthContext";
-import { colors, spacing } from "../src/theme";
-import { ButtonComponent } from "../src/components/ButtonComponent";
+import { AppLoadingScreen } from "../src/features/app-start/AppLoadingScreen";
+import { AppProblemScreen } from "../src/features/app-start/AppProblemScreen";
+import { classifyStartProblem } from "../src/features/app-start/classifyStartProblem";
 
 export default function Index() {
+  const router = useRouter();
   const {
     isReady,
     isOnboardingCompleted,
@@ -14,25 +15,14 @@ export default function Index() {
     setup,
     loadingSetup,
     setupError,
+    setupErrorStatus,
     refreshSetup,
+    signOut,
   } = useAuth();
 
-  // 1. Wait for local storage initialization
-  if (!isReady) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  // 2. Check session status
-  if (isSessionPending) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+  // 1. Wait for local storage, the saved session, and the account details
+  if (!isReady || isSessionPending || (session?.user && loadingSetup)) {
+    return <AppLoadingScreen onRetry={() => void refreshSetup()} />;
   }
 
   // 3. Unauthenticated entry point: check if onboarding was already completed
@@ -43,28 +33,17 @@ export default function Index() {
     return <Redirect href="/(auth)/onboarding" />;
   }
 
-  // 3. Loading setup state
-  if (loadingSetup) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Connecting to Agrivive...</Text>
-      </View>
-    );
-  }
-
-  // 4. If error loading setup, provide retry option
+  // 4. The account could not be loaded: say why and offer the next step
   if (setupError && !setup) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorTitle}>Connection Error</Text>
-        <Text style={styles.errorMessage}>{setupError}</Text>
-        <ButtonComponent
-          title="Retry"
-          onPress={() => refreshSetup()}
-          style={styles.retryButton}
-        />
-      </View>
+      <AppProblemScreen
+        problem={classifyStartProblem(setupErrorStatus, setupError)}
+        email={session?.user?.email}
+        retrying={loadingSetup}
+        onRetry={() => void refreshSetup()}
+        onRestore={() => router.push({ pathname: "/(auth)/account-recovery", params: { email: session?.user?.email ?? "" } })}
+        onLogOut={() => void signOut()}
+      />
     );
   }
 
@@ -95,33 +74,3 @@ export default function Index() {
   // Default to home tab only after setup has been confirmed.
   return <Redirect href="/(app)/(tabs)/home" />;
 }
-
-const styles = StyleSheet.create({
-  centerContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.xl,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: colors.textMuted,
-    fontSize: 14,
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  errorMessage: {
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: "center",
-    marginBottom: spacing.lg,
-  },
-  retryButton: {
-    minWidth: 140,
-  },
-});

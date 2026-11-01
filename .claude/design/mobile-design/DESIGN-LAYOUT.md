@@ -10,7 +10,7 @@ The app strictly adheres to recognized cognitive psychology principles, ergonomi
 - **Tesler's Law (Conservation of Complexity)** *(Larry Tesler)*: The app absorbs multi-criteria AHP-TOPSIS calculations and expiration timers so the seller experiences intuitive simplicity.
 - **Fitts's Law** *(Paul Fitts)*: Primary CTAs $\ge 48$ px high, icon-only buttons $\ge 44 \times 44$ px, and elevated center action button for adding surplus.
 - **Gestalt Principles** *(Wertheimer, Koffka, Köhler)*: Law of Common Region (crisp rounded cards `#FFFFFF`), Proximity (form labels directly above inputs), and Similarity (brand green `#16A34A` for primary actions).
-- **Von Restorff Effect (Isolation Effect)** *(Hedwig von Restorff)*: Reserved high-contrast Forest Green (`#0F920F` / `#16A34A`) and terracotta accents exclusively for primary actions and urgent stock warnings.
+- **Von Restorff Effect (Isolation Effect)** *(Hedwig von Restorff)*: Reserved high-contrast Forest Green (`#457D00`) and terracotta accents exclusively for primary actions and urgent stock warnings.
 - **Plain User-Facing Words Rule**: Short, familiar language suitable for five-year-olds (`Add More`, `Take Away`, `Change Amount`, `Change History`).
 
 ---
@@ -182,7 +182,7 @@ Physical verification flow when a buyer arrives at the market stall:
 
 Replicated strictly from production design with `react-native-gifted-charts`:
 
-- **Header Hero Banner:** Green card (`#0F920F`) summarizing business performance.
+- **Header Hero Banner:** Green card (`#457D00`) summarizing business performance.
 - **Filter Row:** Window selector (`7 Days`, `Last 30 Days`, `Last 90 Days`), Unit filters (`All`, `kg`, `sacks`, `piles`), and Produce selector.
 - **2×4 KPI Grid:**
   - Posted Produce, Completed Pickups (with $\pm X\%$ trend pill), Sell-Through Rate, Gross Sales Value, Available Surplus, Reserved Produce, Remaining Balance, and Repeat Listings.
@@ -205,7 +205,7 @@ Real-time coordination channel between sellers and buyers:
 - **Order Reservation Context Banner:** Top banner displaying the active order ID, pickup time window, and produce items.
 - **Quick Reply Chips:** Pre-built messages (`"Produce is ready for pickup"`, `"Location: Stall #42"`, `"Produce freshly weighed"`).
 - **Message Bubbles:**
-  - Sent: AgriVive Green (`#0F920F`), white text.
+  - Sent: AgriVive Green (`#457D00`), white text.
   - Received: Neutral surface (`#F3F4F6`), dark text (`#111827`).
 - **Media Attachments:** Presigned S3 photo sharing for produce inspection.
 
@@ -214,7 +214,7 @@ Real-time coordination channel between sellers and buyers:
 # 9. COLOR SEMANTICS & DESIGN TOKENS
 
 ```text
-Primary Green:      #0F920F / #16A34A (CTAs, Active Tab, Highlights)
+Primary Green:      #457D00 (CTAs, Active Tab, Highlights)
 Screen Background:  #FFFFFF (Pure Clean White)
 Card Surfaces:      #FFFFFF with 1px border #E5E7EB
 Muted Surfaces:     #F9FAFB (Chips, Table Headers, Inactive States)

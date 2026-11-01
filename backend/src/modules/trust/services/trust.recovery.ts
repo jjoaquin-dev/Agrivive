@@ -3,6 +3,7 @@ import { auth } from "../../auth";
 import { db } from "../../../db";
 import { trust_actions, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { forgetUserStatus } from "../../../utils/user-status-cache";
 import type { TrustRecoveryRequestBody, TrustRecoveryVerifyBody } from "../model/trust.recovery";
 
 const recoveryActionTypes = ["blocked", "temporary_restriction"] as const;
@@ -71,6 +72,7 @@ export async function verifyTrustRecovery(input: TrustRecoveryVerifyBody) {
     await tx.update(user).set({ isActive: true }).where(eq(user.id, candidate.id));
     return candidate.id;
   });
+  forgetUserStatus(restored);
 
   return { success: true, userId: restored, restoredAt: restoredAt.toISOString() };
 }

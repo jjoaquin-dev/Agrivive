@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
   verifiedText: {
     fontFamily: fonts.body.medium,
     fontSize: 10,
-    color: "#15803D",
+    color: "#386600",
   },
   dateText: {
     fontFamily: fonts.body.regular,
@@ -85,7 +85,7 @@ export const styles = StyleSheet.create({
     marginTop: spacing.md,
     backgroundColor: "#F8FAF8",
     borderLeftWidth: 3,
-    borderLeftColor: "#16A34A",
+    borderLeftColor: "#457D00",
     borderRadius: radii.sm,
     padding: spacing.sm,
   },
@@ -98,7 +98,7 @@ export const styles = StyleSheet.create({
   responseTitle: {
     fontFamily: fonts.body.semiBold,
     fontSize: 12,
-    color: "#16A34A",
+    color: "#457D00",
   },
   responseText: {
     fontFamily: fonts.body.regular,
@@ -120,7 +120,7 @@ export const styles = StyleSheet.create({
   replyBtnText: {
     fontFamily: fonts.body.semiBold,
     fontSize: 12,
-    color: "#0F920F",
+    color: "#457D00",
   },
   replyComposer: {
     marginTop: spacing.md,
@@ -161,7 +161,7 @@ export const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   sendBtn: {
-    backgroundColor: "#0F920F",
+    backgroundColor: "#457D00",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: radii.button,

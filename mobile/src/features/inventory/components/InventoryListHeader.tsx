@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, Pressable, TextInput, ScrollView } from "react-native";
-import { Bell, ChevronDown, MoreVertical, Search, X } from "lucide-react-native";
+import { ChevronDown, MoreVertical, Search, X } from "lucide-react-native";
 import { colors } from "../../../theme";
+import { NotificationBellButton } from "../../../components/NotificationBellButton";
 import type { InventoryFilterTab } from "../hooks/useInventory";
 import type { InventorySummary, ProductCategory } from "../types";
 import { styles } from "./InventoryListHeaderStyles";
@@ -20,11 +21,11 @@ interface Props {
 }
 
 const TABS: { id: InventoryFilterTab; label: string; fg: string; bg: string; count: (s: InventorySummary) => number }[] = [
-  { id: "all", label: "All", fg: colors.text, bg: "#F3F4F6", count: (s) => s.totalProducts },
-  { id: "selling", label: "Selling", fg: colors.text, bg: "#F3F4F6", count: (s) => Math.max(0, s.activeCount - s.outOfStockCount) },
+  { id: "all", label: "All", fg: colors.text, bg: "#F3F1EA", count: (s) => s.totalProducts },
+  { id: "selling", label: "Selling", fg: colors.text, bg: "#F3F1EA", count: (s) => Math.max(0, s.activeCount - s.outOfStockCount) },
   { id: "low_stock", label: "Running low", fg: colors.warning, bg: "#FFF7ED", count: (s) => s.lowStockCount },
   { id: "out_of_stock", label: "Sold out", fg: colors.error, bg: "#FEF2F2", count: (s) => s.outOfStockCount },
-  { id: "archived", label: "Archived", fg: colors.textMuted, bg: "#F3F4F6", count: (s) => s.archivedCount },
+  { id: "archived", label: "Archived", fg: colors.textMuted, bg: "#F3F1EA", count: (s) => s.archivedCount },
 ];
 
 export function InventoryListHeader({
@@ -35,10 +36,7 @@ export function InventoryListHeader({
       <View style={styles.topBar}>
         <Text style={styles.title}>Listings</Text>
         <View style={styles.actions}>
-          <Pressable onPress={onOpenNotifications} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Notifications">
-            <Bell size={22} color="#374151" />
-            <View style={styles.dot} />
-          </Pressable>
+          <NotificationBellButton onPress={onOpenNotifications} />
           <Pressable onPress={onOpenMenu} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="More options">
             <MoreVertical size={20} color="#374151" />
           </Pressable>

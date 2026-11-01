@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   starPillActive: {
-    backgroundColor: "#0F920F",
-    borderColor: "#0F920F",
+    backgroundColor: "#457D00",
+    borderColor: "#457D00",
   },
   starPillText: {
     fontFamily: fonts.body.medium,

@@ -6,6 +6,7 @@ import {
   TextInputKeyPressEvent,
   Text,
 } from "react-native";
+import { AlertCircle } from "lucide-react-native";
 import { colors } from "../theme";
 
 export interface OtpInputComponentProps {
@@ -15,6 +16,8 @@ export interface OtpInputComponentProps {
   error?: string | null;
   disabled?: boolean;
   autoFocus?: boolean;
+  /** Stretch the boxes across the full width, left-aligned (used by the sign-in and verify screens). */
+  fill?: boolean;
 }
 
 export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
@@ -24,6 +27,7 @@ export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
   error,
   disabled = false,
   autoFocus = true,
+  fill = false,
 }) => {
   const inputRefs = useRef<(React.ElementRef<typeof TextInput> | null)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -75,8 +79,8 @@ export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
   const boxHeight = length <= 4 ? 64 : 54;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.boxRow}>
+    <View style={[styles.container, fill && styles.containerFill]}>
+      <View style={[styles.boxRow, fill && styles.boxRowFill]}>
         {digits.map((digit, index) => {
           const isFilled = digit.length > 0;
           const isFocused = focusedIndex === index;
@@ -88,7 +92,7 @@ export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
               }}
               style={[
                 styles.box,
-                { width: boxWidth, height: boxHeight },
+                fill ? styles.boxFill : { width: boxWidth, height: boxHeight },
                 isFilled && styles.boxFilled,
                 isFocused && styles.boxFocused,
                 error ? styles.boxError : null,
@@ -108,7 +112,12 @@ export const OtpInputComponent: React.FC<OtpInputComponentProps> = ({
           );
         })}
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <View style={[styles.errorRow, fill && styles.errorRowFill]}>
+          {fill ? <AlertCircle size={14} color={colors.error} /> : null}
+          <Text style={[styles.errorText, fill && styles.errorTextFill]}>{error}</Text>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -127,19 +136,25 @@ const styles = StyleSheet.create({
   box: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#E5E2DA",
     backgroundColor: "#FFFFFF",
     textAlign: "center",
     fontSize: 22,
     fontWeight: "700",
-    color: "#1E1E1E",
+    color: "#202622",
     padding: 0,
   },
+  containerFill: { alignItems: "stretch", marginVertical: 0 },
+  boxRowFill: { justifyContent: "flex-start", gap: 10 },
+  boxFill: { flex: 1, height: 56 },
+  errorRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  errorRowFill: { justifyContent: "flex-start", marginTop: 8 },
+  errorTextFill: { marginTop: 0, flex: 1, textAlign: "left", fontWeight: "400", fontSize: 13 },
   boxFilled: {
-    borderColor: "#1E1E1E",
+    borderColor: "#202622",
   },
   boxFocused: {
-    borderColor: "#0F920F",
+    borderColor: "#457D00",
     borderWidth: 1.5,
   },
   boxError: {

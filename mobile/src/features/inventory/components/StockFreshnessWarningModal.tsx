@@ -41,7 +41,7 @@ export const StockFreshnessWarningModal: React.FC<StockFreshnessWarningModalProp
         </View>
         <View style={styles.divider} />
         <View style={styles.compareRow}>
-          <View style={[styles.rowIcon, { backgroundColor: "#F3F4F6" }]}><RefreshCw size={14} color={colors.textMuted} /></View>
+          <View style={[styles.rowIcon, { backgroundColor: "#F3F1EA" }]}><RefreshCw size={14} color={colors.textMuted} /></View>
           <Text style={[styles.rowText, { color: "#4B5563" }]}>
             <Text style={styles.bold}>Adding to this batch</Text> keeps the old batch date and the current price (<Text style={styles.bold}>{peso(currentPrice)}</Text>)
           </Text>
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   rowText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.text },
   recommended: { fontFamily: fonts.heading.bold, fontSize: 10, letterSpacing: 0.6, color: colors.primary },
   bold: { fontFamily: fonts.body.semiBold },
-  price: { fontFamily: fonts.body.semiBold, color: "#15803D" },
+  price: { fontFamily: fonts.body.semiBold, color: "#386600" },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm + 2 },
   button: { minHeight: 52, borderRadius: radii.button },
   buttonText: { fontFamily: fonts.heading.bold, fontSize: 16 },

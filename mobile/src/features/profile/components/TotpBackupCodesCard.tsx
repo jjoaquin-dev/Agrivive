@@ -1,62 +1,57 @@
 import React from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
-import { Check, Copy } from "lucide-react-native";
-import { colors, fonts, spacing } from "../../../theme";
-import { CardComponent } from "../../../components/CardComponent";
-import { ButtonComponent } from "../../../components/ButtonComponent";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AlertTriangle, Check, Copy, Info } from "lucide-react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { profileColors } from "../profileTokens";
 
 interface Props {
   backupCodes: string[];
   copiedCodes: boolean;
   onCopyCodes: () => void;
-  onFinish: () => void;
 }
 
-export function TotpBackupCodesCard({
-  backupCodes,
-  copiedCodes,
-  onCopyCodes,
-  onFinish,
-}: Props) {
+export function TotpBackupCodesCard({ backupCodes, copiedCodes, onCopyCodes }: Props) {
   return (
-    <CardComponent style={styles.card}>
-      <Text style={styles.cardTitle}>Save Your Backup Codes</Text>
-      <Text style={styles.cardInstruction}>
-        If you lose access to your phone or authenticator app, you can use these one-time codes to sign in. Each code can be used only once.
-      </Text>
-
-      <View style={styles.backupCodesList}>
-        {backupCodes.map((code, index) => (
-          <View key={index} style={styles.codeItem}>
-            <Text style={styles.codeText} selectable>{code}</Text>
-          </View>
-        ))}
+    <View style={styles.card}>
+      <Text style={styles.title}>Save your backup codes</Text>
+      <Text style={styles.text}>If you lose your phone or code app, you can use these one-time codes to sign in.</Text>
+      <View style={styles.warn}>
+        <AlertTriangle size={18} color={profileColors.amberText} />
+        <Text style={styles.warnText}>Each code works once. Keep them somewhere safe.</Text>
       </View>
-
-      <ButtonComponent
-        title={copiedCodes ? "Codes Copied" : "Copy All Codes"}
-        icon={copiedCodes ? <Check size={16} color={colors.primary} /> : <Copy size={16} color={colors.primary} />}
-        variant="secondary"
-        onPress={onCopyCodes}
-        style={styles.copyBtn}
-      />
-
-      <ButtonComponent
-        title="I Have Saved My Backup Codes"
-        onPress={onFinish}
-        style={styles.actionBtn}
-      />
-    </CardComponent>
+      <View style={styles.grid}>
+        {backupCodes.map((code) => <Text key={code} style={styles.code} selectable>{code}</Text>)}
+      </View>
+      <View style={styles.actions}>
+        <Pressable onPress={onCopyCodes} accessibilityRole="button" style={styles.copy}>
+          <Copy size={16} color={colors.primary} />
+          <Text style={styles.copyText}>Copy All</Text>
+        </Pressable>
+        {copiedCodes ? <View style={styles.copied}><Check size={14} color={profileColors.mintText} /><Text style={styles.copiedText}>Copied!</Text></View> : null}
+      </View>
+      {copiedCodes ? (
+        <View style={styles.note}>
+          <Info size={16} color={colors.textMuted} />
+          <Text style={styles.noteText}>Codes were copied to your clipboard. Store them in a password manager or notes.</Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing.base },
-  cardTitle: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text, marginBottom: spacing.xs },
-  cardInstruction: { fontSize: 13, color: colors.textMuted, marginBottom: spacing.md, lineHeight: 18 },
-  backupCodesList: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", backgroundColor: "rgba(0,0,0,0.02)", padding: spacing.sm, borderRadius: 8, marginBottom: spacing.md },
-  codeItem: { width: "48%", backgroundColor: colors.surface, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, borderRadius: 6, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.xs, alignItems: "center" },
-  codeText: { fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", fontSize: 13, color: colors.text, fontWeight: "600" },
-  actionBtn: { marginTop: spacing.xs },
-  copyBtn: { marginBottom: spacing.sm },
+  card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.lg },
+  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text },
+  text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.base },
+  warn: { flexDirection: "row", gap: spacing.sm, alignItems: "center", backgroundColor: "#FFFBEB", borderWidth: 1, borderColor: profileColors.amberBorder, borderRadius: radii.button, padding: spacing.md },
+  warnText: { flex: 1, fontFamily: fonts.body.medium, fontSize: 14, lineHeight: 20, color: "#92400E" },
+  grid: { flexDirection: "row", flexWrap: "wrap", backgroundColor: "#F3F1EA", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.button, paddingVertical: spacing.sm, marginTop: spacing.base },
+  code: { width: "50%", paddingVertical: spacing.sm, paddingHorizontal: spacing.base, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", fontSize: 15, fontWeight: "600", color: colors.text },
+  actions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.base },
+  copy: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingHorizontal: spacing.base, borderRadius: radii.button, borderWidth: 1.5, borderColor: colors.primary },
+  copyText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
+  copied: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: profileColors.mint, borderRadius: radii.full, paddingHorizontal: 12, paddingVertical: 6 },
+  copiedText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: profileColors.mintText },
+  note: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.base, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: profileColors.border },
+  noteText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted },
 });

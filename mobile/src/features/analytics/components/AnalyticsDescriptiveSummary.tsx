@@ -20,7 +20,7 @@ export function AnalyticsDescriptiveSummary({ summary }: { summary: string | nul
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 2, paddingBottom: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 2, paddingBottom: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: "#F3F1EA" },
   icon: { width: 32, height: 32, borderRadius: radii.input, backgroundColor: colors.primarySurface, alignItems: "center", justifyContent: "center" },
   title: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text },
   body: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.text, marginTop: spacing.sm + 2 },

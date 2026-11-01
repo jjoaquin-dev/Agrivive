@@ -14,7 +14,7 @@ const STATUS: Record<ProductStatusKind, Omit<ProductStatus, "kind">> = {
   selling: { label: "Selling", color: colors.success, background: "#DCFCE7" },
   low: { label: "Running low", color: colors.warning, background: "#FFF7ED" },
   soldOut: { label: "Sold out", color: colors.error, background: "#FEF2F2" },
-  archived: { label: "Archived", color: colors.textMuted, background: "#F3F4F6" },
+  archived: { label: "Archived", color: colors.textMuted, background: "#F3F1EA" },
 };
 
 /** One place that decides which status a listing shows, so the list and details always agree. */

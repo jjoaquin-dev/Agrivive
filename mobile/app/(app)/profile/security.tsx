@@ -1,197 +1,79 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
-import * as Clipboard from "expo-clipboard";
-import { authClient } from "../../../src/api/client";
-import { useAuth } from "../../../src/context/AuthContext";
-import { colors, fonts, spacing } from "../../../src/theme";
-import { TotpStatusCard } from "../../../src/features/profile/components/TotpStatusCard";
+import React from "react";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Stack } from "expo-router";
+import { ArrowRight, ShieldCheck } from "lucide-react-native";
+import { ButtonComponent } from "../../../src/components/ButtonComponent";
+import { PasswordSecurityCard } from "../../../src/features/auth/components/PasswordSecurityCard";
+import { useSellerTwoFactor } from "../../../src/features/profile/hooks/useSellerTwoFactor";
+import { ProfileScreenHeader } from "../../../src/features/profile/components/ProfileScreenHeader";
+import { SignInCodeCard } from "../../../src/features/profile/components/SignInCodeCard";
+import { TotpStepper } from "../../../src/features/profile/components/TotpStepper";
 import { TotpConfirmPasswordCard } from "../../../src/features/profile/components/TotpConfirmPasswordCard";
 import { TotpScanQrCard } from "../../../src/features/profile/components/TotpScanQrCard";
+import { TotpVerifyCard } from "../../../src/features/profile/components/TotpVerifyCard";
 import { TotpBackupCodesCard } from "../../../src/features/profile/components/TotpBackupCodesCard";
-import { TotpDisableCard } from "../../../src/features/profile/components/TotpDisableCard";
-import { PasswordSecurityCard } from "../../../src/features/auth/components/PasswordSecurityCard";
+import { profileColors } from "../../../src/features/profile/profileTokens";
+import { colors, fonts, radii, spacing } from "../../../src/theme";
+
+const STEP_NUMBER = { idle: 0, password: 1, scan: 2, verify: 3, backup: 4 } as const;
 
 export default function SecurityScreen() {
-  const { setup, refreshSetup } = useAuth();
-  const is2FAEnabled = !!setup?.twoFactorEnabled;
-
-  const [step, setStep] = useState<"idle" | "enable-password" | "scan-qr" | "backup-codes">("idle");
-  const [password, setPassword] = useState("");
-  const [totpURI, setTotpURI] = useState<string | null>(null), [secretKey, setSecretKey] = useState<string | null>(null);
-  const [backupCodes, setBackupCodes] = useState<string[]>([]), [confirmCode, setConfirmCode] = useState("");
-  const [loading, setLoading] = useState(false), [copiedCodes, setCopiedCodes] = useState(false);
-  const [passwordError, setPasswordError] = useState<string | null>(null), [confirmCodeError, setConfirmCodeError] = useState<string | null>(null);
-  const [disablePasswordError, setDisablePasswordError] = useState<string | null>(null);
-  const [generalError, setGeneralError] = useState<string | null>(null), [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [disablePassword, setDisablePassword] = useState(""), [showDisableModal, setShowDisableModal] = useState(false);
-
-  const handleRequestEnable = async () => {
-    if (!password) {
-      setPasswordError("Please enter your current password to continue.");
-      return;
-    }
-    setLoading(true);
-    setPasswordError(null);
-    setGeneralError(null);
-    try {
-      const response = await authClient.twoFactor.enable({ password });
-      if (response.error) {
-        setPasswordError(response.error.message || "Incorrect password. Please verify and try again.");
-        return;
-      }
-      const data = response.data as any;
-      if (data?.totpURI) {
-        setTotpURI(data.totpURI);
-        const match = data.totpURI.match(/secret=([A-Z0-9]+)/i);
-        setSecretKey(match ? match[1] : null);
-      }
-      if (Array.isArray(data?.backupCodes)) setBackupCodes(data.backupCodes);
-      setStep("scan-qr");
-      setPassword("");
-    } catch (err: any) {
-      setGeneralError(err?.message || "Failed to initiate authenticator setup.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyTotp = async () => {
-    const cleanCode = confirmCode.trim();
-    if (!cleanCode) { setConfirmCodeError("Please enter the 6-digit code from your app."); return; }
-    if (cleanCode.length !== 6 || !/^\d+$/.test(cleanCode)) { setConfirmCodeError("Code must be exactly 6 digits."); return; }
-    setLoading(true);
-    setConfirmCodeError(null);
-    setGeneralError(null);
-    try {
-      const response = await authClient.twoFactor.verifyTotp({ code: cleanCode });
-      if (response.error) { setConfirmCodeError(response.error.message || "Invalid or expired code. Please try again."); return; }
-      await refreshSetup();
-      setConfirmCode("");
-      setTotpURI(null);
-      setSecretKey(null);
-      if (backupCodes.length > 0) setStep("backup-codes");
-      else { setStep("idle"); setSuccessMessage("Two-factor authentication has been successfully enabled."); }
-    } catch (err: any) {
-      setGeneralError(err?.message || "Failed to verify authenticator code.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCopyBackupCodes = async () => {
-    await Clipboard.setStringAsync(backupCodes.join("\n"));
-    setCopiedCodes(true);
-    setTimeout(() => setCopiedCodes(false), 3000);
-  };
-
-  const handleFinishBackupCodes = () => {
-    setStep("idle");
-    setBackupCodes([]);
-    setSuccessMessage("Two-factor authentication has been successfully enabled.");
-  };
-
-  const handleDisable2FA = async () => {
-    if (!disablePassword) { setDisablePasswordError("Please enter your password to disable 2FA."); return; }
-    setLoading(true);
-    setDisablePasswordError(null);
-    setGeneralError(null);
-    try {
-      const response = await authClient.twoFactor.disable({ password: disablePassword });
-      if (response.error) { setDisablePasswordError(response.error.message || "Incorrect password. Could not disable 2FA."); return; }
-      await refreshSetup();
-      setShowDisableModal(false);
-      setDisablePassword("");
-      setSuccessMessage("Two-factor authentication has been disabled.");
-    } catch (err: any) {
-      setGeneralError(err?.message || "Failed to disable two-factor authentication.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const tf = useSellerTwoFactor();
+  const insets = useSafeAreaInsets();
+  const inFlow = tf.step !== "idle";
+  const action = {
+    password: { title: "Continue", run: tf.requestEnable },
+    scan: { title: "Next: Type Code", run: tf.toVerify },
+    verify: { title: "Check Code", run: tf.verifyCode },
+    backup: { title: "I Saved Them", run: tf.finishBackup },
+  }[tf.step as "password" | "scan" | "verify" | "backup"];
 
   return (
-    <KeyboardAvoidingView style={styles.keyboardContainer} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.title}>Account Security</Text>
-          <Text style={styles.subtitle}>Manage two-factor authentication (TOTP) and backup recovery access.</Text>
-        </View>
-
-        {generalError ? <View style={styles.errorBox}><Text style={styles.errorBoxText}>{generalError}</Text></View> : null}
-        {successMessage ? <View style={styles.successBox}><Text style={styles.successBoxText}>{successMessage}</Text></View> : null}
-
-        {/* 1. Authenticator App (TOTP) Card */}
-        <TotpStatusCard
-          is2FAEnabled={is2FAEnabled}
-          isIdle={step === "idle"}
-          showDisableModal={showDisableModal}
-          onEnablePress={() => { setPasswordError(null); setConfirmCodeError(null); setGeneralError(null); setSuccessMessage(null); setStep("enable-password"); }}
-          onDisablePress={() => { setDisablePasswordError(null); setGeneralError(null); setSuccessMessage(null); setShowDisableModal(true); }}
-        />
-
-        {/* 2. TOTP Confirm Password Card: Placed directly BELOW TOTP auth app & ABOVE Password card */}
-        {step === "enable-password" && (
-          <TotpConfirmPasswordCard
-            password={password}
-            passwordError={passwordError}
-            loading={loading}
-            onChangePassword={(text) => { setPassword(text); if (passwordError) setPasswordError(null); if (generalError) setGeneralError(null); }}
-            onCancel={() => { setStep("idle"); setPassword(""); }}
-            onContinue={handleRequestEnable}
-          />
-        )}
-
-        {/* 3. TOTP Scan QR Card */}
-        {step === "scan-qr" && totpURI && (
-          <TotpScanQrCard
-            totpURI={totpURI}
-            secretKey={secretKey}
-            confirmCode={confirmCode}
-            confirmCodeError={confirmCodeError}
-            loading={loading}
-            onChangeCode={(text) => { setConfirmCode(text); if (confirmCodeError) setConfirmCodeError(null); if (generalError) setGeneralError(null); }}
-            onVerify={handleVerifyTotp}
-            onCancel={() => { setStep("idle"); setTotpURI(null); setSecretKey(null); setConfirmCode(""); }}
-          />
-        )}
-
-        {/* 4. TOTP Backup Codes Card */}
-        {step === "backup-codes" && (
-          <TotpBackupCodesCard
-            backupCodes={backupCodes}
-            copiedCodes={copiedCodes}
-            onCopyCodes={handleCopyBackupCodes}
-            onFinish={handleFinishBackupCodes}
-          />
-        )}
-
-        {/* 5. TOTP Disable Card */}
-        {showDisableModal && (
-          <TotpDisableCard
-            disablePassword={disablePassword}
-            disablePasswordError={disablePasswordError}
-            loading={loading}
-            onChangePassword={(text) => { setDisablePassword(text); if (disablePasswordError) setDisablePasswordError(null); if (generalError) setGeneralError(null); }}
-            onCancel={() => { setShowDisableModal(false); setDisablePassword(""); }}
-            onConfirmDisable={handleDisable2FA}
-          />
-        )}
-
-        {/* 6. Password Security Card: Positioned below the TOTP flow */}
-        <PasswordSecurityCard />
-      </ScrollView>
-    </KeyboardAvoidingView>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <ProfileScreenHeader title={inFlow ? "Turn On Sign-in Code" : "Sign-in Safety"} onBack={inFlow ? (tf.step === "backup" ? () => {} : tf.back) : undefined} />
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {tf.generalError ? <View style={styles.error}><Text style={styles.errorText}>{tf.generalError}</Text></View> : null}
+          {tf.successMessage && !inFlow ? <View style={styles.success}><Text style={styles.successText}>{tf.successMessage}</Text></View> : null}
+          {inFlow ? <TotpStepper current={STEP_NUMBER[tf.step]} /> : null}
+          {tf.step === "idle" ? (
+            <>
+              <PasswordSecurityCard />
+              <SignInCodeCard isOn={tf.isOn} loading={tf.loading} disabling={tf.disabling} disablePassword={tf.disablePassword} disableError={tf.disableError}
+                onTurnOn={tf.startEnable} onAskTurnOff={tf.startDisable} onCancelTurnOff={tf.cancelDisable} onChangePassword={tf.onDisablePassword} onTurnOff={tf.disable} />
+              <View style={styles.note}>
+                <ShieldCheck size={20} color={colors.primary} />
+                <Text style={styles.noteText}><Text style={styles.noteBold}>Agrivive Stall Protection: </Text>A sign-in code keeps your vegetable listings and buyer reservations safe from anyone who should not be signing in.</Text>
+              </View>
+            </>
+          ) : null}
+          {tf.step === "password" ? <TotpConfirmPasswordCard password={tf.password} passwordError={tf.passwordError} onChangePassword={tf.onPassword} /> : null}
+          {tf.step === "scan" && tf.totpURI ? <TotpScanQrCard totpURI={tf.totpURI} secretKey={tf.secretKey} /> : null}
+          {tf.step === "verify" ? <TotpVerifyCard code={tf.confirmCode} error={tf.codeError} loading={tf.loading} onChange={tf.onCode} onRescan={tf.toScan} /> : null}
+          {tf.step === "backup" ? <TotpBackupCodesCard backupCodes={tf.backupCodes} copiedCodes={tf.copiedCodes} onCopyCodes={tf.copyCodes} /> : null}
+        </ScrollView>
+        {inFlow && action ? (
+          <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+            <ButtonComponent title={action.title} icon={<ArrowRight size={18} color={colors.white} />} onPress={() => void action.run()} loading={tf.loading && tf.step !== "scan"} />
+          </View>
+        ) : null}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardContainer: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { flexGrow: 1, paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.xxxl },
-  header: { marginBottom: spacing.base },
-  title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, marginBottom: spacing.xs },
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, lineHeight: 20 },
-  errorBox: { backgroundColor: "rgba(184, 84, 80, 0.1)", borderWidth: 1, borderColor: colors.error, borderRadius: 8, padding: spacing.md, marginBottom: spacing.base },
-  errorBoxText: { color: colors.error, fontSize: 13, fontWeight: "500" },
-  successBox: { backgroundColor: "rgba(63, 125, 88, 0.1)", borderWidth: 1, borderColor: colors.success, borderRadius: 8, padding: spacing.md, marginBottom: spacing.base },
-  successBoxText: { color: colors.success, fontSize: 13, fontWeight: "500" },
+  safe: { flex: 1, backgroundColor: profileColors.cream },
+  flex: { flex: 1 },
+  content: { paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.xl },
+  error: { backgroundColor: profileColors.redSoft, borderWidth: 1, borderColor: colors.error, borderRadius: 10, padding: spacing.md, marginBottom: spacing.base },
+  errorText: { color: colors.error, fontFamily: fonts.body.medium, fontSize: 13 },
+  success: { backgroundColor: profileColors.mint, borderWidth: 1, borderColor: colors.success, borderRadius: 10, padding: spacing.md, marginBottom: spacing.base },
+  successText: { color: profileColors.mintText, fontFamily: fonts.body.medium, fontSize: 13 },
+  note: { flexDirection: "row", gap: spacing.sm, backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#BBF7D0", borderRadius: radii.sheet, padding: spacing.base },
+  noteText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 21, color: colors.text },
+  noteBold: { fontFamily: fonts.body.semiBold, color: colors.primary },
+  bar: { paddingHorizontal: spacing.base, paddingTop: spacing.md, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: profileColors.border },
 });

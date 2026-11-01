@@ -2,12 +2,12 @@ import { StyleSheet } from "react-native";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../theme";
 
 export const styles = StyleSheet.create({
-  photoCard: { height: 180, borderRadius: radii.card, overflow: "hidden", backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  photoCard: { height: 180, borderRadius: radii.card, overflow: "hidden", backgroundColor: "#F3F1EA", borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
   photo: { width: "100%", height: "100%", resizeMode: "cover" },
   photoEmpty: { ...typography.label, color: colors.textMuted, marginTop: spacing.sm },
   card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, ...shadows.card },
-  metaRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingBottom: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  code: { ...typography.labelSmall, color: colors.textMuted, backgroundColor: "#F3F4F6", paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 6, overflow: "hidden" },
+  metaRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingBottom: spacing.sm + 2, borderBottomWidth: 1, borderBottomColor: "#F3F1EA" },
+  code: { ...typography.labelSmall, color: colors.textMuted, backgroundColor: "#F3F1EA", paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: 6, overflow: "hidden" },
   category: { ...typography.labelSmall, color: colors.textMuted },
   name: { fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28, color: colors.text, marginTop: spacing.md },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm },
@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
   stockValue: { fontFamily: fonts.heading.bold, fontSize: 28, lineHeight: 32 },
   stockLabel: { ...typography.label, color: colors.textMuted },
   stockPill: { ...typography.caption, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
-  track: { height: 8, borderRadius: 4, backgroundColor: "#E5E7EB", overflow: "hidden", marginTop: spacing.sm + 2 },
+  track: { height: 8, borderRadius: 4, backgroundColor: "#E5E2DA", overflow: "hidden", marginTop: spacing.sm + 2 },
   fill: { height: "100%", borderRadius: 4 },
   stockMeta: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap", marginTop: spacing.sm },
   stockMetaText: { ...typography.caption, fontFamily: fonts.body.regular, color: colors.textMuted },
@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
   historyTitle: { ...typography.sectionHeading, color: colors.text },
   historyCount: { ...typography.labelSmall, color: colors.textMuted },
   historyEmpty: { ...typography.body, color: colors.textMuted },
-  historyRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, padding: 10, borderRadius: radii.input + 2, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: "#F3F4F6", marginBottom: spacing.sm + 2 },
+  historyRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, padding: 10, borderRadius: radii.input + 2, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: "#F3F1EA", marginBottom: spacing.sm + 2 },
   historyIcon: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   historyBody: { flex: 1, minWidth: 0 },
   historyLine: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 4 },

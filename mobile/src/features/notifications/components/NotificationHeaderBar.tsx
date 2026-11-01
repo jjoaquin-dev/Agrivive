@@ -16,10 +16,10 @@ export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenSettin
   const hasUnread = unreadCount > 0;
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Notifications</Text>
       <Pressable onPress={() => safeBack(router)} accessibilityRole="button" accessibilityLabel="Go back" style={[styles.button, styles.left]}>
         <ChevronLeft size={24} color={colors.text} />
       </Pressable>
-      <Text style={styles.title} pointerEvents="none">Notifications</Text>
       <View style={styles.right}>
         <Pressable onPress={onOpenSettings} accessibilityRole="button" accessibilityLabel="Phone alert settings" style={styles.button}>
           <Settings size={20} color={colors.text} />
@@ -44,6 +44,6 @@ const styles = StyleSheet.create({
   button: { width: 44, height: 44, borderRadius: radii.full, alignItems: "center", justifyContent: "center" },
   left: { marginLeft: -spacing.sm },
   right: { flexDirection: "row", alignItems: "center", marginRight: -spacing.sm },
-  title: { position: "absolute", left: 0, right: 0, textAlign: "center", fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
+  title: { position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
   disabled: { opacity: 0.35 },
 });

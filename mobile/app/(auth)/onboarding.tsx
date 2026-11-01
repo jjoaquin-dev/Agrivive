@@ -93,12 +93,11 @@ export default function OnboardingScreen() {
       <View style={styles.topBar}>
         <View style={styles.logoContainer}>
           <Image
-            source={require("../../assets/brand/Agrivive_Logo.png")}
+            source={require("../../assets/brand/agrivive-logo-full.png")}
             style={styles.logoImage}
             resizeMode="contain"
-            accessibilityLabel="Agrivive Logo"
+            accessibilityLabel="Agrivive"
           />
-          <Text style={styles.logoText}>Agrivive</Text>
         </View>
         <Pressable
           onPress={handleSkip}
@@ -185,14 +184,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   logoImage: {
-    width: 32,
-    height: 32,
-  },
-  logoText: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 22,
-    color: colors.primary,
-    letterSpacing: -0.3,
+    width: 120,
+    height: 35,
   },
   skipText: {
     fontFamily: fonts.body.semiBold,
@@ -256,7 +249,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#E5E2DA",
     marginHorizontal: 4,
   },
   indicatorActive: {
