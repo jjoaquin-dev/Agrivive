@@ -11,9 +11,19 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-01
+2026-11-02
 
 ## Latest completed task
+
+Buyer Messages empty state ("Choose a conversation") shows the new green chat-bubble illustration with its background removed (`web/public/brand/empty-chat-bubble.png`). Details: [[2026-11-02 Messages Empty State Chat Image]]. Validation: typecheck passed; seen in the browser pane at desktop width. Not checked: phone width.
+
+Earlier today: [[2026-11-02 Orders Empty State Box Image]], [[2026-11-02 Empty Cart Image Swap]].
+
+Buyer All Orders empty state shows the new green box illustration (`web/public/brand/empty-orders-box.png`) with its background removed. Details: [[2026-11-02 Orders Empty State Box Image]]. Validation: typecheck passed; not seen in the browser (sign-in required). Not checked: phone width.
+
+Earlier today: [[2026-11-02 Empty Cart Image Swap]].
+
+Buyer cart empty state uses the new green cart illustration with its background removed (`web/public/brand/empty-cart-plus.png`). Details: [[2026-11-02 Empty Cart Image Swap]]. Validation: typecheck passed; checked in the browser pane at desktop width. Not checked: phone width.
 
 Boost now opens only for Priority Boost listings (paper rule, owner choice), Add More keeps the cycle's original stock in sync with a repair migration (applied to dev, not yet on the VPS), and the seller Boost list shows official tier names. 33 tests pass. Rebuild the API; run migration `20261101190000_sync_cycle_original_qty` on the VPS when ready. See [[2026-11-01 Boost Rule and Stock Sync]].
 

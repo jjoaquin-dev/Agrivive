@@ -1,13 +1,14 @@
 "use client";
 
 import { Breadcrumbs } from "@/src/components/Breadcrumbs";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
+import { CheckCircle2, RefreshCw, Search } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer } from "@/src/components/PageContainer";
 import { ApiError, isTrustAccessMessage } from "@/src/lib/api";
@@ -152,9 +153,9 @@ export function BuyerOrders() {
             {[1, 2, 3].map((item) => <Skeleton key={item} className="h-40 rounded-2xl bg-white border border-[#E8E8E8]" />)}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <Empty className="rounded-2xl border border-[#E8E8E8] bg-white p-8 shadow-sm">
+          <Empty className="w-full max-w-none rounded-2xl border border-[#E8E8E8] bg-white p-8 shadow-sm">
             <EmptyHeader>
-              <EmptyMedia variant="icon"><ShoppingBag className="text-[#457D00]" /></EmptyMedia>
+              <Image src="/brand/orders-empty-box.png" alt="" width={512} height={475} sizes="144px" className="h-auto w-36" />
               <EmptyTitle className="text-base font-bold text-[#14231A]">{counts.all === 0 ? "No reservations yet" : "No orders match"}</EmptyTitle>
               <EmptyDescription className="text-xs text-[#5F7367]">
                 {counts.all === 0

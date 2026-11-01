@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Bell, Sparkles, Store, Ticket } from "lucide-react";
+import { ArrowRight, Bell, Store, Ticket } from "lucide-react";
 
 interface NotificationEmptyStateComponentProps {
   filterActive?: boolean;
@@ -21,12 +22,13 @@ export const NotificationEmptyStateComponent = ({
       />
 
       {/* Center Icon Badge */}
-      <div className="relative mx-auto flex size-16 items-center justify-center rounded-2xl bg-[#457D00]/10 text-[#457D00] ring-8 ring-[#457D00]/5 shadow-sm">
-        <Bell className="size-8" />
-        <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#457D00] text-white shadow-sm">
-          <Sparkles className="size-3" />
-        </span>
-      </div>
+      <Image
+        src="/brand/notifications-empty-bell.png"
+        alt=""
+        width={160}
+        height={109}
+        className="relative mx-auto h-auto w-40"
+      />
 
       {/* Copywriting */}
       <h2 className="mt-5 font-heading text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { PageContainer } from "./PageContainer";
 import { MarketplaceHeaderFilters } from "@/src/features/marketplace/components/MarketplaceHeaderFilters";
 
@@ -25,7 +25,6 @@ type BuyerSiteHeaderNavProps = {
 
 export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, hasSession }: BuyerSiteHeaderNavProps) {
   const searchParams = useSearchParams();
-  const onMarketplace = (usePathname() ?? "").startsWith("/marketplace");
   const selectedType = searchParams?.get("productType") ?? "";
 
   return (
@@ -56,11 +55,9 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
             })}
           </nav>
           {/* Price and distance under 1280px; the navbar shows them above that. */}
-          {onMarketplace ? (
-            <div className="flex items-center gap-2 xl:hidden">
-              <MarketplaceHeaderFilters />
-            </div>
-          ) : null}
+          <div className="flex items-center gap-2 xl:hidden">
+            <MarketplaceHeaderFilters />
+          </div>
         </PageContainer>
       </div>
 
@@ -69,11 +66,9 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
         <div className="border-t border-neutral-200 p-4 lg:hidden">
           <div className="flex flex-col gap-2">
             {/* Price and distance on phones and tablets. */}
-            {onMarketplace ? (
-              <div className="flex flex-wrap gap-2 md:hidden">
-                <MarketplaceHeaderFilters />
-              </div>
-            ) : null}
+            <div className="flex flex-wrap gap-2 md:hidden">
+              <MarketplaceHeaderFilters />
+            </div>
             {/* Phone header has no search box, so point to the marketplace search. */}
             <Link href="/marketplace" onClick={onCloseMenu} className="mb-2 inline-flex min-h-11 items-center rounded-xl border border-neutral-200 px-3 text-xs font-semibold text-neutral-800">
               Search produce on the marketplace
