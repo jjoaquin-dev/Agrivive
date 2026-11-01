@@ -6,6 +6,7 @@ import type { SellerMessageFilter, SellerProductInquiryItem } from "../types";
 export function useSellerProductInquiries() {
   const [filter, setFilter] = useState<SellerMessageFilter>("open");
   const [inquiries, setInquiries] = useState<SellerProductInquiryItem[]>([]);
+  const [openCount, setOpenCount] = useState<number>(0);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -26,6 +27,9 @@ export function useSellerProductInquiries() {
       });
       setInquiries((previous) => (reset ? response.items : [...previous, ...response.items]));
       setNextCursor(response.nextCursor);
+      if (response.openCount !== undefined) {
+        setOpenCount(response.openCount);
+      }
     } catch (err: any) {
       console.error("Failed to load seller product inquiries", err);
       setError(err?.message || "Could not load listing questions.");
@@ -67,6 +71,7 @@ export function useSellerProductInquiries() {
           )
           .filter((item) => (filter === "open" ? !item.reply : true))
       );
+      setOpenCount((prev) => Math.max(0, prev - 1));
     } finally {
       setReplyingId(null);
     }
@@ -79,6 +84,7 @@ export function useSellerProductInquiries() {
       setFilter(value);
     },
     inquiries,
+    openCount,
     loading,
     refreshing,
     loadingMore,

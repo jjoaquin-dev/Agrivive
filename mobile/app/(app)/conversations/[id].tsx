@@ -1,179 +1,168 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Paperclip, Send, X } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
-import { fetchConversationMessages, fetchConversations, markConversationRead, openConversationSocket, sendConversationMessage, uploadConversationAttachment } from "../../../src/features/conversations/api";
 import { ConversationBubble } from "../../../src/features/conversations/components/ConversationBubble";
 import { ConversationContextBanner } from "../../../src/features/conversations/components/ConversationContextBanner";
 import { ConversationReservationCard } from "../../../src/features/conversations/components/ConversationReservationCard";
+import { ConversationOrderEvent } from "../../../src/features/conversations/components/ConversationOrderEvent";
 import { ConversationQuickReplies } from "../../../src/features/conversations/components/ConversationQuickReplies";
 import { ConversationHeaderBar } from "../../../src/features/conversations/components/ConversationHeaderBar";
-import type { Conversation, ConversationMessage } from "../../../src/features/conversations/types";
-import { radii, spacing } from "../../../src/theme";
+import { ConversationComposer } from "../../../src/features/conversations/components/ConversationComposer";
+import { ConversationDateDivider } from "../../../src/features/conversations/components/ConversationDateDivider";
+import { ConversationFailedBubble } from "../../../src/features/conversations/components/ConversationFailedBubble";
+import { ConversationPhotoViewer } from "../../../src/features/conversations/components/ConversationPhotoViewer";
+import { ConversationReconnectBanner } from "../../../src/features/conversations/components/ConversationReconnectBanner";
+import { useConversationDetail } from "../../../src/features/conversations/hooks/useConversationDetail";
+import { useConversationOrder } from "../../../src/features/conversations/hooks/useConversationOrder";
+import { useConversationProduct } from "../../../src/features/conversations/hooks/useConversationProduct";
+import { colors, fonts, spacing } from "../../../src/theme";
 import { getAvatarColor, getInitials } from "../../../src/features/conversations/utils/avatar";
+import { formatDay, formatDayAndClock, orderRef, peso, unitShort } from "../../../src/features/conversations/utils/chatFormat";
+
+const closedReasons = {
+  completed: "The order has been completed. You cannot send more messages.",
+  cancelled: "The order was cancelled. You cannot send more messages.",
+  expired: "The order has expired. You cannot send more messages.",
+} as const;
 
 export default function ConversationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [draft, setDraft] = useState("");
-  const [attachment, setAttachment] = useState<{ url: string; filename: string } | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState("");
+  const router = useRouter();
+  const inputRef = useRef<TextInput | null>(null);
+  const listRef = useRef<FlatList | null>(null);
+  const [viewer, setViewer] = useState<{ url: string; sentAt: string } | null>(null);
 
-  const addMessage = useCallback((message: ConversationMessage) => {
-    setMessages((current) => (current.some((item) => item.id === message.id) ? current : [...current, message]));
-  }, []);
+  const chat = useConversationDetail(id);
+  const { conversation, messages, loading, failed } = chat;
+  const { order } = useConversationOrder(conversation?.orderId);
+  const product = useConversationProduct(conversation?.orderId ? null : conversation?.productId);
 
+  // Open at the newest message, and follow new ones.
   useEffect(() => {
-    if (!id) return;
-    let active = true;
-    let socket: WebSocket | null = null;
-    void Promise.all([fetchConversations(), fetchConversationMessages(id)])
-      .then(async ([convosRes, history]) => {
-        if (!active) return;
-        setConversation(convosRes.items.find((item) => item.id === id) ?? null);
-        setMessages(history);
-        await markConversationRead(id);
-        socket = await openConversationSocket(id, addMessage, () => setError("Live messages unavailable. Pull down to refresh."));
-      })
-      .catch((r: any) => { if (active) setError(r?.message || "Could not load conversation."); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; socket?.close(); };
-  }, [addMessage, id]);
+    const timer = setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 50);
+    return () => clearTimeout(timer);
+  }, [messages.length, failed, order?.status, loading]);
 
-  const senderName = useMemo(() => conversation?.buyerName || "Buyer", [conversation]);
+  const senderName = conversation?.buyerName || "Buyer";
   const avatarBg = useMemo(() => getAvatarColor(senderName), [senderName]);
   const initials = useMemo(() => getInitials(senderName), [senderName]);
+  const isClosed = conversation?.status === "closed";
+  const orderStatus = order?.status;
+  const closedReason = orderStatus && orderStatus !== "pending" ? closedReasons[orderStatus] : "You cannot send more messages.";
 
-  const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      setError("Photo library access is needed to share produce pictures.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    setUploading(true);
-    setError("");
-    try {
-      const uploaded = await uploadConversationAttachment(result.assets[0].uri);
-      setAttachment(uploaded);
-    } catch (err: any) {
-      setError(err?.message || "Failed to upload image. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
+  const subtitle = conversation?.orderId
+    ? `Order #${orderRef(conversation.orderId)}${isClosed && orderStatus === "completed" ? " • Completed" : ""}`
+    : conversation?.productName ? `Listing: ${conversation.productName}` : null;
+  const openDetails = conversation?.orderId
+    ? () => router.push({ pathname: "/(app)/orders/[id]", params: { id: conversation.orderId as string } })
+    : conversation?.productId
+      ? () => router.push({ pathname: "/(app)/inventory/[id]", params: { id: conversation.productId as string } })
+      : undefined;
 
-  async function send(customText?: string) {
-    if (uploading || sending) return;
-    let body = (customText ?? draft).trim();
-    if (attachment) body = body ? `${body}\n${attachment.url}` : attachment.url;
-    if (!body || !id) return;
-    setSending(true);
-    setError("");
-    try {
-      const message = await sendConversationMessage(id, body, `${Date.now()}-${Math.random().toString(36).slice(2)}`);
-      addMessage(message);
-      setDraft("");
-      setAttachment(null);
-    } catch (reason: any) {
-      setError(reason?.message || "Could not send the message.");
-    } finally {
-      setSending(false);
-    }
+  const listingLine = product
+    ? `From listing: ${product.productName} (${peso(product.productPrice)}/${unitShort(product.scalingType, 1)}) • ${Number(product.productQty ?? 0)} ${unitShort(product.scalingType, Number(product.productQty ?? 0))} available`
+    : null;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.muted}>Loading chat…</Text>
+        </View>
+      </SafeAreaView>
+    );
   }
-
-  if (loading) return <SafeAreaView style={styles.safe}><View style={styles.center}><ActivityIndicator size="large" color="#16A34A" /><Text style={styles.muted}>Loading conversation...</Text></View></SafeAreaView>;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ConversationHeaderBar senderName={senderName} avatarBg={avatarBg} initials={initials} />
-        {conversation && <ConversationContextBanner conversation={conversation} />}
+        <ConversationHeaderBar senderName={senderName} subtitle={subtitle} avatarBg={avatarBg} initials={initials} buyerImage={conversation?.buyerImage} onInfo={openDetails} />
+        {conversation ? <ConversationContextBanner conversation={conversation} order={order} product={product} onPress={openDetails} /> : null}
+        {chat.paused ? <ConversationReconnectBanner /> : null}
 
         <FlatList
+          ref={listRef}
           data={messages}
           keyExtractor={(item) => item.id}
+          style={styles.thread}
           contentContainerStyle={styles.messages}
-          ListHeaderComponent={
+          ListFooterComponent={
             <View>
-              <View style={styles.dateDivider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>Today</Text>
-                <View style={styles.dividerLine} />
-              </View>
-              {conversation?.orderId && (
-                <ConversationReservationCard orderId={conversation.orderId} fallbackProductName={conversation.productName || undefined} />
-              )}
+              {conversation?.orderId ? <ConversationReservationCard order={order} orderId={conversation.orderId} /> : null}
+              <ConversationOrderEvent order={order} />
+              {failed ? <ConversationFailedBubble body={failed.body} message={failed.message} busy={chat.sending} onRetry={chat.retrySend} /> : null}
             </View>
           }
-          renderItem={({ item }) => (
-            <ConversationBubble item={item} isMine={item.senderId === conversation?.sellerId} senderName={senderName} />
-          )}
-          ListEmptyComponent={<Text style={styles.muted}>No messages yet.</Text>}
+          renderItem={({ item, index }) => {
+            const prev = index > 0 ? messages[index - 1] : null;
+            const day = formatDay(item.createdAt);
+            const showDivider = !prev || formatDay(prev.createdAt) !== day;
+            const isMine = item.senderId === conversation?.sellerId;
+            const isFirst = !prev || prev.senderId !== item.senderId || showDivider;
+            const lastMine = isMine && !messages.slice(index + 1).some((m) => m.senderId === conversation?.sellerId);
+            return (
+              <View>
+                {showDivider ? <ConversationDateDivider label={day} /> : null}
+                <ConversationBubble
+                  item={item}
+                  isMine={isMine}
+                  senderName={senderName}
+                  buyerImage={conversation?.buyerImage}
+                  isFirstInGroup={isFirst}
+                  showSent={lastMine && !failed}
+                  onOpenPhoto={(url) => setViewer({ url, sentAt: item.createdAt })}
+                />
+              </View>
+            );
+          }}
+          ListEmptyComponent={<Text style={styles.muted}>{chat.loadError || "No messages yet."}</Text>}
         />
 
-        <ConversationQuickReplies onSelect={(reply) => void send(reply)} shopName={conversation?.sellerShopName} />
+        {!isClosed ? <ConversationQuickReplies onSelect={(text) => { chat.setDraft(text); inputRef.current?.focus(); }} shopName={conversation?.sellerShopName} /> : null}
+        {chat.uploadError ? <Text style={styles.uploadError}>{chat.uploadError}</Text> : null}
 
-        {attachment ? (
-          <View style={styles.attachmentPill}>
-            <Image source={{ uri: attachment.url }} style={styles.thumb} />
-            <Text style={styles.attachmentName} numberOfLines={1}>{attachment.filename}</Text>
-            <Pressable onPress={() => setAttachment(null)}><X size={16} color="#6B7280" /></Pressable>
-          </View>
-        ) : null}
-
-        <View style={styles.composer}>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Pressable onPress={handlePickImage} disabled={uploading || sending} style={styles.attachBtn}>
-            <Paperclip size={18} color="#6B7280" />
-          </Pressable>
-          <TextInput
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="Type a message..."
-            placeholderTextColor="#9CA3AF"
-            multiline
-            maxLength={2000}
-            editable={!sending}
-            style={styles.input}
-          />
-          <Pressable
-            onPress={() => void send()}
-            disabled={sending || uploading || (!draft.trim() && !attachment)}
-            style={[styles.sendBtn, (!draft.trim() && !attachment) && styles.sendBtnDisabled]}
-          >
-            <Send size={16} color="#FFFFFF" />
-          </Pressable>
-        </View>
+        <ConversationComposer
+          isClosed={Boolean(isClosed)}
+          closedReason={closedReason}
+          draft={chat.draft}
+          onChangeDraft={chat.setDraft}
+          inputRef={inputRef}
+          photo={chat.photo}
+          photoReady={chat.photoReady}
+          onRemovePhoto={chat.removePhoto}
+          uploading={chat.uploading}
+          sending={chat.sending}
+          onPickImage={chat.pickImage}
+          onSend={chat.send}
+        />
       </KeyboardAvoidingView>
+
+      <ConversationPhotoViewer
+        visible={viewer !== null}
+        imageUrl={viewer?.url ?? null}
+        senderName={senderName}
+        avatarBg={avatarBg}
+        initials={initials}
+        buyerImage={conversation?.buyerImage}
+        sentAtLabel={viewer ? formatDayAndClock(viewer.sentAt) : ""}
+        listingName={conversation?.productName}
+        listingLine={listingLine}
+        onClose={() => setViewer(null)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  thread: { backgroundColor: colors.surfaceMuted },
   messages: { padding: spacing.base, flexGrow: 1 },
-  dateDivider: { flexDirection: "row", alignItems: "center", marginVertical: spacing.md },
-  dividerLine: { flex: 1, height: 1, backgroundColor: "#E5E7EB" },
-  dividerText: { marginHorizontal: spacing.md, fontSize: 12, color: "#9CA3AF" },
-  composer: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm, borderTopWidth: 1, borderTopColor: "#F3F4F6", backgroundColor: "#FFFFFF" },
-  attachBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "#F3F4F6" },
-  input: { flex: 1, minHeight: 40, maxHeight: 100, borderRadius: 20, backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: spacing.md, paddingVertical: 8, fontSize: 14, color: "#111827" },
-  sendBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "#16A34A" },
-  sendBtnDisabled: { backgroundColor: "#E5E7EB" },
-  attachmentPill: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginHorizontal: spacing.base, padding: spacing.xs, borderRadius: radii.button, backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB" },
-  thumb: { width: 32, height: 32, borderRadius: 6 },
-  attachmentName: { flex: 1, fontSize: 12, color: "#111827" },
-  error: { position: "absolute", bottom: 62, left: spacing.base, right: spacing.base, color: "#DC2626", fontSize: 12 },
-  muted: { fontSize: 13, color: "#9CA3AF", textAlign: "center", marginTop: spacing.md },
+  uploadError: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.error, paddingHorizontal: spacing.base, paddingTop: spacing.xs, backgroundColor: colors.surface },
+  muted: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.md },
 });

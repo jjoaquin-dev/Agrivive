@@ -4,6 +4,7 @@ import { orders } from "../../../db/schema";
 import { restoreOrderStock } from "../../../utils/order-stock";
 import { queueTrustNotice, recordTrustEvent } from "../../../utils/trust";
 import { evaluateTrustAction } from "../../../utils/trust/evaluate-action";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function expirePendingOrders(limit = 100) {
   const due = await db
@@ -47,6 +48,13 @@ export async function expirePendingOrders(limit = 100) {
         recipientId: updated.buyersId,
         orderId: updated.id,
         kind: "buyer_failed_reservation_warning",
+      });
+
+      await createSellerNotification(tx, {
+        sellerId: updated.sellersId,
+        kind: "reservation_ended",
+        dedupeKey: `reservation-ended:${updated.id}`,
+        orderId: updated.id,
       });
 
       return { buyerId: updated.buyersId, orderId: updated.id, eventKey };

@@ -1,6 +1,7 @@
 import { and, desc, eq, lt } from "drizzle-orm";
 import { db } from "../../../db";
 import { seller_visibility_boosts, sellers_product } from "../../../db/schema";
+import { readBoostProgress } from "./seller.visibility-boost.progress";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 
 function errorMessage(status: string) {
@@ -32,6 +33,9 @@ export async function listSellerVisibilityBoostHistory(sellerId: string, limit =
       priceAfter: seller_visibility_boosts.priceAfter,
       createdAt: seller_visibility_boosts.createdAt,
       sentAt: seller_visibility_boosts.sentAt,
+      followUpDueAt: seller_visibility_boosts.followUpDueAt,
+      currentPrice: sellers_product.productPrice,
+      lowestPrice: sellers_product.minimumPrice,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
       .where(and(...conditions))
@@ -42,8 +46,15 @@ export async function listSellerVisibilityBoostHistory(sellerId: string, limit =
     const items = hasMore ? rows.slice(0, limit) : rows;
     const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].createdAt.toISOString() : null;
 
+    const progress = await readBoostProgress(tx, items);
     return {
-      items: items.map((item) => ({ ...item, errorMessage: errorMessage(item.status) })),
+      items: items.map(({ followUpDueAt, ...item }) => ({
+        ...item,
+        currentPrice: item.currentPrice ? Number(item.currentPrice) : null,
+        lowestPrice: item.lowestPrice ? Number(item.lowestPrice) : null,
+        errorMessage: errorMessage(item.status),
+        progress: progress.get(item.id) ?? null,
+      })),
       nextCursor,
       total: items.length,
     };

@@ -35,6 +35,25 @@ export const fonts = {
   },
 } as const;
 
+/**
+ * One type scale for the whole app (DESIGN.md "Typography and Spacing").
+ * Only Inter is loaded, so headings use Inter Bold until Manrope is added.
+ * Spread a role into a style: `{ ...typography.body, color: colors.text }`.
+ */
+export const typography = {
+  largeTitle: { fontFamily: fonts.heading.bold, fontSize: 28, lineHeight: 34 },
+  screenTitle: { fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28 },
+  sectionHeading: { fontFamily: fonts.heading.semiBold, fontSize: 17, lineHeight: 24 },
+  bodyLarge: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22 },
+  body: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20 },
+  label: { fontFamily: fonts.body.medium, fontSize: 13, lineHeight: 18 },
+  labelSmall: { fontFamily: fonts.body.medium, fontSize: 12, lineHeight: 18 },
+  caption: { fontFamily: fonts.body.semiBold, fontSize: 11, lineHeight: 14 },
+} as const;
+
+/** The only font sizes allowed in styles. Anything else snaps to the nearest one. */
+export const fontSizeScale = [10, 11, 12, 13, 14, 15, 16, 17, 18, 22, 28] as const;
+
 export const spacing = {
   xs: 4,
   sm: 8,

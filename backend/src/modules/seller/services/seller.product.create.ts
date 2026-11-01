@@ -11,6 +11,7 @@ import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { validatePriceReductionConfig } from "../../../utils/price-reduction";
 import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function createSellerProduct(userId: string, body: SellerProductCreate) {
   validateLowStockThreshold(body.lowStockThreshold);
@@ -21,7 +22,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
   if (priceToCents(body.productPrice) === null) {
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
-  validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
+  validatePriceReductionConfig(body.productPrice, body.priceReductionAmount, body.minimumPrice);
   const result = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
@@ -48,7 +49,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
         productType: catalog.category,
         productPrice: body.productPrice.toString(),
         basePrice: body.productPrice.toString(),
-        priceReductionPercent: (body.priceReductionPercent ?? 0).toString(),
+        priceReductionAmount: (body.priceReductionAmount ?? 0).toString(),
         minimumPrice: body.minimumPrice?.toString() ?? null,
         priceScheduleStartedAt: now,
         priceReductionPeriodsApplied: 0,
@@ -72,25 +73,17 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
       originalQty: body.productQty.toString(),
     });
     await queueFirstPublicListing(tx, created.id);
+    await createSellerNotification(tx, {
+      sellerId: userId,
+      kind: "listing_live",
+      dedupeKey: `listing-live:${created.id}`,
+      productId: created.id,
+      payload: { productName },
+    });
     return created;
   });
 
   void sendSellerListingNotices().catch(() => {});
-
-  const webhookUrl = process.env.N8N_SELLER_FLOW_WEBHOOK_URL?.trim();
-  if (webhookUrl?.startsWith("https://")) {
-    void fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: result.id,
-        productName: result.productName,
-        price: result.productPrice,
-        event: "new_listing",
-      }),
-      signal: AbortSignal.timeout(5_000),
-    }).catch((error) => console.error("Failed to notify n8n seller flow webhook", error));
-  }
 
   return result;
 }

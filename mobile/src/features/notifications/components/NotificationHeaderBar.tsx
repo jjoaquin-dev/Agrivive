@@ -1,55 +1,38 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ArrowLeft, CheckCheck, MoreHorizontal } from "lucide-react-native";
+import { ChevronLeft, CheckCheck, Settings } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { safeBack } from "../../../utils/safeBack";
 
 interface Props {
   unreadCount: number;
   onMarkAllRead: () => void;
-  onOpenMenu?: () => void;
+  onOpenSettings: () => void;
 }
 
-export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenMenu }: Props) {
+export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenSettings }: Props) {
   const router = useRouter();
-
+  const hasUnread = unreadCount > 0;
   return (
     <View style={styles.container}>
-      <Pressable
-        onPress={() => router.back()}
-        accessibilityRole="button"
-        accessibilityLabel="Go back"
-        style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-      >
-        <ArrowLeft size={20} color={colors.text} />
+      <Pressable onPress={() => safeBack(router)} accessibilityRole="button" accessibilityLabel="Go back" style={[styles.button, styles.left]}>
+        <ChevronLeft size={24} color={colors.text} />
       </Pressable>
-
-      <View style={styles.titleRow}>
-        <Text style={styles.title}>Notifications</Text>
-        {unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadBadgeText}>{unreadCount} unread</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.rightActions}>
+      <Text style={styles.title} pointerEvents="none">Notifications</Text>
+      <View style={styles.right}>
+        <Pressable onPress={onOpenSettings} accessibilityRole="button" accessibilityLabel="Phone alert settings" style={styles.button}>
+          <Settings size={20} color={colors.text} />
+        </Pressable>
         <Pressable
           onPress={onMarkAllRead}
+          disabled={!hasUnread}
           accessibilityRole="button"
           accessibilityLabel="Mark all notifications as read"
-          style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
+          accessibilityState={{ disabled: !hasUnread }}
+          style={[styles.button, !hasUnread && styles.disabled]}
         >
-          <CheckCheck size={18} color={colors.textMuted} />
-        </Pressable>
-
-        <Pressable
-          onPress={onOpenMenu}
-          accessibilityRole="button"
-          accessibilityLabel="More options"
-          style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
-        >
-          <MoreHorizontal size={18} color={colors.textMuted} />
+          <CheckCheck size={20} color={colors.text} />
         </Pressable>
       </View>
     </View>
@@ -57,59 +40,10 @@ export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenMenu }
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.base,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  title: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 18,
-    color: colors.text,
-  },
-  unreadBadge: {
-    backgroundColor: "#EA580C",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radii.full,
-  },
-  unreadBadgeText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 11,
-    color: colors.white,
-  },
-  rightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pressed: {
-    opacity: 0.7,
-  },
+  container: { height: 56, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.base, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  button: { width: 44, height: 44, borderRadius: radii.full, alignItems: "center", justifyContent: "center" },
+  left: { marginLeft: -spacing.sm },
+  right: { flexDirection: "row", alignItems: "center", marginRight: -spacing.sm },
+  title: { position: "absolute", left: 0, right: 0, textAlign: "center", fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
+  disabled: { opacity: 0.35 },
 });

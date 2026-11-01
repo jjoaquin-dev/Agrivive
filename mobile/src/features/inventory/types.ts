@@ -1,3 +1,4 @@
+import type { ProductBoostChip } from "../marketing/types";
 export type ProductCategory =
   | "Leafy Greens"
   | "Root Vegetables"
@@ -46,10 +47,13 @@ export interface Product {
   vegetableCatalogId?: string | null;
   imagUrl?: string | null;
   displayImageUrl?: string | null;
+  boost?: ProductBoostChip | null;
   productPrice: string | number;
   basePrice?: string | number | null;
-  priceReductionPercent?: string | number;
+  priceReductionAmount?: string | number;
   minimumPrice?: string | number | null;
+  /** False when the seller paused the automatic 6-hour drops. */
+  priceReductionEnabled?: boolean;
   priceScheduleStartedAt?: string | null;
   nextPriceReductionAt?: string | null;
   productQty: string | number;
@@ -96,7 +100,7 @@ export interface CreateProductInput {
   catalogId: string;
   imagUrl: string;
   productPrice: number;
-  priceReductionPercent?: number;
+  priceReductionAmount?: number;
   minimumPrice?: number | null;
   productQty: number;
   scalingType: ProductScalingType;
@@ -108,7 +112,7 @@ export interface UpdateProductInput {
   catalogId?: string;
   imagUrl?: string;
   productPrice?: number;
-  priceReductionPercent?: number;
+  priceReductionAmount?: number;
   minimumPrice?: number | null;
   isMarketable?: boolean;
   lowStockThreshold?: number | null;

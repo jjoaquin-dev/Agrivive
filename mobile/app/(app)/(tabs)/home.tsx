@@ -1,38 +1,42 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { StyleSheet, ScrollView, RefreshControl } from "react-native";
+import { StyleSheet, ScrollView, RefreshControl, View, Text, Pressable } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CloudOff } from "lucide-react-native";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useInventory } from "../../../src/features/inventory/hooks/useInventory";
 import { fetchStockAdjustments } from "../../../src/features/inventory/api/stock-adjustments";
 import type { StockAdjustment } from "../../../src/features/inventory/types";
 import { fetchSellerNotifications } from "../../../src/features/notifications/api/seller-notifications";
-import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
+import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
 import { DashboardHeader } from "../../../src/features/dashboard/components/DashboardHeader";
 import { DashboardTwinActions } from "../../../src/features/dashboard/components/DashboardTwinActions";
 import { DashboardMetrics } from "../../../src/features/dashboard/components/DashboardMetrics";
 import { DashboardOperationsHub } from "../../../src/features/dashboard/components/DashboardOperationsHub";
 import { DashboardLowStockAlerts } from "../../../src/features/dashboard/components/DashboardLowStockAlerts";
 import { DashboardRecentActivity } from "../../../src/features/dashboard/components/DashboardRecentActivity";
-import { colors, spacing } from "../../../src/theme";
+import { colors, fonts, radii, shadows, spacing, typography } from "../../../src/theme";
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { session, setup } = useAuth();
-  const { summary, lowStockProducts, refreshing, refresh } = useInventory();
+  const { summary, lowStockProducts, loading: inventoryLoading, refreshing, refresh, error: inventoryError } = useInventory();
   const [recentActivity, setRecentActivity] = useState<StockAdjustment[]>([]);
-  const [loadingActivity, setLoadingActivity] = useState(false);
+  const [loadingActivity, setLoadingActivity] = useState(true);
+  const [activityError, setActivityError] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [openMessageCount, setOpenMessageCount] = useState(0);
 
   const loadRecentActivity = async () => {
     setLoadingActivity(true);
+    setActivityError(false);
     try {
       const res = await fetchStockAdjustments({ limit: 4 });
       setRecentActivity(res.items);
     } catch (err) {
       console.error("Failed to load recent activity", err);
+      setActivityError(true);
     } finally {
       setLoadingActivity(false);
     }
@@ -46,10 +50,10 @@ export default function HomeScreen() {
     try {
       const [notifRes, msgRes] = await Promise.all([
         fetchSellerNotifications({ limit: 1 }),
-        fetchSellerMessages({ status: "open", limit: 1 }),
+        fetchConversationUnreadCount(),
       ]);
       setUnreadCount(notifRes.unreadCount);
-      setOpenMessageCount(msgRes.openCount);
+      setOpenMessageCount(msgRes.unreadMessages ?? 0);
     } catch (err) {
       console.error("Failed to load notification/message count", err);
     }
@@ -87,10 +91,11 @@ export default function HomeScreen() {
         sellerName={sellerName}
         shopName={shopName}
         isVerified={isVerified}
+        avatarUrl={setup?.account?.image || session?.user?.image}
         unreadCount={unreadCount}
         openMessageCount={openMessageCount}
         onPressNotifications={() => router.push("/(app)/notifications")}
-        onPressProfile={() => router.push("/(app)/(tabs)/profile")}
+        onPressProfile={() => router.push("/(app)/profile")}
       />
 
       <DashboardTwinActions
@@ -98,24 +103,37 @@ export default function HomeScreen() {
         onScanQR={() => router.push("/(app)/orders/scan")}
       />
 
+      {inventoryError ? (
+        <View style={styles.errorCard}>
+          <View style={styles.errorIconWrap}>
+            <CloudOff size={20} color={colors.warning} />
+          </View>
+          <View style={styles.errorBody}>
+            <Text style={styles.errorTitle}>Couldn't load your stock.</Text>
+            <Text style={styles.errorSub}>Tap to retry loading your latest inventory.</Text>
+          </View>
+          <Pressable
+            onPress={handleRefresh}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading stock"
+            style={({ pressed }) => [styles.retryButton, pressed && styles.retryButtonPressed]}
+          >
+            <Text style={styles.retryText}>Try Again</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       <DashboardMetrics
         summary={summary}
+        loading={inventoryLoading}
+        error={!!inventoryError && !inventoryLoading}
         onPressInventory={() => router.push("/(app)/(tabs)/inventory")}
-      />
-
-      <DashboardOperationsHub
-        lowStockCount={summary.lowStockCount}
-        openMessageCount={openMessageCount}
-        onPressInventory={() => router.push("/(app)/(tabs)/inventory")}
-        onPressMessages={() => router.push("/(app)/(tabs)/messages")}
-        onAnalytics={() => router.push("/(app)/analytics")}
-        onBoosts={() => router.push("/(app)/boosts")}
-        onActivity={() => router.push("/(app)/activity")}
-        onAdvisories={() => router.push("/(app)/advisories")}
       />
 
       <DashboardLowStockAlerts
         products={lowStockProducts}
+        loading={inventoryLoading}
+        error={!!inventoryError && !inventoryLoading}
         onSeeAll={() => router.push("/(app)/(tabs)/inventory")}
         onStockIn={(productId) =>
           router.push({
@@ -125,9 +143,17 @@ export default function HomeScreen() {
         }
       />
 
+      <DashboardOperationsHub
+        onAnalytics={() => router.push("/(app)/analytics")}
+        onMarketing={() => router.push("/(app)/(tabs)/marketing")}
+        onActivity={() => router.push("/(app)/activity")}
+        onAdvisories={() => router.push("/(app)/advisories")}
+      />
+
       <DashboardRecentActivity
         activity={recentActivity}
         loading={loadingActivity}
+        error={activityError}
         onViewHistory={() => router.push("/(app)/activity")}
       />
     </ScrollView>
@@ -142,5 +168,58 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.base,
     paddingBottom: spacing.xxl,
+  },
+  errorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radii.card,
+    borderWidth: 1,
+    borderColor: "#FED7AA",
+    padding: spacing.md,
+    marginBottom: spacing.base,
+    ...shadows.card,
+  },
+  errorIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFF7ED",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.sm,
+  },
+  errorBody: {
+    flex: 1,
+  },
+  errorTitle: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  errorSub: {
+    fontFamily: fonts.body.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  retryButton: {
+    paddingHorizontal: spacing.md,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: radii.button,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginLeft: spacing.xs,
+  },
+  retryButtonPressed: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  retryText: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 13,
+    color: colors.text,
   },
 });

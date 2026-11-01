@@ -1,111 +1,22 @@
 import { StyleSheet } from "react-native";
-import { colors, fonts, radii } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 
 export const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardUrgent: {
-    borderColor: "#FB923C",
-    backgroundColor: "#FFFBF7",
-  },
-  cardUnread: {
-    borderColor: "#86EFAC",
-    backgroundColor: "#F0FDF4",
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  titleLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    flex: 1,
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
-    color: colors.text,
-    marginRight: 6,
-  },
-  titleUrgent: {
-    color: "#C2410C",
-  },
-  timeWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  unreadDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#16A34A",
-  },
-  timeText: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  subtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 12,
-    lineHeight: 18,
-    color: "#4B5563",
-    marginTop: 2,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 10,
-    marginLeft: 54,
-  },
-  actionBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: radii.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionBtnGreen: {
-    backgroundColor: "#16A34A",
-  },
-  actionBtnOrange: {
-    backgroundColor: "#EA580C",
-  },
-  actionBtnGray: {
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  actionBtnText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 12,
-    color: colors.white,
-  },
-  actionBtnGrayText: {
-    fontFamily: fonts.body.medium,
-    fontSize: 12,
-    color: "#374151",
-  },
-  pressed: {
-    opacity: 0.8,
-  },
+  row: { backgroundColor: colors.surface, paddingTop: 14, paddingBottom: spacing.md, paddingHorizontal: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
+  urgentBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: 3, backgroundColor: colors.warning },
+  topRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
+  gutter: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingTop: 4 },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  content: { flex: 1, minWidth: 0 },
+  titleLine: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing.sm },
+  title: { flex: 1, fontSize: 15, color: colors.text },
+  time: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  body: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: 4 },
+  pill: { alignSelf: "flex-start", marginTop: 10, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.full, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA" },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
+  actions: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md },
+  primary: { minHeight: 44, paddingHorizontal: spacing.base, borderRadius: radii.button, borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
+  ghost: { minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radii.button, alignItems: "center", justifyContent: "center" },
+  actionText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.primary },
 });

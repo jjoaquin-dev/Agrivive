@@ -3,7 +3,7 @@ import { useFocusEffect } from "expo-router";
 import { fetchSellerProducts } from "../api/products";
 import type { InventorySummary, Product, ProductCategory, ProductScalingType } from "../types";
 
-export type InventoryFilterTab = "all" | "low_stock" | "out_of_stock" | "archived";
+export type InventoryFilterTab = "all" | "selling" | "low_stock" | "out_of_stock" | "archived";
 
 export function useInventory() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -129,7 +129,9 @@ export function useInventory() {
         const qty = parseFloat(p.productQty as string) || 0;
         const threshold = p.lowStockThreshold != null ? parseFloat(p.lowStockThreshold as string) : null;
 
-        if (filterTab === "low_stock") {
+        if (filterTab === "selling") {
+          if (qty <= 0) return false;
+        } else if (filterTab === "low_stock") {
           if (threshold == null || qty > threshold) return false;
         } else if (filterTab === "out_of_stock") {
           if (qty > 0) return false;

@@ -23,7 +23,7 @@ export async function publishFacebookPagePhoto(imageUrl: string, caption: string
       causeCode: cause?.code,
       causeMessage: cause?.message,
     });
-    throw new Error("Facebook could not publish this post");
+    throw new OrderError(502, `Facebook could not publish this post (could not reach Facebook${cause?.code ? `: ${cause.code}` : ""})`);
   }
   const result = await response.json().catch(() => ({})) as {
     id?: string;
@@ -44,7 +44,12 @@ export async function publishFacebookPagePhoto(imageUrl: string, caption: string
       subcode: result.error?.error_subcode,
       message: result.error?.message,
     });
-    throw new Error("Facebook could not publish this post");
+    // Facebook's own error code and text help the owner fix the cause. They never contain our token.
+    const detail = [
+      result.error?.code ? `code ${result.error.code}${result.error.error_subcode ? `/${result.error.error_subcode}` : ""}` : `HTTP ${response.status}`,
+      result.error?.message?.slice(0, 160),
+    ].filter(Boolean).join(": ");
+    throw new OrderError(502, `Facebook could not publish this post (${detail})`);
   }
   return { postId: id, postUrl: `https://www.facebook.com/${id}` };
 }

@@ -31,6 +31,7 @@ export const notification_type_enum = pgEnum("notification_type", [
   "buyer_message",
   "seller_listing",
   "seller_boost",
+  "seller_alert",
 ]);
 
 export const user = pgTable("user", {
@@ -215,8 +216,13 @@ export const sellers_product = pgTable("sellers_product", {
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }),
+  /** Unused since 2026-11-01: drops are a peso amount (priceReductionAmount). Kept for rollback. */
   priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
+  /** Pesos taken off every 6 hours after the first Boost post, down to minimumPrice. */
+  priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  /** The seller can pause the automatic 6-hour drops without losing the amount or final price. */
+  priceReductionEnabled: boolean("price_reduction_enabled").default(true).notNull(),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
@@ -479,6 +485,8 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
   readAt: timestamp("read_at", { withTimezone: true }),
+  followUpDueAt: timestamp("follow_up_due_at", { withTimezone: true }),
+  followUpAttempts: integer("follow_up_attempts").default(0).notNull(),
   priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -488,6 +496,7 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt),
 ]);
@@ -781,9 +790,50 @@ export const fb_post_logs = pgTable("fb_post_logs", {
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
   postType: text("post_type").notNull(),
   facebookPostId: text("facebook_post_id"),
+  caption: text("caption"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
   status: text("status").notNull(),
 }, (table) => [
   index("fb_post_logs_product_idx").on(table.productId, table.postedAt),
 ]);
+
+export const instagram_post_logs = pgTable("instagram_post_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  postType: text("post_type").notNull(),
+  instagramPostId: text("instagram_post_id"),
+  postUrl: text("post_url"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
+  status: text("status").notNull(),
+}, (table) => [
+  index("instagram_post_logs_product_idx").on(table.productId, table.postedAt),
+]);
+
+export const seller_notifications = pgTable("seller_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => sellers_product.id, { onDelete: "cascade" }),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+  dedupeKey: text("dedupe_key").notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("seller_notifications_dedupe_unique").on(table.dedupeKey),
+  index("seller_notifications_seller_created_idx").on(table.sellerId, table.createdAt.desc()),
+]);
+
+export const seller_notification_settings = pgTable("seller_notification_settings", {
+  sellerId: text("seller_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+  stockPrice: boolean("stock_price").default(true).notNull(),
+  boost: boolean("boost").default(true).notNull(),
+  account: boolean("account").default(true).notNull(),
+  nightMode: boolean("night_mode").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});

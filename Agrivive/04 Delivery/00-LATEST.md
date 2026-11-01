@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-10-30
+last_updated: 2026-11-01 PST
 status: active
 ---
 
@@ -33,11 +33,14 @@ The intro animation ([[2026-10-31 Surplus Veggies Intro Animation]]) was rejecte
 
 Previous task: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]].
 
+Merged from `main`: 13 Google Stitch mobile mockups for the seller Profile flow (F1 to F12, plus F9b). Mapping and copy changes in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
+
+Earlier on `main`: Stitch frames for Messages, Boost, Notifications, Listings, Sales Report, Reservations, Auth and Home, plus the Messages flow cleanup. See the dated notes in this folder.
+
 ## Current project status
 
-- Branch `ui-enhancements`. Landing, splash and Why Choose work is **uncommitted**.
-- Buyer website (`web/`) landing page is refined. Browser checks cover the reveal only; the remaining layout checks are still open.
-- Mobile app and backend are not part of the recent work.
+- Backend and mobile work (seller notifications, data freshness, seller type removal) is merged to `main` (PR #57). Migrations `20261031120000_seller_notifications`, `20261031130000_remove_seller_type` (applied on dev only) and `20261031140000_boost_follow_up` are **not applied to production**. Production order: notifications before the deploy, remove_seller_type after it (see [[2026-10-31 Remove Seller Type]]). Boost posting runs through `/seller/social-campaigns/*` and `agrivive-social-publishing.json`.
+- Branch `ui-enhancements` carries the buyer website (`web/`) landing, splash and Why Choose work. The landing page is refined; browser checks cover the reveal only, and the remaining layout checks are still open.
 
 ## Active architectural decisions
 
@@ -50,35 +53,36 @@ Previous task: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero H
 
 ## Recently modified files
 
-- `web/src/features/home/components/HomeWhySurplus.tsx`, `HomeWhySurplusCard.tsx`: card reveal and hover zoom.
-- `web/src/lib/gsap/timelines.ts`, `SplashScreen.tsx`, `hero-entrance.ts`, `web/src/lib/motion.ts`: splash and hero.
-- `web/src/hooks/useRevealOnScroll.ts` (new), `web/src/components/sections/Features.tsx`.
-- `web/src/features/home/components/`: categories, featured produce, how it works, FAQ, final CTA, footer, header.
-- `web/app/layout.tsx`, `web/app/globals.css`, `web/tailwind.config.ts`: fonts, pre-paint script, type scale.
-
-Many other `web/` files show as modified in git from earlier sessions. Those were not reviewed in the latest work.
-
-## Completed implementations (recent)
-
-- Why Choose: card reveal matches the other blocks; hover photo zoom removed ([[2026-10-30 Why Choose Scroll Reveal]]).
-- Landing navbar glass, logo size, hero pill removal, Process timeline ([[2026-10-30 Landing Navbar and Sections Redesign]]).
-- Splash: asset gate, session marking, lifecycle cleanup, pacing ([[2026-10-30 Splash Pacing Three-Second Sequence]]; the earlier [[2026-10-30 Splash Timing and Wave Refinement]] is superseded).
-- Landing: fonts self-hosted, type scale, reveal system, categories grid, hero composition, FAQ accessibility, header focus states.
-- Also in the vault today: [[2026-10-30 Web Landing Audit Fixes]] (status: code complete, manual testing pending).
+- `Agrivive/04 Delivery/2026-11-01 Stitch Seller Messages Redesign Frames.md`: created full specification note.
+- `Agrivive/04 Delivery/00-LATEST.md`: updated snapshot with Messages Stitch frames delivery.
 
 ## Unresolved issues
 
-- No browser check yet for: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, and Core Web Vitals. The Why Choose reveal was checked in a browser, but not with reduced motion on.
-- Port 3001 was held by another process during this task, so the dev server ran on 3002.
-- The splash length is estimated from timeline math (about 3.04 s to hand-off), not measured.
-- Parkinsans has no size-matched fallback metrics, so the wordmark may shift slightly while the font loads.
-- Nothing is committed. The diff is large, so review it before committing.
+- Mobile freshness: owner to check on a development build that lists update after a push, nothing is fetched while backgrounded, and chat reconnects after an API restart.
+- Seller notifications: owner must apply the migration, test `GET /seller/notifications`, the read routes and `/seller/notification-settings`, and walk each trigger on a development build.
+- Marketing hub: Boost, History, Active and the Visibility Guide now live in one Marketing hub ([[2026-10-31 Marketing Hub]]).
+- No browser check yet for: splash lifecycle (first visit, navigation, reload, reduced motion), hydration, landing responsive layout, and Core Web Vitals.
+- The `ui-enhancements` web diff is large, so review it before merging to `main`.
 
 ## Next development task
 
-Check the buyer site in a browser (`bun run dev` in `web/`). Turn on reduced motion in the OS and confirm the Why Choose section shows at once. Then check the splash on first visit, and the landing page at phone, tablet and desktop widths. Then decide whether to commit.
+Owner manual testing of the seller mobile app with real device builds, verifying the Messages inbox, Questions tab with public answer cross-posting to buyer chat, and individual chat threads.
 
 ## Historical changelog
 
-- Latest entry: [[2026-10-30 Why Choose Scroll Reveal]]
-- Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].
+- Latest entry: [[2026-11-01 Stitch Seller Messages Redesign Frames]]
+- Earlier entry: [[2026-11-01 Boost Screen Shorter When Blocked]]
+- Earlier entry: [[2026-11-01 Messages Flow Cleanup]]
+- Earlier entries: the dated notes in this folder.
+- Prompt in its 3-hour wait shows Posted + wait text, not Needs your choice (waitUntil on progress and /seller/boost-prompts). See 2026-11-01 Boost Prompt Wait Shown Not Needs Your Choice.
+- Price drop 'Boost again' prompt no longer created or shown; auto cut posts by itself. See 2026-11-01 Price Drop Prompt Removed.
+- Marketing > Price Drops tab = history of lower-price posts + per-listing switch for automatic drops (needs migration 20261101170000). See 2026-11-01 Price Drop History And Auto Drop Switch.
+- Marketing tabs are underlined and spaced; History filters by activity with counts. See 2026-11-01 Marketing Tabs Spaced And Activity Filter.
+- Marketing hub: tabs Running/Price Drops/History, Settings + How buyers find you buttons, Running grouped by activity. See 2026-11-01 Boost Hub Grouped By Activity.
+- Price Lowered notice says the new price was posted; follows the Boost alert setting. See 2026-11-01 Price Lowered Notice Says It Was Posted.
+- Bottom bar: Home, Reservations, Listings, Messages, Boost. Profile opens from Home's picture (now shows the photo). See 2026-11-01 Boost Tab Replaces Profile Tab.
+- Boost tabs are equal width and centered. See 2026-11-01 Boost Tabs Centered.
+- Chat screen restyled from Stitch F7-F11 (banner, photo viewer, failed-message retry, closed panel). Backend never closes chats. See 2026-11-01 Chat Screen Applied From Stitch.
+- n8n boost webhook sends only initial and follow_up; price_reduction boost, prompt-accept route and 3-hour price-drop gap removed. See 2026-11-01 Boost Reasons Only Initial And Follow Up.
+- A listing that starts a new cycle ends its old boost's 6-hour rule (context route clears the timer). See 2026-11-01 Follow Up Stops When Listing Starts Over.
+- Worker ends the 6-hour rule without calling n8n when no cut is possible (sold out, archived, paused, at floor, new cycle). See 2026-11-01 Follow Up Not Sent When Rule Has Ended.

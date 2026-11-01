@@ -46,6 +46,7 @@ export function PaginationControl({
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={`Show ${size} ${itemLabel} per page`}
+                  hitSlop={8}
                   style={[styles.sizePill, active && styles.sizePillActive]}
                 >
                   <Text style={[styles.sizePillText, active && styles.sizePillTextActive]}>
@@ -58,7 +59,7 @@ export function PaginationControl({
         </View>
 
         <Text style={styles.countText}>
-          {totalItems === 0 ? `0 ${itemLabel}` : `${startItem}–${endItem} of ${totalItems}`}
+          {totalItems === 0 ? `0 ${itemLabel}` : `Showing ${startItem}–${endItem} of ${totalItems}`}
         </Text>
       </View>
 
@@ -130,8 +131,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   sizePill: {
+    minWidth: 36,
+    alignItems: "center",
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: radii.full,
   },
   sizePillActive: {
@@ -162,7 +165,7 @@ const styles = StyleSheet.create({
   },
   navButton: {
     minHeight: touchTargets.min,
-    minWidth: 90,
+    minWidth: 104,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

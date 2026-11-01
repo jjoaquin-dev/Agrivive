@@ -1,78 +1,59 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ChevronLeft, MoreVertical } from "lucide-react-native";
-import { fonts, spacing } from "../../../theme";
+import { ChevronLeft, Info } from "lucide-react-native";
+import { colors, fonts, spacing } from "../../../theme";
+import { safeBack } from "../../../utils/safeBack";
 
 interface ConversationHeaderBarProps {
   senderName: string;
+  subtitle?: string | null;
   avatarBg: string;
   initials: string;
+  buyerImage?: string | null;
+  /** Opens the order or listing this chat is about. Hidden when there is none. */
+  onInfo?: () => void;
 }
 
-export function ConversationHeaderBar({ senderName, avatarBg, initials }: ConversationHeaderBarProps) {
+export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials, buyerImage, onInfo }: ConversationHeaderBarProps) {
   const router = useRouter();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <View style={styles.navBar}>
-      <Pressable onPress={() => router.back()} style={styles.iconBtn}>
-        <ChevronLeft size={22} color="#111827" />
+      <Pressable onPress={() => safeBack(router)} accessibilityRole="button" accessibilityLabel="Go back" style={styles.iconButton}>
+        <ChevronLeft size={24} color={colors.text} />
       </Pressable>
+
       <View style={[styles.avatarBox, { backgroundColor: avatarBg }]}>
-        <Text style={styles.initialsText}>{initials}</Text>
-        <View style={styles.onlineDot} />
+        {buyerImage && !imgError ? (
+          <Image source={{ uri: buyerImage }} style={styles.avatarImage} onError={() => setImgError(true)} />
+        ) : (
+          <Text style={styles.initialsText}>{initials}</Text>
+        )}
       </View>
+
       <View style={styles.headerInfo}>
-        <Text style={styles.senderTitle}>{senderName}</Text>
-        <Text style={styles.onlineStatus}>● Online</Text>
+        <Text style={styles.senderTitle} numberOfLines={1}>{senderName}</Text>
+        {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
       </View>
-      <Pressable style={styles.iconBtn}>
-        <MoreVertical size={20} color="#374151" />
-      </Pressable>
+
+      {onInfo ? (
+        <Pressable onPress={onInfo} accessibilityRole="button" accessibilityLabel="Open details" style={styles.iconButton}>
+          <Info size={22} color={colors.textMuted} />
+        </Pressable>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  navBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-    backgroundColor: "#FFFFFF",
-  },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F3F4F6",
-  },
-  avatarBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: spacing.sm,
-    position: "relative",
-  },
-  initialsText: { fontFamily: fonts.heading.bold, fontSize: 14, color: "#FFFFFF" },
-  onlineDot: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#22C55E",
-    borderWidth: 2,
-    borderColor: "#FFFFFF",
-  },
-  headerInfo: { flex: 1, marginLeft: spacing.sm },
-  senderTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: "#111827" },
-  onlineStatus: { fontFamily: fonts.body.regular, fontSize: 12, color: "#16A34A" },
+  navBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface },
+  iconButton: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  avatarBox: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  avatarImage: { width: 44, height: 44, borderRadius: 22 },
+  initialsText: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.white },
+  headerInfo: { flex: 1, marginLeft: spacing.md },
+  senderTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },
+  subtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
 });

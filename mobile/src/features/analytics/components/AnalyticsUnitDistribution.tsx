@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { cardStyles } from "../analyticsCard";
 import type { InventorySummary } from "../../inventory/types";
 
 interface AnalyticsUnitDistributionProps {
@@ -18,10 +19,10 @@ export function AnalyticsUnitDistribution({ summary }: AnalyticsUnitDistribution
   const pilePct = totalUnits > 0 ? (pile / totalUnits) * 100 : 0;
 
   return (
-    <View style={styles.card}>
+    <View style={cardStyles.card}>
       <View style={styles.header}>
-        <Text style={styles.title}>Unit Breakdown</Text>
-        <Text style={styles.subtitle}>Active surplus distribution by packaging scale</Text>
+        <Text style={cardStyles.title}>Stock Right Now</Text>
+        <Text style={cardStyles.subtitle}>All produce, today</Text>
       </View>
 
       {totalUnits > 0 ? (
@@ -29,13 +30,13 @@ export function AnalyticsUnitDistribution({ summary }: AnalyticsUnitDistribution
           {/* Segmented Progress Bar */}
           <View style={styles.progressBar}>
             {kiloPct > 0 && (
-              <View style={[styles.progressSegment, { flex: kiloPct, backgroundColor: "#16A34A" }]} />
+              <View style={[styles.progressSegment, { flex: kiloPct, backgroundColor: colors.primary }]} />
             )}
             {sackPct > 0 && (
-              <View style={[styles.progressSegment, { flex: sackPct, backgroundColor: "#0284C7" }]} />
+              <View style={[styles.progressSegment, { flex: sackPct, backgroundColor: colors.sage }]} />
             )}
             {pilePct > 0 && (
-              <View style={[styles.progressSegment, { flex: pilePct, backgroundColor: "#D97706" }]} />
+              <View style={[styles.progressSegment, { flex: pilePct, backgroundColor: colors.terracotta }]} />
             )}
           </View>
 
@@ -43,41 +44,41 @@ export function AnalyticsUnitDistribution({ summary }: AnalyticsUnitDistribution
           <View style={styles.legendContainer}>
             <View style={styles.unitRow}>
               <View style={styles.unitInfo}>
-                <View style={[styles.colorSquare, { backgroundColor: "#16A34A" }]} />
-                <Text style={styles.unitName}>Kilograms (kg)</Text>
+                <View style={[styles.colorSquare, { backgroundColor: colors.primary }]} />
+                <Text style={styles.unitName}>Kilos</Text>
               </View>
               <View style={styles.unitValues}>
                 <Text style={styles.unitAmount}>{kilo.toLocaleString()} kg</Text>
-                <Text style={styles.unitPercent}>{kiloPct.toFixed(1)}%</Text>
+                <Text style={styles.unitPercent}>{kiloPct.toFixed(0)}%</Text>
               </View>
             </View>
 
             <View style={styles.unitRow}>
               <View style={styles.unitInfo}>
-                <View style={[styles.colorSquare, { backgroundColor: "#0284C7" }]} />
+                <View style={[styles.colorSquare, { backgroundColor: colors.sage }]} />
                 <Text style={styles.unitName}>Sacks</Text>
               </View>
               <View style={styles.unitValues}>
                 <Text style={styles.unitAmount}>{sack.toLocaleString()} sacks</Text>
-                <Text style={styles.unitPercent}>{sackPct.toFixed(1)}%</Text>
+                <Text style={styles.unitPercent}>{sackPct.toFixed(0)}%</Text>
               </View>
             </View>
 
             <View style={styles.unitRow}>
               <View style={styles.unitInfo}>
-                <View style={[styles.colorSquare, { backgroundColor: "#D97706" }]} />
+                <View style={[styles.colorSquare, { backgroundColor: colors.terracotta }]} />
                 <Text style={styles.unitName}>Piles</Text>
               </View>
               <View style={styles.unitValues}>
                 <Text style={styles.unitAmount}>{pile.toLocaleString()} piles</Text>
-                <Text style={styles.unitPercent}>{pilePct.toFixed(1)}%</Text>
+                <Text style={styles.unitPercent}>{pilePct.toFixed(0)}%</Text>
               </View>
             </View>
           </View>
         </>
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>No active produce units recorded yet.</Text>
+          <Text style={styles.emptyText}>No produce in stock right now.</Text>
         </View>
       )}
     </View>
@@ -85,24 +86,14 @@ export function AnalyticsUnitDistribution({ summary }: AnalyticsUnitDistribution
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.base,
-    marginBottom: spacing.base,
-  },
-  header: { marginBottom: spacing.md },
-  title: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  header: {},
   progressBar: {
     height: 10,
     flexDirection: "row",
-    borderRadius: radii.full,
+    borderRadius: 5,
     overflow: "hidden",
     backgroundColor: colors.surfaceMuted,
-    marginBottom: spacing.md,
+    marginVertical: spacing.md,
   },
   progressSegment: { height: "100%" },
   legendContainer: { gap: spacing.sm },

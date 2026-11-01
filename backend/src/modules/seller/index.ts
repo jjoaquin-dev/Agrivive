@@ -21,14 +21,14 @@ import { sellerSetupRoute } from "./index/seller.setup";
 import { sellerProductImageRoute } from "./index/seller.product.image";
 import { sellerStockAdjustmentListRoute } from "./index/seller.stock-adjustment.list";
 import { sellerNotificationsRoute } from "./index/seller.notifications";
+import { sellerNotificationSettingsRoute } from "./index/seller.notification-settings";
 import { sellerAnalyticsRoute } from "./index/seller.analytics";
 import { sellerAdvisoriesRoute } from "./index/seller.advisories";
 import { sellerProductInquiryRoute } from "./index/seller.product.inquiry";
 import { sellerProductShareRoute } from "./index/seller.product.share";
-import { sellerPromotionsRoute } from "./index/seller.promotions";
-import { sellerSocialCampaignsRoute } from "./index/seller.social-campaigns";
 import { sellerVegetableCatalogRoute } from "./index/seller.vegetable-catalog";
 import { sellerVisibilityBoostRoute } from "./index/seller.visibility-boost";
+import { sellerPriceReductionRoute } from "./index/seller.price-reduction";
 
 export const sellerRoute = new Elysia({ prefix: "/seller" })
 
@@ -58,8 +58,8 @@ export const sellerRoute = new Elysia({ prefix: "/seller" })
   .use(sellerReportRoute)
   .use(sellerTrustRoute)
   .use(sellerNotificationsRoute)
-  .use(sellerPromotionsRoute)
+  .use(sellerNotificationSettingsRoute)
   .use(sellerVisibilityBoostRoute)
-  .use(sellerSocialCampaignsRoute)
+  .use(sellerPriceReductionRoute)
   .use(sellerAnalyticsRoute)
   .use(sellerAdvisoriesRoute);

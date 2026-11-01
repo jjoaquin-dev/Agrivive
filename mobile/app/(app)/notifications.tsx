@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ActionSheetIOS, ActivityIndicator, Alert, FlatList, Platform, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { colors, fonts, spacing } from "../../src/theme";
@@ -7,9 +7,12 @@ import { useUnifiedNotifications } from "../../src/features/notifications/hooks/
 import { NotificationHeaderBar } from "../../src/features/notifications/components/NotificationHeaderBar";
 import { NotificationSummaryBanner } from "../../src/features/notifications/components/NotificationSummaryBanner";
 import { NotificationCategoryTabs } from "../../src/features/notifications/components/NotificationCategoryTabs";
+import { NotificationEmptyState } from "../../src/features/notifications/components/NotificationEmptyState";
+import { NotificationSkeleton } from "../../src/features/notifications/components/NotificationSkeleton";
 import { NotificationSearchBar } from "../../src/features/notifications/components/NotificationSearchBar";
 import { NotificationTimelineCard } from "../../src/features/notifications/components/NotificationTimelineCard";
 import { NotificationFilterModal, NotificationFilterState } from "../../src/features/notifications/components/NotificationFilterModal";
+import { NotificationSettingsSheet } from "../../src/features/notifications/components/NotificationSettingsSheet";
 import { PaginationControl } from "../../src/components/PaginationControl";
 import type { NotificationCategory, UnifiedNotificationItem } from "../../src/features/notifications/types";
 
@@ -25,6 +28,7 @@ export default function NotificationsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<NotificationCategory>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<NotificationFilterState>({
@@ -34,24 +38,6 @@ export default function NotificationsScreen() {
   });
 
   useEffect(() => { setCurrentPage(1); }, [selectedCategory, searchQuery, filters]);
-
-  const handleOpenMenu = () => {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options: ["Cancel", "Mark all as read", "Refresh notifications"], cancelButtonIndex: 0 },
-        (idx) => {
-          if (idx === 1) void markAllRead();
-          if (idx === 2) refresh();
-        },
-      );
-    } else {
-      Alert.alert("Notification Options", "Choose an action", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Mark all as read", onPress: () => void markAllRead() },
-        { text: "Refresh", onPress: refresh },
-      ]);
-    }
-  };
 
   const { sectionedData, totalCount } = useMemo(() => {
     let list = items.filter((item) => {
@@ -114,7 +100,7 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <NotificationHeaderBar unreadCount={unreadCount} onMarkAllRead={markAllRead} onOpenMenu={handleOpenMenu} />
+      <NotificationHeaderBar unreadCount={unreadCount} onMarkAllRead={markAllRead} onOpenSettings={() => setSettingsVisible(true)} />
 
       <FlatList
         data={sectionedData}
@@ -123,7 +109,7 @@ export default function NotificationsScreen() {
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
-          <View>
+          <View style={{ paddingHorizontal: spacing.base }}>
             {loadingMore ? <ActivityIndicator color={colors.primary} style={{ marginVertical: 8 }} /> : null}
             {totalCount > 0 ? (
               <PaginationControl
@@ -141,9 +127,7 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.primary]} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
-            {unreadCount > 0 || urgentCount > 0 ? (
-              <NotificationSummaryBanner unreadCount={unreadCount} urgentCount={urgentCount} onMarkAllRead={markAllRead} />
-            ) : null}
+            <NotificationSummaryBanner unreadCount={unreadCount} urgentCount={urgentCount} />
             <NotificationCategoryTabs selected={selectedCategory} onSelect={setSelectedCategory} counts={counts} />
             <NotificationSearchBar value={searchQuery} onChangeText={setSearchQuery} onFilterPress={() => setFilterModalVisible(true)} activeFilterCount={activeFilterCount} />
           </View>
@@ -157,13 +141,11 @@ export default function NotificationsScreen() {
           ) : null;
         }}
         ListEmptyComponent={
-          loading ? (
-            <View style={styles.emptyContainer}><ActivityIndicator color={colors.primary} /><Text style={styles.emptyText}>Loading notifications...</Text></View>
-          ) : (
-            <View style={styles.emptyContainer}><Text style={styles.emptyTitle}>No notifications found</Text><Text style={styles.emptyText}>Updates matching your filter will appear here.</Text></View>
-          )
+          loading ? <NotificationSkeleton /> : <NotificationEmptyState searchQuery={searchQuery} hasFilters={activeFilterCount > 0 || selectedCategory !== "all"} hasAnyItems={items.length > 0} />
         }
       />
+
+      <NotificationSettingsSheet visible={settingsVisible} onClose={() => setSettingsVisible(false)} />
 
       <NotificationFilterModal
         visible={filterModalVisible}
@@ -178,9 +160,6 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing.xxxl },
-  sectionHeader: { fontFamily: fonts.body.semiBold, fontSize: 12, color: "#6B7280", letterSpacing: 0.8, marginTop: spacing.sm, marginBottom: spacing.xs },
-  emptyContainer: { alignItems: "center", paddingVertical: spacing.xxl },
-  emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text },
-  emptyText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  listContent: { paddingBottom: spacing.xxxl },
+  sectionHeader: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted, letterSpacing: 0.8, paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.xs, borderBottomWidth: 1, borderBottomColor: colors.border },
 });

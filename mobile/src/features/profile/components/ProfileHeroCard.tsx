@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   avatarWrapper: { position: "relative", marginRight: spacing.md },
   avatarImage: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: "#34D399" },
   avatarFallback: { width: 68, height: 68, borderRadius: 34, backgroundColor: "#34D399", alignItems: "center", justifyContent: "center" },
-  avatarText: { fontFamily: fonts.heading.bold, fontSize: 26, color: "#064E3B" },
+  avatarText: { fontFamily: fonts.heading.bold, fontSize: 28, color: "#064E3B" },
   cameraBadge: { position: "absolute", bottom: -2, right: -2, backgroundColor: "#FFFFFF", width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: "#14532D" },
   identityText: { flex: 1 },
   shopName: { fontFamily: fonts.heading.bold, fontSize: 18, color: "#FFFFFF" },

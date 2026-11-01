@@ -1,29 +1,45 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { ArrowRight } from "lucide-react-native";
-import { colors, fonts, radii, spacing, shadows } from "../../../theme";
+import { ArrowRight, CheckCircle2 } from "lucide-react-native";
+import { colors, fonts, radii, spacing, shadows, typography } from "../../../theme";
 import type { Product } from "../../inventory/types";
+import { LowStockError, LowStockSkeleton } from "./DashboardLowStockStates";
 
 interface DashboardLowStockAlertsProps {
   products: Product[];
   onSeeAll: () => void;
   onStockIn: (productId: string) => void;
+  loading?: boolean;
+  error?: boolean;
 }
+
+const formatUnitString = (qty: number, scalingType: string): string => {
+  if (scalingType === "kilo") return "kg";
+  if (scalingType === "sack") return qty === 1 ? "sack" : "sacks";
+  if (scalingType === "pile") return qty === 1 ? "pile" : "piles";
+  return scalingType;
+};
+
+const formatNumber = (num: number): string => {
+  return Number.isInteger(num) ? String(num) : String(num);
+};
 
 export const DashboardLowStockAlerts: React.FC<DashboardLowStockAlertsProps> = ({
   products,
   onSeeAll,
   onStockIn,
+  loading = false,
+  error = false,
 }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.sectionHeading}>Low Amount Alerts</Text>
-        {products.length > 0 ? (
+        <Text style={styles.sectionHeading}>Running Low</Text>
+        {!loading && !error && products.length > 0 ? (
           <Pressable
             onPress={onSeeAll}
             accessibilityRole="button"
-            accessibilityLabel={`See all ${products.length} low amount products`}
+            accessibilityLabel={`See all ${products.length} running low products`}
             style={styles.seeAllButton}
           >
             <Text style={styles.seeAllText}>See all ({products.length})</Text>
@@ -32,27 +48,34 @@ export const DashboardLowStockAlerts: React.FC<DashboardLowStockAlertsProps> = (
         ) : null}
       </View>
 
-      {products.length === 0 ? (
+      {loading ? (
+        <LowStockSkeleton />
+      ) : error ? (
+        <LowStockError />
+      ) : products.length === 0 ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>✓ Everything looks good</Text>
-          <Text style={styles.emptySub}>No products need more amount right now.</Text>
+          <CheckCircle2 size={24} color={colors.success} />
+          <Text style={styles.emptyTitle}>All stocked up</Text>
+          <Text style={styles.emptySub}>Nothing is running low right now.</Text>
         </View>
       ) : (
         products.slice(0, 3).map((item) => {
           const qty = parseFloat(item.productQty as string) || 0;
-          const unit = item.scalingType === "kilo" ? "kg" : item.scalingType;
-          const min =
+          const unit = formatUnitString(qty, item.scalingType);
+          const threshold =
             item.lowStockThreshold != null
-              ? parseFloat(item.lowStockThreshold as string).toFixed(2)
-              : "-";
+              ? parseFloat(item.lowStockThreshold as string)
+              : null;
+          const thresholdUnit = threshold != null ? formatUnitString(threshold, item.scalingType) : unit;
+          const thresholdStr = threshold != null ? `${formatNumber(threshold)} ${thresholdUnit}` : "-";
 
           return (
             <View key={item.id} style={styles.alertCard}>
               <View style={styles.alertInfo}>
                 <Text style={styles.productName}>{item.productName}</Text>
                 <Text style={styles.stockText}>
-                  <Text style={styles.stockHighlight}>{qty.toFixed(2)} {unit}</Text>
-                  {" "}remaining (Alert at: {min} {unit})
+                  <Text style={styles.stockHighlight}>{formatNumber(qty)} {unit} left</Text>
+                  {" · alert at "}{thresholdStr}
                 </Text>
               </View>
               <Pressable
@@ -73,7 +96,7 @@ export const DashboardLowStockAlerts: React.FC<DashboardLowStockAlertsProps> = (
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.base,
+    marginBottom: spacing.lg,
   },
   headerRow: {
     flexDirection: "row",
@@ -82,8 +105,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sectionHeading: {
+    ...typography.sectionHeading,
     fontFamily: fonts.heading.bold,
-    fontSize: 18,
     color: colors.text,
   },
   seeAllButton: {
@@ -92,8 +115,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   seeAllText: {
+    ...typography.label,
     fontFamily: fonts.body.semiBold,
-    fontSize: 13,
     color: colors.primary,
     marginRight: 4,
   },
@@ -104,13 +127,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.base,
     alignItems: "center",
+    gap: spacing.xs,
     ...shadows.card,
   },
   emptyTitle: {
     fontFamily: fonts.body.semiBold,
     fontSize: 14,
-    color: colors.success,
-    marginBottom: 2,
+    color: colors.text,
+    marginTop: 2,
   },
   emptySub: {
     fontFamily: fonts.body.regular,
@@ -126,8 +150,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.card,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.base,
-    marginBottom: spacing.xs,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
     ...shadows.card,
   },
   alertInfo: {
@@ -135,8 +159,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   productName: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 15,
+    ...typography.bodyLarge,
+    fontFamily: fonts.heading.semiBold,
     color: colors.text,
   },
   stockText: {
@@ -151,8 +175,9 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.base,
+    height: 44,
+    justifyContent: "center",
     borderRadius: radii.button,
   },
   actionButtonPressed: {
@@ -162,6 +187,6 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: colors.white,
     fontFamily: fonts.body.semiBold,
-    fontSize: 12,
+    fontSize: 13,
   },
 });

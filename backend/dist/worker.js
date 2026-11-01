@@ -28468,7 +28468,8 @@ var notification_type_enum = pgEnum2("notification_type", [
   "seller_message",
   "buyer_message",
   "seller_listing",
-  "seller_boost"
+  "seller_boost",
+  "seller_alert"
 ]);
 var user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -28605,7 +28606,9 @@ var sellers_product = pgTable("sellers_product", {
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }),
   priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
+  priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
+  priceReductionEnabled: boolean("price_reduction_enabled").default(true).notNull(),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
@@ -28841,6 +28844,8 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   leaseUntil: timestamp("lease_until", { withTimezone: true }),
   nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).defaultNow().notNull(),
   readAt: timestamp("read_at", { withTimezone: true }),
+  followUpDueAt: timestamp("follow_up_due_at", { withTimezone: true }),
+  followUpAttempts: integer("follow_up_attempts").default(0).notNull(),
   priceBefore: decimal("price_before", { precision: 10, scale: 2 }),
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -28850,6 +28855,7 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
 }, (table) => [
   uniqueIndex("seller_visibility_boosts_key_unique").on(table.boostKey),
   index("seller_visibility_boosts_due_idx").on(table.status, table.nextAttemptAt),
+  index("seller_visibility_boosts_follow_up_idx").on(table.followUpDueAt),
   index("seller_visibility_boosts_seller_created_idx").on(table.sellerId, table.createdAt),
   index("seller_visibility_boosts_seller_read_created_idx").on(table.sellerId, table.readAt, table.createdAt)
 ]);
@@ -29092,12 +29098,47 @@ var fb_post_logs = pgTable("fb_post_logs", {
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
   postType: text("post_type").notNull(),
   facebookPostId: text("facebook_post_id"),
+  caption: text("caption"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
   status: text("status").notNull()
 }, (table) => [
   index("fb_post_logs_product_idx").on(table.productId, table.postedAt)
 ]);
+var instagram_post_logs = pgTable("instagram_post_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
+  postType: text("post_type").notNull(),
+  instagramPostId: text("instagram_post_id"),
+  postUrl: text("post_url"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
+  status: text("status").notNull()
+}, (table) => [
+  index("instagram_post_logs_product_idx").on(table.productId, table.postedAt)
+]);
+var seller_notifications = pgTable("seller_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  productId: uuid("product_id").references(() => sellers_product.id, { onDelete: "cascade" }),
+  payload: jsonb("payload").$type().notNull().default(sql`'{}'::jsonb`),
+  dedupeKey: text("dedupe_key").notNull(),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [
+  uniqueIndex("seller_notifications_dedupe_unique").on(table.dedupeKey),
+  index("seller_notifications_seller_created_idx").on(table.sellerId, table.createdAt.desc())
+]);
+var seller_notification_settings = pgTable("seller_notification_settings", {
+  sellerId: text("seller_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+  stockPrice: boolean("stock_price").default(true).notNull(),
+  boost: boolean("boost").default(true).notNull(),
+  account: boolean("account").default(true).notNull(),
+  nightMode: boolean("night_mode").default(false).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
+});
 
 // src/utils/order-stock/index.ts
 async function restoreOrderStock(tx, orderId) {
@@ -29115,12 +29156,350 @@ async function restoreOrderStock(tx, orderId) {
   }
 }
 
+// src/utils/seller-notifications/messages.ts
+var text3 = (value, fallback) => typeof value === "string" && value.trim() ? value : fallback;
+var code = (p) => text3(p.code, "Your reservation");
+var product = (p) => text3(p.productName, "Your listing");
+var sellerNoticeDefs = {
+  new_reservation: {
+    title: "New Reservation",
+    plural: "New Reservations",
+    body: (p) => text3(p.summary, "A buyer reserved produce from your stall"),
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order",
+    nightExempt: true
+  },
+  reservation_ending: {
+    title: "Reservation Ends Soon",
+    plural: "Reservations End Soon",
+    body: (p) => `${code(p)} has about an hour left. The buyer has not picked up yet.`,
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order",
+    nightExempt: true
+  },
+  reservation_ended: {
+    title: "Reservation Ended",
+    plural: "Reservations Ended",
+    body: (p) => `${code(p)} was not picked up in time. The stock went back to your listing.`,
+    level: "silent",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  buyer_cancelled: {
+    title: "Buyer Cancelled",
+    plural: "Buyers Cancelled",
+    body: (p) => `${code(p)} was cancelled by the buyer. The stock went back to your listing.`,
+    level: "sound",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  pickup_done: {
+    title: "Pickup Done",
+    plural: "Pickups Done",
+    body: (p) => `${code(p)} was picked up. Pickup confirmed.`,
+    level: "feed",
+    topic: "orders",
+    category: "reservations",
+    target: "order"
+  },
+  listing_live: {
+    title: "Listing Is Live",
+    plural: "Listings Are Live",
+    body: (p) => `${product(p)} is now on sale.`,
+    level: "feed",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  running_low: {
+    title: "Running Low",
+    plural: "Running Low",
+    body: (p) => `${product(p)} is running low. ${text3(p.left, "A little")} left.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  sold_out: {
+    title: "Sold Out",
+    plural: "Sold Out",
+    body: (p) => `${product(p)} is sold out.`,
+    level: "silent",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  price_lowered: {
+    title: "Price Lowered",
+    plural: "Prices Lowered",
+    body: (p) => p.priceBefore ? `${product(p)} went from \u20B1${text3(p.priceBefore, "?")} to \u20B1${text3(p.priceAfter, "?")}. The new price was posted on the Agrivive Facebook Page.` : `${product(p)} is now \u20B1${text3(p.priceAfter, "lower")}. The new price was posted on the Agrivive Facebook Page.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  final_price_reached: {
+    title: "Final Price Reached",
+    plural: "Final Prices Reached",
+    body: (p) => `${product(p)} is now at your final price of \u20B1${text3(p.priceAfter, "?")}. It will not drop any lower.`,
+    level: "sound",
+    topic: "stock_price",
+    category: "listings",
+    target: "listing"
+  },
+  boost_started: {
+    title: "Boost Started",
+    plural: "Boosts Started",
+    body: (p) => p.willLowerPrice ? `${product(p)} was posted. In 6 hours we lower the price if it has not sold out.` : `${product(p)} was posted on the Agrivive Facebook Page.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_posted: {
+    title: "Boost Posted",
+    plural: "Boosts Posted",
+    body: (p) => `${product(p)} was posted on the Agrivive Facebook Page.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  boost_failed: {
+    title: "Boost Did Not Post",
+    plural: "Boosts Did Not Post",
+    body: (p) => `${product(p)} did not post on the Agrivive Facebook Page. Open Boost to try again.`,
+    level: "silent",
+    topic: "boost",
+    category: "listings",
+    target: "notifications"
+  },
+  seller_cancellation_warning: {
+    title: "Cancellation Warning",
+    plural: "Cancellation Warnings",
+    body: (p) => `You cancelled ${code(p)}. This is saved in your record.`,
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_event_corrected: {
+    title: "Record Fixed",
+    plural: "Records Fixed",
+    body: () => "We checked your record again and removed a mistake.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_action_warning: {
+    title: "Account Warning",
+    plural: "Account Warnings",
+    body: () => "Your record reached the warning level. Please reply to buyers on time.",
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  trust_action_restriction: {
+    title: "Account Limited",
+    plural: "Account Limited",
+    body: () => "Your account has a short limit. It ends by itself.",
+    level: "sound",
+    topic: "account",
+    category: "trust",
+    target: "trust",
+    nightExempt: true
+  },
+  trust_action_blocked: {
+    title: "Account Blocked",
+    plural: "Account Blocked",
+    body: () => "Your account is blocked. Open Agrivive to get it back.",
+    level: "sound",
+    topic: "account",
+    category: "trust",
+    target: "trust",
+    nightExempt: true
+  },
+  trust_action_expired: {
+    title: "Limit Lifted",
+    plural: "Limits Lifted",
+    body: () => "Your short limit has ended. You can use Agrivive again.",
+    level: "silent",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inactivity_3w_warning: {
+    title: "We Miss You",
+    plural: "We Miss You",
+    body: () => "You have not opened Agrivive for 3 weeks. Please log in soon.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inactivity_1m_blocked: {
+    title: "Account Blocked",
+    plural: "Account Blocked",
+    body: () => "Your account was blocked after 30 days away. Follow the steps to get it back.",
+    level: "feed",
+    topic: "account",
+    category: "trust",
+    target: "trust"
+  },
+  inquiry_12h_reminder: {
+    title: "Buyer Is Waiting",
+    plural: "Buyers Are Waiting",
+    body: () => "A buyer has waited 12 hours for your reply.",
+    level: "sound",
+    topic: "orders",
+    category: "messages",
+    target: "order"
+  },
+  inquiry_24h_warning: {
+    title: "Buyer Still Waiting",
+    plural: "Buyers Still Waiting",
+    body: () => "A buyer has waited 24 hours for your reply.",
+    level: "sound",
+    topic: "orders",
+    category: "messages",
+    target: "order"
+  }
+};
+function getSellerNoticeDef(kind) {
+  return sellerNoticeDefs[kind];
+}
+function sellerNoticePath(target, orderId) {
+  if (target === "order" && orderId)
+    return `/(app)/orders/${orderId}`;
+  if (target === "listing")
+    return "/(app)/(tabs)/inventory";
+  if (target === "trust")
+    return "/(app)/trust";
+  if (target === "messages")
+    return "/(app)/(tabs)/messages";
+  return "/(app)/notifications";
+}
+function sellerOrderCode(orderId) {
+  return `RSV-${orderId.slice(0, 4).toUpperCase()}`;
+}
+
+// src/utils/seller-notifications/night.ts
+var timeZone = "Asia/Manila";
+function inNightHours(now = new Date) {
+  const hour = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    hourCycle: "h23"
+  }).format(now));
+  return hour >= 21 || hour < 6;
+}
+
+// src/utils/seller-notifications/enqueue.ts
+var windowMs = () => {
+  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 60);
+  return Math.max(10, Math.min(seconds, 600)) * 1000;
+};
+async function readSellerAlertSettings(tx, sellerId) {
+  const [row] = await tx.select().from(seller_notification_settings).where(eq(seller_notification_settings.sellerId, sellerId)).limit(1);
+  return {
+    stockPrice: row?.stockPrice ?? true,
+    boost: row?.boost ?? true,
+    account: row?.account ?? true,
+    nightMode: row?.nightMode ?? false
+  };
+}
+async function enqueueSellerAlert(tx, input) {
+  const def = getSellerNoticeDef(input.kind);
+  if (!def || def.level === "feed")
+    return;
+  const settings = await readSellerAlertSettings(tx, input.sellerId);
+  if (def.topic !== "orders") {
+    const topicOn = def.topic === "stock_price" ? settings.stockPrice : def.topic === "boost" ? settings.boost : settings.account;
+    if (!topicOn)
+      return;
+  }
+  const channel = def.level === "sound" && !(settings.nightMode && inNightHours() && !def.nightExempt) ? "orders" : "updates";
+  const group = channel === "orders" ? input.kind : "updates";
+  const createdAt = input.createdAt ?? new Date;
+  const size = windowMs();
+  const windowStart = new Date(Math.floor(createdAt.getTime() / size) * size);
+  const availableAt = new Date(windowStart.getTime() + size);
+  const countPath = `{counts,${input.kind}}`;
+  await tx.insert(notification_outbox).values({
+    recipientUserId: input.sellerId,
+    type: "seller_alert",
+    aggregationKey: `seller-alert:${input.sellerId}:${group}`,
+    dedupeKey: `${input.sellerId}:alert:${group}:${windowStart.toISOString()}`,
+    referenceId: input.orderId ?? null,
+    itemCount: 1,
+    payload: { ...input.payload, kind: input.kind, channel, counts: { [input.kind]: 1 } },
+    availableAt,
+    createdAt,
+    updatedAt: createdAt
+  }).onConflictDoUpdate({
+    target: notification_outbox.dedupeKey,
+    set: {
+      itemCount: sql`${notification_outbox.itemCount} + 1`,
+      payload: sql`jsonb_set(${notification_outbox.payload}, ${countPath}::text[], to_jsonb(coalesce((${notification_outbox.payload}->'counts'->>${input.kind}::text)::int, 0) + 1))`,
+      updatedAt: createdAt
+    }
+  });
+}
+
+// src/utils/seller-notifications/index.ts
+async function createSellerNotification(tx, input) {
+  const payload = {
+    ...input.orderId ? { code: sellerOrderCode(input.orderId) } : {},
+    ...input.payload
+  };
+  const [row] = await tx.insert(seller_notifications).values({
+    sellerId: input.sellerId,
+    kind: input.kind,
+    orderId: input.orderId ?? null,
+    productId: input.productId ?? null,
+    payload,
+    dedupeKey: input.dedupeKey
+  }).onConflictDoNothing({ target: seller_notifications.dedupeKey }).returning();
+  if (!row)
+    return null;
+  await enqueueSellerAlert(tx, {
+    sellerId: input.sellerId,
+    kind: input.kind,
+    orderId: input.orderId,
+    payload,
+    createdAt: row.createdAt
+  });
+  return row;
+}
+async function alertSellerOfTrustNotice(tx, notice) {
+  const [recipient] = await tx.select({ id: user.id }).from(user).where(sql`${user.id} = ${notice.recipientId} and 'seller'::"role" = any(${user.role})`).limit(1);
+  if (!recipient)
+    return;
+  await enqueueSellerAlert(tx, {
+    sellerId: notice.recipientId,
+    kind: notice.kind,
+    orderId: notice.orderId,
+    payload: notice.orderId ? { code: sellerOrderCode(notice.orderId) } : {}
+  });
+}
+
 // src/utils/trust/index.ts
 function recordTrustEvent(tx, input) {
   return tx.insert(trust_events).values(input).onConflictDoNothing({ target: trust_events.eventKey }).returning();
 }
-function queueTrustNotice(tx, input) {
-  return tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+async function queueTrustNotice(tx, input) {
+  const rows = await tx.insert(trust_notices).values(input).onConflictDoNothing({ target: trust_notices.noticeKey }).returning();
+  if (rows.length)
+    await alertSellerOfTrustNotice(tx, input);
+  return rows;
 }
 async function recordInquiryDeadlines(tx, inquiry, now) {
   const hours = (now.getTime() - inquiry.createdAt.getTime()) / 3600000;
@@ -29333,6 +29712,12 @@ async function expirePendingOrders(limit = 100) {
         recipientId: updated.buyersId,
         orderId: updated.id,
         kind: "buyer_failed_reservation_warning"
+      });
+      await createSellerNotification(tx, {
+        sellerId: updated.sellersId,
+        kind: "reservation_ended",
+        dedupeKey: `reservation-ended:${updated.id}`,
+        orderId: updated.id
       });
       return { buyerId: updated.buyersId, orderId: updated.id, eventKey };
     });
@@ -29645,619 +30030,6 @@ async function sendSellerListingNotices(limit = 25) {
   return { processedEvents, noticesCreated, pushJobsCreated };
 }
 
-// src/modules/marketplace/services/marketplace.visibility.ts
-var sellerRole = sql`'seller' = ANY(coalesce(${user.role}, ARRAY[]::"role"[]))`;
-function marketplaceSellerVisibility() {
-  return and(eq(sellers_profile.isCurrent, true), sql`length(btrim(${sellers_profile.shopName})) > 0`, sql`length(btrim(${sellers_profile.detailAddress})) > 0`, sql`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, eq(user.isActive, true), eq(user.emailVerified, true), sellerRole, sql`not exists (
-      select 1 from ${trust_actions}
-      where ${trust_actions.subjectId} = ${user.id}
-        and ${trust_actions.actionType} = 'temporary_restriction'
-        and ${trust_actions.revokedAt} is null
-        and (${trust_actions.endsAt} is null or ${trust_actions.endsAt} > now())
-    )`);
-}
-
-// src/utils/seller-listing-event/index.ts
-async function queueSellerListingEvent(tx, productId, eventType = "new_listing", metadata = {}) {
-  const [listing] = await tx.select({
-    productId: sellers_product.id,
-    sellerId: sellers_product.userId,
-    productName: sellers_product.productName,
-    shopName: sellers_profile.shopName
-  }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(and(eq(sellers_product.id, productId), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), isNotNull(sellers_product.publishedAt), marketplaceSellerVisibility())).limit(1);
-  if (!listing)
-    return false;
-  if (eventType === "new_listing") {
-    const [existing] = await tx.select({ id: seller_listing_events.id }).from(seller_listing_events).where(and(eq(seller_listing_events.productId, productId), eq(seller_listing_events.eventType, "new_listing"))).limit(1);
-    if (existing)
-      return false;
-  } else if (eventType === "price_drop") {
-    if (!metadata.oldPrice || !metadata.newPrice)
-      return false;
-    const oldP = parseFloat(metadata.oldPrice);
-    const newP = parseFloat(metadata.newPrice);
-    if (isNaN(oldP) || isNaN(newP) || newP >= oldP)
-      return false;
-  }
-  const [created] = await tx.insert(seller_listing_events).values({
-    ...listing,
-    eventType,
-    metadata
-  }).returning({ id: seller_listing_events.id });
-  return Boolean(created);
-}
-
-// src/modules/seller/services/seller.product.price-reduction.followup.ts
-function cents(value) {
-  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
-  if (!match)
-    throw new Error("Invalid price amount");
-  return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
-}
-function decimal3(value) {
-  return `${value / 100n}.${(value % 100n).toString().padStart(2, "0")}`;
-}
-async function applySellerPromotionPriceReduction(tx, productId, now = new Date) {
-  const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
-  if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 || !current.productPrice || !current.minimumPrice || Number(current.priceReductionPercent ?? 0) <= 0)
-    return null;
-  const currentCents = cents(current.productPrice);
-  const floor = cents(current.minimumPrice);
-  if (currentCents <= floor)
-    return null;
-  const basisPoints = BigInt(Math.round(Number(current.priceReductionPercent) * 100));
-  const reducedCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
-  const nextCents = reducedCents < floor ? floor : reducedCents;
-  if (nextCents >= currentCents)
-    return null;
-  const [updated] = await tx.update(sellers_product).set({
-    productPrice: decimal3(nextCents),
-    priceReductionPeriodsApplied: current.priceReductionPeriodsApplied + 1,
-    updatedAt: now
-  }).where(eq(sellers_product.id, productId)).returning({
-    productPrice: sellers_product.productPrice
-  });
-  if (updated && updated.productPrice && current.productPrice) {
-    await queueSellerListingEvent(tx, productId, "price_drop", {
-      oldPrice: current.productPrice,
-      newPrice: updated.productPrice
-    });
-  }
-  return updated ? { before: current.productPrice, after: updated.productPrice } : null;
-}
-
-// src/utils/ahp-topsis/index.ts
-var criterionCount = 4;
-var consistencyRandomIndex = 0.9;
-var ahpTopsisPolicyVersion = "visibility-ahptopsis-v1";
-var ahpPairwiseMatrix = [
-  [1, 1.333333, 2, 4],
-  [0.75, 1, 1.5, 3],
-  [0.5, 0.666667, 1, 2],
-  [0.25, 0.333333, 0.5, 1]
-];
-var clamp = (value) => Math.min(1, Math.max(0, value));
-function criterionValues(criteria) {
-  return [criteria.freshness, criteria.stockAvailability, criteria.sellerReliability, criteria.recurrence];
-}
-function valuesToCriteria(values) {
-  return {
-    freshness: values[0] ?? 0,
-    stockAvailability: values[1] ?? 0,
-    sellerReliability: values[2] ?? 0,
-    recurrence: values[3] ?? 0
-  };
-}
-function createVisibilityCriteria(input) {
-  return {
-    freshness: clamp(1 - Math.max(0, input.ageHours) / 12),
-    stockAvailability: clamp(input.stockRatio),
-    sellerReliability: clamp(input.sellerReliability),
-    recurrence: clamp(input.priorCycles / 3)
-  };
-}
-function calculateAHPWeights(matrix = ahpPairwiseMatrix) {
-  if (matrix.length !== criterionCount || matrix.some((row) => row.length !== criterionCount)) {
-    throw new Error("AHP pairwise matrix must be 4 by 4");
-  }
-  const geometricMeans = matrix.map((row) => Math.pow(row.reduce((product, value) => product * value, 1), 1 / criterionCount));
-  const total = geometricMeans.reduce((sum, value) => sum + value, 0);
-  const weights = geometricMeans.map((value) => value / total);
-  const lambdaRatios = matrix.map((row, rowIndex) => row.reduce((sum, value, columnIndex) => sum + value * weights[columnIndex], 0) / weights[rowIndex]);
-  const lambdaMax = lambdaRatios.reduce((sum, value) => sum + value, 0) / criterionCount;
-  const consistencyIndex = (lambdaMax - criterionCount) / (criterionCount - 1);
-  const consistencyRatio = Math.max(0, consistencyIndex / consistencyRandomIndex);
-  return {
-    weights: valuesToCriteria(weights),
-    consistencyRatio
-  };
-}
-function rankWithAHPAndTOPSIS(alternatives, matrix = ahpPairwiseMatrix) {
-  const { weights, consistencyRatio } = calculateAHPWeights(matrix);
-  if (alternatives.length === 0)
-    return { weights, consistencyRatio, results: [] };
-  const rawColumns = Array.from({ length: criterionCount }, (_, criterionIndex) => alternatives.map((alternative) => criterionValues(alternative.criteria)[criterionIndex] ?? 0));
-  const normalizedColumns = rawColumns.map((column) => {
-    const length = Math.sqrt(column.reduce((sum, value) => sum + value ** 2, 0));
-    return length === 0 ? column.map(() => 0) : column.map((value) => value / length);
-  });
-  const weightValues = criterionValues(weights);
-  const weightedRows = alternatives.map((_, alternativeIndex) => normalizedColumns.map((column, criterionIndex) => column[alternativeIndex] * weightValues[criterionIndex]));
-  const idealBest = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.max(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
-  const idealWorst = Array.from({ length: criterionCount }, (_, criterionIndex) => Math.min(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
-  const results = alternatives.map((alternative, alternativeIndex) => {
-    const weighted = weightedRows[alternativeIndex] ?? [];
-    const distanceToIdeal = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealBest[index] ?? 0)) ** 2, 0));
-    const distanceToWorst = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealWorst[index] ?? 0)) ** 2, 0));
-    const denominator = distanceToIdeal + distanceToWorst;
-    return {
-      id: alternative.id,
-      score: denominator === 0 ? 0.5 : distanceToWorst / denominator,
-      rank: 0,
-      criteria: alternative.criteria,
-      weightedCriteria: valuesToCriteria(weighted),
-      distanceToIdeal,
-      distanceToWorst
-    };
-  }).sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
-  return {
-    weights,
-    consistencyRatio,
-    results: results.map((result, index) => ({ ...result, rank: index + 1 }))
-  };
-}
-
-// src/utils/visibility-ranking/index.ts
-var priorityVisibilityThreshold = 0.6;
-function getVisibilityTier(score) {
-  if (score >= priorityVisibilityThreshold)
-    return "Priority Boost";
-  if (score >= 0.4)
-    return "Standard Exposure";
-  return "Basic/Hold";
-}
-function rankVisibilityCandidates(candidates) {
-  const ranking = rankWithAHPAndTOPSIS(candidates.map(({ id, criteria }) => ({ id, criteria })));
-  const candidatesById = new Map(candidates.map((candidate) => [candidate.id, candidate]));
-  const results = ranking.results.map((result) => ({
-    ...result,
-    publishedAt: candidatesById.get(result.id)?.publishedAt ?? new Date(0),
-    tier: getVisibilityTier(result.score)
-  })).sort((left, right) => {
-    const scoreDifference = right.score - left.score;
-    if (scoreDifference !== 0)
-      return scoreDifference;
-    const publishedDifference = right.publishedAt.getTime() - left.publishedAt.getTime();
-    return publishedDifference || right.id.localeCompare(left.id);
-  }).map((result, index) => ({ ...result, rank: index + 1 }));
-  return {
-    policyVersion: ahpTopsisPolicyVersion,
-    weights: ranking.weights,
-    consistencyRatio: ranking.consistencyRatio,
-    results
-  };
-}
-
-// src/utils/vegetable-identity/index.ts
-function normalizeVegetableName(name) {
-  return name.trim().replace(/\s+/g, " ").toLowerCase();
-}
-function getVegetableCycleIdentity(vegetableCatalogId, vegetableKey, scalingType) {
-  const vegetable = vegetableCatalogId ? "catalog:" + vegetableCatalogId : "name:" + vegetableKey;
-  return vegetable + ":unit:" + (scalingType ?? "unknown");
-}
-
-// src/utils/visibility-ranking/load.ts
-var hourMs = 60 * 60 * 1000;
-var dayMs = 24 * hourMs;
-function hasPublicSellerProfile(row) {
-  return row.sellerActive && row.sellerVerified && row.sellerRoles?.includes("seller") && row.shopName.trim().length > 0 && row.detailAddress.trim().length > 0 && (row.phoneNumber?.trim().length ?? 0) >= 7 && row.latitude !== null && Number.isFinite(row.latitude) && row.latitude >= -90 && row.latitude <= 90 && row.longitude !== null && Number.isFinite(row.longitude) && row.longitude >= -180 && row.longitude <= 180;
-}
-async function loadEligibleVisibilityCandidates(evaluatedAt) {
-  const since = new Date(evaluatedAt.getTime() - 30 * dayMs);
-  const latestCycleStartedAt = sql`(
-    select max(current_cycle.started_at)
-    from listing_cycles as current_cycle
-    where current_cycle.product_id = ${sellers_product.id}
-      and current_cycle.started_at <= ${evaluatedAt}
-  )`;
-  const rows = await db.select({
-    cycleId: listing_cycles.id,
-    productId: sellers_product.id,
-    sellerId: sellers_product.userId,
-    productName: sellers_product.productName,
-    productType: sellers_product.productType,
-    unit: sellers_product.scalingType,
-    sellerName: user.name,
-    sellerActive: user.isActive,
-    sellerVerified: user.emailVerified,
-    sellerRoles: user.role,
-    shopName: sellers_profile.shopName,
-    detailAddress: sellers_profile.detailAddress,
-    phoneNumber: sellers_profile.phoneNumber,
-    latitude: sellers_profile.latitude,
-    longitude: sellers_profile.longitude,
-    publishedAt: sellers_product.publishedAt,
-    price: sellers_product.productPrice,
-    quantity: sellers_product.productQty,
-    originalQuantity: listing_cycles.originalQty,
-    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
-    cycleVegetableKey: listing_cycles.vegetableKey,
-    cycleScalingType: listing_cycles.scalingType
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(and(eq(listing_cycles.startedAt, latestCycleStartedAt), lte(listing_cycles.startedAt, evaluatedAt), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), lte(sellers_product.publishedAt, evaluatedAt), eq(user.isActive, true), eq(user.emailVerified, true)));
-  const publicRows = rows.filter((row) => row.publishedAt && row.price && row.quantity && Number(row.quantity) > 0 && Number(row.price) > 0 && Number(row.originalQuantity) > 0 && hasPublicSellerProfile(row));
-  if (!publicRows.length)
-    return [];
-  const sellerIds = [...new Set(publicRows.map((row) => row.sellerId))];
-  const [ratings, cycles] = await Promise.all([
-    db.select({
-      sellerId: order_reviews.sellerId,
-      reliability: sql`avg(${order_reviews.rating})::double precision / 5.0`
-    }).from(order_reviews).where(inArray(order_reviews.sellerId, sellerIds)).groupBy(order_reviews.sellerId),
-    db.select({
-      id: listing_cycles.id,
-      sellerId: sellers_product.userId,
-      vegetableCatalogId: listing_cycles.vegetableCatalogId,
-      scalingType: listing_cycles.scalingType,
-      vegetableKey: listing_cycles.vegetableKey,
-      startedAt: listing_cycles.startedAt
-    }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).where(and(inArray(sellers_product.userId, sellerIds), gte(listing_cycles.startedAt, since), lte(listing_cycles.startedAt, evaluatedAt)))
-  ]);
-  const ratingsBySeller = new Map(ratings.map((rating) => [rating.sellerId, Number(rating.reliability ?? 0.5)]));
-  return publicRows.map((row) => {
-    const identity = getVegetableCycleIdentity(row.cycleVegetableCatalogId, row.cycleVegetableKey || normalizeVegetableName(row.productName), row.cycleScalingType);
-    const priorCycles = cycles.filter((cycle) => cycle.sellerId === row.sellerId && cycle.startedAt < row.publishedAt && getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === identity).length;
-    return {
-      id: row.cycleId,
-      cycleId: row.cycleId,
-      productId: row.productId,
-      sellerId: row.sellerId,
-      productName: row.productName,
-      productType: row.productType,
-      unit: row.unit,
-      sellerName: row.sellerName,
-      shopName: row.shopName,
-      publishedAt: row.publishedAt,
-      price: row.price,
-      quantity: row.quantity,
-      originalQuantity: row.originalQuantity,
-      criteria: createVisibilityCriteria({
-        ageHours: (evaluatedAt.getTime() - row.publishedAt.getTime()) / hourMs,
-        stockRatio: Number(row.quantity) / Number(row.originalQuantity),
-        sellerReliability: ratingsBySeller.get(row.sellerId) ?? 0.5,
-        priorCycles
-      })
-    };
-  });
-}
-
-// src/utils/promotion-eligibility/index.ts
-function marketplaceUrl(productId) {
-  const base = (process.env.WEB_APP_URL ?? process.env.WEB_TRUSTED_ORIGINS?.split(",")[0] ?? "").trim().replace(/\/$/, "");
-  const path = `/marketplace/${productId}`;
-  try {
-    return base ? new URL(path, base).toString() : path;
-  } catch {
-    return path;
-  }
-}
-async function getPriorityPromotionEligibility(listingCycleId, options) {
-  const evaluatedAt = new Date;
-  const [target] = await db.select({
-    cycleId: listing_cycles.id,
-    productId: sellers_product.id,
-    sellerId: sellers_product.userId,
-    productName: sellers_product.productName,
-    productType: sellers_product.productType,
-    unit: sellers_product.scalingType,
-    price: sellers_product.productPrice,
-    quantity: sellers_product.productQty,
-    originalQuantity: listing_cycles.originalQty,
-    isActive: sellers_product.isActive,
-    isMarketable: sellers_product.isMarketable,
-    publishedAt: sellers_product.publishedAt,
-    priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
-    shopName: sellers_profile.shopName,
-    sellerName: user.name
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).innerJoin(user, eq(user.id, sellers_product.userId)).leftJoin(sellers_profile, and(eq(sellers_profile.userId, user.id), eq(sellers_profile.isCurrent, true))).where(eq(listing_cycles.id, listingCycleId)).limit(1);
-  if (!target)
-    return null;
-  if (!target.isActive || !target.isMarketable || Number(target.quantity ?? 0) <= 0 || Number(target.price ?? 0) <= 0) {
-    return ineligible(target, "Listing is not currently public and buyable", evaluatedAt);
-  }
-  const currentCycle = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, target.productId), lte(listing_cycles.startedAt, evaluatedAt))).orderBy(desc(listing_cycles.startedAt)).limit(1);
-  const activeCycleId = currentCycle[0]?.id ?? target.cycleId;
-  const isPriceReduced = (target.priceReductionPeriodsApplied ?? 0) >= 1 || options?.stage === "followup";
-  const isInitialEligible = options?.stage === "initial" || options?.allowActiveListing === true;
-  let candidates = [];
-  let ranking = null;
-  let candidate;
-  let result;
-  if (!isPriceReduced && !isInitialEligible) {
-    candidates = await loadEligibleVisibilityCandidates(evaluatedAt);
-    ranking = rankVisibilityCandidates(candidates);
-    candidate = candidates.find((item) => item.cycleId === activeCycleId || item.cycleId === listingCycleId);
-    result = ranking.results.find((item) => item.id === activeCycleId || item.id === listingCycleId);
-  }
-  const isPriorityScore = result ? result.score >= 0.6 : false;
-  const shared = {
-    cycleId: activeCycleId,
-    sellerId: target.sellerId,
-    productId: target.productId,
-    visibilityScore: result ? Number(result.score.toFixed(4)) : 0.5,
-    visibilityTier: result?.tier ?? "Priority Boost",
-    visibilityRank: result?.rank ?? 1,
-    policyVersion: ranking?.policyVersion ?? "visibility-ahptopsis-v1",
-    evaluatedAt,
-    productName: candidate?.productName ?? target.productName,
-    productType: candidate?.productType ?? target.productType,
-    unit: candidate?.unit ?? target.unit,
-    price: candidate?.price ?? target.price,
-    quantity: candidate?.quantity ?? target.quantity,
-    originalQuantity: candidate?.originalQuantity ?? target.originalQuantity ?? target.quantity,
-    availability: Number(target.quantity) > 0 ? "available" : "sold_out",
-    shopName: candidate?.shopName ?? target.shopName ?? "Agrivive Shop",
-    sellerName: candidate?.sellerName ?? target.sellerName ?? "Seller",
-    listingUrl: marketplaceUrl(target.productId),
-    criteria: result?.criteria ?? null,
-    priceReductionPeriodsApplied: target.priceReductionPeriodsApplied ?? 0
-  };
-  if (!isPriorityScore && !isPriceReduced && !isInitialEligible) {
-    return { eligible: false, reason: "Visibility is below Priority Boost", ...shared };
-  }
-  return {
-    eligible: true,
-    reason: null,
-    ...shared
-  };
-}
-function ineligible(target, reason, evaluatedAt) {
-  return {
-    eligible: false,
-    reason,
-    listingCycleId: target.cycleId,
-    sellerId: target.sellerId,
-    productId: target.productId,
-    visibilityScore: null,
-    visibilityTier: null,
-    visibilityRank: null,
-    policyVersion: "visibility-ahptopsis-v1",
-    evaluatedAt
-  };
-}
-
-// src/jobs/check-seller-promotion-eligibility.ts
-var hourMs2 = 60 * 60 * 1000;
-var batchSize = 100;
-async function addJobsForNewCycles(now) {
-  const unseen = await db.select({
-    listingCycleId: listing_cycles.id,
-    productId: sellers_product.id,
-    sellerId: sellers_product.userId
-  }).from(listing_cycles).innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId)).leftJoin(seller_promotion_jobs, and(eq(seller_promotion_jobs.listingCycleId, listing_cycles.id), eq(seller_promotion_jobs.stage, "initial"))).where(isNull(seller_promotion_jobs.id)).limit(batchSize);
-  for (const cycle of unseen) {
-    await db.insert(seller_promotion_jobs).values({
-      ...cycle,
-      stage: "initial",
-      status: "waiting",
-      nextCheckAt: now
-    }).onConflictDoNothing();
-  }
-  return unseen.length;
-}
-async function checkSellerPromotionEligibility() {
-  const now = new Date;
-  const discovered = await addJobsForNewCycles(now);
-  const due = await db.select({
-    id: seller_promotion_jobs.id,
-    listingCycleId: seller_promotion_jobs.listingCycleId,
-    stage: seller_promotion_jobs.stage
-  }).from(seller_promotion_jobs).where(and(eq(seller_promotion_jobs.status, "waiting"), lte(seller_promotion_jobs.nextCheckAt, now), or(isNull(seller_promotion_jobs.leaseUntil), lte(seller_promotion_jobs.leaseUntil, now)))).limit(batchSize);
-  let queued = 0;
-  let rescheduled = 0;
-  let skipped = 0;
-  let failed = 0;
-  for (const job of due) {
-    try {
-      const claimed = await db.update(seller_promotion_jobs).set({
-        leaseUntil: new Date(now.getTime() + 15000)
-      }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting"), lte(seller_promotion_jobs.nextCheckAt, now), or(isNull(seller_promotion_jobs.leaseUntil), lte(seller_promotion_jobs.leaseUntil, now)))).returning({ id: seller_promotion_jobs.id });
-      if (!claimed.length)
-        continue;
-      let eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
-      if (!eligibility) {
-        await db.update(seller_promotion_jobs).set({
-          status: "skipped",
-          leaseUntil: null,
-          lastError: "Listing cycle is no longer available",
-          completedAt: now,
-          updatedAt: now
-        }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
-        skipped++;
-        continue;
-      }
-      if (job.stage === "followup" && eligibility.eligible) {
-        const productId = eligibility.productId;
-        await db.transaction(async (tx) => {
-          await applySellerPromotionPriceReduction(tx, productId, now);
-        });
-        eligibility = await getPriorityPromotionEligibility(job.listingCycleId, { stage: job.stage });
-        if (!eligibility) {
-          await db.update(seller_promotion_jobs).set({
-            status: "skipped",
-            leaseUntil: null,
-            lastError: "Listing cycle is no longer available",
-            completedAt: now,
-            updatedAt: now
-          }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
-          skipped++;
-          continue;
-        }
-      }
-      const evaluationFields = {
-        visibilityPolicyVersion: eligibility.policyVersion,
-        visibilityScore: eligibility.visibilityScore === null ? null : eligibility.visibilityScore.toFixed(4),
-        visibilityTier: eligibility.visibilityTier,
-        visibilityRank: eligibility.visibilityRank,
-        evaluatedAt: eligibility.evaluatedAt
-      };
-      if (!eligibility.eligible && eligibility.visibilityScore !== null && job.stage === "initial") {
-        await db.update(seller_promotion_jobs).set({
-          ...evaluationFields,
-          nextCheckAt: new Date(now.getTime() + hourMs2),
-          leaseUntil: null,
-          lastError: null,
-          updatedAt: now
-        }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
-        rescheduled++;
-        continue;
-      }
-      if (!eligibility.eligible) {
-        await db.update(seller_promotion_jobs).set({
-          ...evaluationFields,
-          status: "skipped",
-          leaseUntil: null,
-          lastError: eligibility.reason ?? "Listing is no longer eligible",
-          completedAt: now,
-          updatedAt: now
-        }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
-        skipped++;
-        continue;
-      }
-      const updated = await db.update(seller_promotion_jobs).set({
-        ...evaluationFields,
-        status: "queued",
-        nextCheckAt: now,
-        leaseUntil: null,
-        lastError: null,
-        updatedAt: now
-      }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting"))).returning({ id: seller_promotion_jobs.id });
-      if (updated.length)
-        queued++;
-    } catch (error) {
-      console.error("Promotion eligibility check failed", { jobId: job.id, stage: job.stage, error });
-      await db.update(seller_promotion_jobs).set({
-        nextCheckAt: new Date(now.getTime() + hourMs2),
-        leaseUntil: null,
-        lastError: "Eligibility check could not be completed",
-        updatedAt: now
-      }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "waiting")));
-      failed++;
-    }
-  }
-  return { discovered, checked: due.length, queued, rescheduled, skipped, failed };
-}
-
-// src/jobs/deliver-seller-promotion-webhooks.ts
-var maxAttempts = 5;
-var batchSize2 = 50;
-var draftResponseTimeoutMs = 2 * 60000;
-function retryDelay(attempt) {
-  return Math.min(30000 * 2 ** Math.max(0, attempt - 1), 30 * 60000);
-}
-async function deliverSellerPromotionWebhooks() {
-  const webhookUrl = process.env.N8N_PROMOTION_WEBHOOK_URL?.trim();
-  const serviceToken = process.env.N8N_PROMOTION_SERVICE_TOKEN?.trim();
-  if (!webhookUrl || !serviceToken)
-    return { configured: false, queued: 0, sent: 0, failed: 0 };
-  let target;
-  try {
-    target = new URL(webhookUrl);
-    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname)) {
-      return { configured: false, queued: 0, sent: 0, failed: 0 };
-    }
-  } catch {
-    return { configured: false, queued: 0, sent: 0, failed: 0 };
-  }
-  const now = new Date;
-  const due = await db.select({
-    id: seller_promotion_jobs.id,
-    stage: seller_promotion_jobs.stage,
-    status: seller_promotion_jobs.status,
-    retryCount: seller_promotion_jobs.retryCount
-  }).from(seller_promotion_jobs).where(and(or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent")), lte(seller_promotion_jobs.nextCheckAt, now), or(isNull(seller_promotion_jobs.leaseUntil), lte(seller_promotion_jobs.leaseUntil, now)))).limit(batchSize2);
-  let sent = 0;
-  let failed = 0;
-  for (const job of due) {
-    const claimed = await db.update(seller_promotion_jobs).set({
-      leaseUntil: new Date(now.getTime() + 15000)
-    }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, job.status), lte(seller_promotion_jobs.nextCheckAt, now), or(isNull(seller_promotion_jobs.leaseUntil), lte(seller_promotion_jobs.leaseUntil, now)))).returning({ id: seller_promotion_jobs.id });
-    if (!claimed.length)
-      continue;
-    if (job.status === "sent" && job.retryCount >= maxAttempts) {
-      await db.update(seller_promotion_jobs).set({
-        status: "failed",
-        leaseUntil: null,
-        lastError: "No draft response was received after the retry limit",
-        completedAt: now,
-        updatedAt: now
-      }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "sent")));
-      failed++;
-      continue;
-    }
-    if (job.status === "sent") {
-      await db.update(seller_promotion_jobs).set({
-        status: "queued",
-        nextCheckAt: now,
-        updatedAt: now
-      }).where(and(eq(seller_promotion_jobs.id, job.id), eq(seller_promotion_jobs.status, "sent")));
-    }
-    try {
-      const response = await fetch(target, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${serviceToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json"
-        },
-        body: JSON.stringify({ jobId: job.id, stage: job.stage }),
-        signal: AbortSignal.timeout(1e4)
-      });
-      const attempt = job.retryCount + 1;
-      if (!response.ok) {
-        const exhausted = attempt >= maxAttempts;
-        await db.update(seller_promotion_jobs).set({
-          status: exhausted ? "failed" : "queued",
-          retryCount: attempt,
-          leaseUntil: null,
-          nextCheckAt: new Date(now.getTime() + retryDelay(attempt)),
-          lastError: `n8n webhook returned HTTP ${response.status}`,
-          completedAt: exhausted ? now : null,
-          updatedAt: now
-        }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
-        if (exhausted)
-          failed++;
-        continue;
-      }
-      await db.update(seller_promotion_jobs).set({
-        status: "sent",
-        retryCount: attempt,
-        leaseUntil: null,
-        nextCheckAt: new Date(now.getTime() + draftResponseTimeoutMs),
-        lastError: null,
-        updatedAt: now
-      }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
-      sent++;
-    } catch (error) {
-      const attempt = job.retryCount + 1;
-      const exhausted = attempt >= maxAttempts;
-      console.error("Promotion webhook delivery failed", { jobId: job.id, stage: job.stage, error });
-      await db.update(seller_promotion_jobs).set({
-        status: exhausted ? "failed" : "queued",
-        retryCount: attempt,
-        leaseUntil: null,
-        nextCheckAt: new Date(now.getTime() + retryDelay(attempt)),
-        lastError: "n8n webhook delivery failed",
-        completedAt: exhausted ? now : null,
-        updatedAt: now
-      }).where(and(eq(seller_promotion_jobs.id, job.id), or(eq(seller_promotion_jobs.status, "queued"), eq(seller_promotion_jobs.status, "sent"))));
-      if (exhausted)
-        failed++;
-    }
-  }
-  return { configured: true, queued: due.length, sent, failed };
-}
-
 // node_modules/firebase-admin/lib/esm/app/index.js
 var import_app = __toESM(require_app(), 1);
 var AppErrorCode = import_app.default.AppErrorCode;
@@ -30320,7 +30092,7 @@ async function sendPushNotificationBatch(messages) {
       android: {
         priority: "high",
         collapseKey: first.data.collapseKey,
-        notification: { channelId: "default" }
+        notification: { channelId: first.data.channelId || "default" }
       },
       apns: {
         headers: first.data.collapseKey ? { "apns-collapse-id": first.data.collapseKey } : undefined
@@ -30346,12 +30118,46 @@ async function sendPushNotificationBatch(messages) {
   }
 }
 
+// src/utils/seller-notifications/push-content.ts
+function countsOf(payload) {
+  const counts = payload.counts ?? {};
+  return Object.entries(counts).filter(([kind]) => getSellerNoticeDef(kind));
+}
+function sellerAlertContent(payload, itemCount, referenceId) {
+  const kind = String(payload.kind ?? "");
+  const def = getSellerNoticeDef(kind);
+  const channel = payload.channel === "updates" ? "updates" : "orders";
+  if (!def) {
+    return { title: "Agrivive update", body: "Open Agrivive to see what is new.", path: "/(app)/notifications", channel };
+  }
+  if (itemCount <= 1) {
+    return {
+      title: def.title,
+      body: def.body(payload),
+      path: sellerNoticePath(def.target, referenceId),
+      channel
+    };
+  }
+  if (channel === "orders") {
+    return {
+      title: `${itemCount} ${def.plural}`,
+      body: "Open Agrivive to see them.",
+      path: "/(app)/notifications",
+      channel
+    };
+  }
+  const parts = countsOf(payload).map(([countKind, count]) => `${count > 1 ? `${count} ` : ""}${count > 1 ? getSellerNoticeDef(countKind).plural : getSellerNoticeDef(countKind).title}`);
+  return { title: `${itemCount} Updates`, body: parts.join(" \xB7 "), path: "/(app)/notifications", channel };
+}
+
 // src/jobs/deliver-push-notifications.ts
 var batchLimit = 50;
 var deviceBatchSize = 500;
-var maxAttempts2 = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
+var maxAttempts = () => Math.max(1, Number(process.env.PUSH_MAX_ATTEMPTS ?? 4));
 function notificationContent(job) {
   const payload = job.payload ?? {};
+  if (job.type === "seller_alert")
+    return sellerAlertContent(payload, job.itemCount, job.referenceId);
   if (job.type === "seller_listing") {
     const productName = typeof payload.productName === "string" ? payload.productName : "Fresh produce";
     const shopName = typeof payload.shopName === "string" ? payload.shopName : "A seller you follow";
@@ -30386,16 +30192,18 @@ function notificationContent(job) {
     return {
       title: "New Reservation Received",
       body: typeof payload.summary === "string" ? payload.summary : "A buyer reserved produce from your stall",
-      path: `/(app)/orders/${String(payload.orderId)}`
+      path: `/(app)/orders/${String(payload.orderId)}`,
+      channel: "orders"
     };
   }
   return {
     title: "New buyer messages",
     body: job.itemCount === 1 ? "A buyer sent you a message" : `You have ${job.itemCount} new buyer messages`,
-    path: "/messages"
+    path: "/messages",
+    channel: payload.channel === "updates" ? "updates" : "orders"
   };
 }
-function retryDelay2(attempt) {
+function retryDelay(attempt) {
   return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
 }
 async function claimJobs() {
@@ -30431,13 +30239,13 @@ async function finishJob(job, status, message) {
 }
 async function rescheduleJob(job, message) {
   const now = new Date;
-  if (job.attemptCount >= maxAttempts2()) {
+  if (job.attemptCount >= maxAttempts()) {
     await finishJob(job, "failed", message);
     return;
   }
   await db.update(notification_outbox).set({
     status: "pending",
-    availableAt: new Date(now.getTime() + retryDelay2(job.attemptCount)),
+    availableAt: new Date(now.getTime() + retryDelay(job.attemptCount)),
     lockedAt: null,
     lastError: message,
     updatedAt: now
@@ -30470,7 +30278,8 @@ async function deliverJob(job) {
       notificationId: job.id,
       referenceId: job.referenceId ?? "",
       path: content.path,
-      collapseKey: job.aggregationKey
+      collapseKey: job.aggregationKey,
+      channelId: content.channel ?? "default"
     }
   }));
   let lastError;
@@ -30511,140 +30320,45 @@ async function deliverPushNotifications() {
   return { claimed: jobs.length, delivered, failed };
 }
 
-// src/modules/seller/services/seller.product.price-reduction.ts
-var PRICE_PERIOD_MS = 12 * 60 * 60 * 1000;
-function cents2(value) {
-  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
-  if (!match)
-    throw new Error("Invalid price amount");
-  return BigInt(match[1]) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
-}
-function decimal4(centsValue) {
-  return `${centsValue / 100n}.${(centsValue % 100n).toString().padStart(2, "0")}`;
-}
-function nextReductionAt(product) {
-  if (!product.priceScheduleStartedAt || Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice || !product.productPrice || cents2(product.productPrice) <= cents2(product.minimumPrice))
-    return null;
-  return new Date(product.priceScheduleStartedAt.getTime() + (product.priceReductionPeriodsApplied + 1) * PRICE_PERIOD_MS).toISOString();
-}
-async function applySellerProductPriceReduction(tx, productId, now = new Date) {
-  const [current] = await tx.select().from(sellers_product).where(eq(sellers_product.id, productId)).for("update").limit(1);
-  if (!current)
-    return null;
-  const reductionPercent = Number(current.priceReductionPercent ?? "0");
-  if (!current.priceScheduleStartedAt || reductionPercent <= 0 || !current.minimumPrice || !current.productPrice || now < current.priceScheduleStartedAt) {
-    return { ...current, nextPriceReductionAt: nextReductionAt(current) };
-  }
-  const targetPeriods = Math.floor((now.getTime() - current.priceScheduleStartedAt.getTime()) / PRICE_PERIOD_MS);
-  if (targetPeriods <= current.priceReductionPeriodsApplied) {
-    return { ...current, nextPriceReductionAt: nextReductionAt(current) };
-  }
-  const basisPoints = BigInt(Math.round(reductionPercent * 100));
-  const floor = cents2(current.minimumPrice);
-  let currentCents = cents2(current.productPrice);
-  for (let period = current.priceReductionPeriodsApplied;period < targetPeriods; period += 1) {
-    currentCents = (currentCents * (10000n - basisPoints) + 5000n) / 10000n;
-    if (currentCents <= floor) {
-      currentCents = floor;
-      break;
-    }
-  }
-  const [updated] = await tx.update(sellers_product).set({
-    productPrice: decimal4(currentCents),
-    priceReductionPeriodsApplied: targetPeriods,
-    updatedAt: now
-  }).where(and(eq(sellers_product.id, productId))).returning();
-  return updated ? { ...updated, nextPriceReductionAt: nextReductionAt(updated) } : null;
-}
-
-// src/jobs/apply-seller-price-reductions.ts
-var batchSize3 = 100;
-async function applySellerPriceReductions() {
-  const products = await db.select({ id: sellers_product.id }).from(sellers_product).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.priceReductionPercent, "0"), isNotNull(sellers_product.minimumPrice), isNotNull(sellers_product.priceScheduleStartedAt), lte(sql`${sellers_product.priceScheduleStartedAt} + (${sellers_product.priceReductionPeriodsApplied} + 1) * interval '12 hours'`, sql`now()`))).limit(batchSize3);
-  let checked = 0;
-  let reduced = 0;
-  let promptsCreated = 0;
-  for (const product of products) {
-    const result = await db.transaction(async (tx) => {
-      const [before] = await tx.select().from(sellers_product).where(eq(sellers_product.id, product.id)).for("update").limit(1);
-      if (!before || !before.isActive || !before.isMarketable || Number(before.productQty ?? 0) <= 0)
-        return null;
-      const updated = await applySellerProductPriceReduction(tx, product.id);
-      if (!updated || updated.priceReductionPeriodsApplied <= before.priceReductionPeriodsApplied || Number(updated.productPrice ?? 0) >= Number(before.productPrice ?? 0))
-        return { reduced: false, prompt: false };
-      const [cycle] = await tx.select({ id: listing_cycles.id }).from(listing_cycles).where(eq(listing_cycles.productId, product.id)).orderBy(desc(listing_cycles.startedAt)).limit(1);
-      if (!cycle)
-        return { reduced: true, prompt: false };
-      const boostKey = `${cycle.id}:reduction:${updated.priceReductionPeriodsApplied}`;
-      const [prompt] = await tx.insert(seller_visibility_boosts).values({
-        listingCycleId: cycle.id,
-        productId: product.id,
-        sellerId: before.userId,
-        reason: "price_reduction",
-        reductionPeriod: updated.priceReductionPeriodsApplied,
-        boostKey,
-        status: "prompt",
-        nextAttemptAt: new Date,
-        priceBefore: before.productPrice,
-        priceAfter: updated.productPrice
-      }).onConflictDoNothing({ target: seller_visibility_boosts.boostKey }).returning({
-        id: seller_visibility_boosts.id
-      });
-      if (!prompt)
-        return { reduced: true, prompt: false };
-      await tx.insert(notification_outbox).values({
-        recipientUserId: before.userId,
-        type: "seller_boost",
-        aggregationKey: `seller-boost:${before.userId}`,
-        dedupeKey: `${before.userId}:seller-boost:${boostKey}`,
-        referenceId: prompt.id,
-        payload: {
-          boostId: prompt.id,
-          productId: product.id,
-          productName: before.productName,
-          priceBefore: before.productPrice,
-          priceAfter: updated.productPrice
-        }
-      }).onConflictDoNothing({ target: notification_outbox.dedupeKey });
-      return { reduced: true, prompt: true };
-    });
-    if (result === null)
-      continue;
-    checked++;
-    if (result.reduced)
-      reduced++;
-    if (result.prompt)
-      promptsCreated++;
-  }
-  return { checked, reduced, promptsCreated };
-}
-
-// src/jobs/deliver-seller-visibility-boosts.ts
-var maxAttempts3 = 5;
-var batchSize4 = 50;
-function retryDelay3(attempt) {
-  return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
-}
-async function deliverSellerVisibilityBoosts() {
+// src/jobs/boost-webhook-target.ts
+function getBoostWebhookTarget() {
   const webhookUrl = process.env.N8N_VISIBILITY_BOOST_WEBHOOK_URL?.trim();
   const serviceToken = process.env.N8N_VISIBILITY_BOOST_SERVICE_TOKEN?.trim();
   if (!webhookUrl || !serviceToken)
-    return { configured: false, queued: 0, sent: 0, failed: 0 };
-  let target;
+    return null;
   try {
-    target = new URL(webhookUrl);
-    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname)) {
-      return { configured: false, queued: 0, sent: 0, failed: 0 };
-    }
+    const target = new URL(webhookUrl);
+    if (target.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(target.hostname))
+      return null;
+    return { target, serviceToken };
   } catch {
+    return null;
+  }
+}
+
+// src/jobs/deliver-seller-visibility-boosts.ts
+var maxAttempts2 = 5;
+var batchSize = 50;
+function retryDelay2(attempt) {
+  return Math.min(30 * 60000, 30000 * 2 ** Math.max(0, attempt - 1));
+}
+var warnedNotConfigured = false;
+async function deliverSellerVisibilityBoosts() {
+  const webhook = getBoostWebhookTarget();
+  if (!webhook) {
+    if (!warnedNotConfigured) {
+      warnedNotConfigured = true;
+      console.warn("Boosts are waiting: set N8N_VISIBILITY_BOOST_WEBHOOK_URL (https) and N8N_VISIBILITY_BOOST_SERVICE_TOKEN");
+    }
     return { configured: false, queued: 0, sent: 0, failed: 0 };
   }
+  const { target, serviceToken } = webhook;
   const now = new Date;
   const due = await db.select({
     id: seller_visibility_boosts.id,
     reason: seller_visibility_boosts.reason,
     retryCount: seller_visibility_boosts.retryCount
-  }).from(seller_visibility_boosts).where(and(or(eq(seller_visibility_boosts.status, "queued"), eq(seller_visibility_boosts.status, "sent")), lte(seller_visibility_boosts.nextAttemptAt, now), or(isNull(seller_visibility_boosts.leaseUntil), lte(seller_visibility_boosts.leaseUntil, now)))).limit(batchSize4);
+  }).from(seller_visibility_boosts).where(and(or(eq(seller_visibility_boosts.status, "queued"), eq(seller_visibility_boosts.status, "sent")), lte(seller_visibility_boosts.nextAttemptAt, now), or(isNull(seller_visibility_boosts.leaseUntil), lte(seller_visibility_boosts.leaseUntil, now)))).limit(batchSize);
   let sent = 0;
   let failed = 0;
   for (const boost of due) {
@@ -30667,7 +30381,7 @@ async function deliverSellerVisibilityBoosts() {
       const attempt = boost.retryCount + 1;
       if (!response.ok) {
         const responseBody = await response.text().catch(() => "");
-        const exhausted = attempt >= maxAttempts3;
+        const exhausted = attempt >= maxAttempts2;
         console.error("Visibility boost webhook rejected", {
           boostId: boost.id,
           status: response.status,
@@ -30677,7 +30391,7 @@ async function deliverSellerVisibilityBoosts() {
           status: exhausted ? "failed" : "queued",
           retryCount: attempt,
           leaseUntil: null,
-          nextAttemptAt: new Date(now.getTime() + retryDelay3(attempt)),
+          nextAttemptAt: new Date(now.getTime() + retryDelay2(attempt)),
           lastError: `n8n visibility boost webhook returned HTTP ${response.status}`,
           updatedAt: now
         }).where(eq(seller_visibility_boosts.id, boost.id));
@@ -30697,13 +30411,13 @@ async function deliverSellerVisibilityBoosts() {
       sent++;
     } catch (error) {
       const attempt = boost.retryCount + 1;
-      const exhausted = attempt >= maxAttempts3;
+      const exhausted = attempt >= maxAttempts2;
       console.error("Visibility boost webhook delivery failed", { boostId: boost.id, error });
       await db.update(seller_visibility_boosts).set({
         status: exhausted ? "failed" : "queued",
         retryCount: attempt,
         leaseUntil: null,
-        nextAttemptAt: new Date(now.getTime() + retryDelay3(attempt)),
+        nextAttemptAt: new Date(now.getTime() + retryDelay2(attempt)),
         lastError: "n8n visibility boost webhook delivery failed",
         updatedAt: now
       }).where(eq(seller_visibility_boosts.id, boost.id));
@@ -30714,20 +30428,105 @@ async function deliverSellerVisibilityBoosts() {
   return { configured: true, queued: due.length, sent, failed };
 }
 
+// src/jobs/deliver-seller-boost-follow-ups.ts
+var maxAttempts3 = 5;
+var retryAfterMs = 15 * 60000;
+var batchSize2 = 50;
+async function endedReason(boost) {
+  if (!boost.enabled || !boost.active || !boost.marketable || Number(boost.quantity ?? 0) <= 0)
+    return "unavailable";
+  if (Number(boost.amount ?? 0) <= 0 || boost.minimumPrice === null)
+    return "not_enabled";
+  if (Number(boost.price ?? 0) <= Number(boost.minimumPrice))
+    return "at_floor";
+  const [cycle] = await db.select({ id: listing_cycles.id }).from(listing_cycles).where(and(eq(listing_cycles.productId, boost.productId), lte(listing_cycles.startedAt, new Date))).orderBy(desc(listing_cycles.startedAt)).limit(1);
+  return !cycle || cycle.id !== boost.listingCycleId ? "new_cycle" : null;
+}
+async function deliverSellerBoostFollowUps() {
+  const webhook = getBoostWebhookTarget();
+  if (!webhook)
+    return { configured: false, due: 0, sent: 0, failed: 0 };
+  const now = new Date;
+  const due = await db.select({
+    id: seller_visibility_boosts.id,
+    listingCycleId: seller_visibility_boosts.listingCycleId,
+    productId: seller_visibility_boosts.productId,
+    enabled: sellers_product.priceReductionEnabled,
+    active: sellers_product.isActive,
+    marketable: sellers_product.isMarketable,
+    quantity: sellers_product.productQty,
+    amount: sellers_product.priceReductionAmount,
+    minimumPrice: sellers_product.minimumPrice,
+    price: sellers_product.productPrice
+  }).from(seller_visibility_boosts).innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId)).where(and(eq(seller_visibility_boosts.reason, "initial"), inArray(seller_visibility_boosts.status, ["queued", "sent"]), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts3))).limit(batchSize2);
+  let sent = 0;
+  let failed = 0;
+  for (const boost of due) {
+    if (await endedReason(boost)) {
+      await db.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(eq(seller_visibility_boosts.id, boost.id));
+      continue;
+    }
+    const [claimed] = await db.update(seller_visibility_boosts).set({
+      followUpDueAt: new Date(now.getTime() + retryAfterMs),
+      followUpAttempts: sql`${seller_visibility_boosts.followUpAttempts} + 1`
+    }).where(and(eq(seller_visibility_boosts.id, boost.id), isNotNull(seller_visibility_boosts.followUpDueAt), lte(seller_visibility_boosts.followUpDueAt, now), lt(seller_visibility_boosts.followUpAttempts, maxAttempts3))).returning({ id: seller_visibility_boosts.id });
+    if (!claimed)
+      continue;
+    try {
+      const response = await fetch(webhook.target, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${webhook.serviceToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({ boostId: boost.id, reason: "follow_up" }),
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!response.ok)
+        throw new Error(`n8n returned HTTP ${response.status}`);
+      sent++;
+    } catch (error) {
+      failed++;
+      console.error("Boost follow-up delivery failed", { boostId: boost.id, error });
+      await db.update(seller_visibility_boosts).set({ lastError: "n8n boost follow-up delivery failed" }).where(eq(seller_visibility_boosts.id, boost.id));
+    }
+  }
+  return { configured: true, due: due.length, sent, failed };
+}
+
+// src/jobs/send-reservation-ending-notices.ts
+var warningWindowMs = 60 * 60 * 1000;
+async function sendReservationEndingNotices(limit = 100) {
+  const now = new Date;
+  const due = await db.select({ id: orders.id, sellerId: orders.sellersId }).from(orders).where(and(eq(orders.status, "pending"), gt(orders.expiresAt, now), lte(orders.expiresAt, new Date(now.getTime() + warningWindowMs)), sql`not exists (select 1 from ${seller_notifications} where ${seller_notifications.dedupeKey} = 'reservation-ending:' || ${orders.id}::text)`)).orderBy(asc(orders.expiresAt)).limit(limit);
+  let created = 0;
+  for (const order of due) {
+    const row = await db.transaction((tx) => createSellerNotification(tx, {
+      sellerId: order.sellerId,
+      kind: "reservation_ending",
+      dedupeKey: `reservation-ending:${order.id}`,
+      orderId: order.id
+    }));
+    if (row)
+      created++;
+  }
+  return created;
+}
+
 // src/jobs/run-scheduled.ts
 async function runScheduledJobs() {
   const expiredOrders = await expirePendingOrders();
+  const reservationEndingNotices = await sendReservationEndingNotices();
   const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
   const trustRestrictionsExpired = await expireTrustRestrictions();
   const sellerListingNotices = await sendSellerListingNotices();
-  const sellerPriceReductions = await applySellerPriceReductions();
-  const sellerPromotionChecks = await checkSellerPromotionEligibility();
-  const sellerPromotionWebhooks = await deliverSellerPromotionWebhooks();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
+  const sellerBoostFollowUps = await deliverSellerBoostFollowUps();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerPriceReductions, sellerPromotionChecks, sellerPromotionWebhooks, sellerVisibilityBoosts, pushNotifications };
+  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerVisibilityBoosts, sellerBoostFollowUps, pushNotifications };
 }
 
 // src/worker.ts

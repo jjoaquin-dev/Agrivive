@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { Tabs } from "expo-router";
 import {
@@ -7,32 +7,29 @@ import {
   MessageCircle,
   MessageCircleMore,
   CalendarDays,
-  User,
+  Megaphone,
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
-import { fetchSellerMessages } from "../../../src/features/messages/api/seller-messages";
+import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
+import { useRefreshOnSignal } from "../../../src/hooks/useRefreshOnSignal";
 
 export default function TabsLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    let mounted = true;
-    const checkUnread = async () => {
-      try {
-        const res = await fetchSellerMessages({ status: "open", limit: 1 });
-        if (mounted) setUnreadCount(res.openCount || 0);
-      } catch {}
-    };
-    void checkUnread();
-    const interval = setInterval(checkUnread, 30000);
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
+  const checkUnread = useCallback(async () => {
+    try {
+      const res = await fetchConversationUnreadCount();
+      setUnreadCount(res.unreadMessages ?? 0);
+    } catch {}
   }, []);
+
+  // No timer: refresh on open, on app foreground, and when a message push arrives.
+  useEffect(() => { void checkUnread(); }, [checkUnread]);
+  useRefreshOnSignal(checkUnread, { pushTypes: ["seller_message"] });
 
   return (
     <Tabs
+      screenListeners={{ focus: () => void checkUnread() }}
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,
@@ -44,7 +41,7 @@ export default function TabsLayout() {
           fontSize: 18,
           color: colors.text,
         },
-        tabBarActiveTintColor: "#16A34A",
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: "#6B7280",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
@@ -69,7 +66,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused, color, size }) => (
             <Home
               color={color}
-              fill={focused ? "#16A34A" : "transparent"}
+              fill={focused ? colors.primary : "transparent"}
               size={size || 22}
             />
           ),
@@ -80,6 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="orders"
         options={{
+          headerShown: false,
           title: "Reservations",
           tabBarIcon: ({ color, size }) => (
             <CalendarDays color={color} size={size || 22} />
@@ -91,6 +89,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="inventory"
         options={{
+          headerShown: false,
           title: "Listings",
           tabBarIcon: ({ color, size }) => (
             <LayoutGrid color={color} size={size || 22} />
@@ -102,6 +101,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="messages"
         options={{
+          headerShown: false,
           title: "Messages",
           tabBarBadge:
             unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : undefined,
@@ -120,13 +120,13 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* 5. Stall Profile */}
+      {/* 5. Boost (the profile opens from the picture on Home) */}
       <Tabs.Screen
-        name="profile"
+        name="marketing"
         options={{
-          title: "Profile",
+          title: "Boost",
           tabBarIcon: ({ color, size }) => (
-            <User color={color} size={size || 22} />
+            <Megaphone color={color} size={size || 22} />
           ),
         }}
       />

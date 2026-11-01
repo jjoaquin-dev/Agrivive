@@ -100,7 +100,7 @@ export function SellerOrderCommunication({ orderId }: { orderId: string }) {
     <CardComponent style={styles.card}>
       <View style={styles.headingRow}>
         <MessageCircle size={19} color={colors.primary} />
-        <Text style={styles.heading}>Buyer communication</Text>
+        <Text style={styles.heading}>Buyer Questions</Text>
       </View>
 
       {loading ? (
@@ -116,7 +116,7 @@ export function SellerOrderCommunication({ orderId }: { orderId: string }) {
       ) : (
         <>
           {inquiries.length === 0 ? (
-            <Text style={styles.muted}>No buyer questions for this order.</Text>
+            <Text style={styles.muted}>No questions from the buyer.</Text>
           ) : (
             <View>
               {inquiries.map((inquiry) => (
@@ -150,9 +150,9 @@ export function SellerOrderCommunication({ orderId }: { orderId: string }) {
           )}
 
           <View style={styles.divider} />
-          <Text style={styles.label}>Buyer review</Text>
+          <Text style={styles.label}>Buyer Review</Text>
           {!review ? (
-            <Text style={styles.muted}>No review has been posted for this order.</Text>
+            <Text style={styles.muted}>No review yet.</Text>
           ) : (
             <View>
               <View style={styles.ratingRow}>
@@ -171,7 +171,7 @@ export function SellerOrderCommunication({ orderId }: { orderId: string }) {
                   <TextInput
                     value={response}
                     onChangeText={(value) => { setResponse(value); setResponseError(null); }}
-                    placeholder="Thank the buyer or clarify the handover"
+                    placeholder="Thank the buyer or explain the pickup"
                     placeholderTextColor={colors.textMuted}
                     multiline
                     accessibilityLabel="Respond to buyer review"

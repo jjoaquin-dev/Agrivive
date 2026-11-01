@@ -11,13 +11,10 @@ import { buyerRoute } from "./modules/buyer";
 import { adminRoute } from "./modules/admin";
 import { marketplaceRoute } from "./modules/marketplace";
 import { stakeholderRoute } from "./modules/stakeholder";
-import { integrationsRoute } from "./modules/integrations";
 import { integrationsSocialProductImageRoute } from "./modules/integrations/index/integrations.social-product-image";
-import { integrationsSocialPublishRoute } from "./modules/integrations/index/integrations.social-publish";
 import { integrationsVisibilityBoostRoute } from "./modules/integrations/index/integrations.visibility-boost";
-import { integrationsProductPriceRoute } from "./modules/integrations/index/integrations.product-price";
-import { integrationsFbLogsRoute } from "./modules/integrations/index/integrations.fb-logs";
-import { integrationsProductContextRoute } from "./modules/integrations/index/integrations.product-context";
+import { integrationsVisibilityBoostFacebookPostRoute } from "./modules/integrations/index/integrations.visibility-boost.facebook-post";
+import { integrationsVisibilityBoostReducePriceRoute } from "./modules/integrations/index/integrations.visibility-boost.reduce-price";
 import { conversationsRoute } from "./modules/conversations";
 import { notificationsRoute } from "./modules/notifications";
 import { trustRoute } from "./modules/trust";
@@ -66,13 +63,10 @@ const app = new Elysia()
   .use(conversationsRoute)
   .use(notificationsRoute)
   .use(trustRoute)
-  .use(integrationsRoute)
   .use(integrationsSocialProductImageRoute)
-  .use(integrationsSocialPublishRoute)
   .use(integrationsVisibilityBoostRoute)
-  .use(integrationsProductPriceRoute)
-  .use(integrationsFbLogsRoute)
-  .use(integrationsProductContextRoute)
+  .use(integrationsVisibilityBoostFacebookPostRoute)
+  .use(integrationsVisibilityBoostReducePriceRoute)
   .get("/", () => "Hello Elysia")
   .get("/health", () => ({ status: "ok" }))
   .get("/health/ready", async ({ status }) => {

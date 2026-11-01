@@ -1,10 +1,11 @@
-import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { Filter } from "lucide-react-native";
+import React, { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { ChevronDown } from "lucide-react-native";
 import { colors } from "../../../theme";
 import type { AnalyticsUnit } from "../types";
 import type { Product } from "../../inventory/types";
 import { filterRowStyles as styles } from "./AnalyticsFilterRow.styles";
+import { AnalyticsProduceSheet } from "./AnalyticsProduceSheet";
 
 interface AnalyticsFilterRowProps {
   days: number;
@@ -18,102 +19,72 @@ interface AnalyticsFilterRowProps {
 
 const periods = [
   { days: 7, label: "7 Days" },
-  { days: 30, label: "Last 30 Days" },
-  { days: 90, label: "Last 90 Days" },
+  { days: 30, label: "30 Days" },
+  { days: 90, label: "90 Days" },
 ];
 
 const unitOptions: { value: AnalyticsUnit | undefined; label: string }[] = [
-  { value: undefined, label: "All Units" },
-  { value: "kilo", label: "Kilograms" },
+  { value: undefined, label: "All" },
+  { value: "kilo", label: "Kilos" },
   { value: "sack", label: "Sacks" },
   { value: "pile", label: "Piles" },
 ];
 
-export function AnalyticsFilterRow({
-  days,
-  onSelectDays,
-  unit,
-  onSelectUnit,
-  productId,
-  onSelectProduct,
-  products,
-}: AnalyticsFilterRowProps) {
+export function AnalyticsFilterRow({ days, onSelectDays, unit, onSelectUnit, productId, onSelectProduct, products }: AnalyticsFilterRowProps) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const selected = products.find((p) => p.id === productId);
+
   return (
     <View style={styles.container}>
-      <View style={styles.periodRow}>
+      <View style={styles.segmented}>
         {periods.map((p) => {
-          const isSelected = days === p.days;
+          const active = days === p.days;
           return (
-            <TouchableOpacity
+            <Pressable
               key={p.days}
               onPress={() => onSelectDays(p.days)}
-              activeOpacity={0.8}
-              style={[styles.periodChip, isSelected && styles.periodChipSelected]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={[styles.segment, active && styles.segmentActive]}
             >
-              <Text style={[styles.periodChipText, isSelected && styles.periodChipTextSelected]}>
-                {p.label}
-              </Text>
-            </TouchableOpacity>
+              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{p.label}</Text>
+            </Pressable>
           );
         })}
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.secondaryFilterScroll}
-      >
-        <View style={styles.filterTag}>
-          <Filter size={13} color={colors.textMuted} />
-          <Text style={styles.filterTagText}>Filter:</Text>
+      <View style={styles.row}>
+        <View style={styles.unitRow}>
+          {unitOptions.map((u) => {
+            const active = unit === u.value;
+            return (
+              <Pressable
+                key={u.label}
+                onPress={() => onSelectUnit(u.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                style={[styles.unitChip, active && styles.unitChipActive]}
+              >
+                <Text style={[styles.unitText, active && styles.unitTextActive]}>{u.label}</Text>
+              </Pressable>
+            );
+          })}
         </View>
+        {products.length > 0 ? (
+          <Pressable onPress={() => setPickerOpen(true)} accessibilityRole="button" accessibilityLabel="Choose produce" style={styles.produceButton}>
+            <Text style={styles.produceText} numberOfLines={1}>Produce: {selected ? selected.productName : "All"}</Text>
+            <ChevronDown size={14} color={colors.textMuted} />
+          </Pressable>
+        ) : null}
+      </View>
 
-        {unitOptions.map((u) => {
-          const isSelected = unit === u.value;
-          return (
-            <TouchableOpacity
-              key={u.label}
-              onPress={() => onSelectUnit(u.value)}
-              activeOpacity={0.75}
-              style={[styles.unitChip, isSelected && styles.unitChipSelected]}
-            >
-              <Text style={[styles.unitChipText, isSelected && styles.unitChipTextSelected]}>
-                {u.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-
-        {products.length > 0 && (
-          <>
-            <View style={styles.divider} />
-            <TouchableOpacity
-              onPress={() => onSelectProduct(undefined)}
-              activeOpacity={0.75}
-              style={[styles.productChip, !productId && styles.productChipSelected]}
-            >
-              <Text style={[styles.productChipText, !productId && styles.productChipTextSelected]}>
-                All Produce
-              </Text>
-            </TouchableOpacity>
-            {products.map((prod) => {
-              const isSelected = productId === prod.id;
-              return (
-                <TouchableOpacity
-                  key={prod.id}
-                  onPress={() => onSelectProduct(isSelected ? undefined : prod.id)}
-                  activeOpacity={0.75}
-                  style={[styles.productChip, isSelected && styles.productChipSelected]}
-                >
-                  <Text style={[styles.productChipText, isSelected && styles.productChipTextSelected]}>
-                    {prod.productName}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </>
-        )}
-      </ScrollView>
+      <AnalyticsProduceSheet
+        visible={pickerOpen}
+        products={products}
+        selectedId={productId}
+        onSelect={onSelectProduct}
+        onClose={() => setPickerOpen(false)}
+      />
     </View>
   );
 }

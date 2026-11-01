@@ -28,6 +28,14 @@ export function fetchConversationMessages(conversationId: string) {
   return apiFetch<ConversationMessage[]>(`/conversations/${encodeURIComponent(conversationId)}/messages`);
 }
 
+export function fetchConversation(id: string) {
+  return apiFetch<Conversation>(`/conversations/${encodeURIComponent(id)}`);
+}
+
+export function fetchConversationUnreadCount() {
+  return apiFetch<{ unreadMessages: number; unreadConversations: number }>("/conversations/unread-count");
+}
+
 export function createConversation(input: {
   contextType: ConversationContext;
   productId?: string;
@@ -57,21 +65,27 @@ export function markAllConversationsRead() {
   return apiFetch<{ updatedCount: number }>("/conversations/read-all", { method: "POST" });
 }
 
-export async function uploadConversationAttachment(imageUri: string): Promise<{ url: string; filename: string }> {
+export async function uploadConversationAttachment(imageUri: string, signal?: AbortSignal): Promise<{ url: string; filename: string }> {
   const formData = new FormData();
   formData.append("file", new File(imageUri));
 
   return apiFetch<{ url: string; filename: string }>("/conversations/attachment", {
     method: "POST",
     body: formData,
+    signal,
   });
 }
 
 export async function openConversationSocket(
   conversationId: string,
-  onMessage: (message: ConversationMessage) => void,
-  onError: () => void,
+  handlers: {
+    onMessage: (message: ConversationMessage) => void;
+    onConnected?: () => void;
+    onClose: () => void;
+    onError: () => void;
+  },
 ) {
+  const { onMessage, onConnected, onClose, onError } = handlers;
   const cookie = await authClient.getCookie().catch(() => "");
   const session = await authClient.getSession();
   const token = session.data?.session?.token;
@@ -86,11 +100,13 @@ export async function openConversationSocket(
   socket.onmessage = (event) => {
     try {
       const payload = JSON.parse(String(event.data)) as { type?: string; message?: ConversationMessage };
+      if (payload.type === "conversation.connected") onConnected?.();
       if (payload.type === "conversation.message.created" && payload.message) onMessage(payload.message);
     } catch {
       onError();
     }
   };
   socket.onerror = onError;
+  socket.onclose = onClose;
   return socket;
 }

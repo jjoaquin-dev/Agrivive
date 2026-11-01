@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react-native";
-import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { Plus, Minus } from "lucide-react-native";
+import { colors, fonts, spacing } from "../../../theme";
 
 export type StockActionType = "in" | "out";
 
@@ -10,78 +10,35 @@ interface StockActionTabsProps {
   onChange: (type: StockActionType) => void;
 }
 
-export const StockActionTabs: React.FC<StockActionTabsProps> = ({ actionType, onChange }) => {
-  return (
-    <View style={styles.tabRow}>
-      <Pressable
-        onPress={() => onChange("in")}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: actionType === "in" }}
-        style={[styles.tab, actionType === "in" && styles.tabActiveIn]}
-      >
-        <ArrowUpRight
-          size={18}
-          color={actionType === "in" ? colors.white : colors.success}
-          style={styles.tabIcon}
-        />
-        <Text style={[styles.tabText, actionType === "in" && styles.tabTextActive]}>
-          Add More
-        </Text>
-      </Pressable>
+const TABS: { type: StockActionType; label: string; Icon: typeof Plus; activeColor: string }[] = [
+  { type: "in", label: "Add More", Icon: Plus, activeColor: colors.primary },
+  { type: "out", label: "Take Away", Icon: Minus, activeColor: colors.error },
+];
 
-      <Pressable
-        onPress={() => onChange("out")}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: actionType === "out" }}
-        style={[styles.tab, actionType === "out" && styles.tabActiveOut]}
-      >
-        <ArrowDownRight
-          size={18}
-          color={actionType === "out" ? colors.white : colors.error}
-          style={styles.tabIcon}
-        />
-        <Text style={[styles.tabText, actionType === "out" && styles.tabTextActive]}>
-          Take Away
-        </Text>
-      </Pressable>
-    </View>
-  );
-};
+export const StockActionTabs: React.FC<StockActionTabsProps> = ({ actionType, onChange }) => (
+  <View style={styles.track}>
+    {TABS.map(({ type, label, Icon, activeColor }) => {
+      const active = actionType === type;
+      return (
+        <Pressable
+          key={type}
+          onPress={() => onChange(type)}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: active }}
+          style={[styles.tab, active && styles.tabActive]}
+        >
+          <Icon size={16} color={active ? activeColor : colors.textMuted} style={styles.icon} />
+          <Text style={[styles.text, active && { color: activeColor, fontFamily: fonts.body.semiBold }]}>{label}</Text>
+        </Pressable>
+      );
+    })}
+  </View>
+);
 
 const styles = StyleSheet.create({
-  tabRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.base,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: touchTargets.min,
-    borderRadius: radii.button,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  tabActiveIn: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  tabActiveOut: {
-    backgroundColor: colors.error,
-    borderColor: colors.error,
-  },
-  tabIcon: {
-    marginRight: 6,
-  },
-  tabText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
-    color: colors.text,
-  },
-  tabTextActive: {
-    color: colors.white,
-  },
+  track: { flexDirection: "row", height: 44, backgroundColor: "#F3F4F6", borderRadius: 10, padding: 3, gap: 4, marginBottom: spacing.base },
+  tab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", borderRadius: 8 },
+  tabActive: { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: 1 },
+  icon: { marginRight: 6 },
+  text: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.textMuted },
 });

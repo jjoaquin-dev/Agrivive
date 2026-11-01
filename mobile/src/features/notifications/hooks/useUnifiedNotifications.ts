@@ -1,112 +1,92 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useIsFocused, useRouter } from "expo-router";
+import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { useSellerNotifications } from "./useSellerNotifications";
-import { useSellerPromotions } from "./useSellerPromotions";
-import { fetchSellerBoostPrompts, markAllSellerBoostPromptsRead } from "../../boost/api/visibility-boosts";
-import { fetchSellerOrders } from "../../orders/api/seller-orders";
+import { fetchSellerBoostPrompts, markAllSellerBoostPromptsRead } from "../../marketing/api/visibility-boosts";
 import { fetchConversations, markAllConversationsRead } from "../../conversations/api";
-import { fetchSellerProducts } from "../../inventory/api/products";
 import { mapUnifiedNotificationItems } from "../utils/unifiedNotificationMappers";
-import type { NotificationCategory, SellerBoostPrompt, UnifiedNotificationItem } from "../types";
-import type { SellerOrder } from "../../orders/types";
+import type { NotificationCategory, SellerBoostPrompt } from "../types";
 import type { Conversation } from "../../conversations/types";
 
 export function useUnifiedNotifications() {
   const router = useRouter();
   const sellerNotices = useSellerNotifications();
-  const sellerPromotions = useSellerPromotions();
-  const [items, setItems] = useState<UnifiedNotificationItem[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [boosts, setBoosts] = useState<SellerBoostPrompt[]>([]);
+  const [boostCursor, setBoostCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [orderCursor, setOrderCursor] = useState<string | null>(null);
-  const [boostCursor, setBoostCursor] = useState<string | null>(null);
-  const [accumulatedOrders, setAccumulatedOrders] = useState<SellerOrder[]>([]);
-  const [accumulatedBoosts, setAccumulatedBoosts] = useState<SellerBoostPrompt[]>([]);
+  const [readVersion, setReadVersion] = useState(0);
   const markedReadIdsRef = useRef<Set<string>>(new Set());
 
-  const loadData = useCallback(async (reset = true) => {
-    if (reset) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+  const loadData = useCallback(async (reset = true, cursor: string | null = null) => {
+    if (reset) setLoading(true);
+    else setLoadingMore(true);
 
     try {
-      const [ordersRes, convosRes, boostsRes, prodsRes] = await Promise.allSettled([
-        fetchSellerOrders({ limit: 15, cursor: reset ? undefined : orderCursor ?? undefined }),
+      const [convosRes, boostsRes] = await Promise.allSettled([
         fetchConversations(),
-        fetchSellerBoostPrompts({ limit: 15, cursor: reset ? undefined : boostCursor ?? undefined }),
-        fetchSellerProducts({ limit: 5 }),
+        fetchSellerBoostPrompts({ limit: 15, cursor: cursor ?? undefined }),
       ]);
-
-      const newOrders = ordersRes.status === "fulfilled" ? ordersRes.value.orders : [];
-      const newBoosts = boostsRes.status === "fulfilled" ? boostsRes.value.items : [];
-      if (ordersRes.status === "fulfilled") setOrderCursor(ordersRes.value.nextCursor);
-      if (boostsRes.status === "fulfilled") setBoostCursor(boostsRes.value.nextCursor ?? null);
-
-      const allOrders = reset ? newOrders : [...accumulatedOrders, ...newOrders];
-      const allBoosts = reset ? newBoosts : [...accumulatedBoosts, ...newBoosts];
-      setAccumulatedOrders(allOrders);
-      setAccumulatedBoosts(allBoosts);
-
-      const rawConvos = convosRes.status === "fulfilled" ? convosRes.value : [];
-      const convos: Conversation[] = Array.isArray(rawConvos) ? rawConvos : (rawConvos as any)?.items || [];
-      const prods = prodsRes.status === "fulfilled" ? prodsRes.value.items : [];
-
-      const list = mapUnifiedNotificationItems({
-        orders: allOrders,
-        conversations: convos,
-        notices: sellerNotices.items,
-        promotions: sellerPromotions.items,
-        boosts: allBoosts,
-        products: prods,
-        router,
-        markedReadIds: markedReadIdsRef.current,
-      });
-
-      list.sort((a, b) => {
-        const timeA = a.rawDate && !isNaN(a.rawDate.getTime()) ? a.rawDate.getTime() : 0;
-        const timeB = b.rawDate && !isNaN(b.rawDate.getTime()) ? b.rawDate.getTime() : 0;
-        return timeB - timeA;
-      });
-      setItems(list);
+      if (convosRes.status === "fulfilled") {
+        const raw = convosRes.value;
+        setConversations(Array.isArray(raw) ? raw : (raw as any)?.items || []);
+      }
+      if (boostsRes.status === "fulfilled") {
+        const next = boostsRes.value.items;
+        setBoosts((previous) => (reset ? next : [...previous, ...next]));
+        setBoostCursor(boostsRes.value.nextCursor ?? null);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
       setLoadingMore(false);
     }
-  }, [accumulatedBoosts, accumulatedOrders, boostCursor, orderCursor, router, sellerNotices.items, sellerPromotions.items]);
+  }, []);
 
-  useEffect(() => { void loadData(true); }, []);
+  useEffect(() => { void loadData(true); }, [loadData]);
+
+  const isFocused = useIsFocused();
+  useRefreshOnSignal(() => loadData(true), { pushTypes: ["seller_message", "seller_alert"], enabled: isFocused });
+
+  const items = useMemo(() => {
+    const list = mapUnifiedNotificationItems({
+      conversations,
+      notices: sellerNotices.items,
+      boosts,
+      router,
+      markedReadIds: markedReadIdsRef.current,
+    });
+    return list.sort((a, b) => {
+      const timeA = a.rawDate && !isNaN(a.rawDate.getTime()) ? a.rawDate.getTime() : 0;
+      const timeB = b.rawDate && !isNaN(b.rawDate.getTime()) ? b.rawDate.getTime() : 0;
+      return timeB - timeA;
+    });
+    // readVersion re-runs the mapping after "mark all read" updates the ref.
+  }, [boosts, conversations, router, sellerNotices.items, readVersion]);
 
   const refresh = () => {
     setRefreshing(true);
-    setOrderCursor(null);
-    setBoostCursor(null);
     void sellerNotices.refresh();
-    void sellerPromotions.refresh();
     void loadData(true);
   };
 
   const loadMore = () => {
     if (loading || loadingMore) return;
-    if (!orderCursor && !boostCursor && !sellerNotices.loadMore) return;
-    if (sellerNotices.loadMore) sellerNotices.loadMore();
-    void loadData(false);
+    if (!boostCursor && !sellerNotices.hasMore) return;
+    if (sellerNotices.hasMore) sellerNotices.loadMore();
+    if (boostCursor) void loadData(false, boostCursor);
   };
 
   const markAllRead = async () => {
     items.forEach((item) => markedReadIdsRef.current.add(item.id));
-    setItems((prev) => prev.map((item) => ({ ...item, read: true })));
-    try {
-      await Promise.allSettled([
-        sellerNotices.markAllRead(),
-        sellerPromotions.markAllRead(),
-        markAllSellerBoostPromptsRead(),
-        markAllConversationsRead(),
-      ]);
-    } catch {}
+    setReadVersion((version) => version + 1);
+    await Promise.allSettled([
+      sellerNotices.markAllRead(),
+      markAllSellerBoostPromptsRead(),
+      markAllConversationsRead(),
+    ]);
   };
 
   const counts: Record<NotificationCategory, number> = {
@@ -117,18 +97,15 @@ export function useUnifiedNotifications() {
     trust: items.filter((i) => i.category === "trust").length,
   };
 
-  const unreadCount = items.filter((i) => !i.read).length;
-  const urgentCount = items.filter((i) => i.urgent).length;
-
   return {
     items,
     counts,
-    unreadCount,
-    urgentCount,
+    unreadCount: items.filter((i) => !i.read).length,
+    urgentCount: items.filter((i) => i.urgent).length,
     loading,
     refreshing,
     loadingMore,
-    hasMore: Boolean(orderCursor || boostCursor),
+    hasMore: Boolean(boostCursor || sellerNotices.hasMore),
     refresh,
     loadMore,
     markAllRead,

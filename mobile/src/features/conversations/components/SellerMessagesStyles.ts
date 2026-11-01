@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   iconButtonActive: { backgroundColor: "#DCFCE7" },
   filterDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#16A34A" },
   titleColumn: { flex: 1, marginLeft: spacing.sm },
-  title: { fontFamily: fonts.heading.bold, fontSize: 24, color: "#111827" },
+  title: { fontFamily: fonts.heading.bold, fontSize: 22, color: "#111827" },
   subtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: "#6B7280" },
   actionRow: { flexDirection: "row", gap: spacing.sm },
   filterScrollView: { marginHorizontal: -spacing.base },

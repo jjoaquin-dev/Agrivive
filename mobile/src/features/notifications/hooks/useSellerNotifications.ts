@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useIsFocused } from "expo-router";
+import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import {
   fetchSellerNotifications,
   markAllSellerNotificationsRead,
@@ -18,7 +19,7 @@ export function useSellerNotifications() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (reset = true) => {
-    if (reset) setLoading(true);
+    if (reset && items.length === 0) setLoading(true);
     else setLoadingMore(true);
     setError(null);
 
@@ -39,13 +40,16 @@ export function useSellerNotifications() {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, [nextCursor, unreadOnly]);
+  }, [nextCursor, unreadOnly, items.length]);
 
   useFocusEffect(
     useCallback(() => {
       void load(true);
     }, [unreadOnly]),
   );
+
+  const isFocused = useIsFocused();
+  useRefreshOnSignal(() => load(true), { enabled: isFocused });
 
   const refresh = useCallback(() => {
     setRefreshing(true);
@@ -81,6 +85,7 @@ export function useSellerNotifications() {
       setUnreadOnly(value);
     },
     unreadCount,
+    hasMore: Boolean(nextCursor),
     loading,
     refreshing,
     loadingMore,

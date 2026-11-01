@@ -3,13 +3,12 @@ import { Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
 import { registerNotificationDevice } from "../api/notification-devices";
-import { useNotificationWatcher } from "../hooks/useNotificationWatcher";
 import { getNotificationsModule, isPushNotificationSupported } from "../utils/notificationsModule";
+import { emitPushReceived } from "./pushEvents";
 
 export function NotificationRegistration() {
   const router = useRouter();
   const { session } = useAuth();
-  useNotificationWatcher();
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +36,18 @@ export function NotificationRegistration() {
             lightColor: "#1F4D3A",
             sound: "default",
           });
+          await Notifications.setNotificationChannelAsync("orders", {
+            name: "Orders and Messages",
+            importance: Notifications.AndroidImportance.HIGH,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: "#1F4D3A",
+            sound: "default",
+          });
+          await Notifications.setNotificationChannelAsync("updates", {
+            name: "Updates",
+            importance: Notifications.AndroidImportance.LOW,
+            lightColor: "#1F4D3A",
+          });
         }
 
         await Notifications.requestPermissionsAsync();
@@ -48,7 +59,14 @@ export function NotificationRegistration() {
           }
         });
 
-        removeListener = () => responseSubscription.remove();
+        const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
+          emitPushReceived(notification.request.content.data);
+        });
+
+        removeListener = () => {
+          responseSubscription.remove();
+          receivedSubscription.remove();
+        };
       } catch (err) {
         console.warn("[Push] Error initializing local notification handlers:", err);
       }

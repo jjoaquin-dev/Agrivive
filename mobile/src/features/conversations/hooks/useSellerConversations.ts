@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useIsFocused } from "expo-router";
+import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { fetchConversations } from "../api";
 import type { Conversation } from "../types";
 
@@ -13,7 +14,7 @@ export function useSellerConversations() {
 
   const load = useCallback(async (reset = true) => {
     if (reset) {
-      setLoading(true);
+      if (conversations.length === 0) setLoading(true);
       setError(null);
     } else {
       setLoadingMore(true);
@@ -33,11 +34,14 @@ export function useSellerConversations() {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, [nextCursor]);
+  }, [nextCursor, conversations.length]);
 
   useFocusEffect(useCallback(() => {
     void load(true);
   }, []));
+
+  const isFocused = useIsFocused();
+  useRefreshOnSignal(() => load(true), { pushTypes: ["seller_message"], enabled: isFocused });
 
   const refresh = useCallback(() => {
     setRefreshing(true);

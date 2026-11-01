@@ -1,6 +1,7 @@
 import Elysia, { t } from "elysia";
 import { sessionAuth } from "../../auth/services/auth.session";
 import { OrderError } from "../../../utils/order-types";
+import { deliverSellerVisibilityBoosts } from "../../../jobs/deliver-seller-visibility-boosts";
 import { queueSellerVisibilityBoost } from "../services/seller.visibility-boost.queue";
 import { readSellerVisibilityBoost } from "../services/seller.visibility-boost.read";
 import { listSellerVisibilityBoostHistory } from "../services/seller.visibility-boost.history.list";
@@ -8,7 +9,6 @@ import { listSellerVisibilityBoostPrompts } from "../services/seller.visibility-
 import { readSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.read";
 import { readAllSellerVisibilityBoostPrompts } from "../services/seller.visibility-boost.prompts.read-all";
 import { dismissSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.dismiss";
-import { acceptSellerVisibilityBoostPrompt } from "../services/seller.visibility-boost.prompt.accept";
 
 const params = t.Object({ id: t.String({ format: "uuid" }) });
 
@@ -28,7 +28,10 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
   }, { role: ["seller"], params })
   .post("/products/:id/boost", async ({ session, params: routeParams, status }) => {
     try {
-      return await queueSellerVisibilityBoost(session.userId, routeParams.id);
+      const queued = await queueSellerVisibilityBoost(session.userId, routeParams.id);
+      // Send it to n8n now; the worker's next pass is the safety net.
+      void deliverSellerVisibilityBoosts().catch((error) => console.error("Immediate boost delivery failed", error));
+      return queued;
     } catch (error) {
       return failure(error, status);
     }
@@ -54,13 +57,6 @@ export const sellerVisibilityBoostRoute = new Elysia().use(sessionAuth)
       return failure(error, status);
     }
   }, { role: ["seller"] })
-  .post("/boost-prompts/:id/boost", async ({ session, params: routeParams, status }) => {
-    try {
-      return await acceptSellerVisibilityBoostPrompt(session.userId, routeParams.id);
-    } catch (error) {
-      return failure(error, status);
-    }
-  }, { role: ["seller"], params })
   .post("/boost-prompts/:id/read", async ({ session, params: routeParams, status }) => {
     try {
       return await readSellerVisibilityBoostPrompt(session.userId, routeParams.id);

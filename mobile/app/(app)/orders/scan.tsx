@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, Camera } from "lucide-react-native";
-import { ButtonComponent } from "../../../src/components/ButtonComponent";
-import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
+import { colors } from "../../../src/theme";
+import { formatAmount, formatMoney } from "../../../src/features/orders/orderFormat";
 import {
   fetchSellerOrder,
   scanSellerOrder,
   type ScanOrderItemAdjustment,
 } from "../../../src/features/orders/api/seller-orders";
 import { OrderHandoverSheet } from "../../../src/features/orders/components/OrderHandoverSheet";
+import { OrderPickupDone, type PickupDoneLine } from "../../../src/features/orders/components/OrderPickupDone";
+import { OrderScanOverlay, type ScanProblem } from "../../../src/features/orders/components/OrderScanOverlay";
+import { OrderScanPermission } from "../../../src/features/orders/components/OrderScanPermission";
 import type { SellerOrder } from "../../../src/features/orders/types";
+import { safeBack } from "../../../src/utils/safeBack";
 
 export default function SellerOrderScanScreen() {
   const router = useRouter();
@@ -20,7 +23,8 @@ export default function SellerOrderScanScreen() {
   const [scanning, setScanning] = useState(true);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<ScanProblem | null>(null);
+  const [done, setDone] = useState<{ id: string; total: string; reference: string; lines: PickupDoneLine[] } | null>(null);
   const [handoverError, setHandoverError] = useState<string | null>(null);
 
   const [activePayload, setActivePayload] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export default function SellerOrderScanScreen() {
     const targetOrderId = parts.length === 3 ? parts[1] : orderId;
 
     if (!targetOrderId) {
-      setScanError("This QR code is not a valid Agrivive pickup pass.");
+      setScanError({ title: "Invalid Code", message: "This is not an Agrivive pickup code." });
       return;
     }
 
@@ -45,7 +49,7 @@ export default function SellerOrderScanScreen() {
       setActivePayload(data);
       setActiveOrder(order);
     } catch (err: any) {
-      setScanError(err?.message || "Could not retrieve order details. Please check connection.");
+      setScanError({ title: "Could Not Check Code", message: err?.message || "Please check your connection and try again." });
     } finally {
       setLoadingOrder(false);
     }
@@ -60,10 +64,20 @@ export default function SellerOrderScanScreen() {
         qrPayload: activePayload,
         items: adjustments,
       });
+      const lines: PickupDoneLine[] = (activeOrder?.items ?? []).map((item) => {
+        const reserved = Number(item.quantity ?? 0);
+        const given = adjustments.find((a) => a.itemId === item.id)?.dispensedQuantity ?? reserved;
+        const back = reserved - given;
+        return {
+          id: item.id,
+          label: `${item.productName || "Produce"} given: ${formatAmount(given, item.scalingType)}`,
+          returned: back > 0.001 ? `${formatAmount(back, item.scalingType)} returned to stock` : null,
+        };
+      });
+      setDone({ id: completed.id, total: formatMoney(completed.totalAmount), reference: completed.id.slice(0, 8).toUpperCase(), lines });
       setActiveOrder(null);
       setActivePayload(null);
       setHandoverError(null);
-      router.replace({ pathname: "/(app)/orders/[id]", params: { id: completed.id } });
     } catch (err: any) {
       setHandoverError(err?.message || "Could not complete pickup.");
     } finally {
@@ -73,13 +87,18 @@ export default function SellerOrderScanScreen() {
 
   if (!permission) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
   if (!permission.granted) {
+    return <OrderScanPermission onAllow={requestPermission} onDismiss={() => safeBack(router)} />;
+  }
+
+  if (done) {
     return (
-      <View style={styles.center}>
-        <Camera size={42} color={colors.primary} />
-        <Text style={styles.title}>Camera access is needed</Text>
-        <Text style={styles.text}>Allow camera access to scan a buyer’s pickup code.</Text>
-        <ButtonComponent title="Allow Camera" onPress={requestPermission} style={styles.action} />
-      </View>
+      <OrderPickupDone
+        total={done.total}
+        reference={done.reference}
+        lines={done.lines}
+        onView={() => router.replace({ pathname: "/(app)/orders/[id]", params: { id: done.id } })}
+        onScanAnother={() => { setDone(null); setScanning(true); }}
+      />
     );
   }
 
@@ -91,27 +110,12 @@ export default function SellerOrderScanScreen() {
         barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         onBarcodeScanned={scanning ? handleBarcodeScanned : undefined}
       />
-      <View style={styles.overlay}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close scanner" style={styles.backButton}>
-          <ArrowLeft size={24} color={colors.white} />
-        </Pressable>
-        <View style={styles.instruction}>
-          <Text style={styles.instructionTitle}>Scan buyer QR</Text>
-          <Text style={styles.instructionText}>Place the code inside the box to verify order.</Text>
-        </View>
-        <View style={styles.scanBox} />
-        {loadingOrder ? <ActivityIndicator color={colors.white} size="large" /> : null}
-        {scanError ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{scanError}</Text>
-            <ButtonComponent
-              title="Scan Again"
-              onPress={() => { setScanError(null); setScanning(true); }}
-              variant="secondary"
-            />
-          </View>
-        ) : null}
-      </View>
+      <OrderScanOverlay
+        checking={loadingOrder}
+        problem={scanError}
+        onBack={() => safeBack(router)}
+        onScanAgain={() => { setScanError(null); setScanning(true); }}
+      />
 
       <OrderHandoverSheet
         visible={Boolean(activeOrder)}
@@ -132,16 +136,5 @@ export default function SellerOrderScanScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl, backgroundColor: colors.background },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text, marginTop: spacing.base, textAlign: "center" },
-  text: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, textAlign: "center", marginTop: spacing.sm },
-  action: { marginTop: spacing.base },
-  overlay: { flex: 1, alignItems: "center", padding: spacing.base, backgroundColor: "rgba(0,0,0,0.24)" },
-  backButton: { alignSelf: "flex-start", width: touchTargets.min, height: touchTargets.min, alignItems: "center", justifyContent: "center" },
-  instruction: { marginTop: spacing.xl, alignItems: "center" },
-  instructionTitle: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.white },
-  instructionText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.white, marginTop: spacing.xs },
-  scanBox: { width: 260, height: 260, borderWidth: 3, borderColor: colors.white, borderRadius: radii.card, marginTop: spacing.xxl, marginBottom: spacing.xxl },
-  errorBox: { width: "100%", backgroundColor: colors.surface, borderRadius: radii.card, padding: spacing.md },
-  errorText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.error, marginBottom: spacing.sm, textAlign: "center" },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
 });

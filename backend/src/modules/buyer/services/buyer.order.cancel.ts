@@ -10,6 +10,7 @@ import {
   resolveCancellationWarning,
 } from "../../../utils/trust/cancellation-policy";
 import { trustPolicyVersion } from "../../../utils/trust/policy";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function cancelBuyerOrder(orderId: string, buyerId: string) {
   await db.transaction(async (tx) => {
@@ -25,7 +26,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
           gt(orders.expiresAt, now),
         ),
       )
-      .returning({ id: orders.id });
+      .returning({ id: orders.id, sellersId: orders.sellersId });
 
     if (!cancelled) {
       const [current] = await tx
@@ -41,6 +42,12 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
     }
 
     await restoreOrderStock(tx, cancelled.id);
+    await createSellerNotification(tx, {
+      sellerId: cancelled.sellersId,
+      kind: "buyer_cancelled",
+      dedupeKey: `buyer-cancelled:${cancelled.id}`,
+      orderId: cancelled.id,
+    });
 
     // Count all buyer cancellations to apply 5 (warning), 7 (12h), 9 (24h), 10 (3d) cooldown policy
     const [cancelRow] = await tx

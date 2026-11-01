@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { sellers_product } from "../../../db/schema";
 import type { OrderTransaction } from "../../../utils/order-types";
 import { queueSellerListingEvent } from "../../../utils/seller-listing-event";
+import { createSellerNotification } from "../../../utils/seller-notifications";
 
 function cents(value: string) {
   const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(value);
@@ -21,13 +22,12 @@ export async function applySellerPromotionPriceReduction(
   const [current] = await tx.select().from(sellers_product)
     .where(eq(sellers_product.id, productId)).for("update").limit(1);
   if (!current || !current.isActive || !current.isMarketable || Number(current.productQty ?? 0) <= 0 ||
-    !current.productPrice || !current.minimumPrice || Number(current.priceReductionPercent ?? 0) <= 0) return null;
+    !current.productPrice || !current.minimumPrice || !current.priceReductionEnabled || Number(current.priceReductionAmount ?? 0) <= 0) return null;
 
   const currentCents = cents(current.productPrice);
   const floor = cents(current.minimumPrice);
   if (currentCents <= floor) return null;
-  const basisPoints = BigInt(Math.round(Number(current.priceReductionPercent) * 100));
-  const reducedCents = (currentCents * (10_000n - basisPoints) + 5_000n) / 10_000n;
+  const reducedCents = currentCents - cents(current.priceReductionAmount);
   const nextCents = reducedCents < floor ? floor : reducedCents;
   if (nextCents >= currentCents) return null;
 
@@ -43,6 +43,17 @@ export async function applySellerPromotionPriceReduction(
     await queueSellerListingEvent(tx, productId, "price_drop", {
       oldPrice: current.productPrice,
       newPrice: updated.productPrice,
+    });
+  }
+
+  // The price will not drop again, so tell the seller it reached their final price.
+  if (updated && nextCents === floor) {
+    await createSellerNotification(tx, {
+      sellerId: current.userId,
+      kind: "final_price_reached",
+      dedupeKey: `final-price:${productId}:${current.priceReductionPeriodsApplied + 1}`,
+      productId,
+      payload: { productName: current.productName, priceAfter: updated.productPrice },
     });
   }
 

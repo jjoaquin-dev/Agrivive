@@ -5,7 +5,7 @@ export interface ProductFormErrors {
   productName?: string;
   imagUrl?: string;
   productPrice?: string;
-  priceReductionPercent?: string;
+  priceReductionAmount?: string;
   minimumPrice?: string;
   productQty?: string;
   productType?: string;
@@ -108,24 +108,26 @@ function validatePriceReduction(
   input: Partial<CreateProductInput | UpdateProductInput>,
   errors: ProductFormErrors,
 ) {
-  const percent = input.priceReductionPercent;
+  const drop = input.priceReductionAmount;
   const minimum = input.minimumPrice;
 
-  if (percent !== undefined &&
-    (isNaN(percent) || percent < 0 || percent > 99.99 || !hasTwoDecimalsOrLess(percent))) {
-    errors.priceReductionPercent = "Reduction must be between 0% and 99.99% with at most two decimals.";
+  if (drop !== undefined &&
+    (isNaN(drop) || drop < 0 || drop > 99_999_999.99 || !hasTwoDecimalsOrLess(drop))) {
+    errors.priceReductionAmount = "Enter a peso amount like 1.25, with up to 2 numbers after the dot.";
+  } else if (drop !== undefined && drop > 0 && input.productPrice !== undefined && drop >= input.productPrice) {
+    errors.priceReductionAmount = "The drop must be smaller than the selling price.";
   }
 
   if (minimum !== undefined && minimum !== null) {
     if (isNaN(minimum) || minimum < 1 || minimum > 99_999_999.99 || !hasTwoDecimalsOrLess(minimum)) {
-      errors.minimumPrice = "Lowest price must be at least ₱1 with at most two decimals.";
+      errors.minimumPrice = "Final price must be at least ₱1, with up to 2 numbers after the dot.";
     }
     if (input.productPrice !== undefined && minimum > input.productPrice) {
-      errors.minimumPrice = "Lowest price cannot be higher than the selling price.";
+      errors.minimumPrice = "Final price cannot be higher than the selling price.";
     }
   }
 
-  if (percent !== undefined && percent > 0 && (minimum === undefined || minimum === null)) {
-    errors.minimumPrice = "Enter the lowest price when automatic reduction is enabled.";
+  if (drop !== undefined && drop > 0 && (minimum === undefined || minimum === null)) {
+    errors.minimumPrice = "Enter a final price so the drops know where to stop.";
   }
 }
