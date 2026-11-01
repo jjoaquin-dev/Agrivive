@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageContainer } from "./PageContainer";
 
+// One list drives the category row on every buyer page.
 const produceCategories = [
   { label: "All produce", value: "" },
   { label: "Leafy greens", value: "Leafy Greens" },
@@ -16,20 +17,21 @@ const produceCategories = [
 
 type BuyerSiteHeaderNavProps = {
   menuOpen: boolean;
+  onGreen?: boolean;
   hasSession: boolean;
   onCloseMenu: () => void;
 };
 
-export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu }: BuyerSiteHeaderNavProps) {
+export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false }: BuyerSiteHeaderNavProps) {
   const searchParams = useSearchParams();
   const selectedType = searchParams?.get("productType") ?? "";
 
   return (
     <>
       {/* Sub Navigation Bar (Produce Categories) */}
-      <div className="hidden md:block border-t border-neutral-100 py-2.5">
+      <div className={`hidden md:block border-t py-2.5 ${onGreen ? "border-white/20" : "border-neutral-100"}`}>
         <PageContainer className="flex items-center justify-center">
-          <nav className="flex items-center gap-7 text-xs font-semibold text-neutral-600">
+          <nav className={`flex items-center gap-7 text-xs font-semibold ${onGreen ? "text-white/85" : "text-neutral-600"}`}>
             {produceCategories.map((cat) => {
               const isActive = selectedType === cat.value || (!selectedType && cat.value === "");
               const href = cat.value
@@ -42,20 +44,14 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu }: BuyerSiteHeaderNav
                   href={href}
                   className={`pb-1 transition-all ${
                     isActive
-                      ? "border-b-2 border-[#457D00] font-bold text-[#457D00]"
-                      : "border-b-2 border-transparent hover:text-[#457D00]"
+                      ? (onGreen ? "border-b-2 border-white font-bold text-white" : "border-b-2 border-[#457D00] font-bold text-[#457D00]")
+                      : (onGreen ? "border-b-2 border-transparent hover:text-white" : "border-b-2 border-transparent hover:text-[#457D00]")
                   }`}
                 >
                   {cat.label}
                 </Link>
               );
             })}
-            <Link
-              href="/marketplace/overview"
-              className="border-b-2 border-transparent pb-1 font-semibold text-[#457D00] hover:border-[#457D00] transition-all"
-            >
-              Public Overview
-            </Link>
           </nav>
         </PageContainer>
       </div>

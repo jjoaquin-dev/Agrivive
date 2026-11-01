@@ -75,7 +75,7 @@ export function MarketplacePriceSlider({
           }}
         />
 
-        {/* Min Thumb Slider (Palette Orange #fea938) */}
+        {/* Min Thumb Slider (white thumb with a green ring, on the green track) */}
         <input
           id={minSliderId}
           type="range"
@@ -90,15 +90,15 @@ export function MarketplacePriceSlider({
           }}
           className="pointer-events-none absolute inset-0 z-20 w-full appearance-none bg-transparent 
             [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full 
-            [&::-webkit-slider-thumb]:bg-[#fea938] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white 
+            [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#457d00]
             [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none 
             [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform
             [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full 
-            [&::-moz-range-thumb]:bg-[#fea938] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white 
+            [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#457d00]
             [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
         />
 
-        {/* Max Thumb Slider (Palette Orange #fea938) */}
+        {/* Max Thumb Slider (white thumb with a green ring, on the green track) */}
         <input
           id={maxSliderId}
           type="range"
@@ -113,11 +113,11 @@ export function MarketplacePriceSlider({
           }}
           className="pointer-events-none absolute inset-0 z-20 w-full appearance-none bg-transparent 
             [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full 
-            [&::-webkit-slider-thumb]:bg-[#fea938] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white 
+            [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#457d00]
             [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none 
             [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform
             [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full 
-            [&::-moz-range-thumb]:bg-[#fea938] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white 
+            [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#457d00]
             [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
         />
       </div>

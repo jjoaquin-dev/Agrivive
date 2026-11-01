@@ -1,9 +1,10 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
+import { CheckCircle2, RefreshCw, Search, ShoppingBag } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -105,10 +106,7 @@ export function BuyerOrders() {
     <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-6 py-6 text-foreground">
       <PageContainer className="space-y-6">
         <div>
-          <Link href="/marketplace" className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 hover:text-black cursor-pointer">
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>Back to Marketplace</span>
-          </Link>
+          <Breadcrumbs items={[{ label: "Orders" }]} />
         </div>
 
         <header>

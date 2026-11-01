@@ -82,7 +82,7 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
         <Button
           type="button"
           variant="ghost"
-          className="flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-2.5"
+          className="buyer-account-pill flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-2.5"
           aria-label="Open profile menu"
           aria-expanded={profileOpen}
           aria-haspopup="menu"
@@ -180,13 +180,13 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
     <div className="flex items-center gap-2">
       <Link
         href="/login"
-        className="inline-flex min-h-10 items-center rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary"
+        className="buyer-guest-signin inline-flex min-h-10 items-center rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary"
       >
         Sign in
       </Link>
       <Link
         href="/signup"
-        className="inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]"
+        className="buyer-guest-register inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]"
       >
         Register
       </Link>

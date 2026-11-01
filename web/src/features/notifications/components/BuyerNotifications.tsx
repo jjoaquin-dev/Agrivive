@@ -1,7 +1,8 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import Link from "next/link";
-import { ArrowLeft, Bell, CheckCheck, Clock, ShoppingBasket, Triangle } from "lucide-react";
+import { Bell, CheckCheck, Clock, ShoppingBasket, Triangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/src/components/PageContainer";
 import { useBuyerNotifications, type NoticeFilterTab } from "../hooks/useBuyerNotifications";
@@ -36,13 +37,7 @@ export function BuyerNotifications() {
         {/* Header Section: Left Metadata + Right Floating Toasts */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="flex-1">
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900 cursor-pointer"
-            >
-              <ArrowLeft className="size-4 shrink-0" />
-              <span>Back to Marketplace</span>
-            </Link>
+            <Breadcrumbs items={[{ label: "Notifications" }]} />
 
             <div className="mt-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF5EA] px-3 py-1 text-xs font-semibold text-[#1B4D36]">

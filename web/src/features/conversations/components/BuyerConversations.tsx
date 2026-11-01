@@ -1,5 +1,6 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -124,13 +125,7 @@ export function BuyerConversations() {
       <div className="mx-auto max-w-[1720px]">
         {/* Navigation Link in Upper Left */}
         <div className="mb-6">
-          <Link
-            href={activeContext?.productId ? `/marketplace/${activeContext.productId}` : "/marketplace"}
-            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>{activeContext?.productId ? "Back to Listing" : "Back to Marketplace"}</span>
-          </Link>
+          <Breadcrumbs items={activeContext?.productId ? [{ label: "Listing", href: `/marketplace/${activeContext.productId}` }, { label: "Messages" }] : [{ label: "Messages" }]} />
         </div>
 
         {error ? (

@@ -1,8 +1,9 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Heart, Sparkles, Store } from "lucide-react";
+import { Heart, Sparkles, Store } from "lucide-react";
 import { PageContainer } from "@/src/components/PageContainer";
 import { ProductCard } from "@/src/features/marketplace/components/ProductCard";
 import type { MarketplaceProduct } from "@/src/features/marketplace/types";
@@ -52,13 +53,7 @@ export function BuyerFavorites() {
       <PageContainer>
         {/* Navigation Breadcrumb / Back Link */}
         <div className="mb-6 flex items-center justify-between gap-4">
-          <Link
-            href="/marketplace"
-            className="group inline-flex items-center gap-2 rounded-xl text-xs font-semibold text-neutral-600 transition hover:text-[#457D00]"
-          >
-            <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-            <span>Back to Marketplace</span>
-          </Link>
+          <Breadcrumbs items={[{ label: "Saved items" }]} />
 
           {visibleProducts.length > 0 ? (
             <span className="rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-3 py-1 text-xs font-bold text-[#386600]">
