@@ -43,7 +43,7 @@ export function GoogleSignInButton({ nextPath }: { nextPath: string }) {
         variant="outline"
         onClick={() => void handleClick()}
         disabled={loading}
-        className="group relative flex h-12 w-full items-center justify-center gap-3 rounded-[14px] border border-agrivive-border/80 bg-white px-4 text-sm font-semibold text-agrivive-text shadow-2xs transition-all duration-150 hover:border-slate-300 hover:bg-slate-50/80 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
+        className="group relative flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-agrivive-border/80 bg-white px-4 text-sm font-semibold text-agrivive-text shadow-sm transition-all duration-150 hover:border-slate-300 hover:bg-slate-50/80 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
         aria-label="Continue with Google"
       >
         {loading ? (

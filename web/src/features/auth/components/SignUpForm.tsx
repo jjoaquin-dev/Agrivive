@@ -90,7 +90,7 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
         <GoogleSignInButton nextPath={nextPath} />
         <div className="flex items-center gap-3 text-xs font-medium text-agrivive-muted">
           <span className="h-px flex-1 bg-agrivive-border/80" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-agrivive-muted/80">or create with email</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-agrivive-muted/80">or create with email</span>
           <span className="h-px flex-1 bg-agrivive-border/80" />
         </div>
       </div>
@@ -171,7 +171,7 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
         <Button
           type="submit"
           disabled={loading}
-          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#457D00] text-sm font-semibold text-white shadow-md shadow-emerald-950/15 transition-all duration-150 hover:bg-[#386600] hover:shadow-lg hover:shadow-emerald-950/20 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#457D00] text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-[#457D00]/90 hover:shadow-lg active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
         >
           {loading ? (
             <>

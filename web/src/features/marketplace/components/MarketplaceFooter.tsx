@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowUpRight, Heart, MapPin } from "lucide-react";
 
 export function MarketplaceFooter() {
   return (
-    <footer className="relative mt-16 overflow-hidden bg-agrivive-primary text-white">
+    <footer className="relative mt-16 overflow-hidden bg-agrivive-primary font-heading text-white">
       {/* Top Grid: Brand & Categorized Navigation Links */}
       <div className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-20 lg:px-8">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-5">
@@ -12,11 +12,11 @@ export function MarketplaceFooter() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-1.5">
               <Image
-                src="/brand/agrivive-logo-full-new.png"
+                src="/brand/agrivive-logo-full-white.png"
                 alt="Agrivive"
-                width={130}
+                width={137}
                 height={38}
-                className="h-[38px] w-auto object-contain brightness-0 invert"
+                className="h-[38px] w-auto object-contain"
               />
             </div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-emerald-50/70">
@@ -81,16 +81,6 @@ export function MarketplaceFooter() {
               <li>
                 <Link href="/marketplace/overview" className="hover:text-white transition-colors">
                   Public Overview
-                </Link>
-              </li>
-              <li>
-                <Link href="/marketplace?sort=price_asc" className="hover:text-white transition-colors">
-                  Best Value First
-                </Link>
-              </li>
-              <li>
-                <Link href="/marketplace?sort=recent" className="hover:text-white transition-colors">
-                  Latest Harvests
                 </Link>
               </li>
             </ul>

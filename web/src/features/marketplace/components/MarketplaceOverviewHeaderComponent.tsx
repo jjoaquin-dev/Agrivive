@@ -46,7 +46,7 @@ export const MarketplaceOverviewHeaderComponent = ({
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Timeframe Filter Tabs */}
-          <div className="inline-flex rounded-xl bg-neutral-100 p-1 border border-neutral-200/80 shadow-xs">
+          <div className="inline-flex rounded-xl bg-neutral-100 p-1 border border-neutral-200/80 shadow-sm">
             {(
               [
                 { id: "week", label: "This Week" },
@@ -62,7 +62,7 @@ export const MarketplaceOverviewHeaderComponent = ({
                   onClick={() => onRangeChange(tab.id)}
                   className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
                     active
-                      ? "bg-white text-[#457D00] shadow-xs"
+                      ? "bg-white text-[#457D00] shadow-sm"
                       : "text-neutral-600 hover:text-neutral-900"
                   }`}
                 >
@@ -76,7 +76,7 @@ export const MarketplaceOverviewHeaderComponent = ({
           <button
             type="button"
             onClick={onPrintReport}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-xs font-bold text-neutral-700 shadow-xs transition hover:bg-neutral-50 active:scale-95 print:hidden"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-xs font-bold text-neutral-700 shadow-sm transition hover:bg-neutral-50 active:scale-95 print:hidden"
           >
             <Printer className="size-3.5 text-[#457D00]" />
             <span>Save Plan Report</span>
@@ -91,9 +91,9 @@ export const MarketplaceOverviewHeaderComponent = ({
           <span>Last synchronized: <strong className="font-semibold text-neutral-700">{formattedDate}</strong></span>
         </div>
         {isSampleData && (
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-amber-800 border border-amber-200">
+          <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2 py-0.5 text-amber-800 border border-amber-200">
             <Info className="size-3 text-amber-600" />
-            <span className="text-[11px] font-medium">Sample data: Representative figures shown while new live orders accumulate.</span>
+            <span className="text-xs font-medium">Sample data: Representative figures shown while new live orders accumulate.</span>
           </div>
         )}
       </div>

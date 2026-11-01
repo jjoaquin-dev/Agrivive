@@ -1,4 +1,4 @@
-import { CheckCircle2, PackageCheck, Store, TrendingUp, Users } from "lucide-react";
+import { CheckCircle2, PackageCheck, Store, TrendingUp } from "lucide-react";
 import type { MarketplaceOverviewResponse } from "../api/overview";
 
 interface Props {
@@ -34,24 +34,16 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
       badge: "Reliable Stalls",
       highlightColor: "text-teal-700 bg-teal-50 border-teal-200",
     },
-    {
-      title: "Community Stalls & Shoppers",
-      value: `${kpis.activeSellers + kpis.activeBuyers}`,
-      description: `${kpis.activeSellers} verified stall owners · ${kpis.activeBuyers} community buyers`,
-      icon: Users,
-      badge: "Davao Network",
-      highlightColor: "text-amber-800 bg-amber-50 border-amber-200",
-    },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <div
             key={card.title}
-            className="flex flex-col justify-between rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-xs transition hover:shadow-md"
+            className="flex flex-col justify-between rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-sm transition hover:shadow-md"
           >
             <div>
               <div className="flex items-center justify-between">
@@ -68,7 +60,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] text-neutral-500">
+            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
               <span className="font-semibold text-neutral-700">{card.badge}</span>
               <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
                 <TrendingUp className="size-3" /> Live Database

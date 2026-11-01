@@ -12,7 +12,7 @@ export function OrderSellerCard({ product }: OrderSellerCardProps) {
   const directionsUrl = product ? getDirectionsUrl(product.seller.latitude, product.seller.longitude) : null;
 
   return (
-    <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Store className="size-5 text-[#457D00]" aria-hidden="true" />
@@ -23,7 +23,7 @@ export function OrderSellerCard({ product }: OrderSellerCardProps) {
         {product ? (
           <Link
             href={`/sellers/${product.seller.id}`}
-            className="text-sm font-semibold text-[#457D00] hover:text-[#386600] hover:underline"
+            className="text-sm font-semibold text-[#457D00] hover:text-[#457D00]/80 hover:underline"
           >
             View Stall
           </Link>
@@ -46,7 +46,7 @@ export function OrderSellerCard({ product }: OrderSellerCardProps) {
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5 rounded-[14px] bg-[#F9FAFB] border border-[#F0F2F5] p-4">
+            <div className="flex items-start gap-3.5 rounded-xl bg-[#F9FAFB] border border-[#F0F2F5] p-4">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EBF5E3] text-[#457D00]">
                 <MapPin className="size-4.5" aria-hidden="true" />
               </div>

@@ -2,105 +2,27 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
-// Carousel slide definitions — brand scenes + vegetable images
+// Video panel (looping brand video beside the auth form)
 // ---------------------------------------------------------------------------
-const CAROUSEL_SLIDES = [
-  {
-    src: "/produce/market-vegetable-spread.jpg",
-    alt: "Colorful fresh vegetables spread at a local market stall",
-  },
-  {
-    src: "/produce/market-stall-fresh.avif",
-    alt: "Fresh produce at a Davao City market stall",
-  },
-  {
-    src: "/produce/green-ampalaya.jpg",
-    alt: "Fresh green ampalaya from local farms",
-  },
-  {
-    src: "/produce/highland-carrots.jpg",
-    alt: "Highland carrots freshly harvested",
-  },
-  {
-    src: "/produce/native-tomatoes.jpg",
-    alt: "Fresh native tomatoes from Davao farms",
-  },
-  {
-    src: "/produce/purple-eggplant.jpg",
-    alt: "Fresh purple eggplant",
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Carousel panel (auto-scrolling with dot indicators)
-// ---------------------------------------------------------------------------
-function AuthCarouselPanel() {
-  const [current, setCurrent] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const startInterval = () => {
-    intervalRef.current = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
-    }, 4000);
-  };
-
-  useEffect(() => {
-    startInterval();
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const goTo = (index: number) => {
-    setCurrent(index);
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    startInterval();
-  };
-
+function AuthVideoPanel() {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[28px] bg-[#F2F3F0]">
-      {/* Slide track */}
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-[#F2F3F0]">
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div
-          className="flex h-full transition-transform duration-700 ease-in-out"
-          style={{ transform: `translateX(-${current * 100}%)` }}
-        >
-          {CAROUSEL_SLIDES.map((slide, i) => (
-            <div key={i} className="relative h-full w-full flex-shrink-0">
-              <Image
-                src={slide.src}
-                alt={slide.alt}
-                fill
-                className="object-cover"
-                priority={i === 0}
-                sizes="50vw"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Dot indicators */}
-      <div className="flex flex-shrink-0 items-center justify-center gap-2 py-4">
-        {CAROUSEL_SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={cn(
-              "h-2 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40",
-              i === current
-                ? "w-6 bg-[#457D00]"
-                : "w-2 bg-gray-300 hover:bg-gray-400",
-            )}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
+        <video
+          src="/brand/sign-in-video.mp4"
+          aria-label="Fresh produce from local markets"
+          className="absolute inset-0 h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
       </div>
     </div>
   );
@@ -117,7 +39,7 @@ type AuthShellProps = {
   formMaxWidth?: string;
   /** @deprecated kept for backwards compat — all layouts now use two-column */
   centered?: boolean;
-  /** Which side the carousel appears on. Defaults to "right". */
+  /** Which side the video appears on. Defaults to "right". */
   imagePosition?: "left" | "right";
 };
 
@@ -168,10 +90,10 @@ export function AuthShell({
     </section>
   );
 
-  // Carousel column -----------------------------------------------------------
-  const carouselColumn = (
-    <div className="hidden p-5 lg:flex lg:flex-col">
-      <AuthCarouselPanel />
+  // Video column -------------------------------------------------------------
+  const videoColumn = (
+    <div className="hidden py-5 pl-24 pr-5 lg:sticky lg:top-10 lg:flex lg:h-[80vh] lg:flex-col lg:self-start">
+      <AuthVideoPanel />
     </div>
   );
 
@@ -180,13 +102,13 @@ export function AuthShell({
 
       {imagePosition === "left" ? (
         <>
-          {carouselColumn}
+          {videoColumn}
           {formColumn}
         </>
       ) : (
         <>
           {formColumn}
-          {carouselColumn}
+          {videoColumn}
         </>
       )}
     </main>

@@ -74,7 +74,7 @@ const config: Config = {
       },
       fontFamily: {
         brand: ["var(--font-parkinsans)", "var(--font-brand)", "Poppins", "sans-serif"],
-        heading: ["var(--font-jakarta)", "var(--font-heading)", "Poppins", "sans-serif"],
+        heading: ["var(--font-parkinsans)", "var(--font-jakarta)", "var(--font-heading)", "Poppins", "sans-serif"],
         subheading: ["var(--font-jakarta)", "var(--font-subheading)", "Lato", "sans-serif"],
         body: ["var(--font-jakarta)", "var(--font-body)", "Lato", "sans-serif"],
         sans: ["var(--font-jakarta)", "var(--font-body)", "Lato", "sans-serif"],

@@ -20,7 +20,7 @@ export const MarketplaceActivityTrendComponent = ({ trends, range }: Props) => {
 
   const maxVal = Math.max(...trends.map((t) => t.quantity), 10);
   const width = 640;
-  const height = 200;
+  const height = 300;
   const paddingX = 40;
   const paddingY = 30;
   const chartW = width - paddingX * 2;
@@ -41,7 +41,7 @@ export const MarketplaceActivityTrendComponent = ({ trends, range }: Props) => {
   const activePoint = activeIdx !== null ? points[activeIdx] : null;
 
   return (
-    <div className="rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-xs">
+    <div className="rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-neutral-100 pb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export const MarketplaceActivityTrendComponent = ({ trends, range }: Props) => {
                   y={height - 8}
                   textAnchor="middle"
                   fontSize="11"
-                  fill={isSelected ? "#1F4D3A" : "#6B7280"}
+                  fill={isSelected ? "#457D00" : "#6B7280"}
                   fontWeight={isSelected ? "bold" : "normal"}
                 >
                   {pt.label}

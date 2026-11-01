@@ -12,17 +12,17 @@ export function Hero() {
     <section
       ref={heroRef}
       id="hero"
-      className="relative overflow-hidden bg-white pt-[120px] sm:pt-[168px] text-[#111827] min-h-[92dvh] sm:min-h-dvh flex flex-col pb-10 lg:pb-0"
+      className="relative overflow-hidden bg-white pt-[120px] sm:pt-[168px] text-[#14231A] min-h-[92dvh] sm:min-h-dvh flex flex-col pb-10 lg:pb-0"
     >
       {/* Real Content */}
       <div className="relative z-10 mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8">
-        <div className="flex flex-col items-center text-center lg:items-start lg:self-center lg:pb-16 lg:text-left">
-          <h1 id="hero-title" className="type-display hero-title-line mt-0 font-brand text-[#111827]">
+        <div className="relative z-10 flex flex-col items-center text-center lg:items-start lg:self-center lg:pb-16 lg:text-left">
+          <h1 id="hero-title" className="type-display hero-title-line mt-0 font-heading text-[#14231A]">
             <span>
               Rescue{" "}
-              <span className="relative inline-block text-[#457D00]">
+              <span className="relative isolate inline-block text-[#457D00]">
                 Surplus
-                <svg className="absolute -bottom-1.5 left-0 w-full text-[#457D00] sm:-bottom-2" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <svg className="absolute -bottom-1.5 left-0 -z-10 w-full text-[#E2FD56] sm:-bottom-2" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path className="hero-underline" pathLength={1} d="M3 9C30 3 80 3 107 9" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
                 </svg>
               </span>{" "}
@@ -56,16 +56,16 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Falling vegetables and crate photo, the centre of the hero */}
-        <div id="hero-crate" className="relative mx-auto w-full max-w-[680px] lg:flex lg:max-w-none lg:justify-center lg:self-end">
+        {/* Vegetable cart, sitting in the right column and bleeding slightly off the edge. Multiply blend hides the white background. */}
+        <div id="hero-crate" className="relative mx-auto w-full max-w-[680px] lg:-mr-24 lg:mx-0 lg:max-w-none lg:self-end lg:-translate-x-20 xl:-mr-52 xl:-translate-x-28">
           <Image
-            src="/brand/hero-veggies-cutout-v2.webp"
-            alt="Fresh surplus vegetables, tomatoes, peppers, onions, lettuce and carrots, falling into a wooden crate"
-            width={908}
-            height={1114}
+            src="/brand/hero-cart-nobg.png"
+            alt="Fresh surplus vegetables in a shopping cart"
+            width={2000}
+            height={1116}
             priority
-            sizes="(min-width: 1024px) 40vw, 100vw"
-            className="mx-auto block h-auto w-auto max-w-full object-contain max-h-[480px] lg:h-[calc(100dvh-168px)] lg:max-h-none lg:max-w-none lg:shrink-0"
+            sizes="(min-width: 1024px) 60vw, 100vw"
+            className="block h-auto w-full object-contain mix-blend-multiply lg:w-[190%] lg:max-w-none"
           />
         </div>
       </div>

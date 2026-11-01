@@ -28,40 +28,27 @@ Earlier: AHP-TOPSIS is now the default marketplace policy (unset or unknown `VIS
 Earlier: Fixed the baseline marketplace paging bug (page 2 repeated page 1 when scores tied; the score is now rounded to 9 decimals in the query). Moved the policy choice into `utils/visibility-ranking/policy.ts`. Added tests: 29 pass (AHP-TOPSIS engine, WSV-008 paging, WSV-010 policy switch) and a `bun test` step in backend CI. Verified read-only on the dev database for both policies; the running API needs a restart. See [[2026-11-01 Baseline Paging Fix and Policy Tests]] and [[2026-11-01 AHP-TOPSIS Test Cases]].
 
 Earlier: All 13 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Profile** flow: F1 (Profile tab verified & good standing), F2 (New seller setup checklist), F3 (Warning/limited standing), F4 (Avatar action sheet & uploading spinner), F5 (Edit Profile filled with phone error & sticky Save bar), F6 (Edit Profile leave-without-saving dialog), F7 (Setup step 2 pin not moved error & auto-scroll), F8 (Sign-in Safety password + Sign-in Code off), F9 (Sign-in Code step 2 QR & key), F9b (Sign-in Code step 3 6-digit boxes & invalid code error), F10 (Sign-in Code step 4 backup codes & copied badge), F11 (Sign-in Code on with in-card turn-off confirm), and F12 (Log Out confirmation dialog). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
+Priority deals row added under the marketplace hero (`GET /marketplace/products/deals`: AHP "Priority Boost" tier and at least 30% below base price). The marketplace was reordered so the products come before the seller map, and dead footer sort links and three unused components were removed. Details: [[2026-11-01 Priority Deals Row and Marketplace Reorder]]. Validation: backend typecheck and bundle passed, web typecheck and build passed. Not checked: the deals data path (backend not running) and the desktop and phone layout of the row.
 
-Earlier: 12 high-fidelity mobile UI mockups generated in Google Stitch covering the complete seller **Messages** flow: F1 (All filter), F2 (Unread + search 'Kamatis'), F3 (New seller empty state), F3b (Loading skeleton 6 rows), F4 (Sort sheet modal), F5 (Questions waiting + expanded answer composer), F6 (Questions all + answered card & inline send error), F7 (Order context chat with Jose Reyes & reservation pass card), F8 (Product context chat with Maria Santos & photo upload preview), F9 (Reconnecting banner & send error retry), F10 (Closed chat state with Carlo Mendoza & replaced bar), and F11 (Full-screen photo viewer lightbox). See [[2026-11-01 Stitch Seller Messages Redesign Frames]].
+Previous task: Sign-in and sign-up side panel now plays the uploaded video (`web/public/brand/sign-in-video.mp4`) instead of the photo carousel, and it is shorter (80vh). Details: [[2026-10-31 Auth Video Panel]]. Follow-up: the video column was shifted right with more left padding ([[2026-10-31 Auth Video Shifted Right]]). Validation: `bun run typecheck` in `web/` passed. Not checked in a browser.
 
-Earlier: Boost screen is shorter when boosting is blocked: no preview or price-drop card, a small product row, the wait note, and a button that says how long to wait. Typecheck passed; no device check. See [[2026-11-01 Boost Screen Shorter When Blocked]].
+Cart icon replaced everywhere in the buyer site with the supplied glyph (`CartIcon`). The empty cart shows a basket illustration, and marketplace category images are larger ([[2026-10-31 Cart Icon Category Image and Cart Illustration]]). Typecheck passed; not checked in a browser.
 
-Earlier: Seller Messages and Chat flow cleaned up and aligned to backend endpoints: badge and counts use `GET /conversations/unread-count`, direct chat header uses `GET /conversations/:id`, inbox split into modular components (<200 lines each), sort-only sheet, 6 skeleton rows, waiting urgency pills, Questions tab with segmented control and answer composer that posts into buyer chat, context banner with no cryptic codes, real date dividers, consecutive message clustering, non-sending quick replies, and status banners. All typechecks, android export, and line audits passed. See [[2026-11-01 Messages Flow Cleanup]].
+Parkinsans now used for headers (`font-heading`), footers and the marketplace hero. Alerts, toasts and the restriction notice restyled. Cart has icon and item motion ([[2026-10-31 Parkinsans Headers Alerts and Cart Motion]]). Typecheck passed; not checked in a browser.
 
-Earlier: Boost screen now shows the 3-hour wait up front ("Almost Time", button disabled, `eligibility.waitUntil`) instead of failing with "A price drop post just went out" after a tap. Typechecks and build passed; owner test pending. See [[2026-11-01 Boost Wait Time Shown Up Front]].
+Profile settings: search bar removed and the Profile, Security and Notifications cards share one style ([[2026-10-31 Profile Settings Consistent Cards]]). Typecheck passed; not checked in a browser.
 
-Earlier: Backend: `GET /conversations/unread-count`, `GET /conversations/:id`, `openCount` on `GET /seller/product-inquiries`, and answers to product-page questions now post into the buyer chat. Typecheck, builds and drizzle check passed. See [[2026-11-01 Chat Unread Count and Question Answers in Chat]].
+Previous task: landing hero image swapped for a muted, looping video (`web/public/brand/hero-veggies.mp4`) in `web/src/components/sections/Hero.tsx`. The old image is the poster. Details: [[2026-10-31 Hero Image Swapped for Video]].
 
-Earlier: Low-stock notice now also fires when a seller uses Take Away and the amount reaches the alert amount (before, only buyer reservations did). Shared helper `utils/seller-notifications/stock-level.ts`. Typecheck and build passed; owner to test. See [[2026-11-01 Low Stock Notice On Take Away]].
+Validation: `bun run typecheck` in `web/` passed. At 1024px the video plays and sits inside the hero column. Not checked: reduced motion in the browser, and phone widths.
 
-Earlier: Notifications screen applied from the Stitch frames (flat rows, summary line, count chips, Filter sheet, Phone Alerts sheet, skeleton and empty states). Typecheck passed; no device check. See [[2026-11-01 Notifications Applied From Stitch]].
+The intro animation ([[2026-10-31 Surplus Veggies Intro Animation]]) was rejected by the user and is not used.
 
-Earlier: Low-stock alert field restored on Add Produce and Edit Product; the backend already sends the "running low" notice. Typecheck passed; no device check. See [[2026-11-01 Low Stock Alert Field Restored]].
+Previous task: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]].
 
-Earlier: Sales Report screen applied from the Stitch frames (header with date range, sticky filters, Sold and How Much Sold cards, Pickup Results, Stock Right Now, Your Produce, Summary, skeleton and error states). Our own gifted-charts bar chart and bar rows were kept and restyled. Typecheck passed; no device check. See [[2026-11-01 Sales Report Applied From Stitch]].
+Merged from `main`: 13 Google Stitch mobile mockups for the seller Profile flow (F1 to F12, plus F9b). Mapping and copy changes in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
 
-Earlier: Eight Stitch Listings frames applied to the mobile seller app: Listings, Add Produce, Product Details, Archive sheet, Edit Product, Change Amount sheet, Freshness sheet and the in-sheet Saved state. Look only; current rules kept. See [[2026-11-01 Listings Flow Applied From Stitch]].
-
-Earlier: 7 high-fidelity mobile UI mockups generated in Google Stitch covering the seller **Sales Report** screen (`app/(app)/analytics.tsx`): F1, F1b, F2, F3, F4, F5, F6. Mapping table and copy changes in [[2026-11-01 Stitch Seller Sales Report Redesign Frames]].
-
-Earlier: All 23 high-fidelity mobile UI mockups generated in Google Stitch covering the seller **Listings** flow: Listings tab, Add Produce, Product Details, Edit Product, and Change Amount. Mapping table in [[2026-11-01 Stitch Listings Redesign Frames]].
-
-Earlier: 11 high-fidelity mobile UI mockups generated in Google Stitch covering the seller **Notifications** screen: All feed, Earlier grouping, category filters, All caught up, empty state, skeleton, Filter sheet, and Phone Alerts sheet. See [[2026-11-01 Mobile Notifications Screen Redesign in Google Stitch]].
-
-Earlier: 14 high-fidelity mobile UI mockups generated in Google Stitch covering the seller **Marketing (Boost)** flow: Marketing Hub, Boost Intro Sheet, Preview Boost, and Boost Started live screen. See [[2026-11-01 Mobile Marketing Flow Redesign in Google Stitch]].
-
-Earlier: 16 high-fidelity mobile UI mockups generated in Google Stitch covering the seller **Reservations** flow. See [[2026-11-01 Mobile Reservations Flow Redesign in Google Stitch]].
-
-Earlier: 8 high-fidelity mobile UI mockups generated in Google Stitch covering the seller **Authentication and Onboarding** redesign suite. See [[2026-11-01 Stitch Auth Redesign Frames]].
-
-Earlier: 5 high-fidelity mobile dashboard frames generated in Google Stitch covering the seller **Home** dashboard. See [[2026-11-01 Stitch Home Dashboard Redesign Frames]].
+Earlier on `main`: Stitch frames for Messages, Boost, Notifications, Listings, Sales Report, Reservations, Auth and Home, plus the Messages flow cleanup. See the dated notes in this folder.
 
 ## Current project status
 

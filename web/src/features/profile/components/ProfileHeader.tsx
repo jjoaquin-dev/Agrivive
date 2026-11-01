@@ -29,7 +29,7 @@ export function ProfileHeader({ user, pendingCount, completedCount, onAvatarUplo
     : new Date().getFullYear();
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-agrivive-background p-5 shadow-xs ring-1 ring-primary/10 sm:p-7">
+    <div className="overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-agrivive-background p-5 shadow-sm ring-1 ring-primary/10 sm:p-7">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* User Identity */}
         <div className="flex min-w-0 items-start gap-4">
@@ -65,7 +65,7 @@ export function ProfileHeader({ user, pendingCount, completedCount, onAvatarUplo
 
       {/* Rebalanced Metrics Strip */}
       <div className="mt-5 grid grid-cols-1 gap-2.5 border-t border-border/60 pt-5 sm:grid-cols-3">
-        <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 shadow-2xs backdrop-blur-xs dark:bg-card">
+        <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 shadow-sm backdrop-blur-xs dark:bg-card">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
             <Clock className="size-4" />
           </div>
@@ -75,7 +75,7 @@ export function ProfileHeader({ user, pendingCount, completedCount, onAvatarUplo
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 shadow-2xs backdrop-blur-xs dark:bg-card">
+        <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 shadow-sm backdrop-blur-xs dark:bg-card">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
             <ShoppingBag className="size-4" />
           </div>
@@ -85,7 +85,7 @@ export function ProfileHeader({ user, pendingCount, completedCount, onAvatarUplo
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 shadow-2xs backdrop-blur-xs dark:bg-card">
+        <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 shadow-sm backdrop-blur-xs dark:bg-card">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
             <MapPin className="size-4" />
           </div>

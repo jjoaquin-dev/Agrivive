@@ -18,6 +18,10 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
   const { data: session, isPending } = authClient.useSession();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileImageFailed, setProfileImageFailed] = useState(false);
+  // Same placeholder on server and first client render, so hydration matches.
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const userId = session?.user?.id;
@@ -72,8 +76,8 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
     }
   }
 
-  if (isPending) {
-    return <span className="h-10 w-24 animate-pulse rounded-xl bg-muted" aria-label="Checking account" />;
+  if (!mounted || isPending) {
+    return <span className="h-10 w-10 animate-pulse rounded-full bg-muted sm:w-24 sm:rounded-xl" aria-label="Checking account" />;
   }
 
   if (session?.user) {
@@ -82,7 +86,7 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
         <Button
           type="button"
           variant="ghost"
-          className="flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-2.5"
+          className="buyer-account-pill flex min-h-10 items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-2.5 max-sm:border-0 max-sm:bg-transparent max-sm:px-0 max-sm:hover:bg-transparent"
           aria-label="Open profile menu"
           aria-expanded={profileOpen}
           aria-haspopup="menu"
@@ -107,7 +111,7 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
           <div
             id="buyer-profile-menu"
             role="menu"
-            className="absolute right-0 top-full z-50 mt-2.5 w-56 sm:w-60 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.08)] animate-in fade-in-0 zoom-in-95 duration-150"
+            className="absolute right-0 top-full z-50 mt-2.5 w-56 sm:w-60 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-md animate-in fade-in-0 zoom-in-95 duration-150"
           >
             <div className="truncate border-b border-neutral-100 px-3.5 py-2 text-xs font-semibold text-neutral-400 select-none">
               {session.user.name || session.user.email}
@@ -177,16 +181,16 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="hidden items-center gap-2 lg:flex">
       <Link
         href="/login"
-        className="inline-flex min-h-10 items-center rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary"
+        className="buyer-guest-signin inline-flex min-h-10 items-center whitespace-nowrap rounded-xl px-3.5 text-xs font-semibold text-agrivive-muted hover:bg-agrivive-background hover:text-agrivive-primary"
       >
         Sign in
       </Link>
       <Link
         href="/signup"
-        className="inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-xs transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]"
+        className="buyer-guest-register inline-flex min-h-10 items-center rounded-xl bg-agrivive-primary px-4 text-xs font-semibold text-white shadow-sm transition-[background-color,transform] hover:bg-agrivive-primaryPressed active:scale-[0.98]"
       >
         Register
       </Link>

@@ -42,8 +42,8 @@ export function SellerReviewsSection({ sellerId, shopName }: { sellerId: string;
           <h2 className="font-heading text-[18px] font-semibold text-[#14231A]">Seller ratings & reviews</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-[280px_1fr]">
-          <Skeleton className="h-44 rounded-[16px] border border-[#E8E8E8] bg-white" />
-          <Skeleton className="h-44 rounded-[16px] border border-[#E8E8E8] bg-white" />
+          <Skeleton className="h-44 rounded-2xl border border-[#E8E8E8] bg-white" />
+          <Skeleton className="h-44 rounded-2xl border border-[#E8E8E8] bg-white" />
         </div>
       </section>
     );
@@ -56,7 +56,7 @@ export function SellerReviewsSection({ sellerId, shopName }: { sellerId: string;
       <div className="flex flex-wrap items-center gap-2">
         <Store className="size-5 text-[#457D00]" />
         <h2 className="font-heading text-[18px] font-semibold text-[#14231A]">Seller ratings & reviews</h2>
-        <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2.5 py-0.5 text-[11px] font-semibold text-[#386600]">
+        <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2.5 py-0.5 text-xs font-semibold text-[#457D00]">
           {shopName}
         </span>
       </div>
@@ -71,7 +71,7 @@ export function SellerReviewsSection({ sellerId, shopName }: { sellerId: string;
       ) : null}
 
       {!error && !hasReviews ? (
-        <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-6 text-center shadow-sm">
+        <div className="rounded-2xl border border-[#E8E8E8] bg-white p-6 text-center shadow-sm">
           <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-[#F0F7EB] text-[#457D00]">
             <Star className="size-5" />
           </div>
@@ -85,11 +85,11 @@ export function SellerReviewsSection({ sellerId, shopName }: { sellerId: string;
           <ReviewSummaryCard average={data.average} count={data.count} breakdown={data.breakdown} singular="review" />
           <div className="space-y-4">
             {data.reviews.map((item) => (
-              <div key={item.id} className="rounded-[16px] border border-[#E8E8E8] bg-white p-4 shadow-sm">
+              <div key={item.id} className="rounded-2xl border border-[#E8E8E8] bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-semibold text-foreground">{item.buyerName}</span>
-                    <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2 py-0.5 text-[10px] font-semibold text-[#386600]">
+                    <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2 py-0.5 text-xs font-semibold text-[#457D00]">
                       Verified pickup
                     </span>
                   </div>

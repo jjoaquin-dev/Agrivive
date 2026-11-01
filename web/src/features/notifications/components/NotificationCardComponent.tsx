@@ -86,7 +86,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           ? "border border-[#FCEFE3] border-l-[4px] border-l-[#1B4D36] bg-[#FEFAF6] hover:bg-[#FDF5ED]"
           : isUnread
           ? "border border-neutral-200 border-l-[4px] border-l-[#1B4D36] bg-[#F9FAFB] hover:bg-neutral-50"
-          : "border border-neutral-200/70 bg-white hover:border-neutral-300 shadow-2xs"
+          : "border border-neutral-200/70 bg-white hover:border-neutral-300 shadow-sm"
       }`}
     >
       <div className="relative shrink-0 mt-0.5">
@@ -120,7 +120,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           ) : isUnread ? (
             <ShoppingBasket className="size-5" />
           ) : (
-            <Check className="size-5 stroke-[2.5]" />
+            <Check className="size-5" />
           )}
         </div>
       </div>
@@ -132,7 +132,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           </h3>
           {(isUnread || isTrustNotice) && (
             <span
-              className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+              className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                 isRestriction
                   ? "bg-rose-100 text-rose-800"
                   : isWarning

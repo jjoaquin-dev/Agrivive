@@ -8,6 +8,7 @@ import type { ConversationLaunchContext } from "../types";
 import { ConversationContextCard } from "./ConversationContextCard";
 import { ConversationMessageBubble } from "./ConversationMessageBubble";
 import { ConversationInput } from "./ConversationInput";
+import { ConversationStateButtons } from "./ConversationStateActions";
 
 function displayName(context: ConversationLaunchContext) {
   return context.sellerShopName || context.sellerName || "Seller";
@@ -18,11 +19,13 @@ export function ConversationThread({
   existing,
   onBack,
   onConversationCreated,
+  onStateChanged,
 }: {
   context: ConversationLaunchContext;
   existing: Conversation | null;
   onBack: () => void;
   onConversationCreated: (conversation: Conversation) => void;
+  onStateChanged: () => void;
 }) {
   const thread = useConversationThread(
     context.contextType,
@@ -42,7 +45,7 @@ export function ConversationThread({
 
   return (
     <section
-      className="flex h-full flex-1 flex-col overflow-hidden rounded-[26px] border border-[#E9EBE2] bg-white shadow-xs"
+      className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-[#E9EBE2] bg-white shadow-sm"
       aria-label={`Conversation with ${sellerName}`}
     >
       {/* Top Thread Header */}
@@ -66,7 +69,7 @@ export function ConversationThread({
                   onError={() => setHeaderAvatarFailed(true)}
                 />
               ) : (
-                <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-[#386600]">
+                <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-[#457D00]">
                   <Store className="size-4" />
                 </div>
               )}
@@ -75,15 +78,16 @@ export function ConversationThread({
           </div>
           <div>
             <h2 className="font-heading text-sm font-bold text-[#202E1B]">{sellerName}</h2>
-            <p className="text-xs text-[#386600] font-medium">Active now • Verified vendor</p>
+            <p className="text-xs text-[#457D00] font-medium">Active now • Verified vendor</p>
           </div>
         </div>
+        {existing ? <ConversationStateButtons conversation={existing} onChanged={onStateChanged} /> : null}
       </header>
 
       {/* Date Divider Pill */}
       <div className="relative my-3 flex items-center justify-center px-6">
         <div className="absolute inset-x-6 h-px bg-[#F0F2EB]" />
-        <span className="relative z-10 rounded-full border border-[#ECEEE2] bg-[#FAF9F3] px-3 py-0.5 text-[10px] font-medium text-[#8A9685]">
+        <span className="relative z-10 rounded-full border border-[#ECEEE2] bg-[#FAF9F3] px-3 py-0.5 text-xs font-medium text-[#8A9685]">
           Today
         </span>
       </div>
@@ -102,7 +106,7 @@ export function ConversationThread({
 
         {!thread.loading && thread.messages.length === 0 ? (
           <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#386600]">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#457D00]">
               <Store className="size-5" />
             </span>
             <h3 className="mt-3 font-heading text-sm font-bold text-[#202E1B]">Start chatting with {sellerName}</h3>

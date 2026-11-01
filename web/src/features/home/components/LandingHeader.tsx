@@ -68,7 +68,7 @@ export function LandingHeader() {
       </div>
 
       {/* Floating pill: logo, section links and actions */}
-      <div className={`${pillSurface} pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-3 py-2 pl-5 pr-2`}>
+      <div className={`${pillSurface} pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-3 py-2 pl-5 pr-6`}>
         {/* Brand Logo Lockup: Vector Cart + Parkinsans Typography */}
         <Link id="header-logo" href="/" className="group flex shrink-0 items-center gap-1" aria-label="Agrivive home">
           <div className="relative w-[28px] h-[22px] shrink-0 -mr-2 -rotate-[11deg] origin-bottom-left transition-transform duration-200 group-hover:-rotate-[14deg] group-hover:scale-105">
@@ -96,11 +96,11 @@ export function LandingHeader() {
               <circle fill="#ffffff" stroke="#457D00" cx="144" cy="138" r="9.5" strokeWidth="6" />
             </svg>
           </div>
-          <span className="font-brand text-[22px] font-semibold tracking-[-0.035em] text-[#457D00] leading-none">Agrivive</span>
+          <span className="font-heading text-[22px] font-semibold tracking-[-0.035em] text-[#457D00] leading-none">Agrivive</span>
         </Link>
 
         {/* Section links live inside the main pill */}
-        <div id="header-subnav" className="hidden min-w-0 flex-1 justify-center lg:flex">
+        <div id="header-subnav" className="hidden min-w-0 flex-1 justify-center xl:flex">
           <LandingHeaderNav links={links} />
         </div>
 
@@ -116,12 +116,12 @@ export function LandingHeader() {
 
           {!hasSession && (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="inline-flex min-h-11 items-center px-3 text-sm font-bold text-neutral-700 hover:text-[#457D00] transition-colors">
+              <Link href="/login" className="inline-flex min-h-11 items-center whitespace-nowrap px-3 text-sm font-bold text-neutral-700 hover:text-[#457D00] transition-colors">
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="inline-flex min-h-11 items-center rounded-full bg-[#E2FD56] px-4 text-sm font-black text-[#111827] shadow-xs transition-all hover:bg-[#d4f244] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+                className="inline-flex min-h-11 items-center rounded-full bg-[#E2FD56] px-4 text-sm font-black text-[#14231A] shadow-sm transition-all hover:bg-[#E2FD56]/90 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
               >
                 Register
               </Link>
@@ -131,7 +131,7 @@ export function LandingHeader() {
           {/* Mobile Hamburger */}
           <button
             type="button"
-            className="inline-flex size-11 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 lg:hidden hover:bg-neutral-100 active:scale-95 transition-all"
+            className="inline-flex size-11 items-center justify-center rounded-full border border-neutral-200 text-neutral-700 xl:hidden hover:bg-neutral-100 active:scale-95 transition-all"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}

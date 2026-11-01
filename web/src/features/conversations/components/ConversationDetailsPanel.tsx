@@ -5,12 +5,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, ChevronRight, Phone, Store, User } from "lucide-react";
 import type { ConversationLaunchContext } from "../types";
+import type { Conversation } from "../api";
+import { ConversationStateButtons } from "./ConversationStateActions";
 
 export function ConversationDetailsPanel({
   context,
+  conversation,
+  onStateChanged,
   className = "",
 }: {
   context: ConversationLaunchContext;
+  conversation?: Conversation | null;
+  onStateChanged?: () => void;
   className?: string;
 }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -27,13 +33,13 @@ export function ConversationDetailsPanel({
   return (
     <aside
       data-lenis-prevent
-      className={`flex h-full w-full flex-col overflow-y-auto rounded-[24px] border border-neutral-200/80 bg-white p-5 shadow-xs ${className}`}
+      className={`flex h-full w-full flex-col overflow-y-auto rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm ${className}`}
       aria-label="Conversation details"
     >
       {/* Vendor Profile Hero */}
       <div className="flex flex-col items-center pt-2 pb-4 text-center">
         <div className="relative size-20">
-          <div className="size-full overflow-hidden rounded-full border border-neutral-200/80 shadow-2xs">
+          <div className="size-full overflow-hidden rounded-full border border-neutral-200/80 shadow-sm">
             {context.sellerImage && !avatarFailed ? (
               <Image
                 src={context.sellerImage}
@@ -54,7 +60,7 @@ export function ConversationDetailsPanel({
 
         <h4 className="mt-3 font-heading text-lg font-bold text-neutral-900">{shopName}</h4>
         <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#16A34A]">
-          <Check className="size-3.5 stroke-[2.5]" />
+          <Check className="size-3.5" />
           <span>Verified vendor</span>
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-neutral-500 font-medium">
@@ -66,12 +72,19 @@ export function ConversationDetailsPanel({
         <div className="mt-4 w-full">
           <Link
             href={`/sellers/${context.sellerId}`}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white py-2.5 text-xs font-bold text-neutral-900 transition hover:bg-neutral-50 shadow-2xs"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white py-2.5 text-xs font-bold text-neutral-900 transition hover:bg-neutral-50 shadow-sm"
           >
             <User className="size-3.5 text-neutral-600" />
             <span>Profile</span>
           </Link>
         </div>
+
+        {/* Archive and block for this chat */}
+        {conversation && onStateChanged ? (
+          <div className="mt-3 w-full">
+            <ConversationStateButtons conversation={conversation} onChanged={onStateChanged} />
+          </div>
+        ) : null}
       </div>
 
       <div className="h-px bg-neutral-100 my-2" />
@@ -79,7 +92,7 @@ export function ConversationDetailsPanel({
       {/* Stall Information Section */}
       <div className="py-2.5">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
             Stall Information
           </span>
           <ChevronRight className="size-3.5 text-neutral-400" />
@@ -113,7 +126,7 @@ export function ConversationDetailsPanel({
       {context.productId && (
         <div className="py-2.5">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
               Inquired Produce
             </span>
             <Link
@@ -138,7 +151,7 @@ export function ConversationDetailsPanel({
               <p className="truncate text-xs font-bold text-neutral-900">
                 {context.productName || "Fresh Produce"}
               </p>
-              <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500">
                 {context.productPrice != null && (
                   <span className="font-semibold text-neutral-700">
                     ₱{Number(context.productPrice).toFixed(2)}

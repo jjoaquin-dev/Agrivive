@@ -47,19 +47,19 @@ export function HomeFarmerFaq() {
               </span>
               <h2 className="type-section mt-3 font-heading text-neutral-900">
                 FAQ about{" "}
-                <span className="relative inline-block text-[#457D00]">
+                <span className="relative isolate inline-block text-[#457D00]">
                   Agrivive
                   <svg
-                    viewBox="0 0 120 16"
+                    viewBox="0 0 110 12"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="absolute -bottom-2 left-0 w-full h-3 sm:h-3.5 text-[#FEA938] overflow-visible pointer-events-none"
-                    preserveAspectRatio="none"
+                    className="absolute -bottom-1.5 left-0 -z-10 w-full text-[#E2FD56] sm:-bottom-2 pointer-events-none"
+                    aria-hidden="true"
                   >
                     <path
-                      d="M3 13 C 35 3, 85 3, 117 13"
+                      d="M3 9C30 3 80 3 107 9"
                       stroke="currentColor"
-                      strokeWidth="4"
+                      strokeWidth="3.5"
                       strokeLinecap="round"
                     />
                   </svg>
@@ -73,7 +73,7 @@ export function HomeFarmerFaq() {
                 <button
                   type="button"
                   onClick={() => setIsSocialModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-5 py-2.5 font-heading text-xs sm:text-sm font-bold text-neutral-800 shadow-xs hover:border-[#457D00] hover:text-[#457D00] hover:bg-neutral-50/80 transition-all duration-200 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-5 py-2.5 font-heading text-xs sm:text-sm font-bold text-neutral-800 shadow-sm hover:border-[#457D00] hover:text-[#457D00] hover:bg-neutral-50/80 transition-all duration-200 cursor-pointer"
                 >
                   Contact us <ArrowUpRight className="size-4" />
                 </button>
@@ -106,9 +106,9 @@ export function HomeFarmerFaq() {
                     </span>
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 group-hover:text-neutral-900 transition-colors">
                       {isOpen ? (
-                        <Minus className="size-5 stroke-[2.5]" />
+                        <Minus className="size-5" />
                       ) : (
-                        <Plus className="size-5 stroke-[2.5]" />
+                        <Plus className="size-5" />
                       )}
                     </span>
                   </button>

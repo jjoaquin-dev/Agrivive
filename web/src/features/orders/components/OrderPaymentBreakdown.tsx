@@ -2,20 +2,14 @@
 
 import { CheckCircle2 } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
-
-function money(value: string | number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(Number(value));
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 export function OrderPaymentBreakdown({ order }: { order: BuyerOrder }) {
   const total = Number(order.totalAmount);
   const estimatedSavings = Math.round(total * 0.3);
 
   return (
-    <div className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm space-y-4">
+    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm space-y-4">
       <h2 className="text-[17px] font-bold text-[#14231A]">
         Payment details
       </h2>
@@ -47,7 +41,7 @@ export function OrderPaymentBreakdown({ order }: { order: BuyerOrder }) {
       </div>
 
       {/* Food Waste Reduction Callout */}
-      <div className="rounded-[12px] border border-[#D5EAC3] bg-[#F7FAF4] p-3 flex items-start gap-2.5">
+      <div className="rounded-xl border border-[#D5EAC3] bg-[#F7FAF4] p-3 flex items-start gap-2.5">
         <CheckCircle2 className="size-4 shrink-0 text-[#457D00] mt-0.5" />
         <div className="text-[12px] leading-relaxed text-[#2D4E00]">
           <p className="font-medium">You&apos;re helping reduce food waste!</p>

@@ -1,9 +1,10 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Store } from "lucide-react";
+import { Store } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -19,7 +20,7 @@ function StorefrontLoading() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 lg:py-8" aria-label="Loading seller page" aria-busy="true">
       <PageContainer>
-        <Skeleton className="h-40 rounded-[20px]" />
+        <Skeleton className="h-40 rounded-2xl" />
         <Skeleton className="mt-8 h-8 w-56" />
         <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((item) => <Skeleton key={item} className="h-[380px] rounded-2xl" />)}
@@ -113,14 +114,8 @@ export function SellerStorefront() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-background py-6 text-foreground sm:py-8 lg:py-10">
       <PageContainer>
-        <div className="mb-6">
-          <Link
-            href="/marketplace"
-            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>Back to Marketplace</span>
-          </Link>
+        <div>
+          <Breadcrumbs items={[{ label: "Marketplace", href: "/marketplace" }, { label: seller?.shopName ?? "Stall" }]} />
         </div>
 
         {!seller ? (

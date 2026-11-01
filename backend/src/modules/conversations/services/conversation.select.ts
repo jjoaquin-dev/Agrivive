@@ -19,6 +19,12 @@ export function buildConversationSelect(userId: string) {
     buyerId: conversations.buyerId,
     sellerId: conversations.sellerId,
     status: conversations.status,
+    archivedAt: conversation_participants.archivedAt,
+    myBlockedAt: conversation_participants.blockedAt,
+    blocked: sql<boolean>`exists (
+      select 1 from conversation_participants as blocked_row
+      where blocked_row.conversation_id = ${conversations.id} and blocked_row.blocked_at is not null
+    )`,
     lastMessageAt: conversations.lastMessageAt,
     createdAt: conversations.createdAt,
     productName: sql<string | null>`coalesce(

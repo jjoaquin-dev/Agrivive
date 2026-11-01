@@ -77,13 +77,13 @@ export function ProfileTwoFactorVerifyStep({
 
       {totpURI && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-border/80 bg-neutral-50/70 p-5">
-          <div className="rounded-xl border border-border/80 bg-white p-3 shadow-2xs">
+          <div className="rounded-xl border border-border/80 bg-white p-3 shadow-sm">
             <QRCodeSVG value={totpURI} size={150} level="M" />
           </div>
 
           {secretKey && (
             <div className="mt-4 flex flex-col items-center gap-1.5 text-center">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Manual Setup Key
               </span>
               <div className="flex items-center gap-2">
@@ -95,7 +95,7 @@ export function ProfileTwoFactorVerifyStep({
                   variant="outline"
                   size="sm"
                   onClick={handleCopyKey}
-                  className="h-7 rounded-md px-2 text-[11px]"
+                  className="h-7 rounded-lg px-2 text-xs"
                 >
                   {copiedKey ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
                 </Button>
@@ -124,7 +124,7 @@ export function ProfileTwoFactorVerifyStep({
         <Button
           type="submit"
           disabled={loading || code.length !== 6}
-          className="h-11 rounded-full bg-[#386600] px-5 text-xs font-bold text-white hover:bg-[#386600]/90"
+          className="h-11 rounded-full bg-[#457D00] px-5 text-xs font-bold text-white hover:bg-[#457D00]/90/90"
         >
           {loading ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-4" />}
           <span>Verify & Activate</span>

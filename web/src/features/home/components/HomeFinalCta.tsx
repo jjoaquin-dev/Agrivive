@@ -45,19 +45,19 @@ export function HomeFinalCta() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
           data-reveal
-          className="relative overflow-hidden rounded-3xl bg-[#457D00] bg-[url(/brand/final-cta-pattern.webp)] bg-cover bg-center text-white sm:rounded-[32px]"
+          className="relative overflow-hidden rounded-2xl bg-[#E2FD56] text-[#14231A] sm:rounded-2xl"
         >
           <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 py-14 text-center sm:px-12 sm:py-20">
-            <h2 className="type-section font-heading text-white tracking-tight">Start Shopping Today’s Surplus</h2>
+            <h2 className="type-section font-heading text-[#14231A] tracking-tight">Start Shopping Today’s Surplus</h2>
 
-            <p className="type-lede mt-4 max-w-xl text-white/85">
+            <p className="type-lede mt-4 max-w-xl text-[#14231A]/80">
               Join Davao buyers who save on surplus produce straight from neighborhood stalls.
             </p>
 
             {/* Search Bar (Fitts's Law: 48px primary action) */}
             <form
               onSubmit={handleSearchSubmit}
-              className="mt-8 flex w-full max-w-2xl items-center rounded-full bg-white p-1.5 pl-5 text-left transition-shadow focus-within:ring-4 focus-within:ring-[#B8EB5E]/40 sm:mt-10"
+              className="mt-8 flex w-full max-w-2xl items-center rounded-full bg-white p-1.5 pl-5 text-left transition-shadow focus-within:ring-4 focus-within:ring-[#E2FD56]/40 sm:mt-10"
             >
               <Search className="size-5 shrink-0 text-neutral-400" />
               <input
@@ -89,7 +89,7 @@ export function HomeFinalCta() {
               {/* Search Action Button */}
               <button
                 type="submit"
-                className="flex h-12 items-center gap-1.5 rounded-full bg-[#1F4D3A] px-5 sm:px-7 font-heading text-sm font-bold text-white transition hover:bg-[#173A2B] active:scale-95 cursor-pointer shrink-0"
+                className="flex h-12 items-center gap-1.5 rounded-full bg-[#457D00] px-5 sm:px-7 font-heading text-sm font-bold text-white transition hover:bg-[#457D00] active:scale-95 cursor-pointer shrink-0"
               >
                 <span>Search</span>
                 <ArrowRight className="size-4" />
@@ -98,13 +98,13 @@ export function HomeFinalCta() {
 
             {/* Popular Search Chips (Recognition Over Recall) */}
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-sm">
-              <span className="font-semibold text-white">Popular:</span>
+              <span className="font-semibold text-[#14231A]">Popular:</span>
               {popularSearches.map((item) => (
                 <button
                   key={item.label}
                   type="button"
                   onClick={() => handleQuickSearch(item.query)}
-                  className="min-h-9 rounded-full border border-white/25 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-white/15 cursor-pointer"
+                  className="min-h-9 rounded-full border border-[#14231A]/25 px-4 py-1.5 text-sm font-medium text-[#14231A] transition hover:bg-[#14231A]/10 cursor-pointer"
                 >
                   {item.label}
                 </button>
@@ -112,10 +112,10 @@ export function HomeFinalCta() {
             </div>
 
             {/* Trust assurances and catalog link */}
-            <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-black/10 px-5 py-4 sm:flex-row sm:justify-center sm:gap-6">
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/90">
+            <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-[#14231A]/10 px-5 py-4 sm:flex-row sm:justify-center sm:gap-6">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-[#14231A]/90">
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="size-4 text-[#B8EB5E]" aria-hidden="true" /> 24-Hour QR Holds
+                  <ShieldCheck className="size-4 text-[#457D00]" aria-hidden="true" /> 24-Hour QR Holds
                 </span>
                 <span aria-hidden="true">•</span>
                 <span>Direct Stall Pickup</span>
@@ -125,7 +125,7 @@ export function HomeFinalCta() {
 
               <Link
                 href="/marketplace"
-                className="inline-flex items-center gap-1.5 font-heading text-sm font-bold text-white underline underline-offset-4 transition hover:text-[#E2FD56]"
+                className="inline-flex items-center gap-1.5 font-heading text-sm font-bold text-[#14231A] underline underline-offset-4 transition hover:text-[#457D00]"
               >
                 <span>Browse Full Marketplace Catalog</span>
                 <ArrowRight className="size-4" aria-hidden="true" />

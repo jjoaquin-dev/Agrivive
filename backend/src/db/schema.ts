@@ -664,6 +664,8 @@ export const conversation_participants = pgTable("conversation_participants", {
   conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   lastReadAt: timestamp("last_read_at", { withTimezone: true }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
+  blockedAt: timestamp("blocked_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("conversation_participants_conversation_user_unique").on(table.conversationId, table.userId),

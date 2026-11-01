@@ -1,9 +1,10 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Bell, KeyRound, Search, ShieldCheck, User } from "lucide-react";
+import { Bell, KeyRound, ShieldCheck, User } from "lucide-react";
 import { PageContainer } from "@/src/components/PageContainer";
 import { authClient } from "@/src/lib/auth-client";
 import { getBuyerProfile } from "../api/profile";
@@ -20,7 +21,6 @@ export function BuyerProfile() {
   const { data: session, isPending } = authClient.useSession();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -40,7 +40,7 @@ export function BuyerProfile() {
     return (
       <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] py-8">
         <PageContainer>
-          <div className="h-64 animate-pulse rounded-3xl bg-neutral-100" />
+          <div className="h-64 animate-pulse rounded-2xl bg-neutral-100" />
         </PageContainer>
       </main>
     );
@@ -53,14 +53,8 @@ export function BuyerProfile() {
     <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] py-6 text-foreground sm:py-10">
       <PageContainer>
         {/* Top Back Navigation Link */}
-        <div className="mb-6">
-          <Link
-            href="/marketplace"
-            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>Back to Marketplace</span>
-          </Link>
+        <div>
+          <Breadcrumbs items={[{ label: "Settings" }]} />
         </div>
 
         {/* Top Header: Settings & Verified Badge */}
@@ -81,32 +75,18 @@ export function BuyerProfile() {
           </div>
         </div>
 
-        {/* Pill Search Bar (Matching Photo 2) */}
-        <div className="mt-6">
-          <div className="relative max-w-md">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search settings..."
-              className="h-11 w-full rounded-full border border-neutral-200/90 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
-            />
-          </div>
-        </div>
-
-        {/* System Tab Capsule (Matching Photo 2 - Reservations Removed) */}
+        {/* Settings tabs */}
         <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-[#F3F5EA] border border-[#E5E9DC] p-1.5 overflow-x-auto no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("profile")}
             className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs transition-all cursor-pointer ${
               activeTab === "profile"
-                ? "bg-white text-neutral-900 font-bold shadow-2xs"
+                ? "bg-white text-neutral-900 font-bold shadow-sm"
                 : "text-neutral-600 font-semibold hover:text-neutral-900"
             }`}
           >
-            <User className={`size-3.5 ${activeTab === "profile" ? "text-[#386600]" : "text-neutral-400"}`} />
+            <User className={`size-3.5 ${activeTab === "profile" ? "text-[#457D00]" : "text-neutral-400"}`} />
             <span>Profile</span>
           </button>
           <button
@@ -114,11 +94,11 @@ export function BuyerProfile() {
             onClick={() => setActiveTab("security")}
             className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs transition-all cursor-pointer ${
               activeTab === "security"
-                ? "bg-white text-neutral-900 font-bold shadow-2xs"
+                ? "bg-white text-neutral-900 font-bold shadow-sm"
                 : "text-neutral-600 font-semibold hover:text-neutral-900"
             }`}
           >
-            <KeyRound className={`size-3.5 ${activeTab === "security" ? "text-[#386600]" : "text-neutral-400"}`} />
+            <KeyRound className={`size-3.5 ${activeTab === "security" ? "text-[#457D00]" : "text-neutral-400"}`} />
             <span>Security</span>
           </button>
           <button
@@ -126,11 +106,11 @@ export function BuyerProfile() {
             onClick={() => setActiveTab("notifications")}
             className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs transition-all cursor-pointer ${
               activeTab === "notifications"
-                ? "bg-white text-neutral-900 font-bold shadow-2xs"
+                ? "bg-white text-neutral-900 font-bold shadow-sm"
                 : "text-neutral-600 font-semibold hover:text-neutral-900"
             }`}
           >
-            <Bell className={`size-3.5 ${activeTab === "notifications" ? "text-[#386600]" : "text-neutral-400"}`} />
+            <Bell className={`size-3.5 ${activeTab === "notifications" ? "text-[#457D00]" : "text-neutral-400"}`} />
             <span>Notifications</span>
           </button>
         </div>
@@ -162,7 +142,11 @@ export function BuyerProfile() {
             </div>
           )}
 
-          {activeTab === "notifications" && <ProfileNotificationsCard />}
+          {activeTab === "notifications" && (
+            <div className="flex max-w-xl flex-col gap-6">
+              <ProfileNotificationsCard />
+            </div>
+          )}
         </div>
       </PageContainer>
     </main>

@@ -24,23 +24,28 @@ export function OrderCancelToast({ notice, onDismiss }: OrderCancelToastProps) {
       aria-live="polite"
       className="fixed top-20 right-4 z-50 w-full max-w-sm sm:right-6 animate-in fade-in slide-in-from-top-3 duration-200"
     >
-      <Alert className="relative flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-white/95 py-3.5 pl-3.5 pr-9 text-emerald-950 shadow-[0_12px_28px_rgba(0,0,0,0.08)] backdrop-blur-md">
+      <Alert className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-10 shadow-md backdrop-blur-md">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
             <CheckCircle2 className="size-4" />
           </span>
-          <AlertDescription className="text-xs font-semibold text-emerald-900 leading-snug">
+          <AlertDescription className="text-xs font-semibold leading-snug text-neutral-800">
             {notice}
           </AlertDescription>
         </div>
         <button
           type="button"
           onClick={onDismiss}
-          className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full text-emerald-700/60 transition-colors hover:bg-emerald-50 hover:text-emerald-950 cursor-pointer"
+          className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer"
           aria-label="Dismiss notification"
         >
           <X className="size-4" />
         </button>
+        <span
+          aria-hidden="true"
+          className="toast-progress absolute inset-x-0 bottom-0 h-0.5 bg-neutral-400/60"
+          style={{ animationDuration: "5000ms" }}
+        />
       </Alert>
     </aside>
   );

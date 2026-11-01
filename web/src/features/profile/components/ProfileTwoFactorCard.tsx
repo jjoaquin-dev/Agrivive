@@ -75,11 +75,11 @@ export function ProfileTwoFactorCard({
   }
 
   return (
-    <Card className="rounded-[20px] border border-border/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+    <Card className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-md">
       <div className="flex items-center justify-between border-b border-border/70 pb-4">
         <div>
-          <h2 className="font-heading text-lg font-bold">Two-Factor Authentication</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="font-heading text-lg font-bold text-neutral-900">Two-Factor Authentication</h2>
+          <p className="text-sm text-neutral-500">
             Protect your account with Google Authenticator, Authy, or 1Password.
           </p>
         </div>
@@ -150,7 +150,7 @@ export function ProfileTwoFactorCard({
                   setSuccessMessage("");
                   setView("wizard");
                 }}
-                className="h-11 rounded-full bg-[#386600] px-5 text-xs font-bold text-white hover:bg-[#386600]/90"
+                className="h-11 rounded-full bg-[#457D00] px-5 text-xs font-bold text-white hover:bg-[#457D00]/90/90"
               >
                 <Shield className="size-4" />
                 <span>Enable Two-Factor Authentication</span>

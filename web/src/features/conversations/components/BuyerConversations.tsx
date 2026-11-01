@@ -1,5 +1,6 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,7 +35,8 @@ export function BuyerConversations() {
     setLoading(true);
     setError("");
     try {
-      setItems(await listConversations(signal));
+      const [active, archived] = await Promise.all([listConversations(signal), listConversations(signal, true)]);
+      setItems([...active, ...archived]);
     } catch (reason) {
       if (isAbortError(reason)) return;
       if (reason instanceof ApiError && reason.status === 401) {
@@ -94,7 +96,7 @@ export function BuyerConversations() {
   const productMatch = requestedProductId ? items.find((i) => i.productId === requestedProductId) ?? null : null;
   const sellerMatch = launchContext ? items.find((i) => i.sellerId === launchContext.sellerId) ?? null : null;
   const matched = selectedConversation ?? productMatch ?? sellerMatch;
-  const activeConversation = matched ?? (launchContext ? null : items[0] ?? null);
+  const activeConversation = matched ?? (launchContext ? null : items.find((i) => !i.archivedAt) ?? null);
   const activeContext = launchContext
     ? {
         ...(activeConversation ? launchContextFromConversation(activeConversation) : {}),
@@ -123,14 +125,8 @@ export function BuyerConversations() {
     <main className="min-h-[calc(100vh-70px)] bg-[#FDFDFD] p-3 sm:p-4 lg:p-5">
       <div className="mx-auto max-w-[1720px]">
         {/* Navigation Link in Upper Left */}
-        <div className="mb-6">
-          <Link
-            href={activeContext?.productId ? `/marketplace/${activeContext.productId}` : "/marketplace"}
-            className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer"
-          >
-            <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-            <span>{activeContext?.productId ? "Back to Listing" : "Back to Marketplace"}</span>
-          </Link>
+        <div>
+          <Breadcrumbs items={activeContext?.productId ? [{ label: "Listing", href: `/marketplace/${activeContext.productId}` }, { label: "Messages" }] : [{ label: "Messages" }]} />
         </div>
 
         {error ? (
@@ -148,6 +144,7 @@ export function BuyerConversations() {
               selectedId={activeConversation?.id ?? null}
               loading={loading}
               onSelect={handleSelect}
+              onChanged={() => void load()}
               className="w-full"
             />
           </div>
@@ -160,10 +157,11 @@ export function BuyerConversations() {
                 existing={activeConversation}
                 onBack={handleBack}
                 onConversationCreated={handleConversationCreated}
+                onStateChanged={() => void load()}
               />
             ) : (
-              <div className="flex flex-1 flex-col items-center justify-center rounded-[26px] border border-[#E9EBE2] bg-white p-8 text-center shadow-xs">
-                <span className="flex size-14 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#386600]" aria-hidden="true">
+              <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-[#E9EBE2] bg-white p-8 text-center shadow-sm">
+                <span className="flex size-14 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#457D00]" aria-hidden="true">
                   ✦
                 </span>
                 <h2 className="mt-4 font-heading text-xl font-bold text-neutral-800">Choose a conversation</h2>
@@ -177,7 +175,11 @@ export function BuyerConversations() {
           {/* Right Column: Chat Details & Vendor Info Card */}
           {activeContext ? (
             <div className="hidden xl:flex w-[330px] shrink-0">
-              <ConversationDetailsPanel context={activeContext} />
+              <ConversationDetailsPanel
+                context={activeContext}
+                conversation={activeConversation}
+                onStateChanged={() => void load()}
+              />
             </div>
           ) : null}
         </div>

@@ -5,15 +5,7 @@ import { ProductImage } from "@/src/features/marketplace/components/ProductImage
 import type { CartItem } from "../types";
 import { CartQuantitySelectorComponent } from "./CartQuantitySelectorComponent";
 import { CartRemoveButtonComponent } from "./CartRemoveButtonComponent";
-
-function money(value: number) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 export type CartItemComponentProps = {
   item: CartItem;
@@ -29,12 +21,12 @@ export const CartItemComponent = ({
   onNavigate,
 }: CartItemComponentProps) => {
   return (
-    <div className="relative flex items-center gap-3.5 sm:gap-4 rounded-[20px] border border-neutral-200/90 bg-white p-3.5 sm:p-4 shadow-xs">
+    <div className="relative flex items-center gap-3.5 sm:gap-4 rounded-2xl border border-neutral-200/90 bg-white p-3.5 sm:p-4 shadow-sm">
       {/* Product Thumbnail */}
       <Link
         href={`/marketplace/${item.id}`}
         onClick={onNavigate}
-        className="relative size-[76px] sm:size-[80px] shrink-0 overflow-hidden rounded-[14px] bg-[#f8f6f1] transition-opacity hover:opacity-95"
+        className="relative size-[76px] sm:size-[80px] shrink-0 overflow-hidden rounded-xl bg-[#f8f6f1] transition-opacity hover:opacity-95"
         aria-label={`View details for ${item.productName}`}
       >
         <ProductImage
@@ -62,7 +54,7 @@ export const CartItemComponent = ({
           <span className="font-heading text-sm sm:text-base font-bold text-[#225828]">
             {money(Number(item.productPrice))}
           </span>
-          <span className="font-sans text-neutral-500 font-normal">
+          <span className="font-body text-neutral-500 font-normal">
             / {item.scalingType}
           </span>
         </div>

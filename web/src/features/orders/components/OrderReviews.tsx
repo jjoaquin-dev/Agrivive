@@ -70,7 +70,7 @@ function ReviewForm({
   }
 
   return (
-    <Card className="rounded-[16px] border border-[#E8E8E8] bg-white p-5 shadow-sm">
+    <Card className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
       <CardHeader className="p-0 pb-3">
         <CardTitle className="text-[18px] font-semibold text-foreground">{title}{itemName ? `: ${itemName}` : ""}</CardTitle>
       </CardHeader>
@@ -100,7 +100,7 @@ function ReviewForm({
               className="w-full resize-y rounded-xl border border-[#E8E8E8] bg-white px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/20 focus-visible:border-[#457D00]"
             />
             {error ? <Alert variant="destructive" className="text-xs"><AlertDescription>{error}</AlertDescription></Alert> : null}
-            <Button type="submit" disabled={rating < 1 || saving} className="min-h-[40px] h-10 rounded-xl bg-[#457D00] px-5 text-[14px] font-semibold text-white hover:bg-[#386600] active:translate-y-px">
+            <Button type="submit" disabled={rating < 1 || saving} className="min-h-[40px] h-10 rounded-xl bg-[#457D00] px-5 text-[14px] font-semibold text-white hover:bg-[#457D00]/90 active:translate-y-px">
               {saving ? "Saving…" : itemName ? "Post product review" : "Post seller review"}
             </Button>
           </form>
@@ -143,7 +143,7 @@ export function OrderReviews({ order }: { order: BuyerOrder }) {
     return () => controller.abort();
   }, [loadReviews]);
 
-  if (loading) return <div className="space-y-4" aria-label="Loading review forms"><Skeleton className="h-44 rounded-[20px]" /><Skeleton className="h-44 rounded-[20px]" /></div>;
+  if (loading) return <div className="space-y-4" aria-label="Loading review forms"><Skeleton className="h-44 rounded-2xl" /><Skeleton className="h-44 rounded-2xl" /></div>;
   if (error || !reviews) {
     return <Alert variant="destructive"><AlertDescription>{error || "We could not check your review status."}</AlertDescription><Button type="button" variant="outline" className="mt-3 min-h-11 rounded-xl" onClick={() => void loadReviews()}>Try again</Button></Alert>;
   }

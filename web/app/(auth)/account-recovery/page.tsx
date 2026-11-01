@@ -94,7 +94,7 @@ export default function AccountRecoveryPage() {
       }
     >
       {message ? (
-        <Alert className="mb-5 border-[#457D00]/20 bg-[#F7FAF2] text-[#457D00] rounded-[16px] p-4">
+        <Alert className="mb-5 border-[#457D00]/20 bg-[#F7FAF2] text-[#457D00] rounded-2xl p-4">
           <MailCheck aria-hidden="true" className="size-4 text-[#457D00]" />
           <AlertDescription className="text-sm font-medium">{message}</AlertDescription>
         </Alert>
@@ -141,7 +141,7 @@ export default function AccountRecoveryPage() {
           <Button
             type="submit"
             disabled={loading || resending}
-            className="h-12 w-full rounded-[14px] bg-[#457D00] font-semibold text-white shadow-sm hover:bg-[#386600] active:scale-[0.99] transition-all"
+            className="h-12 w-full rounded-xl bg-[#457D00] font-semibold text-white shadow-sm hover:bg-[#457D00]/90 active:scale-[0.99] transition-all"
           >
             {loading ? (
               <><Spinner data-icon="inline-start" />Restoring access…</>
@@ -158,7 +158,7 @@ export default function AccountRecoveryPage() {
               type="button"
               disabled={resending || loading || cooldown > 0}
               onClick={() => void requestCode()}
-              className="h-12 w-full rounded-[14px] border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-[#14231A] shadow-2xs hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
+              className="h-12 w-full rounded-xl border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-[#14231A] shadow-sm hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
             >
               <RefreshCw data-icon="inline-start" />{cooldown > 0 ? `Send again in ${cooldown}s` : "Send a new code"}
             </Button>

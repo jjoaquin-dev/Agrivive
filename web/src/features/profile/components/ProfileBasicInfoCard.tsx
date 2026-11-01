@@ -67,12 +67,12 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
   }
 
   return (
-    <Card className="rounded-[24px] border border-neutral-200/80 bg-white p-6 shadow-2xs sm:p-7">
-      <div className="border-b border-neutral-100 pb-4">
+    <Card className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-md">
+      <div className="border-b border-border/70 pb-4">
         <h2 className="font-heading text-lg font-bold text-neutral-900">
           Basic Information
         </h2>
-        <p className="mt-0.5 text-xs text-neutral-500">
+        <p className="text-sm text-neutral-500">
           Update your contact details for reservation pickup notifications.
         </p>
       </div>
@@ -90,7 +90,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="e.g. Maria"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-[#457D00] focus:outline-none focus:ring-2 focus:ring-[#457D00]/15"
             />
           </Field>
           <Field>
@@ -103,7 +103,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="e.g. Santos"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-[#457D00] focus:outline-none focus:ring-2 focus:ring-[#457D00]/15"
             />
           </Field>
         </div>
@@ -114,7 +114,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
             <FieldLabel htmlFor="email" className="text-xs font-semibold text-neutral-700">
               E-mail
             </FieldLabel>
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-[#16A34A]">
+            <span className="flex items-center gap-1 text-xs font-semibold text-[#16A34A]">
               <CheckCircle2 className="size-3 text-[#16A34A]" />
               Verified
             </span>
@@ -144,7 +144,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+63 9XX XXX XXXX"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-2xs transition-colors focus:border-[#386600] focus:outline-none focus:ring-2 focus:ring-[#386600]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-[#457D00] focus:outline-none focus:ring-2 focus:ring-[#457D00]/15"
             />
           </div>
         </Field>
@@ -177,7 +177,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 rounded-full px-7 font-bold bg-[#386600] hover:bg-[#2F5400] text-white shadow-2xs transition active:translate-y-px text-xs flex items-center gap-2 cursor-pointer"
+            className="h-11 rounded-full px-7 font-bold bg-[#457D00] hover:bg-[#14231A] text-white shadow-sm transition active:translate-y-px text-xs flex items-center gap-2 cursor-pointer"
           >
             {loading ? <Spinner data-icon="inline-start" /> : null}
             Save changes

@@ -1,13 +1,13 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import Link from "next/link";
-import { ArrowLeft, Bell, CheckCheck, Clock, ShoppingBasket, Triangle } from "lucide-react";
+import { Bell, CheckCheck, Clock, ShoppingBasket, Triangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/src/components/PageContainer";
 import { useBuyerNotifications, type NoticeFilterTab } from "../hooks/useBuyerNotifications";
 import { NotificationCardComponent } from "./NotificationCardComponent";
 import { NotificationEmptyStateComponent } from "./NotificationEmptyStateComponent";
-import { NotificationToastPreviewComponent } from "./NotificationToastPreviewComponent";
 
 export function BuyerNotifications() {
   const {
@@ -36,20 +36,14 @@ export function BuyerNotifications() {
         {/* Header Section: Left Metadata + Right Floating Toasts */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="flex-1">
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900 cursor-pointer"
-            >
-              <ArrowLeft className="size-4 shrink-0" />
-              <span>Back to Marketplace</span>
-            </Link>
+            <Breadcrumbs items={[{ label: "Notifications" }]} />
 
             <div className="mt-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF5EA] px-3 py-1 text-xs font-semibold text-[#1B4D36]">
                 <Triangle className="size-3 fill-[#1B4D36]" />
                 Notifications Hub
               </span>
-              <h1 className="mt-2.5 font-heading text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
+              <h1 className="mt-2.5 font-heading text-3xl font-bold tracking-tight text-[#14231A] sm:text-4xl">
                 Your Notifications
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-500">
@@ -58,8 +52,6 @@ export function BuyerNotifications() {
             </div>
           </div>
 
-          {/* Right Floating Toast Stack matching photo */}
-          <NotificationToastPreviewComponent />
         </div>
 
         {/* Filter Pills Matching Photo: Independent Pill Capsules */}
@@ -74,8 +66,8 @@ export function BuyerNotifications() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#1B4D36] text-white shadow-2xs"
-                      : "border border-neutral-200/80 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 shadow-2xs"
+                      ? "bg-[#1B4D36] text-white shadow-sm"
+                      : "border border-neutral-200/80 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 shadow-sm"
                   }`}
                 >
                   <span>{tab.label}</span>
@@ -131,7 +123,7 @@ export function BuyerNotifications() {
         {/* Bottom Feature Cards Matching Photo */}
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#16A34A] shadow-2xs">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#16A34A] shadow-sm">
               <ShoppingBasket className="size-4.5" />
             </div>
             <div>
@@ -143,7 +135,7 @@ export function BuyerNotifications() {
           </div>
 
           <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#EA580C] shadow-2xs">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#EA580C] shadow-sm">
               <Clock className="size-4.5" />
             </div>
             <div>
@@ -155,7 +147,7 @@ export function BuyerNotifications() {
           </div>
 
           <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#2563EB] shadow-2xs">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#2563EB] shadow-sm">
               <Bell className="size-4.5" />
             </div>
             <div>

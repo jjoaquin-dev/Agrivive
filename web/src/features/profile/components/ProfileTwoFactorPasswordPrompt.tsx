@@ -80,7 +80,7 @@ export function ProfileTwoFactorPasswordPrompt({
           type="submit"
           disabled={loading || !password}
           className={`h-11 rounded-full px-5 text-xs font-bold text-white ${
-            isDestructive ? "bg-destructive hover:bg-destructive/90" : "bg-[#386600] hover:bg-[#386600]/90"
+            isDestructive ? "bg-destructive hover:bg-destructive/90" : "bg-[#457D00] hover:bg-[#457D00]/90/90"
           }`}
         >
           {loading && <Loader2 className="size-3.5 animate-spin" />}

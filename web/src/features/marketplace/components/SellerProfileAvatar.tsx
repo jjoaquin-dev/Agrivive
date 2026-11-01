@@ -25,7 +25,7 @@ export function SellerProfileAvatar({ imageUrl, shopName }: SellerProfileAvatarP
         <img
           src={imageUrl}
           alt={`${shopName} seller profile`}
-          className="size-24 sm:size-28 shrink-0 rounded-2xl object-cover border border-[#E8E8E8] shadow-2xs"
+          className="size-24 sm:size-28 shrink-0 rounded-2xl object-cover border border-[#E8E8E8] shadow-sm"
           onError={() => setImageFailed(true)}
         />
       ) : (
@@ -38,10 +38,10 @@ export function SellerProfileAvatar({ imageUrl, shopName }: SellerProfileAvatarP
         </div>
       )}
       <span
-        className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-[#16A34A] text-white ring-2 ring-white shadow-2xs"
+        className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-[#16A34A] text-white ring-2 ring-white shadow-sm"
         aria-hidden="true"
       >
-        <Check className="size-3.5 stroke-[3]" />
+        <Check className="size-3.5" />
       </span>
     </div>
   );

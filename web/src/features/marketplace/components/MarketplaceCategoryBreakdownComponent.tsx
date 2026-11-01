@@ -9,7 +9,7 @@ interface Props {
 
 const CATEGORY_COLORS = [
   "#457D00", // Forest Lime
-  "#1F4D3A", // Deep Pine
+  "#457D00", // Deep Pine
   "#F59E0B", // Amber
   "#10B981", // Emerald
   "#6366F1", // Indigo
@@ -26,7 +26,7 @@ export const MarketplaceCategoryBreakdownComponent = ({ categories }: Props) => 
   let accumulatedPercent = 0;
 
   return (
-    <div className="rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-xs">
+    <div className="rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export const MarketplaceCategoryBreakdownComponent = ({ categories }: Props) => 
               <span className="block font-heading text-2xl font-black text-neutral-900">
                 {total}
               </span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                 Active Lots
               </span>
             </div>

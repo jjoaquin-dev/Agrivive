@@ -1,8 +1,9 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Heart, Sparkles, Store } from "lucide-react";
+import { Heart, Sparkles, Store } from "lucide-react";
 import { PageContainer } from "@/src/components/PageContainer";
 import { ProductCard } from "@/src/features/marketplace/components/ProductCard";
 import type { MarketplaceProduct } from "@/src/features/marketplace/types";
@@ -51,17 +52,11 @@ export function BuyerFavorites() {
     <main className="min-h-[calc(100vh-73px)] bg-[#fdfdfd] pb-16 pt-8">
       <PageContainer>
         {/* Navigation Breadcrumb / Back Link */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <Link
-            href="/marketplace"
-            className="group inline-flex items-center gap-2 rounded-xl text-xs font-semibold text-neutral-600 transition hover:text-[#457D00]"
-          >
-            <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-            <span>Back to Marketplace</span>
-          </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Breadcrumbs items={[{ label: "Saved items" }]} />
 
           {visibleProducts.length > 0 ? (
-            <span className="rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-3 py-1 text-xs font-bold text-[#386600]">
+            <span className="rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-3 py-1 text-xs font-bold text-[#457D00]">
               {visibleProducts.length} saved {visibleProducts.length === 1 ? "item" : "items"}
             </span>
           ) : null}
@@ -88,15 +83,15 @@ export function BuyerFavorites() {
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="h-80 animate-pulse rounded-[24px] border border-neutral-200/60 bg-white p-4"
+                className="h-80 animate-pulse rounded-2xl border border-neutral-200/60 bg-white p-4"
               />
             ))}
           </div>
         ) : visibleProducts.length === 0 ? (
           /* Empty State */
-          <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-neutral-200/80 bg-white p-8 text-center shadow-xs sm:p-12">
+          <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-sm sm:p-12">
             <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-[#FFF8ED] text-[#FEA938]">
-              <Heart className="size-8 stroke-[1.5]" />
+              <Heart className="size-8" />
             </div>
             <h2 className="font-heading text-lg font-bold text-neutral-900 sm:text-xl">
               No favorite produce yet
@@ -107,7 +102,7 @@ export function BuyerFavorites() {
             <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
               <Link
                 href="/marketplace"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#457D00] px-6 text-xs font-bold text-white shadow-xs transition hover:bg-[#386600] active:scale-95"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#457D00] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#457D00]/90 active:scale-95"
               >
                 <Store className="size-4" />
                 <span>Explore Marketplace</span>

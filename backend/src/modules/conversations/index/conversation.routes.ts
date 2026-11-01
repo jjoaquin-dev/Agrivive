@@ -12,6 +12,7 @@ import { markAllConversationsRead } from "../services/conversation.read-all";
 import { canAccessConversation, getConversationSocketUserId } from "../services/conversation.websocket-auth";
 import { subscribeConversation, unsubscribeConversation } from "../services/conversation.realtime";
 import { uploadConversationAttachment } from "../services/conversation.attachment";
+import { setConversationParticipantState } from "../services/conversation.participant.update";
 import {
   conversationListQuery,
   conversationParams,
@@ -31,7 +32,7 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     catch (error) { return failure(error, status); }
   }, { role: ["buyer"], body: createConversationBody })
   .get("/conversations", async ({ session, query, status }) => {
-    try { return await listConversations(session.userId, query.limit, query.cursor); }
+    try { return await listConversations(session.userId, query.limit, query.cursor, query.archived ?? false); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], query: conversationListQuery })
   .get("/conversations/unread-count", async ({ session, status }) => {
@@ -52,6 +53,22 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
   }, { role: ["buyer", "seller"], params: conversationParams, body: sendConversationMessageBody })
   .post("/conversations/:id/read", async ({ session, params, status }) => {
     try { return await markConversationRead(session.userId, params.id); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"], params: conversationParams })
+  .post("/conversations/:id/archive", async ({ session, params, status }) => {
+    try { return await setConversationParticipantState(session.userId, params.id, { archivedAt: new Date() }); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"], params: conversationParams })
+  .post("/conversations/:id/unarchive", async ({ session, params, status }) => {
+    try { return await setConversationParticipantState(session.userId, params.id, { archivedAt: null }); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"], params: conversationParams })
+  .post("/conversations/:id/block", async ({ session, params, status }) => {
+    try { return await setConversationParticipantState(session.userId, params.id, { blockedAt: new Date() }); }
+    catch (error) { return failure(error, status); }
+  }, { role: ["buyer", "seller"], params: conversationParams })
+  .post("/conversations/:id/unblock", async ({ session, params, status }) => {
+    try { return await setConversationParticipantState(session.userId, params.id, { blockedAt: null }); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], params: conversationParams })
   .post("/conversations/read-all", async ({ session, status }) => {

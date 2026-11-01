@@ -1,9 +1,10 @@
 "use client";
 
+import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowLeft } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -105,7 +106,7 @@ export function OrderDetail() {
   });
 
   if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) {
-    return <main className="min-h-screen bg-[#FDFDFD] p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-[16px] border border-[#E8E8E8] bg-white" /></div></main>;
+    return <main className="min-h-screen bg-[#FDFDFD] p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-2xl border border-[#E8E8E8] bg-white" /></div></main>;
   }
   if (error && !order) {
     return (
@@ -122,10 +123,7 @@ export function OrderDetail() {
   return (
     <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-6 py-6 text-foreground">
       <div className="mx-auto max-w-7xl">
-        <Link href="/orders" className="inline-flex min-h-[36px] items-center gap-2 text-[14px] font-medium text-neutral-500 transition-colors hover:text-black cursor-pointer">
-          <ArrowLeft aria-hidden="true" className="size-4 shrink-0" />
-          <span>Back to reservations</span>
-        </Link>
+        <Breadcrumbs items={[{ label: "Orders", href: "/orders" }, { label: "Order details" }]} />
 
         <div className="mt-4"><OrderSummaryHeader order={order} /></div>
 

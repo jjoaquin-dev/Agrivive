@@ -46,7 +46,7 @@ export function OrderSortDropdown({ value, onChange }: OrderSortDropdownProps) {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex h-10 min-h-[40px] items-center gap-2 rounded-full border border-[#E8E8E8] bg-white px-4 text-xs font-semibold text-[#14231A] shadow-xs transition hover:bg-neutral-50 cursor-pointer select-none outline-none"
+        className="inline-flex h-10 min-h-[40px] items-center gap-2 rounded-full border border-[#E8E8E8] bg-white px-4 text-xs font-semibold text-[#14231A] shadow-sm transition hover:bg-neutral-50 cursor-pointer select-none outline-none"
       >
         <span className="text-[#5F7367] font-normal">Sort By:</span>
         <span className="font-semibold text-[#14231A]">{SORT_LABELS[value]}</span>
@@ -61,7 +61,7 @@ export function OrderSortDropdown({ value, onChange }: OrderSortDropdownProps) {
         <div
           role="listbox"
           tabIndex={-1}
-          className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-[#E8E8E8] bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.08)] z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-[#E8E8E8] bg-white p-2 shadow-md z-50 animate-in fade-in-0 zoom-in-95 duration-150"
         >
           <div className="flex flex-col gap-0.5">
             {options.map((opt) => {

@@ -23,7 +23,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
   };
 
   return (
-    <div className="rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-xs">
+    <div className="rounded-2xl border border-neutral-200/90 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-neutral-100 pb-4">
         <div>
           <div className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                 onMouseLeave={() => setHoveredId(null)}
                 className={`group relative rounded-xl border p-3 transition-all ${
                   isHovered
-                    ? "border-[#457D00] bg-lime-50/30 shadow-xs"
+                    ? "border-[#457D00] bg-lime-50/30 shadow-sm"
                     : "border-neutral-100 bg-neutral-50/40 hover:bg-white hover:border-neutral-200"
                 }`}
               >
@@ -78,7 +78,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                     <span className="truncate font-bold text-neutral-900 group-hover:text-[#457D00] transition-colors">
                       {item.name}
                     </span>
-                    <span className="hidden sm:inline-block rounded-md bg-neutral-200/60 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
+                    <span className="hidden sm:inline-block rounded-lg bg-neutral-200/60 px-2 py-0.5 text-xs font-medium text-neutral-600">
                       {item.category}
                     </span>
                   </div>
@@ -88,7 +88,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                       <span className="font-heading text-sm font-black text-neutral-900">
                         {item.totalQuantity.toLocaleString()} {item.unit}
                       </span>
-                      <span className="block text-[11px] text-neutral-500">
+                      <span className="block text-xs text-neutral-500">
                         {item.orderCount} orders · ₱{item.totalValue.toLocaleString()}
                       </span>
                     </div>
@@ -103,7 +103,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                       width: `${percentage}%`,
                       background: rank <= 3
                         ? "linear-gradient(90deg, #457D00 0%, #76B800 100%)"
-                        : "linear-gradient(90deg, #1F4D3A 0%, #457D00 100%)",
+                        : "linear-gradient(90deg, #457D00 0%, #457D00 100%)",
                     }}
                   />
                 </div>

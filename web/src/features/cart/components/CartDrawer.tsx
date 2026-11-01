@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, RefreshCw, ShoppingCart } from "lucide-react";
+import { AlertTriangle, ArrowRight, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -16,10 +17,7 @@ import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalCo
 import { getBuyerProfile } from "@/src/features/profile/api/profile";
 import { CartSellerHeaderComponent } from "./CartSellerHeaderComponent";
 import { CartItemComponent } from "./CartItemComponent";
-
-function money(value: number) {
-  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value);
-}
+import { formatPeso as money } from "@/src/lib/money";
 
 export function CartDrawer() {
   const pathname = usePathname();
@@ -93,7 +91,7 @@ export function CartDrawer() {
       <SheetContent side="right" className="flex flex-col gap-0 bg-agrivive-background sm:max-w-lg p-0">
         <SheetHeader className="border-b border-border/80 bg-white p-5 pr-14 text-left">
           <SheetTitle className="font-heading text-xl font-bold text-foreground">
-            Your cart <span className="font-sans text-sm font-medium text-muted-foreground">({itemCount} items)</span>
+            Your cart <span className="font-body text-sm font-medium text-muted-foreground">({itemCount} items)</span>
           </SheetTitle>
           <SheetDescription className="text-xs text-muted-foreground">
             Review produce from local stalls. Each store receives its own pickup pass.
@@ -101,7 +99,7 @@ export function CartDrawer() {
         </SheetHeader>
 
         {!isReady ? (
-          <div className="m-6 h-40 animate-pulse rounded-[20px] bg-white" aria-label="Loading cart" />
+          <div className="m-6 h-40 animate-pulse rounded-2xl bg-white" aria-label="Loading cart" />
         ) : items.length > 0 ? (
           <div data-lenis-prevent className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-5">
             {trustWarning ? (
@@ -119,14 +117,15 @@ export function CartDrawer() {
               <div key={shopName} className="space-y-2.5">
                 <CartSellerHeaderComponent shopName={shopName} />
                 <div className="space-y-3">
-                  {sellerItems.map((item) => (
-                    <CartItemComponent
-                      key={item.id}
-                      item={item}
-                      onUpdateQuantity={(quantity) => updateQuantity(item.id, quantity)}
-                      onRemove={() => removeItem(item.id)}
-                      onNavigate={() => setDrawerOpen(false)}
-                    />
+                  {sellerItems.map((item, index) => (
+                    <div key={item.id} className="cart-item-enter" style={{ animationDelay: `${index * 70}ms` }}>
+                      <CartItemComponent
+                        item={item}
+                        onUpdateQuantity={(quantity) => updateQuantity(item.id, quantity)}
+                        onRemove={() => removeItem(item.id)}
+                        onNavigate={() => setDrawerOpen(false)}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -134,9 +133,7 @@ export function CartDrawer() {
           </div>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-            <span className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-[0_8px_20px_rgba(31,77,58,0.06)]">
-              <ShoppingCart aria-hidden="true" className="size-8 text-agrivive-primary" />
-            </span>
+            <Image src="/brand/empty-cart-trolley.png" alt="" width={465} height={507} sizes="160px" className="h-auto w-40 max-w-full" />
             <h3 className="mt-4 font-heading text-lg font-bold">Your cart is empty</h3>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">Reserve fresh surplus produce from Davao public markets.</p>
             <Button render={<Link href="/marketplace" />} nativeButton={false} onClick={() => setDrawerOpen(false)} className="mt-5 min-h-12 rounded-xl px-6">
@@ -165,11 +162,11 @@ export function CartDrawer() {
               type="button"
               onClick={() => setShowReserveModal(true)}
               disabled={checkingOut || !isReady || Boolean(trustRestriction)}
-              className="min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
+              className="group min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
             >
-              {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" />
+              {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" className="transition-transform duration-200 group-hover:translate-x-1" />
             </Button>
-            <p className="pt-2 text-center text-[11px] text-muted-foreground">
+            <p className="pt-2 text-center text-xs text-muted-foreground">
               Direct pickup payment at stall. No upfront card required.
             </p>
           </SheetFooter>

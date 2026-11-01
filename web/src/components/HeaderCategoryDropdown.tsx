@@ -70,7 +70,7 @@ export function HeaderCategoryDropdown({
         <div
           role="listbox"
           tabIndex={-1}
-          className="absolute right-0 top-full mt-2.5 w-52 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-[0_12px_36px_rgba(0,0,0,0.08)] z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-2.5 w-52 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2 shadow-md z-50 animate-in fade-in-0 zoom-in-95 duration-150"
         >
           <div className="flex flex-col gap-0.5">
             {categories.map((cat) => {
