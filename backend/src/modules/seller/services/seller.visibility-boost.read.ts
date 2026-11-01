@@ -8,6 +8,7 @@ import { readPriceDropNow } from "./seller.price-reduction.drop-now.read";
 import { readBoostProgress } from "./seller.visibility-boost.progress";
 import { readBoostChannels } from "./seller.visibility-boost.channels";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { checkPriorityBoostGate } from "../../../utils/visibility-ranking/boost-gate";
 
 function errorMessage(status: string) {
   return status === "failed" ? "We could not send this boost. You can try again." : null;
@@ -68,17 +69,23 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     // Posting is blocked for a few hours after the last first post. Say so up front instead of failing on tap.
     const waitUntil = hasRoom && !boost ? await getFirstPostCooldownEnd(tx, productId) : null;
     const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000)) : 0;
-    const canBoost = hasRoom && !waitUntil;
+    // Only a Priority Boost listing can start a boost. A boost that already exists for this cycle (for example a failed one) can still be retried.
+    const [started] = cycle ? await tx.select({ id: seller_visibility_boosts.id }).from(seller_visibility_boosts)
+      .where(eq(seller_visibility_boosts.boostKey, `${cycle.id}:initial`)).limit(1) : [];
+    const gate = hasRoom && !waitUntil && !started ? await checkPriorityBoostGate(productId, now) : null;
+    const canBoost = hasRoom && !waitUntil && (gate ? gate.allowed : true);
     const currentPriceNum = Number(product.currentPrice ?? 0);
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
 
     const dropAmount = product.priceReductionEnabled ? Number(product.priceReductionAmount ?? 0) : 0;
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
-    const headline = waitUntil ? "Almost Time" : canBoost ? "Ready to Boost" : "Boost Is Running";
+    const headline = waitUntil ? "Almost Time" : gate && !gate.allowed ? gate.headline : canBoost ? "Ready to Boost" : "Boost Is Running";
 
     const message = waitUntil
       ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.`
+      : gate && !gate.allowed
+        ? gate.message
       : canBoost
         ? "Post this listing on the Agrivive Facebook Page."
         : dropsOn

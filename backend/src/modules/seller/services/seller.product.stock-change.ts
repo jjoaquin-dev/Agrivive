@@ -8,6 +8,7 @@ import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { queueFirstPublicListing, queueSellerListingEvent } from "../../../utils/seller-listing-event";
 import { notifyStockLevel } from "../../../utils/seller-notifications/stock-level";
 import { sendSellerListingNotices } from "../../../jobs/send-seller-listing-notices";
+import { addToCurrentCycleOriginalQty } from "./seller.product.stock-change.cycle";
 
 const maxHundredths = 9_999_999_999n;
 
@@ -83,6 +84,9 @@ export async function changeSellerProductStock(
         startedAt: now,
         originalQty,
       });
+    }
+    if (!newCycle && !initializeLegacy && product.isActive && signedChange > 0n && product.originalQty !== null) {
+      await addToCurrentCycleOriginalQty(tx, productId, toDecimal(signedChange));
     }
     await tx.insert(product_stock_adjustments).values({
       productId,

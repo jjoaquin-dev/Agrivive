@@ -15,7 +15,11 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-The `deploy/` folder is removed: `Caddyfile` is at the repo root, `scripts/vps-release.sh` kept for the CD workflows, and all env keys are in the root `.env.example`. See [[2026-11-01 Deploy Folder Removed]].
+Boost now opens only for Priority Boost listings (paper rule, owner choice), Add More keeps the cycle's original stock in sync with a repair migration (applied to dev, not yet on the VPS), and the seller Boost list shows official tier names. 33 tests pass. Rebuild the API; run migration `20261101190000_sync_cycle_original_qty` on the VPS when ready. See [[2026-11-01 Boost Rule and Stock Sync]].
+
+Earlier: Boost screen "Amount left" now uses the same original stock as the Listings screen and buyer feed (it showed 98% for a listing with 6 of 50 kg left). Rebuild and recreate the API on the VPS. See [[2026-11-01 Boost Amount Left Matches Feed]].
+
+Earlier: The `deploy/` folder is removed: `Caddyfile` is at the repo root, `scripts/vps-release.sh` kept for the CD workflows, and all env keys are in the root `.env.example`. See [[2026-11-01 Deploy Folder Removed]].
 
 Earlier: AHP-TOPSIS is now the default marketplace policy (unset or unknown `VISIBILITY_POLICY` uses it; only `visibility-v4` rolls back). The VPS `.env` and container still need updating. See [[2026-11-01 AHP-TOPSIS Default Policy]].
 
@@ -91,7 +95,9 @@ Owner manual testing of the seller mobile app with real device builds, verifying
 
 ## Historical changelog
 
-- Latest entry: [[2026-11-01 Deploy Folder Removed]]
+- Latest entry: [[2026-11-01 Boost Rule and Stock Sync]]
+- Earlier entry: [[2026-11-01 Boost Amount Left Matches Feed]]
+- Earlier entry: [[2026-11-01 Deploy Folder Removed]]
 - Earlier entry: [[2026-11-01 AHP-TOPSIS Default Policy]]
 - Earlier entry: [[2026-11-01 Baseline Paging Fix and Policy Tests]]
 - Earlier entry: [[2026-11-01 AHP-TOPSIS Test Cases]]

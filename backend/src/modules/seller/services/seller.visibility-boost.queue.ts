@@ -5,6 +5,7 @@ import { OrderError } from "../../../utils/order-types";
 import { getFirstPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { isBoostStuck } from "./seller.visibility-boost.used";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { checkPriorityBoostGate } from "../../../utils/visibility-ranking/boost-gate";
 
 // A second first post soon after the last one looks like spam on the Page.
 async function requireFirstPostGap(tx: Parameters<typeof getFirstPostCooldownEnd>[0], productId: string) {
@@ -37,6 +38,13 @@ export async function queueSellerVisibilityBoost(sellerId: string, productId: st
 
     const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
     const boostKey = `${cycle.id}:initial`;
+
+    const [started] = await tx.select({ id: seller_visibility_boosts.id }).from(seller_visibility_boosts)
+      .where(eq(seller_visibility_boosts.boostKey, boostKey)).limit(1);
+    if (!started) {
+      const gate = await checkPriorityBoostGate(productId, now);
+      if (!gate.allowed) throw new OrderError(409, gate.message);
+    }
 
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
