@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { ButtonComponent } from "../../../components/ButtonComponent";
 import {
   Package,
   Clock,
@@ -15,28 +16,31 @@ import type { UnifiedNotificationItem } from "../types";
 import { styles } from "./NotificationTimelineCard.styles";
 
 function renderIcon(type: UnifiedNotificationItem["iconType"], urgent: boolean) {
-  const size = 19;
+  const size = 20;
   switch (type) {
-    case "clock": return <Clock size={size} color="#EA580C" />;
-    case "message": return <MessageCircle size={size} color="#2563EB" />;
-    case "thermometer": return <Thermometer size={size} color="#D97706" />;
-    case "check": return <CheckCircle2 size={size} color="#16A34A" />;
-    case "cross": return <XCircle size={size} color="#DC2626" />;
-    case "celebration": return <PartyPopper size={size} color="#059669" />;
-    case "megaphone": return <Megaphone size={size} color="#D97706" />;
-    case "shield": return <ShieldAlert size={size} color="#EA580C" />;
-    default: return <Package size={size} color="#16A34A" />;
+    case "clock": return <Clock size={size} color="#FFFFFF" />;
+    case "message": return <MessageCircle size={size} color="#FFFFFF" />;
+    case "thermometer": return <Thermometer size={size} color="#FFFFFF" />;
+    case "check": return <CheckCircle2 size={size} color="#FFFFFF" />;
+    case "cross": return <XCircle size={size} color="#FFFFFF" />;
+    case "celebration": return <PartyPopper size={size} color="#FFFFFF" />;
+    case "megaphone": return <Megaphone size={size} color="#FFFFFF" />;
+    case "shield": return <ShieldAlert size={size} color="#FFFFFF" />;
+    default: return <Package size={size} color="#FFFFFF" />;
   }
 }
 
 function getIconBg(type: UnifiedNotificationItem["iconType"], urgent: boolean) {
-  if (urgent) return "#FFEDD5";
+  if (urgent) return "#F97316";
   switch (type) {
-    case "message": return "#EFF6FF";
+    case "message": return "#3B82F6";
     case "thermometer":
-    case "megaphone": return "#FEF3C7";
-    case "cross": return "#FEE2E2";
-    default: return "#DCFCE7";
+    case "megaphone": return "#F5A83C";
+    case "cross": return "#EF4444";
+    case "celebration": return "#10B981";
+    case "clock":
+    case "shield": return "#F97316";
+    default: return "#16A34A";
   }
 }
 
@@ -46,12 +50,9 @@ export function NotificationTimelineCard({ item }: { item: UnifiedNotificationIt
 
   return (
     <View
-      style={[
-        styles.card,
-        isUrgent && styles.cardUrgent,
-        !isUrgent && isUnread && styles.cardUnread,
-      ]}
+      style={[styles.card, isUrgent && styles.cardUrgent]}
     >
+      {isUnread && <View style={styles.gutterDot} accessibilityLabel="Unread" />}
       <View style={styles.topRow}>
         <View style={[styles.iconWrap, { backgroundColor: getIconBg(item.iconType, isUrgent) }]}>
           {renderIcon(item.iconType, isUrgent)}
@@ -63,7 +64,7 @@ export function NotificationTimelineCard({ item }: { item: UnifiedNotificationIt
               {item.title}
             </Text>
             <View style={styles.timeWrap}>
-              {isUnread && <View style={styles.unreadDot} />}
+              <View style={styles.timeDot} />
               <Text style={styles.timeText}>{item.timestamp}</Text>
             </View>
           </View>
@@ -74,29 +75,23 @@ export function NotificationTimelineCard({ item }: { item: UnifiedNotificationIt
       {(item.primaryAction || item.secondaryAction) && (
         <View style={styles.actionsRow}>
           {item.primaryAction && (
-            <Pressable
+            <ButtonComponent
+              title={item.primaryAction.label}
+              variant="secondary"
               onPress={item.primaryAction.onPress}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.actionBtn,
-                item.primaryAction?.variant === "warning" || isUrgent
-                  ? styles.actionBtnOrange
-                  : styles.actionBtnGreen,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text style={styles.actionBtnText}>{item.primaryAction.label}</Text>
-            </Pressable>
+              style={[styles.actionBtn, (item.primaryAction.variant === "warning" || isUrgent) && styles.actionBtnOrange]}
+              textStyle={[styles.actionBtnText, (item.primaryAction.variant === "warning" || isUrgent) && styles.actionBtnTextOrange]}
+            />
           )}
 
           {item.secondaryAction && (
-            <Pressable
+            <ButtonComponent
+              title={item.secondaryAction.label}
+              variant="secondary"
               onPress={item.secondaryAction.onPress}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.actionBtn, styles.actionBtnGray, pressed && styles.pressed]}
-            >
-              <Text style={styles.actionBtnGrayText}>{item.secondaryAction.label}</Text>
-            </Pressable>
+              style={styles.actionBtn}
+              textStyle={styles.actionBtnGrayText}
+            />
           )}
         </View>
       )}

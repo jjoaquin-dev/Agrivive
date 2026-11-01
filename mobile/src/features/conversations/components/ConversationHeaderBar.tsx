@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronLeft, MoreVertical } from "lucide-react-native";
 import { fonts, spacing } from "../../../theme";
+import { safeBack } from "../../../utils/safeBack";
 
 interface ConversationHeaderBarProps {
   senderName: string;
@@ -15,7 +16,7 @@ export function ConversationHeaderBar({ senderName, avatarBg, initials }: Conver
 
   return (
     <View style={styles.navBar}>
-      <Pressable onPress={() => router.back()} style={styles.iconBtn}>
+      <Pressable onPress={() => safeBack(router)} style={styles.iconBtn}>
         <ChevronLeft size={22} color="#111827" />
       </Pressable>
       <View style={[styles.avatarBox, { backgroundColor: avatarBg }]}>

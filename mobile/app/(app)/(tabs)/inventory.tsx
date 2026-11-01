@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -28,7 +29,7 @@ import { useInventory, type InventoryFilterTab } from "../../../src/features/inv
 import { ProductCard } from "../../../src/features/inventory/components/ProductCard";
 import { PaginationControl } from "../../../src/components/PaginationControl";
 import { PRODUCT_CATEGORIES, type ProductCategory } from "../../../src/features/inventory/types";
-import { colors, fonts, spacing } from "../../../src/theme";
+import { colors, fonts, radii, shadows, spacing, touchTargets, typography } from "../../../src/theme";
 
 export default function InventoryScreen() {
   const router = useRouter();
@@ -67,7 +68,14 @@ export default function InventoryScreen() {
       {/* Top Bar with Title, Subtitle, and Quick Actions */}
       <View style={styles.topBar}>
         <View style={styles.titleContainer}>
-          <Text style={styles.screenTitle}>My Listings</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.screenTitle}>My Listings</Text>
+            <View style={styles.countPill}>
+              <Text style={styles.countPillText}>
+                {filteredProducts.length} {filteredProducts.length === 1 ? "listing" : "listings"}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.screenSubtitle}>Manage your surplus products</Text>
         </View>
 
@@ -95,38 +103,58 @@ export default function InventoryScreen() {
         </View>
       </View>
 
-      {/* Search Input Bar */}
-      <View style={styles.searchBar}>
-        <Search size={18} color="#9CA3AF" style={styles.searchIcon} />
-        <TextInput
-          placeholder="Search product name or category..."
-          placeholderTextColor="#9CA3AF"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-          returnKeyType="search"
-        />
-        {searchQuery.length > 0 ? (
-          <Pressable
-            onPress={handleClearSearch}
-            accessibilityRole="button"
-            accessibilityLabel="Clear search"
-            style={styles.clearButton}
-          >
-            <X size={16} color="#9CA3AF" />
-          </Pressable>
-        ) : null}
+      {/* Search and Filter */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBar}>
+          <Search size={18} color="#9CA3AF" style={styles.searchIcon} />
+          <TextInput
+            placeholder="Search product name or category..."
+            placeholderTextColor="#9CA3AF"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 ? (
+            <Pressable
+              onPress={handleClearSearch}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              style={styles.clearButton}
+            >
+              <X size={16} color="#9CA3AF" />
+            </Pressable>
+          ) : null}
+        </View>
+
+        <Pressable
+          onPress={() => {
+            if (selectedCategory !== "all") setSelectedCategory("all");
+            else if (filterTab !== "all") setFilterTab("all");
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Filter listings"
+          style={styles.filterButton}
+        >
+          <SlidersHorizontal size={14} color="#374151" />
+          <Text style={styles.pillControlText}>Filter</Text>
+          {selectedCategory !== "all" || filterTab !== "all" ? (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>1</Text>
+            </View>
+          ) : null}
+        </Pressable>
       </View>
 
       {/* Status Filter Chips */}
-      <View style={styles.chipRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} style={styles.chipScroll}>
         {(
           [
-            { id: "all", label: `All ${summary.totalProducts}` },
-            { id: "low_stock", label: `Low Stock ${summary.lowStockCount}` },
-            { id: "out_of_stock", label: `Out of Stock ${summary.outOfStockCount}` },
-            { id: "archived", label: `Archived ${summary.archivedCount}` },
-          ] as { id: InventoryFilterTab; label: string }[]
+            { id: "all", label: "All", count: summary.totalProducts },
+            { id: "low_stock", label: "Low Stock", count: summary.lowStockCount },
+            { id: "out_of_stock", label: "Out of Stock", count: summary.outOfStockCount },
+            { id: "archived", label: "Archived", count: summary.archivedCount },
+          ] as { id: InventoryFilterTab; label: string; count: number }[]
         ).map((tab) => {
           const isSelected = filterTab === tab.id;
           return (
@@ -145,10 +173,13 @@ export default function InventoryScreen() {
               >
                 {tab.label}
               </Text>
+              <View style={[styles.chipCount, isSelected && styles.chipCountSelected]}>
+                <Text style={[styles.chipCountText, isSelected && styles.chipCountTextSelected]}>{tab.count}</Text>
+              </View>
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* Category Horizontal Filter Pills */}
       <View style={styles.categoryScrollContainer}>
@@ -184,31 +215,13 @@ export default function InventoryScreen() {
       {/* Filter & Sort Summary Row */}
       <View style={styles.filterSortRow}>
         <View style={styles.filterGroup}>
-          <Pressable
-            onPress={() => {
-              if (selectedCategory !== "all") setSelectedCategory("all");
-              else if (filterTab !== "all") setFilterTab("all");
-            }}
-            style={styles.pillControl}
-          >
-            <SlidersHorizontal size={13} color="#374151" />
-            <Text style={styles.pillControlText}>Filter</Text>
-            {selectedCategory !== "all" || filterTab !== "all" ? (
-              <View style={styles.filterBadge}>
-                <Text style={styles.filterBadgeText}>1</Text>
-              </View>
-            ) : null}
-          </Pressable>
-
           <Pressable style={styles.pillControl}>
-            <ArrowUpDown size={13} color="#374151" />
+            <ArrowUpDown size={14} color="#374151" />
             <Text style={styles.pillControlText}>Sort</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.countText}>
-          {filteredProducts.length} {filteredProducts.length === 1 ? "listing" : "listings"} · Newest First
-        </Text>
+        <Text style={styles.countText}>Newest First</Text>
       </View>
     </View>
   );
@@ -431,52 +444,19 @@ const styles = StyleSheet.create({
   listHeader: {
     marginBottom: spacing.base,
   },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingTop: 8,
-  },
+  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.base, },
   titleContainer: {
     flex: 1,
   },
-  screenTitle: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#111827",
-    fontFamily: fonts.heading.bold,
-  },
-  screenSubtitle: {
-    fontSize: 13,
-    color: "#6B7280",
-    fontFamily: fonts.body.regular,
-    marginTop: 2,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationDot: {
-    position: "absolute",
-    top: 9,
-    right: 9,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#EF4444",
-  },
+  titleRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: spacing.sm },
+  countPill: { backgroundColor: colors.primaryLight, borderRadius: radii.full, paddingHorizontal: spacing.sm + 2, paddingVertical: 2 },
+  countPillText: { ...typography.caption, color: colors.primaryPressed },
+  searchRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.md },
+  screenTitle: { ...typography.screenTitle, color: colors.text, },
+  screenSubtitle: { ...typography.label, color: colors.textMuted, marginTop: 2, },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm, },
+  iconButton: { width: touchTargets.min - 4, height: touchTargets.min - 4, borderRadius: radii.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, justifyContent: "center", alignItems: "center", },
+  notificationDot: { position: "absolute", top: 9, right: 9, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.terracotta, },
   metricsContainer: {
     flexDirection: "row",
     gap: 10,
@@ -516,53 +496,30 @@ const styles = StyleSheet.create({
     marginTop: 1,
     fontWeight: "500",
   },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 14,
-    height: 48,
-    marginBottom: 14,
-  },
+  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, height: touchTargets.min, flex: 1, },
+  filterButton: { flexDirection: "row", alignItems: "center", gap: spacing.xs + 2, height: touchTargets.min, paddingHorizontal: spacing.md, backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border },
+  chipCount: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceMuted },
+  chipCountSelected: { backgroundColor: "rgba(255,255,255,0.25)" },
+  chipCountText: { ...typography.caption, color: colors.textMuted },
+  chipCountTextSelected: { color: colors.white },
   searchIcon: {
     marginRight: 8,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#111827",
-    fontFamily: fonts.body.regular,
-  },
+  searchInput: { flex: 1, ...typography.body, color: colors.text, },
   clearButton: {
     padding: 4,
   },
-  chipRow: {
+  chipRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, },
+  chipScroll: { marginBottom: spacing.md, marginHorizontal: -spacing.base, paddingHorizontal: spacing.base, },
+  filterChip: {
     flexDirection: "row",
     alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 14,
-  },
-  filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
+    gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radii.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, },
   filterChipSelected: {
     backgroundColor: "#0F920F",
     borderColor: "#0F920F",
   },
-  filterChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#4B5563",
-  },
+  filterChipText: { ...typography.labelSmall, color: colors.text, },
   filterChipTextSelected: {
     color: "#FFFFFF",
     fontWeight: "700",
@@ -570,31 +527,11 @@ const styles = StyleSheet.create({
   categoryScrollContainer: {
     marginBottom: 14,
   },
-  categoryRow: {
-    gap: 8,
-    paddingVertical: 2,
-  },
-  categoryPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  categoryPillSelected: {
-    backgroundColor: "#065F46",
-    borderColor: "#065F46",
-  },
-  categoryPillText: {
-    fontSize: 12,
-    color: "#4B5563",
-    fontWeight: "500",
-  },
-  categoryPillTextSelected: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
+  categoryRow: { gap: spacing.sm, paddingVertical: 2, },
+  categoryPill: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radii.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, },
+  categoryPillSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary, },
+  categoryPillText: { ...typography.labelSmall, color: colors.text, },
+  categoryPillTextSelected: { color: colors.primaryPressed, fontFamily: fonts.body.semiBold, },
   filterSortRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -607,22 +544,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  pillControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  pillControlText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#374151",
-  },
+  pillControl: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.xs + 2, },
+  pillControlText: { ...typography.labelSmall, color: colors.text, },
   filterBadge: {
     backgroundColor: "#0F920F",
     width: 16,
@@ -636,11 +559,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  countText: {
-    fontSize: 12,
-    color: "#6B7280",
-    fontFamily: fonts.body.regular,
-  },
+  countText: { ...typography.labelSmall, color: colors.textMuted, },
   centerContainer: {
     alignItems: "center",
     paddingVertical: spacing.xxl,
@@ -687,22 +606,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#0F920F",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#0F920F",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+  fab: { position: "absolute", bottom: spacing.lg, right: spacing.lg, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center", ...shadows.elevated, },
   fabPressed: {
     backgroundColor: "#0C770C",
     transform: [{ scale: 0.95 }],

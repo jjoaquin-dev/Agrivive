@@ -41,7 +41,7 @@ export default function TabsLayout() {
           fontSize: 18,
           color: colors.text,
         },
-        tabBarActiveTintColor: "#16A34A",
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: "#6B7280",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
@@ -66,7 +66,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused, color, size }) => (
             <Home
               color={color}
-              fill={focused ? "#16A34A" : "transparent"}
+              fill={focused ? colors.primary : "transparent"}
               size={size || 22}
             />
           ),

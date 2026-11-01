@@ -13,7 +13,7 @@ export async function rearmBoostFollowUp(boostId: string) {
     const [row] = await db.select({
       price: sellers_product.productPrice,
       minimumPrice: sellers_product.minimumPrice,
-      percent: sellers_product.priceReductionPercent,
+      amount: sellers_product.priceReductionAmount,
       quantity: sellers_product.productQty,
       active: sellers_product.isActive,
       marketable: sellers_product.isMarketable,
@@ -23,7 +23,7 @@ export async function rearmBoostFollowUp(boostId: string) {
     if (!row) return;
 
     const canCutAgain = row.active && row.marketable && Number(row.quantity ?? 0) > 0 &&
-      Number(row.percent ?? 0) > 0 && row.minimumPrice !== null &&
+      Number(row.amount ?? 0) > 0 && row.minimumPrice !== null &&
       Number(row.price ?? 0) > Number(row.minimumPrice);
 
     await db.update(seller_visibility_boosts).set({

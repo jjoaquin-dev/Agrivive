@@ -7,102 +7,48 @@ interface VisibilityFactorsGridProps {
   item: SellerVisibilityItem;
 }
 
-function factorPercent(value: number | undefined) {
-  return typeof value === "number" && Number.isFinite(value)
-    ? `${(value * 100).toFixed(0)}%`
-    : "Not available";
+function percent(value: number | undefined): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? Math.round(Math.min(1, Math.max(0, value)) * 100) : null;
 }
 
+/** The four things that decide how high a listing shows, biggest first. */
 export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
-  const freshness = item.criteria?.freshness ?? item.inputs?.postingAge;
-  const stock = item.criteria?.stockAvailability ?? item.inputs?.remainingQuantity;
-  const reliability = item.criteria?.sellerReliability ?? item.inputs?.sellerReliability;
-  const recurrence = item.criteria?.recurrence ?? item.inputs?.recurrence;
-
-  // Criteria sorted strictly from highest visibility weight to lowest
   const factors = [
-    { label: "Freshness (Recency)", weight: "40% WT", value: factorPercent(freshness), maxPts: "0.40 pts max" },
-    { label: "Available Stock", weight: "30% WT", value: factorPercent(stock), maxPts: "0.30 pts max" },
-    { label: "Seller Reliability", weight: "20% WT", value: factorPercent(reliability), maxPts: "0.20 pts max" },
-    { label: "Surplus Recurrence", weight: "10% WT", value: factorPercent(recurrence), maxPts: "0.10 pts max" },
+    { label: "Fresh", weight: 40, value: percent(item.criteria?.freshness ?? item.inputs?.postingAge) },
+    { label: "Amount left", weight: 30, value: percent(item.criteria?.stockAvailability ?? item.inputs?.remainingQuantity) },
+    { label: "Reliability", weight: 20, value: percent(item.criteria?.sellerReliability ?? item.inputs?.sellerReliability) },
+    { label: "Sells often", weight: 10, value: percent(item.criteria?.recurrence ?? item.inputs?.recurrence) },
   ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Evaluation Criteria (Highest Weight at Top)</Text>
-      <View style={styles.grid}>
-        {factors.map((f, i) => (
-          <View key={i} style={styles.item}>
-            <View style={styles.row}>
-              <Text style={styles.label}>{f.label}</Text>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{f.weight}</Text>
-              </View>
-            </View>
-            <Text style={styles.value}>{f.value}</Text>
-            <Text style={styles.subtext}>{f.maxPts}</Text>
+      {factors.map((factor) => (
+        <View key={factor.label} style={styles.item}>
+          <View style={styles.row}>
+            <Text style={styles.label}>
+              {factor.label}
+              <Text style={styles.weight}> · {factor.weight}% of score</Text>
+            </Text>
+            <Text style={styles.value}>{factor.value === null ? "—" : `${factor.value}%`}</Text>
           </View>
-        ))}
-      </View>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${factor.value ?? 0}%` }]} />
+          </View>
+        </View>
+      ))}
+      <Text style={styles.note}>Fresher, bigger, reliable listings show higher.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.sm,
-  },
-  headerTitle: {
-    fontFamily: fonts.body.medium,
-    fontSize: 11,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  item: {
-    width: "48%",
-    backgroundColor: colors.background,
-    borderRadius: radii.input,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: {
-    fontFamily: fonts.body.medium,
-    fontSize: 11,
-    color: colors.textMuted,
-    flex: 1,
-  },
-  badge: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: radii.sm,
-  },
-  badgeText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 9,
-    color: colors.primary,
-  },
-  value: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 15,
-    color: colors.text,
-    marginTop: 2,
-  },
-  subtext: {
-    fontFamily: fonts.body.regular,
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
+  container: { backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.md, gap: spacing.sm },
+  item: { gap: 6 },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  label: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
+  weight: { fontFamily: fonts.body.regular, color: colors.textMuted },
+  value: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
+  track: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
+  fill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm },
 });

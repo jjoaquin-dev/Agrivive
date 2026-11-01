@@ -13,12 +13,12 @@ export async function scheduleBoostFollowUp(boostId: string, firstPostAt: Date) 
   try {
     const [row] = await db.select({
       reason: seller_visibility_boosts.reason,
-      percent: sellers_product.priceReductionPercent,
+      amount: sellers_product.priceReductionAmount,
       minimumPrice: sellers_product.minimumPrice,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
       .where(eq(seller_visibility_boosts.id, boostId)).limit(1);
-    if (!row || row.reason !== "initial" || Number(row.percent ?? 0) <= 0 || row.minimumPrice === null) return;
+    if (!row || row.reason !== "initial" || Number(row.amount ?? 0) <= 0 || row.minimumPrice === null) return;
 
     await db.update(seller_visibility_boosts).set({
       followUpDueAt: new Date(firstPostAt.getTime() + followUpDelayMs),

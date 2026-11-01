@@ -59,12 +59,12 @@ export default function AppLayout() {
       {/* Hierarchical Detail Pages */}
       <Stack.Screen name="inventory/[id]/index" options={{ title: "Product Details" }} />
       <Stack.Screen name="inventory/[id]/edit" options={{ title: "Edit Product" }} />
-      <Stack.Screen name="orders/[id]" options={{ title: "Order Details" }} />
+      <Stack.Screen name="orders/[id]" options={{ title: "Reservation" }} />
       <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
       <Stack.Screen name="conversations/[id]" options={{ title: "Conversation" }} />
       <Stack.Screen name="activity" options={{ title: "Change History" }} />
       <Stack.Screen name="analytics" options={{ title: "Analytics" }} />
-      <Stack.Screen name="marketing/index" options={{ title: "Marketing" }} />
+      <Stack.Screen name="marketing/index" options={{ title: "Boost" }} />
       <Stack.Screen name="marketing/[productId]" options={{ title: "Preview Boost" }} />
       <Stack.Screen name="marketing/started" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="advisories" options={{ title: "Advisories" }} />

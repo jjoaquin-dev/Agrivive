@@ -74,7 +74,7 @@ export default function ProductDetailsScreen() {
 
   const qty = parseFloat(product.productQty as string) || 0;
   const price = parseFloat(product.productPrice as string) || 0;
-  const reductionPercent = parseFloat(String(product.priceReductionPercent ?? "0")) || 0;
+  const reductionAmount = parseFloat(String(product.priceReductionAmount ?? "0")) || 0;
   const threshold =
     product.lowStockThreshold != null
       ? parseFloat(product.lowStockThreshold as string)
@@ -268,29 +268,29 @@ export default function ProductDetailsScreen() {
           </View>
         </View>
 
-        <View style={styles.metaRow}>
-          <Text style={styles.metaLabel}>Low-Stock Alert Level:</Text>
-          <Text style={styles.metaValue}>
-            {threshold != null ? `${threshold.toFixed(2)} ${unitLabel}` : "Not configured"}
-          </Text>
-        </View>
-        {reductionPercent > 0 ? (
+        {threshold != null ? (
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Automatic reduction:</Text>
+            <Text style={styles.metaLabel}>Low-Stock Alert Level:</Text>
+            <Text style={styles.metaValue}>{`${threshold.toFixed(2)} ${unitLabel}`}</Text>
+          </View>
+        ) : null}
+        {reductionAmount > 0 ? (
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Price drop:</Text>
             <Text style={styles.metaValue}>
-              {reductionPercent}% every 12 hours
+              ₱{reductionAmount.toFixed(2)} every 6 hours after Boost
             </Text>
           </View>
         ) : null}
-        {reductionPercent > 0 && product.minimumPrice != null ? (
+        {reductionAmount > 0 && product.minimumPrice != null ? (
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Lowest price:</Text>
+            <Text style={styles.metaLabel}>Final price:</Text>
             <Text style={styles.metaValue}>₱{Number(product.minimumPrice).toFixed(2)}</Text>
           </View>
         ) : null}
-        {reductionPercent > 0 && product.nextPriceReductionAt ? (
+        {reductionAmount > 0 && product.nextPriceReductionAt ? (
           <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Next reduction:</Text>
+            <Text style={styles.metaLabel}>Next price drop:</Text>
             <Text style={styles.metaValue}>
               {new Date(product.nextPriceReductionAt).toLocaleString()}
             </Text>
@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     fontFamily: fonts.heading.bold,
-    fontSize: 20,
+    fontSize: 22,
     color: colors.primary,
   },
   metricUnit: {

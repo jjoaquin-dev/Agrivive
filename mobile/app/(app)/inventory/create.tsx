@@ -11,7 +11,7 @@ export default function CreateProductScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ catalogId?: string; unit?: ProductScalingType; name?: string }>();
   const [loading, setLoading] = useState(false);
-  const [boostFor, setBoostFor] = useState<{ id: string; percent: number } | null>(null);
+  const [boostFor, setBoostFor] = useState<{ id: string; dropAmount: number } | null>(null);
 
   const initialProduct = params.catalogId
     ? ({
@@ -47,7 +47,7 @@ export default function CreateProductScreen() {
         ], { cancelable: false });
         return;
       }
-      setBoostFor({ id: product.id, percent: Number(data.priceReductionPercent) || 0 });
+      setBoostFor({ id: product.id, dropAmount: Number(data.priceReductionAmount) || 0 });
     } catch (err: any) {
       Alert.alert("Error", err?.message || "Failed to add product to inventory.");
     } finally {
@@ -64,7 +64,7 @@ export default function CreateProductScreen() {
         </Text>
       </View>
       <ProductForm mode="create" initialProduct={initialProduct} onSubmit={handleCreate} loading={loading} />
-      <BoostIntroSheet visible={boostFor !== null} priceReductionPercent={boostFor?.percent ?? 0} onPreview={previewBoost} onClose={closeBoostSheet} />
+      <BoostIntroSheet visible={boostFor !== null} priceReductionAmount={boostFor?.dropAmount ?? 0} onPreview={previewBoost} onClose={closeBoostSheet} />
     </View>
   );
 }

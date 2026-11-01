@@ -33,5 +33,5 @@ const styles = StyleSheet.create({
   detailPreviousPrice: { color: colors.textMuted, fontFamily: fonts.body.regular, fontSize: 14, textDecorationLine: "line-through" },
   arrow: { color: colors.textMuted, fontSize: 12, marginHorizontal: spacing.xs },
   currentPrice: { color: colors.primary, fontFamily: fonts.heading.bold, fontSize: 14 },
-  detailPrice: { color: colors.primary, fontFamily: fonts.heading.bold, fontSize: 20 },
+  detailPrice: { color: colors.primary, fontFamily: fonts.heading.bold, fontSize: 22 },
 });

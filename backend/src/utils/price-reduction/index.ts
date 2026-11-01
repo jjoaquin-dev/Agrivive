@@ -1,21 +1,22 @@
 import { OrderError } from "../order-types";
 
+const twoDecimals = (value: number) => Math.round(value * 100) === value * 100;
+
+/** Checks the peso drop and the final (lowest) price against the selling price. */
 export function validatePriceReductionConfig(
   basePrice: number,
-  percent: number | undefined,
+  amount: number | undefined,
   minimumPrice: number | null | undefined,
 ) {
-  const reduction = percent ?? 0;
-  if (!Number.isFinite(reduction) || reduction < 0 || reduction > 99.99 ||
-    Math.round(reduction * 100) !== reduction * 100) {
-    throw new OrderError(400, "Price reduction must be between 0 and 99.99 percent with at most two decimals");
+  const drop = amount ?? 0;
+  if (!Number.isFinite(drop) || drop < 0 || !twoDecimals(drop) || (drop > 0 && drop >= basePrice)) {
+    throw new OrderError(400, "Price drop must be at least 0.01 and lower than the selling price, with at most two decimals");
   }
   if (minimumPrice !== undefined && minimumPrice !== null &&
-    (!Number.isFinite(minimumPrice) || minimumPrice < 1 || minimumPrice > basePrice ||
-      Math.round(minimumPrice * 100) !== minimumPrice * 100)) {
-    throw new OrderError(400, "Minimum price must be at least 1 and no higher than the base price");
+    (!Number.isFinite(minimumPrice) || minimumPrice < 1 || minimumPrice > basePrice || !twoDecimals(minimumPrice))) {
+    throw new OrderError(400, "Final price must be at least 1 and no higher than the selling price");
   }
-  if (reduction > 0 && (minimumPrice === undefined || minimumPrice === null)) {
-    throw new OrderError(400, "A minimum price is required when price reduction is enabled");
+  if (drop > 0 && (minimumPrice === undefined || minimumPrice === null)) {
+    throw new OrderError(400, "A final price is required when a price drop is set");
   }
 }

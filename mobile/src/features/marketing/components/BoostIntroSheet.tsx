@@ -7,24 +7,24 @@ import { PlatformBadge } from "./PlatformBadge";
 
 interface Props {
   visible: boolean;
-  priceReductionPercent: number;
+  priceReductionAmount: number;
   onPreview: () => void;
   onClose: () => void;
 }
 
-const benefits = (percent: number) => [
+const benefits = (dropAmount: number) => [
   { title: "Reach more buyers", text: "Get your produce seen by more people." },
   {
     title: "Lower the price if needed",
-    text: percent > 0
-      ? `If it has not sold, the price drops ${percent}% on its own.`
+    text: dropAmount > 0
+      ? `If it has not sold, the price drops ₱${dropAmount.toFixed(2)} every 6 hours, down to your final price.`
       : "Your price stays the same unless you set a price drop.",
   },
   { title: "Share on Facebook and Instagram", text: "Your product can appear on both Agrivive pages." },
 ];
 
 /** The first Boost step: a short bottom sheet (Hick's Law: three choices to read, two actions). */
-export function BoostIntroSheet({ visible, priceReductionPercent, onPreview, onClose }: Props) {
+export function BoostIntroSheet({ visible, priceReductionAmount, onPreview, onClose }: Props) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
@@ -33,7 +33,7 @@ export function BoostIntroSheet({ visible, priceReductionPercent, onPreview, onC
         <View style={styles.iconWrap}><Megaphone size={34} color={colors.primary} /></View>
         <Text style={styles.title}>Boost this produce?</Text>
         <Text style={styles.text}>Reach more buyers by sharing your product on the Agrivive Facebook and Instagram pages.</Text>
-        {benefits(priceReductionPercent).map((item, index) => (
+        {benefits(priceReductionAmount).map((item, index) => (
           <View key={item.title} style={styles.row}>
             <View style={styles.number}><Text style={styles.numberText}>{index + 1}</Text></View>
             <View style={styles.rowCopy}>
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: radii.sheet + 4, borderTopRightRadius: radii.sheet + 4, padding: spacing.lg, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.md },
   iconWrap: { alignSelf: "center", width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  title: { fontFamily: fonts.heading.bold, fontSize: 24, color: colors.text, textAlign: "center", marginTop: spacing.md },
+  title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, textAlign: "center", marginTop: spacing.md },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, marginBottom: spacing.base },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md, backgroundColor: colors.primarySurface, borderRadius: radii.card, padding: spacing.md, marginBottom: spacing.sm },
   number: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },

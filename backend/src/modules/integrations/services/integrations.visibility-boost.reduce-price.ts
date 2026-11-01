@@ -6,7 +6,7 @@ import { applySellerPromotionPriceReduction } from "../../seller/services/seller
 import { finishBoostFollowUp } from "./integrations.visibility-boost.follow-up.finish";
 import { getVisibilityBoostContext } from "./integrations.visibility-boost.context";
 
-/** The 6-hour rule: cuts the price once by the percent the seller set, never below their minimum price. */
+/** The 6-hour rule: cuts the price once by the peso amount the seller set, never below their final price. */
 export async function reduceVisibilityBoostPrice(boostId: string) {
   const context = await getVisibilityBoostContext(boostId);
   if (context.reason !== "initial") throw new OrderError(409, "Only the first boost lowers the price");
@@ -32,10 +32,12 @@ export async function reduceVisibilityBoostPrice(boostId: string) {
     const base = {
       productId,
       productName: product.productName,
-      discountPercent: Number(product.priceReductionPercent ?? 0),
     };
+    // n8n writes "X% off", so send the real percent of this round's cut.
+    const percentOff = (before: string, after: string) =>
+      Number(before) > 0 ? Math.round(((Number(before) - Number(after)) / Number(before)) * 100) : 0;
     const unchanged = (reason: "not_enabled" | "at_floor" | "unavailable") => ({
-      ...base, reduced: false, reason, originalPrice: currentPrice, newPrice: currentPrice,
+      ...base, reduced: false, reason, discountPercent: 0, originalPrice: currentPrice, newPrice: currentPrice,
     });
 
     if (!product.isActive || !product.isMarketable || Number(product.productQty ?? 0) <= 0) {
@@ -43,15 +45,15 @@ export async function reduceVisibilityBoostPrice(boostId: string) {
     }
     // A retry after a successful cut (price already below the last post) must not cut again.
     if (Number(currentPrice) < Number(firstPost.price)) {
-      return { ...base, reduced: true, originalPrice: firstPost.price, newPrice: currentPrice };
+      return { ...base, reduced: true, discountPercent: percentOff(firstPost.price, currentPrice), originalPrice: firstPost.price, newPrice: currentPrice };
     }
-    if (Number(product.priceReductionPercent ?? 0) <= 0 || !product.minimumPrice) {
+    if (Number(product.priceReductionAmount ?? 0) <= 0 || !product.minimumPrice) {
       return unchanged("not_enabled");
     }
 
     const result = await applySellerPromotionPriceReduction(tx, productId);
     if (!result) return unchanged("at_floor");
-    return { ...base, reduced: true, originalPrice: result.before, newPrice: result.after };
+    return { ...base, reduced: true, discountPercent: percentOff(result.before, result.after ?? result.before), originalPrice: result.before, newPrice: result.after };
   });
   // Nothing was cut, so there is no second post to wait for.
   if (!result.reduced) await finishBoostFollowUp(boostId);

@@ -3,9 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import type { SellerOrderItem } from "../types";
 
-function money(value: string) {
-  return `₱${Number(value).toFixed(2)}`;
-}
+import { formatMoney, formatQuantity, formatUnit } from "../orderFormat";
 
 export function OrderItemsList({ items }: { items: SellerOrderItem[] }) {
   return (
@@ -15,10 +13,10 @@ export function OrderItemsList({ items }: { items: SellerOrderItem[] }) {
           <View style={styles.info}>
             <Text style={styles.name}>{item.productName || "Product"}</Text>
             <Text style={styles.quantity}>
-              {item.quantity || "0"} {item.scalingType || "unit"} × {money(item.unitPrice)}
+              {formatQuantity(item.quantity)} {formatUnit(item.scalingType, item.quantity)} × {formatMoney(item.unitPrice)}
             </Text>
           </View>
-          <Text style={styles.subtotal}>{money(item.subtotal)}</Text>
+          <Text style={styles.subtotal}>{formatMoney(item.subtotal)}</Text>
         </View>
       ))}
     </View>

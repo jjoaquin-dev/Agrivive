@@ -21,7 +21,7 @@ export const sellerProductUpdate = t.Object({
   catalogId: t.Optional(t.String({ format: "uuid" })),
   imagUrl: t.Optional(t.String({ format: "uri" })),
   productPrice: t.Optional(t.Number({ minimum: 1, maximum: 99_999_999.99 })),
-  priceReductionPercent: t.Optional(t.Number({ minimum: 0, maximum: 99.99 })),
+  priceReductionAmount: t.Optional(t.Number({ minimum: 0, maximum: 99_999_999.99 })),
   minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99_999_999.99 }))),
   isMarketable: t.Optional(t.Boolean()),
   lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99_999_999.99 }))),

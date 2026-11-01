@@ -216,7 +216,10 @@ export const sellers_product = pgTable("sellers_product", {
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }),
+  /** Unused since 2026-11-01: drops are a peso amount (priceReductionAmount). Kept for rollback. */
   priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
+  /** Pesos taken off every 6 hours after the first Boost post, down to minimumPrice. */
+  priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
@@ -785,6 +788,7 @@ export const fb_post_logs = pgTable("fb_post_logs", {
   productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "cascade" }),
   postType: text("post_type").notNull(),
   facebookPostId: text("facebook_post_id"),
+  caption: text("caption"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   postedAt: timestamp("posted_at", { withTimezone: true }).defaultNow().notNull(),
   status: text("status").notNull(),

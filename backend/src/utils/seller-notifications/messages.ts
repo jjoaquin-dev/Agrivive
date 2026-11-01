@@ -72,6 +72,11 @@ export const sellerNoticeDefs = {
       : `${product(p)} is now ₱${text(p.priceAfter, "lower")}. You can boost it from your list.`,
     level: "silent", topic: "stock_price", category: "listings", target: "notifications",
   },
+  final_price_reached: {
+    title: "Final Price Reached", plural: "Final Prices Reached",
+    body: (p) => `${product(p)} is now at your final price of ₱${text(p.priceAfter, "?")}. It will not drop any lower.`,
+    level: "sound", topic: "stock_price", category: "listings", target: "listing",
+  },
   boost_started: {
     title: "Boost Started", plural: "Boosts Started",
     body: (p) => p.willLowerPrice
@@ -126,8 +131,8 @@ export const sellerNoticeDefs = {
     level: "feed", topic: "account", category: "trust", target: "trust",
   },
   inactivity_1m_blocked: {
-    title: "Account Paused", plural: "Account Paused",
-    body: () => "Your account was paused after 30 days away. Follow the steps to get it back.",
+    title: "Account Blocked", plural: "Account Blocked",
+    body: () => "Your account was blocked after 30 days away. Follow the steps to get it back.",
     level: "feed", topic: "account", category: "trust", target: "trust",
   },
   inquiry_12h_reminder: {

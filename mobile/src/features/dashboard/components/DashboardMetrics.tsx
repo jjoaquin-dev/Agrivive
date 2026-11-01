@@ -1,141 +1,145 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { ClipboardList, TriangleAlert, Package, Leaf, ChevronRight } from "lucide-react-native";
-import { colors, fonts, radii, spacing } from "../../../theme";
+import { ClipboardList, TriangleAlert, PackageX, Scale, type LucideIcon } from "lucide-react-native";
+import { SkeletonBlock, SkeletonCard } from "./DashboardSkeleton";
+import { colors, fonts, radii, shadows, spacing, typography } from "../../../theme";
 import type { InventorySummary } from "../../inventory/types";
 
 interface DashboardMetricsProps {
   summary: InventorySummary;
   onPressInventory: () => void;
+  loading?: boolean;
+  error?: boolean;
+}
+
+interface Metric {
+  id: string;
+  label: string;
+  Icon: LucideIcon;
+  iconColor: string;
+  quietWhenZero?: boolean;
+  isZero: boolean;
+  value: string;
+  valueColor: string;
+  subtitle: string;
+  pill: { bg: string; fg: string; border: string };
+  a11y: string;
 }
 
 export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   summary,
   onPressInventory,
+  loading = false,
+  error = false,
 }) => {
   const kiloTotal = Math.round(summary.unitTotals?.kilo || 0);
   const sackTotal = Math.round(summary.unitTotals?.sack || 0);
-  const surplusLabel = `${kiloTotal} kg · ${sackTotal} sacks`;
+  const pileTotal = Math.round(summary.unitTotals?.pile || 0);
+
+  const metrics: Metric[] = [
+    {
+      id: "active",
+      label: "Selling Now",
+      Icon: ClipboardList,
+      iconColor: colors.primary,
+      isZero: summary.activeCount === 0,
+      value: String(summary.activeCount),
+      valueColor: colors.text,
+      subtitle: "Buyers can see these",
+      pill: { bg: "#F9FAFB", fg: colors.textMuted, border: "#E5E7EB" },
+      a11y: "Selling now produce count",
+    },
+    {
+      id: "low",
+      label: "Running Low",
+      Icon: TriangleAlert,
+      iconColor: colors.warning,
+      quietWhenZero: true,
+      isZero: summary.lowStockCount === 0,
+      value: String(summary.lowStockCount),
+      valueColor: colors.text,
+      subtitle: "Add more soon",
+      pill: { bg: "#FFF7ED", fg: colors.warning, border: "#FED7AA" },
+      a11y: "Running low produce count",
+    },
+    {
+      id: "out",
+      label: "Out of Stock",
+      Icon: PackageX,
+      iconColor: colors.error,
+      quietWhenZero: true,
+      isZero: summary.outOfStockCount === 0,
+      value: String(summary.outOfStockCount),
+      valueColor: colors.text,
+      subtitle: "Nothing left",
+      pill: { bg: "#FEF2F2", fg: colors.error, border: "#FECACA" },
+      a11y: "Out of stock produce count",
+    },
+    {
+      id: "ready",
+      label: "Ready to Sell",
+      Icon: Scale,
+      iconColor: colors.primary,
+      isZero: kiloTotal === 0,
+      value: `${kiloTotal} kg`,
+      valueColor: colors.primaryPressed,
+      subtitle: `${sackTotal} sacks · ${pileTotal} piles`,
+      pill: { bg: "#F9FAFB", fg: colors.textMuted, border: "#E5E7EB" },
+      a11y: "Ready to sell total quantity",
+    },
+  ];
 
   return (
-    <View style={styles.grid}>
-      {/* 1. Active Listings */}
-      <Pressable
-        onPress={onPressInventory}
-        accessibilityRole="button"
-        accessibilityLabel="Active produce listings"
-        style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      >
-        <View style={styles.cardTop}>
-          <ClipboardList size={18} color="#16A34A" />
-          <ChevronRight size={14} color="#9CA3AF" />
-        </View>
-        <Text style={[styles.cardValue, { color: "#16A34A" }]}>
-          {summary.activeCount}
-        </Text>
-        <Text style={styles.cardTitle}>Active Listings</Text>
-        <Text style={styles.cardSubtitle}>Visible to buyers</Text>
-      </Pressable>
-
-      {/* 2. Low Amount */}
-      <Pressable
-        onPress={onPressInventory}
-        accessibilityRole="button"
-        accessibilityLabel="Produce with low stock"
-        style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      >
-        <View style={styles.cardTop}>
-          <TriangleAlert size={18} color="#D97706" />
-          <ChevronRight size={14} color="#9CA3AF" />
-        </View>
-        <Text style={[styles.cardValue, { color: "#D97706" }]}>
-          {summary.lowStockCount}
-        </Text>
-        <Text style={styles.cardTitle}>Low Amount</Text>
-        <Text style={styles.cardSubtitle}>Needs attention</Text>
-      </Pressable>
-
-      {/* 3. Out of Stock */}
-      <Pressable
-        onPress={onPressInventory}
-        accessibilityRole="button"
-        accessibilityLabel="Out of stock produce"
-        style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      >
-        <View style={styles.cardTop}>
-          <Package size={18} color="#DC2626" />
-          <ChevronRight size={14} color="#9CA3AF" />
-        </View>
-        <Text style={[styles.cardValue, { color: "#DC2626" }]}>
-          {summary.outOfStockCount}
-        </Text>
-        <Text style={styles.cardTitle}>Out of Stock</Text>
-        <Text style={styles.cardSubtitle}>Depleted produce</Text>
-      </Pressable>
-
-      {/* 4. Available Surplus */}
-      <Pressable
-        onPress={onPressInventory}
-        accessibilityRole="button"
-        accessibilityLabel="Available surplus total volume"
-        style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      >
-        <View style={styles.cardTop}>
-          <Leaf size={18} color="#4F46E5" />
-          <ChevronRight size={14} color="#9CA3AF" />
-        </View>
-        <Text style={[styles.cardValue, { color: "#4F46E5", fontSize: 16 }]} numberOfLines={1}>
-          {surplusLabel}
-        </Text>
-        <Text style={styles.cardTitle}>Available Surplus</Text>
-        <Text style={styles.cardSubtitle}>Across active listings</Text>
-      </Pressable>
+    <View style={styles.section}>
+      <Text style={styles.heading}>Your Stock Now</Text>
+      <View style={styles.grid}>
+        {metrics.map((m) => {
+          if (loading) {
+            return (
+              <SkeletonCard key={m.id} style={styles.card}>
+                <SkeletonBlock width="55%" height={12} />
+                <SkeletonBlock width="35%" height={24} radius={8} />
+                <SkeletonBlock width="75%" height={18} radius={9} />
+              </SkeletonCard>
+            );
+          }
+          const quiet = error || (m.quietWhenZero && m.isZero);
+          const neutralPill = { bg: "#F9FAFB", fg: colors.textMuted, border: "#E5E7EB" };
+          const pill = quiet ? neutralPill : m.pill;
+          return (
+          <Pressable
+            key={m.id}
+            onPress={onPressInventory}
+            accessibilityRole="button"
+            accessibilityLabel={m.a11y}
+            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+          >
+            <View style={styles.cardTop}>
+              <Text style={styles.cardLabel} numberOfLines={1}>{m.label}</Text>
+              <m.Icon size={18} color={error ? colors.textMuted : m.iconColor} />
+            </View>
+            <Text style={[styles.cardValue, { color: error ? colors.textMuted : m.valueColor }]} numberOfLines={1} adjustsFontSizeToFit>{error ? "—" : m.value}</Text>
+            <View style={[styles.pill, { backgroundColor: pill.bg, borderColor: pill.border }]}>
+              <Text style={[styles.pillText, { color: pill.fg }]}>{error ? "Unavailable" : m.subtitle}</Text>
+            </View>
+          </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginBottom: spacing.base,
-  },
-  card: {
-    width: "48.5%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 12,
-    minHeight: 110,
-    justifyContent: "space-between",
-  },
-  cardTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  cardValue: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 22,
-    marginTop: 8,
-    marginBottom: 2,
-    letterSpacing: -0.3,
-  },
-  cardTitle: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 13,
-    color: colors.text,
-  },
-  cardSubtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 10,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  cardPressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
-  },
+  section: { marginBottom: spacing.lg },
+  heading: { ...typography.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text, marginBottom: spacing.sm },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  card: { width: "48.5%", backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md, minHeight: 112, justifyContent: "space-between", ...shadows.card },
+  cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.xs },
+  cardLabel: { ...typography.labelSmall, flex: 1, color: colors.textMuted },
+  cardValue: { ...typography.largeTitle, marginVertical: spacing.xs },
+  cardSubtitle: { ...typography.labelSmall, color: colors.textMuted },
+  pill: { alignSelf: "flex-start", borderWidth: 1, borderRadius: radii.full, paddingHorizontal: spacing.sm, paddingVertical: 2 },
+  pillText: { ...typography.caption },
+  cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 });

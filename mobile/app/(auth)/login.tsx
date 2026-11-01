@@ -3,6 +3,7 @@ import {
   StyleSheet,
   View,
   Text,
+  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -11,10 +12,11 @@ import {
 import { useRouter } from "expo-router";
 import { authClient } from "../../src/api/client";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors, fonts, spacing } from "../../src/theme";
-import { Mail, Lock } from "lucide-react-native";
+import { colors, fonts, spacing, radii, touchTargets } from "../../src/theme";
+import { Mail, Lock, ArrowLeft } from "lucide-react-native";
 import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
+import { safeBack } from "../../src/utils/safeBack";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
 
 export default function LoginScreen() {
@@ -91,7 +93,9 @@ export default function LoginScreen() {
         } else if (msg.includes("email")) {
           setErrors({ email: response.error.message });
         } else {
-          setErrors({ general: response.error.message || "Failed to sign in. Please check your credentials." });
+          setErrors({
+            general: response.error.message || "Failed to sign in. Please check your credentials.",
+          });
         }
         return;
       }
@@ -164,11 +168,27 @@ export default function LoginScreen() {
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.navBar}>
+          <Pressable
+            onPress={() => safeBack(router, "/(auth)/onboarding")}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={styles.backButton}
+          >
+            <ArrowLeft size={24} color={colors.primary} />
+          </Pressable>
+        </View>
+
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>
-            {"Enter Your Credentials To Access Your\nAccount"}
-          </Text>
+          <Image
+            source={require("../../assets/brand/agrivive-logo-icon.png")}
+            style={styles.logoIcon}
+            resizeMode="contain"
+            accessibilityLabel="Agrivive"
+          />
+          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.subtitle}>Sign in to manage your stall.</Text>
         </View>
 
         {errors.general ? (
@@ -180,7 +200,7 @@ export default function LoginScreen() {
         <View style={styles.form}>
           <InputComponent
             label="Email"
-            placeholder="Email"
+            placeholder="you@example.com"
             placeholderTextColor="#9CA3AF"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -199,7 +219,7 @@ export default function LoginScreen() {
 
           <InputComponent
             label="Password"
-            placeholder="Password"
+            placeholder="Your password"
             placeholderTextColor="#9CA3AF"
             isPassword
             autoCapitalize="none"
@@ -220,51 +240,47 @@ export default function LoginScreen() {
               onPress={handleForgotPassword}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel="Forget Password"
+              accessibilityLabel="Forgot password"
             >
-              <Text style={styles.forgotText}>Forget Password?</Text>
+              <Text style={styles.forgotText}>Forgot password?</Text>
             </Pressable>
           </View>
 
           <ButtonComponent
-            title="Login"
+            title="Sign In"
             onPress={handleLogin}
             loading={loading}
             style={styles.submitButton}
             textStyle={styles.submitButtonText}
           />
 
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <GoogleSignInButton title="Continue with Google" />
+
+          <ButtonComponent
+            title="Sign in with email code"
+            variant="secondary"
+            icon={<Mail size={20} color={colors.primary} strokeWidth={1.5} />}
+            onPress={() => router.push("/(auth)/email-otp-login")}
+            style={styles.emailOtpButton}
+          />
+
           <View style={styles.footerRow}>
-            <Text style={styles.footerPrompt}>Don’t Have An Account? </Text>
+            <Text style={styles.footerPrompt}>Don’t have an account? </Text>
             <Pressable
               onPress={() => router.push("/(auth)/register")}
               hitSlop={6}
               accessibilityRole="button"
-              accessibilityLabel="Sign up"
+              accessibilityLabel="Create one"
             >
-              <Text style={styles.signUpText}>Sign up</Text>
+              <Text style={styles.signUpText}>Create one</Text>
             </Pressable>
           </View>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <View style={styles.socialRow}>
-            <GoogleSignInButton title="Log In with Google" />
-          </View>
-
-          <Pressable
-            onPress={() => router.push("/(auth)/email-otp-login")}
-            style={styles.emailOtpLink}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Sign in with Email Code"
-          >
-            <Text style={styles.emailOtpLinkText}>Sign in with Email Code</Text>
-          </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -274,39 +290,50 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 50,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.base,
     paddingBottom: spacing.xxl,
     justifyContent: "center",
   },
+  navBar: {
+    height: 48,
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+  },
+  logoIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: spacing.base,
+  },
   header: {
-    alignItems: "center",
-    marginBottom: 40,
+    marginBottom: spacing.xl,
   },
   title: {
     fontFamily: fonts.heading.bold,
     fontSize: 26,
-    color: "#1E1E1E",
-    marginBottom: 8,
-    textAlign: "center",
+    color: colors.text,
+    marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fonts.body.regular,
     fontSize: 14,
-    color: "#4B5563",
+    color: colors.textMuted,
     lineHeight: 20,
-    textAlign: "center",
-    maxWidth: 300,
   },
   errorBox: {
     backgroundColor: "rgba(184, 84, 80, 0.08)",
     borderWidth: 1,
     borderColor: colors.error,
-    borderRadius: 12,
+    borderRadius: radii.card,
     padding: spacing.md,
     marginBottom: spacing.base,
   },
@@ -320,34 +347,34 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   inputLabel: {
-    color: "#4B5563",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 8,
+    marginBottom: spacing.xs,
   },
   inputRounded: {
-    borderRadius: 12,
-    borderColor: "#E5E7EB",
-    borderWidth: 1,
-    minHeight: 50,
-    backgroundColor: "#FFFFFF",
+    borderRadius: radii.input,
+    borderColor: colors.border,
+    borderWidth: 1.5,
+    minHeight: touchTargets.min,
+    backgroundColor: colors.surface,
   },
   forgotPasswordRow: {
     alignItems: "flex-end",
-    marginTop: 6,
-    marginBottom: 28,
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
   },
   forgotText: {
     fontFamily: fonts.body.semiBold,
     fontSize: 13,
-    color: "#11A94D",
+    color: colors.primary,
     fontWeight: "600",
   },
   submitButton: {
-    backgroundColor: "#0F920F",
-    borderRadius: 999,
-    minHeight: 50,
-    shadowColor: "#0F920F",
+    borderRadius: radii.button,
+    minHeight: touchTargets.min,
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
     shadowRadius: 8,
@@ -356,54 +383,46 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: colors.white,
   },
   footerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 36,
+    marginTop: spacing.xl,
   },
   footerPrompt: {
     fontSize: 14,
-    color: "#374151",
+    color: colors.textMuted,
     fontFamily: fonts.body.regular,
   },
   signUpText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#11A94D",
+    color: colors.primary,
     fontFamily: fonts.body.semiBold,
   },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 36,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: colors.border,
   },
   dividerText: {
-    color: "#6B7280",
+    color: colors.textMuted,
     fontSize: 13,
     fontWeight: "500",
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
   },
-  socialRow: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emailOtpLink: {
-    alignItems: "center",
-    marginTop: 20,
-    paddingVertical: 8,
-  },
-  emailOtpLinkText: {
-    fontSize: 13,
-    color: "#6B7280",
-    fontWeight: "500",
+  emailOtpButton: {
+    marginTop: spacing.md,
+    borderRadius: radii.button,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
 });

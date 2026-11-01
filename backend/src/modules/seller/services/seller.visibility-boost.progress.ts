@@ -25,7 +25,7 @@ export async function readBoostProgress(tx: OrderTransaction, rows: BoostRow[]) 
     state: BoostState;
     roundsDone: number;
     nextDropAt: string | null;
-    posts: { type: "first_post" | "second_post"; price: number; postedAt: string; postUrl: string | null }[];
+    posts: { type: "first_post" | "second_post"; price: number; postedAt: string; postUrl: string | null; caption: string | null }[];
   }>();
   if (rows.length === 0) return progress;
 
@@ -45,6 +45,7 @@ export async function readBoostProgress(tx: OrderTransaction, rows: BoostRow[]) 
       price: Number(log.price),
       postedAt: log.postedAt.toISOString(),
       postUrl: log.facebookPostId ? `https://www.facebook.com/${log.facebookPostId}` : null,
+      caption: log.caption,
     }));
 
     let state: BoostState;

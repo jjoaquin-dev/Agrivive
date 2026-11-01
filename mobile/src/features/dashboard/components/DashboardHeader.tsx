@@ -1,7 +1,7 @@
 import React from "react";
-import { StyleSheet, View, Text, Pressable, Image } from "react-native";
-import { Bell, MapPin, Check } from "lucide-react-native";
-import { colors, fonts, radii, spacing } from "../../../theme";
+import { StyleSheet, View, Text, Pressable } from "react-native";
+import { Bell, Store, Check } from "lucide-react-native";
+import { colors, fonts, radii, spacing, touchTargets, typography } from "../../../theme";
 
 interface DashboardHeaderProps {
   sellerName: string;
@@ -22,7 +22,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onPressProfile,
 }) => {
   const hasNotifs = unreadCount > 0;
-  const locationLabel = shopName || "Davao City Market";
   const initials = sellerName
     .split(" ")
     .filter(Boolean)
@@ -40,84 +39,54 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   return (
     <View style={styles.header}>
-      <View style={styles.topBar}>
-        <View style={styles.brandGroup}>
-          <View style={styles.logoRow}>
-            <Image
-              source={require("../../../../assets/brand/Agrivive_Logo.png")}
-              style={styles.logoImage}
-              resizeMode="contain"
-              accessibilityLabel="Agrivive"
-            />
-            <Text style={styles.brandTitle}>Agrivive</Text>
+      <Pressable
+        onPress={onPressProfile}
+        accessibilityRole="button"
+        accessibilityLabel={isVerified ? "Seller Profile, verified" : "Seller Profile"}
+        style={styles.avatarButton}
+      >
+        <Text style={styles.avatarText}>{initials}</Text>
+        {isVerified ? (
+          <View style={styles.verifiedBadge}>
+            <Check size={10} color={colors.white} strokeWidth={3} />
           </View>
-          <View style={styles.locationRow}>
-            <MapPin size={11} color={colors.textMuted} style={styles.locationIcon} />
-            <Text style={styles.locationText} numberOfLines={1}>{locationLabel}</Text>
-          </View>
-        </View>
+        ) : null}
+      </Pressable>
 
-        <View style={styles.topActions}>
-          <Pressable
-            onPress={onPressNotifications}
-            accessibilityRole="button"
-            accessibilityLabel={hasNotifs ? `${unreadCount} unread notifications` : "Notifications"}
-            style={styles.bellButton}
-          >
-            <Bell size={20} color={colors.text} />
-            {hasNotifs ? <View style={styles.redDot} /> : null}
-          </Pressable>
-
-          <Pressable
-            onPress={onPressProfile}
-            accessibilityRole="button"
-            accessibilityLabel="Seller Profile"
-            style={styles.avatarButton}
-          >
-            <Text style={styles.avatarText}>{initials}</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={styles.greetingSection}>
+      <View style={styles.identity}>
         <Text style={styles.greetingText}>{getGreeting()}</Text>
-        <View style={styles.nameRow}>
-          <Text style={styles.sellerName} numberOfLines={1}>{sellerName}</Text>
-          {isVerified ? (
-            <View style={styles.verifiedBadge}>
-              <Check size={11} color="#FFFFFF" strokeWidth={3} />
-              <Text style={styles.verifiedText}>Verified</Text>
-            </View>
-          ) : null}
-        </View>
-        <Text style={styles.roleSubtitle}>
-          Manage your surplus products today.
-        </Text>
+        <Text style={styles.sellerName} numberOfLines={1}>{sellerName}</Text>
+        {shopName ? (
+          <View style={styles.locationRow}>
+            <Store size={12} color={colors.primary} />
+            <Text style={styles.locationText} numberOfLines={1}>{shopName}</Text>
+          </View>
+        ) : null}
       </View>
+
+      <Pressable
+        onPress={onPressNotifications}
+        accessibilityRole="button"
+        accessibilityLabel={hasNotifs ? `${unreadCount} unread notifications` : "Notifications"}
+        style={styles.bellButton}
+      >
+        <Bell size={20} color={colors.text} />
+        {hasNotifs ? <View style={styles.redDot} /> : null}
+      </Pressable>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  header: { marginBottom: spacing.base },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
-  brandGroup: { flex: 1, marginRight: spacing.sm },
-  logoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  logoImage: { width: 26, height: 26 },
-  brandTitle: { fontFamily: fonts.heading.bold, fontSize: 18, color: "#16A34A", letterSpacing: -0.3 },
-  locationRow: { flexDirection: "row", alignItems: "center", marginTop: 2, paddingLeft: 2 },
-  locationIcon: { marginRight: 3 },
-  locationText: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted },
-  topActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  bellButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#F1F5F9", alignItems: "center", justifyContent: "center", position: "relative" },
-  redDot: { position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: 4, backgroundColor: "#EF4444", borderWidth: 1.5, borderColor: "#F1F5F9" },
-  avatarButton: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#34D399", alignItems: "center", justifyContent: "center" },
-  avatarText: { fontFamily: fonts.heading.bold, fontSize: 13, color: "#064E3B" },
-  greetingSection: { marginTop: spacing.xs },
-  greetingText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
-  sellerName: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, letterSpacing: -0.4 },
-  verifiedBadge: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "#16A34A", paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
-  verifiedText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: "#FFFFFF" },
-  roleSubtitle: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  header: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.base },
+  avatarButton: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  avatarText: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.primaryPressed },
+  verifiedBadge: { position: "absolute", right: -2, bottom: -2, width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, borderWidth: 1.5, borderColor: colors.white, alignItems: "center", justifyContent: "center" },
+  identity: { flex: 1 },
+  greetingText: { ...typography.labelSmall, color: colors.textMuted },
+  sellerName: { ...typography.sectionHeading, color: colors.text },
+  locationRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: 2 },
+  locationText: { ...typography.labelSmall, flex: 1, color: colors.textMuted },
+  bellButton: { width: touchTargets.min - 4, height: touchTargets.min - 4, borderRadius: radii.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  redDot: { position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.error },
 });

@@ -1,6 +1,7 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors, fonts, radii, spacing } from "../../../theme";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, radii, spacing, typography } from "../../../theme";
+import { ButtonComponent } from "../../../components/ButtonComponent";
 
 interface Props {
   unreadCount: number;
@@ -23,61 +24,17 @@ export function NotificationSummaryBanner({ unreadCount, urgentCount, onMarkAllR
       </View>
 
       {unreadCount > 0 && (
-        <Pressable
-          onPress={onMarkAllRead}
-          accessibilityRole="button"
-          accessibilityLabel="Mark all as read"
-          style={({ pressed }) => [styles.markButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.markText}>Mark All Read</Text>
-        </Pressable>
+        <ButtonComponent title="Mark All Read" variant="secondary" onPress={onMarkAllRead} style={styles.markButton} textStyle={styles.markText} />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: "#065F46",
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: spacing.sm,
-  },
-  copyContainer: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  heading: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 20,
-    color: colors.white,
-    letterSpacing: -0.3,
-  },
-  subheading: {
-    fontFamily: fonts.body.regular,
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.85)",
-    marginTop: 2,
-  },
-  markButton: {
-    backgroundColor: "#16A34A",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: radii.full,
-    minHeight: 36,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  markText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 12,
-    color: colors.white,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
+  banner: { backgroundColor: colors.primarySurface, borderWidth: 1, borderColor: colors.primaryLight, borderRadius: radii.card, padding: spacing.base, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: spacing.sm },
+  copyContainer: { flex: 1, marginRight: spacing.sm },
+  heading: { ...typography.screenTitle, color: colors.text },
+  subheading: { ...typography.label, color: colors.textMuted, marginTop: 2 },
+  markButton: { minHeight: 40, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: radii.full },
+  markText: { fontSize: 13, color: colors.text },
 });

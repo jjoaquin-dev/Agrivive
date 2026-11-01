@@ -2,6 +2,7 @@ import React from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import { formatBoostTime, type BoostProgress } from "../types";
+import { BoostPostText } from "./BoostPostText";
 
 interface Props {
   progress: BoostProgress;
@@ -19,10 +20,11 @@ export function BoostTimeline({ progress, limit }: Props) {
       title: post.type === "first_post" && hidden === 0 && index === 0 ? "Posted" : "Price drop posted",
       detail: `₱${post.price.toFixed(2)} · ${formatBoostTime(post.postedAt)}`,
       url: post.postUrl,
+      caption: post.caption ?? null,
       done: true,
     })),
     ...(progress.nextDropAt
-      ? [{ key: "next", title: "Next price drop", detail: formatBoostTime(progress.nextDropAt), url: null, done: false }]
+      ? [{ key: "next", title: "Next price drop", detail: formatBoostTime(progress.nextDropAt), url: null, caption: null, done: false }]
       : []),
   ];
   if (rows.length === 0) return null;
@@ -44,6 +46,7 @@ export function BoostTimeline({ progress, limit }: Props) {
                 <Text style={styles.linkText}>View post on Facebook</Text>
               </Pressable>
             ) : null}
+            {row.caption ? <BoostPostText caption={row.caption} /> : null}
           </View>
         </View>
       ))}

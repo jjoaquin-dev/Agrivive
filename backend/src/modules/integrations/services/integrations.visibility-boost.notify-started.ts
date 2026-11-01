@@ -10,7 +10,7 @@ export async function notifyBoostStarted(boostId: string) {
       sellerId: seller_visibility_boosts.sellerId,
       productId: seller_visibility_boosts.productId,
       productName: sellers_product.productName,
-      percent: sellers_product.priceReductionPercent,
+      amount: sellers_product.priceReductionAmount,
       minimumPrice: sellers_product.minimumPrice,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
@@ -23,7 +23,7 @@ export async function notifyBoostStarted(boostId: string) {
       productId: row.productId,
       payload: {
         productName: row.productName,
-        willLowerPrice: Number(row.percent ?? 0) > 0 && row.minimumPrice !== null,
+        willLowerPrice: Number(row.amount ?? 0) > 0 && row.minimumPrice !== null,
       },
     }));
   } catch (error) {

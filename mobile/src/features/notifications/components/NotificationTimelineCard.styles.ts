@@ -1,111 +1,25 @@
 import { StyleSheet } from "react-native";
-import { colors, fonts, radii } from "../../../theme";
+import { colors, fonts, radii, spacing, typography } from "../../../theme";
 
 export const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 14,
-    marginBottom: 10,
-  },
-  cardUrgent: {
-    borderColor: "#FB923C",
-    backgroundColor: "#FFFBF7",
-  },
-  cardUnread: {
-    borderColor: "#86EFAC",
-    backgroundColor: "#F0FDF4",
-  },
-  topRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  headerContent: {
-    flex: 1,
-  },
-  titleLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    flex: 1,
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
-    color: colors.text,
-    marginRight: 6,
-  },
-  titleUrgent: {
-    color: "#C2410C",
-  },
-  timeWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  unreadDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#16A34A",
-  },
-  timeText: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  subtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 12,
-    lineHeight: 18,
-    color: "#4B5563",
-    marginTop: 2,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 10,
-    marginLeft: 54,
-  },
-  actionBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: radii.full,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionBtnGreen: {
-    backgroundColor: "#16A34A",
-  },
-  actionBtnOrange: {
-    backgroundColor: "#EA580C",
-  },
-  actionBtnGray: {
-    backgroundColor: "#F3F4F6",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  actionBtnText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 12,
-    color: colors.white,
-  },
-  actionBtnGrayText: {
-    fontFamily: fonts.body.medium,
-    fontSize: 12,
-    color: "#374151",
-  },
-  pressed: {
-    opacity: 0.8,
-  },
+  card: { paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
+  cardUrgent: { backgroundColor: "#FFFBF7" },
+  // The blue dot sits in the left gutter, so unread rows are found by scanning down one edge.
+  gutterDot: { position: "absolute", left: -12, top: 28, width: 8, height: 8, borderRadius: 4, backgroundColor: "#3B82F6" },
+  topRow: { flexDirection: "row", alignItems: "flex-start" },
+  iconWrap: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
+  headerContent: { flex: 1 },
+  titleLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  title: { flex: 1, ...typography.bodyLarge, fontFamily: fonts.heading.semiBold, color: colors.text, marginRight: spacing.sm },
+  titleUrgent: { color: "#C2410C" },
+  timeWrap: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  timeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#D1D5DB" },
+  timeText: { ...typography.labelSmall, color: colors.textMuted },
+  subtitle: { ...typography.body, color: colors.textMuted, marginTop: 2 },
+  actionsRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm, marginLeft: 44 + spacing.md },
+  actionBtn: { minHeight: 40, paddingVertical: spacing.sm, paddingHorizontal: spacing.base, borderRadius: radii.full },
+  actionBtnOrange: { borderColor: colors.terracotta },
+  actionBtnText: { fontSize: 13 },
+  actionBtnTextOrange: { color: colors.terracotta },
+  actionBtnGrayText: { fontSize: 13, color: colors.text },
 });

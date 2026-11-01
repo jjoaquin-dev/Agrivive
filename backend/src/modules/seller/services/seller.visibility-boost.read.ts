@@ -24,7 +24,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
       minimumPrice: sellers_product.minimumPrice,
       quantity: sellers_product.productQty,
       unit: sellers_product.scalingType,
-      priceReductionPercent: sellers_product.priceReductionPercent,
+      priceReductionAmount: sellers_product.priceReductionAmount,
       priceReductionPeriodsApplied: sellers_product.priceReductionPeriodsApplied,
     }).from(sellers_product).where(and(
       eq(sellers_product.id, productId),
@@ -66,8 +66,8 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
 
-    const percent = Number(product.priceReductionPercent ?? 0);
-    const dropsOn = percent > 0 && product.minimumPrice !== null;
+    const dropAmount = Number(product.priceReductionAmount ?? 0);
+    const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
     const headline = periodsApplied === 0
       ? canBoost ? "Ready to Boost" : "Boost Is Running"
       : canBoost ? "Price Dropped" : "New Price Posted";
@@ -76,7 +76,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
       ? canBoost
         ? "Post this listing on the Agrivive Facebook Page."
         : dropsOn
-          ? "Your listing was posted. The price drops every 6 hours until it reaches your lowest price."
+          ? "Your listing was posted. The price drops every 6 hours until it reaches your final price."
           : "Your listing was posted on the Agrivive Facebook Page."
       : canBoost
         ? `The price went from ₱${basePriceNum.toFixed(2)} to ₱${currentPriceNum.toFixed(2)}. Post the new price.`
@@ -95,7 +95,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
         basePrice: basePriceNum,
         quantity: product.quantity === null ? null : Number(product.quantity),
         unit: product.unit,
-        priceReductionPercent: percent,
+        priceReductionAmount: dropAmount,
         lowestPrice: product.minimumPrice ? Number(product.minimumPrice) : null,
         priceReductionPeriodsApplied: periodsApplied,
       },
