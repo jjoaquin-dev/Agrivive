@@ -20,7 +20,7 @@ export function AnalyticsRepeatListings({ count }: { count: number }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  icon: { width: 28, height: 28, borderRadius: 14, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  icon: { width: 28, height: 28, borderRadius: 14, backgroundColor: "#F3F1EA", alignItems: "center", justifyContent: "center" },
   value: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   text: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 6 },
 });

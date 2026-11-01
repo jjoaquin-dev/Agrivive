@@ -1,156 +1,182 @@
-import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { KeyRound, Mail, ShieldCheck } from "lucide-react-native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { CheckCircle2, Mail } from "lucide-react-native";
+import { ApiError } from "../../src/api/client";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { InputComponent } from "../../src/components/InputComponent";
 import { OtpInputComponent } from "../../src/components/OtpInputComponent";
+import { useAuth } from "../../src/context/AuthContext";
+import { AuthScreenShell } from "../../src/features/auth/components/AuthScreenShell";
+import { AuthTextLink } from "../../src/features/auth/components/AuthTextLink";
+import { AuthResendTimer } from "../../src/features/auth/components/AuthResendTimer";
+import { maskEmail } from "../../src/features/auth/maskEmail";
 import { requestTrustRecovery, verifyTrustRecovery } from "../../src/features/trust/api/recovery";
-import { styles } from "../../src/features/trust/components/account-recovery.styles";
-import { colors } from "../../src/theme";
+import { colors, fonts, spacing } from "../../src/theme";
+
+type Step = "email" | "code" | "done";
+
+/** Turns the backend's recovery errors into one plain line that sits under the code boxes. */
+function codeErrorMessage(err: unknown) {
+  if (err instanceof ApiError && err.statusCode === 400) {
+    return err.message.includes("does not need recovery")
+      ? "This account isn't blocked, so there's nothing to restore. Sign in as usual."
+      : "That code didn't work. Check it or send a new one.";
+  }
+  return "We could not restore your account. Check your connection and try again.";
+}
 
 export default function AccountRecoveryScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const params = useLocalSearchParams<{ email?: string }>();
+  const { session, refreshSetup, signOut } = useAuth();
+  const signedIn = Boolean(session?.user);
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState((params.email ?? "").trim().toLowerCase());
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => setCountdown((value) => value - 1), 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   const sendCode = async () => {
     const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !/^\S+@\S+\.\S+$/.test(cleanEmail)) {
-      setError("Please enter a valid email address.");
+    if (!/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+      setError("Enter a full email, like name@example.com.");
       return;
     }
     setLoading(true);
-    setError(null);
+    setError("");
     try {
       await requestTrustRecovery(cleanEmail);
-      setStep("otp");
-      setNotice("If this account needs recovery, a code was sent to the email above.");
-    } catch (err: any) {
-      setError(err?.message || "Could not request a recovery code. Please try again.");
+      setEmail(cleanEmail);
+      setStep("code");
+      setCountdown(30);
+    } catch {
+      setError("We could not send the code. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const restoreAccount = async () => {
-    const cleanOtp = otp.trim();
-    if (cleanOtp.length < 4) {
-      setError("Enter the recovery code from your email.");
+    if (!/^\d{6}$/.test(otp.trim())) {
+      setError("Enter the 6-digit code from your email.");
       return;
     }
     setLoading(true);
-    setError(null);
+    setError("");
     try {
-      await verifyTrustRecovery(email, cleanOtp);
-      setNotice("Your account is restored. Sign in again to continue.");
-      setStep("email");
-      setOtp("");
-    } catch (err: any) {
-      setError(err?.message || "The code is invalid or expired. Request a new one and try again.");
+      await verifyTrustRecovery(email, otp.trim());
+      setStep("done");
+    } catch (err) {
+      setError(codeErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
+  const backToEmail = () => {
+    setStep("email");
+    setOtp("");
+    setError("");
+  };
+
+  const leave = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/(auth)/login");
+  };
+
+  // A signed-in seller goes back through app start, which re-reads the account; everyone else signs in again.
+  const finish = async () => {
+    if (!signedIn) {
+      router.replace("/(auth)/login");
+      return;
+    }
+    setLoading(true);
+    await refreshSetup();
+    setLoading(false);
+    router.replace("/");
+  };
+
+  const logOut = async () => {
+    await signOut();
+    router.replace("/(auth)/login");
+  };
+
+  if (step === "done") {
+    return (
+      <AuthScreenShell
+        header={<View style={styles.doneIcon}><CheckCircle2 size={32} color={colors.success} /></View>}
+        title="Your Account Is Back"
+        subtitle={signedIn ? "You can sell on Agrivive again." : "Sign in again to keep selling."}
+      >
+        <ButtonComponent title={signedIn ? "Continue" : "Sign In"} onPress={() => void finish()} loading={loading} />
+      </AuthScreenShell>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <AuthScreenShell
+      title={step === "email" ? "Restore Your Account" : "Check Your Email"}
+      subtitle={step === "email" ? "For accounts that were blocked or paused. We'll email you a 6-digit code to prove it's you." : (
+        <>If this account is blocked or paused, we sent a code to {maskEmail(email)} · <Text style={styles.change} onPress={backToEmail} accessibilityRole="button">Change</Text></>
+      )}
+      onBack={step === "code" ? backToEmail : leave}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <ShieldCheck size={28} color={colors.primary} />
-          </View>
-          <Text style={styles.title}>Restore your account</Text>
-          <Text style={styles.subtitle}>
-            Verify the email linked to your Agrivive account. Admins do not restore accounts manually.
-          </Text>
-        </View>
-
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-        {notice ? (
-          <View style={styles.noticeBox}>
-            <Text style={styles.noticeText}>{notice}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.form}>
+      {step === "email" ? (
+        <>
           <InputComponent
-            label="Email Address"
-            placeholder="seller@example.com"
+            label="Email"
+            placeholder="name@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            editable={step === "email"}
             value={email}
-            leftIcon={<Mail size={18} color={colors.textMuted} />}
-            onChangeText={(text) => {
-              setEmail(text);
-              setError(null);
-              setNotice(null);
-            }}
+            error={error || null}
+            leftIcon={<Mail size={20} color={error ? colors.error : colors.textMuted} />}
+            onChangeText={(value) => { setEmail(value); setError(""); }}
           />
-
-          {step === "otp" ? (
-            <OtpInputComponent
-              length={6}
-              value={otp}
-              onChange={(text) => {
-                setOtp(text);
-                setError(null);
-              }}
-              error={error}
-              disabled={loading}
-            />
-          ) : null}
-
+          <ButtonComponent title="Send Code" onPress={() => void sendCode()} loading={loading} style={styles.button} />
+        </>
+      ) : (
+        <>
+          <OtpInputComponent fill length={6} value={otp} error={error || null} disabled={loading} onChange={(value) => { setOtp(value); setError(""); }} />
+          <AuthResendTimer seconds={countdown} sending={loading} onResend={() => void sendCode()} />
           <ButtonComponent
-            title={step === "email" ? "Send Recovery Code" : "Restore Account"}
-            icon={<ShieldCheck size={18} color={colors.white} />}
-            onPress={step === "email" ? sendCode : restoreAccount}
+            title="Restore Account"
+            onPress={() => void restoreAccount()}
             loading={loading}
-            style={styles.primaryButton}
+            disabled={otp.trim().length !== 6 && !loading}
+            style={styles.button}
           />
-          {step === "otp" ? (
-            <ButtonComponent
-              title="Use a different email"
-              variant="ghost"
-              onPress={() => {
-                setStep("email");
-                setOtp("");
-                setError(null);
-                setNotice(null);
-              }}
-              style={styles.secondaryButton}
-            />
-          ) : null}
-        </View>
-
-        <ButtonComponent
-          title="Back to Sign In"
-          variant="ghost"
-          onPress={() => router.replace("/(auth)/login")}
-          style={styles.backButton}
-          textStyle={styles.backText}
-        />
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </>
+      )}
+      {signedIn ? (
+        <AuthTextLink label="Log out instead" onPress={() => void logOut()} disabled={loading} />
+      ) : (
+        <AuthTextLink label="Back to sign in" onPress={() => router.replace("/(auth)/login")} />
+      )}
+    </AuthScreenShell>
   );
 }
 
+const styles = StyleSheet.create({
+  change: { fontFamily: fonts.body.semiBold, color: colors.primary },
+  button: { marginTop: spacing.lg },
+  doneIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.xxl,
+    marginBottom: spacing.base,
+  },
+});

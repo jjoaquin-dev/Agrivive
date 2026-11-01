@@ -154,7 +154,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleForgotPassword = () => router.push("/(auth)/account-recovery");
+  const handleForgotPassword = () => router.push("/(auth)/forgot-password");
 
   return (
     <KeyboardAvoidingView
@@ -182,7 +182,7 @@ export default function LoginScreen() {
 
         <View style={styles.header}>
           <Image
-            source={require("../../assets/brand/agrivive-logo-icon.png")}
+            source={require("../../assets/brand/agrivive-logo-full.png")}
             style={styles.logoIcon}
             resizeMode="contain"
             accessibilityLabel="Agrivive"
@@ -310,8 +310,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logoIcon: {
-    width: 40,
-    height: 40,
+    width: 140,
+    height: 41,
     marginBottom: spacing.base,
   },
   header: {

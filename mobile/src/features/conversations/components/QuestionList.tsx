@@ -120,7 +120,7 @@ export function QuestionList({
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.4}
       ListFooterComponent={
-        loadingMore ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null
+        loadingMore ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : undefined
       }
       refreshControl={
         <RefreshControl

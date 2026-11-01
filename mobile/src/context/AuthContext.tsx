@@ -14,6 +14,8 @@ interface AuthContextType {
   setup: SellerSetupResponse | null;
   loadingSetup: boolean;
   setupError: string | null;
+  /** HTTP status of the failed account load. 0 means no answer at all. */
+  setupErrorStatus: number;
   refreshSetup: () => Promise<SellerSetupResponse | null>;
   signOut: () => Promise<void>;
   isReady: boolean;
@@ -27,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [setup, setSetup] = useState<SellerSetupResponse | null>(null);
   const [loadingSetup, setLoadingSetup] = useState<boolean>(false);
   const [setupError, setSetupError] = useState<string | null>(null);
+  const [setupErrorStatus, setSetupErrorStatus] = useState<number>(0);
 
   const { data: session, isPending: isSessionPendingRaw } = authClient.useSession();
   const [sessionTimedOut, setSessionTimedOut] = useState<boolean>(false);
@@ -59,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshSetup = useCallback(async (): Promise<SellerSetupResponse | null> => {
     setLoadingSetup(true);
     setSetupError(null);
+    setSetupErrorStatus(0);
     try {
       const data = await fetchSellerSetup();
       setSetup(data);
@@ -70,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       console.error("Failed to fetch seller setup", err);
       setSetupError(err?.message || "Failed to load seller setup status");
+      setSetupErrorStatus(typeof err?.statusCode === "number" ? err.statusCode : 0);
       return null;
     } finally {
       setLoadingSetup(false);
@@ -123,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setup,
         loadingSetup,
         setupError,
+        setupErrorStatus,
         refreshSetup,
         signOut: handleSignOut,
         isReady,

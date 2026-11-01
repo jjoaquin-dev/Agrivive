@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { CheckCircle2, Clock, MessageSquare, Package } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerProductInquiryItem } from "../types";
+import { AvatarComponent } from "../../../components/AvatarComponent";
 import { QuestionAnswerBox } from "./QuestionAnswerBox";
 
 interface QuestionCardProps {
@@ -81,10 +82,16 @@ export function QuestionCard({ inquiry, onReply, isReplying, onAnswerSuccess }: 
         </View>
       </View>
 
+      <View style={styles.buyerRow}>
+        <AvatarComponent name={inquiry.buyerName} imageUrl={inquiry.buyerImage} size={36} />
+        <View style={styles.buyerText}>
+          <Text style={styles.buyerName} numberOfLines={1}>{inquiry.buyerName || "Buyer"}</Text>
+          <Text style={styles.dateText}>{formatAskedDate(inquiry.createdAt, !isAnswered)}</Text>
+        </View>
+      </View>
+
       <View style={styles.questionBlock}>
-        <Text style={styles.sectionLabel}>Question</Text>
         <Text style={styles.questionText}>{inquiry.question}</Text>
-        <Text style={styles.dateText}>{formatAskedDate(inquiry.createdAt, !isAnswered)}</Text>
       </View>
 
       {isAnswered && inquiry.reply ? (
@@ -138,7 +145,10 @@ const styles = StyleSheet.create({
   statusAnsweredText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.success },
   statusWaiting: { backgroundColor: "#FEF3C7" },
   statusWaitingText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
-  questionBlock: { marginTop: spacing.xs },
+  buyerRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  buyerText: { flex: 1 },
+  buyerName: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
+  questionBlock: { marginTop: spacing.md },
   replyBlock: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
   sectionLabel: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted, marginBottom: 4 },
   questionText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.text, lineHeight: 20 },

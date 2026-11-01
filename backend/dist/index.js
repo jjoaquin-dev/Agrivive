@@ -119691,9 +119691,14 @@ async function requireNoActiveTrustRestriction(tx, userId) {
   }
 }
 
-// src/modules/auth/services/auth.session.ts
+// src/utils/user-status-cache/index.ts
 var userStatusCache = new Map;
 var STATUS_CACHE_TTL_MS = 30000;
+function forgetUserStatus(userId) {
+  userStatusCache.delete(userId);
+}
+
+// src/modules/auth/services/auth.session.ts
 var sellerRoute = new Elysia({ name: "auth.session" });
 var sessionAuth = new Elysia().macro({
   role: (allowedRoles = []) => ({
@@ -139127,13 +139132,18 @@ async function listSellerProductInquiries(sellerId, query) {
       productId: product_inquiries.productId,
       productName: sellers_product.productName,
       buyerId: product_inquiries.buyerId,
+      buyerName: user.name,
+      buyerImage: user.image,
       question: product_inquiries.question,
       reply: product_inquiries.reply,
       repliedAt: product_inquiries.repliedAt,
       createdAt: product_inquiries.createdAt
-    }).from(product_inquiries).innerJoin(sellers_product, eq(product_inquiries.productId, sellers_product.id)).where(and(eq(product_inquiries.sellerId, sellerId), openOnly ? isNull2(product_inquiries.repliedAt) : undefined, before)).orderBy(desc(product_inquiries.createdAt), desc(product_inquiries.id)).limit(limit + 1);
+    }).from(product_inquiries).innerJoin(sellers_product, eq(product_inquiries.productId, sellers_product.id)).leftJoin(user, eq(product_inquiries.buyerId, user.id)).where(and(eq(product_inquiries.sellerId, sellerId), openOnly ? isNull2(product_inquiries.repliedAt) : undefined, before)).orderBy(desc(product_inquiries.createdAt), desc(product_inquiries.id)).limit(limit + 1);
     const [open] = await tx.select({ value: count() }).from(product_inquiries).where(and(eq(product_inquiries.sellerId, sellerId), isNull2(product_inquiries.repliedAt)));
-    const page = rows.slice(0, limit);
+    const page = await Promise.all(rows.slice(0, limit).map(async (row) => ({
+      ...row,
+      buyerImage: await getAvatarDisplayUrl(row.buyerImage)
+    })));
     const last = page[page.length - 1];
     return { items: page, nextCursor: rows.length > limit ? last?.id ?? null : null, openCount: open?.value ?? 0 };
   });
@@ -144004,6 +144014,7 @@ async function verifyTrustRecovery(input) {
     await tx.update(user).set({ isActive: true }).where(eq(user.id, candidate.id));
     return candidate.id;
   });
+  forgetUserStatus(restored);
   return { success: true, userId: restored, restoredAt: restoredAt.toISOString() };
 }
 

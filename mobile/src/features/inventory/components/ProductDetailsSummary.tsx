@@ -54,7 +54,7 @@ export function ProductDetailsSummary({ product }: { product: Product }) {
             </View>
           ) : null}
           {!product.isMarketable && status.kind !== "archived" ? (
-            <View style={[styles.chip, { backgroundColor: "#F3F4F6" }]}>
+            <View style={[styles.chip, { backgroundColor: "#F3F1EA" }]}>
               <Text style={[styles.chipText, { color: colors.textMuted }]}>Reservations paused</Text>
             </View>
           ) : null}

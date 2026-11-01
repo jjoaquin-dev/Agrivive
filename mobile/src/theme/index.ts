@@ -1,43 +1,46 @@
 /**
  * Agrivive Mobile Design System Tokens
- * Source: .agents/design/mobile-design/DESIGN.md
+ * Source: web/tailwind.config.ts (agrivive palette) and web/app/layout.tsx (Parkinsans headings, Plus Jakarta Sans body)
  */
 
 export const colors = {
-  primary: "#0F920F",
-  primaryPressed: "#0C770C",
-  primaryLight: "rgba(15, 146, 15, 0.10)",
-  primarySurface: "rgba(15, 146, 15, 0.05)",
-  background: "#FFFFFF",
+  primary: "#457D00",
+  primaryPressed: "#386600",
+  primaryLight: "rgba(69, 125, 0, 0.10)",
+  primarySurface: "rgba(69, 125, 0, 0.05)",
+  background: "#F8F6F1",
   surface: "#FFFFFF",
-  surfaceMuted: "#F9FAFB",
-  text: "#111827",
-  textMuted: "#6B7280",
-  sage: "#A8BFA3",
-  terracotta: "#C97850",
-  border: "#E5E7EB",
-  success: "#16A34A",
+  surfaceMuted: "#F3F1EA",
+  text: "#202622",
+  textMuted: "#636B63",
+  sage: "#96B125",
+  olive: "#C6C736",
+  cream: "#FCEC9A",
+  terracotta: "#FEA938",
+  border: "#E5E2DA",
+  success: "#457D00",
+  /** Darker than the web's orange (#FEA938) because this colour is also used for text, which needs contrast on white. */
   warning: "#D97706",
-  error: "#DC2626",
+  error: "#B85450",
   white: "#FFFFFF",
   transparent: "transparent",
 } as const;
 
 export const fonts = {
   heading: {
-    semiBold: "Inter_600SemiBold",
-    bold: "Inter_700Bold",
+    semiBold: "Parkinsans_600SemiBold",
+    bold: "Parkinsans_700Bold",
   },
   body: {
-    regular: "Inter_400Regular",
-    medium: "Inter_500Medium",
-    semiBold: "Inter_600SemiBold",
+    regular: "PlusJakartaSans_400Regular",
+    medium: "PlusJakartaSans_500Medium",
+    semiBold: "PlusJakartaSans_600SemiBold",
   },
 } as const;
 
 /**
  * One type scale for the whole app (DESIGN.md "Typography and Spacing").
- * Only Inter is loaded, so headings use Inter Bold until Manrope is added.
+ * Headings use Parkinsans and body text uses Plus Jakarta Sans, the same faces as the web.
  * Spread a role into a style: `{ ...typography.body, color: colors.text }`.
  */
 export const typography = {

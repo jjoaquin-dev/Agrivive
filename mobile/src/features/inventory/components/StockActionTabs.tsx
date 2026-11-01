@@ -36,7 +36,7 @@ export const StockActionTabs: React.FC<StockActionTabsProps> = ({ actionType, on
 );
 
 const styles = StyleSheet.create({
-  track: { flexDirection: "row", height: 44, backgroundColor: "#F3F4F6", borderRadius: 10, padding: 3, gap: 4, marginBottom: spacing.base },
+  track: { flexDirection: "row", height: 44, backgroundColor: "#F3F1EA", borderRadius: 10, padding: 3, gap: 4, marginBottom: spacing.base },
   tab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", borderRadius: 8 },
   tabActive: { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: 1 },
   icon: { marginRight: 6 },

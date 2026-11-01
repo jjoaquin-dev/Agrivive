@@ -22,7 +22,7 @@ export const StockProjectionCard: React.FC<StockProjectionCardProps> = ({
       <View style={styles.row}>
         <Text style={styles.label}>Current available: <Text style={styles.strong}>{currentQty.toFixed(2)} {unitLabel}</Text></Text>
         {changeQty > 0 ? (
-          <Text style={[styles.change, { color: isAdd ? "#15803D" : colors.error }]}>
+          <Text style={[styles.change, { color: isAdd ? "#386600" : colors.error }]}>
             {isAdd ? "+ Adding" : "− Taking away"} {changeQty.toFixed(2)} {unitLabel}
           </Text>
         ) : null}
@@ -40,7 +40,7 @@ export const StockProjectionCard: React.FC<StockProjectionCardProps> = ({
       ) : isAdd ? (
         <View style={styles.noteRow}>
           <CheckCircle2 size={14} color={colors.success} />
-          <Text style={[styles.note, { color: "#15803D" }]}>Buyers see the new amount right away.</Text>
+          <Text style={[styles.note, { color: "#386600" }]}>Buyers see the new amount right away.</Text>
         </View>
       ) : null}
     </View>

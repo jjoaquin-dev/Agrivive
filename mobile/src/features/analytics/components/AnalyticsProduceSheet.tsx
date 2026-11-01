@@ -52,8 +52,8 @@ const styles = StyleSheet.create({
   handle: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, marginBottom: spacing.sm },
   list: { flexGrow: 0 },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 48, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 48, borderBottomWidth: 1, borderBottomColor: "#F3F1EA" },
   name: { flex: 1, fontFamily: fonts.body.regular, fontSize: 15, color: colors.text },
   nameActive: { fontFamily: fonts.body.semiBold, color: colors.primary },
-  unit: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted, backgroundColor: "#F3F4F6", paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
+  unit: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted, backgroundColor: "#F3F1EA", paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
 });

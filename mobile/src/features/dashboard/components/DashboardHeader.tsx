@@ -1,6 +1,7 @@
 import React from "react";
 import { Image, StyleSheet, View, Text, Pressable } from "react-native";
-import { Bell, Store, Check } from "lucide-react-native";
+import { Store, Check } from "lucide-react-native";
+import { NotificationBellButton } from "../../../components/NotificationBellButton";
 import { colors, fonts, radii, spacing, touchTargets, typography } from "../../../theme";
 
 interface DashboardHeaderProps {
@@ -23,7 +24,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onPressNotifications,
   onPressProfile,
 }) => {
-  const hasNotifs = unreadCount > 0;
   const initials = sellerName
     .split(" ")
     .filter(Boolean)
@@ -66,15 +66,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         ) : null}
       </View>
 
-      <Pressable
-        onPress={onPressNotifications}
-        accessibilityRole="button"
-        accessibilityLabel={hasNotifs ? `${unreadCount} unread notifications` : "Notifications"}
-        style={styles.bellButton}
-      >
-        <Bell size={20} color={colors.text} />
-        {hasNotifs ? <View style={styles.redDot} /> : null}
-      </Pressable>
+      <NotificationBellButton unreadCount={unreadCount} onPress={onPressNotifications} />
     </View>
   );
 };
@@ -90,6 +82,4 @@ const styles = StyleSheet.create({
   sellerName: { ...typography.sectionHeading, color: colors.text },
   locationRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: 2 },
   locationText: { ...typography.labelSmall, flex: 1, color: colors.textMuted },
-  bellButton: { width: touchTargets.min - 4, height: touchTargets.min - 4, borderRadius: radii.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
-  redDot: { position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: colors.error },
 });

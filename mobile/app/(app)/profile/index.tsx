@@ -1,36 +1,32 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import {
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  Alert,
-} from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
+import { LogOut } from "lucide-react-native";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useSellerTrust } from "../../../src/features/trust/hooks/useSellerTrust";
-import { uploadSellerAvatar } from "../../../src/api/seller";
 import { DAVAO_CITY_COORDINATES } from "../../../src/components/MapPickerComponent";
-import { ProfileHeaderBar } from "../../../src/features/profile/components/ProfileHeaderBar";
+import { ConfirmDialogComponent } from "../../../src/components/ConfirmDialogComponent";
+import { useProfileAvatar } from "../../../src/features/profile/hooks/useProfileAvatar";
+import { ProfileScreenHeader } from "../../../src/features/profile/components/ProfileScreenHeader";
 import { ProfileHeroCard } from "../../../src/features/profile/components/ProfileHeroCard";
-import { ProfileVerificationCard } from "../../../src/features/profile/components/ProfileVerificationCard";
-import { ProfileBusinessInfoCard } from "../../../src/features/profile/components/ProfileBusinessInfoCard";
-import { ProfileLocationCard } from "../../../src/features/profile/components/ProfileLocationCard";
-import { ProfileContactCard } from "../../../src/features/profile/components/ProfileContactCard";
+import { ProfileStandingCard } from "../../../src/features/profile/components/ProfileStandingCard";
+import { ProfileSetupChecklist } from "../../../src/features/profile/components/ProfileSetupChecklist";
+import { ProfileStallCard } from "../../../src/features/profile/components/ProfileStallCard";
 import { ProfileSettingsList } from "../../../src/features/profile/components/ProfileSettingsList";
-import { colors, spacing } from "../../../src/theme";
+import { ProfilePhotoSheet } from "../../../src/features/profile/components/ProfilePhotoSheet";
+import { profileColors } from "../../../src/features/profile/profileTokens";
+import { colors, fonts, spacing } from "../../../src/theme";
 
 export default function ProfileOverviewScreen() {
   const router = useRouter();
   const { session, setup, refreshSetup, signOut } = useAuth();
-  const { trust } = useSellerTrust();
+  const { trust, loading: trustLoading, error: trustError } = useSellerTrust();
+  const avatar = useProfileAvatar();
   const [refreshing, setRefreshing] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
-  useEffect(() => {
-    void refreshSetup();
-  }, [refreshSetup]);
+  useEffect(() => { void refreshSetup(); }, [refreshSetup]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -38,158 +34,62 @@ export default function ProfileOverviewScreen() {
     setRefreshing(false);
   }, [refreshSetup]);
 
-  const performAvatarUpload = useCallback(
-    async (uri: string) => {
-      setUploadingAvatar(true);
-      try {
-        await uploadSellerAvatar(uri);
-        await refreshSetup();
-        Alert.alert("Success", "Profile picture updated successfully!");
-      } catch (err: any) {
-        Alert.alert("Upload Failed", err?.message || "Failed to upload photo.");
-      } finally {
-        setUploadingAvatar(false);
-      }
-    },
-    [refreshSetup]
-  );
-
-  const handlePickAvatar = useCallback(() => {
-    Alert.alert("Profile Photo", "Update your seller profile picture", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Take Photo",
-        onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== "granted") return Alert.alert("Permission Required", "Camera permission is required.");
-          const res = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.8 });
-          if (!res.canceled && res.assets?.[0]?.uri) await performAvatarUpload(res.assets[0].uri);
-        },
-      },
-      {
-        text: "Choose from Library",
-        onPress: async () => {
-          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (status !== "granted") return Alert.alert("Permission Required", "Photo library permission is required.");
-          const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
-          if (!res.canceled && res.assets?.[0]?.uri) await performAvatarUpload(res.assets[0].uri);
-        },
-      },
-    ]);
-  }, [performAvatarUpload]);
-
-  const handleSignOut = useCallback(() => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await signOut();
-          router.replace("/(auth)/login");
-        },
-      },
-    ]);
+  const logOut = useCallback(async () => {
+    setConfirmLogout(false);
+    await signOut();
+    router.replace("/(auth)/login");
   }, [signOut, router]);
 
   const profile = setup?.profile;
-  const coordinates = useMemo(
-    () => ({
-      latitude: profile?.latitude ?? DAVAO_CITY_COORDINATES.latitude,
-      longitude: profile?.longitude ?? DAVAO_CITY_COORDINATES.longitude,
-    }),
-    [profile?.latitude, profile?.longitude]
-  );
+  const coordinates = useMemo(() => ({
+    latitude: profile?.latitude ?? DAVAO_CITY_COORDINATES.latitude,
+    longitude: profile?.longitude ?? DAVAO_CITY_COORDINATES.longitude,
+  }), [profile?.latitude, profile?.longitude]);
 
-  const avatarUrl = setup?.account?.image || session?.user?.image;
+  const email = setup?.account?.email || session?.user?.email || "Not set";
   const sellerName = setup?.account?.name || session?.user?.name || "Seller";
-  const shopName = profile?.shopName || "Bankerohan Public Market";
-  const memberSince = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString([], { month: "short", year: "numeric" })
-    : "Jul 2026";
-  const verifiedSince = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })
-    : "July 23, 2026";
-  const sellerId = setup?.account?.id ? `AGV-${setup.account.id.slice(0, 8).toUpperCase()}` : "AGV-SELLER";
+  const shopName = profile?.shopName || "Your stall";
+  const memberSince = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString([], { month: "short", year: "numeric" }) : "today";
+  const sellerId = setup?.account?.id ? `AGV-${setup.account.id.slice(0, 8).toUpperCase()}` : null;
+  const isVerified = Boolean(setup?.sellerVerified || setup?.badge);
+  const goEdit = () => router.push("/(app)/profile/edit");
+
+  const steps = [
+    { title: "Verify your email", hint: "Confirm your email address", done: Boolean(setup?.emailVerified) },
+    { title: "Add your stall", hint: "Pinned stall & pickup info", done: Boolean(setup?.profileComplete) },
+    { title: "Make a password", hint: "Sign in with your email", done: Boolean(setup) && !setup?.passwordSetupRequired },
+  ];
+  const continueSetup = () => {
+    if (!setup?.emailVerified) router.push({ pathname: "/(auth)/verify-email", params: { email, sent: "false" } });
+    else if (!setup?.profileComplete) router.push("/(app)/profile/setup");
+    else router.push("/(auth)/password-setup");
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+    <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ProfileHeaderBar
-        onEdit={() => router.push("/(app)/profile/edit")}
-        onSecurity={() => router.push("/(app)/profile/security")}
-      />
-
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#16A34A"]}
-            tintColor="#16A34A"
-          />
-        }
-      >
-        <ProfileHeroCard
-          shopName={shopName}
-          sellerName={sellerName}
-          avatarUrl={avatarUrl}
-          isVerified={Boolean(setup?.sellerVerified || setup?.badge)}
-          memberSince={memberSince}
-          profileComplete={Boolean(setup?.profileComplete)}
-          trustPoints={trust?.monitoring?.weightedPoints ?? 100}
-          uploadingAvatar={uploadingAvatar}
-          onPickAvatar={handlePickAvatar}
-          onEditProfile={() => router.push("/(app)/profile/edit")}
-          onSecurity={() => router.push("/(app)/profile/security")}
-        />
-
-        <ProfileVerificationCard
-          isVerified={Boolean(setup?.sellerVerified || setup?.badge)}
-          verifiedSince={verifiedSince}
-          isActive={(session?.user as any)?.isActive !== false}
-          onRequestReview={() => router.push("/(app)/trust")}
-        />
-
-        <ProfileBusinessInfoCard
-          businessName={shopName}
-          ownerName={sellerName}
-          marketName={shopName}
-          email={setup?.account?.email || session?.user?.email || "seller@agrivive.com"}
-          sellerId={sellerId}
-          onEdit={() => router.push("/(app)/profile/edit")}
-        />
-
-        <ProfileLocationCard
-          coordinates={coordinates}
-          marketName={shopName}
-          detailAddress={profile?.detailAddress || "Stall 42, Vegetable Section, Bankerohan Market"}
-          pickupInstructions={(profile as any)?.pickupInstructions}
-          onEdit={() => router.push("/(app)/profile/edit")}
-        />
-
-        <ProfileContactCard
-          phoneNumber={profile?.phoneNumber || "Not configured"}
-          email={setup?.account?.email || session?.user?.email || "seller@agrivive.com"}
-          onEdit={() => router.push("/(app)/profile/edit")}
-        />
-
-        <ProfileSettingsList
-          onNotifications={() => router.push("/(app)/notifications")}
-          onReviews={() => router.push("/(app)/reviews")}
-          onTrust={() => router.push("/(app)/trust")}
-          onSecurity={() => router.push("/(app)/profile/security")}
-          onActivity={() => router.push("/(app)/activity")}
-          onSignOut={handleSignOut}
-        />
+      <ProfileScreenHeader title="Profile" large />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />}>
+        <ProfileHeroCard shopName={shopName} sellerName={sellerName} avatarUrl={setup?.account?.image || session?.user?.image}
+          isVerified={isVerified} memberSince={memberSince} uploadingAvatar={avatar.uploading} onPickAvatar={avatar.openSheet} onEditProfile={goEdit} />
+        {setup && setup.nextStep !== "ready" ? <ProfileSetupChecklist steps={steps} onContinue={continueSetup} /> : null}
+        <ProfileStandingCard trust={trust} loading={trustLoading} failed={Boolean(trustError)} isActive={(session?.user as any)?.isActive !== false} onPress={() => router.push("/(app)/trust")} />
+        <ProfileStallCard coordinates={coordinates} detailAddress={profile?.detailAddress || "No stall address yet"} pickupInstructions={(profile as any)?.pickupInstructions}
+          phoneNumber={profile?.phoneNumber || "Not set"} email={email} onEdit={goEdit} />
+        <ProfileSettingsList twoFactorEnabled={Boolean(setup?.twoFactorEnabled)} onNotifications={() => router.push("/(app)/notifications")} onReviews={() => router.push("/(app)/reviews")}
+          onTrust={() => router.push("/(app)/trust")} onSecurity={() => router.push("/(app)/profile/security")} onActivity={() => router.push("/(app)/activity")} onSignOut={() => setConfirmLogout(true)} />
+        {sellerId ? <Text style={styles.footer}>Seller ID {sellerId}</Text> : null}
       </ScrollView>
+      <ProfilePhotoSheet visible={avatar.sheetOpen} onTake={avatar.takePhoto} onChoose={avatar.choosePhoto} onClose={avatar.closeSheet} />
+      <ConfirmDialogComponent visible={confirmLogout} icon={<LogOut size={22} color={profileColors.red} />} title="Log out of Agrivive?"
+        message="You will need to sign in again to manage your stall and produce." cancelLabel="Cancel" confirmLabel="Log Out" onCancel={() => setConfirmLogout(false)} onConfirm={() => void logOut()} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
-  content: { paddingHorizontal: spacing.base, paddingTop: spacing.xs, paddingBottom: spacing.xxl },
+  safe: { flex: 1, backgroundColor: profileColors.cream },
+  content: { paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.xxl },
+  footer: { textAlign: "center", fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
 });

@@ -93,7 +93,7 @@ export function ConversationList({
       onEndReachedThreshold={0.4}
       contentContainerStyle={conversations.length === 0 ? styles.emptyContainer : undefined}
       ListFooterComponent={
-        loadingMore ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null
+        loadingMore ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : undefined
       }
       refreshControl={
         <RefreshControl

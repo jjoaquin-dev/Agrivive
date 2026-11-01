@@ -23,6 +23,8 @@ export interface SellerProductInquiryItem {
   productId: string;
   productName: string;
   buyerId: string;
+  buyerName: string | null;
+  buyerImage: string | null;
   question: string;
   reply: string | null;
   repliedAt: string | null;

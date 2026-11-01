@@ -42,10 +42,10 @@ export default function TabsLayout() {
           color: colors.text,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarInactiveTintColor: "#636B63",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E7EB",
+          borderTopColor: "#E5E2DA",
           borderTopWidth: 1,
           height: Platform.OS === "ios" ? 84 : 64,
           paddingBottom: Platform.OS === "ios" ? 22 : 8,

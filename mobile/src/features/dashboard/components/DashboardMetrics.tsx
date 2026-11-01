@@ -46,7 +46,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       value: String(summary.activeCount),
       valueColor: colors.text,
       subtitle: "Buyers can see these",
-      pill: { bg: "#F9FAFB", fg: colors.textMuted, border: "#E5E7EB" },
+      pill: { bg: "#F3F1EA", fg: colors.textMuted, border: "#E5E2DA" },
       a11y: "Selling now produce count",
     },
     {
@@ -84,7 +84,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       value: `${kiloTotal} kg`,
       valueColor: colors.primaryPressed,
       subtitle: `${sackTotal} sacks · ${pileTotal} piles`,
-      pill: { bg: "#F9FAFB", fg: colors.textMuted, border: "#E5E7EB" },
+      pill: { bg: "#F3F1EA", fg: colors.textMuted, border: "#E5E2DA" },
       a11y: "Ready to sell total quantity",
     },
   ];
@@ -104,7 +104,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             );
           }
           const quiet = error || (m.quietWhenZero && m.isZero);
-          const neutralPill = { bg: "#F9FAFB", fg: colors.textMuted, border: "#E5E7EB" };
+          const neutralPill = { bg: "#F3F1EA", fg: colors.textMuted, border: "#E5E2DA" };
           const pill = quiet ? neutralPill : m.pill;
           return (
           <Pressable

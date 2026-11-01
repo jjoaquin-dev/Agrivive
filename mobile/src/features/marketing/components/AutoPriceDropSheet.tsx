@@ -16,8 +16,9 @@ export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
   const hasAny = products.some((product) => Number(product.priceReductionAmount ?? 0) > 0 && product.minimumPrice != null);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(event) => event.stopPropagation()}>
+      <View style={styles.backdrop}>
+        <Pressable style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
+        <View style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>Boost Settings</Text>
@@ -25,12 +26,12 @@ export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
               <X size={22} color={colors.textMuted} />
             </Pressable>
           </View>
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.body} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled bounces={false}>
             <AutoPriceDropSwitches products={products} />
             {!hasAny ? <Text style={styles.empty}>No listing has automatic price drops. Set a drop amount and a final price in Edit Listing to use them.</Text> : null}
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -42,6 +43,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
   closeBtn: { width: 44, height: 44, marginRight: -spacing.sm, alignItems: "center", justifyContent: "center" },
-  body: { flexGrow: 0 },
+  dismiss: { flex: 1 },
+  body: { flexShrink: 1, flexGrow: 0 },
+  content: { paddingBottom: spacing.base },
   empty: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, paddingVertical: spacing.base },
 });

@@ -46,7 +46,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
         <View style={styles.buyerInfo}>
           <Text style={styles.buyerName}>{review.buyerName}</Text>
           <View style={styles.verifiedBadge}>
-            <Check size={10} color="#16A34A" strokeWidth={3} />
+            <Check size={10} color="#457D00" strokeWidth={3} />
             <Text style={styles.verifiedText}>Verified Buyer</Text>
           </View>
         </View>
@@ -83,7 +83,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
       {review.sellerResponse ? (
         <View style={styles.responseBox}>
           <View style={styles.responseHeader}>
-            <CornerDownRight size={14} color="#16A34A" />
+            <CornerDownRight size={14} color="#457D00" />
             <Text style={styles.responseTitle}>Your reply</Text>
           </View>
           <Text style={styles.responseText}>{review.sellerResponse}</Text>
@@ -111,7 +111,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
           accessibilityRole="button"
           accessibilityLabel="Reply to this review"
         >
-          <MessageSquare size={14} color="#0F920F" />
+          <MessageSquare size={14} color="#457D00" />
           <Text style={styles.replyBtnText}>Reply</Text>
         </Pressable>
       )}

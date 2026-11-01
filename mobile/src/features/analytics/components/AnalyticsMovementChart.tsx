@@ -49,7 +49,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
           roundedTop
           roundedBottom={false}
           hideRules={false}
-          rulesColor="#F3F4F6"
+          rulesColor="#F3F1EA"
           yAxisColor="transparent"
           xAxisColor={colors.border}
           yAxisTextStyle={styles.axisText}

@@ -91,8 +91,8 @@ export default function AppLayout() {
       <Stack.Screen name="reviews" options={{ title: "Ratings & Reviews" }} />
       <Stack.Screen name="profile/index" options={{ title: "Seller Profile" }} />
       <Stack.Screen name="profile/setup" options={{ headerShown: false }} />
-      <Stack.Screen name="profile/edit" options={{ title: "Edit Profile" }} />
-      <Stack.Screen name="profile/security" options={{ title: "Security & 2FA" }} />
+      <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+      <Stack.Screen name="profile/security" options={{ headerShown: false }} />
     </Stack>
   );
 }

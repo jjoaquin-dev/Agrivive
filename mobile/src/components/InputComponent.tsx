@@ -9,7 +9,7 @@ import {
   TextStyle,
   ViewStyle,
 } from "react-native";
-import { Eye, EyeOff } from "lucide-react-native";
+import { AlertCircle, Eye, EyeOff } from "lucide-react-native";
 import { colors, radii, spacing, touchTargets } from "../theme";
 
 export interface InputComponentProps extends TextInputProps {
@@ -80,7 +80,10 @@ export const InputComponent: React.FC<InputComponentProps> = ({
         ) : null}
       </View>
       {error ? (
-        <Text style={styles.errorText}>{error}</Text>
+        <View style={styles.errorRow}>
+          <AlertCircle size={14} color={colors.error} />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
       ) : hint ? (
         <Text style={styles.hintText}>{hint}</Text>
       ) : null}
@@ -134,10 +137,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: colors.primary,
   },
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: spacing.xs,
+  },
   errorText: {
+    flex: 1,
     fontSize: 12,
     color: colors.error,
-    marginTop: spacing.xs,
   },
   hintText: {
     fontSize: 12,

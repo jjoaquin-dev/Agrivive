@@ -22,7 +22,7 @@ export function NotificationSkeleton() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: spacing.md, paddingHorizontal: spacing.base, paddingVertical: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
-  icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#F3F4F6", marginLeft: 16 },
+  icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#F3F1EA", marginLeft: 16 },
   lines: { flex: 1, gap: 8 },
-  line: { height: 12, borderRadius: radii.sm, backgroundColor: "#F3F4F6" },
+  line: { height: 12, borderRadius: radii.sm, backgroundColor: "#F3F1EA" },
 });

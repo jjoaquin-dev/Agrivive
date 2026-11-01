@@ -1,9 +1,11 @@
 import React from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
-import { Bell, ShieldCheck, Lock, History, ChevronRight, LogOut, Star } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Bell, ChevronRight, History, Lock, LogOut, ShieldCheck, Star } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { profileColors } from "../profileTokens";
 
-interface ProfileSettingsListProps {
+interface Props {
+  twoFactorEnabled: boolean;
   onNotifications: () => void;
   onReviews: () => void;
   onTrust: () => void;
@@ -12,138 +14,51 @@ interface ProfileSettingsListProps {
   onSignOut: () => void;
 }
 
-export const ProfileSettingsList: React.FC<ProfileSettingsListProps> = ({
-  onNotifications,
-  onReviews,
-  onTrust,
-  onSecurity,
-  onActivity,
-  onSignOut,
-}) => {
+export function ProfileSettingsList({ twoFactorEnabled, onNotifications, onReviews, onTrust, onSecurity, onActivity, onSignOut }: Props) {
   const items = [
-    {
-      title: "Ratings & Reviews",
-      subtitle: "See customer feedback and reply to reviews",
-      icon: <Star size={18} color="#D97706" />,
-      action: onReviews,
-    },
-    {
-      title: "Notification Preferences",
-      subtitle: "Manage alerts, sound, and pickup reminders",
-      icon: <Bell size={18} color="#D97706" />,
-      action: onNotifications,
-    },
-    {
-      title: "Trust & Account Records",
-      subtitle: "Verified events, ratings, and standing",
-      icon: <ShieldCheck size={18} color="#16A34A" />,
-      action: onTrust,
-    },
-    {
-      title: "Security & Account",
-      subtitle: "Password, Two-Factor Authenticator (2FA)",
-      icon: <Lock size={18} color="#2563EB" />,
-      action: onSecurity,
-    },
-    {
-      title: "Change History & Ledger",
-      subtitle: "Surplus stock adjustments and audit history",
-      icon: <History size={18} color="#7C3AED" />,
-      action: onActivity,
-    },
+    { title: "Ratings & Reviews", hint: "See customer feedback and reply to reviews", icon: Star, action: onReviews },
+    { title: "Notification Preferences", hint: "Manage alerts, sound, and pickup reminders", icon: Bell, action: onNotifications },
+    { title: "Trust & Account Records", hint: "Verified events, ratings, and standing", icon: ShieldCheck, action: onTrust },
+    { title: "Sign-in Safety", hint: "Password and sign-in code", icon: Lock, action: onSecurity, badge: twoFactorEnabled ? "On" : "Off" },
+    { title: "Change History", hint: "Amount changes and past updates", icon: History, action: onActivity },
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={styles.card}>
       {items.map((item) => (
-        <Pressable
-          key={item.title}
-          onPress={item.action}
-          accessibilityRole="button"
-          accessibilityLabel={item.title}
-          style={({ pressed }) => [styles.navItem, pressed && styles.itemPressed]}
-        >
-          <View style={styles.iconCircle}>{item.icon}</View>
-          <View style={styles.textWrap}>
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+        <Pressable key={item.title} onPress={item.action} accessibilityRole="button" accessibilityLabel={item.title} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+          <View style={styles.icon}><item.icon size={20} color={colors.primary} /></View>
+          <View style={styles.text}>
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.hint}>{item.hint}</Text>
           </View>
-          <ChevronRight size={18} color="#94A3B8" />
+          {item.badge ? <View style={[styles.badge, item.badge === "On" && styles.badgeOn]}><Text style={[styles.badgeText, item.badge === "On" && styles.badgeTextOn]}>{item.badge}</Text></View> : null}
+          <ChevronRight size={18} color={colors.textMuted} />
         </Pressable>
       ))}
-
-      {/* Log Out Button */}
-      <Pressable
-        onPress={onSignOut}
-        accessibilityRole="button"
-        accessibilityLabel="Sign out of account"
-        style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
-      >
-        <LogOut size={16} color="#DC2626" />
+      <Pressable onPress={onSignOut} accessibilityRole="button" accessibilityLabel="Log out" style={({ pressed }) => [styles.row, styles.logout, pressed && styles.logoutPressed]}>
+        <View style={[styles.icon, styles.logoutIcon]}><LogOut size={20} color={profileColors.red} /></View>
         <Text style={styles.logoutText}>Log Out</Text>
+        <ChevronRight size={18} color={profileColors.red} />
       </Pressable>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    gap: spacing.sm,
-    marginBottom: spacing.xxl,
-  },
-  navItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: radii.card || 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.base,
-  },
-  itemPressed: {
-    backgroundColor: "#F8FAFC",
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "#F8FAFC",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.sm,
-  },
-  textWrap: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 14,
-    color: "#0F172A",
-  },
-  itemSubtitle: {
-    fontFamily: fonts.body.regular,
-    fontSize: 11,
-    color: "#64748B",
-    marginTop: 1,
-  },
-  logoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1.5,
-    borderColor: "#FCA5A5",
-    borderRadius: radii.card || 14,
-    paddingVertical: 14,
-    marginTop: spacing.xs,
-  },
-  logoutBtnPressed: {
-    backgroundColor: "#FEF2F2",
-  },
-  logoutText: {
-    fontFamily: fonts.heading.bold,
-    fontSize: 14,
-    color: "#DC2626",
-  },
+  card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, overflow: "hidden", marginBottom: spacing.base },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 64, paddingHorizontal: spacing.base, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: profileColors.border },
+  pressed: { backgroundColor: "#F3F1EA" },
+  icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  text: { flex: 1 },
+  title: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
+  hint: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 1 },
+  badge: { backgroundColor: "#F3F1EA", borderRadius: radii.full, paddingHorizontal: 10, paddingVertical: 3 },
+  badgeOn: { backgroundColor: profileColors.mint },
+  badgeText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted },
+  badgeTextOn: { color: profileColors.mintText },
+  logout: { borderBottomWidth: 0, backgroundColor: "#FEF2F2" },
+  logoutPressed: { backgroundColor: profileColors.redSoft },
+  logoutIcon: { backgroundColor: profileColors.redSoft },
+  logoutText: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 15, color: profileColors.red },
 });

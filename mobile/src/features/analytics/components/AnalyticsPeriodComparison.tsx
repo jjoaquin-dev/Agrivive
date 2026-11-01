@@ -49,7 +49,7 @@ export function AnalyticsPeriodComparison({ analytics, unit }: AnalyticsPeriodCo
           <View style={[styles.colChange, styles.changeCell]}>
             {!notComputable.completedQuantityChange && change !== null ? (
               <View style={[styles.varPill, isPos ? styles.varPos : isNeg ? styles.varNeg : styles.varZero]}>
-                {isPos ? <ArrowUpRight size={10} color="#16A34A" /> : isNeg ? <ArrowDownRight size={10} color="#DC2626" /> : null}
+                {isPos ? <ArrowUpRight size={10} color="#457D00" /> : isNeg ? <ArrowDownRight size={10} color="#B85450" /> : null}
                 <Text style={[styles.varText, isPos ? styles.varPosText : isNeg ? styles.varNegText : styles.varZeroText]}>
                   {change > 0 ? `+${change.toFixed(1)}%` : `${change.toFixed(1)}%`}
                 </Text>
@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
   varNeg: { backgroundColor: "rgba(220, 38, 38, 0.1)" },
   varZero: { backgroundColor: colors.surfaceMuted },
   varText: { fontFamily: fonts.body.semiBold, fontSize: 10 },
-  varPosText: { color: "#16A34A" },
-  varNegText: { color: "#DC2626" },
+  varPosText: { color: "#457D00" },
+  varNegText: { color: "#B85450" },
   varZeroText: { color: colors.textMuted },
   naText: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted },
 });

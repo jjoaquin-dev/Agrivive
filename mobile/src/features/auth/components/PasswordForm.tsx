@@ -6,6 +6,8 @@ import { setPassword } from "../../../api/auth";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { InputComponent } from "../../../components/InputComponent";
 import { colors, spacing } from "../../../theme";
+import { validateNewPassword } from "../passwordRules";
+import { PasswordChecklist } from "./PasswordChecklist";
 
 export type PasswordFormMode = "set" | "change";
 
@@ -30,8 +32,9 @@ export function PasswordForm({ mode, onSuccess }: PasswordFormProps) {
       setCurrentPasswordError("Please enter your current password.");
       hasError = true;
     }
-    if (newPassword.length < 8) {
-      setNewPasswordError("Password must be at least 8 characters long.");
+    const passwordProblem = validateNewPassword(newPassword);
+    if (passwordProblem) {
+      setNewPasswordError(passwordProblem);
       hasError = true;
     }
     if (newPassword !== confirmPassword) {
@@ -92,7 +95,7 @@ export function PasswordForm({ mode, onSuccess }: PasswordFormProps) {
 
       <InputComponent
         label="New Password"
-        placeholder="At least 8 characters"
+        placeholder="Create a strong password"
         isPassword
         value={newPassword}
         leftIcon={<KeyRound size={18} color={colors.textMuted} />}
@@ -118,10 +121,10 @@ export function PasswordForm({ mode, onSuccess }: PasswordFormProps) {
         }}
       />
 
-      <Text style={styles.hint}>Use at least 8 characters.</Text>
+      <PasswordChecklist password={newPassword} confirmPassword={confirmPassword} />
 
       <ButtonComponent
-        title={mode === "set" ? "Set Password" : "Update Password"}
+        title={mode === "set" ? "Set Password" : "Change Password"}
         onPress={() => void handleSubmit()}
         loading={loading}
         style={styles.button}
@@ -133,11 +136,6 @@ export function PasswordForm({ mode, onSuccess }: PasswordFormProps) {
 const styles = StyleSheet.create({
   form: {
     gap: spacing.md,
-  },
-  hint: {
-    color: colors.textMuted,
-    fontSize: 13,
-    marginTop: -spacing.xs,
   },
   generalError: {
     color: colors.error,

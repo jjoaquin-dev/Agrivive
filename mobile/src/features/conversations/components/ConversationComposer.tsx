@@ -11,7 +11,7 @@ interface ConversationComposerProps {
   closedReason: string;
   draft: string;
   onChangeDraft: (text: string) => void;
-  inputRef: React.RefObject<TextInput | null>;
+  inputRef: React.RefObject<React.ElementRef<typeof TextInput> | null>;
   /** The chosen photo: its place on the phone while it uploads, and its link once it has. */
   photo: { uri: string; filename: string } | null;
   photoReady: boolean;

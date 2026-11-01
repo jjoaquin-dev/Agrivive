@@ -29,7 +29,7 @@ const closedReasons = {
 export default function ConversationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const inputRef = useRef<TextInput | null>(null);
+  const inputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
   const listRef = useRef<FlatList | null>(null);
   const [viewer, setViewer] = useState<{ url: string; sentAt: string } | null>(null);
 

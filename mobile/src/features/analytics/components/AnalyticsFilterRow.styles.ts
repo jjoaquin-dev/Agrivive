@@ -3,7 +3,7 @@ import { colors, fonts, radii, spacing } from "../../../theme";
 
 export const filterRowStyles = StyleSheet.create({
   container: { backgroundColor: colors.surface, paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border, gap: spacing.sm + 2 },
-  segmented: { flexDirection: "row", height: 44, backgroundColor: "#F3F4F6", borderRadius: radii.input, padding: 3, gap: 4 },
+  segmented: { flexDirection: "row", height: 44, backgroundColor: "#F3F1EA", borderRadius: radii.input, padding: 3, gap: 4 },
   segment: { flex: 1, alignItems: "center", justifyContent: "center", borderRadius: 8 },
   segmentActive: { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: 1 },
   segmentText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.textMuted },

@@ -145,7 +145,7 @@ export default function OrdersScreen() {
                 </SkeletonCard>
               ))}
             </View>
-          ) : error ? null : (
+          ) : error ? undefined : (
             <View style={styles.empty}>
               <View style={styles.emptyIcon}><CalendarDays size={28} color={colors.textMuted} /></View>
               <Text style={styles.emptyTitle}>{filter === "pending" ? "No one is waiting" : "No reservations here"}</Text>
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
   errorTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.error },
   errorText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F3F1EA", alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   skeletonCard: { gap: spacing.sm, marginBottom: spacing.md, backgroundColor: colors.surfaceMuted },
   skeletonRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   retry: { marginTop: spacing.base, alignSelf: "stretch" },

@@ -1,154 +1,75 @@
 import React from "react";
-import { StyleSheet, View, Text, Pressable, Image, ActivityIndicator } from "react-native";
-import { Camera, Check, Pencil, Shield } from "lucide-react-native";
-import { fonts, radii, spacing } from "../../../theme";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { AlertCircle, Camera, ShieldCheck } from "lucide-react-native";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { profileColors } from "../profileTokens";
 
-interface ProfileHeroCardProps {
+interface Props {
   shopName: string;
   sellerName: string;
   avatarUrl?: string | null;
   isVerified: boolean;
   memberSince: string;
-  profileComplete: boolean;
-  trustPoints?: number;
   uploadingAvatar: boolean;
   onPickAvatar: () => void;
   onEditProfile: () => void;
-  onSecurity: () => void;
 }
 
-export const ProfileHeroCard: React.FC<ProfileHeroCardProps> = ({
-  shopName,
-  sellerName,
-  avatarUrl,
-  isVerified,
-  memberSince,
-  profileComplete,
-  trustPoints = 100,
-  uploadingAvatar,
-  onPickAvatar,
-  onEditProfile,
-  onSecurity,
-}) => {
-  const initials = sellerName ? sellerName[0].toUpperCase() : "S";
+function initialsOf(name: string) {
+  const letters = name.trim().split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase() ?? "");
+  return letters.join("") || "S";
+}
 
+export function ProfileHeroCard({ shopName, sellerName, avatarUrl, isVerified, memberSince, uploadingAvatar, onPickAvatar, onEditProfile }: Props) {
   return (
     <View style={styles.card}>
-      {/* Top Identity Row */}
-      <View style={styles.identityRow}>
-        <Pressable
-          onPress={onPickAvatar}
-          disabled={uploadingAvatar}
-          accessibilityRole="button"
-          accessibilityLabel="Change profile picture"
-          style={styles.avatarWrapper}
-        >
+      <View style={styles.row}>
+        <Pressable onPress={onPickAvatar} disabled={uploadingAvatar} accessibilityRole="button" accessibilityLabel="Change profile picture" style={styles.avatarWrap}>
           {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            <Image source={{ uri: avatarUrl }} style={styles.avatar} />
           ) : (
-            <View style={styles.avatarFallback}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
+            <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.initials}>{initialsOf(sellerName)}</Text></View>
           )}
           <View style={styles.cameraBadge}>
-            {uploadingAvatar ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Camera size={12} color="#064E3B" />
-            )}
+            {uploadingAvatar ? <ActivityIndicator size="small" color={colors.primary} /> : <Camera size={14} color={colors.primary} />}
           </View>
         </Pressable>
-
-        <View style={styles.identityText}>
-          <Text style={styles.shopName} numberOfLines={1}>
-            {shopName}
-          </Text>
-          <View style={styles.badgeRow}>
-            {isVerified ? (
-              <View style={styles.verifiedPill}>
-                <Check size={11} color="#22C55E" strokeWidth={3} />
-                <Text style={styles.verifiedText}>Verified</Text>
-              </View>
-            ) : (
-              <View style={styles.unverifiedPill}>
-                <Text style={styles.unverifiedText}>Pending Verification</Text>
-              </View>
-            )}
+        <View style={styles.text}>
+          <Text style={styles.shop} numberOfLines={2}>{shopName}</Text>
+          <Text style={styles.owner} numberOfLines={1}>{sellerName}</Text>
+          <View style={[styles.pill, isVerified ? styles.pillOk : styles.pillWarn]}>
+            {isVerified ? <ShieldCheck size={13} color={profileColors.mintText} /> : <AlertCircle size={13} color={profileColors.amberText} />}
+            <Text style={[styles.pillText, { color: isVerified ? profileColors.mintText : profileColors.amberText }]}>{isVerified ? "Verified Seller" : "Not Verified Yet"}</Text>
           </View>
-          <Text style={styles.sellerName}>{sellerName}</Text>
-          <Text style={styles.subInfo} numberOfLines={1}>
-            {shopName}
-          </Text>
+          {uploadingAvatar ? <Text style={styles.uploading}>Uploading photo...</Text> : null}
+          <Text style={styles.since}>Selling on Agrivive since {memberSince}</Text>
         </View>
       </View>
-
-      {/* 3 Metric Pills */}
-      <View style={styles.statsRow}>
-        <View style={styles.statPill}>
-          <Text style={styles.statValue}>{profileComplete ? "100%" : "85%"}</Text>
-          <Text style={styles.statLabel}>Profile Complete</Text>
-        </View>
-
-        <View style={styles.statPill}>
-          <Text style={styles.statValue}>{memberSince}</Text>
-          <Text style={styles.statLabel}>Member Since</Text>
-        </View>
-
-        <View style={styles.statPill}>
-          <Text style={styles.statValue}>{`${trustPoints} pts`}</Text>
-          <Text style={styles.statLabel}>Trust Score</Text>
-        </View>
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.actionsRow}>
-        <Pressable
-          onPress={onEditProfile}
-          accessibilityRole="button"
-          accessibilityLabel="Edit stall profile"
-          style={styles.actionBtn}
-        >
-          <Pencil size={14} color="#FFFFFF" />
-          <Text style={styles.actionBtnText}>Edit Profile</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={onSecurity}
-          accessibilityRole="button"
-          accessibilityLabel="Open security settings"
-          style={[styles.actionBtn, styles.actionBtnSecondary]}
-        >
-          <Shield size={14} color="#FFFFFF" />
-          <Text style={styles.actionBtnText}>Security Settings</Text>
-        </Pressable>
-      </View>
+      <Pressable onPress={onEditProfile} accessibilityRole="button" accessibilityLabel="Edit profile" style={({ pressed }) => [styles.edit, pressed && styles.editPressed]}>
+        <Text style={styles.editText}>Edit Profile</Text>
+      </Pressable>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: "#14532D", borderRadius: radii.card || 20, padding: spacing.base, marginBottom: spacing.base },
-  identityRow: { flexDirection: "row", alignItems: "center" },
-  avatarWrapper: { position: "relative", marginRight: spacing.md },
-  avatarImage: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: "#34D399" },
-  avatarFallback: { width: 68, height: 68, borderRadius: 34, backgroundColor: "#34D399", alignItems: "center", justifyContent: "center" },
-  avatarText: { fontFamily: fonts.heading.bold, fontSize: 28, color: "#064E3B" },
-  cameraBadge: { position: "absolute", bottom: -2, right: -2, backgroundColor: "#FFFFFF", width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: "#14532D" },
-  identityText: { flex: 1 },
-  shopName: { fontFamily: fonts.heading.bold, fontSize: 18, color: "#FFFFFF" },
-  badgeRow: { flexDirection: "row", marginTop: 2 },
-  verifiedPill: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(34, 197, 94, 0.2)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
-  verifiedText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: "#4ADE80" },
-  unverifiedPill: { backgroundColor: "rgba(234, 179, 8, 0.2)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12 },
-  unverifiedText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: "#FDE047" },
-  sellerName: { fontFamily: fonts.body.semiBold, fontSize: 13, color: "rgba(255, 255, 255, 0.9)", marginTop: 2 },
-  subInfo: { fontFamily: fonts.body.regular, fontSize: 11, color: "rgba(255, 255, 255, 0.7)" },
-  statsRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.base },
-  statPill: { flex: 1, backgroundColor: "rgba(255, 255, 255, 0.12)", borderRadius: 12, paddingVertical: 8, alignItems: "center" },
-  statValue: { fontFamily: fonts.heading.bold, fontSize: 14, color: "#FFFFFF" },
-  statLabel: { fontFamily: fonts.body.regular, fontSize: 10, color: "rgba(255, 255, 255, 0.7)", marginTop: 1 },
-  actionsRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
-  actionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "rgba(255, 255, 255, 0.22)", borderRadius: 10, paddingVertical: 9 },
-  actionBtnSecondary: { backgroundColor: "rgba(255, 255, 255, 0.12)" },
-  actionBtnText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: "#FFFFFF" },
+  card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.base, marginBottom: spacing.base },
+  row: { flexDirection: "row", alignItems: "flex-start" },
+  avatarWrap: { marginRight: spacing.md },
+  avatar: { width: 76, height: 76, borderRadius: 38 },
+  avatarFallback: { backgroundColor: colors.terracotta, alignItems: "center", justifyContent: "center" },
+  initials: { fontFamily: fonts.heading.bold, fontSize: 26, color: colors.white },
+  cameraBadge: { position: "absolute", right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: profileColors.border, alignItems: "center", justifyContent: "center" },
+  text: { flex: 1 },
+  shop: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
+  owner: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: 2 },
+  pill: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 5, borderRadius: radii.full, paddingHorizontal: 10, paddingVertical: 4, marginTop: spacing.xs },
+  pillOk: { backgroundColor: profileColors.mint },
+  pillWarn: { backgroundColor: profileColors.amber },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
+  uploading: { fontFamily: fonts.body.medium, fontSize: 12, color: profileColors.amberText, marginTop: spacing.xs },
+  since: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: spacing.xs },
+  edit: { minHeight: 52, borderRadius: radii.button, borderWidth: 1.5, borderColor: colors.primary, alignItems: "center", justifyContent: "center", marginTop: spacing.base },
+  editPressed: { backgroundColor: colors.primaryLight },
+  editText: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.primary },
 });
