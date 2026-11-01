@@ -69,7 +69,8 @@ export async function loadEligibleVisibilityCandidates(evaluatedAt: Date) {
     publishedAt: sellers_product.publishedAt,
     price: sellers_product.productPrice,
     quantity: sellers_product.productQty,
-    originalQuantity: listing_cycles.originalQty,
+    // Same original stock the buyer feed uses; the cycle value does not grow when a seller adds more stock.
+    originalQuantity: sql<string>`coalesce(${sellers_product.originalQty}, ${listing_cycles.originalQty})`,
     cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
     cycleVegetableKey: listing_cycles.vegetableKey,
     cycleScalingType: listing_cycles.scalingType,

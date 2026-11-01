@@ -21,9 +21,9 @@ const SEGMENTS = 4;
 function placement(item: SellerVisibilityItem) {
   const tier = item.tier?.toLowerCase() ?? "";
   if (item.score === null) return { label: "Not shown yet", line: item.reason || "Add stock and keep the listing on so buyers can see it.", tone: "warn" as const };
-  if (tier.includes("priority")) return { label: "Top spot", line: "Buyers see this near the top.", tone: "good" as const };
-  if (tier.includes("standard")) return { label: "Middle", line: "Buyers see this in the middle.", tone: "good" as const };
-  return { label: "Lower", line: "Buyers see this lower down.", tone: "quiet" as const };
+  if (tier.includes("priority")) return { label: "Priority Boost", line: "Buyers see this near the top.", tone: "good" as const };
+  if (tier.includes("standard")) return { label: "Standard Exposure", line: "Buyers see this in the middle.", tone: "good" as const };
+  return { label: "Basic/Hold", line: "Buyers see this lower down.", tone: "quiet" as const };
 }
 
 const tones = {
@@ -49,7 +49,7 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
           <Text style={styles.code}>{`PRD-${item.productId.slice(0, 4).toUpperCase()}`}</Text>
         </View>
         <View style={[styles.badge, { backgroundColor: tone.bg }]}>
-          {spot.label === "Top spot" ? <Star size={12} color={tone.fg} fill={tone.fg} /> : null}
+          {spot.label === "Priority Boost" ? <Star size={12} color={tone.fg} fill={tone.fg} /> : null}
           <Text style={[styles.badgeText, { color: tone.fg }]}>{spot.label}</Text>
         </View>
       </View>
