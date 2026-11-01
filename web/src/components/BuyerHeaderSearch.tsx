@@ -68,11 +68,9 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
         onSelectCategory={setSelectedCategory}
       />
       {/* Shows here from 1280px up. Below that the filters sit in the category row or the menu. */}
-      {onMarketplace ? (
-        <div className="hidden xl:contents">
-          <MarketplaceHeaderFilters />
-        </div>
-      ) : null}
+      <div className="hidden xl:contents">
+        <MarketplaceHeaderFilters />
+      </div>
       <button
         type="submit"
         className="ml-1 flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#457D00] px-4 text-xs font-bold text-white transition-colors hover:bg-[#457D00]/90 cursor-pointer"

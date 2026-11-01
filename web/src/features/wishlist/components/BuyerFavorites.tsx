@@ -3,6 +3,7 @@
 import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Sparkles, Store } from "lucide-react";
 import { PageContainer } from "@/src/components/PageContainer";
 import { ProductCard } from "@/src/features/marketplace/components/ProductCard";
@@ -89,10 +90,8 @@ export function BuyerFavorites() {
           </div>
         ) : visibleProducts.length === 0 ? (
           /* Empty State */
-          <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-sm sm:p-12">
-            <div className="mb-4 flex size-16 items-center justify-center rounded-2xl bg-[#FFF8ED] text-[#FEA938]">
-              <Heart className="size-8" />
-            </div>
+          <div className="mx-auto flex w-full max-w-none flex-col items-center justify-center rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-sm sm:p-12">
+            <Image src="/brand/favorites-empty.png" alt="" width={1254} height={1254} sizes="144px" className="mb-4 size-36 object-contain" />
             <h2 className="font-heading text-lg font-bold text-neutral-900 sm:text-xl">
               No favorite produce yet
             </h2>
