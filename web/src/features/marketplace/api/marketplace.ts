@@ -15,6 +15,10 @@ export function listMarketplaceProducts(params: URLSearchParams, signal?: AbortS
   return apiRequest<MarketplaceProductResponse>(`/marketplace/products?${query.toString()}`, { signal });
 }
 
+export function listMarketplaceDeals(signal?: AbortSignal) {
+  return apiRequest<{ products: MarketplaceProduct[]; evaluatedAt: string }>("/marketplace/products/deals", { signal });
+}
+
 export function getMarketplaceProduct(id: string, signal?: AbortSignal) {
   return apiRequest<MarketplaceProduct>(`/marketplace/products/${encodeURIComponent(id)}`, { signal });
 }

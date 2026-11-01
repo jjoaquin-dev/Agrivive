@@ -1,4 +1,4 @@
-import { CheckCircle2, PackageCheck, Store, TrendingUp, Users } from "lucide-react";
+import { CheckCircle2, PackageCheck, Store, TrendingUp } from "lucide-react";
 import type { MarketplaceOverviewResponse } from "../api/overview";
 
 interface Props {
@@ -34,18 +34,10 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
       badge: "Reliable Stalls",
       highlightColor: "text-teal-700 bg-teal-50 border-teal-200",
     },
-    {
-      title: "Community Stalls & Shoppers",
-      value: `${kpis.activeSellers + kpis.activeBuyers}`,
-      description: `${kpis.activeSellers} verified stall owners · ${kpis.activeBuyers} community buyers`,
-      icon: Users,
-      badge: "Davao Network",
-      highlightColor: "text-amber-800 bg-amber-50 border-amber-200",
-    },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {cards.map((card) => {
         const Icon = card.icon;
         return (

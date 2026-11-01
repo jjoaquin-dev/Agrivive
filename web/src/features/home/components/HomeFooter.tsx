@@ -4,7 +4,7 @@ import { ArrowDownToLine, ArrowUpRight, Heart, MapPin } from "lucide-react";
 
 export function HomeFooter() {
   return (
-    <footer className="relative overflow-hidden bg-agrivive-primary text-white">
+    <footer className="relative overflow-hidden bg-agrivive-primary font-brand text-white">
       {/* Top Grid: Brand & Categorized Navigation Links */}
       <div className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 sm:pt-24 lg:px-8">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-5 lg:gap-10">

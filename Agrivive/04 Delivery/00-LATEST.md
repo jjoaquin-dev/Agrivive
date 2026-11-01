@@ -11,15 +11,27 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-10-30
+2026-11-01
 
 ## Latest completed task
 
-Hero redesigned to the uploaded green reference: "Rescue Surplus Vegetables" on one line from 1024px, centred sentence and both CTAs, a smaller transparent basket cutout, and four floating labels from 768px. The floating slices and their components are removed. Details: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]]. Earlier: [[2026-10-30 Hero Decluttered with Line Art]].
+Priority deals row added under the marketplace hero (`GET /marketplace/products/deals`: AHP "Priority Boost" tier and at least 30% below base price). The marketplace was reordered so the products come before the seller map, and dead footer sort links and three unused components were removed. Details: [[2026-11-01 Priority Deals Row and Marketplace Reorder]]. Validation: backend typecheck and bundle passed, web typecheck and build passed. Not checked: the deals data path (backend not running) and the desktop and phone layout of the row.
 
-Open point: the reference's floating label chips were not added (they would add copy).
+Previous task: Sign-in and sign-up side panel now plays the uploaded video (`web/public/brand/sign-in-video.mp4`) instead of the photo carousel, and it is shorter (80vh). Details: [[2026-10-31 Auth Video Panel]]. Follow-up: the video column was shifted right with more left padding ([[2026-10-31 Auth Video Shifted Right]]). Validation: `bun run typecheck` in `web/` passed. Not checked in a browser.
 
-Validation: `bun run typecheck` in `web/` passed. Browser check at 1440 and 375 passed on a dev server at port 3002. `bun run build` and reduced motion not yet run.
+Cart icon replaced everywhere in the buyer site with the supplied glyph (`CartIcon`). The empty cart shows a basket illustration, and marketplace category images are larger ([[2026-10-31 Cart Icon Category Image and Cart Illustration]]). Typecheck passed; not checked in a browser.
+
+Parkinsans now used for headers (`font-heading`), footers and the marketplace hero. Alerts, toasts and the restriction notice restyled. Cart has icon and item motion ([[2026-10-31 Parkinsans Headers Alerts and Cart Motion]]). Typecheck passed; not checked in a browser.
+
+Profile settings: search bar removed and the Profile, Security and Notifications cards share one style ([[2026-10-31 Profile Settings Consistent Cards]]). Typecheck passed; not checked in a browser.
+
+Previous task: landing hero image swapped for a muted, looping video (`web/public/brand/hero-veggies.mp4`) in `web/src/components/sections/Hero.tsx`. The old image is the poster. Details: [[2026-10-31 Hero Image Swapped for Video]].
+
+Validation: `bun run typecheck` in `web/` passed. At 1024px the video plays and sits inside the hero column. Not checked: reduced motion in the browser, and phone widths.
+
+The intro animation ([[2026-10-31 Surplus Veggies Intro Animation]]) was rejected by the user and is not used.
+
+Previous task: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]].
 
 ## Current project status
 

@@ -67,12 +67,12 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
   }
 
   return (
-    <Card className="rounded-[24px] border border-neutral-200/80 bg-white p-6 shadow-2xs sm:p-7">
-      <div className="border-b border-neutral-100 pb-4">
+    <Card className="rounded-[20px] border border-neutral-200/80 bg-white p-6 shadow-[0_10px_28px_rgba(31,77,58,0.05)]">
+      <div className="border-b border-border/70 pb-4">
         <h2 className="font-heading text-lg font-bold text-neutral-900">
           Basic Information
         </h2>
-        <p className="mt-0.5 text-xs text-neutral-500">
+        <p className="text-sm text-neutral-500">
           Update your contact details for reservation pickup notifications.
         </p>
       </div>

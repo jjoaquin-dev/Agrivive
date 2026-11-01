@@ -9,7 +9,7 @@ interface MarketplaceHeroProps {
 
 export function MarketplaceHero(_props: MarketplaceHeroProps) {
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-neutral-800/40 shadow-xs">
+    <section className="relative overflow-hidden rounded-[28px] border border-neutral-800/40 font-brand shadow-xs">
       {/* Full Card Background Image */}
       <Image
         src="/brand/marketplace-hero-farm-stall.jpg"

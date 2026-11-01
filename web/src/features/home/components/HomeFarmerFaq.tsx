@@ -47,19 +47,19 @@ export function HomeFarmerFaq() {
               </span>
               <h2 className="type-section mt-3 font-heading text-neutral-900">
                 FAQ about{" "}
-                <span className="relative inline-block text-[#457D00]">
+                <span className="relative isolate inline-block text-[#457D00]">
                   Agrivive
                   <svg
-                    viewBox="0 0 120 16"
+                    viewBox="0 0 110 12"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="absolute -bottom-2 left-0 w-full h-3 sm:h-3.5 text-[#FEA938] overflow-visible pointer-events-none"
-                    preserveAspectRatio="none"
+                    className="absolute -bottom-1.5 left-0 -z-10 w-full text-[#E2FD56] sm:-bottom-2 pointer-events-none"
+                    aria-hidden="true"
                   >
                     <path
-                      d="M3 13 C 35 3, 85 3, 117 13"
+                      d="M3 9C30 3 80 3 107 9"
                       stroke="currentColor"
-                      strokeWidth="4"
+                      strokeWidth="3.5"
                       strokeLinecap="round"
                     />
                   </svg>

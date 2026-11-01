@@ -68,7 +68,7 @@ export function LandingHeader() {
       </div>
 
       {/* Floating pill: logo, section links and actions */}
-      <div className={`${pillSurface} pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-3 py-2 pl-5 pr-2`}>
+      <div className={`${pillSurface} pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-3 py-2 pl-5 pr-6`}>
         {/* Brand Logo Lockup: Vector Cart + Parkinsans Typography */}
         <Link id="header-logo" href="/" className="group flex shrink-0 items-center gap-1" aria-label="Agrivive home">
           <div className="relative w-[28px] h-[22px] shrink-0 -mr-2 -rotate-[11deg] origin-bottom-left transition-transform duration-200 group-hover:-rotate-[14deg] group-hover:scale-105">

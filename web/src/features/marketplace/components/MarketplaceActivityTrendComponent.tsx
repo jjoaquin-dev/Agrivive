@@ -20,7 +20,7 @@ export const MarketplaceActivityTrendComponent = ({ trends, range }: Props) => {
 
   const maxVal = Math.max(...trends.map((t) => t.quantity), 10);
   const width = 640;
-  const height = 200;
+  const height = 300;
   const paddingX = 40;
   const paddingY = 30;
   const chartW = width - paddingX * 2;

@@ -1,11 +1,13 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const alertVariants = cva("flex w-full flex-col gap-1 rounded-xl border px-4 py-3 text-sm", {
+const alertVariants = cva("flex w-full flex-col gap-1 rounded-2xl border px-4 py-3.5 text-sm shadow-[0_8px_24px_rgba(31,77,58,0.06)]", {
   variants: {
     variant: {
-      default: "bg-card text-card-foreground",
-      destructive: "border-destructive/30 bg-destructive/5 text-destructive",
+      default: "border-neutral-200/80 bg-white text-neutral-900",
+      destructive: "border-rose-200/80 bg-rose-50/70 text-rose-900",
+      success: "border-emerald-200/80 bg-emerald-50/70 text-emerald-900",
+      warning: "border-amber-200/80 bg-amber-50/70 text-amber-900",
     },
   },
   defaultVariants: { variant: "default" },

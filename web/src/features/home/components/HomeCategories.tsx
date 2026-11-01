@@ -17,7 +17,8 @@ const categories = [
   {
     name: "Fruit Vegetables",
     href: "/marketplace?productType=Fruit+Vegetables",
-    image: "/categories/fruit-vegetables.png",
+    image: "/categories/card/fruit-vegetables.png",
+    imageScale: "scale-[1.1]",
     alt: "Fresh fruit vegetables including tomatoes, eggplant, and squash",
     topGradient: "from-[#FEECE0]/90 via-[#FEF6F0]/40 to-transparent",
     hoverBorder: "hover:border-[#F7CDB5]",
@@ -25,7 +26,8 @@ const categories = [
   {
     name: "Root Vegetables",
     href: "/marketplace?productType=Root+Vegetables",
-    image: "/categories/root-vegetables.png",
+    image: "/categories/card/root-vegetables.png",
+    imageScale: "scale-[1.12]",
     alt: "Fresh root vegetables including carrots, radish, and beetroot",
     topGradient: "from-[#FEF0D8]/90 via-[#FFF8EC]/40 to-transparent",
     hoverBorder: "hover:border-[#F8D8B0]",
@@ -41,7 +43,8 @@ const categories = [
   {
     name: "Tuber Vegetables",
     href: "/marketplace?productType=Tuber+Vegetables",
-    image: "/categories/tuber-vegetables.png",
+    image: "/categories/card/tuber-vegetables.png",
+    imageScale: "scale-[0.85]",
     alt: "Fresh tuber vegetables including potatoes, ube yam, and taro",
     topGradient: "from-[#F2EBFE]/90 via-[#F9F5FF]/40 to-transparent",
     hoverBorder: "hover:border-[#DDCFF5]",
@@ -84,14 +87,13 @@ export function HomeCategories() {
                 {/* Soft wash behind the produce */}
                 <div className={`pointer-events-none absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b ${cat.topGradient}`} />
 
-                <div className="relative z-10 flex w-full flex-1 items-center justify-center">
+                <div className={`relative z-10 w-full flex-1 ${cat.imageScale ?? ""}`}>
                   <Image
                     src={cat.image}
                     alt={cat.alt}
-                    width={160}
-                    height={160}
-                    sizes="(min-width: 1024px) 160px, (min-width: 640px) 30vw, 45vw"
-                    className="h-auto w-[78%] max-w-[160px] object-contain drop-shadow-sm transition-transform duration-500 ease-settle group-hover:scale-105"
+                    fill
+                    sizes="(min-width: 1024px) 170px, (min-width: 640px) 30vw, 45vw"
+                    className="object-contain p-1 drop-shadow-sm transition-transform duration-500 ease-settle group-hover:scale-105"
                   />
                 </div>
 
