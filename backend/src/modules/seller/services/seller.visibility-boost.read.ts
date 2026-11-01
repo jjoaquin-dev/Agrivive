@@ -4,6 +4,7 @@ import { listing_cycles, seller_visibility_boosts, sellers_product } from "../..
 import { OrderError } from "../../../utils/order-types";
 import { getFirstPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { countUsedBoosts } from "./seller.visibility-boost.used";
+import { readPriceDropNow } from "./seller.price-reduction.drop-now.read";
 import { readBoostProgress } from "./seller.visibility-boost.progress";
 import { readBoostChannels } from "./seller.visibility-boost.channels";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
@@ -84,6 +85,8 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
           ? "Your listing was posted. The price drops every 6 hours until it reaches your final price."
           : "Your listing was posted on the Agrivive Facebook Page.";
 
+    const priceDrop = await readPriceDropNow(tx, sellerId, productId);
+
     const progress = boost ? (await readBoostProgress(tx, [boost])).get(boost.id) ?? null : null;
 
     const channels = boost ? await readBoostChannels(tx, boost) : null;
@@ -118,6 +121,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
         message,
         badge: canBoost ? ("available" as const) : ("boosted" as const),
         waitUntil: waitUntil ? waitUntil.toISOString() : null,
+        priceDrop: { available: priceDrop.available, message: priceDrop.message, waitUntil: priceDrop.waitUntil },
       },
       boost: boost ? { ...boost, errorMessage: errorMessage(boost.status), progress, channels } : null,
     };

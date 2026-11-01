@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Megaphone, TrendingDown, XCircle } from "lucide-react-native";
+import { Megaphone, XCircle } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { ProductBoostChip } from "../types";
 
@@ -12,7 +12,7 @@ function nextDropText(value: string) {
     : `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
 }
 
-/** Small status chips for a listing: Boosted with the next drop time, a waiting price drop, or a post that failed. */
+/** Small status chips for a listing: Boosted with the next drop time, or a post that failed. */
 export function BoostChip({ boost }: { boost?: ProductBoostChip | null }) {
   if (!boost) return null;
   const bad = boost.state === "not_posted" || boost.state === "failed";
@@ -30,12 +30,6 @@ export function BoostChip({ boost }: { boost?: ProductBoostChip | null }) {
         <Icon size={12} color={tone} />
         <Text style={[styles.text, { color: tone }]} numberOfLines={1}>{label}</Text>
       </View>
-      {boost.priceDropPrompt ? (
-        <View style={[styles.chip, { backgroundColor: "#FFEDD5" }]}>
-          <TrendingDown size={12} color="#EA580C" />
-          <Text style={[styles.text, { color: "#EA580C" }]} numberOfLines={1}>Price dropped · Boost again</Text>
-        </View>
-      ) : null}
     </View>
   );
 }

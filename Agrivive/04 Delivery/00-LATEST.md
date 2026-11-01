@@ -100,3 +100,6 @@ Owner manual testing of the seller mobile app with real device builds, verifying
 - n8n boost webhook sends only initial and follow_up; price_reduction boost, prompt-accept route and 3-hour price-drop gap removed. See 2026-11-01 Boost Reasons Only Initial And Follow Up.
 - A listing that starts a new cycle ends its old boost's 6-hour rule (context route clears the timer). See 2026-11-01 Follow Up Stops When Listing Starts Over.
 - Worker ends the 6-hour rule without calling n8n when no cut is possible (sold out, archived, paused, at floor, new cycle). See 2026-11-01 Follow Up Not Sent When Rule Has Ended.
+- Boost screen has Lower Price Now (manual follow_up round); old price_reduction boosts show correct post status. See 2026-11-01 Lower Price Now Button.
+- Running tab = running boosts only; Price Drops tab = waiting drops (Lower Price Now sends follow_up) + history. See 2026-11-01 Price Drops Apart From Running.
+- Leftover boost-again prompts show as skipped; migration 20261101180000 dismisses them; Boost on an already boosted listing answers 409. See 2026-11-01 Old Boost Prompts Retired.

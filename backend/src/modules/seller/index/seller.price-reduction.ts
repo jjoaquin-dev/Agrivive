@@ -4,9 +4,17 @@ import { sellerProductId } from "../model/seller.product";
 import { sellerPriceDropHistoryQuery, sellerPriceReductionToggleBody } from "../model/seller.price-reduction";
 import { listSellerPriceDropHistory } from "../services/seller.price-reduction.history.list";
 import { setSellerPriceReductionEnabled } from "../services/seller.price-reduction.toggle";
+import { listSellerRunningPriceDrops } from "../services/seller.price-reduction.running.list";
+import { requestSellerPriceDropNow } from "../services/seller.price-reduction.drop-now";
+import { deliverSellerBoostFollowUps } from "../../../jobs/deliver-seller-boost-follow-ups";
 import { sellerProductFailure } from "./seller.product.failure";
 
 export const sellerPriceReductionRoute = new Elysia().use(sessionAuth)
+  .get("/price-drops/running", async ({ session, status }) => {
+    try {
+      return await listSellerRunningPriceDrops(session.userId);
+    } catch (error) { return sellerProductFailure(error, status); }
+  }, { role: ["seller"] })
   .get("/price-drops", async ({ session, query, status }) => {
     try {
       return await listSellerPriceDropHistory(session.userId, query?.limit, query?.cursor);
@@ -16,4 +24,12 @@ export const sellerPriceReductionRoute = new Elysia().use(sessionAuth)
     try {
       return await setSellerPriceReductionEnabled(session.userId, params.id, body.enabled);
     } catch (error) { return sellerProductFailure(error, status); }
-  }, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody });
+  }, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody })
+  .post("/products/:id/price-drop", async ({ session, params, status }) => {
+    try {
+      const queued = await requestSellerPriceDropNow(session.userId, params.id);
+      // Send it to n8n now; the worker's next pass is the safety net.
+      void deliverSellerBoostFollowUps().catch((error) => console.error("Immediate price drop delivery failed", error));
+      return queued;
+    } catch (error) { return sellerProductFailure(error, status); }
+  }, { role: ["seller"], params: sellerProductId });
