@@ -83,6 +83,11 @@ export const sellerNoticeDefs = {
       : `${product(p)} was posted on the Agrivive Facebook Page.`,
     level: "silent", topic: "boost", category: "listings", target: "notifications",
   },
+  price_drop_setup: {
+    title: "Set Your Price Drop", plural: "Set Your Price Drops",
+    body: (p) => `${product(p)} is a Priority Boost listing. Set how much the price drops every 6 hours, and your final price.`,
+    level: "silent", topic: "boost", category: "listings", target: "listing",
+  },
   boost_posted: {
     title: "Boost Posted", plural: "Boosts Posted",
     body: (p) => `${product(p)} was posted on the Agrivive Facebook Page.`,

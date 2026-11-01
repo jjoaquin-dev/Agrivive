@@ -7,6 +7,7 @@ import { sendSellerListingNotices } from "./send-seller-listing-notices";
 import { deliverPushNotifications } from "./deliver-push-notifications";
 import { deliverSellerVisibilityBoosts } from "./deliver-seller-visibility-boosts";
 import { deliverSellerBoostFollowUps } from "./deliver-seller-boost-follow-ups";
+import { sendPriceDropSetupNotices } from "./send-price-drop-setup-notices";
 import { sendReservationEndingNotices } from "./send-reservation-ending-notices";
 
 export async function runScheduledJobs() {
@@ -19,6 +20,7 @@ export async function runScheduledJobs() {
   const sellerListingNotices = await sendSellerListingNotices();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const sellerBoostFollowUps = await deliverSellerBoostFollowUps();
+  const priceDropSetupNotices = await sendPriceDropSetupNotices();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerVisibilityBoosts, sellerBoostFollowUps, pushNotifications };
+  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, pushNotifications };
 }

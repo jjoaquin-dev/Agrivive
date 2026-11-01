@@ -8,10 +8,27 @@ import { readPriceDropNow } from "./seller.price-reduction.drop-now.read";
 import { readBoostProgress } from "./seller.visibility-boost.progress";
 import { readBoostChannels } from "./seller.visibility-boost.channels";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
-import { checkPriorityBoostGate } from "../../../utils/visibility-ranking/boost-gate";
 
 function errorMessage(status: string) {
   return status === "failed" ? "We could not send this boost. You can try again." : null;
+}
+
+/** Where the 6-hour price drops stand for a boost whose first post is out. Priority Boost was decided when it posted. */
+function readPriceDropRule(boost: {
+  followUpDueAt: Date | null; priorityScore: string | null; priorityTier: string | null; priceDropSetupAt: Date | null;
+}, dropsOn: boolean, now: Date) {
+  const priority = boost.priorityTier === null || boost.priorityTier === "Priority Boost";
+  const state = !priority ? "not_priority"
+    : boost.followUpDueAt ? "on"
+    : boost.priceDropSetupAt ? (boost.priceDropSetupAt <= now ? "set_up_now" : "waiting_6h")
+    : dropsOn ? "ended" : "off";
+  return {
+    state,
+    score: boost.priorityScore === null ? null : Number(boost.priorityScore),
+    tier: boost.priorityTier,
+    setupAt: boost.priceDropSetupAt ? boost.priceDropSetupAt.toISOString() : null,
+    nextDropAt: boost.followUpDueAt ? boost.followUpDueAt.toISOString() : null,
+  };
 }
 
 export async function readSellerVisibilityBoost(sellerId: string, productId: string) {
@@ -54,6 +71,9 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
       createdAt: seller_visibility_boosts.createdAt,
       sentAt: seller_visibility_boosts.sentAt,
       followUpDueAt: seller_visibility_boosts.followUpDueAt,
+      priorityScore: seller_visibility_boosts.priorityScore,
+      priorityTier: seller_visibility_boosts.priorityTier,
+      priceDropSetupAt: seller_visibility_boosts.priceDropSetupAt,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
       .where(and(
@@ -69,25 +89,20 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     // Posting is blocked for a few hours after the last first post. Say so up front instead of failing on tap.
     const waitUntil = hasRoom && !boost ? await getFirstPostCooldownEnd(tx, productId) : null;
     const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000)) : 0;
-    // Only a Priority Boost listing can start a boost. A boost that already exists for this cycle (for example a failed one) can still be retried.
-    const [started] = cycle ? await tx.select({ id: seller_visibility_boosts.id }).from(seller_visibility_boosts)
-      .where(eq(seller_visibility_boosts.boostKey, `${cycle.id}:initial`)).limit(1) : [];
-    const gate = hasRoom && !waitUntil && !started ? await checkPriorityBoostGate(productId, now) : null;
-    const canBoost = hasRoom && !waitUntil && (gate ? gate.allowed : true);
+    // Any listing can post. Priority Boost only decides the 6-hour price drops, and it is saved when the post goes out.
+    const canBoost = hasRoom && !waitUntil;
     const currentPriceNum = Number(product.currentPrice ?? 0);
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);
     const hasDiscount = currentPriceNum < basePriceNum;
 
     const dropAmount = product.priceReductionEnabled ? Number(product.priceReductionAmount ?? 0) : 0;
     const dropsOn = dropAmount > 0 && product.minimumPrice !== null;
-    const headline = waitUntil ? "Almost Time" : gate && !gate.allowed ? gate.headline : canBoost ? "Ready to Boost" : "Boost Is Running";
+    const headline = waitUntil ? "Almost Time" : canBoost ? "Ready to Post" : "Posted";
 
     const message = waitUntil
       ? `You just boosted this product. You can boost again in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.`
-      : gate && !gate.allowed
-        ? gate.message
       : canBoost
-        ? "Post this listing on the Agrivive Facebook Page."
+        ? "Post this listing on the Agrivive Facebook Page and Instagram."
         : dropsOn
           ? "Your listing was posted. The price drops every 6 hours until it reaches your final price."
           : "Your listing was posted on the Agrivive Facebook Page.";
@@ -97,6 +112,8 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     const progress = boost ? (await readBoostProgress(tx, [boost])).get(boost.id) ?? null : null;
 
     const channels = boost ? await readBoostChannels(tx, boost) : null;
+    const priceDropRule = boost && progress && ["posted", "running", "finished"].includes(progress.state)
+      ? readPriceDropRule(boost, dropsOn, now) : null;
 
     return {
       product: {
@@ -130,6 +147,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
         waitUntil: waitUntil ? waitUntil.toISOString() : null,
         priceDrop: { available: priceDrop.available, message: priceDrop.message, waitUntil: priceDrop.waitUntil },
       },
+      priceDropRule,
       boost: boost ? { ...boost, errorMessage: errorMessage(boost.status), progress, channels } : null,
     };
   });

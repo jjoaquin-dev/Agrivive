@@ -40,6 +40,8 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
   const filled = score === null ? 0 : Math.round((score / 100) * SEGMENTS);
   const lowered = product?.basePrice != null && Number(product.basePrice) > Number(product.productPrice);
   const name = productName || `Product #${item.productId.slice(0, 8)}`;
+  const failed = product?.boost?.state === "not_posted" || product?.boost?.state === "failed";
+  const postLabel = hasActiveBoost(product?.boost) ? "View Status" : failed ? "Try Again" : "Post It";
 
   return (
     <View style={styles.card}>
@@ -85,8 +87,8 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
           <Text style={styles.whyText}>Why?</Text>
           {expanded ? <ChevronUp size={16} color={colors.text} /> : <ChevronDown size={16} color={colors.text} />}
         </Pressable>
-        <Pressable onPress={onBoost} accessibilityRole="button" accessibilityLabel={`Boost ${name}`} style={styles.boostButton}>
-          <Text style={styles.boostText} numberOfLines={1}>{hasActiveBoost(product?.boost) ? "View Boost" : "Boost"}</Text>
+        <Pressable onPress={onBoost} accessibilityRole="button" accessibilityLabel={`${postLabel} ${name}`} style={styles.boostButton}>
+          <Text style={styles.boostText} numberOfLines={1}>{postLabel}</Text>
         </Pressable>
       </View>
 
