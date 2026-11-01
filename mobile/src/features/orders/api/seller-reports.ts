@@ -4,6 +4,7 @@ export type SellerReportReason =
   | "pickup_problem"
   | "conduct"
   | "listing_inaccurate"
+  | "qr_misuse"
   | "other";
 
 export interface SellerReport {

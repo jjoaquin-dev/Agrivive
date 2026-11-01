@@ -18,6 +18,7 @@ const reasons: Array<{ value: SellerReportReason; label: string }> = [
   { value: "pickup_problem", label: "Pickup problem" },
   { value: "conduct", label: "Conduct" },
   { value: "listing_inaccurate", label: "Listing inaccurate" },
+  { value: "qr_misuse", label: "QR code misuse" },
   { value: "other", label: "Other" },
 ];
 
