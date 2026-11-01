@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Pressable, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronLeft, RotateCw, Info, X } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
+import { safeBack } from "../../../utils/safeBack";
 
 interface AdvisoriesHeaderProps {
   generatedAt?: string;
@@ -30,7 +31,7 @@ export const AdvisoriesHeader: React.FC<AdvisoriesHeaderProps> = ({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => safeBack(router)}
           accessibilityRole="button"
           accessibilityLabel="Back"
           style={styles.iconCircle}

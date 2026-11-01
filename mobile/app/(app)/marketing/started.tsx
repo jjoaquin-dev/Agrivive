@@ -41,9 +41,9 @@ export default function BoostStartedScreen() {
   const states = channels ? [channels.facebook.status, channels.instagram.status] : [];
   const allFailed = states.length === 2 && states.every((s) => s === "failed");
   const someFailed = states.includes("failed");
-  const percent = data?.product.priceReductionPercent ?? 0;
+  const dropAmount = data?.product.priceReductionAmount ?? 0;
   const next = ["Your post reaches more buyers.", "Buyers can open your product page.",
-    percent > 0 ? "Your price can automatically decrease if it remains unsold." : "Your price stays the same."];
+    dropAmount > 0 ? "If it does not sell, the price drops every 6 hours until your final price." : "Your price stays the same."];
   const Icon = allFailed ? XCircle : CheckCircle2;
 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content}>
@@ -57,7 +57,7 @@ export default function BoostStartedScreen() {
     <BoostChannelList channels={channels} />
     {checkFailed ? <Text accessibilityRole="alert" style={styles.warn}>We could not check the posts just now. We will try again.</Text> : null}
     {allFailed ? null : <View style={styles.next}>
-      <Text style={styles.nextTitle}>What's next?</Text>
+      <Text style={styles.nextTitle}>What happens now</Text>
       {next.map((line, index) => <View key={line} style={styles.step}>
         <View style={styles.number}><Text style={styles.numberText}>{index + 1}</Text></View>
         <Text style={styles.stepText}>{line}</Text>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxxl },
   badge: { alignSelf: "center", width: 120, height: 120, borderRadius: 60, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   badgeBad: { backgroundColor: "rgba(220,38,38,0.08)" },
-  title: { fontFamily: fonts.heading.bold, fontSize: 26, color: colors.text, textAlign: "center", marginTop: spacing.lg },
+  title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, textAlign: "center", marginTop: spacing.lg },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, textAlign: "center", marginTop: spacing.sm, marginBottom: spacing.lg },
   warn: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.warning, marginTop: spacing.sm },
   next: { backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.primaryLight, padding: spacing.base, marginTop: spacing.base },

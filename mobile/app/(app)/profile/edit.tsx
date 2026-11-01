@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 24,
+    fontSize: 22,
     color: colors.text,
     marginBottom: spacing.xs,
   },

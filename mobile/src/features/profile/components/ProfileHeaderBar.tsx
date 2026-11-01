@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { ChevronLeft, Pencil, ShieldCheck } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
+import { safeBack } from "../../../utils/safeBack";
 
 interface ProfileHeaderBarProps {
   onEdit: () => void;
@@ -15,7 +16,7 @@ export const ProfileHeaderBar: React.FC<ProfileHeaderBarProps> = ({ onEdit, onSe
   return (
     <View style={styles.container}>
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => safeBack(router)}
         accessibilityRole="button"
         accessibilityLabel="Go back"
         style={styles.iconCircle}

@@ -14,7 +14,7 @@ export function VisibilityGuideSection({ products }: { products: Product[] }) {
 
   return (
     <View>
-      <Text style={styles.subtitle}>How high your listings show to buyers.</Text>
+      <Text style={styles.subtitle}>How high your listings show when buyers browse.</Text>
       {guide.loading ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
       {guide.error ? <Text style={styles.error}>{guide.error}</Text> : null}
       {!guide.loading && !guide.error && guide.total === 0 ? (
@@ -40,7 +40,7 @@ export function VisibilityGuideSection({ products }: { products: Product[] }) {
           pageSizeOptions={[3, 5, 10]}
           onPageChange={guide.setPage}
           onPageSizeChange={guide.setPageSize}
-          itemLabel="items"
+          itemLabel="listings"
         />
       ) : null}
     </View>

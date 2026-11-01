@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import * as Linking from "expo-linking";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { authClient } from "../../../api/client";
 import { useAuth } from "../../../context/AuthContext";
-import { colors, fonts, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 
 function GoogleIcon({ size = 20 }: { size?: number }) {
   return (
@@ -40,6 +40,7 @@ export function GoogleSignInButton({
   showDivider = false,
 }: GoogleSignInButtonProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { refreshSetup, completeOnboarding } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,7 +51,8 @@ export function GoogleSignInButton({
     setError("");
 
     try {
-      const callbackURL = Linking.createURL("/");
+      // Return to the screen we started on so the app does not bounce through the index redirect.
+      const callbackURL = Linking.createURL(pathname);
       const response = await authClient.signIn.social({
         provider: "google",
         callbackURL,
@@ -60,6 +62,10 @@ export function GoogleSignInButton({
         setError(response.error.message || "Google sign-in is not available right now.");
         return;
       }
+
+      // Closing the Google window returns without an error and without a session.
+      const current = await authClient.getSession();
+      if (!current.data?.user) return;
 
       await completeOnboarding();
       const setup = await refreshSetup();
@@ -79,7 +85,7 @@ export function GoogleSignInButton({
         }
       }
 
-      router.replace("/(app)/profile/setup");
+      router.replace("/");
     } catch (err: any) {
       console.error("[Google Sign-In Error]", err);
       const msg = err?.message || "";
@@ -133,8 +139,8 @@ const styles = StyleSheet.create({
   },
   pillButton: {
     width: "100%",
-    height: 50,
-    borderRadius: 25,
+    height: 52,
+    borderRadius: radii.button,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -143,11 +149,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   pillPressed: {
     backgroundColor: "#F9FAFB",

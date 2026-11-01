@@ -15,9 +15,45 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Boost now posts to Facebook and Instagram with separate results, and the mobile flow is three screens: intro sheet, Preview Boost, Boost Started. Details and owner steps (apply migration `20261101120000_instagram_post_logs`, check the Meta token can publish to Instagram): [[2026-11-01 Boost Facebook and Instagram Flow]].
+All 23 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Listings** flow: Listings tab (`inventory.tsx`: L1 all listings, L2 expanded card, L3 running low, L4 category bottom sheet, L5 no listings empty, L6 no search results, L7 skeleton, L8 error recovery), Add Produce flow (`create.tsx`: C1 empty form, C2 catalog picker, C3 filled with price drop ON, C4 inline validation errors, C5 upload progress, C6 Boost intro sheet), Product Details (`[id]/index.tsx`: D1 active/boosted Kamatis, D2 running low Talong, D3 archived Repolyo, D4 archive confirmation sheet), Edit Product (`[id]/edit.tsx`: E1 locked selling unit), and Change Amount flow (`[id]/stock.tsx`: S1 Add More tab, S2 Take Away tab with excess stock error, S3 freshness warning for >12h batches, S4 celebratory in-sheet saved state). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Listings Redesign Frames]].
+
+Earlier: Price drop is now a peso amount every 6 hours with a final price (form preview shows the final price and when it gets there); the low-stock alert field is removed and sellers get a "Final Price Reached" notice instead. Owner must apply migrations `20261101150000_fb_post_caption` and `20261101160000_price_reduction_amount` ([[2026-11-01 Peso Price Drop and Final Price Alert]]). Checks passed; no device test.
+
+Earlier: Price drops now follow only the 6-hour Boost rule (12-hour job removed); sellers can see and copy the posted Boost text; official tier names (Priority Boost, Standard Exposure, Basic); 30-day notice says Account Blocked; no condition field. Owner must apply migration `20261101150000_fb_post_caption` and run the manual tests ([[2026-11-01 Six-Hour Price Drop Only and Boost Post Text]]). Backend typecheck, builds, drizzle check and mobile typecheck passed; nothing tested on a device.
+
+Earlier: 11 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`) covering the complete seller **Notifications** screen (opened from the bell on Home) with its Filter sheet and Phone Alerts sheet: All feed with unread and urgent items, scrolled feed with Earlier grouping and pagination, category filters (Reservations, Messages, Account), "All caught up" state with disabled check-all, centered empty state, search zero-results state, 5-row loading skeleton, Filter bottom sheet (Unread only toggle + Newest/Oldest order), and Phone Alerts bottom sheet (Stock and Price, Boost, Account, Night Mode). Mapped every UI element directly to existing codebase lines, with comprehensive copy and behavioral change logs ([[2026-11-01 Mobile Notifications Screen Redesign in Google Stitch]]).
+
+Earlier: 14 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`) covering the complete seller **Marketing (Boost)** flow: Marketing Hub (Running tab with price-drop prompts, empty state, skeleton loading, History tab with filter chips, Did not post retry state, and How Buyers Find You ranking tab with Tomato "Why?" factor breakdown expanded), Boost Intro Sheet over Listings, Preview Boost (allowed state with Facebook preview, allowed state with Instagram preview, and not-allowed state with existing boost timeline and disabled action), and Boost Started live confirmation screen (posting spinners, both posted with external links, and all failed error recovery). Mapped every UI element directly to existing codebase lines, with comprehensive copy and behavioral change logs ([[2026-11-01 Mobile Marketing Flow Redesign in Google Stitch]]).
+
+Earlier: 16 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`) covering the complete seller **Reservations** flow (Reservations tab with filters and pagination, skeleton loading, empty and error states, pending/completed/cancelled reservation details, cancel & report bottom sheets, camera QR scanner with permission and error states, produce handover sheet with dynamic stepper adjustments, and proposed celebratory pickup completion screen). Mapped every UI element directly to existing codebase lines, with comprehensive copy and behavioral change logs ([[2026-11-01 Mobile Reservations Flow Redesign in Google Stitch]]).
+
+Earlier: How Buyers Find You cards, "Why?" bars, Running empty state and failed History cards aligned to the Stitch frames ([[2026-11-01 Boost Visibility Cards Reference]]). Typecheck passed; no device check.
+
+Earlier: boost hub aligned to the Stitch Marketing frames: "Boost" title, shared banner, renamed tabs, Preview Boost sticky bar ([[2026-11-01 Marketing Boost Hub Reference]]). Typecheck passed; no device check.
+
+Earlier: report sheet, scanner screens, handover sheet and a new Pickup done screen applied from the Stitch Reservations frames ([[2026-11-01 Scanner Handover Report Reference]]). Typecheck passed; camera, handover and upload not tested on a device.
+
+Earlier: reservation details, cancel sheet and list error/empty states applied from the Stitch Reservations frames ([[2026-11-01 Reservation Details Reference]]); scanner, handover and report sheets still pending. Typecheck passed; no device check.
+
+Earlier: reservations tab restyled to the supplied reference: scrolling filter chips, reservation cards with units and pickup deadline, tinted status badges, skeleton, new pagination text ([[2026-11-01 Reservations List Reference]]). Typecheck passed; no device check.
+
+Earlier: home gained the loading skeleton, honest "Unavailable" error, and neutral new-seller states from the Stitch frames ([[2026-11-01 Home Loading Error Empty States]]). Typecheck passed; no device check.
+
+Earlier: Sign In and Create Account tuned to the Stitch reference: left-aligned header, reference placeholders and labels, outlined email-code button, footer last, rounded-rectangle Google button ([[2026-11-01 Auth Screens Match Stitch Reference]]). Typecheck passed; no device check.
+
+Earlier: wrapped and integrated the 8 Google Stitch mobile authentication and onboarding screens from project `AGRIVIVE MOBILE UI` (`11184471743007910085`) into the mobile app codebase (`mobile/app/(auth)/`): Onboarding slides 1–3 (`onboarding.tsx`), Sign In default and error states (`login.tsx`), and Create Account default, existing buyer, and validation error states (`register.tsx`), aligning brand logos, navigation chevrons, typography, elongated pill indicators, and plain-language wording ([[2026-11-01 Mobile Onboarding and Auth Screen Redesign]]).
+
+Earlier: 5 high-fidelity mobile dashboard frames generated in Google Stitch under project `AGRIVIVE MOBILE UI` (`11184471743007910085`) covering the seller home dashboard visual redesign: Above-the-fold view, Full scroll view, New seller zero-state, Loading skeleton state, and Proposed honest error recovery state ("—" metrics and Try Again CTA) with shared design tokens, plain-words wording, and UX psychological laws ([[2026-11-01 Stitch Home Dashboard Redesign Frames]]).
+
+Earlier: 8 high-fidelity mobile frames generated in Google Stitch under project `AGRIVIVE MOBILE UI` (`11184471743007910085`) covering the seller authentication and onboarding redesign suite: Onboarding slides 1–3, Sign In (default & error), and Create Account (default, existing buyer link, & validation errors) with shared design system tokens, plain-words wording, and UX psychological laws ([[2026-11-01 Stitch Auth Redesign Frames]]).
+
+Earlier: Seller Marketing hub redesigned to match familiar social creator & advertising patterns (Facebook, Instagram, Twitter) with official social platform badges, active broadcast summary cards, and quick price-drop boost actions ([[2026-11-01 Mobile Marketing Social Hub Redesign]]).
+
+Earlier: Boost now posts to Facebook and Instagram with separate results, and the mobile flow is three screens: intro sheet, Preview Boost, Boost Started. Details and owner steps (apply migration `20261101120000_instagram_post_logs`, check the Meta token can publish to Instagram): [[2026-11-01 Boost Facebook and Instagram Flow]].
 
 Validation: backend typecheck, drizzle check and build; mobile typecheck. Not tested on a device or against Meta.
+
+Listings tab given the new reference layout ([[2026-11-01 Listings Reference Layout]]). Before that: Home screen redesigned to the new reference on shared tokens ([[2026-11-01 Home Screen Redesign]]). Before that: My Listings and Notifications moved onto shared tokens and `ButtonComponent` ([[2026-11-01 Listings and Notifications Use Shared Tokens]]). Before that: mobile type scale made consistent in the core screens, with shared `type` tokens in the theme ([[2026-11-01 Mobile Type Scale Consistency]]).
 
 Earlier: [[2026-10-31 Remove Seller Type]], [[2026-10-31 Mobile Data Freshness]], [[2026-10-31 Seller Notifications]].
 
@@ -74,6 +110,6 @@ Check the buyer site in a browser (`bun run dev` in `web/`). Turn on reduced mot
 
 ## Historical changelog
 
-- Latest entry: [[2026-11-01 Boost Facebook and Instagram Flow]]
+- Latest entry: [[2026-11-01 Peso Price Drop and Final Price Alert]]
 - Latest web landing entry: [[2026-10-30 Why Choose Scroll Reveal]]
 - Earlier entries: the dated notes in this folder, e.g. [[2026-10-30 Splash Screen Refinement]].

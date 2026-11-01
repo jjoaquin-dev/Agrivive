@@ -11,11 +11,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors, fonts, spacing } from "../../src/theme";
+import { colors, fonts, spacing, radii, touchTargets } from "../../src/theme";
 import { ArrowRight } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface OnboardingSlide {
   id: string;
@@ -27,23 +27,23 @@ interface OnboardingSlide {
 const SLIDES: OnboardingSlide[] = [
   {
     id: "1",
-    title: "Turn surplus into opportunity",
+    title: "Sell your extra vegetables",
     description:
-      "List marketable vegetables, reach nearby buyers, and arrange easy self-pickup.",
+      "List what you have left. Buyers nearby can reserve it and pick it up at your stall.",
     image: require("../../assets/onboarding/onboarding-1.png"),
   },
   {
     id: "2",
-    title: "Manage reservations",
+    title: "Keep track of orders",
     description:
-      "Hold stock securely, track incoming orders in real time, and pack produce before buyers arrive.",
+      "We save the vegetables for each buyer, so you know what to pack before they come.",
     image: require("../../assets/onboarding/onboarding-2.png"),
   },
   {
     id: "3",
-    title: "Arrange easy pickup",
+    title: "Easy pickup",
     description:
-      "Confirm buyer handovers with fast QR verification right at your stall with zero friction.",
+      "Scan the buyer's QR code at your stall to finish the handover.",
     image: require("../../assets/onboarding/onboarding-3.png"),
   },
 ];
@@ -86,9 +86,10 @@ export default function OnboardingScreen() {
     setCurrentIndex(index);
   };
 
+  const isLastSlide = currentIndex === SLIDES.length - 1;
+
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      {/* Top Header matching concept mockup */}
       <View style={styles.topBar}>
         <View style={styles.logoContainer}>
           <Image
@@ -109,7 +110,6 @@ export default function OnboardingScreen() {
         </Pressable>
       </View>
 
-      {/* Slide Carousel */}
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -121,16 +121,9 @@ export default function OnboardingScreen() {
         onMomentumScrollEnd={handleMomentumScrollEnd}
         renderItem={({ item }) => (
           <View style={styles.slide}>
-            {/* Visual Hero Illustration with soft rounded edges */}
             <View style={styles.heroContainer}>
-              <Image
-                source={item.image}
-                style={styles.heroImage}
-                resizeMode="cover"
-              />
+              <Image source={item.image} style={styles.heroImage} resizeMode="cover" />
             </View>
-
-            {/* Slide Title and Description */}
             <View style={styles.textContainer}>
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.description}>{item.description}</Text>
@@ -139,9 +132,7 @@ export default function OnboardingScreen() {
         )}
       />
 
-      {/* Bottom Thumb-Zone Controls */}
       <View style={styles.footer}>
-        {/* Circular Indicators matching seller-onboarding-concept-v2 */}
         <View style={styles.indicatorContainer}>
           {SLIDES.map((_, index) => (
             <View
@@ -154,15 +145,13 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        {/* Primary Action Button */}
         <ButtonComponent
-          title={currentIndex === SLIDES.length - 1 ? "Get started" : "Next"}
+          title={isLastSlide ? "Get started" : "Next"}
           icon={<ArrowRight size={18} color={colors.white} />}
           onPress={handleNext}
           style={styles.mainButton}
         />
 
-        {/* I already have an account link matching concept mockup */}
         <Pressable
           onPress={handleAlreadyHaveAccount}
           hitSlop={8}
@@ -175,8 +164,6 @@ export default function OnboardingScreen() {
     </SafeAreaView>
   );
 }
-
-const HERO_HEIGHT = Math.min(SCREEN_HEIGHT * 0.46, 380);
 
 const styles = StyleSheet.create({
   container: {
@@ -195,7 +182,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.sm,
   },
   logoImage: {
     width: 32,
@@ -218,8 +205,8 @@ const styles = StyleSheet.create({
   },
   heroContainer: {
     width: SCREEN_WIDTH - spacing.base * 2,
-    height: HERO_HEIGHT,
-    borderRadius: 24,
+    height: 360,
+    borderRadius: radii.card,
     overflow: "hidden",
     backgroundColor: colors.surfaceMuted,
     marginTop: spacing.xs,
@@ -235,23 +222,23 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: "center",
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     paddingHorizontal: spacing.xl,
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 28,
-    color: colors.primary,
+    fontSize: 26,
+    color: colors.text,
     textAlign: "center",
     marginBottom: spacing.sm,
-    lineHeight: 34,
+    lineHeight: 32,
   },
   description: {
     fontFamily: fonts.body.regular,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textMuted,
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 22,
     paddingHorizontal: spacing.xs,
   },
   footer: {
@@ -266,22 +253,22 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   indicatorDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: "#D1D5DB",
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#E5E7EB",
     marginHorizontal: 4,
   },
   indicatorActive: {
     backgroundColor: colors.primary,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 24,
+    height: 8,
+    borderRadius: 4,
   },
   mainButton: {
     width: "100%",
     minHeight: 52,
-    borderRadius: 12,
+    borderRadius: radii.button,
   },
   loginLinkWrapper: {
     marginTop: spacing.base,

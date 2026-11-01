@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   keyboardContainer: { flex: 1, backgroundColor: colors.background },
   scrollContent: { flexGrow: 1, paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.xxxl },
   header: { marginBottom: spacing.base },
-  title: { fontFamily: fonts.heading.bold, fontSize: 24, color: colors.text, marginBottom: spacing.xs },
+  title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, marginBottom: spacing.xs },
   subtitle: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, lineHeight: 20 },
   errorBox: { backgroundColor: "rgba(184, 84, 80, 0.1)", borderWidth: 1, borderColor: colors.error, borderRadius: 8, padding: spacing.md, marginBottom: spacing.base },
   errorBoxText: { color: colors.error, fontSize: 13, fontWeight: "500" },

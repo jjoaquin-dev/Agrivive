@@ -90,14 +90,14 @@ export function SellerOrderReportModal({ orderId, visible, onClose }: SellerOrde
 
   return <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
     <View style={styles.backdrop}><ScrollView style={styles.sheet} contentContainerStyle={styles.actions}>
-      <View style={styles.header}><Text style={styles.title}>Report this order</Text><Pressable onPress={close} style={styles.fileButton}><X size={22} color={colors.textMuted} /></Pressable></View>
-      <Text style={styles.text}>Your report will be recorded for platform monitoring. Add details and optional evidence.</Text>
-      {submitted ? <View><View style={styles.successRow}><Check size={18} color={colors.success} /><Text style={styles.text}>Report recorded. Thank you for letting us know.</Text></View><ButtonComponent title="Done" onPress={close} style={{ marginTop: 20 }} /></View> : <>
+      <View style={styles.header}><Text style={styles.title}>Report a Problem</Text><Pressable onPress={close} style={styles.fileButton}><X size={22} color={colors.textMuted} /></Pressable></View>
+      <Text style={styles.text}>We keep this for our review team. Add what happened and any proof.</Text>
+      {submitted ? <View><View style={styles.successRow}><Check size={18} color={colors.success} /><Text style={styles.text}>Report sent. Thank you for telling us.</Text></View><ButtonComponent title="Done" onPress={close} style={{ marginTop: 20 }} /></View> : <>
         {!reportId ? <><Text style={styles.label}>What happened?</Text><View style={styles.reasonRow}>{reasons.map((item) => <Pressable key={item.value} onPress={() => setReason(item.value)} style={[styles.reason, reason === item.value ? styles.reasonSelected : null]}><Text style={[styles.reasonText, reason === item.value ? styles.reasonTextSelected : null]}>{item.label}</Text></Pressable>)}</View><Text style={styles.label}>Details</Text><TextInput value={details} onChangeText={setDetails} maxLength={2000} multiline placeholder="Tell us what happened" style={styles.input} /><Text style={styles.count}>{details.length}/2,000</Text></> : null}
-        <Text style={styles.label}>Evidence (optional, up to 5 files)</Text>{files.map((file, index) => <View key={`${file.uri}-${index}`} style={styles.fileRow}><Text style={styles.fileName} numberOfLines={1}>{file.name}</Text><Text style={styles.fileStatus}>{index < uploadedCount ? "Uploaded" : index === uploadingIndex ? "Uploading…" : "Waiting"}</Text></View>)}
-        {!reportId && files.length < 5 ? <ButtonComponent title="Add evidence" onPress={chooseFiles} variant="secondary" icon={<FilePlus size={18} color={colors.primary} />} /> : null}
+        <Text style={styles.label}>Proof (optional, up to 5 files)</Text>{files.map((file, index) => <View key={`${file.uri}-${index}`} style={styles.fileRow}><Text style={styles.fileName} numberOfLines={1}>{file.name}</Text><Text style={styles.fileStatus}>{index < uploadedCount ? "Uploaded" : index === uploadingIndex ? "Uploading…" : "Waiting"}</Text></View>)}
+        {!reportId && files.length < 5 ? <ButtonComponent title="Add Proof" onPress={chooseFiles} variant="secondary" icon={<FilePlus size={18} color={colors.primary} />} /> : null}
         {formError ? <Text style={styles.error}>{formError}</Text> : null}{uploadError ? <Text style={styles.error}>{uploadError}</Text> : null}
-        {uploadingIndex !== null ? <ButtonComponent title="Stop upload" onPress={() => controller.current?.abort()} variant="secondary" /> : <ButtonComponent title={reportId ? "Resume uploads" : "Send report"} onPress={submit} loading={submitting} icon={reportId ? <RotateCcw size={18} color={colors.white} /> : undefined} />}
+        {uploadingIndex !== null ? <ButtonComponent title="Stop Upload" onPress={() => controller.current?.abort()} variant="secondary" /> : <ButtonComponent title={reportId ? "Resume Uploads" : "Send Report"} onPress={submit} loading={submitting} icon={reportId ? <RotateCcw size={18} color={colors.white} /> : undefined} />}
       </>}
     </ScrollView></View>
   </Modal>;

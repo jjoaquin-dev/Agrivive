@@ -1,11 +1,12 @@
 import React from "react";
 import { Pressable, Switch, Text, View } from "react-native";
-import { Scale, Coins, AlertTriangle } from "lucide-react-native";
+import { Scale, Coins } from "lucide-react-native";
 import { InputComponent } from "../../../components/InputComponent";
 import { colors } from "../../../theme";
 import { SCALING_TYPES, type ProductScalingType } from "../types";
 import type { ProductFormErrors } from "../validation";
 import { styles } from "./ProductFormStyles";
+import { PriceDropPreview } from "./PriceDropPreview";
 
 interface ProductFormOperationsProps {
   mode: "create" | "edit";
@@ -15,12 +16,10 @@ interface ProductFormOperationsProps {
   setProductQty: (value: string) => void;
   productPrice: string;
   setProductPrice: (value: string) => void;
-  priceReductionPercent: string;
-  setPriceReductionPercent: (value: string) => void;
+  priceReductionAmount: string;
+  setPriceReductionAmount: (value: string) => void;
   minimumPrice: string;
   setMinimumPrice: (value: string) => void;
-  lowStockThreshold: string;
-  setLowStockThreshold: (value: string) => void;
   isMarketable: boolean;
   setIsMarketable: (value: boolean) => void;
   errors: ProductFormErrors;
@@ -29,8 +28,8 @@ interface ProductFormOperationsProps {
 
 export const ProductFormOperations: React.FC<ProductFormOperationsProps> = ({
   mode, scalingType, setScalingType, productQty, setProductQty, productPrice, setProductPrice,
-  priceReductionPercent, setPriceReductionPercent, minimumPrice, setMinimumPrice,
-  lowStockThreshold, setLowStockThreshold, isMarketable, setIsMarketable, errors, clearFieldError,
+  priceReductionAmount, setPriceReductionAmount, minimumPrice, setMinimumPrice,
+  isMarketable, setIsMarketable, errors, clearFieldError,
 }) => (
   <>
     <View style={styles.section}>
@@ -77,36 +76,29 @@ export const ProductFormOperations: React.FC<ProductFormOperationsProps> = ({
       onChangeText={(text) => { setProductPrice(text); clearFieldError("productPrice"); }}
     />
     <View style={styles.pricingSection}>
-      <Text style={styles.sectionLabel}>Automatic price reduction</Text>
-      <Text style={styles.sectionHint}>Optional: lower the price after each 12-hour period. Enter 0 to keep one price.</Text>
+      <Text style={styles.sectionLabel}>Price drop (optional)</Text>
+      <Text style={styles.sectionHint}>After your Boost post, the price goes down by this amount every 6 hours. Leave it empty to keep one price.</Text>
       <InputComponent
-        label="Reduction every 12 hours (%)"
-        placeholder="0"
+        label="Drop by (₱) every 6 hours"
+        placeholder="e.g. 1.25"
         keyboardType="decimal-pad"
-        value={priceReductionPercent}
-        error={errors.priceReductionPercent}
+        value={priceReductionAmount}
+        error={errors.priceReductionAmount}
         leftIcon={<Coins size={18} color={colors.textMuted} />}
-        onChangeText={(text) => { setPriceReductionPercent(text); clearFieldError("priceReductionPercent"); }}
+        onChangeText={(text) => { setPriceReductionAmount(text); clearFieldError("priceReductionAmount"); }}
       />
       <InputComponent
-        label="Lowest selling price"
-        placeholder="e.g. 45.00"
+        label="Final price (₱)"
+        placeholder="e.g. 5.00"
         keyboardType="decimal-pad"
         value={minimumPrice}
         error={errors.minimumPrice}
+        hint="The price never goes lower than this. We tell you when it gets here."
         leftIcon={<Coins size={18} color={colors.textMuted} />}
         onChangeText={(text) => { setMinimumPrice(text); clearFieldError("minimumPrice"); }}
       />
+      <PriceDropPreview price={productPrice} dropAmount={priceReductionAmount} finalPrice={minimumPrice} />
     </View>
-    <InputComponent
-      label={`Alert me when amount reaches (${scalingType === "kilo" ? "kg" : scalingType})`}
-      placeholder="e.g. 5.00"
-      keyboardType="decimal-pad"
-      value={lowStockThreshold}
-      error={errors.lowStockThreshold}
-      leftIcon={<AlertTriangle size={18} color={colors.textMuted} />}
-      onChangeText={(text) => { setLowStockThreshold(text); clearFieldError("lowStockThreshold"); }}
-    />
     <View style={styles.switchRow}>
       <View style={styles.switchInfo}>
         <Text style={styles.switchLabel}>Available to Buyers</Text>

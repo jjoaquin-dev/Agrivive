@@ -9,6 +9,7 @@ import { ConversationListItem } from "../../../src/features/conversations/compon
 import { ProductInquiryCard } from "../../../src/features/messages/components/ProductInquiryCard";
 import { ConversationFilterModal, type FilterTab, type SortOption } from "../../../src/features/conversations/components/ConversationFilterModal";
 import { styles } from "../../../src/features/conversations/components/SellerMessagesStyles";
+import { safeBack } from "../../../src/utils/safeBack";
 
 export default function SellerMessagesScreen() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function SellerMessagesScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <View style={styles.topRow}>
-          <Pressable onPress={() => router.back()} style={styles.iconButton}>
+          <Pressable onPress={() => safeBack(router)} style={styles.iconButton}>
             <ChevronLeft size={22} color="#111827" />
           </Pressable>
           <View style={styles.titleColumn}>

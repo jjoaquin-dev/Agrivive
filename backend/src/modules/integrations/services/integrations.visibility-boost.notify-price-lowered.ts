@@ -6,7 +6,7 @@ import { createSellerNotification } from "../../../utils/seller-notifications";
 
 /**
  * After the 6-hour price cut and second post are saved: asks the seller to boost again at the new price.
- * Creates the same "prompt" the 12-hour job makes, so tapping Boost on the listing accepts it.
+ * Creates a "prompt", so tapping Boost on the listing accepts it.
  * Never fails the post.
  */
 export async function notifyBoostPriceLowered(boostId: string) {

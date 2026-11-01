@@ -26,13 +26,13 @@ export async function updateSellerProduct(sellerId: string, productId: string, b
     )).for("update").limit(1);
     if (!current) throw new OrderError(404, "Product not found");
     const pricingChanged = body.productPrice !== undefined ||
-      body.priceReductionPercent !== undefined || body.minimumPrice !== undefined;
+      body.priceReductionAmount !== undefined || body.minimumPrice !== undefined;
     const basePrice = body.productPrice ?? Number(current.productPrice ?? current.basePrice ?? 0);
-    const reductionPercent = body.priceReductionPercent ?? Number(current.priceReductionPercent ?? 0);
+    const reductionAmount = body.priceReductionAmount ?? Number(current.priceReductionAmount ?? 0);
     const minimumPrice = body.minimumPrice !== undefined
       ? body.minimumPrice
       : (current.minimumPrice === null ? null : Number(current.minimumPrice));
-    if (pricingChanged) validatePriceReductionConfig(basePrice, reductionPercent, minimumPrice);
+    if (pricingChanged) validatePriceReductionConfig(basePrice, reductionAmount, minimumPrice);
     const initializingLegacy = current.isActive && !current.originalQty && Number(current.productQty) > 0;
     let catalog: { id: string; filipinoName: string; category: "Leafy Greens" | "Root Vegetables" | "Bulb Vegetables" | "Stem Vegetables" | "Flower Vegetables" | "Fruit Vegetables" | "Pod Vegetables" | "Tuber Vegetables" | "Seed Vegetables" } | null = null;
     if (body.catalogId !== undefined) {
@@ -60,7 +60,7 @@ export async function updateSellerProduct(sellerId: string, productId: string, b
       ...(pricingChanged ? {
         productPrice: basePrice.toString(),
         basePrice: basePrice.toString(),
-        priceReductionPercent: reductionPercent.toString(),
+        priceReductionAmount: reductionAmount.toString(),
         minimumPrice: minimumPrice?.toString() ?? null,
         priceScheduleStartedAt: now,
         priceReductionPeriodsApplied: 0,

@@ -15,6 +15,7 @@ const icons: Record<string, IconType> = {
   running_low: "thermometer",
   sold_out: "cross",
   price_lowered: "megaphone",
+  final_price_reached: "check",
   boost_started: "megaphone",
   boost_posted: "celebration",
   boost_failed: "cross",

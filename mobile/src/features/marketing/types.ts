@@ -9,6 +9,8 @@ export interface BoostPostEntry {
   price: number;
   postedAt: string;
   postUrl: string | null;
+  /** The exact words posted on Facebook. Older posts have none. */
+  caption?: string | null;
 }
 
 export interface BoostProgress {
@@ -67,7 +69,7 @@ export interface SellerProductBoostResponse {
     basePrice: number;
     quantity?: number | null;
     unit?: string | null;
-    priceReductionPercent: number;
+    priceReductionAmount: number;
     lowestPrice?: number | null;
     priceReductionPeriodsApplied: number;
   };

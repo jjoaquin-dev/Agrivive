@@ -3,17 +3,20 @@ import {
   StyleSheet,
   View,
   Text,
+  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { authClient, apiFetch } from "../../src/api/client";
 
-import { colors, fonts, spacing } from "../../src/theme";
-import { Mail, Lock, ArrowRight, Info } from "lucide-react-native";
+import { colors, fonts, spacing, radii, touchTargets } from "../../src/theme";
+import { Mail, Lock, ArrowLeft, ArrowRight, Info } from "lucide-react-native";
 import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
+import { safeBack } from "../../src/utils/safeBack";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
 
 interface EmailCheckResult {
@@ -117,7 +120,6 @@ export default function RegisterScreen() {
     const cleanEmail = email.trim().toLowerCase();
 
     try {
-      // 1. Mandatory Preflight Duplicate Filtering
       const check = await checkEmailPreflight(cleanEmail);
 
       if (!check) {
@@ -128,25 +130,22 @@ export default function RegisterScreen() {
         return;
       }
 
-      // Max 2 roles rule: if 2 roles already exist, email cannot be used
       if (check.roleCount >= 2) {
         setErrors({
           email: "This email already has both Buyer and Seller profiles (maximum 2 roles reached). Please sign in instead.",
         });
         setLoading(false);
-        return; // HARD STOP: Never redirect!
+        return;
       }
 
-      // If already a Seller: cannot register duplicate Seller role
       if (check.hasTargetRole) {
         setErrors({
           email: "An account with this email is already registered as a Seller. Please sign in instead.",
         });
         setLoading(false);
-        return; // HARD STOP: Never redirect!
+        return;
       }
 
-      // If account has 1 role (e.g. Buyer): expand role using account password
       if (check.exists && check.canUseEmail) {
         try {
           await apiFetch<any>("/auth/register-role", {
@@ -177,11 +176,10 @@ export default function RegisterScreen() {
             });
           }
           setLoading(false);
-          return; // HARD STOP: Never redirect!
+          return;
         }
       }
 
-      // Brand new account (0 roles): register with targetRole seller and verify OTP
       try {
         await apiFetch<any>("/auth/register-role", {
           method: "POST",
@@ -225,10 +223,28 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
+        <View style={styles.navBar}>
+          <Pressable
+            onPress={() => safeBack(router, "/(auth)/login")}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={styles.backButton}
+          >
+            <ArrowLeft size={24} color={colors.primary} />
+          </Pressable>
+        </View>
+
         <View style={styles.header}>
-          <Text style={styles.title}>Create account</Text>
+          <Image
+            source={require("../../assets/brand/agrivive-logo-icon.png")}
+            style={styles.logoIcon}
+            resizeMode="contain"
+            accessibilityLabel="Agrivive"
+          />
+          <Text style={styles.title}>Create your seller account</Text>
           <Text style={styles.subtitle}>
-            Register your stall to list surplus produce and start receiving verified reservations.
+            Set up your stall to start selling your extra vegetables.
           </Text>
         </View>
 
@@ -247,7 +263,7 @@ export default function RegisterScreen() {
 
         <View style={styles.form}>
           <InputComponent
-            label="Email Address"
+            label="Email address"
             placeholder="seller@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -270,6 +286,7 @@ export default function RegisterScreen() {
             isPassword
             autoCapitalize="none"
             value={password}
+            hint="Use 8 or more characters."
             leftIcon={<Lock size={18} color={colors.textMuted} />}
             error={errors.password}
             onChangeText={(text) => {
@@ -280,8 +297,8 @@ export default function RegisterScreen() {
           />
 
           <InputComponent
-            label="Confirm Password"
-            placeholder="Re-enter your password"
+            label="Confirm password"
+            placeholder="Type your password again"
             isPassword
             autoCapitalize="none"
             value={confirmPassword}
@@ -294,15 +311,21 @@ export default function RegisterScreen() {
             }}
           />
 
+          <View style={styles.verificationNoteWrap}>
+            <Text style={styles.verificationNoteText}>
+              We'll email you a code to check it's really you.
+            </Text>
+          </View>
+
           <ButtonComponent
-            title={accountNotice ? "Add Seller Profile" : "Continue to Email Verification"}
+            title={accountNotice ? "Add Seller Profile" : "Create Account"}
             icon={<ArrowRight size={18} color={colors.white} />}
             onPress={handleRegister}
             loading={loading}
             style={styles.submitButton}
           />
 
-          <GoogleSignInButton title="Sign Up with Google" showDivider />
+          <GoogleSignInButton title="Sign up with Google" showDivider />
         </View>
 
         <View style={styles.footer}>
@@ -328,9 +351,24 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    paddingTop: spacing.base,
     paddingBottom: spacing.xxl,
     justifyContent: "center",
+  },
+  navBar: {
+    height: 48,
+    justifyContent: "center",
+    marginBottom: spacing.xs,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+  },
+  logoIcon: {
+    width: 40,
+    height: 40,
+    marginBottom: spacing.base,
   },
   header: {
     marginBottom: spacing.xl,
@@ -351,7 +389,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(184, 84, 80, 0.1)",
     borderWidth: 1,
     borderColor: colors.error,
-    borderRadius: 8,
+    borderRadius: radii.card,
     padding: spacing.md,
     marginBottom: spacing.base,
   },
@@ -367,7 +405,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     borderWidth: 1,
     borderColor: colors.primary,
-    borderRadius: 8,
+    borderRadius: radii.card,
     padding: spacing.md,
     marginBottom: spacing.base,
   },
@@ -380,8 +418,21 @@ const styles = StyleSheet.create({
   form: {
     marginBottom: spacing.xl,
   },
+  verificationNoteWrap: {
+    marginBottom: spacing.base,
+    marginTop: -spacing.xs,
+  },
+  verificationNoteText: {
+    fontFamily: fonts.body.regular,
+    fontSize: 13,
+    color: colors.textMuted,
+    lineHeight: 18,
+  },
   submitButton: {
     marginTop: spacing.sm,
+    borderRadius: radii.button,
+    minHeight: touchTargets.min,
+    backgroundColor: colors.primary,
   },
   footer: {
     flexDirection: "row",

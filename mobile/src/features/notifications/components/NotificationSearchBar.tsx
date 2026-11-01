@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Search, SlidersHorizontal, X } from "lucide-react-native";
-import { colors, fonts, radii, spacing } from "../../../theme";
+import { colors, radii, spacing, touchTargets, typography } from "../../../theme";
 
 interface Props {
   value: string;
@@ -37,7 +37,7 @@ export function NotificationSearchBar({ value, onChangeText, onFilterPress, acti
         accessibilityLabel="Filter notifications"
         style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
       >
-        <SlidersHorizontal size={15} color={colors.text} />
+        <SlidersHorizontal size={14} color={colors.text} />
         <Text style={styles.filterText}>Filter</Text>
         {Boolean(activeFilterCount) && (
           <View style={styles.filterDot} />
@@ -48,60 +48,13 @@ export function NotificationSearchBar({ value, onChangeText, onFilterPress, acti
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  searchBox: {
-    flex: 1,
-    height: 40,
-    backgroundColor: colors.surface,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
-  icon: {
-    marginRight: 6,
-  },
-  input: {
-    flex: 1,
-    fontFamily: fonts.body.regular,
-    fontSize: 13,
-    color: colors.text,
-    paddingVertical: 0,
-  },
-  clearButton: {
-    padding: 4,
-  },
-  filterButton: {
-    height: 40,
-    paddingHorizontal: 14,
-    backgroundColor: colors.surface,
-    borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  filterText: {
-    fontFamily: fonts.body.medium,
-    fontSize: 13,
-    color: colors.text,
-  },
-  filterDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#16A34A",
-  },
-  pressed: {
-    opacity: 0.75,
-  },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs, marginBottom: spacing.sm },
+  searchBox: { flex: 1, height: touchTargets.min, backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.md },
+  icon: { marginRight: spacing.sm },
+  input: { flex: 1, ...typography.body, color: colors.text, paddingVertical: 0 },
+  clearButton: { padding: spacing.xs },
+  filterButton: { height: touchTargets.min, paddingHorizontal: spacing.md, backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", gap: spacing.sm - 2 },
+  filterText: { ...typography.label, color: colors.text },
+  filterDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  pressed: { opacity: 0.75 },
 });

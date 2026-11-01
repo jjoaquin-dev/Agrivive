@@ -8,9 +8,10 @@ import {
   AlertCircle,
   AlertTriangle,
   Edit3,
-  Sparkles,
+  Zap,
 } from "lucide-react-native";
-import { colors, fonts, spacing } from "../../../theme";
+import { colors, fonts, radii, shadows, spacing, typography } from "../../../theme";
+import { ButtonComponent } from "../../../components/ButtonComponent";
 import type { Product } from "../types";
 import { BoostChip } from "../../marketing/components/BoostChip";
 import { hasActiveBoost } from "../../marketing/types";
@@ -35,8 +36,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const price = parseFloat(product.productPrice as string) || 0;
   const basePrice =
     product.basePrice != null ? parseFloat(product.basePrice as string) : null;
-  const reductionPercent =
-    parseFloat(String(product.priceReductionPercent ?? "0")) || 0;
+  const reductionAmount =
+    parseFloat(String(product.priceReductionAmount ?? "0")) || 0;
   const threshold =
     product.lowStockThreshold != null
       ? parseFloat(product.lowStockThreshold as string)
@@ -71,63 +72,55 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         </View>
 
         <View style={styles.infoContainer}>
-          <Text style={styles.nameText} numberOfLines={1}>
-            {product.productName}
-          </Text>
-          <Text style={styles.codeText}>{productCode}</Text>
-
-          {/* Badges Row */}
-          <View style={styles.badgeRow}>
+          <View style={styles.nameRow}>
+            <Text style={styles.nameText} numberOfLines={1}>{product.productName}</Text>
             {isArchived ? (
               <View style={[styles.badge, styles.badgeArchived]}>
-                <Text style={[styles.badgeText, styles.badgeTextArchived]}>
-                  Archived
-                </Text>
+                <Text style={[styles.badgeText, styles.badgeTextArchived]}>Archived</Text>
               </View>
             ) : isOutOfStock ? (
               <View style={[styles.badge, styles.badgeOutOfStock]}>
                 <AlertCircle size={11} color="#DC2626" style={styles.badgeIcon} />
-                <Text style={[styles.badgeText, styles.badgeTextOutOfStock]}>
-                  Sold Out
-                </Text>
+                <Text style={[styles.badgeText, styles.badgeTextOutOfStock]}>Sold Out</Text>
               </View>
             ) : isLowStock ? (
               <View style={[styles.badge, styles.badgeLowStock]}>
                 <AlertTriangle size={11} color="#D97706" style={styles.badgeIcon} />
-                <Text style={[styles.badgeText, styles.badgeTextLowStock]}>
-                  Low Stock
-                </Text>
+                <Text style={[styles.badgeText, styles.badgeTextLowStock]}>Low Stock</Text>
               </View>
             ) : (
               <View style={[styles.badge, styles.badgeActive]}>
                 <Text style={[styles.badgeText, styles.badgeTextActive]}>Active</Text>
               </View>
             )}
+          </View>
+          <Text style={styles.codeText}>{productCode}</Text>
 
-            {reductionPercent > 0 ? (
+          <View style={styles.priceBadgeRow}>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceSymbol}>₱</Text>
+              <Text style={styles.priceValue}>{price.toFixed(0)}</Text>
+              <Text style={styles.priceUnit}>/{unitLabel}</Text>
+              {basePrice != null && basePrice > price ? (
+                <Text style={styles.originalPrice}>₱{basePrice.toFixed(0)}</Text>
+              ) : null}
+            </View>
+            {reductionAmount > 0 ? (
               <View style={[styles.badge, styles.badgeBoost]}>
                 <Text style={[styles.badgeText, styles.badgeTextBoost]}>
                   {basePrice != null && basePrice > price
                     ? `${Math.round((1 - price / basePrice) * 100)}% Off`
-                    : `Drops ${reductionPercent}% / 6 hrs`}
+                    : `Drops ₱${reductionAmount.toFixed(2)} every 6 hrs after Boost`}
                 </Text>
               </View>
             ) : null}
           </View>
 
           <BoostChip boost={product.boost} />
-
-          {/* Price */}
-          <View style={styles.priceRow}>
-            <Text style={styles.priceSymbol}>₱</Text>
-            <Text style={styles.priceValue}>{price.toFixed(0)}</Text>
-            <Text style={styles.priceUnit}>/{unitLabel}</Text>
-            {basePrice != null && basePrice > price ? (
-              <Text style={styles.originalPrice}>₱{basePrice.toFixed(0)}</Text>
-            ) : null}
-          </View>
         </View>
       </Pressable>
+
+      <View style={styles.divider} />
 
       {/* Stock Progress Bar */}
       <View style={styles.stockSection}>
@@ -174,9 +167,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               </Text>
             </View>
           ) : null}
-          {reductionPercent > 0 && product.nextPriceReductionAt ? (
+          {reductionAmount > 0 && product.nextPriceReductionAt ? (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Next Reduction</Text>
+              <Text style={styles.detailLabel}>Next Price Drop</Text>
               <Text style={styles.detailValueSchedule}>
                 {new Date(product.nextPriceReductionAt).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -190,63 +183,40 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
       {/* Action Buttons Row */}
       <View style={styles.actionRow}>
-        <Pressable
+        <ButtonComponent
+          title={expanded ? "Less" : "Details"}
+          variant="secondary"
           onPress={() => setExpanded((prev) => !prev)}
-          style={styles.detailsButton}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={expanded ? "Show less details" : "Show more details"}
-        >
-          <Text style={styles.detailsButtonText}>{expanded ? "Less" : "Details"}</Text>
-          {expanded ? (
-            <ChevronUp size={16} color="#374151" />
-          ) : (
-            <ChevronDown size={16} color="#374151" />
-          )}
-        </Pressable>
+          icon={expanded ? <ChevronUp size={16} color={colors.text} /> : <ChevronDown size={16} color={colors.text} />}
+          style={[styles.actionButton, styles.detailsButton]}
+          textStyle={[styles.actionText, styles.detailsText]}
+        />
 
         {!isArchived && !isOutOfStock ? (
-          <Pressable
+          <ButtonComponent
+            title={hasActiveBoost(product.boost) ? "View Boost" : "Boost"}
+            variant="secondary"
             onPress={() => router.push({ pathname: "/(app)/marketing/[productId]", params: { productId: product.id } })}
-            style={styles.boostButton}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel={`Boost ${product.productName}`}
-          >
-            <Sparkles size={14} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.boostButtonText}>{hasActiveBoost(product.boost) ? "View Boost" : "Boost"}</Text>
-          </Pressable>
+            icon={<Zap size={16} color={colors.primary} />}
+            style={[styles.actionButton, styles.boostButton]}
+            textStyle={styles.actionText}
+          />
         ) : null}
 
-        <Pressable
+        <ButtonComponent
+          title="Edit Listing"
           onPress={onEdit || onPress}
-          style={styles.editButton}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={`Edit ${product.productName}`}
-        >
-          <Edit3 size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-          <Text style={styles.editButtonText}>Edit Listing</Text>
-        </Pressable>
+          icon={<Edit3 size={16} color={colors.white} />}
+          style={[styles.actionButton, styles.editButton]}
+          textStyle={styles.actionText}
+        />
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: spacing.base,
-    marginBottom: spacing.base,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.base, ...shadows.card, },
   cardArchived: {
     opacity: 0.65,
     backgroundColor: "#F9FAFB",
@@ -255,43 +225,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
   },
-  imageContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginRight: spacing.md,
-  },
-  thumbnail: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 16,
-    resizeMode: "cover",
-  },
-  placeholderThumbnail: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 16,
-    backgroundColor: "#ECFDF5",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  infoContainer: {
-    flex: 1,
-  },
-  nameText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    fontFamily: fonts.heading.bold,
-  },
-  codeText: {
-    fontSize: 12,
-    color: "#6B7280",
-    fontFamily: fonts.body.regular,
-    marginTop: 1,
-    marginBottom: 6,
-  },
+  imageContainer: { width: 88, height: 88, borderRadius: radii.input + 2, overflow: "hidden", marginRight: spacing.md, },
+  thumbnail: { width: "100%", height: "100%", borderRadius: radii.input + 2, resizeMode: "cover" },
+  placeholderThumbnail: { width: "100%", height: "100%", borderRadius: radii.input + 2, backgroundColor: colors.primarySurface, justifyContent: "center", alignItems: "center" },
+  infoContainer: { flex: 1 },
+  nameRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
+  nameText: { ...typography.sectionHeading, flex: 1, color: colors.text },
+  codeText: { ...typography.labelSmall, color: colors.textMuted, },
+  priceBadgeRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", columnGap: spacing.sm, rowGap: spacing.xs, marginTop: spacing.xs, },
   badgeRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -299,13 +240,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 6,
   },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
+  badge: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.sm + 2, paddingVertical: spacing.xs, borderRadius: radii.full, },
   badgeIcon: {
     marginRight: 4,
   },
@@ -324,10 +259,7 @@ const styles = StyleSheet.create({
   badgeBoost: {
     backgroundColor: "#FEF3C7",
   },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
+  badgeText: { fontFamily: fonts.body.medium, fontSize: 12, },
   badgeTextActive: {
     color: "#065F46",
   },
@@ -343,82 +275,34 @@ const styles = StyleSheet.create({
   badgeTextBoost: {
     color: "#92400E",
   },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginTop: 2,
-  },
-  priceSymbol: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#0F920F",
-  },
-  priceValue: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0F920F",
-  },
-  priceUnit: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginLeft: 2,
-  },
-  originalPrice: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    textDecorationLine: "line-through",
-    marginLeft: 8,
-  },
+  priceRow: { flexDirection: "row", alignItems: "baseline", },
+  priceSymbol: { fontFamily: fonts.heading.bold, fontSize: 14, color: colors.primary, },
+  priceValue: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.primary, },
+  priceUnit: { ...typography.label, color: colors.textMuted, marginLeft: 2, },
+  originalPrice: { ...typography.label, color: colors.textMuted, textDecorationLine: "line-through", marginLeft: spacing.sm, },
   stockSection: {
     marginTop: spacing.md,
     paddingTop: spacing.xs,
   },
-  progressBarTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#E5E7EB",
-    overflow: "hidden",
-    flexDirection: "row",
-  },
-  progressBarFill: {
-    height: "100%",
-    backgroundColor: "#0F920F",
-    borderRadius: 3,
-  },
-  stockMetricsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
-  },
+  progressBarTrack: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden", flexDirection: "row", },
+  progressBarFill: { height: "100%", backgroundColor: colors.primary, borderRadius: 3, },
+  stockMetricsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing.sm, },
   stockMetricCol: {
     alignItems: "flex-start",
   },
   stockMetricColRight: {
     alignItems: "flex-end",
   },
-  stockMetricValueGreen: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0F920F",
-  },
-  stockMetricValueDark: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  stockMetricLabel: {
-    fontSize: 11,
-    color: "#6B7280",
-    marginTop: 1,
-  },
+  stockMetricValueGreen: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary, },
+  stockMetricValueDark: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text, },
+  stockMetricLabel: { ...typography.labelSmall, color: colors.textMuted, marginTop: 1, },
   expandedContent: {
     marginTop: spacing.sm,
   },
   divider: {
     height: 1,
-    backgroundColor: "#F3F4F6",
-    marginVertical: spacing.sm,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
   },
   detailRow: {
     flexDirection: "row",
@@ -441,57 +325,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#0F920F",
   },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: spacing.md,
-  },
-  detailsButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 42,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
-    gap: 4,
-  },
-  detailsButtonText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#374151",
-  },
-  boostButton: {
-    flex: 1.3,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "#16A34A",
-  },
-  boostButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  editButton: {
-    flex: 1.4,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "#0F920F",
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
+  actionRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.base, },
+  actionButton: { paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
+  actionText: { fontSize: 13 },
+  detailsText: { color: colors.text },
+  detailsButton: { flex: 1 },
+  boostButton: { flex: 1.3, },
+  editButton: { flex: 1.4, },
 });
 
 export const ProductCard = React.memo(ProductCardComponent);

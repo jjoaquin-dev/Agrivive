@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { Megaphone, Sparkles } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { dismissSellerBoostPrompt, fetchSellerBoostPrompts } from "../api/visibility-boosts";
-import { colors, fonts, radii, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing, shadows } from "../../../theme";
+import { PlatformBadge } from "./PlatformBadge";
 import type { SellerBoostPrompt } from "../../notifications/types";
 
 export function PriceDropPromptList({ refreshSignal }: { refreshSignal: number }) {
@@ -29,7 +30,6 @@ export function PriceDropPromptList({ refreshSignal }: { refreshSignal: number }
   useEffect(() => { void load(); }, [refreshSignal]);
 
   const openBoost = (item: SellerBoostPrompt) => {
-    // Open the Boost screen for this price drop.
     router.push({
       pathname: "/(app)/marketing/[productId]",
       params: { productId: item.productId, promptId: item.id },
@@ -54,27 +54,41 @@ export function PriceDropPromptList({ refreshSignal }: { refreshSignal: number }
 
   return (
     <View style={styles.section}>
-      <View style={styles.headingRow}>
-        <View style={styles.icon}><Megaphone size={18} color={colors.primary} /></View>
-        <View style={styles.headingCopy}>
-          <Text style={styles.title}>Price dropped</Text>
-          <Text style={styles.subtitle}>Boost it again to post the new price on the Agrivive Facebook Page.</Text>
+      <View style={styles.header}>
+        <View style={styles.tagWrap}>
+          <Sparkles size={14} color={colors.primary} />
+          <Text style={styles.tagText}>Price dropped</Text>
+        </View>
+        <View style={styles.platforms}>
+          <PlatformBadge platform="facebook" size={16} />
+          <PlatformBadge platform="instagram" size={16} />
         </View>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {items.map((item) => (
         <View key={item.id} style={styles.card}>
-          <Text style={styles.product}>{item.productName}</Text>
-          <Text style={styles.price}>
-            {item.priceBefore && item.priceAfter ? `₱${Number(item.priceBefore).toFixed(2)} → ₱${Number(item.priceAfter).toFixed(2)}` : "New price available"}
-          </Text>
+          <View style={styles.cardBody}>
+            <Text style={styles.product}>{item.productName}</Text>
+            <View style={styles.priceRow}>
+              {item.priceBefore ? (
+                <Text style={styles.priceOld}>₱{Number(item.priceBefore).toFixed(2)}</Text>
+              ) : null}
+              {item.priceBefore && item.priceAfter ? <Text style={styles.arrow}>→</Text> : null}
+              <Text style={styles.priceNew}>
+                {item.priceAfter ? `₱${Number(item.priceAfter).toFixed(2)}` : "New Price Available"}
+              </Text>
+            </View>
+            <Text style={styles.promptCopy}>
+              Broadcast this lower price to shoppers on Agrivive Facebook & Instagram.
+            </Text>
+          </View>
           <View style={styles.actions}>
             <Pressable
               onPress={() => openBoost(item)}
               disabled={busyId !== null}
               accessibilityRole="button"
               accessibilityLabel={`Boost ${item.productName} again`}
-              style={({ pressed }) => [styles.boost, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.boostBtn, pressed && styles.pressed]}
             >
               <Sparkles size={16} color={colors.white} />
               <Text style={styles.boostText}>Boost Again</Text>
@@ -84,9 +98,9 @@ export function PriceDropPromptList({ refreshSignal }: { refreshSignal: number }
               disabled={busyId !== null}
               accessibilityRole="button"
               accessibilityLabel="Not now"
-              style={({ pressed }) => [styles.dismiss, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.dismissBtn, pressed && styles.pressed]}
             >
-              <Text style={styles.dismissText}>Not now</Text>
+              <Text style={styles.dismissText}>Not Now</Text>
             </Pressable>
           </View>
         </View>
@@ -96,21 +110,119 @@ export function PriceDropPromptList({ refreshSignal }: { refreshSignal: number }
 }
 
 const styles = StyleSheet.create({
-  section: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.base, marginBottom: spacing.lg },
-  headingRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.sm },
-  icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginRight: spacing.sm },
-  headingCopy: { flex: 1 },
-  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 2 },
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.primary, padding: spacing.base, marginTop: spacing.sm },
-  product: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.text },
-  price: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.primary, marginTop: spacing.xs },
-  actions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
-  boost: { minHeight: 48, flex: 1, borderRadius: radii.button, backgroundColor: colors.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.xs },
-  boostText: { fontFamily: fonts.body.semiBold, color: colors.white, fontSize: 14 },
-  dismiss: { minHeight: 44, minWidth: 88, borderRadius: radii.button, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", paddingHorizontal: spacing.sm },
-  dismissText: { fontFamily: fonts.body.semiBold, color: colors.primary, fontSize: 13 },
-  error: { fontFamily: fonts.body.medium, color: colors.error, fontSize: 13, marginTop: spacing.xs },
-  loader: { marginVertical: spacing.md },
-  pressed: { opacity: 0.75 },
+  section: {
+    marginBottom: spacing.base,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.xs,
+  },
+  tagWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  tagText: {
+    fontFamily: fonts.heading.semiBold,
+    fontSize: 17,
+    color: colors.text,
+  },
+  platforms: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.card,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    padding: spacing.base,
+    marginTop: spacing.xs,
+    ...shadows.card,
+  },
+  cardBody: {
+    marginBottom: spacing.md,
+  },
+  product: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 16,
+    color: colors.text,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: spacing.xs,
+  },
+  priceOld: {
+    fontFamily: fonts.body.regular,
+    fontSize: 14,
+    color: colors.textMuted,
+    textDecorationLine: "line-through",
+  },
+  arrow: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  priceNew: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 17,
+    color: colors.primary,
+  },
+  promptCopy: {
+    fontFamily: fonts.body.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  boostBtn: {
+    minHeight: 48,
+    flex: 1,
+    borderRadius: radii.button,
+    backgroundColor: colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  boostText: {
+    fontFamily: fonts.body.semiBold,
+    color: colors.white,
+    fontSize: 14,
+  },
+  dismissBtn: {
+    minHeight: 48,
+    minWidth: 84,
+    borderRadius: radii.button,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
+  },
+  dismissText: {
+    fontFamily: fonts.body.medium,
+    color: colors.textMuted,
+    fontSize: 13,
+  },
+  error: {
+    fontFamily: fonts.body.medium,
+    color: colors.error,
+    fontSize: 13,
+    marginTop: spacing.xs,
+  },
+  loader: {
+    marginVertical: spacing.md,
+  },
+  pressed: {
+    opacity: 0.8,
+  },
 });

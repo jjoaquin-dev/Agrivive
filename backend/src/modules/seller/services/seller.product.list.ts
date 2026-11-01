@@ -3,7 +3,7 @@ import { db } from "../../../db";
 import { sellers_product } from "../../../db/schema";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
-import { applySellerProductPriceReduction } from "./seller.product.price-reduction";
+import { readSellerProductPriceDrop } from "./seller.product.price-reduction";
 import { readProductBoostChips } from "./seller.product.list.boost";
 
 export async function listSellerProducts(sellerId: string, limit = 20, cursor?: string) {
@@ -37,7 +37,7 @@ export async function listSellerProducts(sellerId: string, limit = 20, cursor?: 
 
     const updatedProducts = [];
     for (const product of page) {
-      updatedProducts.push(await applySellerProductPriceReduction(tx, product.id));
+      updatedProducts.push(await readSellerProductPriceDrop(tx, product.id));
     }
 
     const [stats] = await tx

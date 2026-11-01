@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   arrowIcon: {
-    fontSize: 20,
+    fontSize: 22,
     color: colors.textMuted,
   },
   previewLabel: {

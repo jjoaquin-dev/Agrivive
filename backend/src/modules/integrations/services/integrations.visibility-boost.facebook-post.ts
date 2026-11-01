@@ -87,7 +87,7 @@ export async function postVisibilityBoostToFacebook(boostId: string, body: Visib
   }
 
   // If saving fails here the row stays "pending", so a retry stops instead of posting twice.
-  const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId });
+  const log = await finishFacebookPost(claim.logId, { status: "success", facebookPostId: result.postId, caption });
   if (context.reason === "initial") {
     if (body.postType === "first_post") {
       await scheduleBoostFollowUp(boostId, log.postedAt);

@@ -4,18 +4,18 @@ import { Tag } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 
 interface Props {
-  percent: number;
+  dropAmount: number;
   lowestPrice?: number | null;
   stage: "initial" | "price_reduction";
   currentPrice: number;
 }
 
 /** The price drop rule, read from the product's own settings. */
-export function BoostPriceDropCard({ percent, lowestPrice, stage, currentPrice }: Props) {
+export function BoostPriceDropCard({ dropAmount, lowestPrice, stage, currentPrice }: Props) {
   const text = stage === "price_reduction"
     ? `This post shares your new price of ₱${currentPrice.toFixed(2)}.`
-    : percent > 0 && lowestPrice
-      ? `If your produce hasn't sold after 6 hours, the price drops by ${percent}%, without going below ₱${lowestPrice.toFixed(2)}. This repeats every 6 hours.`
+    : dropAmount > 0 && lowestPrice
+      ? `If your produce hasn't sold 6 hours after your Boost post, the price drops by ₱${dropAmount.toFixed(2)}. This repeats every 6 hours until your final price of ₱${lowestPrice.toFixed(2)}. It never goes lower.`
       : "Your price stays the same.";
   return (
     <View style={styles.card}>

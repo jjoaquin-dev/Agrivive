@@ -1,0 +1,6 @@
+# Keep GitHub's language stats about our own code.
+backend/dist/** linguist-generated
+.claude/** linguist-vendored
+.agents/** linguist-vendored
+.github/skills/** linguist-vendored
+graphify-out/** linguist-generated

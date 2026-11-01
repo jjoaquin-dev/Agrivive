@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { AlertTriangle, ChevronLeft, TrendingUp } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { safeBack } from "../../../utils/safeBack";
 
 interface AnalyticsHeaderProps {
   days: number;
@@ -16,7 +17,7 @@ export function AnalyticsHeader({ days, hasSummary }: AnalyticsHeaderProps) {
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => safeBack(router)}
           accessibilityRole="button"
           accessibilityLabel="Go back"
           style={styles.backButton}

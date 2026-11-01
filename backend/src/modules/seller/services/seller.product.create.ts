@@ -22,7 +22,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
   if (priceToCents(body.productPrice) === null) {
     throw new OrderError(400, "Product price must be between 1 and 99999999.99 with at most two decimal places");
   }
-  validatePriceReductionConfig(body.productPrice, body.priceReductionPercent, body.minimumPrice);
+  validatePriceReductionConfig(body.productPrice, body.priceReductionAmount, body.minimumPrice);
   const result = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     await requireVerifiedSeller(tx, userId);
@@ -49,7 +49,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
         productType: catalog.category,
         productPrice: body.productPrice.toString(),
         basePrice: body.productPrice.toString(),
-        priceReductionPercent: (body.priceReductionPercent ?? 0).toString(),
+        priceReductionAmount: (body.priceReductionAmount ?? 0).toString(),
         minimumPrice: body.minimumPrice?.toString() ?? null,
         priceScheduleStartedAt: now,
         priceReductionPeriodsApplied: 0,

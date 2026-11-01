@@ -50,7 +50,7 @@ export interface Product {
   boost?: ProductBoostChip | null;
   productPrice: string | number;
   basePrice?: string | number | null;
-  priceReductionPercent?: string | number;
+  priceReductionAmount?: string | number;
   minimumPrice?: string | number | null;
   priceScheduleStartedAt?: string | null;
   nextPriceReductionAt?: string | null;
@@ -98,7 +98,7 @@ export interface CreateProductInput {
   catalogId: string;
   imagUrl: string;
   productPrice: number;
-  priceReductionPercent?: number;
+  priceReductionAmount?: number;
   minimumPrice?: number | null;
   productQty: number;
   scalingType: ProductScalingType;
@@ -110,7 +110,7 @@ export interface UpdateProductInput {
   catalogId?: string;
   imagUrl?: string;
   productPrice?: number;
-  priceReductionPercent?: number;
+  priceReductionAmount?: number;
   minimumPrice?: number | null;
   isMarketable?: boolean;
   lowStockThreshold?: number | null;

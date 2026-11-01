@@ -51,7 +51,7 @@ Seller-confirmed Boost Visibility uses `N8N_VISIBILITY_BOOST_WEBHOOK_URL` and `N
 
 Every seller event is a stored row in `seller_notifications` (or `trust_notices` for account notes), written by `createSellerNotification` in `src/utils/seller-notifications/`. The wording, level (sound, quiet, list only), and topic for each kind live in one map, `messages.ts`. The same call queues the phone alert in `notification_outbox` (type `seller_alert`); `jobs/deliver-push-notifications.ts` sends it. The mobile app no longer polls for alerts.
 
-Triggers: new reservation, buyer cancelled, reservation ended (order create, cancel, expiry), reservation ends soon (`jobs/send-reservation-ending-notices.ts`, about one hour left), pickup done (QR scan), running low and sold out (stock reserve), listing live (product create), price lowered (`jobs/apply-seller-price-reductions.ts`), Boost posted or not posted (social campaign result), and trust notices (`queueTrustNotice`).
+Triggers: new reservation, buyer cancelled, reservation ended (order create, cancel, expiry), reservation ends soon (`jobs/send-reservation-ending-notices.ts`, about one hour left), pickup done (QR scan), running low and sold out (stock reserve), listing live (product create), price lowered (each 6-hour Boost price cut, `integrations.visibility-boost.notify-price-lowered.ts`), Boost posted or not posted (social campaign result), and trust notices (`queueTrustNotice`).
 
 Frequency: the list is never limited. Phone alerts of one kind within one 60-second window become one alert. Sellers can turn off Stock and Price, Boost, and Account alerts, and turn on Night Mode, through `/seller/notification-settings`. Apply migration `20261031120000_seller_notifications` before use.
 

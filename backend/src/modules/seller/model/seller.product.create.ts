@@ -15,7 +15,7 @@ export const sellerProductCreate = t.Object({
     maximum: 99_999_999.99,
     error: "price must be between 1 and 99999999.99",
   }),
-  priceReductionPercent: t.Optional(t.Number({ minimum: 0, maximum: 99.99 })),
+  priceReductionAmount: t.Optional(t.Number({ minimum: 0, maximum: 99_999_999.99 })),
   minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99_999_999.99 }))),
   productQty: t.Numeric({
     minimum: 0.01,

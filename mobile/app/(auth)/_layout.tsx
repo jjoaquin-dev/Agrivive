@@ -27,7 +27,7 @@ export default function AuthLayout() {
       />
       <Stack.Screen
         name="login"
-        options={{ title: "Sign In", headerBackVisible: true }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="email-otp-login"
@@ -35,7 +35,7 @@ export default function AuthLayout() {
       />
       <Stack.Screen
         name="register"
-        options={{ title: "Create Seller Account" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="verify-email"
