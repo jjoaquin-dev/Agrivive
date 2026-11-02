@@ -10,6 +10,7 @@ import { LandingHeaderNav, type LandingSectionLink } from "./LandingHeaderNav";
 
 const sectionLinks: LandingSectionLink[] = [
   { label: "Public Marketplace Overview", href: "/marketplace/overview", isRoute: true, group: "page" },
+  { label: "How to Install", href: "/download-app", isRoute: true, group: "page" },
   { label: "Categories", href: "#categories", group: "section" },
   { label: "Live Surplus", href: "#live-inventory", group: "section" },
   { label: "How It Works", href: "#how-it-works", group: "section" },

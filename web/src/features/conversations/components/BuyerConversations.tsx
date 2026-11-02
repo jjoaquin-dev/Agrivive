@@ -110,7 +110,14 @@ export function BuyerConversations() {
         productQty: launchContext.productQty,
       }
     : activeConversation ? launchContextFromConversation(activeConversation) : null;
-  const hasSelection = Boolean(activeContext && !launchLoading);
+  // Phones show the list until a chat is named in the address; desktop keeps the first chat open beside the list.
+  const hasSelection = Boolean(activeContext && !launchLoading && (requestedConversationId || requestedProductId || requestedSellerId));
+  const sellerLabel = activeContext ? activeContext.sellerShopName || activeContext.sellerName || "Seller" : "";
+  const trail = [
+    ...(activeContext?.productId ? [{ label: "Listing", href: `/marketplace/${activeContext.productId}` }] : []),
+    { label: "Messages", href: "/messages" },
+    ...(hasSelection ? [{ label: sellerLabel }] : []),
+  ];
 
   const handleSelect = (item: Conversation) => router.replace(`/messages?conversationId=${encodeURIComponent(item.id)}`, { scroll: false });
   const handleBack = () => router.replace("/messages", { scroll: false });
@@ -123,11 +130,11 @@ export function BuyerConversations() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-70px)] bg-[#FDFDFD] p-3 sm:p-4 lg:p-5">
+    <main className="min-h-[calc(100dvh-70px)] bg-[#FDFDFD] p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:p-4 lg:p-5">
       <div className="mx-auto max-w-[1720px]">
         {/* Navigation Link in Upper Left */}
         <div>
-          <Breadcrumbs items={activeContext?.productId ? [{ label: "Listing", href: `/marketplace/${activeContext.productId}` }, { label: "Messages" }] : [{ label: "Messages" }]} />
+          <Breadcrumbs items={trail} />
         </div>
 
         {error ? (
@@ -137,7 +144,7 @@ export function BuyerConversations() {
           </Alert>
         ) : null}
 
-        <div className="flex h-[calc(100vh-140px)] min-h-[640px] gap-4">
+        <div className="flex h-[calc(100dvh-140px)] gap-4 sm:min-h-[640px]">
           {/* Left Column: Messages List Card */}
           <div className={`w-full lg:w-[320px] shrink-0 ${hasSelection ? "hidden lg:flex" : "flex"}`}>
             <ConversationList

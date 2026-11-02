@@ -328,14 +328,16 @@ export default function RegisterScreen() {
 
           <PasswordChecklist password={password} confirmPassword={confirmPassword} />
 
-          <TermsConsent
-            checked={acceptedTerms}
-            error={errors.terms}
-            onChange={(checked) => {
-              setAcceptedTerms(checked);
-              if (errors.terms) setErrors((prev) => ({ ...prev, terms: undefined }));
-            }}
-          />
+          <View style={styles.termsWrap}>
+            <TermsConsent
+              checked={acceptedTerms}
+              error={errors.terms}
+              onChange={(checked) => {
+                setAcceptedTerms(checked);
+                if (errors.terms) setErrors((prev) => ({ ...prev, terms: undefined }));
+              }}
+            />
+          </View>
 
           <View style={styles.verificationNoteWrap}>
             <Text style={styles.verificationNoteText}>
@@ -444,9 +446,13 @@ const styles = StyleSheet.create({
   form: {
     marginBottom: spacing.xl,
   },
+  termsWrap: {
+    marginTop: spacing.base,
+  },
   verificationNoteWrap: {
+    marginTop: spacing.sm,
     marginBottom: spacing.base,
-    marginTop: -spacing.xs,
+    paddingLeft: spacing.xxl + spacing.sm,
   },
   verificationNoteText: {
     fontFamily: fonts.body.regular,

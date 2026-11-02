@@ -62,6 +62,11 @@ export default function LoginPage() {
         return;
       }
       if (response.error) {
+        // The server refuses to open a session for a blocked or paused account, so nobody gets in and then gets bounced.
+        if ((response.error as { code?: string }).code === "ACCOUNT_RESTRICTED") {
+          router.replace(withNextPath(`/account-recovery?email=${encodeURIComponent(cleanEmail)}&blocked=true`, nextPath));
+          return;
+        }
         setErrors({ form: "The email or password you entered is incorrect." });
         return;
       }

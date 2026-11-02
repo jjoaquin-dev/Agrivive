@@ -15,7 +15,8 @@ function normalizeEmail(email: string) {
 async function hasRecoverableAction(email: string) {
   const [candidate] = await db.select({ id: user.id, isActive: user.isActive })
     .from(user).where(eq(user.email, email)).limit(1);
-  if (!candidate || candidate.isActive) return false;
+  // A paused buyer is still active, so recovery depends on the open pause or block, not on isActive.
+  if (!candidate) return false;
   const [action] = await db.select({ id: trust_actions.id }).from(trust_actions).where(and(
     eq(trust_actions.subjectId, candidate.id),
     inArray(trust_actions.actionType, recoveryActionTypes),
@@ -50,9 +51,7 @@ export async function verifyTrustRecovery(input: TrustRecoveryVerifyBody) {
   const restored = await db.transaction(async (tx) => {
     const [candidate] = await tx.select({ id: user.id, isActive: user.isActive })
       .from(user).where(eq(user.email, email)).for("update").limit(1);
-    if (!candidate || candidate.isActive) {
-      throw new OrderError(400, "This account does not need recovery");
-    }
+    if (!candidate) throw new OrderError(400, "This account does not need recovery");
     const actions = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(
       eq(trust_actions.subjectId, candidate.id),
       inArray(trust_actions.actionType, recoveryActionTypes),

@@ -25,6 +25,8 @@ Mobile finished. Closed-account errors now log quietly and seller ranking reliab
 Trust alignment re-checked against a real PostgreSQL: one queue bug fixed, all other flows confirmed. See [[2026-11-02 Trust Alignment Verification]].
 Trust score now fades old violations after 90 days (`TRUST_SCORE_WINDOW_DAYS`), buyer cancel counter uses it too, env example defaults actions on. See [[2026-11-02 Trust Score Window and Defaults]].
 Trust numbers stay as own prototype settings; research (2022-2025) backs only the structure. See [[2026-11-02 Trust Numbers and Research Sources]].
+Buyer trust rules (cancel warn 5, pause at 7/9/10, unpicked reservation 2 points) and current points table now written in the vault. See [[2026-11-02 Buyer Trust Rules Documented]].
+Buyer cancel warnings and pauses now send a notice, follow `TRUST_ACTIONS_ENABLED`, and show the right pause length. Not tested by the owner yet. See [[2026-11-02 Buyer Cancel Penalty Notices and Pause Length]].
 Recovery restarts the inactivity clock, returns real errors, and an ended pause opens the account. See [[2026-11-02 Account Recovery Restarts Inactivity Clock]], [[2026-11-02 Recovery Route Error Statuses]], [[2026-11-02 Ended Pause Opens Account]], [[2026-11-02 Closed Account Shows Problem Screen Anywhere]].
 
 Earlier: Trust and Rating module aligned with the paper: blocking by score, reply timers for all questions and chats, confirmed report violations, seller answers to product reviews, correct pause and block messages. Details in [[2026-11-02 Trust and Rating Paper Alignment]].

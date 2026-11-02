@@ -70,8 +70,7 @@ export const CartItemComponent = ({
           quantity={item.quantity}
           maxQuantity={Number(item.productQty)}
           productName={item.productName}
-          onDecrease={() => onUpdateQuantity(Math.max(1, item.quantity - 1))}
-          onIncrease={() => onUpdateQuantity(item.quantity + 1)}
+          onChange={onUpdateQuantity}
         />
       </div>
     </div>

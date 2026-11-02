@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageContainer } from "./PageContainer";
+import { MobileHeaderSearch } from "./MobileHeaderSearch";
 import { MarketplaceHeaderFilters } from "@/src/features/marketplace/components/MarketplaceHeaderFilters";
 
 // One list drives the category row on every buyer page.
@@ -65,21 +66,18 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
       {menuOpen && (
         <div className="border-t border-neutral-200 p-4 lg:hidden">
           <div className="flex flex-col gap-2">
+            <div className="md:hidden"><MobileHeaderSearch onDone={onCloseMenu} /></div>
             {/* Price and distance on phones and tablets. */}
-            <div className="flex flex-wrap gap-2 md:hidden">
-              <MarketplaceHeaderFilters />
+            <div className="mb-1 flex gap-2 md:hidden">
+              <MarketplaceHeaderFilters variant="pill" />
             </div>
-            {/* Phone header has no search box, so point to the marketplace search. */}
-            <Link href="/marketplace" onClick={onCloseMenu} className="mb-2 inline-flex min-h-11 items-center rounded-xl border border-neutral-200 px-3 text-xs font-semibold text-neutral-800">
-              Search produce on the marketplace
-            </Link>
             {!hasSession ? (
               // Guest buttons live here below the desktop breakpoint, where the top bar has no room.
               <div className="mb-2 flex gap-2">
-                <Link href="/login" onClick={onCloseMenu} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-800">
+                <Link href="/login" onClick={onCloseMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800">
                   Sign in
                 </Link>
-                <Link href="/signup" onClick={onCloseMenu} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-[#457D00] text-xs font-semibold text-white">
+                <Link href="/signup" onClick={onCloseMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#457D00] text-sm font-semibold text-white">
                   Register
                 </Link>
               </div>
@@ -90,7 +88,7 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
             <Link
               href="/marketplace/overview"
               onClick={onCloseMenu}
-              className="py-1.5 text-xs font-bold text-[#457D00] hover:underline"
+              className="flex min-h-11 items-center text-sm font-bold text-[#457D00] hover:underline"
             >
               Public Marketplace Overview
             </Link>
@@ -105,7 +103,7 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
                   key={cat.label}
                   href={href}
                   onClick={onCloseMenu}
-                  className={`py-1.5 text-xs font-semibold ${
+                  className={`flex min-h-11 items-center text-sm font-semibold ${
                     isActive ? "font-bold text-[#457D00]" : "text-neutral-700 hover:text-[#457D00]"
                   }`}
                 >

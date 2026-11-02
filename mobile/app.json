@@ -41,8 +41,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/agrivive-splash.png",
-          "imageWidth": 240,
+          "image": "./assets/brand/agrivive-logo-full.png",
+          "imageWidth": 280,
           "resizeMode": "contain",
           "backgroundColor": "#F8F6F1"
         }

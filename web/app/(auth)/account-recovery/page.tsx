@@ -32,7 +32,7 @@ export default function AccountRecoveryPage() {
     setEmail(params.get("email")?.trim().toLowerCase() ?? "");
     setNextPath(sanitizeNextPath(params.get("next")));
     if (params.get("blocked") === "true") {
-      setMessage("If this email belongs to an account with a trust restriction, we will send a recovery code.");
+      setMessage("Your account is paused right now. Send a recovery code to your email to get back in.");
     }
   }, []);
 

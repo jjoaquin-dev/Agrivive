@@ -46,16 +46,6 @@ export function ProductCard({
     addItem(product, qty);
   }
 
-  function handleIncrement() {
-    const maxQty = Number(product.productQty);
-    if (quantityInCart < maxQty) updateQuantity(product.id, quantityInCart + 1);
-  }
-
-  function handleDecrement() {
-    if (quantityInCart <= 1) removeItem(product.id);
-    else updateQuantity(product.id, quantityInCart - 1);
-  }
-
   function handleCardClick(event: React.MouseEvent) {
     const target = event.target as HTMLElement;
     if (target.closest("button") || target.closest("a") || target.closest("input")) {
@@ -68,7 +58,7 @@ export function ProductCard({
     <Card
       data-seller-id={product.seller.id}
       onClick={handleCardClick}
-      className={`group relative flex h-full w-full max-w-[300px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl bg-white p-4 pb-4.5 transition-all duration-300 hover:-translate-y-1 ${
+      className={`group relative flex h-full w-full max-w-none sm:max-w-[300px] cursor-pointer flex-col justify-between overflow-hidden rounded-2xl bg-white p-4 pb-4.5 transition-all duration-300 hover:-translate-y-1 ${
         selected
           ? "border-[1.5px] border-[#457D00] shadow-md"
           : "border-[1.5px] border-transparent shadow-md hover:shadow-md"
@@ -142,8 +132,8 @@ export function ProductCard({
           soldOut={soldOut}
           quantityInCart={quantityInCart}
           onAddToCart={handleAddToCart}
-          onIncrement={handleIncrement}
-          onDecrement={handleDecrement}
+          onChangeQuantity={(qty) => updateQuantity(product.id, qty)}
+          onRemove={() => removeItem(product.id)}
         />
       </div>
     </Card>

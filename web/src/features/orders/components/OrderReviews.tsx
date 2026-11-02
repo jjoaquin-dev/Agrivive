@@ -100,7 +100,7 @@ function ReviewForm({
               className="w-full resize-y rounded-xl border border-[#E8E8E8] bg-white px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/20 focus-visible:border-[#457D00]"
             />
             {error ? <Alert variant="destructive" className="text-xs"><AlertDescription>{error}</AlertDescription></Alert> : null}
-            <Button type="submit" disabled={rating < 1 || saving} className="min-h-[40px] h-10 rounded-xl bg-[#457D00] px-5 text-[14px] font-semibold text-white hover:bg-[#457D00]/90 active:translate-y-px">
+            <Button type="submit" disabled={rating < 1 || saving} className="min-h-11 h-11 rounded-xl bg-[#457D00] px-5 text-[14px] font-semibold text-white hover:bg-[#457D00]/90 active:translate-y-px">
               {saving ? "Saving…" : itemName ? "Post product review" : "Post seller review"}
             </Button>
           </form>

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, Heart, MapPin, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Check, Heart, MapPin, ShoppingCart } from "lucide-react";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { useBuyerWishlist } from "@/src/features/wishlist/WishlistProvider";
 import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
 import type { MarketplaceProduct } from "@/src/features/marketplace/types";
+import { QuantityStepper } from "@/src/components/QuantityStepper";
 import { formatPeso as money } from "@/src/lib/money";
 
 export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProduct }) {
@@ -19,7 +20,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
   const cartItem = items.find((item) => item.id === product.id);
   const inCart = cartItem?.quantity ?? 0;
 
-  const maxQty = Math.max(1, Math.floor(Number(product.productQty) || 1));
+  const maxQty = Number(product.productQty) > 0 ? Number(product.productQty) : 1;
   const soldOut = product.availability === "sold_out" || Number(product.productQty) <= 0;
   const basePrice = product.basePrice ? Number(product.basePrice) : null;
   const currentPrice = Number(product.productPrice);
@@ -30,7 +31,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
     e.preventDefault();
     e.stopPropagation();
     if (soldOut) return;
-    addItem(product, selectedQty);
+    addItem(product, Math.min(selectedQty, maxQty));
     setDrawerOpen(true);
   }
 
@@ -131,29 +132,15 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
 
       {/* Action Zone: Quantity Selector + Cart CTA */}
       <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center gap-2">
-        <div className="flex h-10 items-center rounded-full border border-neutral-200/80 bg-neutral-100/80 p-0.5 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setSelectedQty((prev) => Math.max(1, prev - 1))}
-            disabled={selectedQty <= 1 || soldOut}
-            aria-label="Decrease quantity"
-            className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
-          >
-            <Minus className="size-3" />
-          </button>
-          <span className="w-7 text-center text-xs font-bold text-neutral-900">
-            {selectedQty}
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedQty((prev) => Math.min(maxQty, prev + 1))}
-            disabled={selectedQty >= maxQty || soldOut}
-            aria-label="Increase quantity"
-            className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
-          >
-            <Plus className="size-3" />
-          </button>
-        </div>
+        <QuantityStepper
+          value={Math.min(selectedQty, maxQty)}
+          max={maxQty}
+          label={`${product.productName} quantity`}
+          onChange={setSelectedQty}
+          disabled={soldOut}
+          className="h-11 shrink-0 rounded-full border border-neutral-200/80 bg-neutral-100/80 px-0.5 shadow-sm"
+          buttonClassName="size-9 bg-white shadow-sm"
+        />
 
         <button
           type="button"

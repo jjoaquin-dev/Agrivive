@@ -28365,7 +28365,7 @@ function drizzle(...params) {
 // src/db/index.ts
 var pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: Number(process.env.DB_POOL_MAX || 10),
+  max: Number(process.env.DB_POOL_MAX || 4),
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
   keepAlive: true,
@@ -29952,6 +29952,8 @@ var messages = {
   trust_action_warning: { subject: "Agrivive trust warning", text: "Your verified trust history reached the warning threshold. Review your account activity and keep future transactions responsive." },
   trust_action_restriction: { subject: "Agrivive temporary restriction", text: "Your account has a temporary restriction because verified trust events reached the configured restriction threshold. The restriction will expire automatically unless a newer action applies." },
   trust_action_blocked: { subject: "Agrivive account recovery", text: "Your account is blocked by the trust policy. Use the Agrivive recovery screen and verify the email OTP to restore access." },
+  buyer_cancellation_warning: { subject: "Agrivive cancellation warning", text: "You have cancelled several reservations. Please keep your reservations so sellers can plan their stock. More cancellations will pause your reservations for a while." },
+  buyer_cancellation_restriction: { subject: "Agrivive reservations paused", text: "You have cancelled many reservations, so your reservations are paused for a short time. The pause ends on its own. Please come back later." },
   trust_action_expired: { subject: "Agrivive restriction ended", text: "Your temporary trust restriction has ended automatically. You can use Agrivive again." },
   buyer_failed_reservation_warning: { subject: "Agrivive uncollected reservation notice", text: "A vegetable reservation expired before pickup. This incident has been recorded in your buyer trust history." },
   inactivity_3w_warning: { subject: "Agrivive inactivity reminder", text: "You have not been active in Agrivive for three weeks. Please log in or update your activity to maintain your account standing." },

@@ -66,7 +66,7 @@ export function OrderMessages({ orderId, refreshKey = 0 }: { orderId: string; re
             <Button
               type="submit"
               disabled={conversation.sending || !message.trim()}
-              className="h-10 min-h-[40px] gap-2 rounded-xl bg-[#457D00] hover:bg-[#457D00]/90 px-5 text-[14px] font-semibold text-white cursor-pointer shadow-sm"
+              className="h-11 min-h-11 gap-2 rounded-xl bg-[#457D00] hover:bg-[#457D00]/90 px-5 text-[14px] font-semibold text-white cursor-pointer shadow-sm"
             >
               <Send className="size-4" aria-hidden="true" />
               {conversation.sending ? "Sending…" : "Send message"}

@@ -1,10 +1,11 @@
-import { betterAuth } from "better-auth";
+import { APIError, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../../db/index"; // your drizzle instance
 import * as schema from "../../db/schema";
 import { bearer, captcha, emailOTP, twoFactor } from "better-auth/plugins";
 import { sendAuthCode } from "../../utils/email";
 import { expo } from "@better-auth/expo";
+import { readLoginBlock } from "../../utils/trust/read-login-block";
 import { isRecaptchaEnabled, recaptchaMinScore } from "../../utils/recaptcha";
 
 export const auth = betterAuth({
@@ -99,6 +100,17 @@ export const auth = betterAuth({
         required: true,
         returned: true,
         input: false,
+      },
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        // Runs for every way of signing in. A blocked or paused account never gets a session.
+        before: async (session) => {
+          const reason = await readLoginBlock(session.userId);
+          if (reason) throw new APIError("FORBIDDEN", { message: reason, code: "ACCOUNT_RESTRICTED" });
+        },
       },
     },
   },

@@ -117,7 +117,7 @@ export function OrderCard({
               <>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="h-12 min-h-12 px-4 rounded-xl font-semibold text-sm bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   <QrCode className="size-3.5" aria-hidden="true" />
                   <span>View Pass</span>
@@ -125,7 +125,7 @@ export function OrderCard({
                 <button
                   type="button"
                   onClick={() => onCancel?.(order)}
-                  className="h-10 min-h-[40px] px-3 rounded-xl font-semibold text-xs border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 inline-flex items-center justify-center transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="h-12 min-h-12 px-3 rounded-xl font-semibold text-sm border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 inline-flex items-center justify-center transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   Cancel Order
                 </button>
@@ -134,7 +134,7 @@ export function OrderCard({
               <>
                 <Link
                   href={`/orders/${order.id}`}
-                  className="h-10 min-h-[40px] px-4 rounded-xl font-semibold text-xs border border-[#E8E8E8] bg-white text-[#14231A] hover:bg-neutral-50 inline-flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="h-12 min-h-12 px-4 rounded-xl font-semibold text-sm border border-[#E8E8E8] bg-white text-[#14231A] hover:bg-neutral-50 inline-flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   <span>View details</span>
                   <ArrowRight className="size-3.5 text-[#5F7367]" aria-hidden="true" />

@@ -39,7 +39,7 @@ export function ConversationStateButtons({ conversation, onChanged }: { conversa
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
       {conversationStateActions(conversation).map(({ action, label, danger }) => {
         const Icon = action === "archive" ? Archive : action === "unarchive" ? ArchiveRestore : action === "block" ? Ban : Undo2;
         return (
@@ -47,7 +47,7 @@ export function ConversationStateButtons({ conversation, onChanged }: { conversa
             key={action}
             type="button"
             onClick={() => handle(action)}
-            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors cursor-pointer ${
+            className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border px-3 text-sm sm:text-xs font-semibold transition-colors cursor-pointer ${
               danger ? "border-rose-200 text-rose-700 hover:bg-rose-50" : "border-[#E3EBCE] text-[#25431D] hover:bg-[#F6F8ED]"
             }`}
           >
@@ -56,7 +56,7 @@ export function ConversationStateButtons({ conversation, onChanged }: { conversa
           </button>
         );
       })}
-      {error ? <p className="w-full text-xs text-rose-700">{error}</p> : null}
+      {error ? <p className="col-span-2 w-full text-xs text-rose-700">{error}</p> : null}
     </div>
   );
 }

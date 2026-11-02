@@ -1,5 +1,5 @@
 import { ArrowDownToLine, Smartphone } from "lucide-react";
-import { BuyerSiteHeader } from "@/src/components/BuyerSiteHeader";
+import { LandingHeader } from "@/src/features/home/components/LandingHeader";
 import { PageContainer } from "@/src/components/PageContainer";
 import { HomeFooter } from "@/src/features/home/components/HomeFooter";
 import { LEGAL_EMAIL } from "@/src/features/legal/content/version";
@@ -9,8 +9,8 @@ import { helpItems, installSteps } from "../content";
 export function InstallGuide() {
   return (
     <>
-      <BuyerSiteHeader />
-      <main className="bg-agrivive-background py-12 text-[#14231A] sm:py-16">
+      <LandingHeader />
+      <main className="bg-agrivive-background pb-12 pt-28 text-[#14231A] sm:pb-16 sm:pt-32">
         <PageContainer>
           <div className="mx-auto max-w-3xl">
             <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#457D00]">

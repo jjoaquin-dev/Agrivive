@@ -23,7 +23,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
 
   return (
     <View style={styles.screen}>
-      <Image source={require("../../../assets/agrivive-splash.png")} style={styles.logo} resizeMode="contain" accessibilityLabel="Agrivive" />
+      <Image source={require("../../../assets/brand/agrivive-logo-full.png")} style={styles.logo} resizeMode="contain" accessibilityLabel="Agrivive" />
       <ActivityIndicator size="small" color={colors.primary} style={styles.spinner} />
       <View style={styles.extra}>
         {showCaption ? <Text style={styles.caption}>Getting your stall ready…</Text> : null}
@@ -35,8 +35,8 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
-  logo: { width: 240, height: 240 },
+  logo: { width: 280, height: 81 },
   spinner: { marginTop: spacing.base, transform: [{ scale: 1.2 }] },
-  extra: { position: "absolute", left: 0, right: 0, top: "50%", marginTop: 150, alignItems: "center" },
+  extra: { position: "absolute", left: 0, right: 0, top: "50%", marginTop: 90, alignItems: "center" },
   caption: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
 });

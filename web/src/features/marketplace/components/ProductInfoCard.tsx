@@ -141,13 +141,14 @@ export function ProductInfoCard({
           <input
             id="reservation-quantity"
             type="number"
+            inputMode="decimal"
             min="0.01"
             max={Number(product.productQty)}
             step="0.01"
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
             disabled={soldOut || ordering}
-            className="h-10 min-h-[40px] w-full rounded-full border border-[#EAECE0] bg-white px-4 text-[14px] text-foreground outline-none transition focus:border-[#457D00] focus:ring-2 focus:ring-[#457D00]/20 disabled:opacity-60"
+            className="h-12 min-h-12 w-full rounded-full border border-[#EAECE0] bg-white px-4 text-base text-foreground outline-none transition focus:border-[#457D00] focus:ring-2 focus:ring-[#457D00]/20 disabled:opacity-60"
           />
         </div>
       </div>
