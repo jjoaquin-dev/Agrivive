@@ -84,13 +84,6 @@ const parkinsans = localFont({
 export const metadata: Metadata = {
   title: "Agrivive",
   description: "Find and reserve fresh surplus produce.",
-  icons: {
-    icon: [
-      { url: "/brand/agrivive-logo-bag.png", type: "image/png" },
-    ],
-    shortcut: "/brand/agrivive-logo-bag.png",
-    apple: "/brand/agrivive-logo-bag.png",
-  },
 };
 
 // Runs before first paint: hides the splash when it will be skipped, and holds its stage back until the

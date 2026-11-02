@@ -15,6 +15,11 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
+Root `README.md` added. See [[2026-11-02 Root README]].
+New cart logo now used for the app icon, splash screen (transparent, cream start colour) and web favicon; the web layout no longer forces the old bag icon. Rebuild the APK to see it on phones.
+
+Seller app install guide at `/download-app`, linked from the Hero and both footers; all download links use one S3 address. See [[2026-11-02 Seller App Install Guide]].
+
 Privacy Policy, Terms of Use and Cookie Notice added on web; mobile links to them. Sign-up and seller registration now need an "I agree" box and store `terms_accepted_at` / `terms_version`. Google reCAPTCHA v3 protects sign-in, code sending, sign-up and account recovery (needs keys and the migration applied; legal contact placeholders still to fill). See [[2026-11-02 Legal Pages, Terms Consent and reCAPTCHA]].
 Mobile finished. Closed-account errors now log quietly and seller ranking reliability uses the same ratings as trust. See [[2026-11-02 Quiet Closed Account Logs and Shared Seller Rating]].
 Trust alignment re-checked against a real PostgreSQL: one queue bug fixed, all other flows confirmed. See [[2026-11-02 Trust Alignment Verification]].

@@ -35,7 +35,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
-  logo: { width: 200, height: 200 },
+  logo: { width: 240, height: 240 },
   spinner: { marginTop: spacing.base, transform: [{ scale: 1.2 }] },
   extra: { position: "absolute", left: 0, right: 0, top: "50%", marginTop: 150, alignItems: "center" },
   caption: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
