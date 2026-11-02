@@ -39,7 +39,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-neutral-200/70 bg-white p-3.5 shadow-md transition-all duration-200 ease-settle hover:-translate-y-1 hover:shadow-md">
       <div>
         {/* Seamless Image Container */}
-        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-white p-1">
+        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-[#F4F7EE]">
           <Link
             href={`/marketplace/${product.id}`}
             className="relative flex h-full w-full items-center justify-center"
@@ -50,7 +50,7 @@ export function HomeFeaturedProduceCard({ product }: { product: MarketplaceProdu
                 src={product.imageUrl}
                 alt={product.productName}
                 category={product.productType}
-                className="h-full w-full object-contain mix-blend-multiply"
+                className="size-full object-cover"
               />
             </div>
           </Link>
