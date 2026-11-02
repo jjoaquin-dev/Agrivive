@@ -1,9 +1,12 @@
 import React from "react";
 import { Stack } from "expo-router";
 import { colors, fonts } from "../../src/theme";
+import { RecaptchaHost } from "../../src/features/auth/components/RecaptchaHost";
 
 export default function AuthLayout() {
   return (
+    <>
+    <RecaptchaHost />
     <Stack
       screenOptions={{
         headerStyle: {
@@ -58,5 +61,6 @@ export default function AuthLayout() {
         options={{ title: "Set Password", headerBackVisible: false }}
       />
     </Stack>
+    </>
   );
 }

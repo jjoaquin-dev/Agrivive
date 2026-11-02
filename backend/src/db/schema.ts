@@ -46,6 +46,8 @@ export const user = pgTable("user", {
     .defaultNow()
     .notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  termsVersion: text("terms_version"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

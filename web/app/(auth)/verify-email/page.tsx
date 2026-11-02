@@ -7,6 +7,7 @@ import { AuthInput } from "@/src/features/auth/components/AuthInput";
 import { AuthShell } from "@/src/features/auth/components/AuthShell";
 import { OtpCodeInput } from "@/src/features/auth/components/OtpCodeInput";
 import { authClient } from "@/src/lib/auth-client";
+import { recaptchaHeaders } from "@/src/lib/recaptcha";
 import { DEFAULT_BUYER_DESTINATION, sanitizeNextPath, withNextPath } from "@/src/lib/navigation";
 import { ArrowLeft, Mail, MailCheck, RefreshCw, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -66,7 +67,7 @@ export default function VerifyEmailPage() {
     setResending(true);
     setError("");
     try {
-      const response = await authClient.emailOtp.sendVerificationOtp({ email, type: "email-verification" });
+      const response = await authClient.emailOtp.sendVerificationOtp({ email, type: "email-verification" }, { headers: await recaptchaHeaders("send_code") });
       if (response.error) return setError(response.error.message || "Could not send a new code.");
       setMessage("A fresh verification code was sent to your inbox.");
       setCooldown(30);

@@ -1,8 +1,10 @@
 import { apiFetch } from "../../../api/client";
+import { recaptchaHeaders } from "../../auth/recaptcha";
 
-export function requestTrustRecovery(email: string) {
+export async function requestTrustRecovery(email: string) {
   return apiFetch<{ success: boolean }>("/trust/recovery/request", {
     method: "POST",
+    headers: await recaptchaHeaders("account_recovery"),
     body: JSON.stringify({ email: email.trim().toLowerCase() }),
   });
 }

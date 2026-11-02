@@ -16,6 +16,7 @@ import { LoginRememberRow } from "@/src/features/auth/components/LoginRememberRo
 import { validateEmail, validatePassword, type AuthErrors } from "@/src/features/auth/validation";
 import { DEFAULT_BUYER_DESTINATION, getNextPathFromLocation, withNextPath } from "@/src/lib/navigation";
 import { authClient } from "@/src/lib/auth-client";
+import { recaptchaHeaders } from "@/src/lib/recaptcha";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function LoginPage() {
     setErrors({});
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const response = await authClient.signIn.email({ email: cleanEmail, password, rememberMe });
+      const response = await authClient.signIn.email({ email: cleanEmail, password, rememberMe }, { headers: await recaptchaHeaders("sign_in") });
       if ((response.data as unknown as { twoFactorRedirect?: boolean } | undefined)?.twoFactorRedirect) {
         setTwoFactorRequired(true);
         return;
@@ -70,7 +71,7 @@ export default function LoginPage() {
         return;
       }
       if (!user?.emailVerified) {
-        await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "email-verification" });
+        await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "email-verification" }, { headers: await recaptchaHeaders("send_code") });
         router.replace(withNextPath(`/verify-email?email=${encodeURIComponent(cleanEmail)}`, nextPath));
         return;
       }

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LogOut, Mail } from "lucide-react-native";
 import { authClient } from "../../src/api/client";
+import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { ConfirmDialogComponent } from "../../src/components/ConfirmDialogComponent";
 import { OtpInputComponent } from "../../src/components/OtpInputComponent";
@@ -34,7 +35,7 @@ export default function VerifyEmailScreen() {
     setResending(true);
     setError(null);
     try {
-      const response = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "email-verification" });
+      const response = await authClient.emailOtp.sendVerificationOtp({ email: targetEmail, type: "email-verification" }, { headers: await recaptchaHeaders("send_code") });
       if (response.error) {
         setError(response.error.message || "We could not send the code. Try again in a moment.");
         return;

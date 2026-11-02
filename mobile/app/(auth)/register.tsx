@@ -20,6 +20,9 @@ import { safeBack } from "../../src/utils/safeBack";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
 import { PasswordChecklist } from "../../src/features/auth/components/PasswordChecklist";
 import { validateNewPassword } from "../../src/features/auth/passwordRules";
+import { TermsConsent } from "../../src/features/auth/components/TermsConsent";
+import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
+import { LEGAL_VERSION } from "../../src/features/legal/legalLinks";
 
 interface EmailCheckResult {
   exists: boolean;
@@ -37,11 +40,13 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [accountNotice, setAccountNotice] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
     confirmPassword?: string;
+    terms?: string;
     general?: string;
   }>({});
 
@@ -110,6 +115,8 @@ export default function RegisterScreen() {
       newErrors.confirmPassword = "Passwords do not match. Please re-check.";
     }
 
+    if (!acceptedTerms) newErrors.terms = "Please agree to the Terms of Use and Privacy Policy to continue.";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -153,17 +160,20 @@ export default function RegisterScreen() {
         try {
           await apiFetch<any>("/auth/register-role", {
             method: "POST",
+            headers: await recaptchaHeaders("sign_up"),
             body: JSON.stringify({
               email: cleanEmail,
               password,
               targetRole: "seller",
+              acceptedTerms: true,
+              termsVersion: LEGAL_VERSION,
             }),
           });
 
           await authClient.signIn.email({
             email: cleanEmail,
             password,
-          });
+          }, { headers: await recaptchaHeaders("sign_in") });
 
           router.replace("/(app)/profile/setup");
           return;
@@ -186,11 +196,14 @@ export default function RegisterScreen() {
       try {
         await apiFetch<any>("/auth/register-role", {
           method: "POST",
+          headers: await recaptchaHeaders("sign_up"),
           body: JSON.stringify({
             email: cleanEmail,
             password,
             name: "Seller",
             targetRole: "seller",
+            acceptedTerms: true,
+            termsVersion: LEGAL_VERSION,
           }),
         });
 
@@ -314,6 +327,15 @@ export default function RegisterScreen() {
           />
 
           <PasswordChecklist password={password} confirmPassword={confirmPassword} />
+
+          <TermsConsent
+            checked={acceptedTerms}
+            error={errors.terms}
+            onChange={(checked) => {
+              setAcceptedTerms(checked);
+              if (errors.terms) setErrors((prev) => ({ ...prev, terms: undefined }));
+            }}
+          />
 
           <View style={styles.verificationNoteWrap}>
             <Text style={styles.verificationNoteText}>

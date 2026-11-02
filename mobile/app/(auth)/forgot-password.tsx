@@ -3,6 +3,7 @@ import { StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { KeyRound, Mail } from "lucide-react-native";
 import { authClient } from "../../src/api/client";
+import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { InputComponent } from "../../src/components/InputComponent";
 import { OtpInputComponent } from "../../src/components/OtpInputComponent";
@@ -43,7 +44,7 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     setError("");
     try {
-      const response = await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "forget-password" });
+      const response = await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "forget-password" }, { headers: await recaptchaHeaders("send_code") });
       if (response.error) {
         setError(response.error.message || "We could not send the code. Please try again.");
         return;

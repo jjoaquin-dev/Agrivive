@@ -14,6 +14,8 @@ import { validateSignUp, type AuthErrors } from "../validation";
 import { checkEmailPreflight, registerBuyerRole } from "../api/signup";
 import { withNextPath } from "@/src/lib/navigation";
 import { authClient } from "@/src/lib/auth-client";
+import { recaptchaHeaders } from "@/src/lib/recaptcha";
+import { SignUpTermsCheckbox } from "./SignUpTermsCheckbox";
 
 export function SignUpForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
@@ -22,6 +24,7 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [accountNotice, setAccountNotice] = useState<string | null>(null);
   const [errors, setErrors] = useState<AuthErrors>({});
@@ -53,7 +56,7 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateSignUp({ name, email, password, confirmPassword });
+    const nextErrors = validateSignUp({ name, email, password, confirmPassword, acceptedTerms });
     if (Object.keys(nextErrors).length) return setErrors(nextErrors);
     setLoading(true);
     setErrors({});
@@ -67,7 +70,7 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
 
       await registerBuyerRole({ email: cleanEmail, password, name: name.trim() });
       if (check.exists && check.canUseEmail) {
-        await authClient.signIn.email({ email: cleanEmail, password });
+        await authClient.signIn.email({ email: cleanEmail, password }, { headers: await recaptchaHeaders("sign_in") });
         router.replace(nextPath);
         return;
       }
@@ -166,6 +169,15 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
 
         {/* 5-Rule Password Strength Bar & Checklist */}
         <PasswordChecklist password={password} confirmPassword={confirmPassword} />
+
+        <SignUpTermsCheckbox
+          checked={acceptedTerms}
+          error={errors.terms}
+          onChange={(checked) => {
+            setAcceptedTerms(checked);
+            if (errors.terms) setErrors((p) => ({ ...p, terms: undefined }));
+          }}
+        />
 
         {/* Submit Button */}
         <Button

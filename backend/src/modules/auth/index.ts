@@ -2,9 +2,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "../../db/index"; // your drizzle instance
 import * as schema from "../../db/schema";
-import { bearer, emailOTP, twoFactor } from "better-auth/plugins";
+import { bearer, captcha, emailOTP, twoFactor } from "better-auth/plugins";
 import { sendAuthCode } from "../../utils/email";
 import { expo } from "@better-auth/expo";
+import { isRecaptchaEnabled, recaptchaMinScore } from "../../utils/recaptcha";
 
 export const auth = betterAuth({
   basePath: "/api/auth",
@@ -68,6 +69,20 @@ export const auth = betterAuth({
         sendAuthCode(email, otp, type),
     }),
     twoFactor({ issuer: "Agrivive" }),
+    ...(isRecaptchaEnabled()
+      ? [
+          captcha({
+            provider: "google-recaptcha",
+            secretKey: process.env.RECAPTCHA_SECRET_KEY!.trim(),
+            minScore: recaptchaMinScore(),
+            endpoints: [
+              "/sign-in/email",
+              "/sign-in/email-otp",
+              "/email-otp/send-verification-otp",
+            ],
+          }),
+        ]
+      : []),
   ],
   user: {
     additionalFields: {
