@@ -140,10 +140,13 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
     productType: sellers_product.productType, condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt, visibilityScore,
     ahpPriorCycles: useAHP ? marketplacePriorCyclesSql(evaluatedAt, since) : sql<number>`0`,
+    // Same ratings the trust score reads: order ratings and product ratings together.
     sellerReliability: useAHP ? sql<number>`coalesce((
-      select avg(${order_reviews.rating})::double precision / 5.0
-      from ${order_reviews}
-      where ${order_reviews.sellerId} = ${sellers_product.userId}
+      select avg(rating)::double precision / 5.0 from (
+        select ${order_reviews.rating} as rating from ${order_reviews} where ${order_reviews.sellerId} = ${sellers_product.userId}
+        union all
+        select ${product_reviews.rating} as rating from ${product_reviews} where ${product_reviews.sellerId} = ${sellers_product.userId}
+      ) as seller_ratings
     ), 0.5)` : sql<number>`0.5`,
     sellerId: sellers_profile.userId, sellerName: user.name, shopName: sellers_profile.shopName,
     detailAddress: sellers_profile.detailAddress,

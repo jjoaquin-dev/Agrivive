@@ -7,6 +7,7 @@ import {
 } from "../api/products";
 import { fetchStockAdjustments } from "../api/stock-adjustments";
 import type { Product, StockAdjustment } from "../types";
+import { logApiError } from "../../../api/client";
 
 export function useProduct(productId: string) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -24,7 +25,7 @@ export function useProduct(productId: string) {
       const data = await fetchSellerProduct(productId);
       setProduct(data);
     } catch (err: any) {
-      console.error("Failed to load product", err);
+      logApiError("Failed to load product", err);
       setError(err?.message || "Failed to load product details.");
     } finally {
       setLoading(false);
@@ -38,7 +39,7 @@ export function useProduct(productId: string) {
       const res = await fetchStockAdjustments({ productId, limit: 20 });
       setHistory(res.items);
     } catch (err) {
-      console.error("Failed to load product stock history", err);
+      logApiError("Failed to load product stock history", err);
     } finally {
       setLoadingHistory(false);
     }

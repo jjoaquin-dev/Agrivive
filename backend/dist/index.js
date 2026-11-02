@@ -119574,8 +119574,12 @@ class OrderError extends Error {
 // src/utils/trust/access.ts
 var comeBackSentence = /\s*Please come back in .*$/i;
 var restoreSentence = /\s*(?:Verify your email to restore|Please restore) your account.*$/i;
-function pausedMessage(reason, endsAt) {
-  const remaining = formatRemainingTime(endsAt ? endsAt.getTime() - Date.now() : 0);
+var longestPauseMs = 72 * 3600000;
+function restrictionEnd(endsAt, createdAt) {
+  return endsAt ?? new Date(createdAt.getTime() + longestPauseMs);
+}
+function pausedMessage(reason, endsAt, createdAt = new Date) {
+  const remaining = formatRemainingTime(restrictionEnd(endsAt, createdAt).getTime() - Date.now());
   return `${reason.replace(comeBackSentence, "")} Please come back in ${remaining}.`;
 }
 function blockedMessage(reason) {
@@ -119595,10 +119599,37 @@ async function requireNoActiveTrustRestriction(tx, userId) {
   const [restriction] = await tx.select({
     id: trust_actions.id,
     endsAt: trust_actions.endsAt,
+    createdAt: trust_actions.createdAt,
     reason: trust_actions.reason
-  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
+  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(gt(trust_actions.endsAt, new Date), and(isNull2(trust_actions.endsAt), gt(trust_actions.createdAt, new Date(Date.now() - longestPauseMs)))))).orderBy(desc(trust_actions.createdAt)).limit(1);
   if (restriction)
-    throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt));
+    throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt, restriction.createdAt));
+}
+
+// src/utils/trust/read-account-block.ts
+async function readAccountBlock(userId) {
+  const open = await db2.select({
+    id: trust_actions.id,
+    actionType: trust_actions.actionType,
+    reason: trust_actions.reason,
+    endsAt: trust_actions.endsAt,
+    createdAt: trust_actions.createdAt
+  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]), isNull2(trust_actions.revokedAt)));
+  const blocked = open.find((row) => row.actionType === "blocked");
+  if (blocked)
+    return blockedMessage(blocked.reason);
+  const now = new Date;
+  const live = open.filter((row) => restrictionEnd(row.endsAt, row.createdAt) > now).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  if (live)
+    return pausedMessage(live.reason, live.endsAt, live.createdAt);
+  if (open.length) {
+    await db2.transaction(async (tx) => {
+      await tx.update(trust_actions).set({ revokedAt: now, revocationReason: "Temporary restriction expired" }).where(inArray(trust_actions.id, open.map((row) => row.id)));
+      await tx.update(user).set({ isActive: true }).where(eq(user.id, userId));
+    });
+    return null;
+  }
+  return "Your account is paused. Please restore your account to continue.";
 }
 
 // src/utils/user-status-cache/index.ts
@@ -119626,21 +119657,15 @@ var sessionAuth = new Elysia().macro({
         if (!current) {
           return status(403, { message: "Account not found or access denied." });
         }
+        let isActive = Boolean(current.isActive);
         let blockReason;
-        if (!current.isActive) {
-          const [activeAction] = await db2.select({
-            actionType: trust_actions.actionType,
-            reason: trust_actions.reason,
-            endsAt: trust_actions.endsAt
-          }).from(trust_actions).where(and(eq(trust_actions.subjectId, authSession.user.id), inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]), isNull2(trust_actions.revokedAt))).orderBy(desc(trust_actions.createdAt)).limit(1);
-          if (activeAction) {
-            blockReason = activeAction.actionType === "blocked" ? blockedMessage(activeAction.reason) : pausedMessage(activeAction.reason, activeAction.endsAt);
-          } else {
-            blockReason = "Your account is paused. Please restore your account to continue.";
-          }
+        if (!isActive) {
+          blockReason = await readAccountBlock(authSession.user.id) ?? undefined;
+          if (!blockReason)
+            isActive = true;
         }
         cached = {
-          isActive: Boolean(current.isActive),
+          isActive,
           role: current.role ?? [],
           email: current.email,
           blockReason,
@@ -126678,7 +126703,7 @@ var import_endpoints5 = __toESM(require_endpoints());
 var import_event_streams2 = __toESM(require_event_streams());
 var import_protocols6 = __toESM(require_protocols());
 var import_retry4 = __toESM(require_retry());
-var import_schema31 = __toESM(require_schema());
+var import_schema32 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/auth/httpAuthSchemeProvider.js
 var import_httpAuthSchemes = __toESM(require_httpAuthSchemes());
@@ -128841,7 +128866,7 @@ var _mw11 = (Command, cs, config, o) => [
 ];
 
 // node_modules/@aws-sdk/client-s3/dist-es/schemas/schemas_0.js
-var import_schema30 = __toESM(require_schema());
+var import_schema31 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/models/S3ServiceException.js
 var import_client5 = __toESM(require_client3());
@@ -130211,10 +130236,10 @@ var _xawob = "x-amz-write-offset-bytes";
 var _xawrl = "x-amz-website-redirect-location";
 var _xs = "xsi:type";
 var n0 = "com.amazonaws.s3";
-var _s_registry = import_schema30.TypeRegistry.for(_s);
+var _s_registry = import_schema31.TypeRegistry.for(_s);
 var S3ServiceException$ = [-3, _s, "S3ServiceException", 0, [], []];
 _s_registry.registerError(S3ServiceException$, S3ServiceException);
-var n0_registry = import_schema30.TypeRegistry.for(n0);
+var n0_registry = import_schema31.TypeRegistry.for(n0);
 var AccessDenied$ = [
   -3,
   n0,
@@ -135245,7 +135270,7 @@ class S3Client extends import_client25.Client {
     const _config_10 = $resolveS3Config(_config_9, { session: [() => this, CreateSessionCommand] });
     const _config_11 = resolveRuntimeExtensions2(_config_10, configuration?.extensions || []);
     this.config = _config_11;
-    this.middlewareStack.use(import_schema31.getSchemaSerdePlugin(this.config));
+    this.middlewareStack.use(import_schema32.getSchemaSerdePlugin(this.config));
     this.middlewareStack.use(import_client24.getUserAgentPlugin(this.config));
     this.middlewareStack.use(import_retry4.getRetryPlugin(this.config));
     this.middlewareStack.use(import_protocols6.getContentLengthPlugin(this.config));
@@ -136281,9 +136306,13 @@ async function loadEligibleVisibilityCandidates(evaluatedAt) {
   const sellerIds = [...new Set(publicRows.map((row) => row.sellerId))];
   const [ratings, cycles] = await Promise.all([
     db2.select({
-      sellerId: order_reviews.sellerId,
-      reliability: sql3`avg(${order_reviews.rating})::double precision / 5.0`
-    }).from(order_reviews).where(inArray(order_reviews.sellerId, sellerIds)).groupBy(order_reviews.sellerId),
+      sellerId: sql3`seller_id`,
+      reliability: sql3`avg(rating)::double precision / 5.0`
+    }).from(sql3`(
+      select ${order_reviews.sellerId} as seller_id, ${order_reviews.rating} as rating from ${order_reviews}
+      union all
+      select ${product_reviews.sellerId} as seller_id, ${product_reviews.rating} as rating from ${product_reviews}
+    ) as seller_ratings`).where(inArray(sql3`seller_id`, sellerIds)).groupBy(sql3`seller_id`),
     db2.select({
       id: listing_cycles.id,
       sellerId: sellers_product.userId,
@@ -142305,9 +142334,11 @@ async function listMarketplaceProducts(query) {
     visibilityScore,
     ahpPriorCycles: useAHP ? marketplacePriorCyclesSql(evaluatedAt, since) : sql3`0`,
     sellerReliability: useAHP ? sql3`coalesce((
-      select avg(${order_reviews.rating})::double precision / 5.0
-      from ${order_reviews}
-      where ${order_reviews.sellerId} = ${sellers_product.userId}
+      select avg(rating)::double precision / 5.0 from (
+        select ${order_reviews.rating} as rating from ${order_reviews} where ${order_reviews.sellerId} = ${sellers_product.userId}
+        union all
+        select ${product_reviews.rating} as rating from ${product_reviews} where ${product_reviews.sellerId} = ${sellers_product.userId}
+      ) as seller_ratings
     ), 0.5)` : sql3`0.5`,
     sellerId: sellers_profile.userId,
     sellerName: user.name,

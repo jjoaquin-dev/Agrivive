@@ -15,14 +15,13 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
+Mobile finished. Closed-account errors now log quietly and seller ranking reliability uses the same ratings as trust. See [[2026-11-02 Quiet Closed Account Logs and Shared Seller Rating]].
 Trust alignment re-checked against a real PostgreSQL: one queue bug fixed, all other flows confirmed. See [[2026-11-02 Trust Alignment Verification]].
 Trust score now fades old violations after 90 days (`TRUST_SCORE_WINDOW_DAYS`), buyer cancel counter uses it too, env example defaults actions on. See [[2026-11-02 Trust Score Window and Defaults]].
 Trust numbers stay as own prototype settings; research (2022-2025) backs only the structure. See [[2026-11-02 Trust Numbers and Research Sources]].
-Account recovery restarts the inactivity clock and returns real error statuses. See [[2026-11-02 Account Recovery Restarts Inactivity Clock]], [[2026-11-02 Recovery Route Error Statuses]].
+Recovery restarts the inactivity clock, returns real errors, and an ended pause opens the account. See [[2026-11-02 Account Recovery Restarts Inactivity Clock]], [[2026-11-02 Recovery Route Error Statuses]], [[2026-11-02 Ended Pause Opens Account]], [[2026-11-02 Closed Account Shows Problem Screen Anywhere]].
 
 Earlier: Trust and Rating module aligned with the paper: blocking by score, reply timers for all questions and chats, confirmed report violations, seller answers to product reviews, correct pause and block messages. Details in [[2026-11-02 Trust and Rating Paper Alignment]].
-
-Earlier: Old promotion and social campaign tables removed from the schema, with a migration for the owner to run. Details in [[2026-11-02 Drop Old Promotion and Social Tables]].
 
 Earlier: Onboarding slides now use the new market photos. Details in [[2026-11-02 Onboarding Images]].
 

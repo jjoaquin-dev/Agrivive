@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchSellerAnalytics } from "../api/seller-analytics";
 import type { AnalyticsUnit, SellerAnalyticsResponse } from "../types";
-import { ApiError } from "../../../api/client";
+import { ApiError, logApiError } from "../../../api/client";
 
 function dateOnly(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -26,7 +26,7 @@ export function useSellerAnalytics(days: number, productId?: string, unit?: Anal
     try {
       setAnalytics(await fetchSellerAnalytics({ ...getAnalyticsRange(days), productId, unit }));
     } catch (err: any) {
-      console.error("Failed to load seller analytics", err);
+      logApiError("Failed to load seller analytics", err);
       if (err instanceof ApiError && [401, 403].includes(err.statusCode)) setAnalytics(null);
       setError(err?.message || "Could not load analytics. Please check your connection.");
     } finally {

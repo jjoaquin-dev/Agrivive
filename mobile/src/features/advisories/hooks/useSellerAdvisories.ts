@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchSellerAdvisories } from "../api/seller-advisories";
 import type { SellerAdvisoriesResponse } from "../types";
+import { logApiError } from "../../../api/client";
 
 export function useSellerAdvisories() {
   const [advisories, setAdvisories] = useState<SellerAdvisoriesResponse | null>(null);
@@ -15,7 +16,7 @@ export function useSellerAdvisories() {
     try {
       setAdvisories(await fetchSellerAdvisories());
     } catch (err: any) {
-      console.error("Failed to load seller advisories", err);
+      logApiError("Failed to load seller advisories", err);
       setError(err?.message || "Could not load advisories. Please check your connection.");
     } finally {
       setLoading(false);

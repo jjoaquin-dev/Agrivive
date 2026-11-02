@@ -11,6 +11,7 @@ import { QuestionList } from "../../../src/features/conversations/components/Que
 import { ConversationSortSheet } from "../../../src/features/conversations/components/ConversationSortSheet";
 import { markAllConversationsRead } from "../../../src/features/conversations/api";
 import { colors } from "../../../src/theme";
+import { logApiError } from "../../../src/api/client";
 
 export default function SellerMessagesScreen() {
   const direct = useSellerConversations();
@@ -31,7 +32,7 @@ export default function SellerMessagesScreen() {
       await markAllConversationsRead();
       await direct.refresh();
     } catch (err) {
-      console.error("Failed to mark all as read", err);
+      logApiError("Failed to mark all as read", err);
     } finally {
       setMarkingAll(false);
     }

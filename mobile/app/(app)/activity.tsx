@@ -7,6 +7,7 @@ import { ActivityItemRow } from "../../src/features/inventory/components/Activit
 import { activityStyles as styles } from "../../src/features/inventory/components/ActivityStyles";
 import { colors } from "../../src/theme";
 import { useFocusEffect } from "expo-router";
+import { logApiError } from "../../src/api/client";
 
 type ActivityFilter = "all" | "in" | "out";
 
@@ -30,7 +31,7 @@ export default function ActivityScreen() {
       setAdjustments((prev) => (reset ? res.items : [...prev, ...res.items]));
       setNextCursor(res.nextCursor);
     } catch (err: any) {
-      console.error("Failed to load activity", err);
+      logApiError("Failed to load activity", err);
     } finally {
       setLoading(false);
       setLoadingMore(false);

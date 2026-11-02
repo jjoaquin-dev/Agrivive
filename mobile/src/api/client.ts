@@ -55,6 +55,22 @@ export class ApiError extends Error {
 
 const API_TIMEOUT_MS = 10_000;
 
+/** Called when the server says this account is paused or blocked, so the app can show that screen from anywhere. */
+let accountClosedHandler: ((message: string) => void) | null = null;
+export function setAccountClosedHandler(handler: ((message: string) => void) | null) {
+  accountClosedHandler = handler;
+}
+const accountClosedText = /restore your account|come back in/i;
+
+/** Logs a failed load; a paused or blocked account is expected, so it gets a quiet warning instead of a red error. */
+export function logApiError(label: string, err: unknown) {
+  if (err instanceof ApiError && err.statusCode === 403 && accountClosedText.test(err.message)) {
+    console.warn(label, "- account is not open");
+    return;
+  }
+  console.error(label, err);
+}
+
 function createRequestController(signal?: AbortSignal | null, timeoutMs = API_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -114,6 +130,7 @@ export async function apiFetch<T = any>(
         (isJson && data?.message) ||
         (typeof data === "string" && data) ||
         `Request failed with status ${response.status}`;
+      if (response.status === 403 && accountClosedText.test(String(errorMessage))) accountClosedHandler?.(String(errorMessage));
       throw new ApiError(response.status, errorMessage, data);
     }
 

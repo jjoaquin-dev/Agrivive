@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import * as SecureStore from "expo-secure-store";
-import { authClient } from "../api/client";
+import { authClient, setAccountClosedHandler } from "../api/client";
 import { fetchSellerSetup, SellerSetupResponse } from "../api/seller";
 
 const ONBOARDING_KEY = "agrivive_onboarding_completed";
@@ -72,13 +72,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSetup(null);
         return null;
       }
-      console.error("Failed to fetch seller setup", err);
+      // A paused or blocked account is an expected answer, so it gets a quiet log instead of a red error screen.
+      if (err?.statusCode === 403) console.warn("Account is not open:", err?.message);
+      else console.error("Failed to fetch seller setup", err);
       setSetupError(err?.message || "Failed to load seller setup status");
       setSetupErrorStatus(typeof err?.statusCode === "number" ? err.statusCode : 0);
       return null;
     } finally {
       setLoadingSetup(false);
     }
+  }, []);
+
+  // Any screen that gets "account paused or blocked" from the server sends the app back to the problem screen.
+  useEffect(() => {
+    setAccountClosedHandler((message) => {
+      setSetup(null);
+      setSetupError(message);
+      setSetupErrorStatus(403);
+    });
+    return () => setAccountClosedHandler(null);
   }, []);
 
   // Sync setup state whenever user logs in or user changes
