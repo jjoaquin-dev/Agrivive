@@ -5478,487 +5478,6 @@ var init_error2 = __esm(() => {
   };
 });
 
-// node_modules/@better-auth/core/dist/db/database-index.mjs
-function getPortableDatabaseIdentifierKey(identifier) {
-  return identifier.toLowerCase();
-}
-function getUtf8ByteLength(value) {
-  return new TextEncoder().encode(value).length;
-}
-function truncateUtf8(value, maxBytes) {
-  let result = "";
-  let byteLength = 0;
-  for (const character of value) {
-    const characterByteLength = getUtf8ByteLength(character);
-    if (byteLength + characterByteLength > maxBytes)
-      break;
-    result += character;
-    byteLength += characterByteLength;
-  }
-  return result;
-}
-function getStableIndexNameHash(value) {
-  let hash = 2166136261;
-  for (let index = 0;index < value.length; index++) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(16).padStart(8, "0");
-}
-function getDatabaseIndexName(tableName, index) {
-  if (index.name !== undefined) {
-    if (index.name.trim().length === 0)
-      throw new BetterAuthError("Database index names must contain at least one visible character.");
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(index.name))
-      throw new BetterAuthError("Database index names must start with a letter or underscore and contain only letters, numbers, and underscores.");
-    if (getUtf8ByteLength(index.name) > MAX_DATABASE_INDEX_NAME_BYTES)
-      throw new BetterAuthError(`Database index names must be at most ${MAX_DATABASE_INDEX_NAME_BYTES} UTF-8 bytes.`);
-    return index.name;
-  }
-  const indexKind = index.unique ? "uidx" : "idx";
-  const generatedName = `${tableName}_${index.fields.join("_")}_${indexKind}`;
-  if (getUtf8ByteLength(generatedName) <= MAX_DATABASE_INDEX_NAME_BYTES)
-    return generatedName;
-  const suffix = `_${getStableIndexNameHash(generatedName)}_${indexKind}`;
-  return `${truncateUtf8(generatedName.slice(0, -indexKind.length - 1), MAX_DATABASE_INDEX_NAME_BYTES - getUtf8ByteLength(suffix))}${suffix}`;
-}
-function getDatabaseFieldIndexName(tableName, columnName, unique) {
-  return getDatabaseIndexName(tableName, {
-    fields: [columnName],
-    unique
-  });
-}
-function resolveDatabaseTableIndexes({ fields, indexes, tableName }) {
-  const resolvedIndexes = (indexes ?? []).map((index) => {
-    if (index.fields.length === 0)
-      throw new BetterAuthError(`Index on table "${tableName}" must include at least one field.`);
-    if (index.fields.length > MAX_DATABASE_INDEX_FIELDS)
-      throw new BetterAuthError(`Index on table "${tableName}" can include at most ${MAX_DATABASE_INDEX_FIELDS} fields so it works across supported databases.`);
-    if (new Set(index.fields).size !== index.fields.length)
-      throw new BetterAuthError(`Index on table "${tableName}" contains the same field more than once.`);
-    if (index.unique && index.fields.some((fieldName) => fields[fieldName]?.required === false))
-      throw new BetterAuthError(`Unique index on table "${tableName}" can only include required fields so its behavior is consistent across databases.`);
-    const unsupportedField = index.fields.find((fieldName) => {
-      const fieldType = fields[fieldName]?.type;
-      return fieldType === "json" || fieldType === "string[]" || fieldType === "number[]";
-    });
-    if (unsupportedField)
-      throw new BetterAuthError(`Index on table "${tableName}" references field "${unsupportedField}", whose type is not portably indexable.`);
-    const resolveFieldName = (fieldName) => {
-      const field = fields[fieldName];
-      if (!field)
-        throw new BetterAuthError(`Index on table "${tableName}" references unknown field "${fieldName}".`);
-      return field.fieldName || fieldName;
-    };
-    const [firstField, ...remainingFields] = index.fields;
-    const columns = [resolveFieldName(firstField), ...remainingFields.map(resolveFieldName)];
-    if (new Set(columns.map(getPortableDatabaseIdentifierKey)).size !== columns.length)
-      throw new BetterAuthError(`Index on table "${tableName}" resolves more than one field to the same database column.`);
-    return {
-      columns,
-      name: getDatabaseIndexName(tableName, {
-        ...index,
-        fields: columns
-      }),
-      unique: index.unique
-    };
-  });
-  const definitionsByName = /* @__PURE__ */ new Map;
-  const deduplicatedIndexes = [];
-  for (const index of resolvedIndexes) {
-    const definition = JSON.stringify([index.columns, index.unique ?? false]);
-    const identifierKey = getPortableDatabaseIdentifierKey(index.name);
-    const existingDefinition = definitionsByName.get(identifierKey);
-    if (existingDefinition && existingDefinition !== definition)
-      throw new BetterAuthError(`Database index name "${index.name}" identifies more than one index on table "${tableName}".`);
-    if (existingDefinition)
-      continue;
-    definitionsByName.set(identifierKey, definition);
-    deduplicatedIndexes.push(index);
-  }
-  return deduplicatedIndexes;
-}
-function getDatabaseIndexStringLength({ columnName, dialect, fields, indexes }) {
-  const fieldsByColumn = new Map(Object.entries(fields).map(([fieldName, field]) => [field.fieldName || fieldName, field]));
-  const containingIndexes = indexes.filter((index) => index.columns.includes(columnName));
-  if (containingIndexes.length === 0)
-    return;
-  const byteBudget = dialect === "mysql" ? 3072 : 1700;
-  const bytesPerCharacter = dialect === "mysql" ? 4 : 1;
-  const defaultLength = dialect === "mysql" ? 191 : 255;
-  return containingIndexes.reduce((length, index) => {
-    const stringColumnCount = index.columns.filter((column) => {
-      const type = fieldsByColumn.get(column)?.type;
-      return type === "string" || Array.isArray(type);
-    }).length;
-    if (stringColumnCount === 0)
-      return length;
-    const nonStringColumnBytes = (index.columns.length - stringColumnCount) * 16;
-    const safeLength = Math.floor(Math.max(1, byteBudget - nonStringColumnBytes) / bytesPerCharacter / stringColumnCount);
-    return Math.min(length, safeLength);
-  }, defaultLength);
-}
-function resolveDatabaseSchemaIndexes(sources) {
-  const mergedSourcesByTable = /* @__PURE__ */ new Map;
-  for (const source of sources) {
-    const existingSource = mergedSourcesByTable.get(source.tableName);
-    if (existingSource) {
-      if (existingSource.indexes.length > 0 || (source.indexes?.length ?? 0) > 0)
-        throw new BetterAuthError(`Database schema resolves more than one indexed logical table to "${source.tableName}". Define table-level indexes through one logical schema key instead of aliasing multiple keys to the same database table.`);
-      Object.assign(existingSource.fields, source.fields);
-      continue;
-    }
-    const mergedSource = {
-      fields: {},
-      indexes: [],
-      tableName: source.tableName
-    };
-    Object.assign(mergedSource.fields, source.fields);
-    mergedSource.indexes.push(...source.indexes ?? []);
-    mergedSourcesByTable.set(source.tableName, mergedSource);
-  }
-  const indexesByTable = /* @__PURE__ */ new Map;
-  const indexOwnerByName = /* @__PURE__ */ new Map;
-  const tableNamesByIdentifier = new Map([...mergedSourcesByTable.keys()].map((tableName) => [getPortableDatabaseIdentifierKey(tableName), tableName]));
-  const fieldIndexOwnerByName = /* @__PURE__ */ new Map;
-  for (const source of mergedSourcesByTable.values())
-    for (const [fieldName, field] of Object.entries(source.fields)) {
-      if (!field.index && !field.unique)
-        continue;
-      const indexName = getDatabaseFieldIndexName(source.tableName, field.fieldName || fieldName, field.unique ?? false);
-      const identifierKey = getPortableDatabaseIdentifierKey(indexName);
-      if (tableNamesByIdentifier.has(identifierKey))
-        throw new BetterAuthError(`Database index name "${indexName}" conflicts with a table name. Index and table names must be unique across the schema.`);
-      const existingOwner = fieldIndexOwnerByName.get(identifierKey);
-      if (existingOwner)
-        throw new BetterAuthError(`Database field-level index name "${indexName}" is used by both table "${existingOwner}" and table "${source.tableName}".`);
-      fieldIndexOwnerByName.set(identifierKey, source.tableName);
-    }
-  for (const source of mergedSourcesByTable.values()) {
-    const resolvedIndexes = resolveDatabaseTableIndexes(source);
-    indexesByTable.set(source.tableName, [...resolvedIndexes]);
-    for (const index of resolvedIndexes) {
-      const identifierKey = getPortableDatabaseIdentifierKey(index.name);
-      if (tableNamesByIdentifier.has(identifierKey))
-        throw new BetterAuthError(`Database index name "${index.name}" conflicts with a table name. Index and table names must be unique across the schema.`);
-      const fieldIndexOwner = fieldIndexOwnerByName.get(identifierKey);
-      if (fieldIndexOwner)
-        throw new BetterAuthError(`Database index name "${index.name}" is already reserved by field-level index metadata on table "${fieldIndexOwner}". Remove the duplicate table-level index or give it a distinct name.`);
-      const indexOwner = indexOwnerByName.get(identifierKey);
-      if (indexOwner && indexOwner !== source.tableName)
-        throw new BetterAuthError(`Database index name "${index.name}" is used by both table "${indexOwner}" and table "${source.tableName}". Index names must be unique across the schema.`);
-      indexOwnerByName.set(identifierKey, source.tableName);
-    }
-  }
-  return indexesByTable;
-}
-var MAX_DATABASE_INDEX_NAME_BYTES = 63, MAX_DATABASE_INDEX_FIELDS = 16;
-var init_database_index = __esm(() => {
-  init_error2();
-});
-
-// node_modules/@better-auth/core/dist/db/get-tables.mjs
-function mergeTableIndexes(...indexCollections) {
-  const indexes = [];
-  const seenIndexDefinitions = /* @__PURE__ */ new Set;
-  for (const index of indexCollections.flatMap((collection) => collection ?? [])) {
-    const definition = JSON.stringify([
-      index.name ?? null,
-      index.fields,
-      index.unique ?? false
-    ]);
-    if (seenIndexDefinitions.has(definition))
-      continue;
-    seenIndexDefinitions.add(definition);
-    indexes.push(index);
-  }
-  return indexes;
-}
-function getAuthTablesWithResolvedIndexes(options) {
-  const tables = buildAuthTables(options);
-  return {
-    indexesByTable: resolveDatabaseSchemaIndexes(Object.values(tables).filter((table) => !("disableMigrations" in table) || !table.disableMigrations).map((table) => ({
-      fields: table.fields,
-      indexes: "indexes" in table ? table.indexes : undefined,
-      tableName: table.modelName
-    }))),
-    tables
-  };
-}
-var buildAuthTables = (options) => {
-  const pluginSchema = (options.plugins ?? []).reduce((acc, plugin) => {
-    const schema = plugin.schema;
-    if (!schema)
-      return acc;
-    for (const [key, value] of Object.entries(schema))
-      acc[key] = {
-        fields: {
-          ...acc[key]?.fields,
-          ...value.fields
-        },
-        indexes: mergeTableIndexes(acc[key]?.indexes, value.indexes),
-        modelName: value.modelName || key,
-        disableMigrations: value.disableMigration ?? acc[key]?.disableMigrations
-      };
-    return acc;
-  }, {});
-  const shouldAddRateLimitTable = options.rateLimit?.storage === "database";
-  const rateLimitTable = { rateLimit: {
-    modelName: options.rateLimit?.modelName || "rateLimit",
-    fields: {
-      key: {
-        type: "string",
-        unique: true,
-        required: true,
-        fieldName: options.rateLimit?.fields?.key || "key"
-      },
-      count: {
-        type: "number",
-        required: true,
-        fieldName: options.rateLimit?.fields?.count || "count"
-      },
-      lastRequest: {
-        type: "number",
-        bigint: true,
-        required: true,
-        fieldName: options.rateLimit?.fields?.lastRequest || "lastRequest",
-        defaultValue: () => Date.now()
-      }
-    }
-  } };
-  const { user, session, account, verification, ...pluginTables } = pluginSchema;
-  const verificationTable = { verification: {
-    modelName: options.verification?.modelName || "verification",
-    indexes: verification?.indexes,
-    fields: {
-      identifier: {
-        type: "string",
-        required: true,
-        fieldName: options.verification?.fields?.identifier || "identifier",
-        index: true
-      },
-      value: {
-        type: "string",
-        required: true,
-        fieldName: options.verification?.fields?.value || "value"
-      },
-      expiresAt: {
-        type: "date",
-        required: true,
-        fieldName: options.verification?.fields?.expiresAt || "expiresAt"
-      },
-      createdAt: {
-        type: "date",
-        required: true,
-        defaultValue: () => /* @__PURE__ */ new Date,
-        fieldName: options.verification?.fields?.createdAt || "createdAt"
-      },
-      updatedAt: {
-        type: "date",
-        required: true,
-        defaultValue: () => /* @__PURE__ */ new Date,
-        onUpdate: () => /* @__PURE__ */ new Date,
-        fieldName: options.verification?.fields?.updatedAt || "updatedAt"
-      },
-      ...verification?.fields,
-      ...options.verification?.additionalFields
-    },
-    order: 4
-  } };
-  const sessionTable = { session: {
-    modelName: options.session?.modelName || "session",
-    indexes: session?.indexes,
-    fields: {
-      expiresAt: {
-        type: "date",
-        required: true,
-        fieldName: options.session?.fields?.expiresAt || "expiresAt"
-      },
-      token: {
-        type: "string",
-        required: true,
-        fieldName: options.session?.fields?.token || "token",
-        unique: true
-      },
-      createdAt: {
-        type: "date",
-        required: true,
-        fieldName: options.session?.fields?.createdAt || "createdAt",
-        defaultValue: () => /* @__PURE__ */ new Date
-      },
-      updatedAt: {
-        type: "date",
-        required: true,
-        fieldName: options.session?.fields?.updatedAt || "updatedAt",
-        onUpdate: () => /* @__PURE__ */ new Date
-      },
-      ipAddress: {
-        type: "string",
-        required: false,
-        fieldName: options.session?.fields?.ipAddress || "ipAddress"
-      },
-      userAgent: {
-        type: "string",
-        required: false,
-        fieldName: options.session?.fields?.userAgent || "userAgent"
-      },
-      userId: {
-        type: "string",
-        fieldName: options.session?.fields?.userId || "userId",
-        references: {
-          model: "user",
-          field: "id",
-          onDelete: "cascade"
-        },
-        required: true,
-        index: true
-      },
-      ...session?.fields,
-      ...options.session?.additionalFields
-    },
-    order: 2
-  } };
-  return {
-    user: {
-      modelName: options.user?.modelName || "user",
-      indexes: user?.indexes,
-      fields: {
-        name: {
-          type: "string",
-          required: true,
-          fieldName: options.user?.fields?.name || "name",
-          sortable: true
-        },
-        email: {
-          type: "string",
-          unique: true,
-          required: true,
-          fieldName: options.user?.fields?.email || "email",
-          sortable: true
-        },
-        emailVerified: {
-          type: "boolean",
-          defaultValue: false,
-          required: true,
-          fieldName: options.user?.fields?.emailVerified || "emailVerified",
-          input: false
-        },
-        image: {
-          type: "string",
-          required: false,
-          fieldName: options.user?.fields?.image || "image"
-        },
-        createdAt: {
-          type: "date",
-          defaultValue: () => /* @__PURE__ */ new Date,
-          required: true,
-          fieldName: options.user?.fields?.createdAt || "createdAt"
-        },
-        updatedAt: {
-          type: "date",
-          defaultValue: () => /* @__PURE__ */ new Date,
-          onUpdate: () => /* @__PURE__ */ new Date,
-          required: true,
-          fieldName: options.user?.fields?.updatedAt || "updatedAt"
-        },
-        ...user?.fields,
-        ...options.user?.additionalFields
-      },
-      order: 1
-    },
-    ...!options.secondaryStorage || options.session?.storeSessionInDatabase ? sessionTable : {},
-    account: {
-      modelName: options.account?.modelName || "account",
-      indexes: account?.indexes,
-      fields: {
-        accountId: {
-          type: "string",
-          required: true,
-          fieldName: options.account?.fields?.accountId || "accountId"
-        },
-        providerId: {
-          type: "string",
-          required: true,
-          fieldName: options.account?.fields?.providerId || "providerId"
-        },
-        userId: {
-          type: "string",
-          references: {
-            model: "user",
-            field: "id",
-            onDelete: "cascade"
-          },
-          required: true,
-          fieldName: options.account?.fields?.userId || "userId",
-          index: true
-        },
-        accessToken: {
-          type: "string",
-          required: false,
-          returned: false,
-          fieldName: options.account?.fields?.accessToken || "accessToken"
-        },
-        refreshToken: {
-          type: "string",
-          required: false,
-          returned: false,
-          fieldName: options.account?.fields?.refreshToken || "refreshToken"
-        },
-        idToken: {
-          type: "string",
-          required: false,
-          returned: false,
-          fieldName: options.account?.fields?.idToken || "idToken"
-        },
-        accessTokenExpiresAt: {
-          type: "date",
-          required: false,
-          returned: false,
-          fieldName: options.account?.fields?.accessTokenExpiresAt || "accessTokenExpiresAt"
-        },
-        refreshTokenExpiresAt: {
-          type: "date",
-          required: false,
-          returned: false,
-          fieldName: options.account?.fields?.refreshTokenExpiresAt || "refreshTokenExpiresAt"
-        },
-        scope: {
-          type: "string",
-          required: false,
-          fieldName: options.account?.fields?.scope || "scope"
-        },
-        password: {
-          type: "string",
-          required: false,
-          returned: false,
-          fieldName: options.account?.fields?.password || "password"
-        },
-        createdAt: {
-          type: "date",
-          required: true,
-          fieldName: options.account?.fields?.createdAt || "createdAt",
-          defaultValue: () => /* @__PURE__ */ new Date
-        },
-        updatedAt: {
-          type: "date",
-          required: true,
-          fieldName: options.account?.fields?.updatedAt || "updatedAt",
-          onUpdate: () => /* @__PURE__ */ new Date
-        },
-        ...account?.fields,
-        ...options.account?.additionalFields
-      },
-      order: 3
-    },
-    ...!options.secondaryStorage || options.verification?.storeInDatabase ? verificationTable : {},
-    ...pluginTables,
-    ...shouldAddRateLimitTable ? rateLimitTable : {}
-  };
-}, getAuthTables = (options) => getAuthTablesWithResolvedIndexes(options).tables;
-var init_get_tables = __esm(() => {
-  init_database_index();
-});
-
 // node_modules/zod/v4/core/util.js
 function getEnumValues(entries) {
   const numericValues = Object.values(entries).filter((v) => typeof v === "number");
@@ -11826,6 +11345,35 @@ var init_zod = __esm(() => {
   init_external();
 });
 
+// node_modules/@better-auth/core/dist/context/global.mjs
+function __getBetterAuthGlobal() {
+  if (!globalThis[symbol]) {
+    globalThis[symbol] = {
+      version: __betterAuthVersion,
+      epoch: 1,
+      context: __context
+    };
+    bind = globalThis[symbol];
+  }
+  bind = globalThis[symbol];
+  if (bind.version !== __betterAuthVersion) {
+    bind.version = __betterAuthVersion;
+    bind.epoch++;
+  }
+  return globalThis[symbol];
+}
+function __getCurrentEndpointContext() {
+  return __getBetterAuthGlobal().context.endpointContextAsyncStorage?.getStore();
+}
+function getBetterAuthVersion() {
+  return __getBetterAuthGlobal().version;
+}
+var symbol, bind = null, __context, __betterAuthVersion = "1.7.3";
+var init_global = __esm(() => {
+  symbol = Symbol.for("better-auth:global");
+  __context = {};
+});
+
 // node_modules/@better-auth/core/dist/env/env-impl.mjs
 function toBoolean(val) {
   return val ? val !== "false" : false;
@@ -12004,35 +11552,6 @@ var init_color_depth = __esm(() => {
   ];
 });
 
-// node_modules/@better-auth/core/dist/context/global.mjs
-function __getBetterAuthGlobal() {
-  if (!globalThis[symbol]) {
-    globalThis[symbol] = {
-      version: __betterAuthVersion,
-      epoch: 1,
-      context: __context
-    };
-    bind = globalThis[symbol];
-  }
-  bind = globalThis[symbol];
-  if (bind.version !== __betterAuthVersion) {
-    bind.version = __betterAuthVersion;
-    bind.epoch++;
-  }
-  return globalThis[symbol];
-}
-function __getCurrentEndpointContext() {
-  return __getBetterAuthGlobal().context.endpointContextAsyncStorage?.getStore();
-}
-function getBetterAuthVersion() {
-  return __getBetterAuthGlobal().version;
-}
-var symbol, bind = null, __context, __betterAuthVersion = "1.7.3";
-var init_global = __esm(() => {
-  symbol = Symbol.for("better-auth:global");
-  __context = {};
-});
-
 // node_modules/@better-auth/core/dist/env/logger.mjs
 function shouldPublishLog(currentLogLevel, logLevel) {
   return levels.indexOf(logLevel) >= levels.indexOf(currentLogLevel);
@@ -12137,308 +11656,690 @@ var init_env = __esm(() => {
   init_logger();
 });
 
-// node_modules/@better-auth/core/dist/db/adapter/get-default-model-name.mjs
-var initGetDefaultModelName = ({ usePlural, schema }) => {
-  const getDefaultModelName = (model) => {
-    const resolve = (candidate) => {
-      if (schema[candidate])
-        return candidate;
-      return Object.entries(schema).find(([_, f]) => f.modelName === candidate)?.[0];
+// node_modules/@better-auth/core/dist/db/database-index.mjs
+function getPortableDatabaseIdentifierKey(identifier) {
+  return identifier.toLowerCase();
+}
+function getUtf8ByteLength(value) {
+  return new TextEncoder().encode(value).length;
+}
+function truncateUtf8(value, maxBytes) {
+  let result = "";
+  let byteLength = 0;
+  for (const character of value) {
+    const characterByteLength = getUtf8ByteLength(character);
+    if (byteLength + characterByteLength > maxBytes)
+      break;
+    result += character;
+    byteLength += characterByteLength;
+  }
+  return result;
+}
+function getStableIndexNameHash(value) {
+  let hash = 2166136261;
+  for (let index = 0;index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+function getDatabaseIndexName(tableName, index) {
+  if (index.name !== undefined) {
+    if (index.name.trim().length === 0)
+      throw new BetterAuthError("Database index names must contain at least one visible character.");
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(index.name))
+      throw new BetterAuthError("Database index names must start with a letter or underscore and contain only letters, numbers, and underscores.");
+    if (getUtf8ByteLength(index.name) > MAX_DATABASE_INDEX_NAME_BYTES)
+      throw new BetterAuthError(`Database index names must be at most ${MAX_DATABASE_INDEX_NAME_BYTES} UTF-8 bytes.`);
+    return index.name;
+  }
+  const indexKind = index.unique ? "uidx" : "idx";
+  const generatedName = `${tableName}_${index.fields.join("_")}_${indexKind}`;
+  if (getUtf8ByteLength(generatedName) <= MAX_DATABASE_INDEX_NAME_BYTES)
+    return generatedName;
+  const suffix = `_${getStableIndexNameHash(generatedName)}_${indexKind}`;
+  return `${truncateUtf8(generatedName.slice(0, -indexKind.length - 1), MAX_DATABASE_INDEX_NAME_BYTES - getUtf8ByteLength(suffix))}${suffix}`;
+}
+function getDatabaseFieldIndexName(tableName, columnName, unique) {
+  return getDatabaseIndexName(tableName, {
+    fields: [columnName],
+    unique
+  });
+}
+function resolveDatabaseTableIndexes({ fields, indexes, tableName }) {
+  const resolvedIndexes = (indexes ?? []).map((index) => {
+    if (index.fields.length === 0)
+      throw new BetterAuthError(`Index on table "${tableName}" must include at least one field.`);
+    if (index.fields.length > MAX_DATABASE_INDEX_FIELDS)
+      throw new BetterAuthError(`Index on table "${tableName}" can include at most ${MAX_DATABASE_INDEX_FIELDS} fields so it works across supported databases.`);
+    if (new Set(index.fields).size !== index.fields.length)
+      throw new BetterAuthError(`Index on table "${tableName}" contains the same field more than once.`);
+    if (index.unique && index.fields.some((fieldName) => fields[fieldName]?.required === false))
+      throw new BetterAuthError(`Unique index on table "${tableName}" can only include required fields so its behavior is consistent across databases.`);
+    const unsupportedField = index.fields.find((fieldName) => {
+      const fieldType = fields[fieldName]?.type;
+      return fieldType === "json" || fieldType === "string[]" || fieldType === "number[]";
+    });
+    if (unsupportedField)
+      throw new BetterAuthError(`Index on table "${tableName}" references field "${unsupportedField}", whose type is not portably indexable.`);
+    const resolveFieldName = (fieldName) => {
+      const field = fields[fieldName];
+      if (!field)
+        throw new BetterAuthError(`Index on table "${tableName}" references unknown field "${fieldName}".`);
+      return field.fieldName || fieldName;
     };
-    if (usePlural && model.charAt(model.length - 1) === "s") {
-      const m = resolve(model.slice(0, -1));
-      if (m)
-        return m;
-    }
-    const m = resolve(model);
-    if (!m)
-      throw new BetterAuthError(`Model "${model}" not found in schema`);
-    return m;
-  };
-  return getDefaultModelName;
-};
-var init_get_default_model_name = __esm(() => {
-  init_error2();
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/get-default-field-name.mjs
-var initGetDefaultFieldName = ({ schema, usePlural }) => {
-  const getDefaultModelName = initGetDefaultModelName({
-    schema,
-    usePlural
-  });
-  const getDefaultFieldName = ({ field, model: unsafeModel }) => {
-    if (field === "id" || field === "_id")
-      return "id";
-    const model = getDefaultModelName(unsafeModel);
-    let f = schema[model]?.fields[field];
-    if (!f) {
-      const result = Object.entries(schema[model].fields).find(([_, f]) => f.fieldName === field);
-      if (result) {
-        f = result[1];
-        field = result[0];
-      }
-    }
-    if (!f)
-      throw new BetterAuthError(`Field ${field} not found in model ${model}`);
-    return field;
-  };
-  return getDefaultFieldName;
-};
-var init_get_default_field_name = __esm(() => {
-  init_error2();
-  init_get_default_model_name();
-});
-
-// node_modules/@better-auth/utils/dist/random.mjs
-function expandAlphabet(alphabet) {
-  switch (alphabet) {
-    case "a-z":
-      return "abcdefghijklmnopqrstuvwxyz";
-    case "A-Z":
-      return "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    case "0-9":
-      return "0123456789";
-    case "-_":
-      return "-_";
-    default:
-      throw new Error(`Unsupported alphabet: ${alphabet}`);
-  }
-}
-function createRandomStringGenerator(...baseAlphabets) {
-  const baseCharSet = baseAlphabets.map(expandAlphabet).join("");
-  if (baseCharSet.length === 0) {
-    throw new Error("No valid characters provided for random string generation.");
-  }
-  const baseCharSetLength = baseCharSet.length;
-  return (length, ...alphabets) => {
-    if (length <= 0) {
-      throw new Error("Length must be a positive integer.");
-    }
-    let charSet = baseCharSet;
-    let charSetLength = baseCharSetLength;
-    if (alphabets.length > 0) {
-      charSet = alphabets.map(expandAlphabet).join("");
-      charSetLength = charSet.length;
-    }
-    const maxValid = Math.floor(256 / charSetLength) * charSetLength;
-    const buf = new Uint8Array(length * 2);
-    const bufLength = buf.length;
-    let result = "";
-    let bufIndex = bufLength;
-    let rand;
-    while (result.length < length) {
-      if (bufIndex >= bufLength) {
-        crypto.getRandomValues(buf);
-        bufIndex = 0;
-      }
-      rand = buf[bufIndex++];
-      if (rand < maxValid) {
-        result += charSet[rand % charSetLength];
-      }
-    }
-    return result;
-  };
-}
-var init_random = () => {};
-
-// node_modules/@better-auth/core/dist/utils/id.mjs
-var generateId = (size) => {
-  return createRandomStringGenerator("a-z", "A-Z", "0-9")(size || 32);
-};
-var init_id = __esm(() => {
-  init_random();
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/get-id-field.mjs
-var initGetIdField = ({ usePlural, schema, disableIdGeneration, options, customIdGenerator, supportsUUIDs }) => {
-  const getDefaultModelName = initGetDefaultModelName({
-    usePlural,
-    schema
-  });
-  const idField = ({ customModelName, forceAllowId }) => {
-    const useNumberId = options.advanced?.database?.generateId === "serial";
-    const useUUIDs = options.advanced?.database?.generateId === "uuid";
-    const shouldGenerateId = (() => {
-      if (disableIdGeneration)
-        return false;
-      else if (useNumberId && !forceAllowId)
-        return false;
-      else if (useUUIDs)
-        return !supportsUUIDs;
-      else
-        return true;
-    })();
-    const model = getDefaultModelName(customModelName ?? "id");
+    const [firstField, ...remainingFields] = index.fields;
+    const columns = [resolveFieldName(firstField), ...remainingFields.map(resolveFieldName)];
+    if (new Set(columns.map(getPortableDatabaseIdentifierKey)).size !== columns.length)
+      throw new BetterAuthError(`Index on table "${tableName}" resolves more than one field to the same database column.`);
     return {
-      type: useNumberId ? "number" : "string",
-      required: shouldGenerateId ? true : false,
-      ...shouldGenerateId ? { defaultValue() {
-        if (disableIdGeneration)
-          return;
-        const generateId$1 = options.advanced?.database?.generateId;
-        if (generateId$1 === false || generateId$1 === "serial")
-          return;
-        if (typeof generateId$1 === "function")
-          return generateId$1({ model });
-        if (generateId$1 === "uuid")
-          return crypto.randomUUID();
-        if (customIdGenerator)
-          return customIdGenerator({ model });
-        return generateId();
-      } } : {},
-      transform: {
-        input: (value) => {
-          if (!value)
-            return;
-          if (useNumberId) {
-            const numberValue = Number(value);
-            if (isNaN(numberValue))
-              return;
-            return numberValue;
-          }
-          if (useUUIDs) {
-            if (shouldGenerateId && !forceAllowId)
-              return value;
-            if (disableIdGeneration)
-              return;
-            if (forceAllowId && typeof value === "string")
-              if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
-                return value;
-              else {
-                const stack = (/* @__PURE__ */ new Error()).stack?.split(`
-`).filter((_, i) => i !== 1).join(`
-`).replace("Error:", "");
-                logger.warn("[Adapter Factory] - Invalid UUID value for field `id` provided when `forceAllowId` is true. Generating a new UUID.", stack);
-              }
-            if (supportsUUIDs)
-              return;
-            if (typeof value !== "string" && !supportsUUIDs)
-              return crypto.randomUUID();
-            return;
-          }
-          return value;
-        },
-        output: (value) => {
-          if (!value)
-            return;
-          return String(value);
-        }
-      }
+      columns,
+      name: getDatabaseIndexName(tableName, {
+        ...index,
+        fields: columns
+      }),
+      unique: index.unique
     };
-  };
-  return idField;
-};
-var init_get_id_field = __esm(() => {
-  init_logger();
-  init_id();
-  init_get_default_model_name();
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/get-field-attributes.mjs
-var initGetFieldAttributes = ({ usePlural, schema, options, customIdGenerator, disableIdGeneration }) => {
-  const getDefaultModelName = initGetDefaultModelName({
-    usePlural,
-    schema
   });
-  const getDefaultFieldName = initGetDefaultFieldName({
-    usePlural,
-    schema
-  });
-  const idField = initGetIdField({
-    usePlural,
-    schema,
-    options,
-    customIdGenerator,
-    disableIdGeneration
-  });
-  const getFieldAttributes = ({ model, field }) => {
-    const defaultModelName = getDefaultModelName(model);
-    const defaultFieldName = getDefaultFieldName({
-      field,
-      model: defaultModelName
-    });
-    const fields = schema[defaultModelName].fields;
-    fields.id = idField({ customModelName: defaultModelName });
-    const fieldAttributes = fields[defaultFieldName];
-    if (!fieldAttributes)
-      throw new BetterAuthError(`Field ${field} not found in model ${model}`);
-    return fieldAttributes;
-  };
-  return getFieldAttributes;
-};
-var init_get_field_attributes = __esm(() => {
-  init_error2();
-  init_get_default_model_name();
-  init_get_default_field_name();
-  init_get_id_field();
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/get-field-name.mjs
-var initGetFieldName = ({ schema, usePlural }) => {
-  const getDefaultModelName = initGetDefaultModelName({
-    schema,
-    usePlural
-  });
-  const getDefaultFieldName = initGetDefaultFieldName({
-    schema,
-    usePlural
-  });
-  function getFieldName({ model: modelName, field: fieldName }) {
-    const model = getDefaultModelName(modelName);
-    const field = getDefaultFieldName({
-      model,
-      field: fieldName
-    });
-    return schema[model]?.fields[field]?.fieldName || field;
+  const definitionsByName = /* @__PURE__ */ new Map;
+  const deduplicatedIndexes = [];
+  for (const index of resolvedIndexes) {
+    const definition = JSON.stringify([index.columns, index.unique ?? false]);
+    const identifierKey = getPortableDatabaseIdentifierKey(index.name);
+    const existingDefinition = definitionsByName.get(identifierKey);
+    if (existingDefinition && existingDefinition !== definition)
+      throw new BetterAuthError(`Database index name "${index.name}" identifies more than one index on table "${tableName}".`);
+    if (existingDefinition)
+      continue;
+    definitionsByName.set(identifierKey, definition);
+    deduplicatedIndexes.push(index);
   }
-  return getFieldName;
-};
-var init_get_field_name = __esm(() => {
-  init_get_default_model_name();
-  init_get_default_field_name();
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/get-model-name.mjs
-var initGetModelName = ({ usePlural, schema }) => {
-  const getDefaultModelName = initGetDefaultModelName({
-    schema,
-    usePlural
-  });
-  const getModelName = (model) => {
-    const defaultModelKey = getDefaultModelName(model);
-    if (schema && schema[defaultModelKey] && schema[defaultModelKey].modelName !== model)
-      return usePlural ? `${schema[defaultModelKey].modelName}s` : schema[defaultModelKey].modelName;
-    return usePlural ? `${model}s` : model;
-  };
-  return getModelName;
-};
-var init_get_model_name = __esm(() => {
-  init_get_default_model_name();
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/utils.mjs
-function withApplyDefault(value, field, action) {
-  if (action === "update") {
-    if (value === undefined && field.onUpdate !== undefined) {
-      if (typeof field.onUpdate === "function")
-        return field.onUpdate();
-      return field.onUpdate;
+  return deduplicatedIndexes;
+}
+function getDatabaseIndexStringLength({ columnName, dialect, fields, indexes }) {
+  const fieldsByColumn = new Map(Object.entries(fields).map(([fieldName, field]) => [field.fieldName || fieldName, field]));
+  const containingIndexes = indexes.filter((index) => index.columns.includes(columnName));
+  if (containingIndexes.length === 0)
+    return;
+  const byteBudget = dialect === "mysql" ? 3072 : 1700;
+  const bytesPerCharacter = dialect === "mysql" ? 4 : 1;
+  const defaultLength = dialect === "mysql" ? 191 : 255;
+  return containingIndexes.reduce((length, index) => {
+    const stringColumnCount = index.columns.filter((column) => {
+      const type = fieldsByColumn.get(column)?.type;
+      return type === "string" || Array.isArray(type);
+    }).length;
+    if (stringColumnCount === 0)
+      return length;
+    const nonStringColumnBytes = (index.columns.length - stringColumnCount) * 16;
+    const safeLength = Math.floor(Math.max(1, byteBudget - nonStringColumnBytes) / bytesPerCharacter / stringColumnCount);
+    return Math.min(length, safeLength);
+  }, defaultLength);
+}
+function resolveDatabaseSchemaIndexes(sources) {
+  const mergedSourcesByTable = /* @__PURE__ */ new Map;
+  for (const source of sources) {
+    const existingSource = mergedSourcesByTable.get(source.tableName);
+    if (existingSource) {
+      if (existingSource.indexes.length > 0 || (source.indexes?.length ?? 0) > 0)
+        throw new BetterAuthError(`Database schema resolves more than one indexed logical table to "${source.tableName}". Define table-level indexes through one logical schema key instead of aliasing multiple keys to the same database table.`);
+      Object.assign(existingSource.fields, source.fields);
+      continue;
     }
-    return value;
+    const mergedSource = {
+      fields: {},
+      indexes: [],
+      tableName: source.tableName
+    };
+    Object.assign(mergedSource.fields, source.fields);
+    mergedSource.indexes.push(...source.indexes ?? []);
+    mergedSourcesByTable.set(source.tableName, mergedSource);
   }
-  if (action === "create") {
-    if (value === undefined || field.required === true && value === null) {
-      if (field.defaultValue !== undefined) {
-        if (typeof field.defaultValue === "function")
-          return field.defaultValue();
-        return field.defaultValue;
+  const indexesByTable = /* @__PURE__ */ new Map;
+  const indexOwnerByName = /* @__PURE__ */ new Map;
+  const tableNamesByIdentifier = new Map([...mergedSourcesByTable.keys()].map((tableName) => [getPortableDatabaseIdentifierKey(tableName), tableName]));
+  const fieldIndexOwnerByName = /* @__PURE__ */ new Map;
+  for (const source of mergedSourcesByTable.values())
+    for (const [fieldName, field] of Object.entries(source.fields)) {
+      if (!field.index && !field.unique)
+        continue;
+      const indexName = getDatabaseFieldIndexName(source.tableName, field.fieldName || fieldName, field.unique ?? false);
+      const identifierKey = getPortableDatabaseIdentifierKey(indexName);
+      if (tableNamesByIdentifier.has(identifierKey))
+        throw new BetterAuthError(`Database index name "${indexName}" conflicts with a table name. Index and table names must be unique across the schema.`);
+      const existingOwner = fieldIndexOwnerByName.get(identifierKey);
+      if (existingOwner)
+        throw new BetterAuthError(`Database field-level index name "${indexName}" is used by both table "${existingOwner}" and table "${source.tableName}".`);
+      fieldIndexOwnerByName.set(identifierKey, source.tableName);
+    }
+  for (const source of mergedSourcesByTable.values()) {
+    const resolvedIndexes = resolveDatabaseTableIndexes(source);
+    indexesByTable.set(source.tableName, [...resolvedIndexes]);
+    for (const index of resolvedIndexes) {
+      const identifierKey = getPortableDatabaseIdentifierKey(index.name);
+      if (tableNamesByIdentifier.has(identifierKey))
+        throw new BetterAuthError(`Database index name "${index.name}" conflicts with a table name. Index and table names must be unique across the schema.`);
+      const fieldIndexOwner = fieldIndexOwnerByName.get(identifierKey);
+      if (fieldIndexOwner)
+        throw new BetterAuthError(`Database index name "${index.name}" is already reserved by field-level index metadata on table "${fieldIndexOwner}". Remove the duplicate table-level index or give it a distinct name.`);
+      const indexOwner = indexOwnerByName.get(identifierKey);
+      if (indexOwner && indexOwner !== source.tableName)
+        throw new BetterAuthError(`Database index name "${index.name}" is used by both table "${indexOwner}" and table "${source.tableName}". Index names must be unique across the schema.`);
+      indexOwnerByName.set(identifierKey, source.tableName);
+    }
+  }
+  return indexesByTable;
+}
+var MAX_DATABASE_INDEX_NAME_BYTES = 63, MAX_DATABASE_INDEX_FIELDS = 16;
+var init_database_index = __esm(() => {
+  init_error2();
+});
+
+// node_modules/@better-auth/core/dist/db/get-tables.mjs
+function mergeTableIndexes(...indexCollections) {
+  const indexes = [];
+  const seenIndexDefinitions = /* @__PURE__ */ new Set;
+  for (const index of indexCollections.flatMap((collection) => collection ?? [])) {
+    const definition = JSON.stringify([
+      index.name ?? null,
+      index.fields,
+      index.unique ?? false
+    ]);
+    if (seenIndexDefinitions.has(definition))
+      continue;
+    seenIndexDefinitions.add(definition);
+    indexes.push(index);
+  }
+  return indexes;
+}
+function getAuthTablesWithResolvedIndexes(options) {
+  const tables = buildAuthTables(options);
+  return {
+    indexesByTable: resolveDatabaseSchemaIndexes(Object.values(tables).filter((table) => !("disableMigrations" in table) || !table.disableMigrations).map((table) => ({
+      fields: table.fields,
+      indexes: "indexes" in table ? table.indexes : undefined,
+      tableName: table.modelName
+    }))),
+    tables
+  };
+}
+var buildAuthTables = (options) => {
+  const pluginSchema = (options.plugins ?? []).reduce((acc, plugin) => {
+    const schema = plugin.schema;
+    if (!schema)
+      return acc;
+    for (const [key, value] of Object.entries(schema))
+      acc[key] = {
+        fields: {
+          ...acc[key]?.fields,
+          ...value.fields
+        },
+        indexes: mergeTableIndexes(acc[key]?.indexes, value.indexes),
+        modelName: value.modelName || key,
+        disableMigrations: value.disableMigration ?? acc[key]?.disableMigrations
+      };
+    return acc;
+  }, {});
+  const shouldAddRateLimitTable = options.rateLimit?.storage === "database";
+  const rateLimitTable = { rateLimit: {
+    modelName: options.rateLimit?.modelName || "rateLimit",
+    fields: {
+      key: {
+        type: "string",
+        unique: true,
+        required: true,
+        fieldName: options.rateLimit?.fields?.key || "key"
+      },
+      count: {
+        type: "number",
+        required: true,
+        fieldName: options.rateLimit?.fields?.count || "count"
+      },
+      lastRequest: {
+        type: "number",
+        bigint: true,
+        required: true,
+        fieldName: options.rateLimit?.fields?.lastRequest || "lastRequest",
+        defaultValue: () => Date.now()
       }
     }
+  } };
+  const { user, session, account, verification, ...pluginTables } = pluginSchema;
+  const verificationTable = { verification: {
+    modelName: options.verification?.modelName || "verification",
+    indexes: verification?.indexes,
+    fields: {
+      identifier: {
+        type: "string",
+        required: true,
+        fieldName: options.verification?.fields?.identifier || "identifier",
+        index: true
+      },
+      value: {
+        type: "string",
+        required: true,
+        fieldName: options.verification?.fields?.value || "value"
+      },
+      expiresAt: {
+        type: "date",
+        required: true,
+        fieldName: options.verification?.fields?.expiresAt || "expiresAt"
+      },
+      createdAt: {
+        type: "date",
+        required: true,
+        defaultValue: () => /* @__PURE__ */ new Date,
+        fieldName: options.verification?.fields?.createdAt || "createdAt"
+      },
+      updatedAt: {
+        type: "date",
+        required: true,
+        defaultValue: () => /* @__PURE__ */ new Date,
+        onUpdate: () => /* @__PURE__ */ new Date,
+        fieldName: options.verification?.fields?.updatedAt || "updatedAt"
+      },
+      ...verification?.fields,
+      ...options.verification?.additionalFields
+    },
+    order: 4
+  } };
+  const sessionTable = { session: {
+    modelName: options.session?.modelName || "session",
+    indexes: session?.indexes,
+    fields: {
+      expiresAt: {
+        type: "date",
+        required: true,
+        fieldName: options.session?.fields?.expiresAt || "expiresAt"
+      },
+      token: {
+        type: "string",
+        required: true,
+        fieldName: options.session?.fields?.token || "token",
+        unique: true
+      },
+      createdAt: {
+        type: "date",
+        required: true,
+        fieldName: options.session?.fields?.createdAt || "createdAt",
+        defaultValue: () => /* @__PURE__ */ new Date
+      },
+      updatedAt: {
+        type: "date",
+        required: true,
+        fieldName: options.session?.fields?.updatedAt || "updatedAt",
+        onUpdate: () => /* @__PURE__ */ new Date
+      },
+      ipAddress: {
+        type: "string",
+        required: false,
+        fieldName: options.session?.fields?.ipAddress || "ipAddress"
+      },
+      userAgent: {
+        type: "string",
+        required: false,
+        fieldName: options.session?.fields?.userAgent || "userAgent"
+      },
+      userId: {
+        type: "string",
+        fieldName: options.session?.fields?.userId || "userId",
+        references: {
+          model: "user",
+          field: "id",
+          onDelete: "cascade"
+        },
+        required: true,
+        index: true
+      },
+      ...session?.fields,
+      ...options.session?.additionalFields
+    },
+    order: 2
+  } };
+  return {
+    user: {
+      modelName: options.user?.modelName || "user",
+      indexes: user?.indexes,
+      fields: {
+        name: {
+          type: "string",
+          required: true,
+          fieldName: options.user?.fields?.name || "name",
+          sortable: true
+        },
+        email: {
+          type: "string",
+          unique: true,
+          required: true,
+          fieldName: options.user?.fields?.email || "email",
+          sortable: true
+        },
+        emailVerified: {
+          type: "boolean",
+          defaultValue: false,
+          required: true,
+          fieldName: options.user?.fields?.emailVerified || "emailVerified",
+          input: false
+        },
+        image: {
+          type: "string",
+          required: false,
+          fieldName: options.user?.fields?.image || "image"
+        },
+        createdAt: {
+          type: "date",
+          defaultValue: () => /* @__PURE__ */ new Date,
+          required: true,
+          fieldName: options.user?.fields?.createdAt || "createdAt"
+        },
+        updatedAt: {
+          type: "date",
+          defaultValue: () => /* @__PURE__ */ new Date,
+          onUpdate: () => /* @__PURE__ */ new Date,
+          required: true,
+          fieldName: options.user?.fields?.updatedAt || "updatedAt"
+        },
+        ...user?.fields,
+        ...options.user?.additionalFields
+      },
+      order: 1
+    },
+    ...!options.secondaryStorage || options.session?.storeSessionInDatabase ? sessionTable : {},
+    account: {
+      modelName: options.account?.modelName || "account",
+      indexes: account?.indexes,
+      fields: {
+        accountId: {
+          type: "string",
+          required: true,
+          fieldName: options.account?.fields?.accountId || "accountId"
+        },
+        providerId: {
+          type: "string",
+          required: true,
+          fieldName: options.account?.fields?.providerId || "providerId"
+        },
+        userId: {
+          type: "string",
+          references: {
+            model: "user",
+            field: "id",
+            onDelete: "cascade"
+          },
+          required: true,
+          fieldName: options.account?.fields?.userId || "userId",
+          index: true
+        },
+        accessToken: {
+          type: "string",
+          required: false,
+          returned: false,
+          fieldName: options.account?.fields?.accessToken || "accessToken"
+        },
+        refreshToken: {
+          type: "string",
+          required: false,
+          returned: false,
+          fieldName: options.account?.fields?.refreshToken || "refreshToken"
+        },
+        idToken: {
+          type: "string",
+          required: false,
+          returned: false,
+          fieldName: options.account?.fields?.idToken || "idToken"
+        },
+        accessTokenExpiresAt: {
+          type: "date",
+          required: false,
+          returned: false,
+          fieldName: options.account?.fields?.accessTokenExpiresAt || "accessTokenExpiresAt"
+        },
+        refreshTokenExpiresAt: {
+          type: "date",
+          required: false,
+          returned: false,
+          fieldName: options.account?.fields?.refreshTokenExpiresAt || "refreshTokenExpiresAt"
+        },
+        scope: {
+          type: "string",
+          required: false,
+          fieldName: options.account?.fields?.scope || "scope"
+        },
+        password: {
+          type: "string",
+          required: false,
+          returned: false,
+          fieldName: options.account?.fields?.password || "password"
+        },
+        createdAt: {
+          type: "date",
+          required: true,
+          fieldName: options.account?.fields?.createdAt || "createdAt",
+          defaultValue: () => /* @__PURE__ */ new Date
+        },
+        updatedAt: {
+          type: "date",
+          required: true,
+          fieldName: options.account?.fields?.updatedAt || "updatedAt",
+          onUpdate: () => /* @__PURE__ */ new Date
+        },
+        ...account?.fields,
+        ...options.account?.additionalFields
+      },
+      order: 3
+    },
+    ...!options.secondaryStorage || options.verification?.storeInDatabase ? verificationTable : {},
+    ...pluginTables,
+    ...shouldAddRateLimitTable ? rateLimitTable : {}
+  };
+}, getAuthTables = (options) => getAuthTablesWithResolvedIndexes(options).tables;
+var init_get_tables = __esm(() => {
+  init_database_index();
+});
+
+// node_modules/@better-auth/core/dist/db/schema-diff.mjs
+function getExpectedSchema(options, { usePlural = false } = {}) {
+  const expected = {};
+  for (const table of Object.values(getAuthTables(options))) {
+    const name = usePlural ? `${table.modelName}s` : table.modelName;
+    const entry = expected[name] ??= {
+      fields: {},
+      disableMigrations: true
+    };
+    for (const [key, field] of Object.entries(table.fields))
+      entry.fields[field.fieldName || key] = field;
+    entry.disableMigrations = entry.disableMigrations && !!table.disableMigrations;
   }
-  return value;
+  return expected;
 }
-var init_utils = () => {};
+function diffSchema(expected, actual) {
+  const findings = [];
+  for (const [tableName, table] of Object.entries(expected)) {
+    if (table.disableMigrations)
+      continue;
+    const actualTable = actual.find((candidate) => candidate.name === tableName && (table.schema === undefined || candidate.schema === table.schema));
+    if (!actualTable) {
+      findings.push({
+        kind: "missing-table",
+        table: tableName
+      });
+      continue;
+    }
+    const written = new Set([table.idColumn ?? "id", ...Object.keys(table.fields)]);
+    for (const column of written)
+      if (!actualTable.columns.some((candidate) => candidate.name === column))
+        findings.push({
+          kind: "missing-column",
+          table: tableName,
+          column
+        });
+    for (const column of actualTable.columns) {
+      if (written.has(column.name) || column.nullable || column.hasDefault)
+        continue;
+      findings.push({
+        kind: "unexpected-required-column",
+        table: tableName,
+        column: column.name
+      });
+    }
+  }
+  return findings;
+}
+function formatSchemaFinding(finding, source) {
+  switch (finding.kind) {
+    case "missing-table":
+      return `Table "${finding.table}" is missing. ${applyHint[source]}`;
+    case "missing-column":
+      return `Column "${finding.column}" is missing from table "${finding.table}". ${applyHint[source]}`;
+    case "unexpected-required-column": {
+      const issuer = finding.column === "issuer" ? " If this column came from Better Auth 1.7.0 through 1.7.2, follow the upgrade guide before removing it: https://www.better-auth.com/docs/guides/1-7-upgrade-guide" : "";
+      return `Column "${finding.column}" on table "${finding.table}" is required but Better Auth never writes it, so every insert into "${finding.table}" fails. ${relaxHint[source]}${issuer}`;
+    }
+  }
+}
+function formatSchemaMismatch(findings, source) {
+  const tables = [];
+  const columns = [];
+  const required = [];
+  const affectedTables = /* @__PURE__ */ new Set;
+  let hasIssuer = false;
+  for (const finding of findings)
+    switch (finding.kind) {
+      case "missing-table":
+        tables.push(finding.table);
+        break;
+      case "missing-column":
+        columns.push(`${finding.table}.${finding.column}`);
+        break;
+      case "unexpected-required-column":
+        required.push(`${finding.table}.${finding.column}`);
+        affectedTables.add(finding.table);
+        hasIssuer ||= finding.column === "issuer";
+        break;
+    }
+  const sections = [`${sourceLabel[source]} schema mismatch`];
+  if (tables.length)
+    sections.push(`  Missing tables
+    ${tables.join(", ")}`);
+  if (columns.length)
+    sections.push(`  Missing columns
+    ${columns.join(`
+    `)}`);
+  if (required.length) {
+    sections.push(`  Required columns Better Auth never writes
+    ${required.join(`
+    `)}`);
+    sections.push(`  Inserts into ${[...affectedTables].join(", ")} will fail.`);
+  }
+  const help = [];
+  if (required.length)
+    help.push(repairHint[source]);
+  if (tables.length || columns.length || required.length && source !== "database")
+    help.push(migrationHint[source]);
+  if (help.length)
+    sections.push(`  help: ${help.join(`
+        `)}`);
+  if (hasIssuer)
+    sections.push(`  note: If this column came from Better Auth 1.7.0 through 1.7.2,
+        follow the upgrade guide before removing it:
+        https://www.better-auth.com/docs/guides/1-7-upgrade-guide`);
+  return sections.join(`
+
+`);
+}
+var applyHint, relaxHint, sourceLabel, repairHint, migrationHint, SchemaMismatchError;
+var init_schema_diff = __esm(() => {
+  init_error2();
+  init_get_tables();
+  applyHint = {
+    database: "Run `npx auth migrate` to add it.",
+    drizzle: "Run `npx auth generate` to refresh the Drizzle schema, then apply it with your migration tool.",
+    prisma: "Run `npx auth generate` to refresh the Prisma schema, then run `prisma migrate`."
+  };
+  relaxHint = {
+    database: "Drop the column, make it nullable, or give it a database default.",
+    drizzle: "Remove it from the Drizzle schema, make it nullable, or give it a default, then apply the change with your migration tool.",
+    prisma: "Remove it from the Prisma schema, make it optional, or give it a default, then run `prisma migrate`."
+  };
+  sourceLabel = {
+    database: "Database",
+    drizzle: "Drizzle",
+    prisma: "Prisma"
+  };
+  repairHint = {
+    database: "Make the listed columns nullable, give them defaults, or remove them.",
+    drizzle: "Make the listed columns nullable in your Drizzle schema, give them defaults, or remove them.",
+    prisma: "Make the listed fields optional in your Prisma schema, give them defaults, or remove them."
+  };
+  migrationHint = {
+    ...applyHint,
+    database: "Run `npx auth migrate` to add the missing tables and columns."
+  };
+  SchemaMismatchError = class extends BetterAuthError {
+    code = "SCHEMA_MISMATCH";
+    constructor(findings, source) {
+      super(formatSchemaMismatch(findings, source));
+      this.findings = findings;
+      this.source = source;
+    }
+  };
+});
+
+// node_modules/@better-auth/core/dist/db/schema-check.mjs
+function checksSchema(options) {
+  return options.advanced?.database?.validateSchema !== false;
+}
+function invalidateSchemaChecks(database) {
+  const revision = schemaRevisions.get(database);
+  if (revision)
+    revision.value++;
+}
+function registerSchemaCheck(adapter, check) {
+  schemaChecks.set(adapter, check);
+}
+function schemaCheckFor(adapter) {
+  return schemaChecks.get(adapter);
+}
+function createSchemaCheck(find, source, database) {
+  let revision = database ? schemaRevisions.get(database) : undefined;
+  if (database && !revision) {
+    revision = { value: 0 };
+    schemaRevisions.set(database, revision);
+  }
+  let checkedRevision = revision?.value;
+  let clean = false;
+  let verdict;
+  return function checkSchema() {
+    const currentRevision = revision?.value;
+    if (checkedRevision !== currentRevision) {
+      checkedRevision = currentRevision;
+      clean = false;
+      verdict = undefined;
+    }
+    if (clean)
+      return;
+    return verdict ??= Promise.resolve().then(find).then((findings) => {
+      if (revision?.value !== currentRevision)
+        return checkSchema();
+      if (findings.length)
+        throw new SchemaMismatchError(findings, source);
+      if (checkedRevision === currentRevision)
+        clean = true;
+    }, (error) => {
+      if (revision?.value !== currentRevision)
+        return checkSchema();
+      if (checkedRevision === currentRevision)
+        verdict = undefined;
+      throw error;
+    });
+  };
+}
+var schemaChecks, schemaRevisions;
+var init_schema_check = __esm(() => {
+  init_schema_diff();
+  schemaChecks = /* @__PURE__ */ new WeakMap;
+  schemaRevisions = /* @__PURE__ */ new WeakMap;
+});
 
 // node_modules/@better-auth/core/dist/utils/json.mjs
 function reviveDate(value) {
@@ -12483,158 +12384,6 @@ var iso8601Regex;
 var init_json = __esm(() => {
   init_logger();
   iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
-});
-
-// node_modules/@better-auth/core/dist/db/adapter/atomic-fallback.mjs
-function createAtomicFallbacks(context) {
-  const { adapter, adapterId } = context;
-  const outputId = Object.entries(context.mapKeysTransformOutput ?? {}).find(([, field]) => field === "id")?.[0] ?? "id";
-  async function idWhere(row, model, action) {
-    const mappedId = context.mapKeysTransformInput?.id || context.getFieldName({
-      model,
-      field: "id"
-    });
-    if (row[mappedId] === undefined || row[mappedId] === null)
-      throw new BetterAuthError(`Adapter "${context.adapterId}" must return the row id for atomic fallbacks.`);
-    const id = (await context.transformOutput(row, model, [outputId], undefined))?.id;
-    if (typeof id !== "string" && typeof id !== "number")
-      throw new BetterAuthError(`Adapter "${context.adapterId}" must expose a logical string or number id through its output transform.`);
-    const [condition] = context.transformWhereClause({
-      model,
-      where: [{
-        field: "id",
-        value: id
-      }],
-      action
-    });
-    if (!condition)
-      throw new BetterAuthError("The atomic fallback id condition was transformed away.");
-    return condition;
-  }
-  async function readRow({ model, where }) {
-    const result = readSchema.safeParse(await adapter.findOne({
-      model,
-      where
-    }));
-    if (!result.success)
-      throw new BetterAuthError(`Adapter "${adapterId}" must return a row snapshot or null.`);
-    return result.data ?? null;
-  }
-  async function snapshotGuard(row, fields, request, action) {
-    const id = await idWhere(row, request.logicalModel, action);
-    const hasOr = request.where.some((clause) => clause.connector === "OR");
-    const guard = hasOr ? [id] : [...request.where, id];
-    const keys = new Set(fields);
-    for (const field of keys) {
-      if (field === id.field)
-        continue;
-      const value = scalar.safeParse(row[field] ?? null);
-      if (!value.success) {
-        if (hasOr && request.where.some((clause) => clause.field === field))
-          throw new BetterAuthError(`Adapter "${adapterId}" must implement native atomic methods for OR predicates on structured values.`);
-        continue;
-      }
-      guard.push({
-        field,
-        value: value.data,
-        operator: "eq",
-        connector: "AND",
-        mode: "sensitive"
-      });
-    }
-    return guard;
-  }
-  function changedOne(count) {
-    if (count !== 0 && count !== 1)
-      throw new BetterAuthError(`Adapter "${adapterId}" must return an affected row count of 0 or 1 from an atomic fallback.`);
-    return count === 1;
-  }
-  async function consumeOne(request) {
-    const { model, where } = request;
-    const row = await readRow(request);
-    if (row === null)
-      return null;
-    const guard = await snapshotGuard(row, [...Object.keys(row), ...where.map(({ field }) => field)], request, "consumeOne");
-    return changedOne(await adapter.deleteMany({
-      model,
-      where: guard
-    })) ? row : null;
-  }
-  async function incrementOne(request) {
-    const { model, where } = request;
-    const mutation = mutationSchema.safeParse(request);
-    if (!mutation.success)
-      throw new BetterAuthError("incrementOne requires finite increments and a set object for the atomic fallback.");
-    const { increment, set } = mutation.data;
-    const deltas = Object.entries(increment);
-    const fields = [
-      ...where.map(({ field }) => field),
-      ...Object.keys(increment),
-      ...Object.keys(set ?? {})
-    ];
-    for (let attempt = 0;attempt < MAX_ATTEMPTS; attempt++) {
-      const row = await readRow(request);
-      if (row === null)
-        return null;
-      const update = { ...set };
-      for (const [field, delta] of deltas) {
-        const previous = counterSchema.safeParse(row[field]);
-        if (!previous.success)
-          throw new BetterAuthError(`Adapter "${adapterId}" must return finite numeric counter values or null for atomic increments.`);
-        const current = previous.data ?? 0;
-        const next = current + delta;
-        if (!Number.isFinite(next) || delta !== 0 && next === current)
-          throw new BetterAuthError(`Adapter "${adapterId}" cannot represent the requested counter increment safely.`);
-        update[field] = next;
-      }
-      const guard = await snapshotGuard(row, fields, request, "incrementOne");
-      if (Object.entries(update).every(([field, value]) => {
-        const previous = row[field];
-        if (previous instanceof Date && value instanceof Date)
-          return previous.getTime() === value.getTime();
-        return Object.is(previous, value);
-      }))
-        return row;
-      if (changedOne(await adapter.updateMany({
-        model,
-        where: guard,
-        update
-      })))
-        return {
-          ...row,
-          ...update
-        };
-    }
-    throw new BetterAuthError(`Adapter "${adapterId}" could not complete an atomic increment due to contention. Retry the operation or implement incrementOne natively.`);
-  }
-  return {
-    consumeOne,
-    incrementOne
-  };
-}
-var MAX_ATTEMPTS = 5, scalar, readSchema, setSchema, mutationSchema, counterSchema;
-var init_atomic_fallback = __esm(() => {
-  init_error2();
-  init_zod();
-  scalar = union([
-    string2(),
-    number2(),
-    boolean2(),
-    date3()
-  ]).nullable();
-  readSchema = record(string2(), unknown()).nullish();
-  setSchema = record(string2(), unknown()).transform((values) => {
-    const assignments = {};
-    for (const [field, value] of Object.entries(values))
-      if (value !== undefined)
-        assignments[field] = value;
-    return assignments;
-  });
-  mutationSchema = object({
-    increment: record(string2(), number2()),
-    set: setSchema.optional()
-  });
-  counterSchema = number2().nullish();
 });
 
 // node_modules/@opentelemetry/semantic-conventions/build/src/internal/utils.js
@@ -15859,6 +15608,461 @@ var init_instrumentation = __esm(() => {
   init_tracer();
 });
 
+// node_modules/@better-auth/utils/dist/random.mjs
+function expandAlphabet(alphabet) {
+  switch (alphabet) {
+    case "a-z":
+      return "abcdefghijklmnopqrstuvwxyz";
+    case "A-Z":
+      return "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    case "0-9":
+      return "0123456789";
+    case "-_":
+      return "-_";
+    default:
+      throw new Error(`Unsupported alphabet: ${alphabet}`);
+  }
+}
+function createRandomStringGenerator(...baseAlphabets) {
+  const baseCharSet = baseAlphabets.map(expandAlphabet).join("");
+  if (baseCharSet.length === 0) {
+    throw new Error("No valid characters provided for random string generation.");
+  }
+  const baseCharSetLength = baseCharSet.length;
+  return (length, ...alphabets) => {
+    if (length <= 0) {
+      throw new Error("Length must be a positive integer.");
+    }
+    let charSet = baseCharSet;
+    let charSetLength = baseCharSetLength;
+    if (alphabets.length > 0) {
+      charSet = alphabets.map(expandAlphabet).join("");
+      charSetLength = charSet.length;
+    }
+    const maxValid = Math.floor(256 / charSetLength) * charSetLength;
+    const buf = new Uint8Array(length * 2);
+    const bufLength = buf.length;
+    let result = "";
+    let bufIndex = bufLength;
+    let rand;
+    while (result.length < length) {
+      if (bufIndex >= bufLength) {
+        crypto.getRandomValues(buf);
+        bufIndex = 0;
+      }
+      rand = buf[bufIndex++];
+      if (rand < maxValid) {
+        result += charSet[rand % charSetLength];
+      }
+    }
+    return result;
+  };
+}
+var init_random = () => {};
+
+// node_modules/@better-auth/core/dist/utils/id.mjs
+var generateId = (size) => {
+  return createRandomStringGenerator("a-z", "A-Z", "0-9")(size || 32);
+};
+var init_id = __esm(() => {
+  init_random();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/get-default-model-name.mjs
+var initGetDefaultModelName = ({ usePlural, schema }) => {
+  const getDefaultModelName = (model) => {
+    const resolve = (candidate) => {
+      if (schema[candidate])
+        return candidate;
+      return Object.entries(schema).find(([_, f]) => f.modelName === candidate)?.[0];
+    };
+    if (usePlural && model.charAt(model.length - 1) === "s") {
+      const m = resolve(model.slice(0, -1));
+      if (m)
+        return m;
+    }
+    const m = resolve(model);
+    if (!m)
+      throw new BetterAuthError(`Model "${model}" not found in schema`);
+    return m;
+  };
+  return getDefaultModelName;
+};
+var init_get_default_model_name = __esm(() => {
+  init_error2();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/get-default-field-name.mjs
+var initGetDefaultFieldName = ({ schema, usePlural }) => {
+  const getDefaultModelName = initGetDefaultModelName({
+    schema,
+    usePlural
+  });
+  const getDefaultFieldName = ({ field, model: unsafeModel }) => {
+    if (field === "id" || field === "_id")
+      return "id";
+    const model = getDefaultModelName(unsafeModel);
+    let f = schema[model]?.fields[field];
+    if (!f) {
+      const result = Object.entries(schema[model].fields).find(([_, f]) => f.fieldName === field);
+      if (result) {
+        f = result[1];
+        field = result[0];
+      }
+    }
+    if (!f)
+      throw new BetterAuthError(`Field ${field} not found in model ${model}`);
+    return field;
+  };
+  return getDefaultFieldName;
+};
+var init_get_default_field_name = __esm(() => {
+  init_error2();
+  init_get_default_model_name();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/get-id-field.mjs
+var initGetIdField = ({ usePlural, schema, disableIdGeneration, options, customIdGenerator, supportsUUIDs }) => {
+  const getDefaultModelName = initGetDefaultModelName({
+    usePlural,
+    schema
+  });
+  const idField = ({ customModelName, forceAllowId }) => {
+    const useNumberId = options.advanced?.database?.generateId === "serial";
+    const useUUIDs = options.advanced?.database?.generateId === "uuid";
+    const shouldGenerateId = (() => {
+      if (disableIdGeneration)
+        return false;
+      else if (useNumberId && !forceAllowId)
+        return false;
+      else if (useUUIDs)
+        return !supportsUUIDs;
+      else
+        return true;
+    })();
+    const model = getDefaultModelName(customModelName ?? "id");
+    return {
+      type: useNumberId ? "number" : "string",
+      required: shouldGenerateId ? true : false,
+      ...shouldGenerateId ? { defaultValue() {
+        if (disableIdGeneration)
+          return;
+        const generateId$1 = options.advanced?.database?.generateId;
+        if (generateId$1 === false || generateId$1 === "serial")
+          return;
+        if (typeof generateId$1 === "function")
+          return generateId$1({ model });
+        if (generateId$1 === "uuid")
+          return crypto.randomUUID();
+        if (customIdGenerator)
+          return customIdGenerator({ model });
+        return generateId();
+      } } : {},
+      transform: {
+        input: (value) => {
+          if (!value)
+            return;
+          if (useNumberId) {
+            const numberValue = Number(value);
+            if (isNaN(numberValue))
+              return;
+            return numberValue;
+          }
+          if (useUUIDs) {
+            if (shouldGenerateId && !forceAllowId)
+              return value;
+            if (disableIdGeneration)
+              return;
+            if (forceAllowId && typeof value === "string")
+              if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+                return value;
+              else {
+                const stack = (/* @__PURE__ */ new Error()).stack?.split(`
+`).filter((_, i) => i !== 1).join(`
+`).replace("Error:", "");
+                logger.warn("[Adapter Factory] - Invalid UUID value for field `id` provided when `forceAllowId` is true. Generating a new UUID.", stack);
+              }
+            if (supportsUUIDs)
+              return;
+            if (typeof value !== "string" && !supportsUUIDs)
+              return crypto.randomUUID();
+            return;
+          }
+          return value;
+        },
+        output: (value) => {
+          if (!value)
+            return;
+          return String(value);
+        }
+      }
+    };
+  };
+  return idField;
+};
+var init_get_id_field = __esm(() => {
+  init_logger();
+  init_id();
+  init_get_default_model_name();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/get-field-attributes.mjs
+var initGetFieldAttributes = ({ usePlural, schema, options, customIdGenerator, disableIdGeneration }) => {
+  const getDefaultModelName = initGetDefaultModelName({
+    usePlural,
+    schema
+  });
+  const getDefaultFieldName = initGetDefaultFieldName({
+    usePlural,
+    schema
+  });
+  const idField = initGetIdField({
+    usePlural,
+    schema,
+    options,
+    customIdGenerator,
+    disableIdGeneration
+  });
+  const getFieldAttributes = ({ model, field }) => {
+    const defaultModelName = getDefaultModelName(model);
+    const defaultFieldName = getDefaultFieldName({
+      field,
+      model: defaultModelName
+    });
+    const fields = schema[defaultModelName].fields;
+    fields.id = idField({ customModelName: defaultModelName });
+    const fieldAttributes = fields[defaultFieldName];
+    if (!fieldAttributes)
+      throw new BetterAuthError(`Field ${field} not found in model ${model}`);
+    return fieldAttributes;
+  };
+  return getFieldAttributes;
+};
+var init_get_field_attributes = __esm(() => {
+  init_error2();
+  init_get_default_model_name();
+  init_get_default_field_name();
+  init_get_id_field();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/get-field-name.mjs
+var initGetFieldName = ({ schema, usePlural }) => {
+  const getDefaultModelName = initGetDefaultModelName({
+    schema,
+    usePlural
+  });
+  const getDefaultFieldName = initGetDefaultFieldName({
+    schema,
+    usePlural
+  });
+  function getFieldName({ model: modelName, field: fieldName }) {
+    const model = getDefaultModelName(modelName);
+    const field = getDefaultFieldName({
+      model,
+      field: fieldName
+    });
+    return schema[model]?.fields[field]?.fieldName || field;
+  }
+  return getFieldName;
+};
+var init_get_field_name = __esm(() => {
+  init_get_default_model_name();
+  init_get_default_field_name();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/get-model-name.mjs
+var initGetModelName = ({ usePlural, schema }) => {
+  const getDefaultModelName = initGetDefaultModelName({
+    schema,
+    usePlural
+  });
+  const getModelName = (model) => {
+    const defaultModelKey = getDefaultModelName(model);
+    if (schema && schema[defaultModelKey] && schema[defaultModelKey].modelName !== model)
+      return usePlural ? `${schema[defaultModelKey].modelName}s` : schema[defaultModelKey].modelName;
+    return usePlural ? `${model}s` : model;
+  };
+  return getModelName;
+};
+var init_get_model_name = __esm(() => {
+  init_get_default_model_name();
+});
+
+// node_modules/@better-auth/core/dist/db/adapter/utils.mjs
+function withApplyDefault(value, field, action) {
+  if (action === "update") {
+    if (value === undefined && field.onUpdate !== undefined) {
+      if (typeof field.onUpdate === "function")
+        return field.onUpdate();
+      return field.onUpdate;
+    }
+    return value;
+  }
+  if (action === "create") {
+    if (value === undefined || field.required === true && value === null) {
+      if (field.defaultValue !== undefined) {
+        if (typeof field.defaultValue === "function")
+          return field.defaultValue();
+        return field.defaultValue;
+      }
+    }
+  }
+  return value;
+}
+var init_utils = () => {};
+
+// node_modules/@better-auth/core/dist/db/adapter/atomic-fallback.mjs
+function createAtomicFallbacks(context) {
+  const { adapter, adapterId } = context;
+  const outputId = Object.entries(context.mapKeysTransformOutput ?? {}).find(([, field]) => field === "id")?.[0] ?? "id";
+  async function idWhere(row, model, action) {
+    const mappedId = context.mapKeysTransformInput?.id || context.getFieldName({
+      model,
+      field: "id"
+    });
+    if (row[mappedId] === undefined || row[mappedId] === null)
+      throw new BetterAuthError(`Adapter "${context.adapterId}" must return the row id for atomic fallbacks.`);
+    const id = (await context.transformOutput(row, model, [outputId], undefined))?.id;
+    if (typeof id !== "string" && typeof id !== "number")
+      throw new BetterAuthError(`Adapter "${context.adapterId}" must expose a logical string or number id through its output transform.`);
+    const [condition] = context.transformWhereClause({
+      model,
+      where: [{
+        field: "id",
+        value: id
+      }],
+      action
+    });
+    if (!condition)
+      throw new BetterAuthError("The atomic fallback id condition was transformed away.");
+    return condition;
+  }
+  async function readRow({ model, where }) {
+    const result = readSchema.safeParse(await adapter.findOne({
+      model,
+      where
+    }));
+    if (!result.success)
+      throw new BetterAuthError(`Adapter "${adapterId}" must return a row snapshot or null.`);
+    return result.data ?? null;
+  }
+  async function snapshotGuard(row, fields, request, action) {
+    const id = await idWhere(row, request.logicalModel, action);
+    const hasOr = request.where.some((clause) => clause.connector === "OR");
+    const guard = hasOr ? [id] : [...request.where, id];
+    const keys = new Set(fields);
+    for (const field of keys) {
+      if (field === id.field)
+        continue;
+      const value = scalar.safeParse(row[field] ?? null);
+      if (!value.success) {
+        if (hasOr && request.where.some((clause) => clause.field === field))
+          throw new BetterAuthError(`Adapter "${adapterId}" must implement native atomic methods for OR predicates on structured values.`);
+        continue;
+      }
+      guard.push({
+        field,
+        value: value.data,
+        operator: "eq",
+        connector: "AND",
+        mode: "sensitive"
+      });
+    }
+    return guard;
+  }
+  function changedOne(count) {
+    if (count !== 0 && count !== 1)
+      throw new BetterAuthError(`Adapter "${adapterId}" must return an affected row count of 0 or 1 from an atomic fallback.`);
+    return count === 1;
+  }
+  async function consumeOne(request) {
+    const { model, where } = request;
+    const row = await readRow(request);
+    if (row === null)
+      return null;
+    const guard = await snapshotGuard(row, [...Object.keys(row), ...where.map(({ field }) => field)], request, "consumeOne");
+    return changedOne(await adapter.deleteMany({
+      model,
+      where: guard
+    })) ? row : null;
+  }
+  async function incrementOne(request) {
+    const { model, where } = request;
+    const mutation = mutationSchema.safeParse(request);
+    if (!mutation.success)
+      throw new BetterAuthError("incrementOne requires finite increments and a set object for the atomic fallback.");
+    const { increment, set } = mutation.data;
+    const deltas = Object.entries(increment);
+    const fields = [
+      ...where.map(({ field }) => field),
+      ...Object.keys(increment),
+      ...Object.keys(set ?? {})
+    ];
+    for (let attempt = 0;attempt < MAX_ATTEMPTS; attempt++) {
+      const row = await readRow(request);
+      if (row === null)
+        return null;
+      const update = { ...set };
+      for (const [field, delta] of deltas) {
+        const previous = counterSchema.safeParse(row[field]);
+        if (!previous.success)
+          throw new BetterAuthError(`Adapter "${adapterId}" must return finite numeric counter values or null for atomic increments.`);
+        const current = previous.data ?? 0;
+        const next = current + delta;
+        if (!Number.isFinite(next) || delta !== 0 && next === current)
+          throw new BetterAuthError(`Adapter "${adapterId}" cannot represent the requested counter increment safely.`);
+        update[field] = next;
+      }
+      const guard = await snapshotGuard(row, fields, request, "incrementOne");
+      if (Object.entries(update).every(([field, value]) => {
+        const previous = row[field];
+        if (previous instanceof Date && value instanceof Date)
+          return previous.getTime() === value.getTime();
+        return Object.is(previous, value);
+      }))
+        return row;
+      if (changedOne(await adapter.updateMany({
+        model,
+        where: guard,
+        update
+      })))
+        return {
+          ...row,
+          ...update
+        };
+    }
+    throw new BetterAuthError(`Adapter "${adapterId}" could not complete an atomic increment due to contention. Retry the operation or implement incrementOne natively.`);
+  }
+  return {
+    consumeOne,
+    incrementOne
+  };
+}
+var MAX_ATTEMPTS = 5, scalar, readSchema, setSchema, mutationSchema, counterSchema;
+var init_atomic_fallback = __esm(() => {
+  init_error2();
+  init_zod();
+  scalar = union([
+    string2(),
+    number2(),
+    boolean2(),
+    date3()
+  ]).nullable();
+  readSchema = record(string2(), unknown()).nullish();
+  setSchema = record(string2(), unknown()).transform((values) => {
+    const assignments = {};
+    for (const [field, value] of Object.entries(values))
+      if (value !== undefined)
+        assignments[field] = value;
+    return assignments;
+  });
+  mutationSchema = object({
+    increment: record(string2(), number2()),
+    set: setSchema.optional()
+  });
+  counterSchema = number2().nullish();
+});
+
 // node_modules/@better-auth/core/dist/db/adapter/factory.mjs
 function formatTransactionId(transactionId) {
   if (getColorDepth() < 8)
@@ -17201,10 +17405,10 @@ function isBigInt(obj) {
 function isBuffer(obj) {
   return typeof Buffer !== "undefined" && Buffer.isBuffer(obj);
 }
-function isFunction(obj) {
+function isFunction2(obj) {
   return typeof obj === "function";
 }
-function isObject3(obj) {
+function isObject4(obj) {
   return typeof obj === "object" && obj !== null;
 }
 function freeze(obj) {
@@ -17527,7 +17731,7 @@ var init_table_node = __esm(() => {
 
 // node_modules/kysely/dist/operation-node/operation-node-source.js
 function isOperationNodeSource(obj) {
-  return isObject3(obj) && isFunction(obj.toOperationNode);
+  return isObject4(obj) && isFunction2(obj.toOperationNode);
 }
 var init_operation_node_source = __esm(() => {
   init_object_utils();
@@ -17535,10 +17739,10 @@ var init_operation_node_source = __esm(() => {
 
 // node_modules/kysely/dist/expression/expression.js
 function isExpression(obj) {
-  return isObject3(obj) && "expressionType" in obj && isOperationNodeSource(obj);
+  return isObject4(obj) && "expressionType" in obj && isOperationNodeSource(obj);
 }
 function isAliasedExpression(obj) {
-  return isObject3(obj) && "expression" in obj && isString(obj.alias) && isOperationNodeSource(obj);
+  return isObject4(obj) && "expression" in obj && isString(obj.alias) && isOperationNodeSource(obj);
 }
 var init_expression = __esm(() => {
   init_operation_node_source();
@@ -17870,7 +18074,7 @@ class DynamicReferenceBuilder {
   }
 }
 function isDynamicReferenceBuilder(obj) {
-  return isObject3(obj) && isOperationNodeSource(obj) && isString(obj.dynamicReference);
+  return isObject4(obj) && isOperationNodeSource(obj) && isString(obj.dynamicReference);
 }
 var init_dynamic_reference_builder = __esm(() => {
   init_operation_node_source();
@@ -19201,7 +19405,7 @@ var init_selection_node = __esm(() => {
 
 // node_modules/kysely/dist/parser/select-parser.js
 function parseSelectArg(selection) {
-  if (isFunction(selection)) {
+  if (isFunction2(selection)) {
     return parseSelectArg(selection(expressionBuilder()));
   } else if (isReadonlyArray(selection)) {
     return selection.map((it) => parseSelectExpression(it));
@@ -19278,7 +19482,7 @@ var init_default_insert_value_node = __esm(() => {
 
 // node_modules/kysely/dist/parser/insert-values-parser.js
 function parseInsertExpression(arg) {
-  const objectOrList = isFunction(arg) ? arg(expressionBuilder()) : arg;
+  const objectOrList = isFunction2(arg) ? arg(expressionBuilder()) : arg;
   const list = isReadonlyArray(objectOrList) ? objectOrList : freeze([objectOrList]);
   return parseInsertColumnsAndValues(list);
 }
@@ -19367,7 +19571,7 @@ function parseUpdate(...args) {
   return parseUpdateObjectExpression(args[0]);
 }
 function parseUpdateObjectExpression(update) {
-  const updateObj = isFunction(update) ? update(expressionBuilder()) : update;
+  const updateObj = isFunction2(update) ? update(expressionBuilder()) : update;
   return Object.entries(updateObj).filter(([_, value]) => value !== undefined).map(([key, value]) => {
     return ColumnUpdateNode.create(ColumnNode.create(key), parseValueExpression(value));
   });
@@ -20448,7 +20652,7 @@ var init_cte_builder = __esm(() => {
 // node_modules/kysely/dist/parser/with-parser.js
 function parseCommonTableExpression(nameOrBuilderCallback, expression) {
   const expressionNode = isOperationNodeSource(expression) ? expression.toOperationNode() : expression(createQueryCreator()).toOperationNode();
-  if (isFunction(nameOrBuilderCallback)) {
+  if (isFunction2(nameOrBuilderCallback)) {
     return nameOrBuilderCallback(cteBuilderFactory(expressionNode)).toOperationNode();
   }
   return CommonTableExpressionNode.create(parseCommonTableExpressionName(nameOrBuilderCallback), expressionNode);
@@ -21519,7 +21723,7 @@ var init_operation_node_transformer = __esm(() => {
 
 // node_modules/kysely/dist/operation-node/operation-node.js
 function isOperationNode(thing) {
-  return isObject3(thing) && isString(thing.kind);
+  return isObject4(thing) && isString(thing.kind);
 }
 var init_operation_node = __esm(() => {
   init_object_utils();
@@ -22546,7 +22750,7 @@ var init_group_by_item_node = __esm(() => {
 
 // node_modules/kysely/dist/parser/group-by-parser.js
 function parseGroupBy(groupBy) {
-  groupBy = isFunction(groupBy) ? groupBy(expressionBuilder()) : groupBy;
+  groupBy = isFunction2(groupBy) ? groupBy(expressionBuilder()) : groupBy;
   return parseReferenceExpressionOrList(groupBy).map(GroupByItemNode.create);
 }
 var init_group_by_parser = __esm(() => {
@@ -22577,7 +22781,7 @@ var init_set_operation_node = __esm(() => {
 
 // node_modules/kysely/dist/parser/set-operation-parser.js
 function parseSetOperations(operator, expression, all) {
-  if (isFunction(expression)) {
+  if (isFunction2(expression)) {
     expression = expression(createExpressionBuilder());
   }
   if (!isReadonlyArray(expression)) {
@@ -23863,7 +24067,7 @@ var init_expression_builder = __esm(() => {
 function parseExpression(exp) {
   if (isOperationNodeSource(exp)) {
     return exp.toOperationNode();
-  } else if (isFunction(exp)) {
+  } else if (isFunction2(exp)) {
     return exp(expressionBuilder()).toOperationNode();
   }
   throw new Error(`invalid expression: ${JSON.stringify(exp)}`);
@@ -23871,13 +24075,13 @@ function parseExpression(exp) {
 function parseAliasedExpression(exp) {
   if (isOperationNodeSource(exp)) {
     return exp.toOperationNode();
-  } else if (isFunction(exp)) {
+  } else if (isFunction2(exp)) {
     return exp(expressionBuilder()).toOperationNode();
   }
   throw new Error(`invalid aliased expression: ${JSON.stringify(exp)}`);
 }
 function isExpressionOrFactory(obj) {
-  return isExpression(obj) || isAliasedExpression(obj) || isFunction(obj);
+  return isExpression(obj) || isAliasedExpression(obj) || isFunction2(obj);
 }
 var init_expression_parser = __esm(() => {
   init_expression();
@@ -23918,7 +24122,7 @@ class AliasedDynamicTableBuilder {
   }
 }
 function isAliasedDynamicTableBuilder(obj) {
-  return isObject3(obj) && isOperationNodeSource(obj) && isString(obj.table) && isString(obj.alias);
+  return isObject4(obj) && isOperationNodeSource(obj) && isString(obj.table) && isString(obj.alias);
 }
 var init_dynamic_table_builder = __esm(() => {
   init_alias_node();
@@ -26374,7 +26578,7 @@ var init_default_query_executor = __esm(() => {
 
 // node_modules/kysely/dist/util/performance-now.js
 function performanceNow() {
-  if (typeof performance !== "undefined" && isFunction(performance.now)) {
+  if (typeof performance !== "undefined" && isFunction2(performance.now)) {
     return performance.now();
   } else {
     return Date.now();
@@ -26609,7 +26813,7 @@ class Log {
   #levels;
   #logger;
   constructor(config) {
-    if (isFunction(config)) {
+    if (isFunction2(config)) {
       this.#logger = config;
       this.#levels = freeze({
         query: true,
@@ -26663,7 +26867,7 @@ var init_log = __esm(() => {
 
 // node_modules/kysely/dist/util/compilable.js
 function isCompilable(value) {
-  return isObject3(value) && isFunction(value.compile);
+  return isObject4(value) && isFunction2(value.compile);
 }
 var init_compilable = __esm(() => {
   init_object_utils();
@@ -26671,7 +26875,7 @@ var init_compilable = __esm(() => {
 
 // node_modules/kysely/dist/kysely.js
 function isKyselyProps(obj) {
-  return isObject3(obj) && isObject3(obj.config) && isObject3(obj.driver) && isObject3(obj.executor) && isObject3(obj.dialect);
+  return isObject4(obj) && isObject4(obj.config) && isObject4(obj.driver) && isObject4(obj.executor) && isObject4(obj.dialect);
 }
 
 class ConnectionBuilder {
@@ -28845,7 +29049,7 @@ class SqliteDriver {
     this.#config = freeze({ ...config });
   }
   async init(options) {
-    this.#db = isFunction(this.#config.database) ? await this.#config.database(options) : this.#config.database;
+    this.#db = isFunction2(this.#config.database) ? await this.#config.database(options) : this.#config.database;
     this.#connection = new SqliteConnection(this.#db);
     if (this.#config.onCreateConnection) {
       await this.#config.onCreateConnection(this.#connection, options);
@@ -29094,7 +29298,7 @@ ${stackExtension}`;
   return err;
 }
 function isStackHolder(obj) {
-  return isObject3(obj) && isString(obj.stack);
+  return isObject4(obj) && isString(obj.stack);
 }
 var init_stack_trace_utils = __esm(() => {
   init_object_utils();
@@ -29109,7 +29313,7 @@ class MysqlDriver {
     this.#config = freeze({ ...config });
   }
   async init(options) {
-    this.#pool = isFunction(this.#config.pool) ? await this.#config.pool(options) : this.#config.pool;
+    this.#pool = isFunction2(this.#config.pool) ? await this.#config.pool(options) : this.#config.pool;
   }
   async acquireConnection(options) {
     const rawConnection = await this.#acquireConnection();
@@ -29182,7 +29386,7 @@ class MysqlDriver {
   }
 }
 function isOkPacket(obj) {
-  return isObject3(obj) && "insertId" in obj && "affectedRows" in obj;
+  return isObject4(obj) && "insertId" in obj && "affectedRows" in obj;
 }
 var PRIVATE_RELEASE_METHOD, MysqlConnection;
 var init_mysql_driver = __esm(() => {
@@ -29254,7 +29458,7 @@ var init_mysql_driver = __esm(() => {
           };
         }
       } catch (error) {
-        if (isObject3(error) && "code" in error && error.code === "ERR_STREAM_PREMATURE_CLOSE") {
+        if (isObject4(error) && "code" in error && error.code === "ERR_STREAM_PREMATURE_CLOSE") {
           return;
         }
         throw error;
@@ -29504,7 +29708,7 @@ class PostgresDriver {
     this.#config = freeze({ ...config });
   }
   async init(options) {
-    this.#pool = isFunction(this.#config.pool) ? await this.#config.pool(options) : this.#config.pool;
+    this.#pool = isFunction2(this.#config.pool) ? await this.#config.pool(options) : this.#config.pool;
   }
   async acquireConnection(options) {
     const client = await this.#pool.connect();
@@ -30579,210 +30783,6 @@ var init_dist2 = __esm(() => {
   init_rename_value_node();
   init_compilable();
   init_log();
-});
-
-// node_modules/@better-auth/core/dist/db/schema-diff.mjs
-function getExpectedSchema(options, { usePlural = false } = {}) {
-  const expected = {};
-  for (const table of Object.values(getAuthTables(options))) {
-    const name = usePlural ? `${table.modelName}s` : table.modelName;
-    const entry = expected[name] ??= {
-      fields: {},
-      disableMigrations: true
-    };
-    for (const [key, field] of Object.entries(table.fields))
-      entry.fields[field.fieldName || key] = field;
-    entry.disableMigrations = entry.disableMigrations && !!table.disableMigrations;
-  }
-  return expected;
-}
-function diffSchema(expected, actual) {
-  const findings = [];
-  for (const [tableName, table] of Object.entries(expected)) {
-    if (table.disableMigrations)
-      continue;
-    const actualTable = actual.find((candidate) => candidate.name === tableName && (table.schema === undefined || candidate.schema === table.schema));
-    if (!actualTable) {
-      findings.push({
-        kind: "missing-table",
-        table: tableName
-      });
-      continue;
-    }
-    const written = new Set([table.idColumn ?? "id", ...Object.keys(table.fields)]);
-    for (const column of written)
-      if (!actualTable.columns.some((candidate) => candidate.name === column))
-        findings.push({
-          kind: "missing-column",
-          table: tableName,
-          column
-        });
-    for (const column of actualTable.columns) {
-      if (written.has(column.name) || column.nullable || column.hasDefault)
-        continue;
-      findings.push({
-        kind: "unexpected-required-column",
-        table: tableName,
-        column: column.name
-      });
-    }
-  }
-  return findings;
-}
-function formatSchemaFinding(finding, source) {
-  switch (finding.kind) {
-    case "missing-table":
-      return `Table "${finding.table}" is missing. ${applyHint[source]}`;
-    case "missing-column":
-      return `Column "${finding.column}" is missing from table "${finding.table}". ${applyHint[source]}`;
-    case "unexpected-required-column": {
-      const issuer = finding.column === "issuer" ? " If this column came from Better Auth 1.7.0 through 1.7.2, follow the upgrade guide before removing it: https://www.better-auth.com/docs/guides/1-7-upgrade-guide" : "";
-      return `Column "${finding.column}" on table "${finding.table}" is required but Better Auth never writes it, so every insert into "${finding.table}" fails. ${relaxHint[source]}${issuer}`;
-    }
-  }
-}
-function formatSchemaMismatch(findings, source) {
-  const tables = [];
-  const columns = [];
-  const required = [];
-  const affectedTables = /* @__PURE__ */ new Set;
-  let hasIssuer = false;
-  for (const finding of findings)
-    switch (finding.kind) {
-      case "missing-table":
-        tables.push(finding.table);
-        break;
-      case "missing-column":
-        columns.push(`${finding.table}.${finding.column}`);
-        break;
-      case "unexpected-required-column":
-        required.push(`${finding.table}.${finding.column}`);
-        affectedTables.add(finding.table);
-        hasIssuer ||= finding.column === "issuer";
-        break;
-    }
-  const sections = [`${sourceLabel[source]} schema mismatch`];
-  if (tables.length)
-    sections.push(`  Missing tables
-    ${tables.join(", ")}`);
-  if (columns.length)
-    sections.push(`  Missing columns
-    ${columns.join(`
-    `)}`);
-  if (required.length) {
-    sections.push(`  Required columns Better Auth never writes
-    ${required.join(`
-    `)}`);
-    sections.push(`  Inserts into ${[...affectedTables].join(", ")} will fail.`);
-  }
-  const help = [];
-  if (required.length)
-    help.push(repairHint[source]);
-  if (tables.length || columns.length || required.length && source !== "database")
-    help.push(migrationHint[source]);
-  if (help.length)
-    sections.push(`  help: ${help.join(`
-        `)}`);
-  if (hasIssuer)
-    sections.push(`  note: If this column came from Better Auth 1.7.0 through 1.7.2,
-        follow the upgrade guide before removing it:
-        https://www.better-auth.com/docs/guides/1-7-upgrade-guide`);
-  return sections.join(`
-
-`);
-}
-var applyHint, relaxHint, sourceLabel, repairHint, migrationHint, SchemaMismatchError;
-var init_schema_diff = __esm(() => {
-  init_error2();
-  init_get_tables();
-  applyHint = {
-    database: "Run `npx auth migrate` to add it.",
-    drizzle: "Run `npx auth generate` to refresh the Drizzle schema, then apply it with your migration tool.",
-    prisma: "Run `npx auth generate` to refresh the Prisma schema, then run `prisma migrate`."
-  };
-  relaxHint = {
-    database: "Drop the column, make it nullable, or give it a database default.",
-    drizzle: "Remove it from the Drizzle schema, make it nullable, or give it a default, then apply the change with your migration tool.",
-    prisma: "Remove it from the Prisma schema, make it optional, or give it a default, then run `prisma migrate`."
-  };
-  sourceLabel = {
-    database: "Database",
-    drizzle: "Drizzle",
-    prisma: "Prisma"
-  };
-  repairHint = {
-    database: "Make the listed columns nullable, give them defaults, or remove them.",
-    drizzle: "Make the listed columns nullable in your Drizzle schema, give them defaults, or remove them.",
-    prisma: "Make the listed fields optional in your Prisma schema, give them defaults, or remove them."
-  };
-  migrationHint = {
-    ...applyHint,
-    database: "Run `npx auth migrate` to add the missing tables and columns."
-  };
-  SchemaMismatchError = class extends BetterAuthError {
-    code = "SCHEMA_MISMATCH";
-    constructor(findings, source) {
-      super(formatSchemaMismatch(findings, source));
-      this.findings = findings;
-      this.source = source;
-    }
-  };
-});
-
-// node_modules/@better-auth/core/dist/db/schema-check.mjs
-function checksSchema(options) {
-  return options.advanced?.database?.validateSchema !== false;
-}
-function invalidateSchemaChecks(database) {
-  const revision = schemaRevisions.get(database);
-  if (revision)
-    revision.value++;
-}
-function registerSchemaCheck(adapter, check) {
-  schemaChecks.set(adapter, check);
-}
-function schemaCheckFor(adapter) {
-  return schemaChecks.get(adapter);
-}
-function createSchemaCheck(find, source, database) {
-  let revision = database ? schemaRevisions.get(database) : undefined;
-  if (database && !revision) {
-    revision = { value: 0 };
-    schemaRevisions.set(database, revision);
-  }
-  let checkedRevision = revision?.value;
-  let clean = false;
-  let verdict;
-  return function checkSchema() {
-    const currentRevision = revision?.value;
-    if (checkedRevision !== currentRevision) {
-      checkedRevision = currentRevision;
-      clean = false;
-      verdict = undefined;
-    }
-    if (clean)
-      return;
-    return verdict ??= Promise.resolve().then(find).then((findings) => {
-      if (revision?.value !== currentRevision)
-        return checkSchema();
-      if (findings.length)
-        throw new SchemaMismatchError(findings, source);
-      if (checkedRevision === currentRevision)
-        clean = true;
-    }, (error) => {
-      if (revision?.value !== currentRevision)
-        return checkSchema();
-      if (checkedRevision === currentRevision)
-        verdict = undefined;
-      throw error;
-    });
-  };
-}
-var schemaChecks, schemaRevisions;
-var init_schema_check = __esm(() => {
-  init_schema_diff();
-  schemaChecks = /* @__PURE__ */ new WeakMap;
-  schemaRevisions = /* @__PURE__ */ new WeakMap;
 });
 
 // node_modules/@better-auth/core/dist/db/internal.mjs
@@ -89548,4044 +89548,9 @@ var _Elysia = class _Elysia {
 var Elysia = _Elysia;
 // node_modules/better-auth/dist/utils/hide-metadata.mjs
 var HIDE_METADATA = { scope: "server" };
-// node_modules/@better-auth/core/dist/db/index.mjs
-init_get_tables();
 
-// node_modules/@better-auth/core/dist/db/schema/shared.mjs
-init_zod();
-var coreSchema = object({
-  id: string2(),
-  createdAt: date3().default(() => /* @__PURE__ */ new Date),
-  updatedAt: date3().default(() => /* @__PURE__ */ new Date)
-});
-
-// node_modules/@better-auth/core/dist/db/schema/session.mjs
-init_zod();
-var sessionSchema = coreSchema.extend({
-  userId: string3(),
-  expiresAt: date3(),
-  token: string2(),
-  ipAddress: string2().nullish(),
-  userAgent: string2().nullish()
-});
-
-// node_modules/@better-auth/core/dist/db/schema/user.mjs
-init_zod();
-var userSchema = coreSchema.extend({
-  email: string2().transform((val) => val.toLowerCase()),
-  emailVerified: boolean2().default(false),
-  name: string2(),
-  image: string2().nullish()
-});
-
-// node_modules/better-auth/dist/db/adapter-base.mjs
-init_env();
-async function getBaseAdapter(options, handleDirectDatabase) {
-  let adapter;
-  if (!options.database) {
-    const tables = getAuthTables(options);
-    const memoryDB = Object.keys(tables).reduce((acc, key) => {
-      acc[key] = [];
-      return acc;
-    }, {});
-    await Promise.resolve().then(() => init_dist());
-    adapter = memoryAdapter(memoryDB)(options);
-  } else if (typeof options.database === "function")
-    adapter = options.database(options);
-  else
-    adapter = await handleDirectDatabase(options);
-  if (!adapter.transaction) {
-    logger.warn("Adapter does not correctly implement transaction function, patching it automatically. Please update your adapter implementation.");
-    adapter.transaction = async (cb) => {
-      return cb(adapter);
-    };
-  }
-  return adapter;
-}
-
-// node_modules/better-auth/dist/db/adapter-kysely.mjs
+// node_modules/@better-auth/core/dist/utils/is-api-error.mjs
 init_error2();
-async function getAdapter(options) {
-  return getBaseAdapter(options, async (opts) => {
-    await Promise.resolve().then(() => init_kysely_adapter());
-    const { kysely, databaseType, transaction } = await createKyselyAdapter(opts);
-    if (!kysely)
-      throw new BetterAuthError("Failed to initialize database adapter");
-    return kyselyAdapter(kysely, {
-      type: databaseType || "sqlite",
-      debugLogs: opts.database && "debugLogs" in opts.database ? opts.database.debugLogs : false,
-      transaction
-    })(opts);
-  });
-}
-
-// node_modules/better-auth/dist/db/get-schema.mjs
-init_internal();
-function getSchema(config) {
-  const { indexesByTable, tables } = getAuthTablesWithResolvedIndexes(config);
-  const schema = {};
-  for (const key in tables) {
-    const table = tables[key];
-    const fields = table.fields;
-    const actualFields = {};
-    Object.entries(fields).forEach(([key, field]) => {
-      actualFields[field.fieldName || key] = field;
-      if (field.references) {
-        const refTable = tables[field.references.model];
-        if (refTable)
-          actualFields[field.fieldName || key].references = {
-            ...field.references,
-            model: refTable.modelName,
-            field: field.references.field
-          };
-      }
-    });
-    if (schema[table.modelName]) {
-      schema[table.modelName].fields = {
-        ...schema[table.modelName].fields,
-        ...actualFields
-      };
-      if (table.disableMigrations)
-        schema[table.modelName].disableMigrations = true;
-      continue;
-    }
-    schema[table.modelName] = {
-      fields: actualFields,
-      order: table.order || Infinity,
-      disableMigrations: table.disableMigrations
-    };
-  }
-  for (const [tableName, indexes] of indexesByTable)
-    if (schema[tableName])
-      schema[tableName].indexes = indexes;
-  return schema;
-}
-
-// node_modules/better-auth/dist/db/get-migration.mjs
-init_env();
-init_error2();
-init_dist3();
-init_adapter();
-init_internal();
-init_dist2();
-var map3 = {
-  postgres: {
-    string: [
-      "character varying",
-      "varchar",
-      "text",
-      "uuid"
-    ],
-    number: [
-      "int4",
-      "integer",
-      "bigint",
-      "smallint",
-      "numeric",
-      "real",
-      "double precision"
-    ],
-    boolean: ["bool", "boolean"],
-    date: [
-      "timestamptz",
-      "timestamp",
-      "date"
-    ],
-    json: ["json", "jsonb"]
-  },
-  mysql: {
-    string: [
-      "varchar",
-      "text",
-      "uuid"
-    ],
-    number: [
-      "integer",
-      "int",
-      "bigint",
-      "smallint",
-      "decimal",
-      "float",
-      "double"
-    ],
-    boolean: ["boolean", "tinyint"],
-    date: [
-      "timestamp",
-      "datetime",
-      "date"
-    ],
-    json: ["json"]
-  },
-  sqlite: {
-    string: ["TEXT"],
-    number: [
-      "INTEGER",
-      "REAL",
-      "BIGINT"
-    ],
-    boolean: ["INTEGER", "BOOLEAN"],
-    date: ["DATE", "INTEGER"],
-    json: ["TEXT"]
-  },
-  mssql: {
-    string: [
-      "varchar",
-      "nvarchar",
-      "uniqueidentifier"
-    ],
-    number: [
-      "int",
-      "bigint",
-      "smallint",
-      "decimal",
-      "float",
-      "double"
-    ],
-    boolean: ["bit", "smallint"],
-    date: [
-      "datetime2",
-      "date",
-      "datetime"
-    ],
-    json: ["varchar", "nvarchar"]
-  }
-};
-function createDatabaseIndexKey(tableName, indexName) {
-  return `${getPortableDatabaseIdentifierKey(tableName)}\x00${getPortableDatabaseIdentifierKey(indexName)}`;
-}
-function createDatabaseColumnKey(tableName, columnName) {
-  return `${tableName}\x00${columnName}`;
-}
-function databaseIndexMatches(existing, configured) {
-  return existing.unique === (configured.unique ?? false) && existing.validFullColumns && existing.columns.length === configured.columns.length && existing.columns.every((column, position) => column === configured.columns[position]);
-}
-function databaseValueIsTrue(value) {
-  if (typeof value === "boolean")
-    return value;
-  if (typeof value === "number")
-    return value !== 0;
-  return value === "1" || value?.toLowerCase() === "true" || value === "t";
-}
-function toDatabaseIndexMap(indexes) {
-  return new Map(indexes.map((index) => {
-    const columns = [...index.columns].sort((left, right) => left.position - right.position);
-    return [createDatabaseIndexKey(index.table, index.name), {
-      columns: columns.flatMap((column) => column.name === null ? [] : [column.name]),
-      name: index.name,
-      table: index.table,
-      unique: index.unique,
-      validFullColumns: index.valid && !index.partial && columns.length > 0 && columns.every((column) => column.name !== null && column.fullLength)
-    }];
-  }));
-}
-async function getDatabaseIndexMap(db, dbType, schemaName, tableNames, introspectIndexes) {
-  if (introspectIndexes)
-    return toDatabaseIndexMap(await introspectIndexes(tableNames));
-  let rows;
-  if (dbType === "sqlite")
-    rows = (await sql`
-				SELECT
-					tables.name AS "tableName",
-					index_list.name AS "indexName",
-					index_info.name AS "columnName",
-					index_list."unique" AS "isUnique",
-					index_list.partial AS "isPartial",
-					index_info.seqno AS "columnPosition"
-				FROM sqlite_master AS tables
-				INNER JOIN pragma_index_list(tables.name) AS index_list
-				INNER JOIN pragma_index_info(index_list.name) AS index_info
-				WHERE tables.type = 'table'
-			`.execute(db)).rows;
-  else if (dbType === "postgres")
-    rows = (await sql`
-				SELECT
-					table_class.relname AS "tableName",
-					index_class.relname AS "indexName",
-					index_attribute.attname AS "columnName",
-					index_data.indisunique AS "isUnique",
-					index_data.indisvalid AS "isValid",
-					(index_data.indpred IS NOT NULL) AS "isPartial",
-					index_column.ordinality AS "columnPosition"
-				FROM pg_class AS table_class
-				INNER JOIN pg_namespace AS table_namespace
-					ON table_namespace.oid = table_class.relnamespace
-				INNER JOIN pg_index AS index_data
-					ON index_data.indrelid = table_class.oid
-				INNER JOIN pg_class AS index_class
-					ON index_class.oid = index_data.indexrelid
-				INNER JOIN LATERAL unnest(index_data.indkey)
-					WITH ORDINALITY AS index_column(attribute_number, ordinality)
-					ON TRUE
-				LEFT JOIN pg_attribute AS index_attribute
-					ON index_attribute.attrelid = table_class.oid
-					AND index_attribute.attnum = index_column.attribute_number
-				WHERE table_namespace.nspname = ${schemaName}
-					AND table_class.relkind = 'r'
-					AND index_column.ordinality <= index_data.indnkeyatts
-			`.execute(db)).rows;
-  else if (dbType === "mysql")
-    rows = (await sql`
-				SELECT
-					table_name AS tableName,
-					index_name AS indexName,
-					column_name AS columnName,
-					non_unique AS nonUnique,
-					seq_in_index AS columnPosition,
-					sub_part AS prefixLength,
-					COALESCE(LOWER(comment) = 'disabled', FALSE) AS isDisabled
-				FROM information_schema.statistics
-				WHERE table_schema = DATABASE()
-			`.execute(db)).rows;
-  else
-    rows = (await sql`
-				SELECT
-					tables.name AS "tableName",
-					indexes.name AS "indexName",
-					columns.name AS "columnName",
-					indexes.is_unique AS "isUnique",
-					indexes.is_disabled AS "isDisabled",
-					indexes.is_hypothetical AS "isHypothetical",
-					indexes.has_filter AS "isPartial",
-					index_columns.key_ordinal AS "columnPosition"
-				FROM sys.indexes AS indexes
-				INNER JOIN sys.tables AS tables
-					ON indexes.object_id = tables.object_id
-				INNER JOIN sys.schemas AS table_schemas
-					ON table_schemas.schema_id = tables.schema_id
-				INNER JOIN sys.index_columns AS index_columns
-					ON index_columns.object_id = indexes.object_id
-					AND index_columns.index_id = indexes.index_id
-				INNER JOIN sys.columns AS columns
-					ON columns.object_id = index_columns.object_id
-					AND columns.column_id = index_columns.column_id
-				WHERE table_schemas.name = ${schemaName}
-					AND indexes.name IS NOT NULL
-					AND index_columns.key_ordinal > 0
-			`.execute(db)).rows;
-  const indexMetadata = /* @__PURE__ */ new Map;
-  for (const row of rows) {
-    const table = row.tableName ?? row.table_name ?? row.TABLE_NAME ?? row.tablename ?? row.tbl_name;
-    const name = row.indexName ?? row.index_name ?? row.INDEX_NAME ?? row.name;
-    const column = row.columnName ?? row.column_name ?? row.COLUMN_NAME;
-    if (!table || !name)
-      continue;
-    const key = createDatabaseIndexKey(table, name);
-    const nonUnique = row.nonUnique ?? row.non_unique ?? row.NON_UNIQUE;
-    const unique = nonUnique === undefined ? databaseValueIsTrue(row.isUnique ?? row.is_unique) : !databaseValueIsTrue(nonUnique);
-    const position = Number(row.columnPosition ?? row.column_position ?? row.keyOrdinal ?? row.key_ordinal ?? row.ordinality ?? row.seqInIndex ?? row.seq_in_index ?? row.SEQ_IN_INDEX ?? row.seqno ?? 0);
-    const indexColumn = {
-      fullLength: column !== undefined && column !== null && (row.prefixLength === undefined || row.prefixLength === null),
-      name: column ?? null,
-      position
-    };
-    const partial = databaseValueIsTrue(row.isPartial);
-    const valid = !databaseValueIsTrue(row.isDisabled) && !databaseValueIsTrue(row.isHypothetical) && (row.isValid === undefined || databaseValueIsTrue(row.isValid));
-    const existing = indexMetadata.get(key);
-    indexMetadata.set(key, existing ? {
-      ...existing,
-      columns: [...existing.columns, indexColumn],
-      partial: existing.partial || partial,
-      valid: existing.valid && valid
-    } : {
-      columns: [indexColumn],
-      name,
-      partial,
-      table,
-      unique,
-      valid
-    });
-  }
-  return toDatabaseIndexMap([...indexMetadata.values()]);
-}
-async function getDatabaseColumnBounds(db, dbType, schemaName) {
-  if (dbType !== "mysql" && dbType !== "mssql")
-    return /* @__PURE__ */ new Map;
-  let rows;
-  if (dbType === "mysql")
-    rows = (await sql`
-				SELECT
-					table_name AS tableName,
-					column_name AS columnName,
-					data_type AS dataType,
-					character_maximum_length AS characterMaximumLength
-				FROM information_schema.columns
-				WHERE table_schema = DATABASE()
-			`.execute(db)).rows;
-  else
-    rows = (await sql`
-				SELECT
-					tables.name AS "tableName",
-					columns.name AS "columnName",
-					types.name AS "dataType",
-					columns.max_length AS "maxLength"
-				FROM sys.columns AS columns
-				INNER JOIN sys.tables AS tables
-					ON tables.object_id = columns.object_id
-				INNER JOIN sys.schemas AS table_schemas
-					ON table_schemas.schema_id = tables.schema_id
-				INNER JOIN sys.types AS types
-					ON types.user_type_id = columns.user_type_id
-				WHERE table_schemas.name = ${schemaName}
-			`.execute(db)).rows;
-  return new Map(rows.flatMap((row) => {
-    const table = row.tableName ?? row.TABLE_NAME;
-    const column = row.columnName ?? row.COLUMN_NAME;
-    const dataType = (row.dataType ?? row.DATA_TYPE)?.toLowerCase();
-    if (!table || !column || !dataType)
-      return [];
-    if (dbType === "mysql") {
-      const characterLength = row.characterMaximumLength ?? row.CHARACTER_MAXIMUM_LENGTH;
-      const maxIndexBytes = characterLength === null || characterLength === undefined ? null : Number(characterLength) * 4;
-      return [[createDatabaseColumnKey(table, column), { maxIndexBytes }]];
-    }
-    const maxLength = Number(row.maxLength ?? -1);
-    return [[createDatabaseColumnKey(table, column), { maxIndexBytes: maxLength < 0 ? null : maxLength }]];
-  }));
-}
-function assertExistingTableIndexFits({ columnBounds, dbType, existingColumns, fields, indexes, index, table }) {
-  const byteBudget = dbType === "mysql" ? 3072 : 1700;
-  let requiredBytes = 0;
-  for (const column of index.columns) {
-    const field = fields[column];
-    if (!field)
-      continue;
-    if (field.type === "string" || Array.isArray(field.type)) {
-      if (!existingColumns.has(column)) {
-        const generatedLength = getDatabaseIndexStringLength({
-          columnName: column,
-          dialect: dbType,
-          fields,
-          indexes
-        });
-        requiredBytes += (generatedLength ?? 0) * (dbType === "mysql" ? 4 : 1);
-        continue;
-      }
-      const bound = columnBounds.get(createDatabaseColumnKey(table, column));
-      if (!bound?.maxIndexBytes)
-        throw new BetterAuthError(`Cannot create database index "${index.name}" on existing table "${table}" because column "${column}" is not bounded for ${dbType === "mysql" ? "MySQL" : "SQL Server"}. Change it to a bounded string column, resolve oversized values, then run the migration again.`);
-      requiredBytes += bound.maxIndexBytes;
-    } else
-      requiredBytes += 16;
-  }
-  if (requiredBytes > byteBudget)
-    throw new BetterAuthError(`Cannot create database index "${index.name}" on existing table "${table}" because its columns can exceed ${dbType === "mysql" ? "MySQL" : "SQL Server"}'s ${byteBudget}-byte index-key limit. Bound the indexed string columns to the generated schema lengths, resolve oversized values, then run the migration again.`);
-}
-var UnsafeMigrationError = class extends BetterAuthError {
-};
-function hasTimestampColumnDefault(field, dbType) {
-  return field.type === "date" && typeof field.defaultValue === "function" && (dbType === "postgres" || dbType === "mysql" || dbType === "mssql");
-}
-function hasStaticColumnDefault(field) {
-  return !(field.unique && field.required === false) && (field.type === "string" || field.type === "number" || field.type === "boolean") && field.defaultValue !== undefined && field.defaultValue !== null && typeof field.defaultValue !== "function";
-}
-async function tableHasRows(db, dbType, table) {
-  const probe = db.selectFrom(table).select(sql`1`.as("present"));
-  return (await (dbType === "mssql" ? probe.top(1) : probe.limit(1)).execute()).length > 0;
-}
-function matchType(columnDataType, fieldType, dbType) {
-  function normalize(type) {
-    return type.toLowerCase().split("(")[0].trim();
-  }
-  if (fieldType === "string[]" || fieldType === "number[]")
-    return columnDataType.toLowerCase().includes("json");
-  const types = map3[dbType];
-  return (Array.isArray(fieldType) ? types["string"].map((t) => t.toLowerCase()) : types[fieldType].map((t) => t.toLowerCase())).includes(normalize(columnDataType));
-}
-async function getMigrations(config, { throwOnUnsafe = true } = {}) {
-  const betterAuthSchema = getSchema(config);
-  const authTables = getAuthTables(config);
-  const logger = createLogger(config.logger);
-  const unsafeChanges = [];
-  const reportUnsafeChange = (message) => {
-    if (throwOnUnsafe)
-      throw new UnsafeMigrationError(message);
-    unsafeChanges.push(message);
-  };
-  let { kysely: db, databaseType: dbType, introspectIndexes } = await createKyselyAdapter(config);
-  if (!dbType) {
-    logger.warn("Could not determine database type, defaulting to sqlite. Please provide a type in the database options to avoid this.");
-    dbType = "sqlite";
-  }
-  if (!db) {
-    logger.error("Only kysely adapter is supported for migrations. You can use `generate` command to generate the schema, if you're using a different adapter.");
-    process.exit(1);
-  }
-  let currentSchema = dbType === "mssql" ? await getMssqlSchema(db) : "public";
-  if (dbType === "postgres") {
-    currentSchema = await getPostgresSchema(db);
-    logger.debug(`PostgreSQL migration: Using schema '${currentSchema}' (from search_path)`);
-    try {
-      const schemaCheck = await sql`
-				SELECT schema_name
-				FROM information_schema.schemata
-				WHERE schema_name = ${currentSchema}
-			`.execute(db);
-      if (!(schemaCheck.rows[0]?.schema_name ?? schemaCheck.rows[0]?.schemaName))
-        logger.warn(`Schema '${currentSchema}' does not exist. Tables will be inspected from available schemas. Consider creating the schema first or checking your database configuration.`);
-    } catch (error) {
-      logger.debug(`Could not verify schema existence: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  } else if (dbType === "mssql")
-    logger.debug(`SQL Server migration: Using schema '${currentSchema}' (from the current user's default schema)`);
-  const allTableMetadata = await db.introspection.getTables();
-  const databaseIndexMap = await getDatabaseIndexMap(db, dbType, currentSchema, allTableMetadata.map((table) => table.name), introspectIndexes);
-  const databaseColumnBounds = await getDatabaseColumnBounds(db, dbType, currentSchema);
-  let tableMetadata = allTableMetadata;
-  if (dbType === "postgres")
-    try {
-      const tablesInSchema = await sql`
-				SELECT table_name
-				FROM information_schema.tables
-				WHERE table_schema = ${currentSchema}
-				AND table_type = 'BASE TABLE'
-			`.execute(db);
-      const tableNamesInSchema = new Set(tablesInSchema.rows.map((row) => row.table_name ?? row.tableName));
-      tableMetadata = allTableMetadata.filter((table) => table.schema === currentSchema && tableNamesInSchema.has(table.name));
-      logger.debug(`Found ${tableMetadata.length} table(s) in schema '${currentSchema}': ${tableMetadata.map((t) => t.name).join(", ") || "(none)"}`);
-    } catch (error) {
-      logger.warn(`Could not filter tables by schema. Using all discovered tables. Error: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  else if (dbType === "mssql")
-    tableMetadata = allTableMetadata.filter((table) => table.schema === currentSchema);
-  const schemaProblems = diffSchema(toPhysicalSchema(db, betterAuthSchema), toIntrospectedTables(tableMetadata)).filter((finding) => finding.kind === "unexpected-required-column").map((finding) => formatSchemaFinding(finding, "database"));
-  const toBeCreated = [];
-  const toBeAdded = [];
-  const toBeAddedIndexes = [];
-  const plannedIndexes = /* @__PURE__ */ new Map;
-  for (const [key, value] of Object.entries(betterAuthSchema)) {
-    if (value.disableMigrations)
-      continue;
-    const table = tableMetadata.find((table) => table.name === key);
-    for (const index of value.indexes ?? []) {
-      const name = index.name;
-      const indexKey = createDatabaseIndexKey(key, name);
-      const existingIndex = databaseIndexMap.get(indexKey);
-      if (existingIndex) {
-        if (!databaseIndexMatches(existingIndex, index))
-          throw new BetterAuthError(`Database index "${name}" on table "${key}" does not match the configured fields and uniqueness. Rename or replace the existing index, then run the migration again.`);
-        continue;
-      }
-      if (dbType === "sqlite" || dbType === "postgres") {
-        const indexOnAnotherTable = [...databaseIndexMap.values()].find((databaseIndex) => getPortableDatabaseIdentifierKey(databaseIndex.name) === getPortableDatabaseIdentifierKey(name) && getPortableDatabaseIdentifierKey(databaseIndex.table) !== getPortableDatabaseIdentifierKey(key));
-        if (indexOnAnotherTable)
-          throw new BetterAuthError(`Database index name "${name}" is already used by table "${indexOnAnotherTable.table}". Index names must be unique across the schema.`);
-      }
-      const plannedIndex = plannedIndexes.get(indexKey);
-      if (plannedIndex) {
-        if (!databaseIndexMatches({
-          columns: plannedIndex.columns,
-          name: plannedIndex.name,
-          table: key,
-          unique: plannedIndex.unique ?? false,
-          validFullColumns: true
-        }, index))
-          throw new BetterAuthError(`Database index name "${name}" identifies more than one index on table "${key}".`);
-        continue;
-      }
-      if (table && (dbType === "mysql" || dbType === "mssql"))
-        assertExistingTableIndexFits({
-          columnBounds: databaseColumnBounds,
-          dbType,
-          existingColumns: new Set(table.columns.map((column) => column.name)),
-          fields: value.fields,
-          index,
-          indexes: value.indexes ?? [],
-          table: key
-        });
-      plannedIndexes.set(indexKey, index);
-      toBeAddedIndexes.push({
-        table: key,
-        index,
-        name
-      });
-    }
-    if (!table) {
-      const tIndex = toBeCreated.findIndex((t) => t.table === key);
-      const tableData = {
-        table: key,
-        fields: value.fields,
-        order: value.order || Infinity
-      };
-      const insertIndex = toBeCreated.findIndex((t) => (t.order || Infinity) > tableData.order);
-      if (insertIndex === -1)
-        if (tIndex === -1)
-          toBeCreated.push(tableData);
-        else
-          toBeCreated[tIndex].fields = {
-            ...toBeCreated[tIndex].fields,
-            ...value.fields
-          };
-      else
-        toBeCreated.splice(insertIndex, 0, tableData);
-      continue;
-    }
-    const toBeAddedFields = {};
-    for (const [fieldName, field] of Object.entries(value.fields)) {
-      const column = table.columns.find((c) => c.name === fieldName);
-      if (!column) {
-        toBeAddedFields[fieldName] = field;
-        continue;
-      }
-      if (field.required !== false && column.isNullable)
-        logger.warn(`Column "${fieldName}" on table "${key}" stays nullable while the schema declares the field required, so existing rows can still hold null. Backfill every row for this column and enforce NOT NULL to remove the drift.`);
-      if (matchType(column.dataType, field.type, dbType))
-        continue;
-      else
-        logger.warn(`Field ${fieldName} in table ${key} has a different type in the database. Expected ${field.type} but got ${column.dataType}.`);
-    }
-    if (Object.keys(toBeAddedFields).length > 0)
-      toBeAdded.push({
-        table: key,
-        fields: toBeAddedFields,
-        order: value.order || Infinity
-      });
-  }
-  const migrations = [];
-  const useUUIDs = config.advanced?.database?.generateId === "uuid";
-  const useNumberId = config.advanced?.database?.generateId === "serial";
-  function getType(field, fieldName, tableIndexStringLength) {
-    const type = field.type;
-    const provider = dbType || "sqlite";
-    const typeMap = {
-      string: {
-        sqlite: "text",
-        postgres: "text",
-        mysql: tableIndexStringLength ? `varchar(${tableIndexStringLength})` : field.unique ? "varchar(255)" : field.references ? "varchar(36)" : field.sortable ? "varchar(255)" : field.index ? "varchar(255)" : "text",
-        mssql: tableIndexStringLength ? `varchar(${tableIndexStringLength})` : field.unique || field.sortable ? "varchar(255)" : field.references ? "varchar(36)" : "varchar(8000)"
-      },
-      boolean: {
-        sqlite: "integer",
-        postgres: "boolean",
-        mysql: "boolean",
-        mssql: "smallint"
-      },
-      number: {
-        sqlite: field.bigint ? "bigint" : "integer",
-        postgres: field.bigint ? "bigint" : "integer",
-        mysql: field.bigint ? "bigint" : "integer",
-        mssql: field.bigint ? "bigint" : "integer"
-      },
-      date: {
-        sqlite: "date",
-        postgres: "timestamptz",
-        mysql: "timestamp(3)",
-        mssql: sql`datetime2(3)`
-      },
-      json: {
-        sqlite: "text",
-        postgres: "jsonb",
-        mysql: "json",
-        mssql: "varchar(8000)"
-      },
-      id: {
-        postgres: useNumberId ? sql`integer GENERATED BY DEFAULT AS IDENTITY` : useUUIDs ? "uuid" : "text",
-        mysql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
-        mssql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
-        sqlite: useNumberId ? "integer" : "text"
-      },
-      foreignKeyId: {
-        postgres: useNumberId ? "integer" : useUUIDs ? "uuid" : "text",
-        mysql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
-        mssql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
-        sqlite: useNumberId ? "integer" : "text"
-      },
-      "string[]": {
-        sqlite: "text",
-        postgres: "jsonb",
-        mysql: "json",
-        mssql: "varchar(8000)"
-      },
-      "number[]": {
-        sqlite: "text",
-        postgres: "jsonb",
-        mysql: "json",
-        mssql: "varchar(8000)"
-      }
-    };
-    if (fieldName === "id" || field.references?.field === "id") {
-      if (fieldName === "id")
-        return typeMap.id[provider];
-      return typeMap.foreignKeyId[provider];
-    }
-    if (Array.isArray(type))
-      return "text";
-    if (!(type in typeMap))
-      throw new Error(`Unsupported field type '${String(type)}' for field '${fieldName}'. Allowed types are: string, number, boolean, date, string[], number[]. If you need to store structured data, store it as a JSON string (type: "string") or split it into primitive fields. See https://better-auth.com/docs/advanced/schema#additional-fields`);
-    return typeMap[type][provider];
-  }
-  const getModelName = initGetModelName({
-    schema: authTables,
-    usePlural: false
-  });
-  const getFieldName = initGetFieldName({
-    schema: authTables,
-    usePlural: false
-  });
-  function getReferencePath(model, field) {
-    try {
-      return `${getModelName(model)}.${getFieldName({
-        model,
-        field
-      })}`;
-    } catch {
-      return `${model}.${field}`;
-    }
-  }
-  const deferredIndexes = [];
-  const getTableIndexStringLength = (tableName, fieldName) => {
-    if (dbType !== "mysql" && dbType !== "mssql")
-      return;
-    const table = betterAuthSchema[tableName];
-    if (!table)
-      return;
-    return getDatabaseIndexStringLength({
-      columnName: fieldName,
-      dialect: dbType,
-      fields: table.fields,
-      indexes: table.indexes ?? []
-    });
-  };
-  if (toBeAdded.length) {
-    const populatedTables = /* @__PURE__ */ new Map;
-    for (const table of toBeAdded)
-      for (const [fieldName, field] of Object.entries(table.fields)) {
-        const timestampDefault = hasTimestampColumnDefault(field, dbType);
-        const staticDefault = hasStaticColumnDefault(field);
-        if (field.required !== false && !timestampDefault && !staticDefault) {
-          let populated = populatedTables.get(table.table);
-          if (populated === undefined) {
-            populated = await tableHasRows(db, dbType, table.table);
-            populatedTables.set(table.table, populated);
-          }
-          if (populated) {
-            const textDetail = field.type === "string" ? " For a text column, every existing row ends up with the same empty string." : "";
-            reportUnsafeChange(`Cannot add required column "${fieldName}" to populated table "${table.table}": the schema declares no default value, so existing rows have no value to backfill. MySQL accepts this statement instead of rejecting it and fills every existing row with an implicit default for the column type, reporting a successful migration over corrupted data.${textDetail} Add the column as nullable, backfill a correct value for every row, then make it NOT NULL.`);
-          }
-        }
-        const type = getType(field, fieldName, getTableIndexStringLength(table.table, fieldName));
-        const builder = db.schema.alterTable(table.table);
-        if (field.index || field.unique) {
-          const indexName = getDatabaseFieldIndexName(table.table, fieldName, field.unique ?? false);
-          let indexBuilder = db.schema.createIndex(indexName).on(table.table).columns([fieldName]);
-          if (field.unique) {
-            indexBuilder = indexBuilder.unique();
-            if (field.required === false && dbType === "mssql")
-              indexBuilder = indexBuilder.where(fieldName, "is not", null);
-            if (field.required !== false && field.defaultValue !== undefined && field.defaultValue !== null && typeof field.defaultValue !== "function")
-              logger.warn(`Adding unique column "${fieldName}" to existing table "${table.table}" backfills every existing row with its default value. If the table has more than one row, creating the unique index "${indexName}" will fail; backfill distinct values manually, then re-run the migration or create the index yourself.`);
-          }
-          deferredIndexes.push(indexBuilder);
-        }
-        const built = builder.addColumn(fieldName, type, (col) => {
-          col = field.required !== false ? col.notNull() : col;
-          if (field.references)
-            col = col.references(getReferencePath(field.references.model, field.references.field)).onDelete(field.references.onDelete || "cascade");
-          if (timestampDefault)
-            if (dbType === "mysql")
-              col = col.defaultTo(sql`CURRENT_TIMESTAMP(3)`);
-            else
-              col = col.defaultTo(sql`CURRENT_TIMESTAMP`);
-          else if (staticDefault)
-            col = col.defaultTo(typeof field.defaultValue === "boolean" && (dbType === "sqlite" || dbType === "mssql") ? field.defaultValue ? 1 : 0 : field.defaultValue);
-          return col;
-        });
-        migrations.push(built);
-      }
-  }
-  if (toBeCreated.length)
-    for (const table of toBeCreated) {
-      const idType = getType({ type: useNumberId ? "number" : "string" }, "id");
-      let dbT = db.schema.createTable(table.table).addColumn("id", idType, (col) => {
-        if (useNumberId) {
-          if (dbType === "postgres")
-            return col.primaryKey().notNull();
-          else if (dbType === "sqlite")
-            return col.primaryKey().notNull();
-          else if (dbType === "mssql")
-            return col.identity().primaryKey().notNull();
-          return col.autoIncrement().primaryKey().notNull();
-        }
-        if (useUUIDs) {
-          if (dbType === "postgres")
-            return col.primaryKey().defaultTo(sql`pg_catalog.gen_random_uuid()`).notNull();
-          return col.primaryKey().notNull();
-        }
-        return col.primaryKey().notNull();
-      });
-      for (const [fieldName, field] of Object.entries(table.fields)) {
-        const type = getType(field, fieldName, getTableIndexStringLength(table.table, fieldName));
-        dbT = dbT.addColumn(fieldName, type, (col) => {
-          col = field.required !== false ? col.notNull() : col;
-          if (field.references)
-            col = col.references(getReferencePath(field.references.model, field.references.field)).onDelete(field.references.onDelete || "cascade");
-          if (field.unique)
-            col = col.unique();
-          if (field.type === "date" && typeof field.defaultValue === "function" && (dbType === "postgres" || dbType === "mysql" || dbType === "mssql"))
-            if (dbType === "mysql")
-              col = col.defaultTo(sql`CURRENT_TIMESTAMP(3)`);
-            else
-              col = col.defaultTo(sql`CURRENT_TIMESTAMP`);
-          return col;
-        });
-        if (field.index && !field.unique) {
-          const builder = db.schema.createIndex(getDatabaseFieldIndexName(table.table, fieldName, false)).on(table.table).columns([fieldName]);
-          deferredIndexes.push(builder);
-        }
-      }
-      migrations.push(dbT);
-    }
-  for (const { table, index, name } of toBeAddedIndexes) {
-    let builder = db.schema.createIndex(name).on(table).columns([...index.columns]);
-    if (index.unique)
-      builder = builder.unique();
-    deferredIndexes.push(builder);
-  }
-  for (const index of deferredIndexes)
-    migrations.push(index);
-  async function runMigrations() {
-    try {
-      for (const migration of migrations)
-        await migration.execute();
-    } finally {
-      if (migrations.length && config.database)
-        invalidateSchemaChecks(config.database);
-    }
-  }
-  async function compileMigrations() {
-    return migrations.map((m) => m.compile().sql).join(`;
-
-`) + ";";
-  }
-  return {
-    toBeCreated,
-    toBeAdded,
-    toBeAddedIndexes,
-    unsafeChanges,
-    schemaProblems,
-    runMigrations,
-    compileMigrations
-  };
-}
-
-// node_modules/better-auth/dist/utils/wildcard.mjs
-function escapeRegExpChar(char) {
-  if (char === "-" || char === "^" || char === "$" || char === "+" || char === "." || char === "(" || char === ")" || char === "|" || char === "[" || char === "]" || char === "{" || char === "}" || char === "*" || char === "?" || char === "\\")
-    return `\\${char}`;
-  else
-    return char;
-}
-function escapeRegExpString(str) {
-  let result = "";
-  for (let i = 0;i < str.length; i++)
-    result += escapeRegExpChar(str[i]);
-  return result;
-}
-function transform3(pattern, separator = true) {
-  if (Array.isArray(pattern))
-    return `(?:${pattern.map((p) => `^${transform3(p, separator)}$`).join("|")})`;
-  let separatorSplitter = "";
-  let separatorMatcher = "";
-  let wildcard = ".";
-  if (separator === true) {
-    separatorSplitter = "/";
-    separatorMatcher = "[/\\\\]";
-    wildcard = "[^/\\\\]";
-  } else if (separator) {
-    separatorSplitter = separator;
-    separatorMatcher = escapeRegExpString(separatorSplitter);
-    if (separatorMatcher.length > 1) {
-      separatorMatcher = `(?:${separatorMatcher})`;
-      wildcard = `((?!${separatorMatcher}).)`;
-    } else
-      wildcard = `[^${separatorMatcher}]`;
-  }
-  const requiredSeparator = separator ? `${separatorMatcher}+?` : "";
-  const optionalSeparator = separator ? `${separatorMatcher}*?` : "";
-  const segments = separator ? pattern.split(separatorSplitter) : [pattern];
-  let result = "";
-  for (let s = 0;s < segments.length; s++) {
-    const segment = segments[s];
-    const nextSegment = segments[s + 1];
-    let currentSeparator = "";
-    if (!segment && s > 0)
-      continue;
-    if (separator)
-      if (s === segments.length - 1)
-        currentSeparator = optionalSeparator;
-      else if (nextSegment !== "**")
-        currentSeparator = requiredSeparator;
-      else
-        currentSeparator = "";
-    if (separator && segment === "**") {
-      if (currentSeparator) {
-        result += s === 0 ? "" : currentSeparator;
-        result += `(?:${wildcard}*?${currentSeparator})*?`;
-      }
-      continue;
-    }
-    for (let c = 0;c < segment.length; c++) {
-      const char = segment[c];
-      if (char === "\\") {
-        if (c < segment.length - 1) {
-          result += escapeRegExpChar(segment[c + 1]);
-          c++;
-        }
-      } else if (char === "?")
-        result += wildcard;
-      else if (char === "*")
-        result += `${wildcard}*?`;
-      else
-        result += escapeRegExpChar(char);
-    }
-    result += currentSeparator;
-  }
-  return result;
-}
-function isMatch(regexp, sample) {
-  if (typeof sample !== "string")
-    throw new TypeError(`Sample must be a string, but ${typeof sample} given`);
-  return regexp.test(sample);
-}
-function wildcardMatch(pattern, options) {
-  if (typeof pattern !== "string" && !Array.isArray(pattern))
-    throw new TypeError(`The first argument must be a single pattern string or an array of patterns, but ${typeof pattern} given`);
-  if (typeof options === "string" || typeof options === "boolean")
-    options = { separator: options };
-  if (arguments.length === 2 && !(typeof options === "undefined" || typeof options === "object" && options !== null && !Array.isArray(options)))
-    throw new TypeError(`The second argument must be an options object or a string/boolean separator, but ${typeof options} given`);
-  options = options || {};
-  if (options.separator === "\\")
-    throw new Error("\\ is not a valid separator because it is used for escaping. Try setting the separator to `true` instead");
-  const regexpPattern = transform3(pattern, options.separator);
-  const regexp = new RegExp(`^${regexpPattern}$`, options.flags);
-  const fn = isMatch.bind(null, regexp);
-  fn.options = options;
-  fn.pattern = pattern;
-  fn.regexp = regexp;
-  return fn;
-}
-
-// node_modules/better-auth/dist/utils/url.mjs
-init_env();
-init_error2();
-var SLASH_CHAR_CODE = 47;
-function isLoopbackForDevScheme(host) {
-  const hostname = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "").toLowerCase();
-  return hostname === "localhost" || hostname.endsWith(".localhost") || hostname === "::1" || hostname.startsWith("127.");
-}
-function trimTrailingSlashes(value) {
-  let end = value.length;
-  while (end > 0 && value.charCodeAt(end - 1) === SLASH_CHAR_CODE)
-    end--;
-  return end === value.length ? value : value.slice(0, end);
-}
-function checkHasPath(url) {
-  try {
-    return (trimTrailingSlashes(new URL(url).pathname) || "/") !== "/";
-  } catch {
-    throw new BetterAuthError(`Invalid base URL: ${url}. Please provide a valid base URL.`);
-  }
-}
-function assertHasProtocol(url) {
-  try {
-    const parsedUrl = new URL(url);
-    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:")
-      throw new BetterAuthError(`Invalid base URL: ${url}. URL must include 'http://' or 'https://'`);
-  } catch (error) {
-    if (error instanceof BetterAuthError)
-      throw error;
-    throw new BetterAuthError(`Invalid base URL: ${url}. Please provide a valid base URL.`, { cause: error });
-  }
-}
-function withPath(url, path = "/api/auth") {
-  assertHasProtocol(url);
-  if (checkHasPath(url))
-    return url;
-  const trimmedUrl = trimTrailingSlashes(url);
-  if (!path || path === "/")
-    return trimmedUrl;
-  path = path.startsWith("/") ? path : `/${path}`;
-  return `${trimmedUrl}${path}`;
-}
-function validateProxyHeader(header, type) {
-  if (!header || header.trim() === "")
-    return false;
-  if (type === "proto")
-    return header === "http" || header === "https";
-  if (type === "host") {
-    if ([
-      /\.\./,
-      /\0/,
-      /[\s]/,
-      /^[.]/,
-      /[<>'"]/,
-      /javascript:/i,
-      /file:/i,
-      /data:/i
-    ].some((pattern) => pattern.test(header)))
-      return false;
-    return /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*(:[0-9]{1,5})?$/.test(header) || /^(\d{1,3}\.){3}\d{1,3}(:[0-9]{1,5})?$/.test(header) || /^\[[0-9a-fA-F:]+\](:[0-9]{1,5})?$/.test(header) || /^localhost(:[0-9]{1,5})?$/i.test(header);
-  }
-  return false;
-}
-function getBaseURL(url, path, request, loadEnv, trustedProxyHeaders) {
-  if (url)
-    return withPath(url, path);
-  if (loadEnv !== false) {
-    const fromEnv = env3.BETTER_AUTH_URL || env3.NEXT_PUBLIC_BETTER_AUTH_URL || env3.PUBLIC_BETTER_AUTH_URL || env3.NUXT_PUBLIC_BETTER_AUTH_URL || env3.NUXT_PUBLIC_AUTH_URL || (env3.BASE_URL !== "/" ? env3.BASE_URL : undefined);
-    if (fromEnv)
-      return withPath(fromEnv, path);
-  }
-  const fromRequest = request?.headers.get("x-forwarded-host");
-  const fromRequestProto = request?.headers.get("x-forwarded-proto");
-  if (fromRequest && fromRequestProto && trustedProxyHeaders) {
-    if (validateProxyHeader(fromRequestProto, "proto") && validateProxyHeader(fromRequest, "host"))
-      try {
-        return withPath(`${fromRequestProto}://${fromRequest}`, path);
-      } catch (_error) {}
-  }
-  if (request) {
-    const url = getOrigin(request.url);
-    if (!url)
-      throw new BetterAuthError("Could not get origin from request. Please provide a valid base URL.");
-    return withPath(url, path);
-  }
-  if (typeof window !== "undefined" && window.location)
-    return withPath(window.location.origin, path);
-}
-function getOrigin(url) {
-  try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.origin === "null" ? null : parsedUrl.origin;
-  } catch {
-    return null;
-  }
-}
-function getProtocol(url) {
-  try {
-    return new URL(url).protocol;
-  } catch {
-    return null;
-  }
-}
-function getHost(url) {
-  try {
-    return new URL(url).host;
-  } catch {
-    return null;
-  }
-}
-function isDynamicBaseURLConfig(config) {
-  return typeof config === "object" && config !== null && "allowedHosts" in config && Array.isArray(config.allowedHosts);
-}
-function isRequestLike(value) {
-  if (value instanceof Request)
-    return true;
-  if (typeof value !== "object" || value === null || Object.prototype.toString.call(value) !== "[object Request]")
-    return false;
-  const v = value;
-  return typeof v.url === "string" && typeof v.headers === "object" && v.headers !== null && typeof v.headers.get === "function";
-}
-function getHostFromSource(source, trustedProxyHeaders) {
-  const headers = isRequestLike(source) ? source.headers : source;
-  if (trustedProxyHeaders) {
-    const forwardedHost = headers.get("x-forwarded-host");
-    if (forwardedHost && validateProxyHeader(forwardedHost, "host"))
-      return forwardedHost;
-  }
-  const host = headers.get("host");
-  if (host && validateProxyHeader(host, "host"))
-    return host;
-  if (isRequestLike(source))
-    try {
-      return new URL(source.url).host;
-    } catch {
-      return null;
-    }
-  return null;
-}
-function getProtocolFromSource(source, configProtocol, trustedProxyHeaders) {
-  if (configProtocol === "http" || configProtocol === "https")
-    return configProtocol;
-  const headers = isRequestLike(source) ? source.headers : source;
-  if (trustedProxyHeaders) {
-    const forwardedProto = headers.get("x-forwarded-proto");
-    if (forwardedProto && validateProxyHeader(forwardedProto, "proto"))
-      return forwardedProto;
-  }
-  if (isRequestLike(source))
-    try {
-      const url = new URL(source.url);
-      if (url.protocol === "http:" || url.protocol === "https:")
-        return url.protocol.slice(0, -1);
-    } catch {}
-  const host = getHostFromSource(source, trustedProxyHeaders);
-  if (host && isLoopbackForDevScheme(host))
-    return "http";
-  return "https";
-}
-var matchesHostPattern = (host, pattern) => {
-  if (!host || !pattern)
-    return false;
-  const normalizedHost = host.replace(/^https?:\/\//, "").split("/")[0].toLowerCase();
-  const normalizedPattern = pattern.replace(/^https?:\/\//, "").split("/")[0].toLowerCase();
-  if (normalizedPattern.includes("*") || normalizedPattern.includes("?"))
-    return wildcardMatch(normalizedPattern)(normalizedHost);
-  return normalizedHost.toLowerCase() === normalizedPattern.toLowerCase();
-};
-function resolveDynamicBaseURL(config, source, basePath, trustedProxyHeaders) {
-  const host = getHostFromSource(source, trustedProxyHeaders);
-  if (!host) {
-    if (config.fallback)
-      return withPath(config.fallback, basePath);
-    throw new BetterAuthError("Could not determine host from request headers. Please provide a fallback URL in your baseURL config.");
-  }
-  if (config.allowedHosts.some((pattern) => matchesHostPattern(host, pattern)))
-    return withPath(`${getProtocolFromSource(source, config.protocol, trustedProxyHeaders)}://${host}`, basePath);
-  if (config.fallback)
-    return withPath(config.fallback, basePath);
-  throw new BetterAuthError(`Host "${host}" is not in the allowed hosts list. Allowed hosts: ${config.allowedHosts.join(", ")}. Add this host to your allowedHosts config or provide a fallback URL.`);
-}
-function resolveBaseURL(config, basePath, source, loadEnv, trustedProxyHeaders) {
-  if (isDynamicBaseURLConfig(config)) {
-    if (source)
-      return resolveDynamicBaseURL(config, source, basePath, trustedProxyHeaders);
-    if (config.fallback)
-      return withPath(config.fallback, basePath);
-    return getBaseURL(undefined, basePath, undefined, loadEnv, trustedProxyHeaders);
-  }
-  const request = isRequestLike(source) ? source : undefined;
-  if (typeof config === "string")
-    return getBaseURL(config, basePath, request, loadEnv, trustedProxyHeaders);
-  return getBaseURL(undefined, basePath, request, loadEnv, trustedProxyHeaders);
-}
-
-// node_modules/better-auth/dist/auth/trusted-origins.mjs
-var CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f-\u009f]/;
-var RELATIVE_URL_PARSER_ORIGIN = "https://better-auth.invalid";
-var ENCODED_PATH_SEPARATOR_PATTERN = /%2[fF]|%5[cC]/;
-var normalizePath = (path) => {
-  let decoded = path;
-  try {
-    decoded = decodeURIComponent(path);
-  } catch {}
-  const segments = [];
-  for (const segment of decoded.split("/"))
-    if (segment === "..")
-      segments.pop();
-    else if (segment !== "." && segment !== "")
-      segments.push(segment);
-  return segments.length > 0 ? `/${segments.join("/")}` : "";
-};
-var parseCustomSchemeOrigin = (value) => {
-  if (CONTROL_CHARACTER_PATTERN.test(value))
-    return null;
-  const schemeEnd = value.indexOf(":");
-  if (schemeEnd <= 0)
-    return null;
-  const scheme = value.slice(0, schemeEnd).toLowerCase();
-  let rest = value.slice(schemeEnd + 1);
-  let authority = "";
-  if (rest.startsWith("//")) {
-    rest = rest.slice(2);
-    const authorityEnd = rest.search(/[/?#]/);
-    if (authorityEnd === -1) {
-      authority = rest;
-      rest = "";
-    } else {
-      authority = rest.slice(0, authorityEnd);
-      rest = rest.slice(authorityEnd);
-    }
-  }
-  const pathEnd = rest.search(/[?#]/);
-  const path = normalizePath(pathEnd === -1 ? rest : rest.slice(0, pathEnd));
-  return {
-    scheme,
-    authority: authority.toLowerCase(),
-    path
-  };
-};
-var isSafeRelativeURL = (value) => {
-  if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\") || CONTROL_CHARACTER_PATTERN.test(value))
-    return false;
-  const pathEnd = value.search(/[?#]/);
-  const path = pathEnd === -1 ? value : value.slice(0, pathEnd);
-  if (ENCODED_PATH_SEPARATOR_PATTERN.test(path))
-    return false;
-  try {
-    return new URL(value, RELATIVE_URL_PARSER_ORIGIN).origin === RELATIVE_URL_PARSER_ORIGIN;
-  } catch {
-    return false;
-  }
-};
-var matchesOriginPattern = (url, pattern, settings) => {
-  if (url.startsWith("/"))
-    return settings?.allowRelativePaths === true && isSafeRelativeURL(url);
-  if (pattern.includes("*") || pattern.includes("?")) {
-    if (pattern.includes("://"))
-      return wildcardMatch(pattern)(getOrigin(url) || url);
-    const host = getHost(url);
-    if (!host)
-      return false;
-    return wildcardMatch(pattern)(host);
-  }
-  const protocol = getProtocol(url);
-  if (protocol === "http:" || protocol === "https:" || !protocol)
-    return pattern === getOrigin(url);
-  const parsed = parseCustomSchemeOrigin(url);
-  const parsedPattern = parseCustomSchemeOrigin(pattern);
-  if (!parsed || !parsedPattern || parsed.scheme !== parsedPattern.scheme)
-    return false;
-  if (parsedPattern.authority && parsed.authority !== parsedPattern.authority)
-    return false;
-  if (!parsedPattern.path)
-    return true;
-  return parsed.path === parsedPattern.path || parsed.path.startsWith(`${parsedPattern.path}/`);
-};
-
-// node_modules/better-auth/dist/context/store-capabilities.mjs
-function hasServerSessionStore(options) {
-  return !!options.database || !!options.secondaryStorage;
-}
-function hasServerAccountStore(options) {
-  return !!options.database;
-}
-function shouldBindAccountCookieToSessionUser(options) {
-  return hasServerAccountStore(options);
-}
-
-// node_modules/better-auth/dist/utils/is-promise.mjs
-function isPromise(obj) {
-  return !!obj && (typeof obj === "object" || typeof obj === "function") && typeof obj.then === "function";
-}
-
-// node_modules/@better-auth/utils/dist/password.node.mjs
-import { randomBytes, scrypt } from "crypto";
-var config2 = {
-  N: 16384,
-  r: 16,
-  p: 1,
-  dkLen: 64
-};
-function generateKey(password, salt) {
-  return new Promise((resolve, reject) => {
-    scrypt(password.normalize("NFKC"), salt, config2.dkLen, {
-      N: config2.N,
-      r: config2.r,
-      p: config2.p,
-      maxmem: 128 * config2.N * config2.r * 2
-    }, (err, key) => {
-      if (err)
-        reject(err);
-      else
-        resolve(key);
-    });
-  });
-}
-async function hashPassword(password) {
-  const salt = randomBytes(16).toString("hex");
-  const key = await generateKey(password, salt);
-  return `${salt}:${key.toString("hex")}`;
-}
-async function verifyPassword(hash, password) {
-  const [salt, key] = hash.split(":");
-  if (!salt || !key) {
-    throw new Error("Invalid password hash");
-  }
-  const targetKey = await generateKey(password, salt);
-  return targetKey.toString("hex") === key;
-}
-
-// node_modules/better-auth/dist/crypto/password.mjs
-var hashPassword$1 = hashPassword;
-var verifyPassword$1 = async ({ hash, password }) => {
-  return verifyPassword(hash, password);
-};
-
-// node_modules/@noble/hashes/utils.js
-function isBytes(a) {
-  return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in a && a.BYTES_PER_ELEMENT === 1;
-}
-var atitle = (title) => title ? `"${title}" ` : "";
-function anumber(n, title = "") {
-  if (typeof n !== "number")
-    throw new TypeError(atitle(title) + "expected number, got " + typeof n);
-  if (!Number.isSafeInteger(n) || n < 0)
-    throw new RangeError(atitle(title) + "expected integer >= 0, got " + n);
-  return n;
-}
-function abytes(value, length, title = "") {
-  if (isBytes(value) && (length === undefined || value.length === length))
-    return value;
-  if (length !== undefined)
-    anumber(length, "length");
-  const bytes = isBytes(value);
-  const ofLen = length !== undefined ? ` of length ${length}` : "";
-  const got = bytes ? `length=${value.length}` : `type=${typeof value}`;
-  const message = atitle(title) + "expected Uint8Array" + ofLen + ", got " + got;
-  if (!bytes)
-    throw new TypeError(message);
-  throw new RangeError(message);
-}
-function ahash(h) {
-  if (typeof h !== "function" || typeof h.create !== "function")
-    throw new TypeError("expected hash wrapped by utils.createHasher");
-  anumber(h.outputLen);
-  anumber(h.blockLen);
-  if (h.outputLen < 1 || h.blockLen < 1)
-    throw new Error("hash blockLen / outputLen must be >= 1");
-}
-var aobject = (value, label) => {
-  if (value === null || typeof value !== "object" || Array.isArray(value))
-    throw new TypeError((label === "object" ? "" : `"${label}" `) + "expected object, got type=" + typeof value);
-};
-var aopts = (value, label) => {
-  aobject(value, label);
-  const proto = Object.getPrototypeOf(value);
-  if (proto !== Object.prototype && proto !== null)
-    throw new TypeError(`"${label}" expected plain object`);
-  if (Object.hasOwn(value, "__proto__"))
-    throw new TypeError(`"${label}.__proto__" is not allowed`);
-};
-function aexists(instance, checkFinished = true) {
-  if (instance.destroyed)
-    throw new Error("hash was destroyed");
-  if (checkFinished && instance.finished)
-    throw new Error("digest() was already called");
-}
-function aoutput(out, instance) {
-  abytes(out, undefined, "output");
-  const min = instance.outputLen;
-  if (!(out.length >= min)) {
-    throw new RangeError('"output" expected length >= ' + min);
-  }
-}
-function clean2(...arrays) {
-  for (let i = 0;i < arrays.length; i++) {
-    arrays[i].fill(0);
-  }
-}
-function createView(arr) {
-  return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
-}
-function rotr(word, shift) {
-  return word << 32 - shift | word >>> shift;
-}
-function checkOpts(defaults, opts, title = "opts") {
-  aopts(defaults, "defaults");
-  if (opts !== undefined)
-    aopts(opts, title);
-  const merged = Object.assign(Object.create(null), defaults, opts);
-  return merged;
-}
-function createHasher(hashCons, info = {}) {
-  if (typeof hashCons !== "function")
-    throw new TypeError('"hashCons" expected function, got type=' + typeof hashCons);
-  info = checkOpts({}, info, "info");
-  const hashC = (msg, opts) => hashCons(opts).update(msg).digest();
-  const tmp = hashCons(undefined);
-  hashC.outputLen = tmp.outputLen;
-  hashC.blockLen = tmp.blockLen;
-  hashC.canXOF = tmp.canXOF;
-  hashC.create = (opts) => hashCons(opts);
-  Object.assign(hashC, info);
-  return Object.freeze(hashC);
-}
-var oidNist = (suffix) => ({
-  oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])
-});
-
-// node_modules/@noble/hashes/hmac.js
-class _HMAC {
-  oHash;
-  iHash;
-  blockLen;
-  outputLen;
-  canXOF = false;
-  finished = false;
-  destroyed = false;
-  constructor(hash, key) {
-    ahash(hash);
-    abytes(key, undefined, "key");
-    this.iHash = hash.create();
-    if (typeof this.iHash.update !== "function")
-      throw new Error("expected Hash instance");
-    this.blockLen = this.iHash.blockLen;
-    this.outputLen = this.iHash.outputLen;
-    const blockLen = this.blockLen;
-    const pad = new Uint8Array(blockLen);
-    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
-    for (let i = 0;i < pad.length; i++)
-      pad[i] ^= 54;
-    this.iHash.update(pad);
-    this.oHash = hash.create();
-    for (let i = 0;i < pad.length; i++)
-      pad[i] ^= 54 ^ 92;
-    this.oHash.update(pad);
-    clean2(pad);
-  }
-  update(buf) {
-    aexists(this);
-    this.iHash.update(buf);
-    return this;
-  }
-  digestInto(out) {
-    aexists(this);
-    aoutput(out, this);
-    this.finished = true;
-    const buf = out.subarray(0, this.outputLen);
-    this.iHash.digestInto(buf);
-    this.oHash.update(buf);
-    this.oHash.digestInto(buf);
-    this.destroy();
-  }
-  digest() {
-    const out = new Uint8Array(this.oHash.outputLen);
-    this.digestInto(out);
-    return out;
-  }
-  _cloneInto(to) {
-    to ||= Object.create(Object.getPrototypeOf(this), {});
-    const { oHash, iHash, finished, destroyed, blockLen, outputLen, canXOF } = this;
-    to = to;
-    to.finished = finished;
-    to.destroyed = destroyed;
-    to.blockLen = blockLen;
-    to.outputLen = outputLen;
-    to.canXOF = canXOF;
-    to.oHash = oHash._cloneInto(to.oHash);
-    to.iHash = iHash._cloneInto(to.iHash);
-    return to;
-  }
-  clone() {
-    return this._cloneInto();
-  }
-  destroy() {
-    this.destroyed = true;
-    this.oHash.destroy();
-    this.iHash.destroy();
-  }
-}
-var hmac = /* @__PURE__ */ (() => {
-  const hmac_ = (hash, key, message) => new _HMAC(hash, key).update(message).digest();
-  hmac_.create = (hash, key) => new _HMAC(hash, key);
-  return hmac_;
-})();
-
-// node_modules/@noble/hashes/hkdf.js
-var HKDF_COUNTER = /* @__PURE__ */ Uint8Array.of(0);
-var EMPTY_BUFFER = /* @__PURE__ */ Uint8Array.of();
-function expand(hash, prk, info, length = 32, _recycled) {
-  ahash(hash);
-  anumber(length, "length");
-  abytes(prk, undefined, "prk");
-  const olen = hash.outputLen;
-  if (prk.length < olen)
-    throw new Error('"prk" must be at least HashLen octets');
-  if (length > 255 * olen)
-    throw new Error("Length must be <= 255*HashLen");
-  const blocks = Math.ceil(length / olen);
-  if (info === undefined)
-    info = EMPTY_BUFFER;
-  else
-    abytes(info, undefined, "info");
-  if (!blocks) {
-    if (_recycled)
-      clean2(prk);
-    return new Uint8Array;
-  }
-  const okm = _recycled && blocks === 1 ? prk : new Uint8Array(blocks * olen);
-  const { iHash, oHash } = hmac.create(hash, prk);
-  const T = _recycled ? prk : new Uint8Array(olen);
-  const worker = blocks > 1 ? _recycled?.iHash || hash.create() : undefined;
-  for (let counter = 0;counter < blocks - 1; counter++) {
-    HKDF_COUNTER[0] = counter + 1;
-    const iWork = iHash._cloneInto(worker);
-    if (counter)
-      iWork.update(T);
-    iWork.update(info).update(HKDF_COUNTER).digestInto(T);
-    oHash._cloneInto(worker).update(T).digestInto(T);
-    okm.set(T, olen * counter);
-  }
-  HKDF_COUNTER[0] = blocks;
-  if (blocks > 1)
-    iHash.update(T);
-  iHash.update(info).update(HKDF_COUNTER).digestInto(T);
-  oHash.update(T).digestInto(T);
-  okm.set(T, olen * (blocks - 1));
-  iHash.destroy();
-  oHash.destroy();
-  worker?.destroy();
-  if (T !== okm)
-    clean2(T);
-  clean2(HKDF_COUNTER);
-  if (length === okm.length)
-    return okm;
-  const res = okm.slice(0, length);
-  clean2(okm);
-  return res;
-}
-var hkdf = (hash, ikm, salt, info, length) => {
-  ahash(hash);
-  if (salt === undefined)
-    salt = new Uint8Array(hash.outputLen);
-  const HMAC = hmac.create(hash, salt).update(ikm);
-  return expand(hash, HMAC.digest(), info, length, HMAC);
-};
-
-// node_modules/@noble/hashes/_u64.js
-var fromNumH = (n) => n / 2 ** 32 | 0;
-var fromNumL = (n) => n >>> 0;
-function setU64FromNum(view, byteOffset, n, isLE) {
-  const h = fromNumH(n);
-  const l = fromNumL(n);
-  view.setUint32(byteOffset, isLE ? l : h, isLE);
-  view.setUint32(byteOffset + 4, isLE ? h : l, isLE);
-}
-
-// node_modules/@noble/hashes/_md.js
-function Chi(a, b, c) {
-  return a & b ^ ~a & c;
-}
-function Maj(a, b, c) {
-  return a & b ^ a & c ^ b & c;
-}
-
-class HashMD {
-  blockLen;
-  outputLen;
-  canXOF = false;
-  padOffset;
-  isLE;
-  buffer;
-  view;
-  finished = false;
-  length = 0;
-  pos = 0;
-  destroyed = false;
-  constructor(blockLen, outputLen, padOffset, isLE) {
-    this.blockLen = blockLen;
-    this.outputLen = outputLen;
-    this.padOffset = padOffset;
-    this.isLE = isLE;
-    this.buffer = new Uint8Array(blockLen);
-    this.view = createView(this.buffer);
-  }
-  update(data) {
-    aexists(this);
-    abytes(data);
-    const { view, buffer, blockLen } = this;
-    const len = data.length;
-    let processed = false;
-    for (let pos = 0;pos < len; ) {
-      const take = Math.min(blockLen - this.pos, len - pos);
-      if (take === blockLen) {
-        const dataView = createView(data);
-        for (;blockLen <= len - pos; pos += blockLen)
-          this.process(dataView, pos);
-        processed = true;
-        continue;
-      }
-      buffer.set(pos === 0 && take === len ? data : data.subarray(pos, pos + take), this.pos);
-      this.pos += take;
-      pos += take;
-      if (this.pos === blockLen) {
-        this.process(view, 0);
-        this.pos = 0;
-        processed = true;
-      }
-    }
-    this.length += data.length;
-    if (processed)
-      this.roundClean();
-    return this;
-  }
-  digestInto(out) {
-    aexists(this);
-    aoutput(out, this);
-    this.finished = true;
-    const { buffer, view, blockLen, isLE } = this;
-    let { pos } = this;
-    buffer[pos++] = 128;
-    buffer.fill(0, pos);
-    if (this.padOffset > blockLen - pos) {
-      this.process(view, 0);
-      buffer.fill(0);
-    }
-    setU64FromNum(view, blockLen - 8, this.length * 8, isLE);
-    this.process(view, 0);
-    this.roundClean();
-    const oview = out === buffer ? view : createView(out);
-    const len = this.outputLen;
-    const outLen = len / 4;
-    const state = this.get();
-    if (len % 4 || outLen > state.length)
-      throw new Error("invalid outputLen");
-    for (let i = 0;i < outLen; i++)
-      oview.setUint32(4 * i, state[i], isLE);
-  }
-  digest() {
-    const { buffer, outputLen } = this;
-    this.digestInto(buffer);
-    const res = buffer.slice(0, outputLen);
-    this.destroy();
-    return res;
-  }
-  _cloneIntoMeta(to) {
-    const { buffer, length, finished, destroyed, pos } = this;
-    to.destroyed = destroyed;
-    to.finished = finished;
-    to.length = length;
-    to.pos = pos;
-    if (pos)
-      to.buffer.set(buffer);
-    return to;
-  }
-  clone() {
-    return this._cloneInto();
-  }
-}
-var SHA256_IV = /* @__PURE__ */ Uint32Array.from([
-  1779033703,
-  3144134277,
-  1013904242,
-  2773480762,
-  1359893119,
-  2600822924,
-  528734635,
-  1541459225
-]);
-
-// node_modules/@noble/hashes/sha2.js
-var SHA256_K = /* @__PURE__ */ Uint32Array.from([
-  1116352408,
-  1899447441,
-  3049323471,
-  3921009573,
-  961987163,
-  1508970993,
-  2453635748,
-  2870763221,
-  3624381080,
-  310598401,
-  607225278,
-  1426881987,
-  1925078388,
-  2162078206,
-  2614888103,
-  3248222580,
-  3835390401,
-  4022224774,
-  264347078,
-  604807628,
-  770255983,
-  1249150122,
-  1555081692,
-  1996064986,
-  2554220882,
-  2821834349,
-  2952996808,
-  3210313671,
-  3336571891,
-  3584528711,
-  113926993,
-  338241895,
-  666307205,
-  773529912,
-  1294757372,
-  1396182291,
-  1695183700,
-  1986661051,
-  2177026350,
-  2456956037,
-  2730485921,
-  2820302411,
-  3259730800,
-  3345764771,
-  3516065817,
-  3600352804,
-  4094571909,
-  275423344,
-  430227734,
-  506948616,
-  659060556,
-  883997877,
-  958139571,
-  1322822218,
-  1537002063,
-  1747873779,
-  1955562222,
-  2024104815,
-  2227730452,
-  2361852424,
-  2428436474,
-  2756734187,
-  3204031479,
-  3329325298
-]);
-var SHA256_W = /* @__PURE__ */ new Uint32Array(64);
-
-class SHA2_32B extends HashMD {
-  A = 0;
-  B = 0;
-  C = 0;
-  D = 0;
-  E = 0;
-  F = 0;
-  G = 0;
-  H = 0;
-  constructor(outputLen, IV) {
-    super(64, outputLen, 8, false);
-    this.A = IV[0] | 0;
-    this.B = IV[1] | 0;
-    this.C = IV[2] | 0;
-    this.D = IV[3] | 0;
-    this.E = IV[4] | 0;
-    this.F = IV[5] | 0;
-    this.G = IV[6] | 0;
-    this.H = IV[7] | 0;
-  }
-  get() {
-    const { A, B, C, D, E, F, G, H } = this;
-    return [A, B, C, D, E, F, G, H];
-  }
-  set(A, B, C, D, E, F, G, H) {
-    this.A = A | 0;
-    this.B = B | 0;
-    this.C = C | 0;
-    this.D = D | 0;
-    this.E = E | 0;
-    this.F = F | 0;
-    this.G = G | 0;
-    this.H = H | 0;
-  }
-  _cloneInto(to) {
-    (to ||= new this.constructor).set(...this.get());
-    return this._cloneIntoMeta(to);
-  }
-  process(view, offset) {
-    for (let i = 0;i < 16; i++, offset += 4)
-      SHA256_W[i] = view.getUint32(offset, false);
-    for (let i = 16;i < 64; i++) {
-      const W15 = SHA256_W[i - 15];
-      const W2 = SHA256_W[i - 2];
-      const s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ W15 >>> 3;
-      const s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ W2 >>> 10;
-      SHA256_W[i] = s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16] | 0;
-    }
-    let { A, B, C, D, E, F, G, H } = this;
-    for (let i = 0;i < 64; i++) {
-      const sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25);
-      const T1 = H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i] | 0;
-      const sigma0 = rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22);
-      const T2 = sigma0 + Maj(A, B, C) | 0;
-      H = G;
-      G = F;
-      F = E;
-      E = D + T1 | 0;
-      D = C;
-      C = B;
-      B = A;
-      A = T1 + T2 | 0;
-    }
-    A = A + this.A | 0;
-    B = B + this.B | 0;
-    C = C + this.C | 0;
-    D = D + this.D | 0;
-    E = E + this.E | 0;
-    F = F + this.F | 0;
-    G = G + this.G | 0;
-    H = H + this.H | 0;
-    this.set(A, B, C, D, E, F, G, H);
-  }
-  roundClean() {
-    clean2(SHA256_W);
-  }
-  destroy() {
-    this.destroyed = true;
-    this.set(0, 0, 0, 0, 0, 0, 0, 0);
-    clean2(this.buffer);
-  }
-}
-
-class _SHA256 extends SHA2_32B {
-  constructor() {
-    super(32, SHA256_IV);
-  }
-}
-var sha256 = /* @__PURE__ */ createHasher(() => new _SHA256, /* @__PURE__ */ oidNist(1));
-
-// node_modules/jose/dist/webapi/lib/buffer_utils.js
-var encoder2 = new TextEncoder;
-var decoder = new TextDecoder;
-var strictDecoder = new TextDecoder("utf-8", { fatal: true });
-var MAX_INT322 = 2 ** 32;
-function concat(...buffers) {
-  const size = buffers.reduce((acc, { length }) => acc + length, 0), buf = new Uint8Array(size);
-  let i = 0;
-  for (const buffer of buffers)
-    buf.set(buffer, i), i += buffer.length;
-  return buf;
-}
-function writeUInt32BE(buf, value, offset) {
-  if (value < 0 || value >= MAX_INT322)
-    throw new RangeError(`value must be >= 0 and <= ${MAX_INT322 - 1}. Received ${value}`);
-  buf.set([value >>> 24, value >>> 16, value >>> 8, value & 255], offset);
-}
-function uint64be(value) {
-  const high = Math.floor(value / MAX_INT322), low = value % MAX_INT322, buf = new Uint8Array(8);
-  return writeUInt32BE(buf, high, 0), writeUInt32BE(buf, low, 4), buf;
-}
-function uint32be(value) {
-  const buf = new Uint8Array(4);
-  return writeUInt32BE(buf, value), buf;
-}
-var NON_ASCII = /[^\x00-\x7f]/;
-function encode3(string) {
-  if (typeof string == "string" && string.length >= 128) {
-    if (NON_ASCII.test(string))
-      throw new TypeError("non-ASCII string encountered in encode()");
-    return encoder2.encode(string);
-  }
-  const bytes = new Uint8Array(string.length);
-  for (let i = 0;i < string.length; i++) {
-    const code = string.charCodeAt(i);
-    if (code > 127)
-      throw new TypeError("non-ASCII string encountered in encode()");
-    bytes[i] = code;
-  }
-  return bytes;
-}
-function encodeBase64(input, url = false) {
-  if (Uint8Array.prototype.toBase64)
-    return input.toBase64({ alphabet: url ? "base64url" : "base64", omitPadding: url });
-  const CHUNK_SIZE = 32768, arr = [];
-  for (let i = 0;i < input.length; i += CHUNK_SIZE)
-    arr.push(String.fromCharCode.apply(null, input.subarray(i, i + CHUNK_SIZE)));
-  const encoded = btoa(arr.join(""));
-  return url ? encoded.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_") : encoded;
-}
-function decodeBase64(encoded, url = false) {
-  if (Uint8Array.fromBase64)
-    return Uint8Array.fromBase64(encoded, { alphabet: url ? "base64url" : "base64" });
-  if (url) {
-    if (encoded.includes("+") || encoded.includes("/"))
-      throw new TypeError("Invalid base64url");
-    encoded = encoded.replace(/-/g, "+").replace(/_/g, "/");
-  }
-  const binary = atob(encoded), bytes = new Uint8Array(binary.length);
-  for (let i = 0;i < binary.length; i++)
-    bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-async function digest(algorithm, data) {
-  const subtleDigest = `SHA-${algorithm.slice(-3)}`;
-  return new Uint8Array(await crypto.subtle.digest(subtleDigest, data));
-}
-
-// node_modules/jose/dist/webapi/util/errors.js
-class JOSEError extends Error {
-  static code = "ERR_JOSE_GENERIC";
-  code = "ERR_JOSE_GENERIC";
-  constructor(message, options) {
-    super(message, options), this.name = this.constructor.name, Error.captureStackTrace?.(this, this.constructor);
-  }
-}
-
-class JWTClaimValidationFailed extends JOSEError {
-  static code = "ERR_JWT_CLAIM_VALIDATION_FAILED";
-  code = "ERR_JWT_CLAIM_VALIDATION_FAILED";
-  claim;
-  reason;
-  payload;
-  constructor(message, payload, claim = "unspecified", reason = "unspecified") {
-    super(message, { cause: { claim, reason, payload } }), this.claim = claim, this.reason = reason, this.payload = payload;
-  }
-}
-
-class JWTExpired extends JOSEError {
-  static code = "ERR_JWT_EXPIRED";
-  code = "ERR_JWT_EXPIRED";
-  claim;
-  reason;
-  payload;
-  constructor(message, payload, claim = "unspecified", reason = "unspecified") {
-    super(message, { cause: { claim, reason, payload } }), this.claim = claim, this.reason = reason, this.payload = payload;
-  }
-}
-
-class JOSEAlgNotAllowed extends JOSEError {
-  static code = "ERR_JOSE_ALG_NOT_ALLOWED";
-  code = "ERR_JOSE_ALG_NOT_ALLOWED";
-}
-
-class JOSENotSupported extends JOSEError {
-  static code = "ERR_JOSE_NOT_SUPPORTED";
-  code = "ERR_JOSE_NOT_SUPPORTED";
-}
-
-class JWEDecryptionFailed extends JOSEError {
-  static code = "ERR_JWE_DECRYPTION_FAILED";
-  code = "ERR_JWE_DECRYPTION_FAILED";
-  constructor(message = "decryption operation failed", options) {
-    super(message, options);
-  }
-}
-
-class JWEInvalid extends JOSEError {
-  static code = "ERR_JWE_INVALID";
-  code = "ERR_JWE_INVALID";
-}
-
-class JWSInvalid extends JOSEError {
-  static code = "ERR_JWS_INVALID";
-  code = "ERR_JWS_INVALID";
-}
-
-class JWTInvalid extends JOSEError {
-  static code = "ERR_JWT_INVALID";
-  code = "ERR_JWT_INVALID";
-}
-
-class JWKInvalid extends JOSEError {
-  static code = "ERR_JWK_INVALID";
-  code = "ERR_JWK_INVALID";
-}
-
-class JWKSInvalid extends JOSEError {
-  static code = "ERR_JWKS_INVALID";
-  code = "ERR_JWKS_INVALID";
-}
-
-class JWKSNoMatchingKey extends JOSEError {
-  static code = "ERR_JWKS_NO_MATCHING_KEY";
-  code = "ERR_JWKS_NO_MATCHING_KEY";
-  constructor(message = "no applicable key found in the JSON Web Key Set", options) {
-    super(message, options);
-  }
-}
-
-class JWKSMultipleMatchingKeys extends JOSEError {
-  [Symbol.asyncIterator] = async function* () {};
-  static code = "ERR_JWKS_MULTIPLE_MATCHING_KEYS";
-  code = "ERR_JWKS_MULTIPLE_MATCHING_KEYS";
-  constructor(message = "multiple matching keys found in the JSON Web Key Set", options) {
-    super(message, options);
-  }
-}
-
-class JWKSTimeout extends JOSEError {
-  static code = "ERR_JWKS_TIMEOUT";
-  code = "ERR_JWKS_TIMEOUT";
-  constructor(message = "request timed out", options) {
-    super(message, options);
-  }
-}
-
-class JWSSignatureVerificationFailed extends JOSEError {
-  static code = "ERR_JWS_SIGNATURE_VERIFICATION_FAILED";
-  code = "ERR_JWS_SIGNATURE_VERIFICATION_FAILED";
-  constructor(message = "signature verification failed", options) {
-    super(message, options);
-  }
-}
-
-// node_modules/jose/dist/webapi/util/base64url.js
-var invalid = "The input to be decoded is not correctly encoded.";
-function decode6(input) {
-  try {
-    return decodeBase64(typeof input == "string" ? input : decoder.decode(input), true);
-  } catch (cause) {
-    throw new TypeError(invalid, { cause });
-  }
-}
-function encode4(input) {
-  return encodeBase64(typeof input == "string" ? encoder2.encode(input) : input, true);
-}
-
-// node_modules/jose/dist/webapi/lib/validate.js
-function assertUint8Array2(input, label) {
-  if (!(input instanceof Uint8Array))
-    throw new TypeError(`${label} must be an instance of Uint8Array`);
-}
-function isObject4(input) {
-  if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
-    return false;
-  const prototype = Object.getPrototypeOf(input);
-  return prototype === null || Object.getPrototypeOf(prototype) === null;
-}
-function isJwkSet(input) {
-  return isObject4(input) && Array.isArray(input.keys) && Array.from(input.keys).every(isObject4);
-}
-function isDisjoint(...headers) {
-  const parameters = /* @__PURE__ */ new Set;
-  for (const header of headers)
-    if (header)
-      for (const parameter of Object.keys(header)) {
-        if (parameters.has(parameter))
-          return false;
-        parameters.add(parameter);
-      }
-  return true;
-}
-function assertNotSet(value, name) {
-  if (value !== undefined)
-    throw new TypeError(`${name} can only be called once`);
-}
-function decodeBase64url(value, label, ErrorClass) {
-  try {
-    return decode6(value);
-  } catch {
-    throw new ErrorClass(`Failed to base64url decode the ${label}`);
-  }
-}
-function encodeBase64url(value, label, ErrorClass) {
-  try {
-    return encode3(value);
-  } catch {
-    throw new ErrorClass(`The ${label} is not a valid base64url string`);
-  }
-}
-function parseJoseHeader(b64, ErrorClass, message) {
-  let parsed;
-  try {
-    parsed = JSON.parse(strictDecoder.decode(decode6(b64)));
-  } catch {
-    throw new ErrorClass(message);
-  }
-  if (!isObject4(parsed))
-    throw new ErrorClass(message);
-  return parsed;
-}
-var JWS_RECOGNIZED = { __proto__: null, b64: true };
-var JWE_RECOGNIZED = { __proto__: null };
-function validateAlgorithms(option, algorithms) {
-  if (algorithms !== undefined && (!Array.isArray(algorithms) || algorithms.some((s) => typeof s != "string")))
-    throw new TypeError(`"${option}" option must be an array of strings`);
-  return algorithms === undefined ? undefined : new Set(algorithms);
-}
-function validateCritDuplicates(Err, protectedHeader) {
-  const { crit } = protectedHeader ?? {};
-  if (Array.isArray(crit) && new Set(crit).size !== crit.length)
-    throw new Err('"crit" (Critical) Header Parameter MUST NOT contain duplicate values');
-}
-function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) {
-  if (joseHeader.crit !== undefined && protectedHeader?.crit === undefined)
-    throw new Err('"crit" (Critical) Header Parameter MUST be integrity protected');
-  if (!protectedHeader || protectedHeader.crit === undefined)
-    return [];
-  if (!Array.isArray(protectedHeader.crit) || protectedHeader.crit.length === 0 || protectedHeader.crit.some((input) => typeof input != "string" || input.length === 0))
-    throw new Err('"crit" (Critical) Header Parameter MUST be an array of non-empty strings when present');
-  const recognized = recognizedOption === undefined ? recognizedDefault : { __proto__: null, ...recognizedOption, ...recognizedDefault };
-  for (const parameter of protectedHeader.crit) {
-    if (!(parameter in recognized))
-      throw new JOSENotSupported(`Extension Header Parameter "${parameter}" is not recognized`);
-    if (!Object.hasOwn(joseHeader, parameter) || joseHeader[parameter] === undefined)
-      throw new Err(`Extension Header Parameter "${parameter}" is missing`);
-    if (recognized[parameter] && (!Object.hasOwn(protectedHeader, parameter) || protectedHeader[parameter] === undefined))
-      throw new Err(`Extension Header Parameter "${parameter}" MUST be integrity protected`);
-  }
-  return protectedHeader.crit;
-}
-function validateB64(protectedHeader, extensions) {
-  if (extensions.includes("b64")) {
-    const b64 = protectedHeader.b64;
-    if (typeof b64 != "boolean")
-      throw new JWSInvalid('The "b64" (base64url-encode payload) Header Parameter must be a boolean');
-    return b64;
-  }
-  return true;
-}
-function serializeJoseHeader(Err, header) {
-  let serialized, parsed;
-  try {
-    serialized = JSON.stringify(header), parsed = JSON.parse(serialized);
-  } catch (cause) {
-    throw new Err("JOSE Header is not valid JSON", { cause });
-  }
-  if (!isObject4(parsed))
-    throw new Err("JOSE Header is not a JSON object");
-  return [parsed, serialized];
-}
-
-// node_modules/jose/dist/webapi/lib/key.js
-var tag = (key) => key[Symbol.toStringTag];
-var jwkMatchesOp = (entry, key, usage) => {
-  const { alg } = entry;
-  if (key.use !== undefined) {
-    const expected = usage === "sign" || usage === "verify" ? "sig" : "enc";
-    if (key.use !== expected)
-      throw new TypeError(`Invalid key for this operation, its "use" must be "${expected}" when present`);
-  }
-  if (key.alg !== undefined && key.alg !== alg)
-    throw new TypeError(`Invalid key for this operation, its "alg" must be "${alg}" when present`);
-  if (Array.isArray(key.key_ops)) {
-    const expectedKeyOp = usage === "encrypt" || usage === "decrypt" ? entry.ops?.[usage === "encrypt" ? 0 : 1] : usage;
-    if (expectedKeyOp && !key.key_ops.includes(expectedKeyOp))
-      throw new TypeError(`Invalid key for this operation, its "key_ops" must include "${expectedKeyOp}" when present`);
-  }
-};
-async function prepareKey(entry, key, usage) {
-  const { alg, secret } = entry, privateKey = usage === "decrypt" || usage === "sign";
-  if (secret && key instanceof Uint8Array)
-    return key;
-  let normalized, keyObject;
-  if (isObject4(key)) {
-    if (normalized = normalizeJwk(key), typeof normalized.kty != "string")
-      throw invalidKeyType(alg, key, secret);
-    if (!(secret ? normalized.kty === "oct" && typeof normalized.k == "string" : normalized.kty !== "oct" && (privateKey ? normalized.kty === "AKP" && typeof normalized.priv == "string" || typeof normalized.d == "string" : normalized.d === undefined && normalized.priv === undefined)))
-      throw new TypeError(secret ? 'JSON Web Key for symmetric algorithms must have JWK "kty" (Key Type) equal to "oct" and the JWK "k" (Key Value) present' : `JSON Web Key for this operation must be a ${privateKey ? "private" : "public"} JWK`);
-    if (jwkMatchesOp(entry, normalized, usage), normalized.kty === "oct")
-      return decode6(normalized.k);
-    if (!Object.isFrozen(key)) {
-      const { key_ops } = key;
-      Array.isArray(key_ops) && Object.freeze(key_ops), Object.freeze(key);
-    }
-  } else {
-    if (!isKeyLike(key))
-      throw invalidKeyType(alg, key, secret);
-    const expectedType = secret ? "secret" : privateKey ? "private" : "public";
-    if (key.type !== expectedType && (secret || ["secret", "public", "private"].includes(key.type)))
-      throw new TypeError(`${tag(key)} instances must be of type "${expectedType}" for the ${alg} algorithm`);
-    if (isCryptoKey(key))
-      return key;
-    if (keyObject = key, keyObject.type === "secret")
-      return keyObject.export();
-  }
-  cache ||= /* @__PURE__ */ new WeakMap;
-  const cacheKey = key;
-  let cached = cache.get(cacheKey);
-  if (cached?.[alg])
-    return cached[alg];
-  if (cached || cache.set(cacheKey, cached = {}), keyObject && typeof keyObject.toCryptoKey == "function") {
-    const isPublic = keyObject.type === "public", crv = nist[keyObject.asymmetricKeyDetails?.namedCurve], params = entry.resolve?.({ crv, asymmetricKeyType: keyObject.asymmetricKeyType }) ?? entry.subtle;
-    return cached[alg] = keyObject.toCryptoKey(params, isPublic, entry.usages[isPublic ? 0 : 1]);
-  }
-  return normalized ??= keyObject.export({ format: "jwk" }), normalized.alg = alg, cached[alg] = await jwkToKey(entry, normalized);
-}
-var cache;
-var nist = {
-  __proto__: null,
-  prime256v1: "P-256",
-  secp384r1: "P-384",
-  secp521r1: "P-521"
-};
-function assertCryptoKey(key) {
-  if (!isCryptoKey(key))
-    throw new Error("CryptoKey instance expected");
-}
-var isCryptoKey = (key) => {
-  if (key?.[Symbol.toStringTag] === "CryptoKey")
-    return true;
-  try {
-    return key instanceof CryptoKey;
-  } catch {
-    return false;
-  }
-};
-var isKeyObject = (key) => key?.[Symbol.toStringTag] === "KeyObject";
-var isKeyLike = (key) => isCryptoKey(key) || isKeyObject(key);
-function message(msg, actual, ...types) {
-  if (types.length > 2) {
-    const last = types.pop();
-    msg += `one of type ${types.join(", ")}, or ${last}.`;
-  } else
-    types.length === 2 ? msg += `one of type ${types[0]} or ${types[1]}.` : msg += `of type ${types[0]}.`;
-  return actual == null ? msg += ` Received ${actual}` : typeof actual == "function" && actual.name ? msg += ` Received function ${actual.name}` : typeof actual == "object" && actual != null && actual.constructor?.name && (msg += ` Received an instance of ${actual.constructor.name}`), msg;
-}
-var invalidKeyInput = (actual, ...types) => message("Key must be ", actual, ...types);
-function invalidKeyType(alg, actual, secret) {
-  const types = ["CryptoKey", "KeyObject", "JSON Web Key"];
-  return secret && types.push("Uint8Array"), new TypeError(message(`Key for the ${alg} algorithm must be `, actual, ...types));
-}
-var unusable = (name, prop = "algorithm.name") => new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name}`);
-function checkUsage(key, usage) {
-  if (usage && !key.usages.includes(usage))
-    throw new TypeError(`CryptoKey does not support this operation, its usages must include ${usage}.`);
-}
-function checkModulusLength(alg, key) {
-  const { modulusLength } = key.algorithm;
-  if (typeof modulusLength != "number" || modulusLength < 2048)
-    throw new TypeError(`${alg} requires key modulusLength to be 2048 bits or larger`);
-}
-function checkCryptoKey(key, expected, usage) {
-  const algorithm = key.algorithm;
-  if (algorithm.name !== expected.name)
-    throw unusable(expected.name);
-  if (expected.hash && algorithm.hash?.name !== expected.hash)
-    throw unusable(expected.hash, "algorithm.hash");
-  if (expected.namedCurve && algorithm.namedCurve !== expected.namedCurve)
-    throw unusable(expected.namedCurve, "algorithm.namedCurve");
-  if (expected.length !== undefined && algorithm.length !== expected.length)
-    throw unusable(expected.length, "algorithm.length");
-  checkUsage(key, usage);
-}
-function snapshotJwk(jwk) {
-  return { __proto__: null, ...jwk };
-}
-function normalizeJwk(jwk) {
-  const normalized = snapshotJwk(jwk);
-  if (normalized.ext !== undefined && typeof normalized.ext != "boolean")
-    throw new TypeError('"ext" (Extractable) Parameter must be a boolean');
-  if (normalized.key_ops !== undefined) {
-    const value = normalized.key_ops, keyOps = Array.isArray(value) ? [...value] : undefined;
-    if (!keyOps || keyOps.some((operation) => typeof operation != "string") || new Set(keyOps).size !== keyOps.length)
-      throw new TypeError('"key_ops" (Key Operations) Parameter must be an array of unique strings');
-    normalized.key_ops = keyOps;
-  }
-  return normalized;
-}
-function validateExtractableOption(extractable) {
-  if (extractable !== undefined && typeof extractable != "boolean")
-    throw new TypeError('"extractable" option must be a boolean');
-  return extractable;
-}
-async function jwkToKey(entry, jwk, extractable) {
-  if (!entry.kty.includes(jwk.kty))
-    throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
-  const algorithm = entry.resolve?.({ kty: jwk.kty, crv: jwk.crv }) ?? entry.subtle, isPrivate = !!(jwk.d || jwk.priv), keyData = { ...jwk, ext: extractable ?? jwk.ext };
-  return keyData.kty !== "AKP" && delete keyData.alg, delete keyData.use, crypto.subtle.importKey("jwk", keyData, algorithm, keyData.ext ?? !isPrivate, jwk.key_ops ?? entry.usages[isPrivate ? 1 : 0]);
-}
-async function rawKey(key, expected, usage, extractable = false) {
-  return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
-}
-
-// node_modules/jose/dist/webapi/lib/content_encryption.js
-var generateCek = (enc) => crypto.getRandomValues(new Uint8Array(enc.cekBits >> 3));
-function checkCekLength(cek, expected) {
-  const actual = cek.byteLength << 3;
-  if (actual !== expected)
-    throw new JWEInvalid(`Invalid Content Encryption Key length. Expected ${expected} bits, got ${actual} bits`);
-}
-var generateIv = (enc) => crypto.getRandomValues(new Uint8Array(enc.ivBits >> 3));
-function checkIvLength(enc, iv) {
-  if (iv.length << 3 !== enc.ivBits)
-    throw new JWEInvalid("Invalid Initialization Vector length");
-}
-async function cbcKeySetup(enc, cek, usage) {
-  if (!(cek instanceof Uint8Array))
-    throw new TypeError(invalidKeyInput(cek, "Uint8Array"));
-  const keySize = enc.cekBits >> 1, encKey = await crypto.subtle.importKey("raw", cek.subarray(keySize >> 3), "AES-CBC", false, [usage]), macKey = await crypto.subtle.importKey("raw", cek.subarray(0, keySize >> 3), {
-    hash: `SHA-${keySize << 1}`,
-    name: "HMAC"
-  }, false, ["sign"]);
-  return [encKey, macKey, keySize];
-}
-async function cbcHmacTag(macKey, macData, keySize) {
-  return new Uint8Array((await crypto.subtle.sign("HMAC", macKey, macData)).slice(0, keySize >> 3));
-}
-async function cbcEncrypt(enc, plaintext, cek, iv, aad) {
-  const [encKey, macKey, keySize] = await cbcKeySetup(enc, cek, "encrypt"), ciphertext = new Uint8Array(await crypto.subtle.encrypt({
-    iv,
-    name: "AES-CBC"
-  }, encKey, plaintext)), macData = concat(aad, iv, ciphertext, uint64be(aad.length * 8)), tag = await cbcHmacTag(macKey, macData, keySize);
-  return { ciphertext, tag, iv };
-}
-async function timingSafeEqual(a, b) {
-  const algorithm = { name: "HMAC", hash: "SHA-256" }, key = await crypto.subtle.generateKey(algorithm, false, ["sign", "verify"]), aHmac = await crypto.subtle.sign(algorithm, key, a);
-  return crypto.subtle.verify(algorithm, key, aHmac, b);
-}
-async function cbcDecrypt(enc, cek, ciphertext, iv, tag, aad) {
-  const [encKey, macKey, keySize] = await cbcKeySetup(enc, cek, "decrypt"), macData = concat(aad, iv, ciphertext, uint64be(aad.length * 8)), expectedTag = await cbcHmacTag(macKey, macData, keySize);
-  try {
-    if (await timingSafeEqual(tag, expectedTag))
-      return new Uint8Array(await crypto.subtle.decrypt({ iv, name: "AES-CBC" }, encKey, ciphertext));
-  } catch {}
-  throw new JWEDecryptionFailed;
-}
-async function encrypt(enc, plaintext, cek, iv, aad) {
-  if (!isCryptoKey(cek) && !(cek instanceof Uint8Array))
-    throw new TypeError(invalidKeyInput(cek, "CryptoKey", "KeyObject", "Uint8Array", "JSON Web Key"));
-  if (iv ? checkIvLength(enc, iv) : iv = generateIv(enc), cek instanceof Uint8Array && checkCekLength(cek, enc.cekBits), enc.cbc)
-    return cbcEncrypt(enc, plaintext, cek, iv, aad);
-  const encKey = await rawKey(cek, enc.subtle, "encrypt"), encrypted = new Uint8Array(await crypto.subtle.encrypt({
-    additionalData: aad,
-    iv,
-    name: "AES-GCM",
-    tagLength: 128
-  }, encKey, plaintext));
-  return { ciphertext: encrypted.subarray(0, -16), tag: encrypted.subarray(-16), iv };
-}
-async function decrypt(enc, cek, ciphertext, iv, tag, aad) {
-  if (!isCryptoKey(cek) && !(cek instanceof Uint8Array))
-    throw new TypeError(invalidKeyInput(cek, "CryptoKey", "KeyObject", "Uint8Array", "JSON Web Key"));
-  if (!iv)
-    throw new JWEInvalid("JWE Initialization Vector missing");
-  if (!tag)
-    throw new JWEInvalid("JWE Authentication Tag missing");
-  if (!enc.cbc && tag.length !== 16)
-    throw new JWEInvalid("Invalid Authentication Tag length");
-  if (checkIvLength(enc, iv), cek instanceof Uint8Array && checkCekLength(cek, enc.cekBits), enc.cbc)
-    return cbcDecrypt(enc, cek, ciphertext, iv, tag, aad);
-  const encKey = await rawKey(cek, enc.subtle, "decrypt");
-  try {
-    return new Uint8Array(await crypto.subtle.decrypt({
-      additionalData: aad,
-      iv,
-      name: "AES-GCM",
-      tagLength: 128
-    }, encKey, concat(ciphertext, tag)));
-  } catch {
-    throw new JWEDecryptionFailed;
-  }
-}
-
-// node_modules/jose/dist/webapi/lib/key_descriptor.js
-function table(entries) {
-  const out = { __proto__: null };
-  for (const alg in entries)
-    out[alg] = { ...entries[alg], alg };
-  return out;
-}
-
-// node_modules/jose/dist/webapi/lib/jwe_algorithms.js
-var wrap = [
-  ["encrypt", "wrapKey"],
-  ["decrypt", "unwrapKey"]
-];
-var derive = [[], ["deriveBits"]];
-var none = [[], []];
-function rsaes(bits) {
-  return {
-    kty: ["RSA"],
-    mode: "key-encryption",
-    subtle: { name: "RSA-OAEP", hash: `SHA-${bits}` },
-    usages: wrap,
-    ops: ["wrapKey", "unwrapKey"]
-  };
-}
-function ecdh(mode) {
-  return {
-    kty: ["EC", "OKP"],
-    mode,
-    subtle: { name: "ECDH" },
-    resolve: ({ kty, crv, asymmetricKeyType }) => {
-      if (crv === "X25519" || asymmetricKeyType === "x25519")
-        return { name: "X25519" };
-      if (kty === "OKP")
-        throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
-      return { name: "ECDH", namedCurve: crv };
-    },
-    usages: derive,
-    ops: [undefined, "deriveBits"]
-  };
-}
-function aeskw(bits, gcm = false) {
-  return {
-    kty: ["oct"],
-    mode: "key-wrapping",
-    secret: true,
-    subtle: { name: gcm ? "AES-GCM" : "AES-KW", length: bits },
-    usages: none,
-    ops: gcm ? ["encrypt", "decrypt"] : ["wrapKey", "unwrapKey"]
-  };
-}
-function pbes2() {
-  return {
-    kty: ["oct"],
-    mode: "key-wrapping",
-    secret: true,
-    subtle: { name: "PBKDF2" },
-    usages: none,
-    ops: ["deriveBits", "deriveBits"]
-  };
-}
-var JWE = table({
-  dir: {
-    kty: ["oct"],
-    mode: "direct-encryption",
-    secret: true,
-    subtle: { name: "AES-GCM" },
-    usages: none,
-    ops: ["encrypt", "decrypt"]
-  },
-  "RSA-OAEP": rsaes(1),
-  "RSA-OAEP-256": rsaes(256),
-  "RSA-OAEP-384": rsaes(384),
-  "RSA-OAEP-512": rsaes(512),
-  "ECDH-ES": ecdh("direct-key-agreement"),
-  "ECDH-ES+A128KW": ecdh("key-agreement-with-key-wrapping"),
-  "ECDH-ES+A192KW": ecdh("key-agreement-with-key-wrapping"),
-  "ECDH-ES+A256KW": ecdh("key-agreement-with-key-wrapping"),
-  A128KW: aeskw(128),
-  A192KW: aeskw(192),
-  A256KW: aeskw(256),
-  A128GCMKW: aeskw(128, true),
-  A192GCMKW: aeskw(192, true),
-  A256GCMKW: aeskw(256, true),
-  "PBES2-HS256+A128KW": pbes2(),
-  "PBES2-HS384+A192KW": pbes2(),
-  "PBES2-HS512+A256KW": pbes2()
-});
-var contentOps = ["encrypt", "decrypt"];
-function contentEncryption(bits, cbc = false) {
-  return {
-    kty: ["oct"],
-    secret: true,
-    subtle: { name: cbc ? "AES-CBC" : "AES-GCM", length: bits },
-    usages: none,
-    ops: contentOps,
-    cekBits: bits,
-    ivBits: cbc ? 128 : 96,
-    cbc
-  };
-}
-var ENC = table({
-  A128GCM: contentEncryption(128),
-  A192GCM: contentEncryption(192),
-  A256GCM: contentEncryption(256),
-  "A128CBC-HS256": contentEncryption(256, true),
-  "A192CBC-HS384": contentEncryption(384, true),
-  "A256CBC-HS512": contentEncryption(512, true)
-});
-function unsupported(parameter, name) {
-  throw new JOSENotSupported(`Invalid or unsupported "${parameter}" (JWE ${name}) header value`);
-}
-function jweAlgorithm(alg) {
-  return (typeof alg == "string" ? JWE[alg] : undefined) ?? unsupported("alg", "Algorithm");
-}
-function isJWECEKTransport(algorithm) {
-  return algorithm.mode === "key-wrapping" || algorithm.mode === "key-encryption" || algorithm.mode === "key-agreement-with-key-wrapping";
-}
-function jweEncryption(enc) {
-  return (typeof enc == "string" ? ENC[enc] : undefined) ?? unsupported("enc", "Encryption Algorithm");
-}
-
-// node_modules/jose/dist/webapi/lib/key_management.js
-function checkEcdhCryptoKey(key, usage) {
-  if (key.algorithm.name !== "ECDH" && key.algorithm.name !== "X25519")
-    throw new TypeError("CryptoKey does not support this operation, its algorithm.name must be ECDH or X25519");
-  checkUsage(key, usage);
-}
-async function aeskwWrap(alg, key, cek) {
-  const cryptoKey = await rawKey(key, jweAlgorithm(alg).subtle, "wrapKey", true), cryptoKeyCek = await crypto.subtle.importKey("raw", cek, { hash: "SHA-256", name: "HMAC" }, true, ["sign"]);
-  return new Uint8Array(await crypto.subtle.wrapKey("raw", cryptoKeyCek, cryptoKey, "AES-KW"));
-}
-async function aeskwUnwrap(alg, key, encryptedKey) {
-  const cryptoKey = await rawKey(key, jweAlgorithm(alg).subtle, "unwrapKey", true), cryptoKeyCek = await crypto.subtle.unwrapKey("raw", encryptedKey, cryptoKey, "AES-KW", { hash: "SHA-256", name: "HMAC" }, true, ["sign"]);
-  return new Uint8Array(await crypto.subtle.exportKey("raw", cryptoKeyCek));
-}
-function checkRsaKey(alg, key, usage) {
-  checkCryptoKey(key, jweAlgorithm(alg).subtle, usage), checkModulusLength(alg, key);
-}
-async function deriveKey(p2s, alg, p2c, key) {
-  if (!(p2s instanceof Uint8Array) || p2s.length < 8)
-    throw new JWEInvalid("PBES2 Salt Input must be 8 or more octets");
-  if (!Number.isSafeInteger(p2c) || Math.sign(p2c) !== 1)
-    throw new JWEInvalid("PBES2 Count Input must be a positive integer");
-  const salt = concat(encode3(alg), Uint8Array.of(0), p2s), keylen = parseInt(alg.slice(13, 16), 10), subtleAlg = {
-    hash: `SHA-${alg.slice(8, 11)}`,
-    iterations: p2c,
-    name: "PBKDF2",
-    salt
-  }, cryptoKey = await rawKey(key, jweAlgorithm(alg).subtle, "deriveBits");
-  return new Uint8Array(await crypto.subtle.deriveBits(subtleAlg, cryptoKey, keylen));
-}
-function lengthAndInput(input) {
-  return concat(uint32be(input.length), input);
-}
-async function concatKdf(Z, L, OtherInfo) {
-  const dkLen = L >> 3, hashLen = 32, reps = Math.ceil(dkLen / hashLen), dk = new Uint8Array(reps * hashLen);
-  for (let i = 1;i <= reps; i++) {
-    const hashResult = await digest("sha256", concat(uint32be(i), Z, OtherInfo));
-    dk.set(hashResult, (i - 1) * hashLen);
-  }
-  return dk.slice(0, dkLen);
-}
-async function ecdhesDeriveKey(publicKey, privateKey, algorithm, keyLength, apu = new Uint8Array, apv = new Uint8Array) {
-  checkEcdhCryptoKey(publicKey), checkEcdhCryptoKey(privateKey, "deriveBits");
-  const otherInfo = concat(lengthAndInput(encode3(algorithm)), lengthAndInput(apu), lengthAndInput(apv), uint32be(keyLength)), Z = new Uint8Array(await crypto.subtle.deriveBits({
-    name: publicKey.algorithm.name,
-    public: publicKey
-  }, privateKey, publicKey.algorithm.name === "X25519" ? 256 : Math.ceil(parseInt(publicKey.algorithm.namedCurve.slice(-3), 10) / 8) << 3));
-  return concatKdf(Z, keyLength, otherInfo);
-}
-function assertEcdhKey(key) {
-  assertCryptoKey(key);
-  const curve = key.algorithm.namedCurve;
-  if (curve !== "P-256" && curve !== "P-384" && curve !== "P-521" && key.algorithm.name !== "X25519")
-    throw new JOSENotSupported("ECDH with the provided key is not allowed or not supported by your javascript runtime");
-}
-function partyInfo(joseHeader, name) {
-  const value = joseHeader[name];
-  if (value !== undefined) {
-    if (typeof value != "string")
-      throw new JWEInvalid(`JOSE Header "${name}" (Agreement Party${name === "apu" ? "U" : "V"}Info) invalid`);
-    return decodeBase64url(value, name, JWEInvalid);
-  }
-}
-function checkPartyInfo(apu, apv) {
-  if (!(apu === undefined || apv === undefined || apu.byteLength !== apv.byteLength)) {
-    for (let i = 0;i < apu.byteLength; i++)
-      if (apu[i] !== apv[i])
-        return;
-    throw new JWEInvalid('JOSE Header "apu" and "apv" values must be distinct');
-  }
-}
-function assertEncryptedKey(encryptedKey) {
-  if (encryptedKey === undefined)
-    throw new JWEInvalid("JWE Encrypted Key missing");
-}
-function assertNoEncryptedKey(encryptedKey) {
-  if (encryptedKey !== undefined)
-    throw new JWEInvalid("Encountered unexpected JWE Encrypted Key");
-}
-function validateMaxPBES2Count(value) {
-  if (value !== undefined && value !== 1 / 0 && (!Number.isSafeInteger(value) || value < 1))
-    throw new TypeError("maxPBES2Count must be a positive safe integer or Infinity");
-}
-async function decryptKeyManagement(entry, enc, key, encryptedKey, joseHeader, maxPBES2Count) {
-  const { alg } = entry, mode = entry.mode;
-  if (mode === "direct-encryption")
-    return assertNoEncryptedKey(encryptedKey), key;
-  const direct = mode === "direct-key-agreement";
-  switch (direct ? assertNoEncryptedKey(encryptedKey) : assertEncryptedKey(encryptedKey), entry.subtle.name) {
-    case "ECDH": {
-      const { epk } = joseHeader;
-      if (!isObject4(epk) || ["d", "k", "p", "q", "dp", "dq", "qi", "oth", "priv"].some((parameter) => Object.hasOwn(epk, parameter)))
-        throw new JWEInvalid('JOSE Header "epk" (Ephemeral Public Key) missing or invalid');
-      assertEcdhKey(key);
-      const ephemeralPublicKey = await jwkToKey(entry, epk), partyUInfo = partyInfo(joseHeader, "apu"), partyVInfo = partyInfo(joseHeader, "apv");
-      checkPartyInfo(partyUInfo, partyVInfo);
-      const sharedSecret = await ecdhesDeriveKey(ephemeralPublicKey, key, direct ? enc.alg : alg, direct ? enc.cekBits : parseInt(alg.slice(-5, -2), 10), partyUInfo, partyVInfo);
-      if (direct)
-        return sharedSecret;
-      key = sharedSecret;
-      break;
-    }
-    case "RSA-OAEP":
-      return assertCryptoKey(key), checkRsaKey(alg, key, "decrypt"), new Uint8Array(await crypto.subtle.decrypt("RSA-OAEP", key, encryptedKey));
-    case "PBKDF2": {
-      if (typeof joseHeader.p2c != "number")
-        throw new JWEInvalid('JOSE Header "p2c" (PBES2 Count) missing or invalid');
-      validateMaxPBES2Count(maxPBES2Count);
-      const p2cLimit = maxPBES2Count ?? 1e4;
-      if (joseHeader.p2c > p2cLimit)
-        throw new JWEInvalid('JOSE Header "p2c" (PBES2 Count) out is of acceptable bounds');
-      if (typeof joseHeader.p2s != "string")
-        throw new JWEInvalid('JOSE Header "p2s" (PBES2 Salt) missing or invalid');
-      const p2s = decodeBase64url(joseHeader.p2s, "p2s", JWEInvalid);
-      key = await deriveKey(p2s, alg, joseHeader.p2c, key);
-      break;
-    }
-    case "AES-GCM": {
-      if (typeof joseHeader.iv != "string")
-        throw new JWEInvalid('JOSE Header "iv" (Initialization Vector) missing or invalid');
-      if (typeof joseHeader.tag != "string")
-        throw new JWEInvalid('JOSE Header "tag" (Authentication Tag) missing or invalid');
-      const iv = decodeBase64url(joseHeader.iv, "iv", JWEInvalid), tag = decodeBase64url(joseHeader.tag, "tag", JWEInvalid);
-      if (iv.byteLength !== 12)
-        throw new JWEInvalid("Invalid Initialization Vector length");
-      if (tag.byteLength !== 16)
-        throw new JWEInvalid("Invalid Authentication Tag length");
-      return decrypt(jweEncryption(alg.slice(0, -2)), key, encryptedKey, iv, tag, new Uint8Array);
-    }
-  }
-  return aeskwUnwrap(alg.slice(-6), key, encryptedKey);
-}
-async function encryptKeyManagement(entry, enc, inputKey, joseHeader, providedCek, providedParameters = {}) {
-  const { alg, mode } = entry, transport = isJWECEKTransport(entry);
-  if (providedCek !== undefined && !transport)
-    throw new TypeError(`setContentEncryptionKey cannot be called with JWE "alg" (Algorithm) Header ${alg}`);
-  let key = await prepareKey(mode === "direct-encryption" ? enc : entry, inputKey, "encrypt");
-  if (mode === "direct-encryption")
-    return [key, undefined, undefined];
-  const cek = transport ? providedCek ?? generateCek(enc) : undefined;
-  cek && checkCekLength(cek, enc.cekBits);
-  let encryptedKey, parameters;
-  switch (entry.subtle.name) {
-    case "ECDH": {
-      assertEcdhKey(key);
-      const { apu: providedApu, apv: providedApv } = providedParameters;
-      providedApu !== undefined && assertUint8Array2(providedApu, '"apu"'), providedApv !== undefined && assertUint8Array2(providedApv, '"apv"');
-      const apu = providedApu ?? partyInfo(joseHeader, "apu"), apv = providedApv ?? partyInfo(joseHeader, "apv");
-      checkPartyInfo(apu, apv);
-      let ephemeralKey;
-      providedParameters.epk !== undefined ? ephemeralKey = await prepareKey(entry, providedParameters.epk, "decrypt") : ephemeralKey = (await crypto.subtle.generateKey(key.algorithm, true, ["deriveBits"])).privateKey;
-      const subtle = crypto.subtle;
-      let exportableEpk = ephemeralKey;
-      if (!exportableEpk.extractable) {
-        if (typeof subtle.getPublicKey != "function")
-          throw new TypeError('CryptoKey for "epk" must be extractable');
-        exportableEpk = await subtle.getPublicKey(ephemeralKey, []);
-      }
-      const { x, y, crv, kty } = await subtle.exportKey("jwk", exportableEpk), direct = mode === "direct-key-agreement", sharedSecret = await ecdhesDeriveKey(key, ephemeralKey, direct ? enc.alg : alg, direct ? enc.cekBits : parseInt(alg.slice(-5, -2), 10), apu, apv), epk = { x, crv, kty };
-      if (kty === "EC" && (epk.y = y), parameters = { epk }, providedApu !== undefined && (parameters.apu = encode4(providedApu)), providedApv !== undefined && (parameters.apv = encode4(providedApv)), direct)
-        return [sharedSecret, undefined, parameters];
-      key = sharedSecret;
-      break;
-    }
-    case "RSA-OAEP": {
-      assertCryptoKey(key), checkRsaKey(alg, key, "encrypt"), encryptedKey = new Uint8Array(await crypto.subtle.encrypt("RSA-OAEP", key, cek));
-      break;
-    }
-    case "PBKDF2": {
-      const { p2c = 2048, p2s = crypto.getRandomValues(new Uint8Array(16)) } = providedParameters;
-      key = await deriveKey(p2s, alg, p2c, key), parameters = { p2c, p2s: encode4(p2s) };
-      break;
-    }
-    case "AES-GCM": {
-      const iv = providedParameters.iv === undefined ? crypto.getRandomValues(new Uint8Array(12)) : providedParameters.iv;
-      if (!(iv instanceof Uint8Array))
-        throw new TypeError('"iv" must be an instance of Uint8Array');
-      const wrapped = await encrypt(jweEncryption(alg.slice(0, -2)), cek, key, iv, new Uint8Array);
-      encryptedKey = wrapped.ciphertext, parameters = { iv: encode4(wrapped.iv), tag: encode4(wrapped.tag) };
-    }
-  }
-  if (encryptedKey ??= await aeskwWrap(alg.slice(-6), key, cek), !(encryptedKey instanceof Uint8Array) || !encryptedKey.byteLength)
-    throw new TypeError("JWE key management algorithm did not produce an Encrypted Key");
-  return [cek, encryptedKey, parameters];
-}
-
-// node_modules/jose/dist/webapi/lib/deflate.js
-function validateZip(joseHeader, protectedHeader) {
-  if (joseHeader.zip !== undefined && joseHeader.zip !== "DEF")
-    throw new JOSENotSupported('Unsupported JWE "zip" (Compression Algorithm) Header Parameter value.');
-  if (joseHeader.zip !== undefined && !protectedHeader?.zip)
-    throw new JWEInvalid('JWE "zip" (Compression Algorithm) Header Parameter MUST be in a protected header.');
-}
-function supported(name) {
-  if (typeof globalThis[name] > "u")
-    throw new JOSENotSupported(`JWE "zip" (Compression Algorithm) Header Parameter requires the ${name} API.`);
-}
-async function transform4(stream, input, maxLength = 1 / 0) {
-  const writer = stream.writable.getWriter();
-  writer.write(input).catch(() => {}), writer.close().catch(() => {});
-  const chunks = [];
-  let length = 0;
-  const reader = stream.readable.getReader();
-  for (;; ) {
-    const { value, done } = await reader.read();
-    if (done)
-      break;
-    if (chunks.push(value), length += value.byteLength, maxLength !== 1 / 0 && length > maxLength)
-      throw new JWEInvalid("Decompressed plaintext exceeded the configured limit");
-  }
-  return concat(...chunks);
-}
-async function compress(input) {
-  return supported("CompressionStream"), transform4(new CompressionStream("deflate-raw"), input);
-}
-async function decompress(input, maxLength) {
-  return supported("DecompressionStream"), transform4(new DecompressionStream("deflate-raw"), input, maxLength);
-}
-
-// node_modules/jose/dist/webapi/lib/jwe_decrypt.js
-function shareJWE(jwe) {
-  const { protected: encodedProtected, ciphertext, iv, tag, aad } = jwe;
-  let parsedProt;
-  return encodedProtected !== undefined && (parsedProt = parseJoseHeader(encodedProtected, JWEInvalid, "JWE Protected Header is invalid")), [
-    parsedProt,
-    decodeBase64url(ciphertext, "ciphertext", JWEInvalid),
-    iv !== undefined ? decodeBase64url(iv, "iv", JWEInvalid) : undefined,
-    tag !== undefined ? decodeBase64url(tag, "tag", JWEInvalid) : undefined,
-    encodeBase64url((encodedProtected ?? "") + (aad !== undefined ? `.${aad}` : ""), "aad", JWEInvalid)
-  ];
-}
-function prepareDecrypt(options) {
-  return [
-    options && validateAlgorithms("keyManagementAlgorithms", options.keyManagementAlgorithms),
-    options && validateAlgorithms("contentEncryptionAlgorithms", options.contentEncryptionAlgorithms),
-    options?.crit,
-    options?.maxPBES2Count,
-    options?.maxDecompressedLength
-  ];
-}
-async function decryptJWE(jwe, shared, key, token = shareJWE(jwe)) {
-  const [parsedProt, ciphertext, iv, tag, additionalData] = token, { header, unprotected, aad } = jwe;
-  let joseHeader;
-  if (header !== undefined || unprotected !== undefined) {
-    if (!isDisjoint(parsedProt, header, unprotected))
-      throw new JWEInvalid("JWE Protected, JWE Unprotected Header, and JWE Per-Recipient Unprotected Header Parameter names must be disjoint");
-    joseHeader = { ...parsedProt, ...header, ...unprotected };
-  } else
-    joseHeader = parsedProt ?? {};
-  const [keyManagementAlgorithms, contentEncryptionAlgorithms, crit, maxPBES2Count, maxDecompressedLength] = shared, { encrypted_key: encodedKey } = jwe;
-  validateCrit(JWEInvalid, JWE_RECOGNIZED, crit, parsedProt, joseHeader), validateZip(joseHeader, parsedProt);
-  const { alg, enc } = joseHeader;
-  if (typeof alg != "string" || !alg)
-    throw new JWEInvalid("missing JWE Algorithm (alg) in JWE Header");
-  const selected = JWE[alg];
-  if (encodedKey === "" && (!selected || !isJWECEKTransport(selected)))
-    throw new JWEInvalid("JWE Encrypted Key incorrect type");
-  const integrated = selected?.mode === "integrated-encryption";
-  if (!integrated && (typeof enc != "string" || !enc))
-    throw new JWEInvalid("missing JWE Encryption Algorithm (enc) in JWE Header");
-  if (keyManagementAlgorithms && !keyManagementAlgorithms.has(alg) || !keyManagementAlgorithms && alg.startsWith("PBES2"))
-    throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter value not allowed');
-  let encEntry;
-  if (integrated) {
-    if (enc !== undefined)
-      throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter must not be present for integrated encryption');
-    if (iv?.byteLength)
-      throw new JWEInvalid("JWE Initialization Vector must be empty for integrated encryption");
-    if (tag?.byteLength)
-      throw new JWEInvalid("JWE Authentication Tag must be empty for integrated encryption");
-  } else {
-    if (contentEncryptionAlgorithms && !contentEncryptionAlgorithms.has(enc))
-      throw new JOSEAlgNotAllowed('"enc" (Encryption Algorithm) Header Parameter value not allowed');
-    encEntry = jweEncryption(enc);
-  }
-  let encryptedKey;
-  if (encodedKey !== undefined)
-    try {
-      encryptedKey = decodeBase64url(encodedKey, "encrypted_key", JWEInvalid);
-    } catch (error) {
-      if (!selected || !isJWECEKTransport(selected))
-        throw error;
-      encryptedKey = new Uint8Array;
-    }
-  let resolvedKey = false;
-  typeof key == "function" && (key = await key(parsedProt, jwe), resolvedKey = true);
-  const algEntry = selected ?? jweAlgorithm(alg);
-  isJWECEKTransport(algEntry) && encryptedKey === undefined && (encryptedKey = new Uint8Array);
-  const k = await prepareKey(algEntry.mode === "direct-encryption" ? encEntry : algEntry, key, "decrypt");
-  let plaintext;
-  if (algEntry.mode === "integrated-encryption")
-    plaintext = await algEntry.decrypt(k, encryptedKey, ciphertext, additionalData, parsedProt, joseHeader);
-  else {
-    const encryption = encEntry;
-    let cek;
-    try {
-      cek = await decryptKeyManagement(algEntry, encryption, k, encryptedKey, joseHeader, maxPBES2Count), isJWECEKTransport(algEntry) && cek instanceof Uint8Array && cek.byteLength << 3 !== encryption.cekBits && (cek = generateCek(encryption));
-    } catch (err) {
-      if (err instanceof TypeError || err instanceof JWEInvalid || err instanceof JOSENotSupported)
-        throw err;
-      cek = generateCek(encryption);
-    }
-    plaintext = await decrypt(encryption, cek, ciphertext, iv, tag, additionalData);
-  }
-  if (joseHeader.zip === "DEF") {
-    const decompressionLimit = maxDecompressedLength ?? 250000;
-    if (decompressionLimit === 0)
-      throw new JOSENotSupported('JWE "zip" (Compression Algorithm) Header Parameter is not supported.');
-    if (decompressionLimit !== 1 / 0 && (!Number.isSafeInteger(decompressionLimit) || decompressionLimit < 1))
-      throw new TypeError("maxDecompressedLength must be 0, a positive safe integer, or Infinity");
-    plaintext = await decompress(plaintext, decompressionLimit).catch((cause) => {
-      throw cause instanceof JWEInvalid ? cause : new JWEInvalid("Failed to decompress plaintext", { cause });
-    });
-  }
-  return {
-    plaintext,
-    ...parsedProt && { protectedHeader: parsedProt },
-    ...aad !== undefined && {
-      additionalAuthenticatedData: decodeBase64url(aad, "aad", JWEInvalid)
-    },
-    ...unprotected && { sharedUnprotectedHeader: unprotected },
-    ...header && { unprotectedHeader: header },
-    ...resolvedKey && { key: k }
-  };
-}
-async function decryptCompact(jwe, shared, key) {
-  if (jwe instanceof Uint8Array && (jwe = decoder.decode(jwe)), typeof jwe != "string")
-    throw new JWEInvalid("Compact JWE must be a string or Uint8Array");
-  const { 0: protectedHeader, 1: encryptedKey, 2: iv, 3: ciphertext, 4: tag, length } = jwe.split(".");
-  if (length !== 5)
-    throw new JWEInvalid("Invalid Compact JWE");
-  return decryptJWE({
-    ciphertext,
-    iv: iv || undefined,
-    protected: protectedHeader,
-    tag: tag || undefined,
-    encrypted_key: encryptedKey || undefined
-  }, shared, key);
-}
-
-// node_modules/jose/dist/webapi/lib/jwe_encrypt.js
-function checkDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader) {
-  if (!isDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader))
-    throw new JWEInvalid("JWE Protected, JWE Shared Unprotected and JWE Per-Recipient Header Parameter names must be disjoint");
-}
-function checkEncryptHeaders(input, options, sharedHeadersNormalized = false) {
-  if (!input[1] && !input[2] && !input[3])
-    throw new JWEInvalid("either setProtectedHeader, setUnprotectedHeader, or sharedUnprotectedHeader must be called before #encrypt()");
-  options !== undefined && (input[8] = options?.crit);
-  let [, protectedHeader, unprotectedHeader, sharedUnprotectedHeader, aad, cek, iv, keyManagementParameters, crit] = input;
-  if (aad !== undefined && assertUint8Array2(aad, "JWE Additional Authenticated Data"), cek !== undefined && assertUint8Array2(cek, "JWE Content Encryption Key"), iv !== undefined && assertUint8Array2(iv, "JWE Initialization Vector"), !sharedHeadersNormalized && protectedHeader !== undefined && (protectedHeader = serializeJoseHeader(JWEInvalid, protectedHeader)[0], input[1] = protectedHeader), unprotectedHeader !== undefined && (unprotectedHeader = serializeJoseHeader(JWEInvalid, unprotectedHeader)[0], input[2] = unprotectedHeader), !sharedHeadersNormalized && sharedUnprotectedHeader !== undefined && (sharedUnprotectedHeader = serializeJoseHeader(JWEInvalid, sharedUnprotectedHeader)[0], input[3] = sharedUnprotectedHeader), keyManagementParameters !== undefined && !isObject4(keyManagementParameters))
-    throw new TypeError("JWE Key Management Parameters must be an object");
-  checkDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader);
-  const joseHeader = {
-    ...protectedHeader,
-    ...unprotectedHeader,
-    ...sharedUnprotectedHeader
-  };
-  validateCritDuplicates(JWEInvalid, protectedHeader), validateCrit(JWEInvalid, JWE_RECOGNIZED, crit, protectedHeader, joseHeader), validateZip(joseHeader, protectedHeader);
-  const { alg, enc } = joseHeader;
-  if (typeof alg != "string" || !alg)
-    throw new JWEInvalid('JWE "alg" (Algorithm) Header Parameter missing or invalid');
-  const algEntry = JWE[alg];
-  if (algEntry?.mode === "integrated-encryption") {
-    if (enc !== undefined)
-      throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter must not be present for integrated encryption');
-    if (cek !== undefined)
-      throw new TypeError(`setContentEncryptionKey cannot be called with JWE "alg" (Algorithm) Header ${alg}`);
-    if (iv !== undefined)
-      throw new TypeError(`setInitializationVector cannot be called with JWE "alg" (Algorithm) Header ${alg}`);
-    return [joseHeader, undefined, algEntry];
-  }
-  if (typeof enc != "string" || !enc)
-    throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter missing or invalid');
-  return [joseHeader, jweEncryption(enc), algEntry];
-}
-async function encryptJWE(input, checked, key) {
-  const [joseHeader, encEntry, selected] = checked, [inputPlaintext, inputProtectedHeader, inputUnprotectedHeader, sharedUnprotectedHeader, aad, providedCek, inputIv, keyManagementParameters, , unprotectedParameters] = input;
-  let protectedHeader = inputProtectedHeader, unprotectedHeader = inputUnprotectedHeader;
-  const algEntry = selected ?? jweAlgorithm(joseHeader.alg);
-  let encryptedKey, parameters, cek;
-  algEntry.mode === "integrated-encryption" ? cek = await prepareKey(algEntry, key, "encrypt") : [cek, encryptedKey, parameters] = await encryptKeyManagement(algEntry, encEntry, key, joseHeader, providedCek, keyManagementParameters), parameters && (unprotectedParameters ? unprotectedHeader = unprotectedHeader ? { ...unprotectedHeader, ...parameters } : parameters : protectedHeader = protectedHeader ? { ...protectedHeader, ...parameters } : parameters, checkDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader));
-  const protectedHeaderS = protectedHeader ? encode4(JSON.stringify(protectedHeader)) : "", aadMember = aad?.byteLength ? encode4(aad) : undefined, additionalData = encode3(aadMember ? `${protectedHeaderS}.${aadMember}` : protectedHeaderS);
-  let plaintext = inputPlaintext;
-  joseHeader.zip === "DEF" && (plaintext = await compress(plaintext).catch((cause) => {
-    throw new JWEInvalid("Failed to compress plaintext", { cause });
-  }));
-  let ciphertext, tag, iv;
-  algEntry.mode === "integrated-encryption" ? [encryptedKey, ciphertext] = await algEntry.encrypt(cek, plaintext, additionalData, protectedHeader, joseHeader, keyManagementParameters) : { ciphertext, tag, iv } = await encrypt(encEntry, plaintext, cek, inputIv, additionalData);
-  const jwe = {
-    ciphertext: encode4(ciphertext)
-  };
-  return iv && (jwe.iv = encode4(iv)), tag && (jwe.tag = encode4(tag)), encryptedKey?.byteLength && (jwe.encrypted_key = encode4(encryptedKey)), aadMember && (jwe.aad = aadMember), protectedHeader && (jwe.protected = protectedHeaderS), sharedUnprotectedHeader && (jwe.unprotected = sharedUnprotectedHeader), unprotectedHeader && (jwe.header = unprotectedHeader), jwe;
-}
-async function createJWE(input, key, options) {
-  return encryptJWE(input, checkEncryptHeaders(input, options), key);
-}
-function compactJWE(jwe) {
-  return [jwe.protected, jwe.encrypted_key, jwe.iv, jwe.ciphertext, jwe.tag].join(".");
-}
-
-// node_modules/jose/dist/webapi/lib/jws_algorithms.js
-var sig = [["verify"], ["sign"]];
-function hmac2(bits) {
-  const subtle = { name: "HMAC", hash: `SHA-${bits}` };
-  return { kty: ["oct"], secret: true, subtle, signing: subtle, usages: sig };
-}
-function rsa(bits, saltLength) {
-  const subtle = { name: saltLength ? "RSA-PSS" : "RSASSA-PKCS1-v1_5", hash: `SHA-${bits}` };
-  return {
-    kty: ["RSA"],
-    subtle,
-    signing: saltLength ? { ...subtle, saltLength } : subtle,
-    usages: sig,
-    minRsaBits: 2048
-  };
-}
-function ecdsa(crv, bits) {
-  return {
-    kty: ["EC"],
-    crv,
-    subtle: { name: "ECDSA", namedCurve: crv },
-    signing: { name: "ECDSA", hash: `SHA-${bits}` },
-    usages: sig
-  };
-}
-function eddsa() {
-  const subtle = { name: "Ed25519" };
-  return {
-    kty: ["OKP"],
-    crv: "Ed25519",
-    subtle,
-    signing: subtle,
-    usages: sig
-  };
-}
-function mldsa(bits) {
-  const subtle = { name: `ML-DSA-${bits}` };
-  return {
-    kty: ["AKP"],
-    subtle,
-    signing: subtle,
-    usages: sig
-  };
-}
-var JWS = table({
-  HS256: hmac2(256),
-  HS384: hmac2(384),
-  HS512: hmac2(512),
-  RS256: rsa(256),
-  RS384: rsa(384),
-  RS512: rsa(512),
-  PS256: rsa(256, 32),
-  PS384: rsa(384, 48),
-  PS512: rsa(512, 64),
-  ES256: ecdsa("P-256", 256),
-  ES384: ecdsa("P-384", 384),
-  ES512: ecdsa("P-521", 512),
-  EdDSA: eddsa(),
-  Ed25519: eddsa(),
-  "ML-DSA-44": mldsa(44),
-  "ML-DSA-65": mldsa(65),
-  "ML-DSA-87": mldsa(87)
-});
-function jwsAlgorithm(alg) {
-  const entry = typeof alg == "string" ? JWS[alg] : undefined;
-  if (!entry)
-    throw new JOSENotSupported(`alg ${alg} is not supported either by JOSE or your javascript runtime`);
-  return entry;
-}
-
-// node_modules/jose/dist/webapi/lib/jws_verify.js
-function prepareVerify(options) {
-  return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
-}
-function parseProtectedHeader(encodedProtected) {
-  return encodedProtected === undefined ? {} : parseJoseHeader(encodedProtected, JWSInvalid, "JWS Protected Header is invalid");
-}
-function encodeCompactUnencodedPayload(payload) {
-  try {
-    return encode3(payload);
-  } catch {
-    throw new JWSInvalid("JWS Compact Serialization payload must use only ASCII characters");
-  }
-}
-async function verifySignature(jws, shared, key, encodeUnencodedPayload, parsedProtected) {
-  const { protected: encodedProtected, header, payload: inputPayload } = jws, parsedProt = parsedProtected ?? parseProtectedHeader(encodedProtected);
-  if (!isDisjoint(parsedProt, header))
-    throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
-  const joseHeader = { ...parsedProt, ...header }, b64 = validateB64(parsedProt, validateCrit(JWSInvalid, JWS_RECOGNIZED, shared[1], parsedProt, joseHeader)), { alg } = joseHeader;
-  if (typeof alg != "string" || !alg)
-    throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
-  if (shared[0] && !shared[0].has(alg))
-    throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter value not allowed');
-  if (b64) {
-    if (typeof inputPayload != "string")
-      throw new JWSInvalid("JWS Payload must be a string");
-  } else if (typeof inputPayload != "string" && !(inputPayload instanceof Uint8Array))
-    throw new JWSInvalid("JWS Payload must be a string or an Uint8Array instance");
-  const signingPayload = b64 || typeof inputPayload != "string" ? inputPayload : encodeUnencodedPayload(inputPayload);
-  let resolvedKey = false;
-  typeof key == "function" && (key = await key(parsedProt, jws), resolvedKey = true);
-  const entry = jwsAlgorithm(alg), data = concat(encodedProtected !== undefined ? encode3(encodedProtected) : new Uint8Array, encode3("."), typeof signingPayload == "string" ? shared[2] ??= encodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload), signature = decodeBase64url(jws.signature, "signature", JWSInvalid), k = await prepareKey(entry, key, "verify"), cryptoKey = await rawKey(k, entry.subtle, "verify");
-  entry.minRsaBits && checkModulusLength(entry.alg, cryptoKey);
-  let verified = false;
-  try {
-    verified = await crypto.subtle.verify(entry.signing, cryptoKey, signature, data);
-  } catch {}
-  if (!verified)
-    throw new JWSSignatureVerificationFailed;
-  const result = { payload: typeof signingPayload == "string" ? decodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload };
-  return encodedProtected !== undefined && (result.protectedHeader = parsedProt), header !== undefined && (result.unprotectedHeader = header), resolvedKey ? [{ ...result, key: k }, b64] : [result, b64];
-}
-async function verifyCompact(jws, shared, key) {
-  if (jws instanceof Uint8Array && (jws = decoder.decode(jws)), typeof jws != "string")
-    throw new JWSInvalid("Compact JWS must be a string or Uint8Array");
-  const { 0: protectedHeader, 1: payload, 2: signature, length } = jws.split(".");
-  if (length !== 3)
-    throw new JWSInvalid("Invalid Compact JWS");
-  return verifySignature({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
-}
-
-// node_modules/jose/dist/webapi/lib/jwt_claims_set.js
-var epoch = (date) => Math.floor(date.getTime() / 1000);
-var multipliers = {
-  s: 1,
-  m: 60,
-  h: 3600,
-  d: 86400,
-  w: 604800,
-  y: 31557600
-};
-var REGEX = /^(\+|\-)? ?(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)(?: (ago|from now))?$/i;
-var checkFailed = "check_failed";
-function invalidDuration() {
-  throw new TypeError("Invalid time period format");
-}
-function secs(str) {
-  typeof str != "string" && invalidDuration();
-  const matched = REGEX.exec(str);
-  (!matched || matched[4] && matched[1]) && invalidDuration();
-  const value = parseFloat(matched[2]), numericDate2 = Math.round(value * multipliers[matched[3][0].toLowerCase()]);
-  return Number.isFinite(numericDate2) || invalidDuration(), matched[1] === "-" || matched[4] === "ago" ? -numericDate2 : numericDate2;
-}
-function validateInput(label, input) {
-  if (!Number.isFinite(input))
-    throw new TypeError(`Invalid ${label} input`);
-  return input;
-}
-function validateStringClaim(claim, value) {
-  if (typeof value != "string")
-    throw new TypeError(`"${claim}" claim must be a string`);
-}
-function validateAudienceClaim(value) {
-  if (typeof value != "string" && (!Array.isArray(value) || Array.from(value).some((member) => typeof member != "string")))
-    throw new TypeError('"aud" claim must be a string or an array of strings');
-}
-function numericDate(value, label) {
-  return typeof value == "number" ? validateInput(label, value) : value instanceof Date ? validateInput(label, epoch(value)) : epoch(/* @__PURE__ */ new Date) + secs(value);
-}
-var normalizeTyp = (value) => {
-  const normalized = value.toLowerCase();
-  return value.includes("/") ? normalized : `application/${normalized}`;
-};
-var checkAudiencePresence = (audPayload, audOption) => typeof audPayload == "string" ? audOption.includes(audPayload) : Array.isArray(audPayload) ? audOption.some((aud) => audPayload.includes(aud)) : false;
-function validateNumericDate(payload, claim, required = false) {
-  const value = payload[claim];
-  if (!(value === undefined && !required)) {
-    if (typeof value != "number")
-      throw new JWTClaimValidationFailed(`"${claim}" claim must be a number`, payload, claim, "invalid");
-    return value;
-  }
-}
-function unexpectedClaim(payload, claim) {
-  throw new JWTClaimValidationFailed(`unexpected "${claim}" claim value`, payload, claim, checkFailed);
-}
-function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
-  let payload;
-  try {
-    payload = JSON.parse(strictDecoder.decode(encodedPayload));
-  } catch {}
-  if (!isObject4(payload))
-    throw new JWTInvalid("JWT Claims Set must be a top-level JSON object");
-  const { typ } = options;
-  if (typ !== undefined && (typeof protectedHeader.typ != "string" || normalizeTyp(protectedHeader.typ) !== normalizeTyp(typ)))
-    throw new JWTClaimValidationFailed('unexpected "typ" JWT header value', payload, "typ", checkFailed);
-  const { requiredClaims = [], issuer, subject, audience, maxTokenAge } = options, presenceCheck = [...requiredClaims];
-  maxTokenAge !== undefined && presenceCheck.push("iat"), audience !== undefined && presenceCheck.push("aud"), subject !== undefined && presenceCheck.push("sub"), issuer !== undefined && presenceCheck.push("iss");
-  for (const claim of new Set(presenceCheck.reverse()))
-    if (!Object.hasOwn(payload, claim))
-      throw new JWTClaimValidationFailed(`missing required "${claim}" claim`, payload, claim, "missing");
-  issuer !== undefined && !(Array.isArray(issuer) ? issuer : [issuer]).includes(payload.iss) && unexpectedClaim(payload, "iss"), subject !== undefined && payload.sub !== subject && unexpectedClaim(payload, "sub"), audience !== undefined && !checkAudiencePresence(payload.aud, typeof audience == "string" ? [audience] : audience) && unexpectedClaim(payload, "aud");
-  const { clockTolerance } = options;
-  let tolerance = 0;
-  if (typeof clockTolerance == "string")
-    tolerance = secs(clockTolerance);
-  else if (clockTolerance !== undefined) {
-    if (typeof clockTolerance != "number")
-      throw new TypeError("Invalid clockTolerance option type");
-    tolerance = clockTolerance;
-  }
-  validateInput("clockTolerance option", tolerance);
-  const { currentDate } = options, now = validateInput("currentDate option", epoch(currentDate === undefined ? /* @__PURE__ */ new Date : currentDate)), iat = validateNumericDate(payload, "iat", maxTokenAge !== undefined), nbf = validateNumericDate(payload, "nbf");
-  if (nbf !== undefined && nbf > now + tolerance)
-    throw new JWTClaimValidationFailed('"nbf" claim timestamp check failed', payload, "nbf", checkFailed);
-  const exp = validateNumericDate(payload, "exp");
-  if (exp !== undefined && exp <= now - tolerance)
-    throw new JWTExpired('"exp" claim timestamp check failed', payload, "exp", checkFailed);
-  if (maxTokenAge !== undefined) {
-    const age = now - iat, max = validateInput("maxTokenAge option", typeof maxTokenAge == "number" ? maxTokenAge : secs(maxTokenAge));
-    if (age - tolerance > max)
-      throw new JWTExpired('"iat" claim timestamp check failed (too far in the past)', payload, "iat", checkFailed);
-    if (age < -tolerance)
-      throw new JWTClaimValidationFailed('"iat" claim timestamp check failed (it should be in the past)', payload, "iat", checkFailed);
-  }
-  return payload;
-}
-var producerPayloads;
-function producerPayload(producer) {
-  return producerPayloads.get(producer);
-}
-function jwtData(producer) {
-  const payload = producerPayload(producer);
-  for (const claim of ["iat", "nbf", "exp"]) {
-    const value = payload[claim];
-    if (typeof value == "number" && !Number.isFinite(value))
-      throw new TypeError(`"${claim}" claim must be a finite number`);
-  }
-  return encoder2.encode(JSON.stringify(payload));
-}
-function jwtClaim(producer, claim) {
-  return producerPayload(producer)[claim];
-}
-
-class JWTClaimsBuilder {
-  constructor(payload = {}) {
-    if (!isObject4(payload))
-      throw new TypeError("JWT Claims Set MUST be an object");
-    (producerPayloads ||= /* @__PURE__ */ new WeakMap).set(this, structuredClone(payload));
-  }
-  setIssuer(value) {
-    return validateStringClaim("iss", value), producerPayload(this).iss = value, this;
-  }
-  setSubject(value) {
-    return validateStringClaim("sub", value), producerPayload(this).sub = value, this;
-  }
-  setAudience(value) {
-    return validateAudienceClaim(value), producerPayload(this).aud = value, this;
-  }
-  setJti(value) {
-    return validateStringClaim("jti", value), producerPayload(this).jti = value, this;
-  }
-  setNotBefore(value) {
-    return producerPayload(this).nbf = numericDate(value, "setNotBefore"), this;
-  }
-  setExpirationTime(value) {
-    return producerPayload(this).exp = numericDate(value, "setExpirationTime"), this;
-  }
-  setIssuedAt(value) {
-    const payload = producerPayload(this);
-    return value === undefined ? payload.iat = epoch(/* @__PURE__ */ new Date) : typeof value == "string" ? payload.iat = validateInput("setIssuedAt", epoch(/* @__PURE__ */ new Date) + secs(value)) : payload.iat = numericDate(value, "setIssuedAt"), this;
-  }
-}
-
-// node_modules/jose/dist/webapi/jwt/verify.js
-async function jwtVerify(jwt, key, options) {
-  const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
-  if (!b64)
-    throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
-  const payload = validateClaimsSet(verified.protectedHeader, verified.payload, options);
-  return { ...verified, payload };
-}
-
-// node_modules/jose/dist/webapi/jwt/decrypt.js
-async function jwtDecrypt(jwt, key, options) {
-  const { plaintext, ...result } = await decryptCompact(jwt, prepareDecrypt(options), key), { protectedHeader } = result, payload = validateClaimsSet(protectedHeader, plaintext, options);
-  for (const claim of ["iss", "sub", "aud"])
-    if (protectedHeader[claim] !== undefined && (claim === "aud" ? JSON.stringify(protectedHeader.aud) !== JSON.stringify(payload.aud) : protectedHeader[claim] !== payload[claim]))
-      throw new JWTClaimValidationFailed(`replicated "${claim}" claim header parameter mismatch`, payload, claim, "mismatch");
-  return { payload, ...result };
-}
-
-// node_modules/jose/dist/webapi/lib/jws_sign.js
-async function createSignature(input, key, rejectUnencoded) {
-  let [payload, protectedHeader, unprotectedHeader, crit] = input, protectedHeaderString = "";
-  if (protectedHeader !== undefined) {
-    const normalized = serializeJoseHeader(JWSInvalid, protectedHeader);
-    protectedHeader = normalized[0], protectedHeaderString = encode4(normalized[1]);
-  }
-  if (unprotectedHeader !== undefined && (unprotectedHeader = serializeJoseHeader(JWSInvalid, unprotectedHeader)[0]), !protectedHeader && !unprotectedHeader)
-    throw new JWSInvalid("either setProtectedHeader or setUnprotectedHeader must be called before #sign()");
-  if (!isDisjoint(protectedHeader, unprotectedHeader))
-    throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
-  const joseHeader = { ...protectedHeader, ...unprotectedHeader };
-  validateCritDuplicates(JWSInvalid, protectedHeader);
-  const b64 = validateB64(protectedHeader, validateCrit(JWSInvalid, JWS_RECOGNIZED, crit, protectedHeader, joseHeader));
-  b64 || rejectUnencoded?.();
-  const { alg } = joseHeader;
-  if (typeof alg != "string" || !alg)
-    throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
-  const entry = jwsAlgorithm(alg);
-  let payloadS = "", payloadB = payload, data;
-  if (b64) {
-    const encoded = input[4];
-    encoded ? (payloadS = encoded[0] ??= encode4(payload), payloadB = encoded[1] ??= encode3(payloadS)) : (payloadS = encode4(payload), data = encoder2.encode(`${protectedHeaderString}.${payloadS}`));
-  }
-  data ??= concat(encode3(protectedHeaderString), encode3("."), payloadB);
-  const k = await rawKey(await prepareKey(entry, key, "sign"), entry.subtle, "sign");
-  entry.minRsaBits && checkModulusLength(entry.alg, k);
-  const jws = {
-    signature: encode4(new Uint8Array(await crypto.subtle.sign(entry.signing, k, data))),
-    payload: payloadS
-  };
-  return protectedHeader && (jws.protected = protectedHeaderString), unprotectedHeader && (jws.header = unprotectedHeader), [jws, b64];
-}
-async function createCompactSignature(payload, protectedHeader, crit, key, rejectUnencoded) {
-  const [jws] = await createSignature([payload, protectedHeader, undefined, crit], key, rejectUnencoded);
-  return `${jws.protected}.${jws.payload}.${jws.signature}`;
-}
-
-// node_modules/jose/dist/webapi/jwt/sign.js
-var SignJWT_base = JWTClaimsBuilder;
-
-class SignJWT extends SignJWT_base {
-  #protectedHeader;
-  setProtectedHeader(protectedHeader) {
-    return assertNotSet(this.#protectedHeader, "setProtectedHeader"), this.#protectedHeader = protectedHeader, this;
-  }
-  async sign(key, options) {
-    return createCompactSignature(jwtData(this), this.#protectedHeader, options?.crit, key, () => {
-      throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
-    });
-  }
-}
-
-// node_modules/jose/dist/webapi/jwt/encrypt.js
-var EncryptJWT_base = JWTClaimsBuilder;
-
-class EncryptJWT extends EncryptJWT_base {
-  #input = [undefined];
-  #replicateIssuerAsHeader;
-  #replicateSubjectAsHeader;
-  #replicateAudienceAsHeader;
-  setProtectedHeader(protectedHeader) {
-    return assertNotSet(this.#input[1], "setProtectedHeader"), this.#input[1] = protectedHeader, this;
-  }
-  setKeyManagementParameters(parameters) {
-    return assertNotSet(this.#input[7], "setKeyManagementParameters"), this.#input[7] = parameters, this;
-  }
-  setContentEncryptionKey(cek) {
-    return assertNotSet(this.#input[5], "setContentEncryptionKey"), this.#input[5] = cek, this;
-  }
-  setInitializationVector(iv) {
-    return assertNotSet(this.#input[6], "setInitializationVector"), this.#input[6] = iv, this;
-  }
-  replicateIssuerAsHeader() {
-    return this.#replicateIssuerAsHeader = true, this;
-  }
-  replicateSubjectAsHeader() {
-    return this.#replicateSubjectAsHeader = true, this;
-  }
-  replicateAudienceAsHeader() {
-    return this.#replicateAudienceAsHeader = true, this;
-  }
-  async encrypt(key, options) {
-    const plaintext = jwtData(this);
-    this.#input[1] && (this.#replicateIssuerAsHeader || this.#replicateSubjectAsHeader || this.#replicateAudienceAsHeader) && (this.#input[1] = {
-      ...this.#input[1],
-      iss: this.#replicateIssuerAsHeader ? jwtClaim(this, "iss") : undefined,
-      sub: this.#replicateSubjectAsHeader ? jwtClaim(this, "sub") : undefined,
-      aud: this.#replicateAudienceAsHeader ? jwtClaim(this, "aud") : undefined
-    });
-    const input = [...this.#input];
-    return input[0] = plaintext, compactJWE(await createJWE(input, key, options));
-  }
-}
-
-// node_modules/jose/dist/webapi/lib/key_algorithm.js
-function unsupportedAlg(source = 'JWK "alg" (Algorithm) Parameter') {
-  throw new JOSENotSupported(`Invalid or unsupported ${source} value`);
-}
-function keyAlgorithm(alg, source) {
-  return (typeof alg == "string" ? JWS[alg] ?? JWE[alg] : undefined) ?? unsupportedAlg(source);
-}
-
-// node_modules/jose/dist/webapi/key/export.js
-async function exportJWK(key) {
-  if (isKeyObject(key))
-    if (key.type === "secret")
-      key = key.export();
-    else
-      return key.export({ format: "jwk" });
-  if (key instanceof Uint8Array)
-    return {
-      kty: "oct",
-      k: encode4(key)
-    };
-  if (!isCryptoKey(key))
-    throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "Uint8Array"));
-  if (!key.extractable)
-    throw new TypeError("non-extractable CryptoKey cannot be exported as a JWK");
-  const jwk = await crypto.subtle.exportKey("jwk", key);
-  delete jwk.ext, delete jwk.key_ops, delete jwk.use, jwk.kty !== "AKP" && delete jwk.alg;
-  for (const parameter of Object.keys(jwk))
-    jwk[parameter] === undefined && delete jwk[parameter];
-  return jwk;
-}
-
-// node_modules/jose/dist/webapi/jwk/thumbprint.js
-var check2 = (value, description) => {
-  if (typeof value != "string" || !value)
-    throw new JWKInvalid(`${description} missing or invalid`);
-};
-async function calculateJwkThumbprint(key, digestAlgorithm) {
-  let jwk;
-  if (isObject4(key)) {
-    if (jwk = snapshotJwk(key), typeof jwk.kty != "string")
-      throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "JSON Web Key"));
-  } else if (isKeyLike(key))
-    jwk = snapshotJwk(await exportJWK(key));
-  else
-    throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "JSON Web Key"));
-  if (digestAlgorithm ??= "sha256", digestAlgorithm !== "sha256" && digestAlgorithm !== "sha384" && digestAlgorithm !== "sha512")
-    throw new TypeError('digestAlgorithm must one of "sha256", "sha384", or "sha512"');
-  let components;
-  switch (jwk.kty) {
-    case "AKP":
-      check2(jwk.alg, '"alg" (Algorithm) Parameter'), check2(jwk.pub, '"pub" (Public key) Parameter'), components = { alg: jwk.alg, kty: jwk.kty, pub: jwk.pub };
-      break;
-    case "EC":
-      check2(jwk.crv, '"crv" (Curve) Parameter'), check2(jwk.x, '"x" (X Coordinate) Parameter'), check2(jwk.y, '"y" (Y Coordinate) Parameter'), components = { crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y };
-      break;
-    case "OKP":
-      check2(jwk.crv, '"crv" (Subtype of Key Pair) Parameter'), check2(jwk.x, '"x" (Public Key) Parameter'), components = { crv: jwk.crv, kty: jwk.kty, x: jwk.x };
-      break;
-    case "RSA":
-      check2(jwk.e, '"e" (Exponent) Parameter'), check2(jwk.n, '"n" (Modulus) Parameter'), components = { e: jwk.e, kty: jwk.kty, n: jwk.n };
-      break;
-    case "oct":
-      if (typeof jwk.k != "string")
-        throw new JWKInvalid('"k" (Key Value) Parameter missing or invalid');
-      components = { k: jwk.k, kty: jwk.kty };
-      break;
-    default:
-      throw new JOSENotSupported('"kty" (Key Type) Parameter missing or unsupported');
-  }
-  const data = encode3(JSON.stringify(components));
-  return encode4(await digest(digestAlgorithm, data));
-}
-
-// node_modules/jose/dist/webapi/jwks/local.js
-function isUsableJWK(jwk, entry, alg, kid) {
-  const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
-  return (ext === undefined || typeof ext == "boolean") && (keyOps === undefined || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === undefined || typeof kid == "string" && kid === jwkKid) && (jwkAlg === undefined ? kty !== "AKP" : alg === jwkAlg) && (use === undefined || use === "sig") && (!entry.crv || crv === entry.crv);
-}
-async function importWithAlgCache(cache, jwk, entry) {
-  const cached = cache.get(jwk) || cache.set(jwk, {}).get(jwk), { alg } = entry;
-  if (cached[alg] === undefined) {
-    const pending = jwkToKey(entry, jwk, true).then((key) => {
-      if (key.type !== "public")
-        throw new JWKSInvalid("JSON Web Key Set members must be public keys");
-      return cached[alg] = key, key;
-    }).catch((error) => {
-      throw cached[alg] === pending && delete cached[alg], error;
-    });
-    cached[alg] = pending;
-  }
-  return cached[alg];
-}
-function createLocalJWKSet(jwks) {
-  let snapshot;
-  try {
-    snapshot = structuredClone(jwks);
-  } catch {}
-  if (!isJwkSet(snapshot))
-    throw new JWKSInvalid("JSON Web Key Set malformed");
-  const metadata = snapshot.keys.map((jwk) => {
-    const normalized = snapshotJwk(jwk);
-    return Array.isArray(normalized.key_ops) && (normalized.key_ops = [...normalized.key_ops]), normalized;
-  }), cached = /* @__PURE__ */ new WeakMap;
-  return Object.defineProperty(async (protectedHeader, token) => {
-    const { alg, kid } = { ...protectedHeader, ...token?.header }, entry = typeof alg == "string" ? JWS[alg] : undefined;
-    if (!entry || entry.secret)
-      throw new JOSENotSupported('Unsupported "alg" value for a JSON Web Key Set');
-    const candidates = snapshot.keys.filter((_, index) => isUsableJWK(metadata[index], entry, alg, kid)), { 0: jwk, length } = candidates;
-    if (!length)
-      throw new JWKSNoMatchingKey;
-    if (length !== 1) {
-      const error = new JWKSMultipleMatchingKeys;
-      throw error[Symbol.asyncIterator] = async function* () {
-        for (const jwk2 of candidates)
-          try {
-            yield await importWithAlgCache(cached, jwk2, entry);
-          } catch {}
-      }, error;
-    }
-    return importWithAlgCache(cached, jwk, entry);
-  }, "jwks", {
-    value: () => structuredClone(snapshot)
-  });
-}
-
-// node_modules/jose/dist/webapi/jwks/remote.js
-function isCloudflareWorkers() {
-  return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
-}
-var USER_AGENT;
-(typeof navigator > "u" || !navigator.userAgent?.startsWith?.("Mozilla/5.0 ")) && (USER_AGENT = "jose/v6.2.12");
-var customFetch = /* @__PURE__ */ Symbol();
-async function fetchJwks(url, headers, signal, fetchImpl = fetch) {
-  const response = await fetchImpl(url, {
-    method: "GET",
-    signal,
-    redirect: "manual",
-    headers
-  }).catch((err) => {
-    throw err.name === "TimeoutError" ? new JWKSTimeout : err;
-  });
-  if (response.status !== 200)
-    throw new JOSEError("Expected 200 OK from the JSON Web Key Set HTTP response");
-  try {
-    return await response.json();
-  } catch {
-    throw new JOSEError("Failed to parse the JSON Web Key Set HTTP response as JSON");
-  }
-}
-var jwksCache = /* @__PURE__ */ Symbol();
-function isFreshFor(timestamp, duration) {
-  return Number.isFinite(timestamp) && Date.now() < timestamp + duration;
-}
-function validateDuration(value, fallback, option) {
-  if (Number.isNaN(value))
-    throw new TypeError(`"${option}" option must not be NaN`);
-  return typeof value == "number" ? value : fallback;
-}
-function createRemoteJWKSet(url, options) {
-  if (!(url instanceof URL))
-    throw new TypeError("url must be an instance of URL");
-  const href = new URL(url.href).href, opts = options ?? {}, timeoutOption = opts.timeoutDuration;
-  if (typeof timeoutOption == "number" && (!Number.isInteger(timeoutOption) || timeoutOption < 0))
-    throw new TypeError('"timeoutDuration" option must be a non-negative integer');
-  const timeoutDuration = typeof timeoutOption == "number" ? timeoutOption : 5000, cooldownDuration = validateDuration(opts.cooldownDuration, 30000, "cooldownDuration"), cacheMaxAge = validateDuration(opts.cacheMaxAge, 600000, "cacheMaxAge"), headers = new Headers(opts.headers);
-  USER_AGENT && !headers.has("User-Agent") && headers.set("User-Agent", USER_AGENT), headers.has("accept") || headers.set("accept", "application/json, application/jwk-set+json");
-  const fetchImpl = opts[customFetch], cache = opts[jwksCache];
-  let jwksTimestamp, pendingFetch, reloadSequence = 0, appliedSequence = 0, local;
-  if (cache && typeof cache == "object") {
-    const { uat, jwks } = cache;
-    isFreshFor(uat, cacheMaxAge) && isJwkSet(jwks) && (jwksTimestamp = uat, local = createLocalJWKSet(jwks));
-  }
-  const reload = async () => {
-    if (pendingFetch && isCloudflareWorkers() && (pendingFetch = undefined), !pendingFetch) {
-      const sequence = ++reloadSequence, current = pendingFetch = fetchJwks(href, headers, AbortSignal.timeout(timeoutDuration), fetchImpl).then((json) => {
-        const next = createLocalJWKSet(json);
-        if (sequence <= appliedSequence)
-          return;
-        local = next;
-        const updatedAt = Date.now();
-        cache && (cache.uat = updatedAt, cache.jwks = json), jwksTimestamp = updatedAt, appliedSequence = sequence;
-      }).finally(() => {
-        pendingFetch === current && (pendingFetch = undefined);
-      });
-    }
-    await pendingFetch;
-  };
-  return Object.defineProperties(async (protectedHeader, token) => {
-    (!local || !isFreshFor(jwksTimestamp, cacheMaxAge)) && await reload();
-    try {
-      return await local(protectedHeader, token);
-    } catch (err) {
-      if (err instanceof JWKSNoMatchingKey && !isFreshFor(jwksTimestamp, cooldownDuration))
-        return await reload(), local(protectedHeader, token);
-      throw err;
-    }
-  }, {
-    coolingDown: {
-      get: () => isFreshFor(jwksTimestamp, cooldownDuration),
-      enumerable: true
-    },
-    fresh: {
-      get: () => isFreshFor(jwksTimestamp, cacheMaxAge),
-      enumerable: true
-    },
-    reload: {
-      value: reload,
-      enumerable: true
-    },
-    reloading: {
-      get: () => !!pendingFetch,
-      enumerable: true
-    },
-    jwks: {
-      value: () => local?.jwks(),
-      enumerable: true
-    }
-  });
-}
-
-// node_modules/jose/dist/webapi/key/import.js
-async function importJWK(jwk, alg, options) {
-  if (!isObject4(jwk))
-    throw new TypeError("JWK must be an object");
-  const normalized = normalizeJwk(jwk), extractable = validateExtractableOption(options?.extractable), { alg: jwkAlg } = normalized;
-  if (alg ??= jwkAlg, normalized.kty !== "oct" && !alg)
-    throw new TypeError('"alg" argument is required when "jwk.alg" is not present');
-  switch (normalized.kty) {
-    case "oct":
-      if (typeof normalized.k != "string")
-        throw new TypeError('missing "k" (Key Value) Parameter value');
-      return decode6(normalized.k);
-    case "AKP": {
-      if (typeof jwkAlg != "string" || !jwkAlg)
-        throw new TypeError('missing "alg" (Algorithm) Parameter value');
-      if (alg !== jwkAlg)
-        throw new TypeError("JWK alg and alg option value mismatch");
-      return jwkToKey(keyAlgorithm(alg), normalized, extractable);
-    }
-    case "RSA":
-    case "EC":
-    case "OKP":
-      return jwkToKey(keyAlgorithm(alg), normalized, extractable);
-    default:
-      throw new JOSENotSupported('Unsupported "kty" (Key Type) Parameter value');
-  }
-}
-
-// node_modules/jose/dist/webapi/util/decode_protected_header.js
-function decodeProtectedHeader(token) {
-  let protectedB64u;
-  if (typeof token == "string") {
-    const parts = token.split(".");
-    (parts.length === 3 || parts.length === 5) && ([protectedB64u] = parts);
-  } else if (typeof token == "object" && token)
-    if ("protected" in token)
-      protectedB64u = token.protected;
-    else
-      throw new TypeError("Token does not contain a Protected Header");
-  const invalid = "Invalid Token or Protected Header formatting";
-  if (typeof protectedB64u != "string" || !protectedB64u)
-    throw new TypeError(invalid);
-  return parseJoseHeader(protectedB64u, TypeError, invalid);
-}
-
-// node_modules/jose/dist/webapi/util/decode_jwt.js
-function decodeJwt(jwt) {
-  if (typeof jwt != "string")
-    throw new JWTInvalid("JWTs must use Compact JWS serialization, JWT must be a string");
-  const { 1: payload, length } = jwt.split(".");
-  if (length === 5)
-    throw new JWTInvalid("Only JWTs using Compact JWS serialization can be decoded");
-  if (length !== 3)
-    throw new JWTInvalid("Invalid JWT");
-  if (!payload)
-    throw new JWTInvalid("JWTs must contain a payload");
-  let decoded;
-  try {
-    decoded = decode6(payload);
-  } catch {
-    throw new JWTInvalid("Failed to base64url decode the payload");
-  }
-  let result;
-  try {
-    result = JSON.parse(strictDecoder.decode(decoded));
-  } catch {
-    throw new JWTInvalid("Failed to parse the decoded payload as JSON");
-  }
-  if (!isObject4(result))
-    throw new JWTInvalid("Invalid JWT Claims Set");
-  return result;
-}
-
-// node_modules/better-auth/dist/crypto/jwt.mjs
-async function signJWT(payload, secret, expiresIn = 3600) {
-  return await new SignJWT(payload).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime(Math.floor(Date.now() / 1000) + expiresIn).sign(new TextEncoder().encode(secret));
-}
-async function verifyJWT(token, secret) {
-  try {
-    return (await jwtVerify(token, new TextEncoder().encode(secret))).payload;
-  } catch {
-    return null;
-  }
-}
-var info = new Uint8Array([
-  66,
-  101,
-  116,
-  116,
-  101,
-  114,
-  65,
-  117,
-  116,
-  104,
-  46,
-  106,
-  115,
-  32,
-  71,
-  101,
-  110,
-  101,
-  114,
-  97,
-  116,
-  101,
-  100,
-  32,
-  69,
-  110,
-  99,
-  114,
-  121,
-  112,
-  116,
-  105,
-  111,
-  110,
-  32,
-  75,
-  101,
-  121
-]);
-var now = () => Date.now() / 1000 | 0;
-var alg = "dir";
-var enc = "A256CBC-HS512";
-function deriveEncryptionSecret(secret, salt) {
-  return hkdf(sha256, new TextEncoder().encode(secret), new TextEncoder().encode(salt), info, 64);
-}
-function getCurrentSecret(secret) {
-  if (typeof secret === "string")
-    return secret;
-  const value = secret.keys.get(secret.currentVersion);
-  if (!value)
-    throw new Error(`Secret version ${secret.currentVersion} not found in keys`);
-  return value;
-}
-function getAllSecrets(secret) {
-  if (typeof secret === "string")
-    return [{
-      version: 0,
-      value: secret
-    }];
-  const result = [];
-  for (const [version, value] of secret.keys)
-    result.push({
-      version,
-      value
-    });
-  if (secret.legacySecret && !result.some((s) => s.value === secret.legacySecret))
-    result.push({
-      version: -1,
-      value: secret.legacySecret
-    });
-  return result;
-}
-async function symmetricEncodeJWT(payload, secret, salt, expiresIn = 3600) {
-  const encryptionSecret = deriveEncryptionSecret(getCurrentSecret(secret), salt);
-  const thumbprint = await calculateJwkThumbprint({
-    kty: "oct",
-    k: encode4(encryptionSecret)
-  }, "sha256");
-  return await new EncryptJWT(payload).setProtectedHeader({
-    alg,
-    enc,
-    kid: thumbprint
-  }).setIssuedAt().setExpirationTime(now() + expiresIn).setJti(crypto.randomUUID()).encrypt(encryptionSecret);
-}
-var jwtDecryptOpts = {
-  clockTolerance: 15,
-  keyManagementAlgorithms: [alg],
-  contentEncryptionAlgorithms: [enc, "A256GCM"]
-};
-async function symmetricDecodeJWT(token, secret, salt) {
-  if (!token)
-    return null;
-  let hasKid = false;
-  try {
-    hasKid = decodeProtectedHeader(token).kid !== undefined;
-  } catch {
-    return null;
-  }
-  try {
-    const secrets = getAllSecrets(secret);
-    const { payload } = await jwtDecrypt(token, async (protectedHeader) => {
-      const kid = protectedHeader.kid;
-      if (kid !== undefined) {
-        for (const s of secrets) {
-          const encryptionSecret = deriveEncryptionSecret(s.value, salt);
-          if (kid === await calculateJwkThumbprint({
-            kty: "oct",
-            k: encode4(encryptionSecret)
-          }, "sha256"))
-            return encryptionSecret;
-        }
-        throw new Error("no matching decryption secret");
-      }
-      if (secrets.length === 1)
-        return deriveEncryptionSecret(secrets[0].value, salt);
-      return deriveEncryptionSecret(secrets[0].value, salt);
-    }, jwtDecryptOpts);
-    return payload;
-  } catch {
-    if (hasKid)
-      return null;
-    const secrets = getAllSecrets(secret);
-    if (secrets.length <= 1)
-      return null;
-    for (let i = 1;i < secrets.length; i++)
-      try {
-        const s = secrets[i];
-        const { payload } = await jwtDecrypt(token, deriveEncryptionSecret(s.value, salt), jwtDecryptOpts);
-        return payload;
-      } catch {
-        continue;
-      }
-    return null;
-  }
-}
-
-// node_modules/better-auth/dist/db/schema.mjs
-init_error2();
-
-// node_modules/@better-auth/core/dist/utils/db.mjs
-function filterOutputFields(data, additionalFields) {
-  if (!data || !additionalFields)
-    return data;
-  const returnFiltered = Object.entries(additionalFields).filter(([, { returned }]) => returned === false).map(([key]) => key);
-  return Object.entries(structuredClone(data)).filter(([key]) => !returnFiltered.includes(key)).reduce((acc, [key, value]) => ({
-    ...acc,
-    [key]: value
-  }), {});
-}
-
-// node_modules/better-auth/dist/db/schema.mjs
-var cache2 = /* @__PURE__ */ new WeakMap;
-function getFields(options, modelName, mode) {
-  const cacheKey = `${modelName}:${mode}`;
-  if (!cache2.has(options))
-    cache2.set(options, /* @__PURE__ */ new Map);
-  const tableCache = cache2.get(options);
-  if (tableCache.has(cacheKey))
-    return tableCache.get(cacheKey);
-  const coreSchema = mode === "output" ? getAuthTables(options)[modelName]?.fields ?? {} : {};
-  const additionalFields = modelName === "user" || modelName === "session" || modelName === "account" ? options[modelName]?.additionalFields : undefined;
-  let schema = {
-    ...coreSchema,
-    ...additionalFields ?? {}
-  };
-  for (const plugin of options.plugins || [])
-    if (plugin.schema && plugin.schema[modelName])
-      schema = {
-        ...schema,
-        ...plugin.schema[modelName].fields
-      };
-  tableCache.set(cacheKey, schema);
-  return schema;
-}
-function parseUserOutput(options, user) {
-  return filterOutputFields(user, getFields(options, "user", "output"));
-}
-function buildSyntheticUserOutput(options, data) {
-  const schema = getFields(options, "user", "output");
-  const result = {};
-  for (const key in schema) {
-    const fieldAttr = schema[key];
-    if (fieldAttr.returned === false)
-      continue;
-    if (key in data && data[key] !== undefined)
-      result[key] = data[key];
-    else if (fieldAttr.defaultValue !== undefined)
-      result[key] = typeof fieldAttr.defaultValue === "function" ? fieldAttr.defaultValue() : fieldAttr.defaultValue;
-    else if (!fieldAttr.required)
-      result[key] = null;
-  }
-  if ("id" in data)
-    result.id = data.id;
-  return result;
-}
-function parseSessionOutput(options, session) {
-  return filterOutputFields(session, getFields(options, "session", "output"));
-}
-function parseAccountOutput(options, account) {
-  const { accessToken: _accessToken, refreshToken: _refreshToken, idToken: _idToken, accessTokenExpiresAt: _accessTokenExpiresAt, refreshTokenExpiresAt: _refreshTokenExpiresAt, password: _password, ...rest } = filterOutputFields(account, getFields(options, "account", "output"));
-  return rest;
-}
-function parseInputData(data, schema) {
-  const action = schema.action || "create";
-  const fields = schema.fields;
-  const parsedData = Object.create(null);
-  for (const key in fields) {
-    if (key in data) {
-      if (fields[key].input === false) {
-        if (fields[key].defaultValue !== undefined) {
-          if (action !== "update") {
-            parsedData[key] = fields[key].defaultValue;
-            continue;
-          }
-        }
-        if (data[key])
-          throw APIError2.from("BAD_REQUEST", {
-            ...BASE_ERROR_CODES.FIELD_NOT_ALLOWED,
-            message: `${key} is not allowed to be set`
-          });
-        continue;
-      }
-      if (fields[key].validator?.input && data[key] !== undefined) {
-        const result = fields[key].validator.input["~standard"].validate(data[key]);
-        if (result instanceof Promise)
-          throw APIError2.from("INTERNAL_SERVER_ERROR", BASE_ERROR_CODES.ASYNC_VALIDATION_NOT_SUPPORTED);
-        if ("issues" in result && result.issues)
-          throw APIError2.from("BAD_REQUEST", {
-            ...BASE_ERROR_CODES.VALIDATION_ERROR,
-            message: result.issues[0]?.message || "Validation Error"
-          });
-        parsedData[key] = result.value;
-        continue;
-      }
-      if (fields[key].transform?.input && data[key] !== undefined) {
-        parsedData[key] = fields[key].transform?.input(data[key]);
-        continue;
-      }
-      parsedData[key] = data[key];
-      continue;
-    }
-    if (fields[key].defaultValue !== undefined && action === "create") {
-      if (typeof fields[key].defaultValue === "function") {
-        parsedData[key] = fields[key].defaultValue();
-        continue;
-      }
-      parsedData[key] = fields[key].defaultValue;
-      continue;
-    }
-    if (fields[key].required && action === "create")
-      throw APIError2.from("BAD_REQUEST", {
-        ...BASE_ERROR_CODES.MISSING_FIELD,
-        message: `${key} is required`
-      });
-  }
-  return parsedData;
-}
-function parseUserInput(options, user = {}, action) {
-  return parseInputData(user, {
-    fields: getFields(options, "user", "input"),
-    action
-  });
-}
-function parseAdditionalUserInputFromProviderProfile(options, profile = {}, action) {
-  const schema = getFields(options, "user", "input");
-  const allowedProfileFields = Object.create(null);
-  for (const key of Object.keys(profile)) {
-    if (schema[key]?.input === false)
-      continue;
-    allowedProfileFields[key] = profile[key];
-  }
-  return parseInputData(allowedProfileFields, {
-    fields: schema,
-    action
-  });
-}
-function parseSessionInput(options, session, action) {
-  return parseInputData(session, {
-    fields: getFields(options, "session", "input"),
-    action
-  });
-}
-function getSessionDefaultFields(options) {
-  const fields = getFields(options, "session", "input");
-  const defaults = {};
-  for (const key in fields)
-    if (fields[key].defaultValue !== undefined)
-      defaults[key] = typeof fields[key].defaultValue === "function" ? fields[key].defaultValue() : fields[key].defaultValue;
-  return defaults;
-}
-function mergeSchema(schema, newSchema) {
-  if (!newSchema)
-    return schema;
-  for (const table in newSchema) {
-    const newModelName = newSchema[table]?.modelName;
-    if (newModelName)
-      schema[table].modelName = newModelName;
-    for (const field in schema[table].fields) {
-      const newField = newSchema[table]?.fields?.[field];
-      if (!newField)
-        continue;
-      schema[table].fields[field].fieldName = newField;
-    }
-  }
-  return schema;
-}
-
-// node_modules/better-auth/dist/utils/date.mjs
-var getDate = (span, unit = "ms") => {
-  return new Date(Date.now() + (unit === "sec" ? span * 1000 : span));
-};
-
-// node_modules/better-auth/dist/utils/time.mjs
-var SEC = 1000;
-var MIN = SEC * 60;
-var HOUR = MIN * 60;
-var DAY = HOUR * 24;
-var WEEK = DAY * 7;
-var MONTH = DAY * 30;
-var YEAR = DAY * 365.25;
-var REGEX2 = /^(\+|\-)? ?(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo|years?|yrs?|y)(?: (ago|from now))?$/i;
-function parse7(value) {
-  const match = REGEX2.exec(value);
-  if (!match || match[4] && match[1])
-    throw new TypeError(`Invalid time string format: "${value}". Use formats like "7d", "30m", "1 hour", etc.`);
-  const n = parseFloat(match[2]);
-  const unit = match[3].toLowerCase();
-  let result;
-  switch (unit) {
-    case "years":
-    case "year":
-    case "yrs":
-    case "yr":
-    case "y":
-      result = n * YEAR;
-      break;
-    case "months":
-    case "month":
-    case "mo":
-      result = n * MONTH;
-      break;
-    case "weeks":
-    case "week":
-    case "w":
-      result = n * WEEK;
-      break;
-    case "days":
-    case "day":
-    case "d":
-      result = n * DAY;
-      break;
-    case "hours":
-    case "hour":
-    case "hrs":
-    case "hr":
-    case "h":
-      result = n * HOUR;
-      break;
-    case "minutes":
-    case "minute":
-    case "mins":
-    case "min":
-    case "m":
-      result = n * MIN;
-      break;
-    case "seconds":
-    case "second":
-    case "secs":
-    case "sec":
-    case "s":
-      result = n * SEC;
-      break;
-    default:
-      throw new TypeError(`Unknown time unit: "${unit}"`);
-  }
-  if (match[1] === "-" || match[4] === "ago")
-    return -result;
-  return result;
-}
-function sec(value) {
-  return Math.round(parse7(value) / 1000);
-}
-
-// node_modules/better-auth/dist/cookies/cache.mjs
-init_env();
-init_json();
-init_zod();
-var cookieCachePayloadSchema = looseObject({
-  session: sessionSchema.loose(),
-  user: userSchema.loose(),
-  updatedAt: number2(),
-  version: string2().optional()
-});
-var compactCookieCacheSchema = object({
-  session: record(string2(), unknown()),
-  expiresAt: number2(),
-  signature: string2()
-});
-function parseCookieCachePayload(value) {
-  const parsed = safeJSONParse(value);
-  if (parsed === null)
-    return null;
-  const result = cookieCachePayloadSchema.safeParse(parsed);
-  if (result.success)
-    return result.data;
-  logger.warn("Cookie cache payload failed schema validation", { issues: result.error.issues.map(({ code, path }) => ({
-    code,
-    path
-  })) });
-  return null;
-}
-function parseCompactCookieCache(value) {
-  const result = compactCookieCacheSchema.safeParse(value);
-  return result.success ? result.data : null;
-}
-
-// node_modules/better-auth/dist/cookies/cookie-utils.mjs
-function tryDecode(str) {
-  if (str.indexOf("%") === -1)
-    return str;
-  try {
-    return decodeURIComponent(str);
-  } catch {
-    return str;
-  }
-}
-var SECURE_COOKIE_PREFIX = "__Secure-";
-function splitSetCookieHeader(setCookie) {
-  if (!setCookie)
-    return [];
-  const result = [];
-  let start = 0;
-  let i = 0;
-  while (i < setCookie.length) {
-    if (setCookie[i] === ",") {
-      let j = i + 1;
-      while (j < setCookie.length && setCookie[j] === " ")
-        j++;
-      while (j < setCookie.length && setCookie[j] !== "=" && setCookie[j] !== ";" && setCookie[j] !== ",")
-        j++;
-      if (j < setCookie.length && setCookie[j] === "=") {
-        const part = setCookie.slice(start, i).trim();
-        if (part)
-          result.push(part);
-        start = i + 1;
-        while (start < setCookie.length && setCookie[start] === " ")
-          start++;
-        i = start;
-        continue;
-      }
-    }
-    i++;
-  }
-  const last = setCookie.slice(start).trim();
-  if (last)
-    result.push(last);
-  return result;
-}
-function parseSetCookieHeader(setCookie) {
-  const cookies = /* @__PURE__ */ new Map;
-  splitSetCookieHeader(setCookie).forEach((cookieString) => {
-    const [nameValue, ...attributes] = cookieString.split(";").map((part) => part.trim());
-    const [name, ...valueParts] = (nameValue || "").split("=");
-    const value = unquoteCookieValue(valueParts.join("="));
-    if (!name)
-      return;
-    const attrObj = { value: tryDecode(value) };
-    attributes.forEach((attribute) => {
-      const [attrName, ...attrValueParts] = attribute.split("=");
-      const attrValue = attrValueParts.join("=");
-      const normalizedAttrName = attrName.trim().toLowerCase();
-      switch (normalizedAttrName) {
-        case "max-age":
-          attrObj["max-age"] = attrValue ? parseInt(attrValue.trim(), 10) : undefined;
-          break;
-        case "expires":
-          attrObj.expires = attrValue ? new Date(attrValue.trim()) : undefined;
-          break;
-        case "domain":
-          attrObj.domain = attrValue ? attrValue.trim() : undefined;
-          break;
-        case "path":
-          attrObj.path = attrValue ? attrValue.trim() : undefined;
-          break;
-        case "secure":
-          attrObj.secure = true;
-          break;
-        case "httponly":
-          attrObj.httponly = true;
-          break;
-        case "samesite":
-          attrObj.samesite = attrValue ? attrValue.trim().toLowerCase() : undefined;
-          break;
-        case "partitioned":
-          attrObj.partitioned = true;
-          break;
-        default:
-          attrObj[normalizedAttrName] = attrValue ? attrValue.trim() : true;
-          break;
-      }
-    });
-    cookies.set(name, attrObj);
-  });
-  return cookies;
-}
-var cookieNameRegex = /^[\x21\x23-\x27\x2A\x2B\x2D\x2E\x30-\x39\x41-\x5A\x5E\x5F\x60\x61-\x7A\x7C\x7E]+$/;
-var cookieValueRegex = /^[\x20\x21\x23-\x3A\x3C-\x5B\x5D-\x7E]*$/;
-function unquoteCookieValue(value) {
-  if (value.length < 2 || !value.startsWith('"') || !value.endsWith('"'))
-    return value;
-  return value.slice(1, -1);
-}
-function trimOWS(s) {
-  let start = 0;
-  let end = s.length;
-  while (start < end) {
-    const c = s.charCodeAt(start);
-    if (c !== 32 && c !== 9)
-      break;
-    start++;
-  }
-  while (end > start) {
-    const c = s.charCodeAt(end - 1);
-    if (c !== 32 && c !== 9)
-      break;
-    end--;
-  }
-  return start === 0 && end === s.length ? s : s.slice(start, end);
-}
-function parseCookies(cookie) {
-  const cookieMap = /* @__PURE__ */ new Map;
-  if (cookie.length < 2)
-    return cookieMap;
-  for (const chunk of cookie.split(";")) {
-    const eq = chunk.indexOf("=");
-    if (eq === -1)
-      continue;
-    const key = trimOWS(chunk.slice(0, eq));
-    const val = unquoteCookieValue(trimOWS(chunk.slice(eq + 1)));
-    if (cookieNameRegex.test(key) && cookieValueRegex.test(val))
-      cookieMap.set(key, tryDecode(val));
-  }
-  return cookieMap;
-}
-function setRequestCookie(headers, name, value) {
-  const cookieMap = parseCookies(headers.get("cookie") || "");
-  if (cookieNameRegex.test(name))
-    cookieMap.set(name, value);
-  headers.set("cookie", Array.from(cookieMap, ([k, v]) => `${k}=${encodeURIComponent(v)}`).join("; "));
-}
-
-// node_modules/better-auth/dist/cookies/session-store.mjs
-init_json();
 
 // node_modules/better-call/dist/index.mjs
 init_error();
@@ -93607,7 +89572,7 @@ var getCryptoKey = async (secret) => {
   const secretBuf = typeof secret === "string" ? new TextEncoder().encode(secret) : secret;
   return await getWebcryptoSubtle().importKey("raw", secretBuf, algorithm, false, ["sign", "verify"]);
 };
-var verifySignature2 = async (base64Signature, value, secret) => {
+var verifySignature = async (base64Signature, value, secret) => {
   try {
     const signatureBinStr = atob(base64Signature);
     const signature = new Uint8Array(signatureBinStr.length);
@@ -93695,7 +89660,7 @@ async function getBody(request, allowedMediaTypes) {
 function isAPIError(error) {
   return error instanceof APIError || error?.name === "APIError";
 }
-function tryDecode2(str) {
+function tryDecode(str) {
   try {
     return str.includes("%") ? decodeURIComponent(str) : str;
   } catch {
@@ -93731,7 +89696,7 @@ var getCookieKey = (key, prefix) => {
       return;
   return finalKey;
 };
-function parseCookies2(str) {
+function parseCookies(str) {
   if (typeof str !== "string")
     throw new TypeError("argument str must be a string");
   const cookies = /* @__PURE__ */ new Map;
@@ -93752,7 +89717,7 @@ function parseCookies2(str) {
       let val = str.slice(eqIdx + 1, endIdx).trim();
       if (val.codePointAt(0) === 34)
         val = val.slice(1, -1);
-      cookies.set(key, tryDecode2(val));
+      cookies.set(key, tryDecode(val));
     }
     index = endIdx + 1;
   }
@@ -93878,7 +89843,7 @@ var createInternalContext = async (context, { options, path }) => {
     throw new ValidationError2(error.message, error.issues);
   const requestHeaders = "headers" in context ? context.headers instanceof Headers ? context.headers : new Headers(context.headers) : ("request" in context) && isRequest(context.request) ? context.request.headers : null;
   const requestCookies = requestHeaders?.get("cookie");
-  const parsedCookies = requestCookies ? parseCookies2(requestCookies) : undefined;
+  const parsedCookies = requestCookies ? parseCookies(requestCookies) : undefined;
   const internalContext = {
     ...context,
     body: data.body,
@@ -93918,7 +89883,7 @@ var createInternalContext = async (context, { options, path }) => {
       const signature = value.substring(signatureStartPos + 1);
       if (signature.length !== 44 || !signature.endsWith("="))
         return null;
-      return await verifySignature2(signature, signedValue, await getCryptoKey(secret)) ? signedValue : false;
+      return await verifySignature(signature, signedValue, await getCryptoKey(secret)) ? signedValue : false;
     },
     setCookie: (key, value, options) => {
       const cookie = serializeCookie2(key, value, options);
@@ -94629,7 +90594,7 @@ function expandModifiers(segments) {
     return m[2] === "+" ? [wc] : [wc, without];
   }
 }
-function normalizePath2(path) {
+function normalizePath(path) {
   if (!path.includes("/."))
     return path;
   const r = [];
@@ -94784,7 +90749,7 @@ function getParamRegexp(segment, unnamedStart = 0) {
 }
 function findRoute(ctx, method = "", path, opts) {
   if (opts?.normalize)
-    path = normalizePath2(path);
+    path = normalizePath(path);
   if (path.charCodeAt(path.length - 1) === 47)
     path = path.slice(0, -1);
   const staticNode = ctx.static[path];
@@ -94867,7 +90832,7 @@ function _selectMatcher(methods, method, segments, dynamicTerminal, optionalOnly
 }
 function findAllRoutes(ctx, method = "", path, opts) {
   if (opts?.normalize)
-    path = normalizePath2(path);
+    path = normalizePath(path);
   if (path.charCodeAt(path.length - 1) === 47)
     path = path.slice(0, -1);
   const segments = splitPath(path);
@@ -95079,7 +91044,4097 @@ var createRouter$1 = (endpoints, config) => {
   };
 };
 
+// node_modules/@better-auth/core/dist/utils/is-api-error.mjs
+function isAPIError2(error) {
+  return error instanceof APIError || error instanceof APIError2 || error?.name === "APIError";
+}
+
+// node_modules/@better-auth/core/dist/context/endpoint-context.mjs
+init_global();
+
+// node_modules/@better-auth/core/dist/async_hooks/index.mjs
+var AsyncLocalStoragePromise = import("async_hooks").then((mod) => mod.AsyncLocalStorage).catch((err) => {
+  if ("AsyncLocalStorage" in globalThis)
+    return globalThis.AsyncLocalStorage;
+  if (typeof window !== "undefined")
+    return null;
+  console.warn("[better-auth] Warning: AsyncLocalStorage is not available in this environment. Some features may not work as expected.");
+  console.warn("[better-auth] Please read more about this warning at https://better-auth.com/docs/installation#mount-handler");
+  console.warn("[better-auth] If you are using Cloudflare Workers, please see: https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag");
+  throw err;
+});
+async function getAsyncLocalStorage() {
+  const mod = await AsyncLocalStoragePromise;
+  if (mod === null)
+    throw new Error("getAsyncLocalStorage is only available in server code");
+  else
+    return mod;
+}
+
+// node_modules/@better-auth/core/dist/context/endpoint-context.mjs
+var getExistingEndpointContextStorage = () => {
+  return __getBetterAuthGlobal().context.endpointContextAsyncStorage;
+};
+var getOrCreateEndpointContextStorage = async () => {
+  const existing = getExistingEndpointContextStorage();
+  if (existing)
+    return existing;
+  const AsyncLocalStorage = await getAsyncLocalStorage();
+  const globalContext = __getBetterAuthGlobal().context;
+  return globalContext.endpointContextAsyncStorage ??= new AsyncLocalStorage;
+};
+function tryGetCurrentAuthEndpointContext() {
+  return __getCurrentEndpointContext();
+}
+function getCurrentAuthEndpointContext() {
+  const authEndpointContext = tryGetCurrentAuthEndpointContext();
+  if (!authEndpointContext)
+    throw new Error("No auth context found. Please make sure you are calling this function within a `runWithEndpointContext` callback.");
+  return authEndpointContext;
+}
+async function runWithEndpointContext(authEndpointContext, fn) {
+  return (await getOrCreateEndpointContextStorage()).run(authEndpointContext, fn);
+}
+
+// node_modules/@better-auth/core/dist/api/index.mjs
+var NO_STORE_HEADERS = {
+  "Cache-Control": "no-store",
+  Pragma: "no-cache"
+};
+function attachResponseHeadersToAPIError(responseHeaders, e) {
+  if (!isAPIError2(e) || !responseHeaders)
+    return;
+  Object.defineProperty(e, kAPIErrorHeaderSymbol, {
+    enumerable: false,
+    configurable: true,
+    value: responseHeaders,
+    writable: false
+  });
+}
+var optionsMiddleware = createMiddleware(async () => {
+  return {};
+});
+var createAuthMiddleware = createMiddleware.create({ use: [optionsMiddleware, createMiddleware(async () => {
+  return {};
+})] });
+var createEndpointWithAuthContext = createEndpoint.create({ use: [optionsMiddleware] });
+function wrapEndpointHandler(handler, options) {
+  const noStore = options.metadata?.noStore === true;
+  return async (context) => {
+    if (noStore)
+      for (const [name, value] of Object.entries(NO_STORE_HEADERS))
+        context.setHeader(name, value);
+    try {
+      return await runWithEndpointContext(context, () => handler(context));
+    } catch (error) {
+      attachResponseHeadersToAPIError(context.responseHeaders, error);
+      throw error;
+    }
+  };
+}
+function createAuthEndpoint(...args) {
+  if (args.length === 3) {
+    const [path, options, handler] = args;
+    return createEndpointWithAuthContext(path, options, wrapEndpointHandler(handler, options));
+  }
+  const [options, handler] = args;
+  return createEndpointWithAuthContext(options, wrapEndpointHandler(handler, options));
+}
+function withServerOnly(options) {
+  return {
+    ...options,
+    metadata: {
+      ...options.metadata,
+      SERVER_ONLY: true
+    }
+  };
+}
+createAuthEndpoint.serverOnly = (options, handler) => createAuthEndpoint(withServerOnly(options), handler);
+
+// node_modules/better-auth/dist/utils/wildcard.mjs
+function escapeRegExpChar(char) {
+  if (char === "-" || char === "^" || char === "$" || char === "+" || char === "." || char === "(" || char === ")" || char === "|" || char === "[" || char === "]" || char === "{" || char === "}" || char === "*" || char === "?" || char === "\\")
+    return `\\${char}`;
+  else
+    return char;
+}
+function escapeRegExpString(str) {
+  let result = "";
+  for (let i = 0;i < str.length; i++)
+    result += escapeRegExpChar(str[i]);
+  return result;
+}
+function transform3(pattern, separator = true) {
+  if (Array.isArray(pattern))
+    return `(?:${pattern.map((p) => `^${transform3(p, separator)}$`).join("|")})`;
+  let separatorSplitter = "";
+  let separatorMatcher = "";
+  let wildcard = ".";
+  if (separator === true) {
+    separatorSplitter = "/";
+    separatorMatcher = "[/\\\\]";
+    wildcard = "[^/\\\\]";
+  } else if (separator) {
+    separatorSplitter = separator;
+    separatorMatcher = escapeRegExpString(separatorSplitter);
+    if (separatorMatcher.length > 1) {
+      separatorMatcher = `(?:${separatorMatcher})`;
+      wildcard = `((?!${separatorMatcher}).)`;
+    } else
+      wildcard = `[^${separatorMatcher}]`;
+  }
+  const requiredSeparator = separator ? `${separatorMatcher}+?` : "";
+  const optionalSeparator = separator ? `${separatorMatcher}*?` : "";
+  const segments = separator ? pattern.split(separatorSplitter) : [pattern];
+  let result = "";
+  for (let s = 0;s < segments.length; s++) {
+    const segment = segments[s];
+    const nextSegment = segments[s + 1];
+    let currentSeparator = "";
+    if (!segment && s > 0)
+      continue;
+    if (separator)
+      if (s === segments.length - 1)
+        currentSeparator = optionalSeparator;
+      else if (nextSegment !== "**")
+        currentSeparator = requiredSeparator;
+      else
+        currentSeparator = "";
+    if (separator && segment === "**") {
+      if (currentSeparator) {
+        result += s === 0 ? "" : currentSeparator;
+        result += `(?:${wildcard}*?${currentSeparator})*?`;
+      }
+      continue;
+    }
+    for (let c = 0;c < segment.length; c++) {
+      const char = segment[c];
+      if (char === "\\") {
+        if (c < segment.length - 1) {
+          result += escapeRegExpChar(segment[c + 1]);
+          c++;
+        }
+      } else if (char === "?")
+        result += wildcard;
+      else if (char === "*")
+        result += `${wildcard}*?`;
+      else
+        result += escapeRegExpChar(char);
+    }
+    result += currentSeparator;
+  }
+  return result;
+}
+function isMatch(regexp, sample) {
+  if (typeof sample !== "string")
+    throw new TypeError(`Sample must be a string, but ${typeof sample} given`);
+  return regexp.test(sample);
+}
+function wildcardMatch(pattern, options) {
+  if (typeof pattern !== "string" && !Array.isArray(pattern))
+    throw new TypeError(`The first argument must be a single pattern string or an array of patterns, but ${typeof pattern} given`);
+  if (typeof options === "string" || typeof options === "boolean")
+    options = { separator: options };
+  if (arguments.length === 2 && !(typeof options === "undefined" || typeof options === "object" && options !== null && !Array.isArray(options)))
+    throw new TypeError(`The second argument must be an options object or a string/boolean separator, but ${typeof options} given`);
+  options = options || {};
+  if (options.separator === "\\")
+    throw new Error("\\ is not a valid separator because it is used for escaping. Try setting the separator to `true` instead");
+  const regexpPattern = transform3(pattern, options.separator);
+  const regexp = new RegExp(`^${regexpPattern}$`, options.flags);
+  const fn = isMatch.bind(null, regexp);
+  fn.options = options;
+  fn.pattern = pattern;
+  fn.regexp = regexp;
+  return fn;
+}
+
+// node_modules/better-auth/dist/utils/url.mjs
+init_env();
+init_error2();
+var SLASH_CHAR_CODE = 47;
+function isLoopbackForDevScheme(host) {
+  const hostname = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "").toLowerCase();
+  return hostname === "localhost" || hostname.endsWith(".localhost") || hostname === "::1" || hostname.startsWith("127.");
+}
+function trimTrailingSlashes(value) {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === SLASH_CHAR_CODE)
+    end--;
+  return end === value.length ? value : value.slice(0, end);
+}
+function checkHasPath(url) {
+  try {
+    return (trimTrailingSlashes(new URL(url).pathname) || "/") !== "/";
+  } catch {
+    throw new BetterAuthError(`Invalid base URL: ${url}. Please provide a valid base URL.`);
+  }
+}
+function assertHasProtocol(url) {
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:")
+      throw new BetterAuthError(`Invalid base URL: ${url}. URL must include 'http://' or 'https://'`);
+  } catch (error) {
+    if (error instanceof BetterAuthError)
+      throw error;
+    throw new BetterAuthError(`Invalid base URL: ${url}. Please provide a valid base URL.`, { cause: error });
+  }
+}
+function withPath(url, path = "/api/auth") {
+  assertHasProtocol(url);
+  if (checkHasPath(url))
+    return url;
+  const trimmedUrl = trimTrailingSlashes(url);
+  if (!path || path === "/")
+    return trimmedUrl;
+  path = path.startsWith("/") ? path : `/${path}`;
+  return `${trimmedUrl}${path}`;
+}
+function validateProxyHeader(header, type) {
+  if (!header || header.trim() === "")
+    return false;
+  if (type === "proto")
+    return header === "http" || header === "https";
+  if (type === "host") {
+    if ([
+      /\.\./,
+      /\0/,
+      /[\s]/,
+      /^[.]/,
+      /[<>'"]/,
+      /javascript:/i,
+      /file:/i,
+      /data:/i
+    ].some((pattern) => pattern.test(header)))
+      return false;
+    return /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*(:[0-9]{1,5})?$/.test(header) || /^(\d{1,3}\.){3}\d{1,3}(:[0-9]{1,5})?$/.test(header) || /^\[[0-9a-fA-F:]+\](:[0-9]{1,5})?$/.test(header) || /^localhost(:[0-9]{1,5})?$/i.test(header);
+  }
+  return false;
+}
+function getBaseURL(url, path, request, loadEnv, trustedProxyHeaders) {
+  if (url)
+    return withPath(url, path);
+  if (loadEnv !== false) {
+    const fromEnv = env3.BETTER_AUTH_URL || env3.NEXT_PUBLIC_BETTER_AUTH_URL || env3.PUBLIC_BETTER_AUTH_URL || env3.NUXT_PUBLIC_BETTER_AUTH_URL || env3.NUXT_PUBLIC_AUTH_URL || (env3.BASE_URL !== "/" ? env3.BASE_URL : undefined);
+    if (fromEnv)
+      return withPath(fromEnv, path);
+  }
+  const fromRequest = request?.headers.get("x-forwarded-host");
+  const fromRequestProto = request?.headers.get("x-forwarded-proto");
+  if (fromRequest && fromRequestProto && trustedProxyHeaders) {
+    if (validateProxyHeader(fromRequestProto, "proto") && validateProxyHeader(fromRequest, "host"))
+      try {
+        return withPath(`${fromRequestProto}://${fromRequest}`, path);
+      } catch (_error) {}
+  }
+  if (request) {
+    const url = getOrigin(request.url);
+    if (!url)
+      throw new BetterAuthError("Could not get origin from request. Please provide a valid base URL.");
+    return withPath(url, path);
+  }
+  if (typeof window !== "undefined" && window.location)
+    return withPath(window.location.origin, path);
+}
+function getOrigin(url) {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.origin === "null" ? null : parsedUrl.origin;
+  } catch {
+    return null;
+  }
+}
+function getProtocol(url) {
+  try {
+    return new URL(url).protocol;
+  } catch {
+    return null;
+  }
+}
+function getHost(url) {
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
+}
+function isDynamicBaseURLConfig(config) {
+  return typeof config === "object" && config !== null && "allowedHosts" in config && Array.isArray(config.allowedHosts);
+}
+function isRequestLike(value) {
+  if (value instanceof Request)
+    return true;
+  if (typeof value !== "object" || value === null || Object.prototype.toString.call(value) !== "[object Request]")
+    return false;
+  const v = value;
+  return typeof v.url === "string" && typeof v.headers === "object" && v.headers !== null && typeof v.headers.get === "function";
+}
+function getHostFromSource(source, trustedProxyHeaders) {
+  const headers = isRequestLike(source) ? source.headers : source;
+  if (trustedProxyHeaders) {
+    const forwardedHost = headers.get("x-forwarded-host");
+    if (forwardedHost && validateProxyHeader(forwardedHost, "host"))
+      return forwardedHost;
+  }
+  const host = headers.get("host");
+  if (host && validateProxyHeader(host, "host"))
+    return host;
+  if (isRequestLike(source))
+    try {
+      return new URL(source.url).host;
+    } catch {
+      return null;
+    }
+  return null;
+}
+function getProtocolFromSource(source, configProtocol, trustedProxyHeaders) {
+  if (configProtocol === "http" || configProtocol === "https")
+    return configProtocol;
+  const headers = isRequestLike(source) ? source.headers : source;
+  if (trustedProxyHeaders) {
+    const forwardedProto = headers.get("x-forwarded-proto");
+    if (forwardedProto && validateProxyHeader(forwardedProto, "proto"))
+      return forwardedProto;
+  }
+  if (isRequestLike(source))
+    try {
+      const url = new URL(source.url);
+      if (url.protocol === "http:" || url.protocol === "https:")
+        return url.protocol.slice(0, -1);
+    } catch {}
+  const host = getHostFromSource(source, trustedProxyHeaders);
+  if (host && isLoopbackForDevScheme(host))
+    return "http";
+  return "https";
+}
+var matchesHostPattern = (host, pattern) => {
+  if (!host || !pattern)
+    return false;
+  const normalizedHost = host.replace(/^https?:\/\//, "").split("/")[0].toLowerCase();
+  const normalizedPattern = pattern.replace(/^https?:\/\//, "").split("/")[0].toLowerCase();
+  if (normalizedPattern.includes("*") || normalizedPattern.includes("?"))
+    return wildcardMatch(normalizedPattern)(normalizedHost);
+  return normalizedHost.toLowerCase() === normalizedPattern.toLowerCase();
+};
+function resolveDynamicBaseURL(config, source, basePath, trustedProxyHeaders) {
+  const host = getHostFromSource(source, trustedProxyHeaders);
+  if (!host) {
+    if (config.fallback)
+      return withPath(config.fallback, basePath);
+    throw new BetterAuthError("Could not determine host from request headers. Please provide a fallback URL in your baseURL config.");
+  }
+  if (config.allowedHosts.some((pattern) => matchesHostPattern(host, pattern)))
+    return withPath(`${getProtocolFromSource(source, config.protocol, trustedProxyHeaders)}://${host}`, basePath);
+  if (config.fallback)
+    return withPath(config.fallback, basePath);
+  throw new BetterAuthError(`Host "${host}" is not in the allowed hosts list. Allowed hosts: ${config.allowedHosts.join(", ")}. Add this host to your allowedHosts config or provide a fallback URL.`);
+}
+function resolveBaseURL(config, basePath, source, loadEnv, trustedProxyHeaders) {
+  if (isDynamicBaseURLConfig(config)) {
+    if (source)
+      return resolveDynamicBaseURL(config, source, basePath, trustedProxyHeaders);
+    if (config.fallback)
+      return withPath(config.fallback, basePath);
+    return getBaseURL(undefined, basePath, undefined, loadEnv, trustedProxyHeaders);
+  }
+  const request = isRequestLike(source) ? source : undefined;
+  if (typeof config === "string")
+    return getBaseURL(config, basePath, request, loadEnv, trustedProxyHeaders);
+  return getBaseURL(undefined, basePath, request, loadEnv, trustedProxyHeaders);
+}
+
+// node_modules/better-auth/dist/auth/trusted-origins.mjs
+var CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f-\u009f]/;
+var RELATIVE_URL_PARSER_ORIGIN = "https://better-auth.invalid";
+var ENCODED_PATH_SEPARATOR_PATTERN = /%2[fF]|%5[cC]/;
+var normalizePath2 = (path) => {
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {}
+  const segments = [];
+  for (const segment of decoded.split("/"))
+    if (segment === "..")
+      segments.pop();
+    else if (segment !== "." && segment !== "")
+      segments.push(segment);
+  return segments.length > 0 ? `/${segments.join("/")}` : "";
+};
+var parseCustomSchemeOrigin = (value) => {
+  if (CONTROL_CHARACTER_PATTERN.test(value))
+    return null;
+  const schemeEnd = value.indexOf(":");
+  if (schemeEnd <= 0)
+    return null;
+  const scheme = value.slice(0, schemeEnd).toLowerCase();
+  let rest = value.slice(schemeEnd + 1);
+  let authority = "";
+  if (rest.startsWith("//")) {
+    rest = rest.slice(2);
+    const authorityEnd = rest.search(/[/?#]/);
+    if (authorityEnd === -1) {
+      authority = rest;
+      rest = "";
+    } else {
+      authority = rest.slice(0, authorityEnd);
+      rest = rest.slice(authorityEnd);
+    }
+  }
+  const pathEnd = rest.search(/[?#]/);
+  const path = normalizePath2(pathEnd === -1 ? rest : rest.slice(0, pathEnd));
+  return {
+    scheme,
+    authority: authority.toLowerCase(),
+    path
+  };
+};
+var isSafeRelativeURL = (value) => {
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\") || CONTROL_CHARACTER_PATTERN.test(value))
+    return false;
+  const pathEnd = value.search(/[?#]/);
+  const path = pathEnd === -1 ? value : value.slice(0, pathEnd);
+  if (ENCODED_PATH_SEPARATOR_PATTERN.test(path))
+    return false;
+  try {
+    return new URL(value, RELATIVE_URL_PARSER_ORIGIN).origin === RELATIVE_URL_PARSER_ORIGIN;
+  } catch {
+    return false;
+  }
+};
+var matchesOriginPattern = (url, pattern, settings) => {
+  if (url.startsWith("/"))
+    return settings?.allowRelativePaths === true && isSafeRelativeURL(url);
+  if (pattern.includes("*") || pattern.includes("?")) {
+    if (pattern.includes("://"))
+      return wildcardMatch(pattern)(getOrigin(url) || url);
+    const host = getHost(url);
+    if (!host)
+      return false;
+    return wildcardMatch(pattern)(host);
+  }
+  const protocol = getProtocol(url);
+  if (protocol === "http:" || protocol === "https:" || !protocol)
+    return pattern === getOrigin(url);
+  const parsed = parseCustomSchemeOrigin(url);
+  const parsedPattern = parseCustomSchemeOrigin(pattern);
+  if (!parsed || !parsedPattern || parsed.scheme !== parsedPattern.scheme)
+    return false;
+  if (parsedPattern.authority && parsed.authority !== parsedPattern.authority)
+    return false;
+  if (!parsedPattern.path)
+    return true;
+  return parsed.path === parsedPattern.path || parsed.path.startsWith(`${parsedPattern.path}/`);
+};
+
+// node_modules/better-auth/dist/api/middlewares/origin-check.mjs
+init_error2();
+
+// node_modules/@better-auth/core/dist/utils/url.mjs
+function normalizePathname(requestUrl, basePath) {
+  let pathname;
+  try {
+    pathname = new URL(requestUrl).pathname.replace(/\/+$/, "") || "/";
+  } catch {
+    return "/";
+  }
+  const normalizedBasePath = basePath.replace(/\/+$/, "");
+  if (normalizedBasePath === "")
+    return pathname;
+  if (pathname === normalizedBasePath)
+    return "/";
+  if (pathname.startsWith(normalizedBasePath + "/"))
+    return pathname.slice(normalizedBasePath.length).replace(/\/+$/, "") || "/";
+  return pathname;
+}
+var URL_REFERENCE_ORIGIN = "https://better-auth.invalid";
+function appendQueryParams(input, params) {
+  const relative = input.startsWith("/");
+  if (input.startsWith("//") || input.startsWith("/\\"))
+    throw new TypeError("Expected an absolute or root-relative URL");
+  const parsedURL = relative ? new URL(input, URL_REFERENCE_ORIGIN) : new URL(input);
+  if (relative && parsedURL.origin !== URL_REFERENCE_ORIGIN)
+    throw new TypeError("Expected an absolute or root-relative URL");
+  const query = params.toString();
+  if (!query)
+    return input;
+  const separator = parsedURL.search.endsWith("&") ? "" : "&";
+  parsedURL.search = parsedURL.search ? `${parsedURL.search}${separator}${query}` : query;
+  return relative ? parsedURL.href.slice(parsedURL.origin.length) : parsedURL.href;
+}
+
+// node_modules/@better-auth/core/dist/utils/deprecate.mjs
+function deprecate(fn, message, logger) {
+  let warned = false;
+  return function(...args) {
+    if (!warned) {
+      (logger?.warn ?? console.warn)(`[Deprecation] ${message}`);
+      warned = true;
+    }
+    return fn.apply(this, args);
+  };
+}
+
+// node_modules/better-auth/dist/api/middlewares/origin-check.mjs
+function shouldSkipCSRFForBackwardCompat(ctx) {
+  return ctx.context.skipOriginCheck === true && ctx.context.options.advanced?.disableCSRFCheck === undefined;
+}
+function shouldSkipOriginCheck(ctx) {
+  const skipOriginCheck = ctx.context.skipOriginCheck;
+  if (skipOriginCheck === true)
+    return true;
+  if (Array.isArray(skipOriginCheck) && ctx.request)
+    try {
+      const basePath = new URL(ctx.context.baseURL).pathname;
+      const currentPath = normalizePathname(ctx.request.url, basePath);
+      return skipOriginCheck.some((skipPath) => {
+        const normalizedSkipPath = skipPath.replace(/\/+$/, "");
+        return currentPath === normalizedSkipPath || currentPath.startsWith(`${normalizedSkipPath}/`);
+      });
+    } catch {}
+  return false;
+}
+var logBackwardCompatWarning = deprecate(function logBackwardCompatWarning() {}, "disableOriginCheck: true currently also disables CSRF checks. In a future version, disableOriginCheck will ONLY disable URL validation. To keep CSRF disabled, add disableCSRFCheck: true to your config.");
+var originCheckMiddleware = createAuthMiddleware(async (ctx) => {
+  if (ctx.request?.method === "GET" || ctx.request?.method === "OPTIONS" || ctx.request?.method === "HEAD" || !ctx.request)
+    return;
+  await validateOrigin(ctx);
+  if (shouldSkipOriginCheck(ctx))
+    return;
+  const { body, query } = ctx;
+  const callbackURL = body?.callbackURL || query?.callbackURL;
+  const redirectURL = body?.redirectTo;
+  const errorCallbackURL = body?.errorCallbackURL;
+  const newUserCallbackURL = body?.newUserCallbackURL;
+  const validateURL = (url, label) => {
+    if (!url)
+      return;
+    if (typeof url !== "string")
+      throw APIError2.fromStatus("BAD_REQUEST", { message: `Invalid ${label}: expected a string` });
+    if (!ctx.context.isTrustedOrigin(url, { allowRelativePaths: label !== "origin" })) {
+      ctx.context.logger.error(`Invalid ${label}: ${url}`);
+      ctx.context.logger.info(`If it's a valid URL, please add ${url} to trustedOrigins in your auth config
+`, `Current list of trustedOrigins: ${ctx.context.trustedOrigins}`);
+      if (label === "origin")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ORIGIN);
+      if (label === "callbackURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_CALLBACK_URL);
+      if (label === "redirectURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_REDIRECT_URL);
+      if (label === "errorCallbackURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ERROR_CALLBACK_URL);
+      if (label === "newUserCallbackURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_NEW_USER_CALLBACK_URL);
+      throw APIError2.fromStatus("FORBIDDEN", { message: `Invalid ${label}` });
+    }
+  };
+  callbackURL && validateURL(callbackURL, "callbackURL");
+  redirectURL && validateURL(redirectURL, "redirectURL");
+  errorCallbackURL && validateURL(errorCallbackURL, "errorCallbackURL");
+  newUserCallbackURL && validateURL(newUserCallbackURL, "newUserCallbackURL");
+});
+var originCheck = (getValue) => createAuthMiddleware(async (ctx) => {
+  if (!ctx.request)
+    return;
+  if (shouldSkipOriginCheck(ctx))
+    return;
+  const callbackURL = getValue(ctx);
+  const validateURL = (url, label) => {
+    if (!url)
+      return;
+    if (!ctx.context.isTrustedOrigin(url, { allowRelativePaths: label !== "origin" })) {
+      ctx.context.logger.error(`Invalid ${label}: ${url}`);
+      ctx.context.logger.info(`If it's a valid URL, please add ${url} to trustedOrigins in your auth config
+`, `Current list of trustedOrigins: ${ctx.context.trustedOrigins}`);
+      if (label === "origin")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ORIGIN);
+      if (label === "callbackURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_CALLBACK_URL);
+      if (label === "redirectURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_REDIRECT_URL);
+      if (label === "errorCallbackURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ERROR_CALLBACK_URL);
+      if (label === "newUserCallbackURL")
+        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_NEW_USER_CALLBACK_URL);
+      throw APIError2.fromStatus("FORBIDDEN", { message: `Invalid ${label}` });
+    }
+  };
+  const callbacks = Array.isArray(callbackURL) ? callbackURL : [callbackURL];
+  for (const url of callbacks)
+    validateURL(url, "callbackURL");
+});
+async function validateOrigin(ctx, forceValidate = false) {
+  const headers = ctx.request?.headers;
+  if (!headers || !ctx.request)
+    return;
+  const origin = headers.get("origin");
+  const originHeader = origin || headers.get("referer") || "";
+  const useCookies = headers.has("cookie");
+  if (ctx.context.skipCSRFCheck)
+    return;
+  if (shouldSkipCSRFForBackwardCompat(ctx)) {
+    ctx.context.options.advanced?.disableOriginCheck === true && logBackwardCompatWarning();
+    return;
+  }
+  if (shouldSkipOriginCheck(ctx))
+    return;
+  if (!(forceValidate || useCookies))
+    return;
+  const inferredBaseURL = origin === "null" && headers.get("sec-fetch-site") === "same-origin" ? getBaseURL(undefined, ctx.context.options.basePath, ctx.request, false, ctx.context.options.advanced?.trustedProxyHeaders) : undefined;
+  const originToValidate = (inferredBaseURL ? getOrigin(inferredBaseURL) : undefined) ?? originHeader;
+  if (!originToValidate || originToValidate === "null")
+    throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.MISSING_OR_NULL_ORIGIN);
+  const trustedOrigins = Array.isArray(ctx.context.options.trustedOrigins) ? ctx.context.trustedOrigins : [...ctx.context.trustedOrigins, ...(await ctx.context.options.trustedOrigins?.(ctx.request))?.filter((v) => Boolean(v)) || []];
+  if (!trustedOrigins.some((origin) => matchesOriginPattern(originToValidate, origin))) {
+    ctx.context.logger.error(`Invalid origin: ${originToValidate}`);
+    ctx.context.logger.info(`If it's a valid URL, please add ${originToValidate} to trustedOrigins in your auth config
+`, `Current list of trustedOrigins: ${trustedOrigins}`);
+    throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ORIGIN);
+  }
+}
+var formCsrfMiddleware = createAuthMiddleware(async (ctx) => {
+  if (!ctx.request)
+    return;
+  await validateFormCsrf(ctx);
+});
+async function validateFormCsrf(ctx) {
+  const req = ctx.request;
+  if (!req)
+    return;
+  if (ctx.context.skipCSRFCheck)
+    return;
+  if (shouldSkipCSRFForBackwardCompat(ctx))
+    return;
+  const headers = req.headers;
+  if (headers.has("cookie"))
+    return await validateOrigin(ctx);
+  const site = headers.get("Sec-Fetch-Site");
+  const mode = headers.get("Sec-Fetch-Mode");
+  const dest = headers.get("Sec-Fetch-Dest");
+  if (Boolean(site && site.trim() || mode && mode.trim() || dest && dest.trim())) {
+    if (site === "cross-site" && mode === "navigate") {
+      ctx.context.logger.error("Blocked cross-site navigation login attempt (CSRF protection)", {
+        secFetchSite: site,
+        secFetchMode: mode,
+        secFetchDest: dest
+      });
+      throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.CROSS_SITE_NAVIGATION_LOGIN_BLOCKED);
+    }
+    return await validateOrigin(ctx, true);
+  }
+  if (headers.get("origin") || headers.get("referer"))
+    return await validateOrigin(ctx, true);
+}
+
+// node_modules/better-auth/dist/api/rate-limiter/index.mjs
+init_error2();
+
+// node_modules/@better-auth/core/dist/utils/ip.mjs
+init_env_impl();
+init_zod();
+var ipv4Schema = ipv42();
+var ipv6Schema = ipv62();
+function isValidIP(ip) {
+  return isIPv4(ip) || isIPv6(ip);
+}
+function isIPv4(ip) {
+  return validate(ipv4Schema, ip);
+}
+function isIPv6(ip) {
+  return validate(ipv6Schema, ip);
+}
+function extractIPv4FromMapped(ipv6) {
+  const lower = ipv6.toLowerCase();
+  if (lower.startsWith("::ffff:")) {
+    const ipv4Part = lower.substring(7);
+    if (isIPv4(ipv4Part))
+      return ipv4Part;
+  }
+  const parts = ipv6.split(":");
+  if (parts.length === 7 && parts[5]?.toLowerCase() === "ffff") {
+    const ipv4Part = parts[6];
+    if (ipv4Part && isIPv4(ipv4Part))
+      return ipv4Part;
+  }
+  if (lower.includes("::ffff:") || lower.includes(":ffff:")) {
+    const groups = expandIPv6(ipv6);
+    if (groups.length === 8 && groups[0] === "0000" && groups[1] === "0000" && groups[2] === "0000" && groups[3] === "0000" && groups[4] === "0000" && groups[5] === "ffff" && groups[6] && groups[7])
+      return `${Number.parseInt(groups[6].substring(0, 2), 16)}.${Number.parseInt(groups[6].substring(2, 4), 16)}.${Number.parseInt(groups[7].substring(0, 2), 16)}.${Number.parseInt(groups[7].substring(2, 4), 16)}`;
+  }
+  return null;
+}
+function expandIPv6(ipv6) {
+  if (ipv6.includes("::")) {
+    const sides = ipv6.split("::");
+    const left = sides[0] ? sides[0].split(":") : [];
+    const right = sides[1] ? sides[1].split(":") : [];
+    const missingGroups = 8 - left.length - right.length;
+    const zeros = Array(missingGroups).fill("0000");
+    const paddedLeft = left.map((g) => g.padStart(4, "0"));
+    const paddedRight = right.map((g) => g.padStart(4, "0"));
+    return [
+      ...paddedLeft,
+      ...zeros,
+      ...paddedRight
+    ];
+  }
+  return ipv6.split(":").map((g) => g.padStart(4, "0"));
+}
+function normalizeIPv6(ipv6, subnetPrefix) {
+  const groups = expandIPv6(ipv6);
+  if (subnetPrefix !== undefined && subnetPrefix < 128) {
+    let bitsRemaining = Math.max(0, Math.floor(subnetPrefix));
+    return groups.map((group) => {
+      if (bitsRemaining <= 0)
+        return "0000";
+      if (bitsRemaining >= 16) {
+        bitsRemaining -= 16;
+        return group;
+      }
+      const masked = Number.parseInt(group, 16) & (65535 << 16 - bitsRemaining & 65535);
+      bitsRemaining = 0;
+      return masked.toString(16).padStart(4, "0");
+    }).join(":").toLowerCase();
+  }
+  return groups.join(":").toLowerCase();
+}
+function normalizeIP(ip, options = {}) {
+  if (isIPv4(ip))
+    return ip.toLowerCase();
+  if (!isIPv6(ip))
+    return ip.toLowerCase();
+  const ipv4 = extractIPv4FromMapped(ip);
+  if (ipv4)
+    return ipv4.toLowerCase();
+  return normalizeIPv6(ip, options.ipv6Subnet ?? 64);
+}
+function ipToBytes(ip) {
+  if (isIPv4(ip))
+    return Uint8Array.from(ip.split(".").map((octet) => Number(octet)));
+  if (!isIPv6(ip))
+    return null;
+  const mapped = extractIPv4FromMapped(ip);
+  if (mapped)
+    return Uint8Array.from(mapped.split(".").map((octet) => Number(octet)));
+  const groups = expandIPv6(ip);
+  const bytes = new Uint8Array(16);
+  for (let i = 0;i < 8; i++) {
+    const group = Number.parseInt(groups[i] ?? "0", 16);
+    bytes[i * 2] = group >> 8 & 255;
+    bytes[i * 2 + 1] = group & 255;
+  }
+  return bytes;
+}
+var CIDR_PREFIX_PATTERN = /^\d+$/;
+function parseCIDR(value) {
+  const slash = value.lastIndexOf("/");
+  const bytes = ipToBytes(slash === -1 ? value : value.slice(0, slash));
+  if (!bytes)
+    return null;
+  const maxBits = bytes.length * 8;
+  if (slash === -1)
+    return {
+      bytes,
+      prefix: maxBits
+    };
+  const prefixPart = value.slice(slash + 1);
+  if (!CIDR_PREFIX_PATTERN.test(prefixPart))
+    return null;
+  const prefix = Number(prefixPart);
+  return prefix <= maxBits ? {
+    bytes,
+    prefix
+  } : null;
+}
+function matchesCIDR(ipBytes, net) {
+  if (ipBytes.length !== net.bytes.length)
+    return false;
+  let bitsRemaining = net.prefix;
+  for (let i = 0;i < ipBytes.length && bitsRemaining > 0; i++) {
+    const take = bitsRemaining >= 8 ? 8 : bitsRemaining;
+    const mask = take === 8 ? 255 : 255 << 8 - take & 255;
+    if (((ipBytes[i] ?? 0) & mask) !== ((net.bytes[i] ?? 0) & mask))
+      return false;
+    bitsRemaining -= 8;
+  }
+  return true;
+}
+function findInvalidTrustedProxies(entries) {
+  return entries.filter((entry) => parseCIDR(entry) === null);
+}
+function getIPFromHeader(value, options = {}) {
+  const forwardedIps = value.split(",").map((ip) => ip.trim()).filter(Boolean);
+  if (forwardedIps.length === 0)
+    return null;
+  const trustedProxies = (options.trustedProxies ?? []).map(parseCIDR).filter((proxy) => {
+    return proxy !== null;
+  });
+  if (trustedProxies.length > 0) {
+    for (let i = forwardedIps.length - 1;i >= 0; i--) {
+      const ip = forwardedIps[i];
+      const ipBytes = ip ? ipToBytes(ip) : null;
+      if (!ip || !ipBytes)
+        return null;
+      if (trustedProxies.some((proxy) => matchesCIDR(ipBytes, proxy)))
+        continue;
+      return normalizeIP(ip, { ipv6Subnet: options.ipv6Subnet });
+    }
+    return null;
+  }
+  if (forwardedIps.length !== 1)
+    return null;
+  const selectedIp = forwardedIps[0];
+  if (!selectedIp || !isValidIP(selectedIp))
+    return null;
+  return normalizeIP(selectedIp, { ipv6Subnet: options.ipv6Subnet });
+}
+var LOCALHOST_IP = "127.0.0.1";
+var DEFAULT_IP_HEADERS = ["x-forwarded-for"];
+function getIP(req, options) {
+  if (options.advanced?.ipAddress?.disableIpTracking)
+    return null;
+  const headers = "headers" in req ? req.headers : req;
+  const ipHeaders = options.advanced?.ipAddress?.ipAddressHeaders || DEFAULT_IP_HEADERS;
+  for (const key of ipHeaders) {
+    const value = "get" in headers ? headers.get(key) : headers[key];
+    if (typeof value === "string") {
+      const ip = getIPFromHeader(value, {
+        ipv6Subnet: options.advanced?.ipAddress?.ipv6Subnet,
+        trustedProxies: options.advanced?.ipAddress?.trustedProxies
+      });
+      if (ip)
+        return ip;
+    }
+  }
+  if (isTest() || isDevelopment())
+    return LOCALHOST_IP;
+  return null;
+}
+function createRateLimitKey(ip, path) {
+  return `${ip}|${path}`;
+}
+
+// node_modules/better-auth/dist/api/rate-limiter/index.mjs
+var memory = /* @__PURE__ */ new Map;
+var MEMORY_STORE_MAX_ENTRIES = 1e5;
+function pruneMemoryStore() {
+  const now = Date.now();
+  for (const [key, entry] of memory)
+    if (now >= entry.expiresAt)
+      memory.delete(key);
+  if (memory.size <= MEMORY_STORE_MAX_ENTRIES)
+    return;
+  const overflow = memory.size - MEMORY_STORE_MAX_ENTRIES;
+  let removed = 0;
+  for (const key of memory.keys()) {
+    memory.delete(key);
+    if (++removed >= overflow)
+      break;
+  }
+}
+function decideConsume(data, rule, now) {
+  const windowInMs = rule.window * 1000;
+  if (!data)
+    return {
+      next: {
+        key: "",
+        count: 1,
+        lastRequest: now
+      },
+      update: false,
+      allowed: true,
+      retryAfter: null
+    };
+  if (now - data.lastRequest >= windowInMs)
+    return {
+      next: {
+        ...data,
+        count: 1,
+        lastRequest: now
+      },
+      update: true,
+      allowed: true,
+      retryAfter: null
+    };
+  if (data.count >= rule.max)
+    return {
+      next: data,
+      update: true,
+      allowed: false,
+      retryAfter: getRetryAfter(data.lastRequest, rule.window)
+    };
+  return {
+    next: {
+      ...data,
+      count: data.count + 1,
+      lastRequest: now
+    },
+    update: true,
+    allowed: true,
+    retryAfter: null
+  };
+}
+function rateLimitResponse(retryAfter) {
+  return new Response(JSON.stringify({ message: "Too many requests. Please try again later." }), {
+    status: 429,
+    statusText: "Too Many Requests",
+    headers: { "X-Retry-After": retryAfter.toString() }
+  });
+}
+function getRetryAfter(lastRequest, window2) {
+  const now = Date.now();
+  const windowInMs = window2 * 1000;
+  return Math.ceil((lastRequest + windowInMs - now) / 1000);
+}
+function createDatabaseStorageWrapper(ctx) {
+  const model = "rateLimit";
+  const db = ctx.adapter;
+  let longestObservedWindow = Math.max(...getConfiguredRateLimitWindows(ctx));
+  const readRow = async (key) => {
+    const data = (await db.findMany({
+      model,
+      where: [{
+        field: "key",
+        value: key
+      }]
+    }))[0];
+    if (typeof data?.lastRequest === "bigint")
+      data.lastRequest = Number(data.lastRequest);
+    return data;
+  };
+  const consume = async (key, rule) => {
+    if (rule.window > longestObservedWindow)
+      longestObservedWindow = rule.window;
+    const windowInMs = rule.window * 1000;
+    const data = await readRow(key);
+    const now = Date.now();
+    if (!data)
+      try {
+        await db.create({
+          model,
+          data: {
+            key,
+            count: 1,
+            lastRequest: now
+          }
+        });
+        return {
+          allowed: true,
+          retryAfter: null
+        };
+      } catch (error) {
+        if (!await readRow(key))
+          throw error;
+        return consume(key, rule);
+      }
+    if (now - data.lastRequest >= windowInMs) {
+      if (await db.incrementOne({
+        model,
+        where: [{
+          field: "key",
+          value: key
+        }, {
+          field: "lastRequest",
+          operator: "lte",
+          value: data.lastRequest
+        }],
+        increment: {},
+        set: {
+          count: 1,
+          lastRequest: now
+        }
+      })) {
+        await deleteExpiredRows(now);
+        return {
+          allowed: true,
+          retryAfter: null
+        };
+      }
+      return consume(key, rule);
+    }
+    const windowStart = now - windowInMs;
+    if (await db.incrementOne({
+      model,
+      where: [
+        {
+          field: "key",
+          value: key
+        },
+        {
+          field: "lastRequest",
+          operator: "gt",
+          value: windowStart
+        },
+        {
+          field: "count",
+          operator: "lt",
+          value: rule.max
+        }
+      ],
+      increment: { count: 1 },
+      set: { lastRequest: now }
+    }))
+      return {
+        allowed: true,
+        retryAfter: null
+      };
+    const fresh = await readRow(key);
+    if (!fresh)
+      return consume(key, rule);
+    if (now - fresh.lastRequest >= windowInMs)
+      return consume(key, rule);
+    return {
+      allowed: false,
+      retryAfter: getRetryAfter(fresh.lastRequest, rule.window)
+    };
+  };
+  const deleteExpiredRows = async (now) => {
+    const cutoff = now - longestObservedWindow * 1000;
+    await ctx.runInBackgroundOrAwait(db.deleteMany({
+      model,
+      where: [{
+        field: "lastRequest",
+        operator: "lt",
+        value: cutoff
+      }]
+    }).then(() => {
+      return;
+    }).catch((e) => ctx.logger.error("Error pruning rate limit rows", e)));
+  };
+  return { consume };
+}
+function getConfiguredRateLimitWindows(ctx) {
+  const windows = [ctx.rateLimit.window, ...getDefaultSpecialRules().map((rule) => rule.window)];
+  for (const plugin of ctx.options.plugins || [])
+    if (plugin.rateLimit)
+      windows.push(...plugin.rateLimit.map((rule) => rule.window));
+  if (ctx.rateLimit.customRules) {
+    for (const customRule of Object.values(ctx.rateLimit.customRules))
+      if (customRule && typeof customRule !== "function")
+        windows.push(customRule.window);
+  }
+  const validWindows = windows.filter((window2) => Number.isFinite(window2) && window2 > 0);
+  return validWindows.length > 0 ? validWindows : [ctx.rateLimit.window];
+}
+function getRateLimitStorage(ctx, rateLimitSettings) {
+  if (ctx.options.rateLimit?.customStorage)
+    return ctx.options.rateLimit.customStorage;
+  const storage = ctx.rateLimit.storage;
+  if (storage === "secondary-storage") {
+    const ttlFor = (window2) => window2 ?? ctx.options.rateLimit?.window ?? 10;
+    const increment = ctx.options.secondaryStorage?.increment;
+    if (!increment)
+      throw new BetterAuthError("Secondary-storage rate limiting requires SecondaryStorage.increment.");
+    return { consume: async (key, rule) => {
+      if (await increment(key, ttlFor(rule.window)) <= rule.max)
+        return {
+          allowed: true,
+          retryAfter: null
+        };
+      return {
+        allowed: false,
+        retryAfter: rule.window
+      };
+    } };
+  } else if (storage === "memory") {
+    const ttlFor = (window2) => window2 ?? ctx.options.rateLimit?.window ?? 10;
+    return { async consume(key, rule) {
+      pruneMemoryStore();
+      const now = Date.now();
+      const entry = memory.get(key);
+      const decision = decideConsume(entry && now < entry.expiresAt ? entry.data : undefined, rule, now);
+      if (decision.allowed)
+        memory.set(key, {
+          data: {
+            ...decision.next,
+            key
+          },
+          expiresAt: now + ttlFor(rule.window) * 1000
+        });
+      return {
+        allowed: decision.allowed,
+        retryAfter: decision.retryAfter
+      };
+    } };
+  }
+  return createDatabaseStorageWrapper(ctx);
+}
+var ipWarningLogged = false;
+var NO_TRUSTED_IP_KEY = "no-trusted-ip";
+async function resolveRateLimitConfig(req, ctx) {
+  const basePath = new URL(ctx.baseURL).pathname;
+  const path = normalizePathname(req.url, basePath);
+  let currentWindow = ctx.rateLimit.window;
+  let currentMax = ctx.rateLimit.max;
+  const ip = getIP(req, ctx.options);
+  if (!ip && ctx.options.advanced?.ipAddress?.disableIpTracking)
+    return null;
+  if (!ip && !ipWarningLogged) {
+    ctx.logger.warn("Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.");
+    ipWarningLogged = true;
+  }
+  const key = createRateLimitKey(ip ?? NO_TRUSTED_IP_KEY, path);
+  const specialRule = getDefaultSpecialRules().find((rule) => rule.pathMatcher(path));
+  if (specialRule) {
+    currentWindow = specialRule.window;
+    currentMax = specialRule.max;
+  }
+  for (const plugin of ctx.options.plugins || [])
+    if (plugin.rateLimit) {
+      const matchedRule = plugin.rateLimit.find((rule) => rule.pathMatcher(path));
+      if (matchedRule) {
+        currentWindow = matchedRule.window;
+        currentMax = matchedRule.max;
+        break;
+      }
+    }
+  if (ctx.rateLimit.customRules) {
+    const _path = Object.keys(ctx.rateLimit.customRules).find((p) => {
+      if (p.includes("*"))
+        return wildcardMatch(p)(path);
+      return p === path;
+    });
+    if (_path) {
+      const customRule = ctx.rateLimit.customRules[_path];
+      const resolved = typeof customRule === "function" ? await customRule(req, {
+        window: currentWindow,
+        max: currentMax
+      }) : customRule;
+      if (resolved) {
+        currentWindow = resolved.window;
+        currentMax = resolved.max;
+      }
+      if (resolved === false)
+        return null;
+    }
+  }
+  return {
+    key,
+    currentWindow,
+    currentMax
+  };
+}
+async function onRequestRateLimit(req, ctx) {
+  if (!ctx.rateLimit.enabled)
+    return;
+  const config = await resolveRateLimitConfig(req, ctx);
+  if (!config)
+    return;
+  const { key, currentWindow, currentMax } = config;
+  const storage = getRateLimitStorage(ctx, { window: currentWindow });
+  const rule = {
+    window: currentWindow,
+    max: currentMax
+  };
+  const { allowed, retryAfter } = await storage.consume(key, rule);
+  if (!allowed)
+    return rateLimitResponse(retryAfter ?? currentWindow);
+}
+function getDefaultSpecialRules() {
+  return [{
+    pathMatcher(path) {
+      return path.startsWith("/sign-in") || path.startsWith("/sign-up") || path.startsWith("/change-password") || path.startsWith("/change-email");
+    },
+    window: 10,
+    max: 3
+  }, {
+    pathMatcher(path) {
+      return path === "/request-password-reset" || path === "/send-verification-email" || path.startsWith("/forget-password") || path === "/email-otp/send-verification-otp" || path === "/email-otp/request-password-reset";
+    },
+    window: 60,
+    max: 3
+  }];
+}
+
+// node_modules/@better-auth/core/dist/context/index.mjs
+init_global();
+
+// node_modules/@better-auth/core/dist/context/request-state.mjs
+init_global();
+var ensureAsyncStorage = async () => {
+  const betterAuthGlobal = __getBetterAuthGlobal();
+  const existing = betterAuthGlobal.context.requestStateAsyncStorage;
+  if (existing)
+    return existing;
+  const AsyncLocalStorage = await getAsyncLocalStorage();
+  betterAuthGlobal.context.requestStateAsyncStorage ??= new AsyncLocalStorage;
+  return betterAuthGlobal.context.requestStateAsyncStorage;
+};
+async function hasRequestState() {
+  return (await ensureAsyncStorage()).getStore() !== undefined;
+}
+async function getCurrentRequestState() {
+  const store = (await ensureAsyncStorage()).getStore();
+  if (!store)
+    throw new Error("No request state found. Please make sure you are calling this function within a `runWithRequestState` callback.");
+  return store;
+}
+async function runWithRequestState(store, fn) {
+  return (await ensureAsyncStorage()).run(store, fn);
+}
+function defineRequestState(initFn) {
+  const ref = Object.freeze({});
+  return {
+    get ref() {
+      return ref;
+    },
+    async get() {
+      const store = await getCurrentRequestState();
+      if (!store.has(ref)) {
+        const initialValue = await initFn();
+        store.set(ref, initialValue);
+        return initialValue;
+      }
+      return store.get(ref);
+    },
+    async set(value) {
+      (await getCurrentRequestState()).set(ref, value);
+    }
+  };
+}
+
+// node_modules/@better-auth/core/dist/context/transaction.mjs
+init_global();
+init_schema_check();
+var ensureAsyncStorage2 = async () => {
+  const betterAuthGlobal = __getBetterAuthGlobal();
+  const existing = betterAuthGlobal.context.adapterAsyncStorage;
+  if (existing)
+    return existing;
+  const AsyncLocalStorage = await getAsyncLocalStorage();
+  betterAuthGlobal.context.adapterAsyncStorage ??= new AsyncLocalStorage;
+  return betterAuthGlobal.context.adapterAsyncStorage;
+};
+var getCurrentAdapter = async (fallback) => {
+  return ensureAsyncStorage2().then((als) => {
+    return als.getStore()?.adapter || fallback;
+  }).catch(() => {
+    return fallback;
+  });
+};
+var runWithAdapter = async (adapter, fn) => {
+  let called = false;
+  return ensureAsyncStorage2().then(async (als) => {
+    called = true;
+    const pendingHooks = [];
+    let result;
+    let error;
+    let hasError = false;
+    try {
+      result = await als.run({
+        adapter,
+        pendingHooks,
+        isTransactionActive: false
+      }, fn);
+    } catch (err) {
+      error = err;
+      hasError = true;
+    }
+    for (const hook of pendingHooks)
+      await hook();
+    if (hasError)
+      throw error;
+    return result;
+  }).catch((err) => {
+    if (!called)
+      return fn();
+    throw err;
+  });
+};
+var runWithTransaction = async (adapter, fn, options) => {
+  let called = false;
+  return ensureAsyncStorage2().then(async (als) => {
+    called = true;
+    if (als.getStore()?.isTransactionActive)
+      return fn();
+    const pendingSchemaCheck = schemaCheckFor(adapter)?.();
+    if (pendingSchemaCheck)
+      await pendingSchemaCheck;
+    const pendingHooks = [];
+    let result;
+    let error;
+    let hasError = false;
+    try {
+      result = await adapter.transaction(async (trx) => {
+        return als.run({
+          adapter: trx,
+          pendingHooks,
+          isTransactionActive: true
+        }, fn);
+      });
+    } catch (e) {
+      hasError = true;
+      error = e;
+    }
+    if (hasError)
+      throw error;
+    for (const hook of pendingHooks)
+      try {
+        await hook();
+      } catch (error) {
+        if (!options?.onAfterCommitHookError)
+          throw error;
+        try {
+          await options.onAfterCommitHookError(error);
+        } catch {}
+      }
+    return result;
+  }).catch((err) => {
+    if (!called)
+      return fn();
+    throw err;
+  });
+};
+var queueAfterTransactionHook = async (hook, options) => {
+  const executeHook = async () => {
+    try {
+      await hook();
+    } catch (error) {
+      if (!options?.onError)
+        throw error;
+      await options.onError(error);
+    }
+  };
+  let storage;
+  try {
+    storage = await ensureAsyncStorage2();
+  } catch {
+    return executeHook();
+  }
+  const store = storage.getStore();
+  if (!store?.isTransactionActive)
+    return executeHook();
+  store.pendingHooks.push(executeHook);
+};
+
+// node_modules/better-auth/dist/api/state/oauth.mjs
+var { get: getRawOAuthState, set: setOAuthState } = defineRequestState(() => null);
+var { get: getOAuthServerContext, set: setOAuthServerContext } = defineRequestState(() => null);
+
+// node_modules/better-auth/dist/api/state/should-session-refresh.mjs
+var { get: getShouldSkipSessionRefresh, set: setShouldSkipSessionRefresh } = defineRequestState(() => false);
+
+// node_modules/better-auth/dist/context/store-capabilities.mjs
+function hasServerSessionStore(options) {
+  return !!options.database || !!options.secondaryStorage;
+}
+function hasServerAccountStore(options) {
+  return !!options.database;
+}
+function shouldBindAccountCookieToSessionUser(options) {
+  return hasServerAccountStore(options);
+}
+
+// node_modules/@better-auth/core/dist/db/index.mjs
+init_get_tables();
+
+// node_modules/@better-auth/core/dist/db/schema/shared.mjs
+init_zod();
+var coreSchema = object({
+  id: string2(),
+  createdAt: date3().default(() => /* @__PURE__ */ new Date),
+  updatedAt: date3().default(() => /* @__PURE__ */ new Date)
+});
+
+// node_modules/@better-auth/core/dist/db/schema/session.mjs
+init_zod();
+var sessionSchema = coreSchema.extend({
+  userId: string3(),
+  expiresAt: date3(),
+  token: string2(),
+  ipAddress: string2().nullish(),
+  userAgent: string2().nullish()
+});
+
+// node_modules/@better-auth/core/dist/db/schema/user.mjs
+init_zod();
+var userSchema = coreSchema.extend({
+  email: string2().transform((val) => val.toLowerCase()),
+  emailVerified: boolean2().default(false),
+  name: string2(),
+  image: string2().nullish()
+});
+
+// node_modules/better-auth/dist/db/schema.mjs
+init_error2();
+
+// node_modules/@better-auth/core/dist/utils/db.mjs
+function filterOutputFields(data, additionalFields) {
+  if (!data || !additionalFields)
+    return data;
+  const returnFiltered = Object.entries(additionalFields).filter(([, { returned }]) => returned === false).map(([key]) => key);
+  return Object.entries(structuredClone(data)).filter(([key]) => !returnFiltered.includes(key)).reduce((acc, [key, value]) => ({
+    ...acc,
+    [key]: value
+  }), {});
+}
+
+// node_modules/better-auth/dist/db/schema.mjs
+var cache = /* @__PURE__ */ new WeakMap;
+function getFields(options, modelName, mode) {
+  const cacheKey = `${modelName}:${mode}`;
+  if (!cache.has(options))
+    cache.set(options, /* @__PURE__ */ new Map);
+  const tableCache = cache.get(options);
+  if (tableCache.has(cacheKey))
+    return tableCache.get(cacheKey);
+  const coreSchema = mode === "output" ? getAuthTables(options)[modelName]?.fields ?? {} : {};
+  const additionalFields = modelName === "user" || modelName === "session" || modelName === "account" ? options[modelName]?.additionalFields : undefined;
+  let schema = {
+    ...coreSchema,
+    ...additionalFields ?? {}
+  };
+  for (const plugin of options.plugins || [])
+    if (plugin.schema && plugin.schema[modelName])
+      schema = {
+        ...schema,
+        ...plugin.schema[modelName].fields
+      };
+  tableCache.set(cacheKey, schema);
+  return schema;
+}
+function parseUserOutput(options, user) {
+  return filterOutputFields(user, getFields(options, "user", "output"));
+}
+function buildSyntheticUserOutput(options, data) {
+  const schema = getFields(options, "user", "output");
+  const result = {};
+  for (const key in schema) {
+    const fieldAttr = schema[key];
+    if (fieldAttr.returned === false)
+      continue;
+    if (key in data && data[key] !== undefined)
+      result[key] = data[key];
+    else if (fieldAttr.defaultValue !== undefined)
+      result[key] = typeof fieldAttr.defaultValue === "function" ? fieldAttr.defaultValue() : fieldAttr.defaultValue;
+    else if (!fieldAttr.required)
+      result[key] = null;
+  }
+  if ("id" in data)
+    result.id = data.id;
+  return result;
+}
+function parseSessionOutput(options, session) {
+  return filterOutputFields(session, getFields(options, "session", "output"));
+}
+function parseAccountOutput(options, account) {
+  const { accessToken: _accessToken, refreshToken: _refreshToken, idToken: _idToken, accessTokenExpiresAt: _accessTokenExpiresAt, refreshTokenExpiresAt: _refreshTokenExpiresAt, password: _password, ...rest } = filterOutputFields(account, getFields(options, "account", "output"));
+  return rest;
+}
+function parseInputData(data, schema) {
+  const action = schema.action || "create";
+  const fields = schema.fields;
+  const parsedData = Object.create(null);
+  for (const key in fields) {
+    if (key in data) {
+      if (fields[key].input === false) {
+        if (fields[key].defaultValue !== undefined) {
+          if (action !== "update") {
+            parsedData[key] = fields[key].defaultValue;
+            continue;
+          }
+        }
+        if (data[key])
+          throw APIError2.from("BAD_REQUEST", {
+            ...BASE_ERROR_CODES.FIELD_NOT_ALLOWED,
+            message: `${key} is not allowed to be set`
+          });
+        continue;
+      }
+      if (fields[key].validator?.input && data[key] !== undefined) {
+        const result = fields[key].validator.input["~standard"].validate(data[key]);
+        if (result instanceof Promise)
+          throw APIError2.from("INTERNAL_SERVER_ERROR", BASE_ERROR_CODES.ASYNC_VALIDATION_NOT_SUPPORTED);
+        if ("issues" in result && result.issues)
+          throw APIError2.from("BAD_REQUEST", {
+            ...BASE_ERROR_CODES.VALIDATION_ERROR,
+            message: result.issues[0]?.message || "Validation Error"
+          });
+        parsedData[key] = result.value;
+        continue;
+      }
+      if (fields[key].transform?.input && data[key] !== undefined) {
+        parsedData[key] = fields[key].transform?.input(data[key]);
+        continue;
+      }
+      parsedData[key] = data[key];
+      continue;
+    }
+    if (fields[key].defaultValue !== undefined && action === "create") {
+      if (typeof fields[key].defaultValue === "function") {
+        parsedData[key] = fields[key].defaultValue();
+        continue;
+      }
+      parsedData[key] = fields[key].defaultValue;
+      continue;
+    }
+    if (fields[key].required && action === "create")
+      throw APIError2.from("BAD_REQUEST", {
+        ...BASE_ERROR_CODES.MISSING_FIELD,
+        message: `${key} is required`
+      });
+  }
+  return parsedData;
+}
+function parseUserInput(options, user = {}, action) {
+  return parseInputData(user, {
+    fields: getFields(options, "user", "input"),
+    action
+  });
+}
+function parseAdditionalUserInputFromProviderProfile(options, profile = {}, action) {
+  const schema = getFields(options, "user", "input");
+  const allowedProfileFields = Object.create(null);
+  for (const key of Object.keys(profile)) {
+    if (schema[key]?.input === false)
+      continue;
+    allowedProfileFields[key] = profile[key];
+  }
+  return parseInputData(allowedProfileFields, {
+    fields: schema,
+    action
+  });
+}
+function parseSessionInput(options, session, action) {
+  return parseInputData(session, {
+    fields: getFields(options, "session", "input"),
+    action
+  });
+}
+function getSessionDefaultFields(options) {
+  const fields = getFields(options, "session", "input");
+  const defaults = {};
+  for (const key in fields)
+    if (fields[key].defaultValue !== undefined)
+      defaults[key] = typeof fields[key].defaultValue === "function" ? fields[key].defaultValue() : fields[key].defaultValue;
+  return defaults;
+}
+function mergeSchema(schema, newSchema) {
+  if (!newSchema)
+    return schema;
+  for (const table in newSchema) {
+    const newModelName = newSchema[table]?.modelName;
+    if (newModelName)
+      schema[table].modelName = newModelName;
+    for (const field in schema[table].fields) {
+      const newField = newSchema[table]?.fields?.[field];
+      if (!newField)
+        continue;
+      schema[table].fields[field].fieldName = newField;
+    }
+  }
+  return schema;
+}
+
+// node_modules/better-auth/dist/utils/date.mjs
+var getDate = (span, unit = "ms") => {
+  return new Date(Date.now() + (unit === "sec" ? span * 1000 : span));
+};
+
+// node_modules/@noble/hashes/utils.js
+function isBytes(a) {
+  return a instanceof Uint8Array || ArrayBuffer.isView(a) && a.constructor.name === "Uint8Array" && "BYTES_PER_ELEMENT" in a && a.BYTES_PER_ELEMENT === 1;
+}
+var atitle = (title) => title ? `"${title}" ` : "";
+function anumber(n, title = "") {
+  if (typeof n !== "number")
+    throw new TypeError(atitle(title) + "expected number, got " + typeof n);
+  if (!Number.isSafeInteger(n) || n < 0)
+    throw new RangeError(atitle(title) + "expected integer >= 0, got " + n);
+  return n;
+}
+function abytes(value, length, title = "") {
+  if (isBytes(value) && (length === undefined || value.length === length))
+    return value;
+  if (length !== undefined)
+    anumber(length, "length");
+  const bytes = isBytes(value);
+  const ofLen = length !== undefined ? ` of length ${length}` : "";
+  const got = bytes ? `length=${value.length}` : `type=${typeof value}`;
+  const message = atitle(title) + "expected Uint8Array" + ofLen + ", got " + got;
+  if (!bytes)
+    throw new TypeError(message);
+  throw new RangeError(message);
+}
+function ahash(h) {
+  if (typeof h !== "function" || typeof h.create !== "function")
+    throw new TypeError("expected hash wrapped by utils.createHasher");
+  anumber(h.outputLen);
+  anumber(h.blockLen);
+  if (h.outputLen < 1 || h.blockLen < 1)
+    throw new Error("hash blockLen / outputLen must be >= 1");
+}
+var aobject = (value, label) => {
+  if (value === null || typeof value !== "object" || Array.isArray(value))
+    throw new TypeError((label === "object" ? "" : `"${label}" `) + "expected object, got type=" + typeof value);
+};
+var aopts = (value, label) => {
+  aobject(value, label);
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null)
+    throw new TypeError(`"${label}" expected plain object`);
+  if (Object.hasOwn(value, "__proto__"))
+    throw new TypeError(`"${label}.__proto__" is not allowed`);
+};
+function aexists(instance, checkFinished = true) {
+  if (instance.destroyed)
+    throw new Error("hash was destroyed");
+  if (checkFinished && instance.finished)
+    throw new Error("digest() was already called");
+}
+function aoutput(out, instance) {
+  abytes(out, undefined, "output");
+  const min = instance.outputLen;
+  if (!(out.length >= min)) {
+    throw new RangeError('"output" expected length >= ' + min);
+  }
+}
+function clean2(...arrays) {
+  for (let i = 0;i < arrays.length; i++) {
+    arrays[i].fill(0);
+  }
+}
+function createView(arr) {
+  return new DataView(arr.buffer, arr.byteOffset, arr.byteLength);
+}
+function rotr(word, shift) {
+  return word << 32 - shift | word >>> shift;
+}
+function checkOpts(defaults, opts, title = "opts") {
+  aopts(defaults, "defaults");
+  if (opts !== undefined)
+    aopts(opts, title);
+  const merged = Object.assign(Object.create(null), defaults, opts);
+  return merged;
+}
+function createHasher(hashCons, info = {}) {
+  if (typeof hashCons !== "function")
+    throw new TypeError('"hashCons" expected function, got type=' + typeof hashCons);
+  info = checkOpts({}, info, "info");
+  const hashC = (msg, opts) => hashCons(opts).update(msg).digest();
+  const tmp = hashCons(undefined);
+  hashC.outputLen = tmp.outputLen;
+  hashC.blockLen = tmp.blockLen;
+  hashC.canXOF = tmp.canXOF;
+  hashC.create = (opts) => hashCons(opts);
+  Object.assign(hashC, info);
+  return Object.freeze(hashC);
+}
+var oidNist = (suffix) => ({
+  oid: Uint8Array.from([6, 9, 96, 134, 72, 1, 101, 3, 4, 2, suffix])
+});
+
+// node_modules/@noble/hashes/hmac.js
+class _HMAC {
+  oHash;
+  iHash;
+  blockLen;
+  outputLen;
+  canXOF = false;
+  finished = false;
+  destroyed = false;
+  constructor(hash, key) {
+    ahash(hash);
+    abytes(key, undefined, "key");
+    this.iHash = hash.create();
+    if (typeof this.iHash.update !== "function")
+      throw new Error("expected Hash instance");
+    this.blockLen = this.iHash.blockLen;
+    this.outputLen = this.iHash.outputLen;
+    const blockLen = this.blockLen;
+    const pad = new Uint8Array(blockLen);
+    pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
+    for (let i = 0;i < pad.length; i++)
+      pad[i] ^= 54;
+    this.iHash.update(pad);
+    this.oHash = hash.create();
+    for (let i = 0;i < pad.length; i++)
+      pad[i] ^= 54 ^ 92;
+    this.oHash.update(pad);
+    clean2(pad);
+  }
+  update(buf) {
+    aexists(this);
+    this.iHash.update(buf);
+    return this;
+  }
+  digestInto(out) {
+    aexists(this);
+    aoutput(out, this);
+    this.finished = true;
+    const buf = out.subarray(0, this.outputLen);
+    this.iHash.digestInto(buf);
+    this.oHash.update(buf);
+    this.oHash.digestInto(buf);
+    this.destroy();
+  }
+  digest() {
+    const out = new Uint8Array(this.oHash.outputLen);
+    this.digestInto(out);
+    return out;
+  }
+  _cloneInto(to) {
+    to ||= Object.create(Object.getPrototypeOf(this), {});
+    const { oHash, iHash, finished, destroyed, blockLen, outputLen, canXOF } = this;
+    to = to;
+    to.finished = finished;
+    to.destroyed = destroyed;
+    to.blockLen = blockLen;
+    to.outputLen = outputLen;
+    to.canXOF = canXOF;
+    to.oHash = oHash._cloneInto(to.oHash);
+    to.iHash = iHash._cloneInto(to.iHash);
+    return to;
+  }
+  clone() {
+    return this._cloneInto();
+  }
+  destroy() {
+    this.destroyed = true;
+    this.oHash.destroy();
+    this.iHash.destroy();
+  }
+}
+var hmac = /* @__PURE__ */ (() => {
+  const hmac_ = (hash, key, message) => new _HMAC(hash, key).update(message).digest();
+  hmac_.create = (hash, key) => new _HMAC(hash, key);
+  return hmac_;
+})();
+
+// node_modules/@noble/hashes/hkdf.js
+var HKDF_COUNTER = /* @__PURE__ */ Uint8Array.of(0);
+var EMPTY_BUFFER = /* @__PURE__ */ Uint8Array.of();
+function expand(hash, prk, info, length = 32, _recycled) {
+  ahash(hash);
+  anumber(length, "length");
+  abytes(prk, undefined, "prk");
+  const olen = hash.outputLen;
+  if (prk.length < olen)
+    throw new Error('"prk" must be at least HashLen octets');
+  if (length > 255 * olen)
+    throw new Error("Length must be <= 255*HashLen");
+  const blocks = Math.ceil(length / olen);
+  if (info === undefined)
+    info = EMPTY_BUFFER;
+  else
+    abytes(info, undefined, "info");
+  if (!blocks) {
+    if (_recycled)
+      clean2(prk);
+    return new Uint8Array;
+  }
+  const okm = _recycled && blocks === 1 ? prk : new Uint8Array(blocks * olen);
+  const { iHash, oHash } = hmac.create(hash, prk);
+  const T = _recycled ? prk : new Uint8Array(olen);
+  const worker = blocks > 1 ? _recycled?.iHash || hash.create() : undefined;
+  for (let counter = 0;counter < blocks - 1; counter++) {
+    HKDF_COUNTER[0] = counter + 1;
+    const iWork = iHash._cloneInto(worker);
+    if (counter)
+      iWork.update(T);
+    iWork.update(info).update(HKDF_COUNTER).digestInto(T);
+    oHash._cloneInto(worker).update(T).digestInto(T);
+    okm.set(T, olen * counter);
+  }
+  HKDF_COUNTER[0] = blocks;
+  if (blocks > 1)
+    iHash.update(T);
+  iHash.update(info).update(HKDF_COUNTER).digestInto(T);
+  oHash.update(T).digestInto(T);
+  okm.set(T, olen * (blocks - 1));
+  iHash.destroy();
+  oHash.destroy();
+  worker?.destroy();
+  if (T !== okm)
+    clean2(T);
+  clean2(HKDF_COUNTER);
+  if (length === okm.length)
+    return okm;
+  const res = okm.slice(0, length);
+  clean2(okm);
+  return res;
+}
+var hkdf = (hash, ikm, salt, info, length) => {
+  ahash(hash);
+  if (salt === undefined)
+    salt = new Uint8Array(hash.outputLen);
+  const HMAC = hmac.create(hash, salt).update(ikm);
+  return expand(hash, HMAC.digest(), info, length, HMAC);
+};
+
+// node_modules/@noble/hashes/_u64.js
+var fromNumH = (n) => n / 2 ** 32 | 0;
+var fromNumL = (n) => n >>> 0;
+function setU64FromNum(view, byteOffset, n, isLE) {
+  const h = fromNumH(n);
+  const l = fromNumL(n);
+  view.setUint32(byteOffset, isLE ? l : h, isLE);
+  view.setUint32(byteOffset + 4, isLE ? h : l, isLE);
+}
+
+// node_modules/@noble/hashes/_md.js
+function Chi(a, b, c) {
+  return a & b ^ ~a & c;
+}
+function Maj(a, b, c) {
+  return a & b ^ a & c ^ b & c;
+}
+
+class HashMD {
+  blockLen;
+  outputLen;
+  canXOF = false;
+  padOffset;
+  isLE;
+  buffer;
+  view;
+  finished = false;
+  length = 0;
+  pos = 0;
+  destroyed = false;
+  constructor(blockLen, outputLen, padOffset, isLE) {
+    this.blockLen = blockLen;
+    this.outputLen = outputLen;
+    this.padOffset = padOffset;
+    this.isLE = isLE;
+    this.buffer = new Uint8Array(blockLen);
+    this.view = createView(this.buffer);
+  }
+  update(data) {
+    aexists(this);
+    abytes(data);
+    const { view, buffer, blockLen } = this;
+    const len = data.length;
+    let processed = false;
+    for (let pos = 0;pos < len; ) {
+      const take = Math.min(blockLen - this.pos, len - pos);
+      if (take === blockLen) {
+        const dataView = createView(data);
+        for (;blockLen <= len - pos; pos += blockLen)
+          this.process(dataView, pos);
+        processed = true;
+        continue;
+      }
+      buffer.set(pos === 0 && take === len ? data : data.subarray(pos, pos + take), this.pos);
+      this.pos += take;
+      pos += take;
+      if (this.pos === blockLen) {
+        this.process(view, 0);
+        this.pos = 0;
+        processed = true;
+      }
+    }
+    this.length += data.length;
+    if (processed)
+      this.roundClean();
+    return this;
+  }
+  digestInto(out) {
+    aexists(this);
+    aoutput(out, this);
+    this.finished = true;
+    const { buffer, view, blockLen, isLE } = this;
+    let { pos } = this;
+    buffer[pos++] = 128;
+    buffer.fill(0, pos);
+    if (this.padOffset > blockLen - pos) {
+      this.process(view, 0);
+      buffer.fill(0);
+    }
+    setU64FromNum(view, blockLen - 8, this.length * 8, isLE);
+    this.process(view, 0);
+    this.roundClean();
+    const oview = out === buffer ? view : createView(out);
+    const len = this.outputLen;
+    const outLen = len / 4;
+    const state = this.get();
+    if (len % 4 || outLen > state.length)
+      throw new Error("invalid outputLen");
+    for (let i = 0;i < outLen; i++)
+      oview.setUint32(4 * i, state[i], isLE);
+  }
+  digest() {
+    const { buffer, outputLen } = this;
+    this.digestInto(buffer);
+    const res = buffer.slice(0, outputLen);
+    this.destroy();
+    return res;
+  }
+  _cloneIntoMeta(to) {
+    const { buffer, length, finished, destroyed, pos } = this;
+    to.destroyed = destroyed;
+    to.finished = finished;
+    to.length = length;
+    to.pos = pos;
+    if (pos)
+      to.buffer.set(buffer);
+    return to;
+  }
+  clone() {
+    return this._cloneInto();
+  }
+}
+var SHA256_IV = /* @__PURE__ */ Uint32Array.from([
+  1779033703,
+  3144134277,
+  1013904242,
+  2773480762,
+  1359893119,
+  2600822924,
+  528734635,
+  1541459225
+]);
+
+// node_modules/@noble/hashes/sha2.js
+var SHA256_K = /* @__PURE__ */ Uint32Array.from([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+var SHA256_W = /* @__PURE__ */ new Uint32Array(64);
+
+class SHA2_32B extends HashMD {
+  A = 0;
+  B = 0;
+  C = 0;
+  D = 0;
+  E = 0;
+  F = 0;
+  G = 0;
+  H = 0;
+  constructor(outputLen, IV) {
+    super(64, outputLen, 8, false);
+    this.A = IV[0] | 0;
+    this.B = IV[1] | 0;
+    this.C = IV[2] | 0;
+    this.D = IV[3] | 0;
+    this.E = IV[4] | 0;
+    this.F = IV[5] | 0;
+    this.G = IV[6] | 0;
+    this.H = IV[7] | 0;
+  }
+  get() {
+    const { A, B, C, D, E, F, G, H } = this;
+    return [A, B, C, D, E, F, G, H];
+  }
+  set(A, B, C, D, E, F, G, H) {
+    this.A = A | 0;
+    this.B = B | 0;
+    this.C = C | 0;
+    this.D = D | 0;
+    this.E = E | 0;
+    this.F = F | 0;
+    this.G = G | 0;
+    this.H = H | 0;
+  }
+  _cloneInto(to) {
+    (to ||= new this.constructor).set(...this.get());
+    return this._cloneIntoMeta(to);
+  }
+  process(view, offset) {
+    for (let i = 0;i < 16; i++, offset += 4)
+      SHA256_W[i] = view.getUint32(offset, false);
+    for (let i = 16;i < 64; i++) {
+      const W15 = SHA256_W[i - 15];
+      const W2 = SHA256_W[i - 2];
+      const s0 = rotr(W15, 7) ^ rotr(W15, 18) ^ W15 >>> 3;
+      const s1 = rotr(W2, 17) ^ rotr(W2, 19) ^ W2 >>> 10;
+      SHA256_W[i] = s1 + SHA256_W[i - 7] + s0 + SHA256_W[i - 16] | 0;
+    }
+    let { A, B, C, D, E, F, G, H } = this;
+    for (let i = 0;i < 64; i++) {
+      const sigma1 = rotr(E, 6) ^ rotr(E, 11) ^ rotr(E, 25);
+      const T1 = H + sigma1 + Chi(E, F, G) + SHA256_K[i] + SHA256_W[i] | 0;
+      const sigma0 = rotr(A, 2) ^ rotr(A, 13) ^ rotr(A, 22);
+      const T2 = sigma0 + Maj(A, B, C) | 0;
+      H = G;
+      G = F;
+      F = E;
+      E = D + T1 | 0;
+      D = C;
+      C = B;
+      B = A;
+      A = T1 + T2 | 0;
+    }
+    A = A + this.A | 0;
+    B = B + this.B | 0;
+    C = C + this.C | 0;
+    D = D + this.D | 0;
+    E = E + this.E | 0;
+    F = F + this.F | 0;
+    G = G + this.G | 0;
+    H = H + this.H | 0;
+    this.set(A, B, C, D, E, F, G, H);
+  }
+  roundClean() {
+    clean2(SHA256_W);
+  }
+  destroy() {
+    this.destroyed = true;
+    this.set(0, 0, 0, 0, 0, 0, 0, 0);
+    clean2(this.buffer);
+  }
+}
+
+class _SHA256 extends SHA2_32B {
+  constructor() {
+    super(32, SHA256_IV);
+  }
+}
+var sha256 = /* @__PURE__ */ createHasher(() => new _SHA256, /* @__PURE__ */ oidNist(1));
+
+// node_modules/jose/dist/webapi/lib/buffer_utils.js
+var encoder2 = new TextEncoder;
+var decoder = new TextDecoder;
+var strictDecoder = new TextDecoder("utf-8", { fatal: true });
+var MAX_INT322 = 2 ** 32;
+function concat(...buffers) {
+  const size = buffers.reduce((acc, { length }) => acc + length, 0), buf = new Uint8Array(size);
+  let i = 0;
+  for (const buffer of buffers)
+    buf.set(buffer, i), i += buffer.length;
+  return buf;
+}
+function writeUInt32BE(buf, value, offset) {
+  if (value < 0 || value >= MAX_INT322)
+    throw new RangeError(`value must be >= 0 and <= ${MAX_INT322 - 1}. Received ${value}`);
+  buf.set([value >>> 24, value >>> 16, value >>> 8, value & 255], offset);
+}
+function uint64be(value) {
+  const high = Math.floor(value / MAX_INT322), low = value % MAX_INT322, buf = new Uint8Array(8);
+  return writeUInt32BE(buf, high, 0), writeUInt32BE(buf, low, 4), buf;
+}
+function uint32be(value) {
+  const buf = new Uint8Array(4);
+  return writeUInt32BE(buf, value), buf;
+}
+var NON_ASCII = /[^\x00-\x7f]/;
+function encode3(string) {
+  if (typeof string == "string" && string.length >= 128) {
+    if (NON_ASCII.test(string))
+      throw new TypeError("non-ASCII string encountered in encode()");
+    return encoder2.encode(string);
+  }
+  const bytes = new Uint8Array(string.length);
+  for (let i = 0;i < string.length; i++) {
+    const code = string.charCodeAt(i);
+    if (code > 127)
+      throw new TypeError("non-ASCII string encountered in encode()");
+    bytes[i] = code;
+  }
+  return bytes;
+}
+function encodeBase64(input, url = false) {
+  if (Uint8Array.prototype.toBase64)
+    return input.toBase64({ alphabet: url ? "base64url" : "base64", omitPadding: url });
+  const CHUNK_SIZE = 32768, arr = [];
+  for (let i = 0;i < input.length; i += CHUNK_SIZE)
+    arr.push(String.fromCharCode.apply(null, input.subarray(i, i + CHUNK_SIZE)));
+  const encoded = btoa(arr.join(""));
+  return url ? encoded.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_") : encoded;
+}
+function decodeBase64(encoded, url = false) {
+  if (Uint8Array.fromBase64)
+    return Uint8Array.fromBase64(encoded, { alphabet: url ? "base64url" : "base64" });
+  if (url) {
+    if (encoded.includes("+") || encoded.includes("/"))
+      throw new TypeError("Invalid base64url");
+    encoded = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  }
+  const binary = atob(encoded), bytes = new Uint8Array(binary.length);
+  for (let i = 0;i < binary.length; i++)
+    bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+async function digest(algorithm, data) {
+  const subtleDigest = `SHA-${algorithm.slice(-3)}`;
+  return new Uint8Array(await crypto.subtle.digest(subtleDigest, data));
+}
+
+// node_modules/jose/dist/webapi/util/errors.js
+class JOSEError extends Error {
+  static code = "ERR_JOSE_GENERIC";
+  code = "ERR_JOSE_GENERIC";
+  constructor(message, options) {
+    super(message, options), this.name = this.constructor.name, Error.captureStackTrace?.(this, this.constructor);
+  }
+}
+
+class JWTClaimValidationFailed extends JOSEError {
+  static code = "ERR_JWT_CLAIM_VALIDATION_FAILED";
+  code = "ERR_JWT_CLAIM_VALIDATION_FAILED";
+  claim;
+  reason;
+  payload;
+  constructor(message, payload, claim = "unspecified", reason = "unspecified") {
+    super(message, { cause: { claim, reason, payload } }), this.claim = claim, this.reason = reason, this.payload = payload;
+  }
+}
+
+class JWTExpired extends JOSEError {
+  static code = "ERR_JWT_EXPIRED";
+  code = "ERR_JWT_EXPIRED";
+  claim;
+  reason;
+  payload;
+  constructor(message, payload, claim = "unspecified", reason = "unspecified") {
+    super(message, { cause: { claim, reason, payload } }), this.claim = claim, this.reason = reason, this.payload = payload;
+  }
+}
+
+class JOSEAlgNotAllowed extends JOSEError {
+  static code = "ERR_JOSE_ALG_NOT_ALLOWED";
+  code = "ERR_JOSE_ALG_NOT_ALLOWED";
+}
+
+class JOSENotSupported extends JOSEError {
+  static code = "ERR_JOSE_NOT_SUPPORTED";
+  code = "ERR_JOSE_NOT_SUPPORTED";
+}
+
+class JWEDecryptionFailed extends JOSEError {
+  static code = "ERR_JWE_DECRYPTION_FAILED";
+  code = "ERR_JWE_DECRYPTION_FAILED";
+  constructor(message = "decryption operation failed", options) {
+    super(message, options);
+  }
+}
+
+class JWEInvalid extends JOSEError {
+  static code = "ERR_JWE_INVALID";
+  code = "ERR_JWE_INVALID";
+}
+
+class JWSInvalid extends JOSEError {
+  static code = "ERR_JWS_INVALID";
+  code = "ERR_JWS_INVALID";
+}
+
+class JWTInvalid extends JOSEError {
+  static code = "ERR_JWT_INVALID";
+  code = "ERR_JWT_INVALID";
+}
+
+class JWKInvalid extends JOSEError {
+  static code = "ERR_JWK_INVALID";
+  code = "ERR_JWK_INVALID";
+}
+
+class JWKSInvalid extends JOSEError {
+  static code = "ERR_JWKS_INVALID";
+  code = "ERR_JWKS_INVALID";
+}
+
+class JWKSNoMatchingKey extends JOSEError {
+  static code = "ERR_JWKS_NO_MATCHING_KEY";
+  code = "ERR_JWKS_NO_MATCHING_KEY";
+  constructor(message = "no applicable key found in the JSON Web Key Set", options) {
+    super(message, options);
+  }
+}
+
+class JWKSMultipleMatchingKeys extends JOSEError {
+  [Symbol.asyncIterator] = async function* () {};
+  static code = "ERR_JWKS_MULTIPLE_MATCHING_KEYS";
+  code = "ERR_JWKS_MULTIPLE_MATCHING_KEYS";
+  constructor(message = "multiple matching keys found in the JSON Web Key Set", options) {
+    super(message, options);
+  }
+}
+
+class JWKSTimeout extends JOSEError {
+  static code = "ERR_JWKS_TIMEOUT";
+  code = "ERR_JWKS_TIMEOUT";
+  constructor(message = "request timed out", options) {
+    super(message, options);
+  }
+}
+
+class JWSSignatureVerificationFailed extends JOSEError {
+  static code = "ERR_JWS_SIGNATURE_VERIFICATION_FAILED";
+  code = "ERR_JWS_SIGNATURE_VERIFICATION_FAILED";
+  constructor(message = "signature verification failed", options) {
+    super(message, options);
+  }
+}
+
+// node_modules/jose/dist/webapi/util/base64url.js
+var invalid = "The input to be decoded is not correctly encoded.";
+function decode6(input) {
+  try {
+    return decodeBase64(typeof input == "string" ? input : decoder.decode(input), true);
+  } catch (cause) {
+    throw new TypeError(invalid, { cause });
+  }
+}
+function encode4(input) {
+  return encodeBase64(typeof input == "string" ? encoder2.encode(input) : input, true);
+}
+
+// node_modules/jose/dist/webapi/lib/validate.js
+function assertUint8Array2(input, label) {
+  if (!(input instanceof Uint8Array))
+    throw new TypeError(`${label} must be an instance of Uint8Array`);
+}
+function isObject3(input) {
+  if (typeof input != "object" || input === null || Object.prototype.toString.call(input) !== "[object Object]")
+    return false;
+  const prototype = Object.getPrototypeOf(input);
+  return prototype === null || Object.getPrototypeOf(prototype) === null;
+}
+function isJwkSet(input) {
+  return isObject3(input) && Array.isArray(input.keys) && Array.from(input.keys).every(isObject3);
+}
+function isDisjoint(...headers) {
+  const parameters = /* @__PURE__ */ new Set;
+  for (const header of headers)
+    if (header)
+      for (const parameter of Object.keys(header)) {
+        if (parameters.has(parameter))
+          return false;
+        parameters.add(parameter);
+      }
+  return true;
+}
+function assertNotSet(value, name) {
+  if (value !== undefined)
+    throw new TypeError(`${name} can only be called once`);
+}
+function decodeBase64url(value, label, ErrorClass) {
+  try {
+    return decode6(value);
+  } catch {
+    throw new ErrorClass(`Failed to base64url decode the ${label}`);
+  }
+}
+function encodeBase64url(value, label, ErrorClass) {
+  try {
+    return encode3(value);
+  } catch {
+    throw new ErrorClass(`The ${label} is not a valid base64url string`);
+  }
+}
+function parseJoseHeader(b64, ErrorClass, message) {
+  let parsed;
+  try {
+    parsed = JSON.parse(strictDecoder.decode(decode6(b64)));
+  } catch {
+    throw new ErrorClass(message);
+  }
+  if (!isObject3(parsed))
+    throw new ErrorClass(message);
+  return parsed;
+}
+var JWS_RECOGNIZED = { __proto__: null, b64: true };
+var JWE_RECOGNIZED = { __proto__: null };
+function validateAlgorithms(option, algorithms) {
+  if (algorithms !== undefined && (!Array.isArray(algorithms) || algorithms.some((s) => typeof s != "string")))
+    throw new TypeError(`"${option}" option must be an array of strings`);
+  return algorithms === undefined ? undefined : new Set(algorithms);
+}
+function validateCritDuplicates(Err, protectedHeader) {
+  const { crit } = protectedHeader ?? {};
+  if (Array.isArray(crit) && new Set(crit).size !== crit.length)
+    throw new Err('"crit" (Critical) Header Parameter MUST NOT contain duplicate values');
+}
+function validateCrit(Err, recognizedDefault, recognizedOption, protectedHeader, joseHeader) {
+  if (joseHeader.crit !== undefined && protectedHeader?.crit === undefined)
+    throw new Err('"crit" (Critical) Header Parameter MUST be integrity protected');
+  if (!protectedHeader || protectedHeader.crit === undefined)
+    return [];
+  if (!Array.isArray(protectedHeader.crit) || protectedHeader.crit.length === 0 || protectedHeader.crit.some((input) => typeof input != "string" || input.length === 0))
+    throw new Err('"crit" (Critical) Header Parameter MUST be an array of non-empty strings when present');
+  const recognized = recognizedOption === undefined ? recognizedDefault : { __proto__: null, ...recognizedOption, ...recognizedDefault };
+  for (const parameter of protectedHeader.crit) {
+    if (!(parameter in recognized))
+      throw new JOSENotSupported(`Extension Header Parameter "${parameter}" is not recognized`);
+    if (!Object.hasOwn(joseHeader, parameter) || joseHeader[parameter] === undefined)
+      throw new Err(`Extension Header Parameter "${parameter}" is missing`);
+    if (recognized[parameter] && (!Object.hasOwn(protectedHeader, parameter) || protectedHeader[parameter] === undefined))
+      throw new Err(`Extension Header Parameter "${parameter}" MUST be integrity protected`);
+  }
+  return protectedHeader.crit;
+}
+function validateB64(protectedHeader, extensions) {
+  if (extensions.includes("b64")) {
+    const b64 = protectedHeader.b64;
+    if (typeof b64 != "boolean")
+      throw new JWSInvalid('The "b64" (base64url-encode payload) Header Parameter must be a boolean');
+    return b64;
+  }
+  return true;
+}
+function serializeJoseHeader(Err, header) {
+  let serialized, parsed;
+  try {
+    serialized = JSON.stringify(header), parsed = JSON.parse(serialized);
+  } catch (cause) {
+    throw new Err("JOSE Header is not valid JSON", { cause });
+  }
+  if (!isObject3(parsed))
+    throw new Err("JOSE Header is not a JSON object");
+  return [parsed, serialized];
+}
+
+// node_modules/jose/dist/webapi/lib/key.js
+var tag = (key) => key[Symbol.toStringTag];
+var jwkMatchesOp = (entry, key, usage) => {
+  const { alg } = entry;
+  if (key.use !== undefined) {
+    const expected = usage === "sign" || usage === "verify" ? "sig" : "enc";
+    if (key.use !== expected)
+      throw new TypeError(`Invalid key for this operation, its "use" must be "${expected}" when present`);
+  }
+  if (key.alg !== undefined && key.alg !== alg)
+    throw new TypeError(`Invalid key for this operation, its "alg" must be "${alg}" when present`);
+  if (Array.isArray(key.key_ops)) {
+    const expectedKeyOp = usage === "encrypt" || usage === "decrypt" ? entry.ops?.[usage === "encrypt" ? 0 : 1] : usage;
+    if (expectedKeyOp && !key.key_ops.includes(expectedKeyOp))
+      throw new TypeError(`Invalid key for this operation, its "key_ops" must include "${expectedKeyOp}" when present`);
+  }
+};
+async function prepareKey(entry, key, usage) {
+  const { alg, secret } = entry, privateKey = usage === "decrypt" || usage === "sign";
+  if (secret && key instanceof Uint8Array)
+    return key;
+  let normalized, keyObject;
+  if (isObject3(key)) {
+    if (normalized = normalizeJwk(key), typeof normalized.kty != "string")
+      throw invalidKeyType(alg, key, secret);
+    if (!(secret ? normalized.kty === "oct" && typeof normalized.k == "string" : normalized.kty !== "oct" && (privateKey ? normalized.kty === "AKP" && typeof normalized.priv == "string" || typeof normalized.d == "string" : normalized.d === undefined && normalized.priv === undefined)))
+      throw new TypeError(secret ? 'JSON Web Key for symmetric algorithms must have JWK "kty" (Key Type) equal to "oct" and the JWK "k" (Key Value) present' : `JSON Web Key for this operation must be a ${privateKey ? "private" : "public"} JWK`);
+    if (jwkMatchesOp(entry, normalized, usage), normalized.kty === "oct")
+      return decode6(normalized.k);
+    if (!Object.isFrozen(key)) {
+      const { key_ops } = key;
+      Array.isArray(key_ops) && Object.freeze(key_ops), Object.freeze(key);
+    }
+  } else {
+    if (!isKeyLike(key))
+      throw invalidKeyType(alg, key, secret);
+    const expectedType = secret ? "secret" : privateKey ? "private" : "public";
+    if (key.type !== expectedType && (secret || ["secret", "public", "private"].includes(key.type)))
+      throw new TypeError(`${tag(key)} instances must be of type "${expectedType}" for the ${alg} algorithm`);
+    if (isCryptoKey(key))
+      return key;
+    if (keyObject = key, keyObject.type === "secret")
+      return keyObject.export();
+  }
+  cache2 ||= /* @__PURE__ */ new WeakMap;
+  const cacheKey = key;
+  let cached = cache2.get(cacheKey);
+  if (cached?.[alg])
+    return cached[alg];
+  if (cached || cache2.set(cacheKey, cached = {}), keyObject && typeof keyObject.toCryptoKey == "function") {
+    const isPublic = keyObject.type === "public", crv = nist[keyObject.asymmetricKeyDetails?.namedCurve], params = entry.resolve?.({ crv, asymmetricKeyType: keyObject.asymmetricKeyType }) ?? entry.subtle;
+    return cached[alg] = keyObject.toCryptoKey(params, isPublic, entry.usages[isPublic ? 0 : 1]);
+  }
+  return normalized ??= keyObject.export({ format: "jwk" }), normalized.alg = alg, cached[alg] = await jwkToKey(entry, normalized);
+}
+var cache2;
+var nist = {
+  __proto__: null,
+  prime256v1: "P-256",
+  secp384r1: "P-384",
+  secp521r1: "P-521"
+};
+function assertCryptoKey(key) {
+  if (!isCryptoKey(key))
+    throw new Error("CryptoKey instance expected");
+}
+var isCryptoKey = (key) => {
+  if (key?.[Symbol.toStringTag] === "CryptoKey")
+    return true;
+  try {
+    return key instanceof CryptoKey;
+  } catch {
+    return false;
+  }
+};
+var isKeyObject = (key) => key?.[Symbol.toStringTag] === "KeyObject";
+var isKeyLike = (key) => isCryptoKey(key) || isKeyObject(key);
+function message(msg, actual, ...types) {
+  if (types.length > 2) {
+    const last = types.pop();
+    msg += `one of type ${types.join(", ")}, or ${last}.`;
+  } else
+    types.length === 2 ? msg += `one of type ${types[0]} or ${types[1]}.` : msg += `of type ${types[0]}.`;
+  return actual == null ? msg += ` Received ${actual}` : typeof actual == "function" && actual.name ? msg += ` Received function ${actual.name}` : typeof actual == "object" && actual != null && actual.constructor?.name && (msg += ` Received an instance of ${actual.constructor.name}`), msg;
+}
+var invalidKeyInput = (actual, ...types) => message("Key must be ", actual, ...types);
+function invalidKeyType(alg, actual, secret) {
+  const types = ["CryptoKey", "KeyObject", "JSON Web Key"];
+  return secret && types.push("Uint8Array"), new TypeError(message(`Key for the ${alg} algorithm must be `, actual, ...types));
+}
+var unusable = (name, prop = "algorithm.name") => new TypeError(`CryptoKey does not support this operation, its ${prop} must be ${name}`);
+function checkUsage(key, usage) {
+  if (usage && !key.usages.includes(usage))
+    throw new TypeError(`CryptoKey does not support this operation, its usages must include ${usage}.`);
+}
+function checkModulusLength(alg, key) {
+  const { modulusLength } = key.algorithm;
+  if (typeof modulusLength != "number" || modulusLength < 2048)
+    throw new TypeError(`${alg} requires key modulusLength to be 2048 bits or larger`);
+}
+function checkCryptoKey(key, expected, usage) {
+  const algorithm = key.algorithm;
+  if (algorithm.name !== expected.name)
+    throw unusable(expected.name);
+  if (expected.hash && algorithm.hash?.name !== expected.hash)
+    throw unusable(expected.hash, "algorithm.hash");
+  if (expected.namedCurve && algorithm.namedCurve !== expected.namedCurve)
+    throw unusable(expected.namedCurve, "algorithm.namedCurve");
+  if (expected.length !== undefined && algorithm.length !== expected.length)
+    throw unusable(expected.length, "algorithm.length");
+  checkUsage(key, usage);
+}
+function snapshotJwk(jwk) {
+  return { __proto__: null, ...jwk };
+}
+function normalizeJwk(jwk) {
+  const normalized = snapshotJwk(jwk);
+  if (normalized.ext !== undefined && typeof normalized.ext != "boolean")
+    throw new TypeError('"ext" (Extractable) Parameter must be a boolean');
+  if (normalized.key_ops !== undefined) {
+    const value = normalized.key_ops, keyOps = Array.isArray(value) ? [...value] : undefined;
+    if (!keyOps || keyOps.some((operation) => typeof operation != "string") || new Set(keyOps).size !== keyOps.length)
+      throw new TypeError('"key_ops" (Key Operations) Parameter must be an array of unique strings');
+    normalized.key_ops = keyOps;
+  }
+  return normalized;
+}
+function validateExtractableOption(extractable) {
+  if (extractable !== undefined && typeof extractable != "boolean")
+    throw new TypeError('"extractable" option must be a boolean');
+  return extractable;
+}
+async function jwkToKey(entry, jwk, extractable) {
+  if (!entry.kty.includes(jwk.kty))
+    throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+  const algorithm = entry.resolve?.({ kty: jwk.kty, crv: jwk.crv }) ?? entry.subtle, isPrivate = !!(jwk.d || jwk.priv), keyData = { ...jwk, ext: extractable ?? jwk.ext };
+  return keyData.kty !== "AKP" && delete keyData.alg, delete keyData.use, crypto.subtle.importKey("jwk", keyData, algorithm, keyData.ext ?? !isPrivate, jwk.key_ops ?? entry.usages[isPrivate ? 1 : 0]);
+}
+async function rawKey(key, expected, usage, extractable = false) {
+  return key instanceof Uint8Array && (key = await crypto.subtle.importKey("raw", key, expected, extractable, [usage])), checkCryptoKey(key, expected, usage), key;
+}
+
+// node_modules/jose/dist/webapi/lib/content_encryption.js
+var generateCek = (enc) => crypto.getRandomValues(new Uint8Array(enc.cekBits >> 3));
+function checkCekLength(cek, expected) {
+  const actual = cek.byteLength << 3;
+  if (actual !== expected)
+    throw new JWEInvalid(`Invalid Content Encryption Key length. Expected ${expected} bits, got ${actual} bits`);
+}
+var generateIv = (enc) => crypto.getRandomValues(new Uint8Array(enc.ivBits >> 3));
+function checkIvLength(enc, iv) {
+  if (iv.length << 3 !== enc.ivBits)
+    throw new JWEInvalid("Invalid Initialization Vector length");
+}
+async function cbcKeySetup(enc, cek, usage) {
+  if (!(cek instanceof Uint8Array))
+    throw new TypeError(invalidKeyInput(cek, "Uint8Array"));
+  const keySize = enc.cekBits >> 1, encKey = await crypto.subtle.importKey("raw", cek.subarray(keySize >> 3), "AES-CBC", false, [usage]), macKey = await crypto.subtle.importKey("raw", cek.subarray(0, keySize >> 3), {
+    hash: `SHA-${keySize << 1}`,
+    name: "HMAC"
+  }, false, ["sign"]);
+  return [encKey, macKey, keySize];
+}
+async function cbcHmacTag(macKey, macData, keySize) {
+  return new Uint8Array((await crypto.subtle.sign("HMAC", macKey, macData)).slice(0, keySize >> 3));
+}
+async function cbcEncrypt(enc, plaintext, cek, iv, aad) {
+  const [encKey, macKey, keySize] = await cbcKeySetup(enc, cek, "encrypt"), ciphertext = new Uint8Array(await crypto.subtle.encrypt({
+    iv,
+    name: "AES-CBC"
+  }, encKey, plaintext)), macData = concat(aad, iv, ciphertext, uint64be(aad.length * 8)), tag = await cbcHmacTag(macKey, macData, keySize);
+  return { ciphertext, tag, iv };
+}
+async function timingSafeEqual(a, b) {
+  const algorithm = { name: "HMAC", hash: "SHA-256" }, key = await crypto.subtle.generateKey(algorithm, false, ["sign", "verify"]), aHmac = await crypto.subtle.sign(algorithm, key, a);
+  return crypto.subtle.verify(algorithm, key, aHmac, b);
+}
+async function cbcDecrypt(enc, cek, ciphertext, iv, tag, aad) {
+  const [encKey, macKey, keySize] = await cbcKeySetup(enc, cek, "decrypt"), macData = concat(aad, iv, ciphertext, uint64be(aad.length * 8)), expectedTag = await cbcHmacTag(macKey, macData, keySize);
+  try {
+    if (await timingSafeEqual(tag, expectedTag))
+      return new Uint8Array(await crypto.subtle.decrypt({ iv, name: "AES-CBC" }, encKey, ciphertext));
+  } catch {}
+  throw new JWEDecryptionFailed;
+}
+async function encrypt(enc, plaintext, cek, iv, aad) {
+  if (!isCryptoKey(cek) && !(cek instanceof Uint8Array))
+    throw new TypeError(invalidKeyInput(cek, "CryptoKey", "KeyObject", "Uint8Array", "JSON Web Key"));
+  if (iv ? checkIvLength(enc, iv) : iv = generateIv(enc), cek instanceof Uint8Array && checkCekLength(cek, enc.cekBits), enc.cbc)
+    return cbcEncrypt(enc, plaintext, cek, iv, aad);
+  const encKey = await rawKey(cek, enc.subtle, "encrypt"), encrypted = new Uint8Array(await crypto.subtle.encrypt({
+    additionalData: aad,
+    iv,
+    name: "AES-GCM",
+    tagLength: 128
+  }, encKey, plaintext));
+  return { ciphertext: encrypted.subarray(0, -16), tag: encrypted.subarray(-16), iv };
+}
+async function decrypt(enc, cek, ciphertext, iv, tag, aad) {
+  if (!isCryptoKey(cek) && !(cek instanceof Uint8Array))
+    throw new TypeError(invalidKeyInput(cek, "CryptoKey", "KeyObject", "Uint8Array", "JSON Web Key"));
+  if (!iv)
+    throw new JWEInvalid("JWE Initialization Vector missing");
+  if (!tag)
+    throw new JWEInvalid("JWE Authentication Tag missing");
+  if (!enc.cbc && tag.length !== 16)
+    throw new JWEInvalid("Invalid Authentication Tag length");
+  if (checkIvLength(enc, iv), cek instanceof Uint8Array && checkCekLength(cek, enc.cekBits), enc.cbc)
+    return cbcDecrypt(enc, cek, ciphertext, iv, tag, aad);
+  const encKey = await rawKey(cek, enc.subtle, "decrypt");
+  try {
+    return new Uint8Array(await crypto.subtle.decrypt({
+      additionalData: aad,
+      iv,
+      name: "AES-GCM",
+      tagLength: 128
+    }, encKey, concat(ciphertext, tag)));
+  } catch {
+    throw new JWEDecryptionFailed;
+  }
+}
+
+// node_modules/jose/dist/webapi/lib/key_descriptor.js
+function table(entries) {
+  const out = { __proto__: null };
+  for (const alg in entries)
+    out[alg] = { ...entries[alg], alg };
+  return out;
+}
+
+// node_modules/jose/dist/webapi/lib/jwe_algorithms.js
+var wrap = [
+  ["encrypt", "wrapKey"],
+  ["decrypt", "unwrapKey"]
+];
+var derive = [[], ["deriveBits"]];
+var none = [[], []];
+function rsaes(bits) {
+  return {
+    kty: ["RSA"],
+    mode: "key-encryption",
+    subtle: { name: "RSA-OAEP", hash: `SHA-${bits}` },
+    usages: wrap,
+    ops: ["wrapKey", "unwrapKey"]
+  };
+}
+function ecdh(mode) {
+  return {
+    kty: ["EC", "OKP"],
+    mode,
+    subtle: { name: "ECDH" },
+    resolve: ({ kty, crv, asymmetricKeyType }) => {
+      if (crv === "X25519" || asymmetricKeyType === "x25519")
+        return { name: "X25519" };
+      if (kty === "OKP")
+        throw new JOSENotSupported('Invalid or unsupported JWK "alg" (Algorithm) Parameter value');
+      return { name: "ECDH", namedCurve: crv };
+    },
+    usages: derive,
+    ops: [undefined, "deriveBits"]
+  };
+}
+function aeskw(bits, gcm = false) {
+  return {
+    kty: ["oct"],
+    mode: "key-wrapping",
+    secret: true,
+    subtle: { name: gcm ? "AES-GCM" : "AES-KW", length: bits },
+    usages: none,
+    ops: gcm ? ["encrypt", "decrypt"] : ["wrapKey", "unwrapKey"]
+  };
+}
+function pbes2() {
+  return {
+    kty: ["oct"],
+    mode: "key-wrapping",
+    secret: true,
+    subtle: { name: "PBKDF2" },
+    usages: none,
+    ops: ["deriveBits", "deriveBits"]
+  };
+}
+var JWE = table({
+  dir: {
+    kty: ["oct"],
+    mode: "direct-encryption",
+    secret: true,
+    subtle: { name: "AES-GCM" },
+    usages: none,
+    ops: ["encrypt", "decrypt"]
+  },
+  "RSA-OAEP": rsaes(1),
+  "RSA-OAEP-256": rsaes(256),
+  "RSA-OAEP-384": rsaes(384),
+  "RSA-OAEP-512": rsaes(512),
+  "ECDH-ES": ecdh("direct-key-agreement"),
+  "ECDH-ES+A128KW": ecdh("key-agreement-with-key-wrapping"),
+  "ECDH-ES+A192KW": ecdh("key-agreement-with-key-wrapping"),
+  "ECDH-ES+A256KW": ecdh("key-agreement-with-key-wrapping"),
+  A128KW: aeskw(128),
+  A192KW: aeskw(192),
+  A256KW: aeskw(256),
+  A128GCMKW: aeskw(128, true),
+  A192GCMKW: aeskw(192, true),
+  A256GCMKW: aeskw(256, true),
+  "PBES2-HS256+A128KW": pbes2(),
+  "PBES2-HS384+A192KW": pbes2(),
+  "PBES2-HS512+A256KW": pbes2()
+});
+var contentOps = ["encrypt", "decrypt"];
+function contentEncryption(bits, cbc = false) {
+  return {
+    kty: ["oct"],
+    secret: true,
+    subtle: { name: cbc ? "AES-CBC" : "AES-GCM", length: bits },
+    usages: none,
+    ops: contentOps,
+    cekBits: bits,
+    ivBits: cbc ? 128 : 96,
+    cbc
+  };
+}
+var ENC = table({
+  A128GCM: contentEncryption(128),
+  A192GCM: contentEncryption(192),
+  A256GCM: contentEncryption(256),
+  "A128CBC-HS256": contentEncryption(256, true),
+  "A192CBC-HS384": contentEncryption(384, true),
+  "A256CBC-HS512": contentEncryption(512, true)
+});
+function unsupported(parameter, name) {
+  throw new JOSENotSupported(`Invalid or unsupported "${parameter}" (JWE ${name}) header value`);
+}
+function jweAlgorithm(alg) {
+  return (typeof alg == "string" ? JWE[alg] : undefined) ?? unsupported("alg", "Algorithm");
+}
+function isJWECEKTransport(algorithm) {
+  return algorithm.mode === "key-wrapping" || algorithm.mode === "key-encryption" || algorithm.mode === "key-agreement-with-key-wrapping";
+}
+function jweEncryption(enc) {
+  return (typeof enc == "string" ? ENC[enc] : undefined) ?? unsupported("enc", "Encryption Algorithm");
+}
+
+// node_modules/jose/dist/webapi/lib/key_management.js
+function checkEcdhCryptoKey(key, usage) {
+  if (key.algorithm.name !== "ECDH" && key.algorithm.name !== "X25519")
+    throw new TypeError("CryptoKey does not support this operation, its algorithm.name must be ECDH or X25519");
+  checkUsage(key, usage);
+}
+async function aeskwWrap(alg, key, cek) {
+  const cryptoKey = await rawKey(key, jweAlgorithm(alg).subtle, "wrapKey", true), cryptoKeyCek = await crypto.subtle.importKey("raw", cek, { hash: "SHA-256", name: "HMAC" }, true, ["sign"]);
+  return new Uint8Array(await crypto.subtle.wrapKey("raw", cryptoKeyCek, cryptoKey, "AES-KW"));
+}
+async function aeskwUnwrap(alg, key, encryptedKey) {
+  const cryptoKey = await rawKey(key, jweAlgorithm(alg).subtle, "unwrapKey", true), cryptoKeyCek = await crypto.subtle.unwrapKey("raw", encryptedKey, cryptoKey, "AES-KW", { hash: "SHA-256", name: "HMAC" }, true, ["sign"]);
+  return new Uint8Array(await crypto.subtle.exportKey("raw", cryptoKeyCek));
+}
+function checkRsaKey(alg, key, usage) {
+  checkCryptoKey(key, jweAlgorithm(alg).subtle, usage), checkModulusLength(alg, key);
+}
+async function deriveKey(p2s, alg, p2c, key) {
+  if (!(p2s instanceof Uint8Array) || p2s.length < 8)
+    throw new JWEInvalid("PBES2 Salt Input must be 8 or more octets");
+  if (!Number.isSafeInteger(p2c) || Math.sign(p2c) !== 1)
+    throw new JWEInvalid("PBES2 Count Input must be a positive integer");
+  const salt = concat(encode3(alg), Uint8Array.of(0), p2s), keylen = parseInt(alg.slice(13, 16), 10), subtleAlg = {
+    hash: `SHA-${alg.slice(8, 11)}`,
+    iterations: p2c,
+    name: "PBKDF2",
+    salt
+  }, cryptoKey = await rawKey(key, jweAlgorithm(alg).subtle, "deriveBits");
+  return new Uint8Array(await crypto.subtle.deriveBits(subtleAlg, cryptoKey, keylen));
+}
+function lengthAndInput(input) {
+  return concat(uint32be(input.length), input);
+}
+async function concatKdf(Z, L, OtherInfo) {
+  const dkLen = L >> 3, hashLen = 32, reps = Math.ceil(dkLen / hashLen), dk = new Uint8Array(reps * hashLen);
+  for (let i = 1;i <= reps; i++) {
+    const hashResult = await digest("sha256", concat(uint32be(i), Z, OtherInfo));
+    dk.set(hashResult, (i - 1) * hashLen);
+  }
+  return dk.slice(0, dkLen);
+}
+async function ecdhesDeriveKey(publicKey, privateKey, algorithm, keyLength, apu = new Uint8Array, apv = new Uint8Array) {
+  checkEcdhCryptoKey(publicKey), checkEcdhCryptoKey(privateKey, "deriveBits");
+  const otherInfo = concat(lengthAndInput(encode3(algorithm)), lengthAndInput(apu), lengthAndInput(apv), uint32be(keyLength)), Z = new Uint8Array(await crypto.subtle.deriveBits({
+    name: publicKey.algorithm.name,
+    public: publicKey
+  }, privateKey, publicKey.algorithm.name === "X25519" ? 256 : Math.ceil(parseInt(publicKey.algorithm.namedCurve.slice(-3), 10) / 8) << 3));
+  return concatKdf(Z, keyLength, otherInfo);
+}
+function assertEcdhKey(key) {
+  assertCryptoKey(key);
+  const curve = key.algorithm.namedCurve;
+  if (curve !== "P-256" && curve !== "P-384" && curve !== "P-521" && key.algorithm.name !== "X25519")
+    throw new JOSENotSupported("ECDH with the provided key is not allowed or not supported by your javascript runtime");
+}
+function partyInfo(joseHeader, name) {
+  const value = joseHeader[name];
+  if (value !== undefined) {
+    if (typeof value != "string")
+      throw new JWEInvalid(`JOSE Header "${name}" (Agreement Party${name === "apu" ? "U" : "V"}Info) invalid`);
+    return decodeBase64url(value, name, JWEInvalid);
+  }
+}
+function checkPartyInfo(apu, apv) {
+  if (!(apu === undefined || apv === undefined || apu.byteLength !== apv.byteLength)) {
+    for (let i = 0;i < apu.byteLength; i++)
+      if (apu[i] !== apv[i])
+        return;
+    throw new JWEInvalid('JOSE Header "apu" and "apv" values must be distinct');
+  }
+}
+function assertEncryptedKey(encryptedKey) {
+  if (encryptedKey === undefined)
+    throw new JWEInvalid("JWE Encrypted Key missing");
+}
+function assertNoEncryptedKey(encryptedKey) {
+  if (encryptedKey !== undefined)
+    throw new JWEInvalid("Encountered unexpected JWE Encrypted Key");
+}
+function validateMaxPBES2Count(value) {
+  if (value !== undefined && value !== 1 / 0 && (!Number.isSafeInteger(value) || value < 1))
+    throw new TypeError("maxPBES2Count must be a positive safe integer or Infinity");
+}
+async function decryptKeyManagement(entry, enc, key, encryptedKey, joseHeader, maxPBES2Count) {
+  const { alg } = entry, mode = entry.mode;
+  if (mode === "direct-encryption")
+    return assertNoEncryptedKey(encryptedKey), key;
+  const direct = mode === "direct-key-agreement";
+  switch (direct ? assertNoEncryptedKey(encryptedKey) : assertEncryptedKey(encryptedKey), entry.subtle.name) {
+    case "ECDH": {
+      const { epk } = joseHeader;
+      if (!isObject3(epk) || ["d", "k", "p", "q", "dp", "dq", "qi", "oth", "priv"].some((parameter) => Object.hasOwn(epk, parameter)))
+        throw new JWEInvalid('JOSE Header "epk" (Ephemeral Public Key) missing or invalid');
+      assertEcdhKey(key);
+      const ephemeralPublicKey = await jwkToKey(entry, epk), partyUInfo = partyInfo(joseHeader, "apu"), partyVInfo = partyInfo(joseHeader, "apv");
+      checkPartyInfo(partyUInfo, partyVInfo);
+      const sharedSecret = await ecdhesDeriveKey(ephemeralPublicKey, key, direct ? enc.alg : alg, direct ? enc.cekBits : parseInt(alg.slice(-5, -2), 10), partyUInfo, partyVInfo);
+      if (direct)
+        return sharedSecret;
+      key = sharedSecret;
+      break;
+    }
+    case "RSA-OAEP":
+      return assertCryptoKey(key), checkRsaKey(alg, key, "decrypt"), new Uint8Array(await crypto.subtle.decrypt("RSA-OAEP", key, encryptedKey));
+    case "PBKDF2": {
+      if (typeof joseHeader.p2c != "number")
+        throw new JWEInvalid('JOSE Header "p2c" (PBES2 Count) missing or invalid');
+      validateMaxPBES2Count(maxPBES2Count);
+      const p2cLimit = maxPBES2Count ?? 1e4;
+      if (joseHeader.p2c > p2cLimit)
+        throw new JWEInvalid('JOSE Header "p2c" (PBES2 Count) out is of acceptable bounds');
+      if (typeof joseHeader.p2s != "string")
+        throw new JWEInvalid('JOSE Header "p2s" (PBES2 Salt) missing or invalid');
+      const p2s = decodeBase64url(joseHeader.p2s, "p2s", JWEInvalid);
+      key = await deriveKey(p2s, alg, joseHeader.p2c, key);
+      break;
+    }
+    case "AES-GCM": {
+      if (typeof joseHeader.iv != "string")
+        throw new JWEInvalid('JOSE Header "iv" (Initialization Vector) missing or invalid');
+      if (typeof joseHeader.tag != "string")
+        throw new JWEInvalid('JOSE Header "tag" (Authentication Tag) missing or invalid');
+      const iv = decodeBase64url(joseHeader.iv, "iv", JWEInvalid), tag = decodeBase64url(joseHeader.tag, "tag", JWEInvalid);
+      if (iv.byteLength !== 12)
+        throw new JWEInvalid("Invalid Initialization Vector length");
+      if (tag.byteLength !== 16)
+        throw new JWEInvalid("Invalid Authentication Tag length");
+      return decrypt(jweEncryption(alg.slice(0, -2)), key, encryptedKey, iv, tag, new Uint8Array);
+    }
+  }
+  return aeskwUnwrap(alg.slice(-6), key, encryptedKey);
+}
+async function encryptKeyManagement(entry, enc, inputKey, joseHeader, providedCek, providedParameters = {}) {
+  const { alg, mode } = entry, transport = isJWECEKTransport(entry);
+  if (providedCek !== undefined && !transport)
+    throw new TypeError(`setContentEncryptionKey cannot be called with JWE "alg" (Algorithm) Header ${alg}`);
+  let key = await prepareKey(mode === "direct-encryption" ? enc : entry, inputKey, "encrypt");
+  if (mode === "direct-encryption")
+    return [key, undefined, undefined];
+  const cek = transport ? providedCek ?? generateCek(enc) : undefined;
+  cek && checkCekLength(cek, enc.cekBits);
+  let encryptedKey, parameters;
+  switch (entry.subtle.name) {
+    case "ECDH": {
+      assertEcdhKey(key);
+      const { apu: providedApu, apv: providedApv } = providedParameters;
+      providedApu !== undefined && assertUint8Array2(providedApu, '"apu"'), providedApv !== undefined && assertUint8Array2(providedApv, '"apv"');
+      const apu = providedApu ?? partyInfo(joseHeader, "apu"), apv = providedApv ?? partyInfo(joseHeader, "apv");
+      checkPartyInfo(apu, apv);
+      let ephemeralKey;
+      providedParameters.epk !== undefined ? ephemeralKey = await prepareKey(entry, providedParameters.epk, "decrypt") : ephemeralKey = (await crypto.subtle.generateKey(key.algorithm, true, ["deriveBits"])).privateKey;
+      const subtle = crypto.subtle;
+      let exportableEpk = ephemeralKey;
+      if (!exportableEpk.extractable) {
+        if (typeof subtle.getPublicKey != "function")
+          throw new TypeError('CryptoKey for "epk" must be extractable');
+        exportableEpk = await subtle.getPublicKey(ephemeralKey, []);
+      }
+      const { x, y, crv, kty } = await subtle.exportKey("jwk", exportableEpk), direct = mode === "direct-key-agreement", sharedSecret = await ecdhesDeriveKey(key, ephemeralKey, direct ? enc.alg : alg, direct ? enc.cekBits : parseInt(alg.slice(-5, -2), 10), apu, apv), epk = { x, crv, kty };
+      if (kty === "EC" && (epk.y = y), parameters = { epk }, providedApu !== undefined && (parameters.apu = encode4(providedApu)), providedApv !== undefined && (parameters.apv = encode4(providedApv)), direct)
+        return [sharedSecret, undefined, parameters];
+      key = sharedSecret;
+      break;
+    }
+    case "RSA-OAEP": {
+      assertCryptoKey(key), checkRsaKey(alg, key, "encrypt"), encryptedKey = new Uint8Array(await crypto.subtle.encrypt("RSA-OAEP", key, cek));
+      break;
+    }
+    case "PBKDF2": {
+      const { p2c = 2048, p2s = crypto.getRandomValues(new Uint8Array(16)) } = providedParameters;
+      key = await deriveKey(p2s, alg, p2c, key), parameters = { p2c, p2s: encode4(p2s) };
+      break;
+    }
+    case "AES-GCM": {
+      const iv = providedParameters.iv === undefined ? crypto.getRandomValues(new Uint8Array(12)) : providedParameters.iv;
+      if (!(iv instanceof Uint8Array))
+        throw new TypeError('"iv" must be an instance of Uint8Array');
+      const wrapped = await encrypt(jweEncryption(alg.slice(0, -2)), cek, key, iv, new Uint8Array);
+      encryptedKey = wrapped.ciphertext, parameters = { iv: encode4(wrapped.iv), tag: encode4(wrapped.tag) };
+    }
+  }
+  if (encryptedKey ??= await aeskwWrap(alg.slice(-6), key, cek), !(encryptedKey instanceof Uint8Array) || !encryptedKey.byteLength)
+    throw new TypeError("JWE key management algorithm did not produce an Encrypted Key");
+  return [cek, encryptedKey, parameters];
+}
+
+// node_modules/jose/dist/webapi/lib/deflate.js
+function validateZip(joseHeader, protectedHeader) {
+  if (joseHeader.zip !== undefined && joseHeader.zip !== "DEF")
+    throw new JOSENotSupported('Unsupported JWE "zip" (Compression Algorithm) Header Parameter value.');
+  if (joseHeader.zip !== undefined && !protectedHeader?.zip)
+    throw new JWEInvalid('JWE "zip" (Compression Algorithm) Header Parameter MUST be in a protected header.');
+}
+function supported(name) {
+  if (typeof globalThis[name] > "u")
+    throw new JOSENotSupported(`JWE "zip" (Compression Algorithm) Header Parameter requires the ${name} API.`);
+}
+async function transform4(stream, input, maxLength = 1 / 0) {
+  const writer = stream.writable.getWriter();
+  writer.write(input).catch(() => {}), writer.close().catch(() => {});
+  const chunks = [];
+  let length = 0;
+  const reader = stream.readable.getReader();
+  for (;; ) {
+    const { value, done } = await reader.read();
+    if (done)
+      break;
+    if (chunks.push(value), length += value.byteLength, maxLength !== 1 / 0 && length > maxLength)
+      throw new JWEInvalid("Decompressed plaintext exceeded the configured limit");
+  }
+  return concat(...chunks);
+}
+async function compress(input) {
+  return supported("CompressionStream"), transform4(new CompressionStream("deflate-raw"), input);
+}
+async function decompress(input, maxLength) {
+  return supported("DecompressionStream"), transform4(new DecompressionStream("deflate-raw"), input, maxLength);
+}
+
+// node_modules/jose/dist/webapi/lib/jwe_decrypt.js
+function shareJWE(jwe) {
+  const { protected: encodedProtected, ciphertext, iv, tag, aad } = jwe;
+  let parsedProt;
+  return encodedProtected !== undefined && (parsedProt = parseJoseHeader(encodedProtected, JWEInvalid, "JWE Protected Header is invalid")), [
+    parsedProt,
+    decodeBase64url(ciphertext, "ciphertext", JWEInvalid),
+    iv !== undefined ? decodeBase64url(iv, "iv", JWEInvalid) : undefined,
+    tag !== undefined ? decodeBase64url(tag, "tag", JWEInvalid) : undefined,
+    encodeBase64url((encodedProtected ?? "") + (aad !== undefined ? `.${aad}` : ""), "aad", JWEInvalid)
+  ];
+}
+function prepareDecrypt(options) {
+  return [
+    options && validateAlgorithms("keyManagementAlgorithms", options.keyManagementAlgorithms),
+    options && validateAlgorithms("contentEncryptionAlgorithms", options.contentEncryptionAlgorithms),
+    options?.crit,
+    options?.maxPBES2Count,
+    options?.maxDecompressedLength
+  ];
+}
+async function decryptJWE(jwe, shared, key, token = shareJWE(jwe)) {
+  const [parsedProt, ciphertext, iv, tag, additionalData] = token, { header, unprotected, aad } = jwe;
+  let joseHeader;
+  if (header !== undefined || unprotected !== undefined) {
+    if (!isDisjoint(parsedProt, header, unprotected))
+      throw new JWEInvalid("JWE Protected, JWE Unprotected Header, and JWE Per-Recipient Unprotected Header Parameter names must be disjoint");
+    joseHeader = { ...parsedProt, ...header, ...unprotected };
+  } else
+    joseHeader = parsedProt ?? {};
+  const [keyManagementAlgorithms, contentEncryptionAlgorithms, crit, maxPBES2Count, maxDecompressedLength] = shared, { encrypted_key: encodedKey } = jwe;
+  validateCrit(JWEInvalid, JWE_RECOGNIZED, crit, parsedProt, joseHeader), validateZip(joseHeader, parsedProt);
+  const { alg, enc } = joseHeader;
+  if (typeof alg != "string" || !alg)
+    throw new JWEInvalid("missing JWE Algorithm (alg) in JWE Header");
+  const selected = JWE[alg];
+  if (encodedKey === "" && (!selected || !isJWECEKTransport(selected)))
+    throw new JWEInvalid("JWE Encrypted Key incorrect type");
+  const integrated = selected?.mode === "integrated-encryption";
+  if (!integrated && (typeof enc != "string" || !enc))
+    throw new JWEInvalid("missing JWE Encryption Algorithm (enc) in JWE Header");
+  if (keyManagementAlgorithms && !keyManagementAlgorithms.has(alg) || !keyManagementAlgorithms && alg.startsWith("PBES2"))
+    throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter value not allowed');
+  let encEntry;
+  if (integrated) {
+    if (enc !== undefined)
+      throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter must not be present for integrated encryption');
+    if (iv?.byteLength)
+      throw new JWEInvalid("JWE Initialization Vector must be empty for integrated encryption");
+    if (tag?.byteLength)
+      throw new JWEInvalid("JWE Authentication Tag must be empty for integrated encryption");
+  } else {
+    if (contentEncryptionAlgorithms && !contentEncryptionAlgorithms.has(enc))
+      throw new JOSEAlgNotAllowed('"enc" (Encryption Algorithm) Header Parameter value not allowed');
+    encEntry = jweEncryption(enc);
+  }
+  let encryptedKey;
+  if (encodedKey !== undefined)
+    try {
+      encryptedKey = decodeBase64url(encodedKey, "encrypted_key", JWEInvalid);
+    } catch (error) {
+      if (!selected || !isJWECEKTransport(selected))
+        throw error;
+      encryptedKey = new Uint8Array;
+    }
+  let resolvedKey = false;
+  typeof key == "function" && (key = await key(parsedProt, jwe), resolvedKey = true);
+  const algEntry = selected ?? jweAlgorithm(alg);
+  isJWECEKTransport(algEntry) && encryptedKey === undefined && (encryptedKey = new Uint8Array);
+  const k = await prepareKey(algEntry.mode === "direct-encryption" ? encEntry : algEntry, key, "decrypt");
+  let plaintext;
+  if (algEntry.mode === "integrated-encryption")
+    plaintext = await algEntry.decrypt(k, encryptedKey, ciphertext, additionalData, parsedProt, joseHeader);
+  else {
+    const encryption = encEntry;
+    let cek;
+    try {
+      cek = await decryptKeyManagement(algEntry, encryption, k, encryptedKey, joseHeader, maxPBES2Count), isJWECEKTransport(algEntry) && cek instanceof Uint8Array && cek.byteLength << 3 !== encryption.cekBits && (cek = generateCek(encryption));
+    } catch (err) {
+      if (err instanceof TypeError || err instanceof JWEInvalid || err instanceof JOSENotSupported)
+        throw err;
+      cek = generateCek(encryption);
+    }
+    plaintext = await decrypt(encryption, cek, ciphertext, iv, tag, additionalData);
+  }
+  if (joseHeader.zip === "DEF") {
+    const decompressionLimit = maxDecompressedLength ?? 250000;
+    if (decompressionLimit === 0)
+      throw new JOSENotSupported('JWE "zip" (Compression Algorithm) Header Parameter is not supported.');
+    if (decompressionLimit !== 1 / 0 && (!Number.isSafeInteger(decompressionLimit) || decompressionLimit < 1))
+      throw new TypeError("maxDecompressedLength must be 0, a positive safe integer, or Infinity");
+    plaintext = await decompress(plaintext, decompressionLimit).catch((cause) => {
+      throw cause instanceof JWEInvalid ? cause : new JWEInvalid("Failed to decompress plaintext", { cause });
+    });
+  }
+  return {
+    plaintext,
+    ...parsedProt && { protectedHeader: parsedProt },
+    ...aad !== undefined && {
+      additionalAuthenticatedData: decodeBase64url(aad, "aad", JWEInvalid)
+    },
+    ...unprotected && { sharedUnprotectedHeader: unprotected },
+    ...header && { unprotectedHeader: header },
+    ...resolvedKey && { key: k }
+  };
+}
+async function decryptCompact(jwe, shared, key) {
+  if (jwe instanceof Uint8Array && (jwe = decoder.decode(jwe)), typeof jwe != "string")
+    throw new JWEInvalid("Compact JWE must be a string or Uint8Array");
+  const { 0: protectedHeader, 1: encryptedKey, 2: iv, 3: ciphertext, 4: tag, length } = jwe.split(".");
+  if (length !== 5)
+    throw new JWEInvalid("Invalid Compact JWE");
+  return decryptJWE({
+    ciphertext,
+    iv: iv || undefined,
+    protected: protectedHeader,
+    tag: tag || undefined,
+    encrypted_key: encryptedKey || undefined
+  }, shared, key);
+}
+
+// node_modules/jose/dist/webapi/lib/jwe_encrypt.js
+function checkDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader) {
+  if (!isDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader))
+    throw new JWEInvalid("JWE Protected, JWE Shared Unprotected and JWE Per-Recipient Header Parameter names must be disjoint");
+}
+function checkEncryptHeaders(input, options, sharedHeadersNormalized = false) {
+  if (!input[1] && !input[2] && !input[3])
+    throw new JWEInvalid("either setProtectedHeader, setUnprotectedHeader, or sharedUnprotectedHeader must be called before #encrypt()");
+  options !== undefined && (input[8] = options?.crit);
+  let [, protectedHeader, unprotectedHeader, sharedUnprotectedHeader, aad, cek, iv, keyManagementParameters, crit] = input;
+  if (aad !== undefined && assertUint8Array2(aad, "JWE Additional Authenticated Data"), cek !== undefined && assertUint8Array2(cek, "JWE Content Encryption Key"), iv !== undefined && assertUint8Array2(iv, "JWE Initialization Vector"), !sharedHeadersNormalized && protectedHeader !== undefined && (protectedHeader = serializeJoseHeader(JWEInvalid, protectedHeader)[0], input[1] = protectedHeader), unprotectedHeader !== undefined && (unprotectedHeader = serializeJoseHeader(JWEInvalid, unprotectedHeader)[0], input[2] = unprotectedHeader), !sharedHeadersNormalized && sharedUnprotectedHeader !== undefined && (sharedUnprotectedHeader = serializeJoseHeader(JWEInvalid, sharedUnprotectedHeader)[0], input[3] = sharedUnprotectedHeader), keyManagementParameters !== undefined && !isObject3(keyManagementParameters))
+    throw new TypeError("JWE Key Management Parameters must be an object");
+  checkDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader);
+  const joseHeader = {
+    ...protectedHeader,
+    ...unprotectedHeader,
+    ...sharedUnprotectedHeader
+  };
+  validateCritDuplicates(JWEInvalid, protectedHeader), validateCrit(JWEInvalid, JWE_RECOGNIZED, crit, protectedHeader, joseHeader), validateZip(joseHeader, protectedHeader);
+  const { alg, enc } = joseHeader;
+  if (typeof alg != "string" || !alg)
+    throw new JWEInvalid('JWE "alg" (Algorithm) Header Parameter missing or invalid');
+  const algEntry = JWE[alg];
+  if (algEntry?.mode === "integrated-encryption") {
+    if (enc !== undefined)
+      throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter must not be present for integrated encryption');
+    if (cek !== undefined)
+      throw new TypeError(`setContentEncryptionKey cannot be called with JWE "alg" (Algorithm) Header ${alg}`);
+    if (iv !== undefined)
+      throw new TypeError(`setInitializationVector cannot be called with JWE "alg" (Algorithm) Header ${alg}`);
+    return [joseHeader, undefined, algEntry];
+  }
+  if (typeof enc != "string" || !enc)
+    throw new JWEInvalid('JWE "enc" (Encryption Algorithm) Header Parameter missing or invalid');
+  return [joseHeader, jweEncryption(enc), algEntry];
+}
+async function encryptJWE(input, checked, key) {
+  const [joseHeader, encEntry, selected] = checked, [inputPlaintext, inputProtectedHeader, inputUnprotectedHeader, sharedUnprotectedHeader, aad, providedCek, inputIv, keyManagementParameters, , unprotectedParameters] = input;
+  let protectedHeader = inputProtectedHeader, unprotectedHeader = inputUnprotectedHeader;
+  const algEntry = selected ?? jweAlgorithm(joseHeader.alg);
+  let encryptedKey, parameters, cek;
+  algEntry.mode === "integrated-encryption" ? cek = await prepareKey(algEntry, key, "encrypt") : [cek, encryptedKey, parameters] = await encryptKeyManagement(algEntry, encEntry, key, joseHeader, providedCek, keyManagementParameters), parameters && (unprotectedParameters ? unprotectedHeader = unprotectedHeader ? { ...unprotectedHeader, ...parameters } : parameters : protectedHeader = protectedHeader ? { ...protectedHeader, ...parameters } : parameters, checkDisjoint(protectedHeader, unprotectedHeader, sharedUnprotectedHeader));
+  const protectedHeaderS = protectedHeader ? encode4(JSON.stringify(protectedHeader)) : "", aadMember = aad?.byteLength ? encode4(aad) : undefined, additionalData = encode3(aadMember ? `${protectedHeaderS}.${aadMember}` : protectedHeaderS);
+  let plaintext = inputPlaintext;
+  joseHeader.zip === "DEF" && (plaintext = await compress(plaintext).catch((cause) => {
+    throw new JWEInvalid("Failed to compress plaintext", { cause });
+  }));
+  let ciphertext, tag, iv;
+  algEntry.mode === "integrated-encryption" ? [encryptedKey, ciphertext] = await algEntry.encrypt(cek, plaintext, additionalData, protectedHeader, joseHeader, keyManagementParameters) : { ciphertext, tag, iv } = await encrypt(encEntry, plaintext, cek, inputIv, additionalData);
+  const jwe = {
+    ciphertext: encode4(ciphertext)
+  };
+  return iv && (jwe.iv = encode4(iv)), tag && (jwe.tag = encode4(tag)), encryptedKey?.byteLength && (jwe.encrypted_key = encode4(encryptedKey)), aadMember && (jwe.aad = aadMember), protectedHeader && (jwe.protected = protectedHeaderS), sharedUnprotectedHeader && (jwe.unprotected = sharedUnprotectedHeader), unprotectedHeader && (jwe.header = unprotectedHeader), jwe;
+}
+async function createJWE(input, key, options) {
+  return encryptJWE(input, checkEncryptHeaders(input, options), key);
+}
+function compactJWE(jwe) {
+  return [jwe.protected, jwe.encrypted_key, jwe.iv, jwe.ciphertext, jwe.tag].join(".");
+}
+
+// node_modules/jose/dist/webapi/lib/jws_algorithms.js
+var sig = [["verify"], ["sign"]];
+function hmac2(bits) {
+  const subtle = { name: "HMAC", hash: `SHA-${bits}` };
+  return { kty: ["oct"], secret: true, subtle, signing: subtle, usages: sig };
+}
+function rsa(bits, saltLength) {
+  const subtle = { name: saltLength ? "RSA-PSS" : "RSASSA-PKCS1-v1_5", hash: `SHA-${bits}` };
+  return {
+    kty: ["RSA"],
+    subtle,
+    signing: saltLength ? { ...subtle, saltLength } : subtle,
+    usages: sig,
+    minRsaBits: 2048
+  };
+}
+function ecdsa(crv, bits) {
+  return {
+    kty: ["EC"],
+    crv,
+    subtle: { name: "ECDSA", namedCurve: crv },
+    signing: { name: "ECDSA", hash: `SHA-${bits}` },
+    usages: sig
+  };
+}
+function eddsa() {
+  const subtle = { name: "Ed25519" };
+  return {
+    kty: ["OKP"],
+    crv: "Ed25519",
+    subtle,
+    signing: subtle,
+    usages: sig
+  };
+}
+function mldsa(bits) {
+  const subtle = { name: `ML-DSA-${bits}` };
+  return {
+    kty: ["AKP"],
+    subtle,
+    signing: subtle,
+    usages: sig
+  };
+}
+var JWS = table({
+  HS256: hmac2(256),
+  HS384: hmac2(384),
+  HS512: hmac2(512),
+  RS256: rsa(256),
+  RS384: rsa(384),
+  RS512: rsa(512),
+  PS256: rsa(256, 32),
+  PS384: rsa(384, 48),
+  PS512: rsa(512, 64),
+  ES256: ecdsa("P-256", 256),
+  ES384: ecdsa("P-384", 384),
+  ES512: ecdsa("P-521", 512),
+  EdDSA: eddsa(),
+  Ed25519: eddsa(),
+  "ML-DSA-44": mldsa(44),
+  "ML-DSA-65": mldsa(65),
+  "ML-DSA-87": mldsa(87)
+});
+function jwsAlgorithm(alg) {
+  const entry = typeof alg == "string" ? JWS[alg] : undefined;
+  if (!entry)
+    throw new JOSENotSupported(`alg ${alg} is not supported either by JOSE or your javascript runtime`);
+  return entry;
+}
+
+// node_modules/jose/dist/webapi/lib/jws_verify.js
+function prepareVerify(options) {
+  return [options && validateAlgorithms("algorithms", options.algorithms), options?.crit];
+}
+function parseProtectedHeader(encodedProtected) {
+  return encodedProtected === undefined ? {} : parseJoseHeader(encodedProtected, JWSInvalid, "JWS Protected Header is invalid");
+}
+function encodeCompactUnencodedPayload(payload) {
+  try {
+    return encode3(payload);
+  } catch {
+    throw new JWSInvalid("JWS Compact Serialization payload must use only ASCII characters");
+  }
+}
+async function verifySignature2(jws, shared, key, encodeUnencodedPayload, parsedProtected) {
+  const { protected: encodedProtected, header, payload: inputPayload } = jws, parsedProt = parsedProtected ?? parseProtectedHeader(encodedProtected);
+  if (!isDisjoint(parsedProt, header))
+    throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
+  const joseHeader = { ...parsedProt, ...header }, b64 = validateB64(parsedProt, validateCrit(JWSInvalid, JWS_RECOGNIZED, shared[1], parsedProt, joseHeader)), { alg } = joseHeader;
+  if (typeof alg != "string" || !alg)
+    throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
+  if (shared[0] && !shared[0].has(alg))
+    throw new JOSEAlgNotAllowed('"alg" (Algorithm) Header Parameter value not allowed');
+  if (b64) {
+    if (typeof inputPayload != "string")
+      throw new JWSInvalid("JWS Payload must be a string");
+  } else if (typeof inputPayload != "string" && !(inputPayload instanceof Uint8Array))
+    throw new JWSInvalid("JWS Payload must be a string or an Uint8Array instance");
+  const signingPayload = b64 || typeof inputPayload != "string" ? inputPayload : encodeUnencodedPayload(inputPayload);
+  let resolvedKey = false;
+  typeof key == "function" && (key = await key(parsedProt, jws), resolvedKey = true);
+  const entry = jwsAlgorithm(alg), data = concat(encodedProtected !== undefined ? encode3(encodedProtected) : new Uint8Array, encode3("."), typeof signingPayload == "string" ? shared[2] ??= encodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload), signature = decodeBase64url(jws.signature, "signature", JWSInvalid), k = await prepareKey(entry, key, "verify"), cryptoKey = await rawKey(k, entry.subtle, "verify");
+  entry.minRsaBits && checkModulusLength(entry.alg, cryptoKey);
+  let verified = false;
+  try {
+    verified = await crypto.subtle.verify(entry.signing, cryptoKey, signature, data);
+  } catch {}
+  if (!verified)
+    throw new JWSSignatureVerificationFailed;
+  const result = { payload: typeof signingPayload == "string" ? decodeBase64url(signingPayload, "payload", JWSInvalid) : signingPayload };
+  return encodedProtected !== undefined && (result.protectedHeader = parsedProt), header !== undefined && (result.unprotectedHeader = header), resolvedKey ? [{ ...result, key: k }, b64] : [result, b64];
+}
+async function verifyCompact(jws, shared, key) {
+  if (jws instanceof Uint8Array && (jws = decoder.decode(jws)), typeof jws != "string")
+    throw new JWSInvalid("Compact JWS must be a string or Uint8Array");
+  const { 0: protectedHeader, 1: payload, 2: signature, length } = jws.split(".");
+  if (length !== 3)
+    throw new JWSInvalid("Invalid Compact JWS");
+  return verifySignature2({ payload, protected: protectedHeader, signature }, shared, key, encodeCompactUnencodedPayload);
+}
+
+// node_modules/jose/dist/webapi/lib/jwt_claims_set.js
+var epoch = (date) => Math.floor(date.getTime() / 1000);
+var multipliers = {
+  s: 1,
+  m: 60,
+  h: 3600,
+  d: 86400,
+  w: 604800,
+  y: 31557600
+};
+var REGEX = /^(\+|\-)? ?(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)(?: (ago|from now))?$/i;
+var checkFailed = "check_failed";
+function invalidDuration() {
+  throw new TypeError("Invalid time period format");
+}
+function secs(str) {
+  typeof str != "string" && invalidDuration();
+  const matched = REGEX.exec(str);
+  (!matched || matched[4] && matched[1]) && invalidDuration();
+  const value = parseFloat(matched[2]), numericDate2 = Math.round(value * multipliers[matched[3][0].toLowerCase()]);
+  return Number.isFinite(numericDate2) || invalidDuration(), matched[1] === "-" || matched[4] === "ago" ? -numericDate2 : numericDate2;
+}
+function validateInput(label, input) {
+  if (!Number.isFinite(input))
+    throw new TypeError(`Invalid ${label} input`);
+  return input;
+}
+function validateStringClaim(claim, value) {
+  if (typeof value != "string")
+    throw new TypeError(`"${claim}" claim must be a string`);
+}
+function validateAudienceClaim(value) {
+  if (typeof value != "string" && (!Array.isArray(value) || Array.from(value).some((member) => typeof member != "string")))
+    throw new TypeError('"aud" claim must be a string or an array of strings');
+}
+function numericDate(value, label) {
+  return typeof value == "number" ? validateInput(label, value) : value instanceof Date ? validateInput(label, epoch(value)) : epoch(/* @__PURE__ */ new Date) + secs(value);
+}
+var normalizeTyp = (value) => {
+  const normalized = value.toLowerCase();
+  return value.includes("/") ? normalized : `application/${normalized}`;
+};
+var checkAudiencePresence = (audPayload, audOption) => typeof audPayload == "string" ? audOption.includes(audPayload) : Array.isArray(audPayload) ? audOption.some((aud) => audPayload.includes(aud)) : false;
+function validateNumericDate(payload, claim, required = false) {
+  const value = payload[claim];
+  if (!(value === undefined && !required)) {
+    if (typeof value != "number")
+      throw new JWTClaimValidationFailed(`"${claim}" claim must be a number`, payload, claim, "invalid");
+    return value;
+  }
+}
+function unexpectedClaim(payload, claim) {
+  throw new JWTClaimValidationFailed(`unexpected "${claim}" claim value`, payload, claim, checkFailed);
+}
+function validateClaimsSet(protectedHeader, encodedPayload, options = {}) {
+  let payload;
+  try {
+    payload = JSON.parse(strictDecoder.decode(encodedPayload));
+  } catch {}
+  if (!isObject3(payload))
+    throw new JWTInvalid("JWT Claims Set must be a top-level JSON object");
+  const { typ } = options;
+  if (typ !== undefined && (typeof protectedHeader.typ != "string" || normalizeTyp(protectedHeader.typ) !== normalizeTyp(typ)))
+    throw new JWTClaimValidationFailed('unexpected "typ" JWT header value', payload, "typ", checkFailed);
+  const { requiredClaims = [], issuer, subject, audience, maxTokenAge } = options, presenceCheck = [...requiredClaims];
+  maxTokenAge !== undefined && presenceCheck.push("iat"), audience !== undefined && presenceCheck.push("aud"), subject !== undefined && presenceCheck.push("sub"), issuer !== undefined && presenceCheck.push("iss");
+  for (const claim of new Set(presenceCheck.reverse()))
+    if (!Object.hasOwn(payload, claim))
+      throw new JWTClaimValidationFailed(`missing required "${claim}" claim`, payload, claim, "missing");
+  issuer !== undefined && !(Array.isArray(issuer) ? issuer : [issuer]).includes(payload.iss) && unexpectedClaim(payload, "iss"), subject !== undefined && payload.sub !== subject && unexpectedClaim(payload, "sub"), audience !== undefined && !checkAudiencePresence(payload.aud, typeof audience == "string" ? [audience] : audience) && unexpectedClaim(payload, "aud");
+  const { clockTolerance } = options;
+  let tolerance = 0;
+  if (typeof clockTolerance == "string")
+    tolerance = secs(clockTolerance);
+  else if (clockTolerance !== undefined) {
+    if (typeof clockTolerance != "number")
+      throw new TypeError("Invalid clockTolerance option type");
+    tolerance = clockTolerance;
+  }
+  validateInput("clockTolerance option", tolerance);
+  const { currentDate } = options, now = validateInput("currentDate option", epoch(currentDate === undefined ? /* @__PURE__ */ new Date : currentDate)), iat = validateNumericDate(payload, "iat", maxTokenAge !== undefined), nbf = validateNumericDate(payload, "nbf");
+  if (nbf !== undefined && nbf > now + tolerance)
+    throw new JWTClaimValidationFailed('"nbf" claim timestamp check failed', payload, "nbf", checkFailed);
+  const exp = validateNumericDate(payload, "exp");
+  if (exp !== undefined && exp <= now - tolerance)
+    throw new JWTExpired('"exp" claim timestamp check failed', payload, "exp", checkFailed);
+  if (maxTokenAge !== undefined) {
+    const age = now - iat, max = validateInput("maxTokenAge option", typeof maxTokenAge == "number" ? maxTokenAge : secs(maxTokenAge));
+    if (age - tolerance > max)
+      throw new JWTExpired('"iat" claim timestamp check failed (too far in the past)', payload, "iat", checkFailed);
+    if (age < -tolerance)
+      throw new JWTClaimValidationFailed('"iat" claim timestamp check failed (it should be in the past)', payload, "iat", checkFailed);
+  }
+  return payload;
+}
+var producerPayloads;
+function producerPayload(producer) {
+  return producerPayloads.get(producer);
+}
+function jwtData(producer) {
+  const payload = producerPayload(producer);
+  for (const claim of ["iat", "nbf", "exp"]) {
+    const value = payload[claim];
+    if (typeof value == "number" && !Number.isFinite(value))
+      throw new TypeError(`"${claim}" claim must be a finite number`);
+  }
+  return encoder2.encode(JSON.stringify(payload));
+}
+function jwtClaim(producer, claim) {
+  return producerPayload(producer)[claim];
+}
+
+class JWTClaimsBuilder {
+  constructor(payload = {}) {
+    if (!isObject3(payload))
+      throw new TypeError("JWT Claims Set MUST be an object");
+    (producerPayloads ||= /* @__PURE__ */ new WeakMap).set(this, structuredClone(payload));
+  }
+  setIssuer(value) {
+    return validateStringClaim("iss", value), producerPayload(this).iss = value, this;
+  }
+  setSubject(value) {
+    return validateStringClaim("sub", value), producerPayload(this).sub = value, this;
+  }
+  setAudience(value) {
+    return validateAudienceClaim(value), producerPayload(this).aud = value, this;
+  }
+  setJti(value) {
+    return validateStringClaim("jti", value), producerPayload(this).jti = value, this;
+  }
+  setNotBefore(value) {
+    return producerPayload(this).nbf = numericDate(value, "setNotBefore"), this;
+  }
+  setExpirationTime(value) {
+    return producerPayload(this).exp = numericDate(value, "setExpirationTime"), this;
+  }
+  setIssuedAt(value) {
+    const payload = producerPayload(this);
+    return value === undefined ? payload.iat = epoch(/* @__PURE__ */ new Date) : typeof value == "string" ? payload.iat = validateInput("setIssuedAt", epoch(/* @__PURE__ */ new Date) + secs(value)) : payload.iat = numericDate(value, "setIssuedAt"), this;
+  }
+}
+
+// node_modules/jose/dist/webapi/jwt/verify.js
+async function jwtVerify(jwt, key, options) {
+  const [verified, b64] = await verifyCompact(jwt, prepareVerify(options), key);
+  if (!b64)
+    throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
+  const payload = validateClaimsSet(verified.protectedHeader, verified.payload, options);
+  return { ...verified, payload };
+}
+
+// node_modules/jose/dist/webapi/jwt/decrypt.js
+async function jwtDecrypt(jwt, key, options) {
+  const { plaintext, ...result } = await decryptCompact(jwt, prepareDecrypt(options), key), { protectedHeader } = result, payload = validateClaimsSet(protectedHeader, plaintext, options);
+  for (const claim of ["iss", "sub", "aud"])
+    if (protectedHeader[claim] !== undefined && (claim === "aud" ? JSON.stringify(protectedHeader.aud) !== JSON.stringify(payload.aud) : protectedHeader[claim] !== payload[claim]))
+      throw new JWTClaimValidationFailed(`replicated "${claim}" claim header parameter mismatch`, payload, claim, "mismatch");
+  return { payload, ...result };
+}
+
+// node_modules/jose/dist/webapi/lib/jws_sign.js
+async function createSignature(input, key, rejectUnencoded) {
+  let [payload, protectedHeader, unprotectedHeader, crit] = input, protectedHeaderString = "";
+  if (protectedHeader !== undefined) {
+    const normalized = serializeJoseHeader(JWSInvalid, protectedHeader);
+    protectedHeader = normalized[0], protectedHeaderString = encode4(normalized[1]);
+  }
+  if (unprotectedHeader !== undefined && (unprotectedHeader = serializeJoseHeader(JWSInvalid, unprotectedHeader)[0]), !protectedHeader && !unprotectedHeader)
+    throw new JWSInvalid("either setProtectedHeader or setUnprotectedHeader must be called before #sign()");
+  if (!isDisjoint(protectedHeader, unprotectedHeader))
+    throw new JWSInvalid("JWS Protected and JWS Unprotected Header Parameter names must be disjoint");
+  const joseHeader = { ...protectedHeader, ...unprotectedHeader };
+  validateCritDuplicates(JWSInvalid, protectedHeader);
+  const b64 = validateB64(protectedHeader, validateCrit(JWSInvalid, JWS_RECOGNIZED, crit, protectedHeader, joseHeader));
+  b64 || rejectUnencoded?.();
+  const { alg } = joseHeader;
+  if (typeof alg != "string" || !alg)
+    throw new JWSInvalid('JWS "alg" (Algorithm) Header Parameter missing or invalid');
+  const entry = jwsAlgorithm(alg);
+  let payloadS = "", payloadB = payload, data;
+  if (b64) {
+    const encoded = input[4];
+    encoded ? (payloadS = encoded[0] ??= encode4(payload), payloadB = encoded[1] ??= encode3(payloadS)) : (payloadS = encode4(payload), data = encoder2.encode(`${protectedHeaderString}.${payloadS}`));
+  }
+  data ??= concat(encode3(protectedHeaderString), encode3("."), payloadB);
+  const k = await rawKey(await prepareKey(entry, key, "sign"), entry.subtle, "sign");
+  entry.minRsaBits && checkModulusLength(entry.alg, k);
+  const jws = {
+    signature: encode4(new Uint8Array(await crypto.subtle.sign(entry.signing, k, data))),
+    payload: payloadS
+  };
+  return protectedHeader && (jws.protected = protectedHeaderString), unprotectedHeader && (jws.header = unprotectedHeader), [jws, b64];
+}
+async function createCompactSignature(payload, protectedHeader, crit, key, rejectUnencoded) {
+  const [jws] = await createSignature([payload, protectedHeader, undefined, crit], key, rejectUnencoded);
+  return `${jws.protected}.${jws.payload}.${jws.signature}`;
+}
+
+// node_modules/jose/dist/webapi/jwt/sign.js
+var SignJWT_base = JWTClaimsBuilder;
+
+class SignJWT extends SignJWT_base {
+  #protectedHeader;
+  setProtectedHeader(protectedHeader) {
+    return assertNotSet(this.#protectedHeader, "setProtectedHeader"), this.#protectedHeader = protectedHeader, this;
+  }
+  async sign(key, options) {
+    return createCompactSignature(jwtData(this), this.#protectedHeader, options?.crit, key, () => {
+      throw new JWTInvalid("JWTs MUST NOT use unencoded payload");
+    });
+  }
+}
+
+// node_modules/jose/dist/webapi/jwt/encrypt.js
+var EncryptJWT_base = JWTClaimsBuilder;
+
+class EncryptJWT extends EncryptJWT_base {
+  #input = [undefined];
+  #replicateIssuerAsHeader;
+  #replicateSubjectAsHeader;
+  #replicateAudienceAsHeader;
+  setProtectedHeader(protectedHeader) {
+    return assertNotSet(this.#input[1], "setProtectedHeader"), this.#input[1] = protectedHeader, this;
+  }
+  setKeyManagementParameters(parameters) {
+    return assertNotSet(this.#input[7], "setKeyManagementParameters"), this.#input[7] = parameters, this;
+  }
+  setContentEncryptionKey(cek) {
+    return assertNotSet(this.#input[5], "setContentEncryptionKey"), this.#input[5] = cek, this;
+  }
+  setInitializationVector(iv) {
+    return assertNotSet(this.#input[6], "setInitializationVector"), this.#input[6] = iv, this;
+  }
+  replicateIssuerAsHeader() {
+    return this.#replicateIssuerAsHeader = true, this;
+  }
+  replicateSubjectAsHeader() {
+    return this.#replicateSubjectAsHeader = true, this;
+  }
+  replicateAudienceAsHeader() {
+    return this.#replicateAudienceAsHeader = true, this;
+  }
+  async encrypt(key, options) {
+    const plaintext = jwtData(this);
+    this.#input[1] && (this.#replicateIssuerAsHeader || this.#replicateSubjectAsHeader || this.#replicateAudienceAsHeader) && (this.#input[1] = {
+      ...this.#input[1],
+      iss: this.#replicateIssuerAsHeader ? jwtClaim(this, "iss") : undefined,
+      sub: this.#replicateSubjectAsHeader ? jwtClaim(this, "sub") : undefined,
+      aud: this.#replicateAudienceAsHeader ? jwtClaim(this, "aud") : undefined
+    });
+    const input = [...this.#input];
+    return input[0] = plaintext, compactJWE(await createJWE(input, key, options));
+  }
+}
+
+// node_modules/jose/dist/webapi/lib/key_algorithm.js
+function unsupportedAlg(source = 'JWK "alg" (Algorithm) Parameter') {
+  throw new JOSENotSupported(`Invalid or unsupported ${source} value`);
+}
+function keyAlgorithm(alg, source) {
+  return (typeof alg == "string" ? JWS[alg] ?? JWE[alg] : undefined) ?? unsupportedAlg(source);
+}
+
+// node_modules/jose/dist/webapi/key/export.js
+async function exportJWK(key) {
+  if (isKeyObject(key))
+    if (key.type === "secret")
+      key = key.export();
+    else
+      return key.export({ format: "jwk" });
+  if (key instanceof Uint8Array)
+    return {
+      kty: "oct",
+      k: encode4(key)
+    };
+  if (!isCryptoKey(key))
+    throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "Uint8Array"));
+  if (!key.extractable)
+    throw new TypeError("non-extractable CryptoKey cannot be exported as a JWK");
+  const jwk = await crypto.subtle.exportKey("jwk", key);
+  delete jwk.ext, delete jwk.key_ops, delete jwk.use, jwk.kty !== "AKP" && delete jwk.alg;
+  for (const parameter of Object.keys(jwk))
+    jwk[parameter] === undefined && delete jwk[parameter];
+  return jwk;
+}
+
+// node_modules/jose/dist/webapi/jwk/thumbprint.js
+var check2 = (value, description) => {
+  if (typeof value != "string" || !value)
+    throw new JWKInvalid(`${description} missing or invalid`);
+};
+async function calculateJwkThumbprint(key, digestAlgorithm) {
+  let jwk;
+  if (isObject3(key)) {
+    if (jwk = snapshotJwk(key), typeof jwk.kty != "string")
+      throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "JSON Web Key"));
+  } else if (isKeyLike(key))
+    jwk = snapshotJwk(await exportJWK(key));
+  else
+    throw new TypeError(invalidKeyInput(key, "CryptoKey", "KeyObject", "JSON Web Key"));
+  if (digestAlgorithm ??= "sha256", digestAlgorithm !== "sha256" && digestAlgorithm !== "sha384" && digestAlgorithm !== "sha512")
+    throw new TypeError('digestAlgorithm must one of "sha256", "sha384", or "sha512"');
+  let components;
+  switch (jwk.kty) {
+    case "AKP":
+      check2(jwk.alg, '"alg" (Algorithm) Parameter'), check2(jwk.pub, '"pub" (Public key) Parameter'), components = { alg: jwk.alg, kty: jwk.kty, pub: jwk.pub };
+      break;
+    case "EC":
+      check2(jwk.crv, '"crv" (Curve) Parameter'), check2(jwk.x, '"x" (X Coordinate) Parameter'), check2(jwk.y, '"y" (Y Coordinate) Parameter'), components = { crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y };
+      break;
+    case "OKP":
+      check2(jwk.crv, '"crv" (Subtype of Key Pair) Parameter'), check2(jwk.x, '"x" (Public Key) Parameter'), components = { crv: jwk.crv, kty: jwk.kty, x: jwk.x };
+      break;
+    case "RSA":
+      check2(jwk.e, '"e" (Exponent) Parameter'), check2(jwk.n, '"n" (Modulus) Parameter'), components = { e: jwk.e, kty: jwk.kty, n: jwk.n };
+      break;
+    case "oct":
+      if (typeof jwk.k != "string")
+        throw new JWKInvalid('"k" (Key Value) Parameter missing or invalid');
+      components = { k: jwk.k, kty: jwk.kty };
+      break;
+    default:
+      throw new JOSENotSupported('"kty" (Key Type) Parameter missing or unsupported');
+  }
+  const data = encode3(JSON.stringify(components));
+  return encode4(await digest(digestAlgorithm, data));
+}
+
+// node_modules/jose/dist/webapi/jwks/local.js
+function isUsableJWK(jwk, entry, alg, kid) {
+  const { kty, key_ops: keyOps, ext, kid: jwkKid, alg: jwkAlg, use, crv } = jwk;
+  return (ext === undefined || typeof ext == "boolean") && (keyOps === undefined || Array.isArray(keyOps) && keyOps.every((operation, index) => typeof operation == "string" && keyOps.indexOf(operation) === index) && keyOps.includes("verify")) && entry.kty.includes(kty) && (kid === undefined || typeof kid == "string" && kid === jwkKid) && (jwkAlg === undefined ? kty !== "AKP" : alg === jwkAlg) && (use === undefined || use === "sig") && (!entry.crv || crv === entry.crv);
+}
+async function importWithAlgCache(cache, jwk, entry) {
+  const cached = cache.get(jwk) || cache.set(jwk, {}).get(jwk), { alg } = entry;
+  if (cached[alg] === undefined) {
+    const pending = jwkToKey(entry, jwk, true).then((key) => {
+      if (key.type !== "public")
+        throw new JWKSInvalid("JSON Web Key Set members must be public keys");
+      return cached[alg] = key, key;
+    }).catch((error) => {
+      throw cached[alg] === pending && delete cached[alg], error;
+    });
+    cached[alg] = pending;
+  }
+  return cached[alg];
+}
+function createLocalJWKSet(jwks) {
+  let snapshot;
+  try {
+    snapshot = structuredClone(jwks);
+  } catch {}
+  if (!isJwkSet(snapshot))
+    throw new JWKSInvalid("JSON Web Key Set malformed");
+  const metadata = snapshot.keys.map((jwk) => {
+    const normalized = snapshotJwk(jwk);
+    return Array.isArray(normalized.key_ops) && (normalized.key_ops = [...normalized.key_ops]), normalized;
+  }), cached = /* @__PURE__ */ new WeakMap;
+  return Object.defineProperty(async (protectedHeader, token) => {
+    const { alg, kid } = { ...protectedHeader, ...token?.header }, entry = typeof alg == "string" ? JWS[alg] : undefined;
+    if (!entry || entry.secret)
+      throw new JOSENotSupported('Unsupported "alg" value for a JSON Web Key Set');
+    const candidates = snapshot.keys.filter((_, index) => isUsableJWK(metadata[index], entry, alg, kid)), { 0: jwk, length } = candidates;
+    if (!length)
+      throw new JWKSNoMatchingKey;
+    if (length !== 1) {
+      const error = new JWKSMultipleMatchingKeys;
+      throw error[Symbol.asyncIterator] = async function* () {
+        for (const jwk2 of candidates)
+          try {
+            yield await importWithAlgCache(cached, jwk2, entry);
+          } catch {}
+      }, error;
+    }
+    return importWithAlgCache(cached, jwk, entry);
+  }, "jwks", {
+    value: () => structuredClone(snapshot)
+  });
+}
+
+// node_modules/jose/dist/webapi/jwks/remote.js
+function isCloudflareWorkers() {
+  return typeof WebSocketPair < "u" || typeof navigator < "u" && navigator.userAgent === "Cloudflare-Workers" || typeof EdgeRuntime < "u" && EdgeRuntime === "vercel";
+}
+var USER_AGENT;
+(typeof navigator > "u" || !navigator.userAgent?.startsWith?.("Mozilla/5.0 ")) && (USER_AGENT = "jose/v6.2.12");
+var customFetch = /* @__PURE__ */ Symbol();
+async function fetchJwks(url, headers, signal, fetchImpl = fetch) {
+  const response = await fetchImpl(url, {
+    method: "GET",
+    signal,
+    redirect: "manual",
+    headers
+  }).catch((err) => {
+    throw err.name === "TimeoutError" ? new JWKSTimeout : err;
+  });
+  if (response.status !== 200)
+    throw new JOSEError("Expected 200 OK from the JSON Web Key Set HTTP response");
+  try {
+    return await response.json();
+  } catch {
+    throw new JOSEError("Failed to parse the JSON Web Key Set HTTP response as JSON");
+  }
+}
+var jwksCache = /* @__PURE__ */ Symbol();
+function isFreshFor(timestamp, duration) {
+  return Number.isFinite(timestamp) && Date.now() < timestamp + duration;
+}
+function validateDuration(value, fallback, option) {
+  if (Number.isNaN(value))
+    throw new TypeError(`"${option}" option must not be NaN`);
+  return typeof value == "number" ? value : fallback;
+}
+function createRemoteJWKSet(url, options) {
+  if (!(url instanceof URL))
+    throw new TypeError("url must be an instance of URL");
+  const href = new URL(url.href).href, opts = options ?? {}, timeoutOption = opts.timeoutDuration;
+  if (typeof timeoutOption == "number" && (!Number.isInteger(timeoutOption) || timeoutOption < 0))
+    throw new TypeError('"timeoutDuration" option must be a non-negative integer');
+  const timeoutDuration = typeof timeoutOption == "number" ? timeoutOption : 5000, cooldownDuration = validateDuration(opts.cooldownDuration, 30000, "cooldownDuration"), cacheMaxAge = validateDuration(opts.cacheMaxAge, 600000, "cacheMaxAge"), headers = new Headers(opts.headers);
+  USER_AGENT && !headers.has("User-Agent") && headers.set("User-Agent", USER_AGENT), headers.has("accept") || headers.set("accept", "application/json, application/jwk-set+json");
+  const fetchImpl = opts[customFetch], cache = opts[jwksCache];
+  let jwksTimestamp, pendingFetch, reloadSequence = 0, appliedSequence = 0, local;
+  if (cache && typeof cache == "object") {
+    const { uat, jwks } = cache;
+    isFreshFor(uat, cacheMaxAge) && isJwkSet(jwks) && (jwksTimestamp = uat, local = createLocalJWKSet(jwks));
+  }
+  const reload = async () => {
+    if (pendingFetch && isCloudflareWorkers() && (pendingFetch = undefined), !pendingFetch) {
+      const sequence = ++reloadSequence, current = pendingFetch = fetchJwks(href, headers, AbortSignal.timeout(timeoutDuration), fetchImpl).then((json) => {
+        const next = createLocalJWKSet(json);
+        if (sequence <= appliedSequence)
+          return;
+        local = next;
+        const updatedAt = Date.now();
+        cache && (cache.uat = updatedAt, cache.jwks = json), jwksTimestamp = updatedAt, appliedSequence = sequence;
+      }).finally(() => {
+        pendingFetch === current && (pendingFetch = undefined);
+      });
+    }
+    await pendingFetch;
+  };
+  return Object.defineProperties(async (protectedHeader, token) => {
+    (!local || !isFreshFor(jwksTimestamp, cacheMaxAge)) && await reload();
+    try {
+      return await local(protectedHeader, token);
+    } catch (err) {
+      if (err instanceof JWKSNoMatchingKey && !isFreshFor(jwksTimestamp, cooldownDuration))
+        return await reload(), local(protectedHeader, token);
+      throw err;
+    }
+  }, {
+    coolingDown: {
+      get: () => isFreshFor(jwksTimestamp, cooldownDuration),
+      enumerable: true
+    },
+    fresh: {
+      get: () => isFreshFor(jwksTimestamp, cacheMaxAge),
+      enumerable: true
+    },
+    reload: {
+      value: reload,
+      enumerable: true
+    },
+    reloading: {
+      get: () => !!pendingFetch,
+      enumerable: true
+    },
+    jwks: {
+      value: () => local?.jwks(),
+      enumerable: true
+    }
+  });
+}
+
+// node_modules/jose/dist/webapi/key/import.js
+async function importJWK(jwk, alg, options) {
+  if (!isObject3(jwk))
+    throw new TypeError("JWK must be an object");
+  const normalized = normalizeJwk(jwk), extractable = validateExtractableOption(options?.extractable), { alg: jwkAlg } = normalized;
+  if (alg ??= jwkAlg, normalized.kty !== "oct" && !alg)
+    throw new TypeError('"alg" argument is required when "jwk.alg" is not present');
+  switch (normalized.kty) {
+    case "oct":
+      if (typeof normalized.k != "string")
+        throw new TypeError('missing "k" (Key Value) Parameter value');
+      return decode6(normalized.k);
+    case "AKP": {
+      if (typeof jwkAlg != "string" || !jwkAlg)
+        throw new TypeError('missing "alg" (Algorithm) Parameter value');
+      if (alg !== jwkAlg)
+        throw new TypeError("JWK alg and alg option value mismatch");
+      return jwkToKey(keyAlgorithm(alg), normalized, extractable);
+    }
+    case "RSA":
+    case "EC":
+    case "OKP":
+      return jwkToKey(keyAlgorithm(alg), normalized, extractable);
+    default:
+      throw new JOSENotSupported('Unsupported "kty" (Key Type) Parameter value');
+  }
+}
+
+// node_modules/jose/dist/webapi/util/decode_protected_header.js
+function decodeProtectedHeader(token) {
+  let protectedB64u;
+  if (typeof token == "string") {
+    const parts = token.split(".");
+    (parts.length === 3 || parts.length === 5) && ([protectedB64u] = parts);
+  } else if (typeof token == "object" && token)
+    if ("protected" in token)
+      protectedB64u = token.protected;
+    else
+      throw new TypeError("Token does not contain a Protected Header");
+  const invalid = "Invalid Token or Protected Header formatting";
+  if (typeof protectedB64u != "string" || !protectedB64u)
+    throw new TypeError(invalid);
+  return parseJoseHeader(protectedB64u, TypeError, invalid);
+}
+
+// node_modules/jose/dist/webapi/util/decode_jwt.js
+function decodeJwt(jwt) {
+  if (typeof jwt != "string")
+    throw new JWTInvalid("JWTs must use Compact JWS serialization, JWT must be a string");
+  const { 1: payload, length } = jwt.split(".");
+  if (length === 5)
+    throw new JWTInvalid("Only JWTs using Compact JWS serialization can be decoded");
+  if (length !== 3)
+    throw new JWTInvalid("Invalid JWT");
+  if (!payload)
+    throw new JWTInvalid("JWTs must contain a payload");
+  let decoded;
+  try {
+    decoded = decode6(payload);
+  } catch {
+    throw new JWTInvalid("Failed to base64url decode the payload");
+  }
+  let result;
+  try {
+    result = JSON.parse(strictDecoder.decode(decoded));
+  } catch {
+    throw new JWTInvalid("Failed to parse the decoded payload as JSON");
+  }
+  if (!isObject3(result))
+    throw new JWTInvalid("Invalid JWT Claims Set");
+  return result;
+}
+
+// node_modules/better-auth/dist/crypto/jwt.mjs
+async function signJWT(payload, secret, expiresIn = 3600) {
+  return await new SignJWT(payload).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime(Math.floor(Date.now() / 1000) + expiresIn).sign(new TextEncoder().encode(secret));
+}
+async function verifyJWT(token, secret) {
+  try {
+    return (await jwtVerify(token, new TextEncoder().encode(secret))).payload;
+  } catch {
+    return null;
+  }
+}
+var info = new Uint8Array([
+  66,
+  101,
+  116,
+  116,
+  101,
+  114,
+  65,
+  117,
+  116,
+  104,
+  46,
+  106,
+  115,
+  32,
+  71,
+  101,
+  110,
+  101,
+  114,
+  97,
+  116,
+  101,
+  100,
+  32,
+  69,
+  110,
+  99,
+  114,
+  121,
+  112,
+  116,
+  105,
+  111,
+  110,
+  32,
+  75,
+  101,
+  121
+]);
+var now = () => Date.now() / 1000 | 0;
+var alg = "dir";
+var enc = "A256CBC-HS512";
+function deriveEncryptionSecret(secret, salt) {
+  return hkdf(sha256, new TextEncoder().encode(secret), new TextEncoder().encode(salt), info, 64);
+}
+function getCurrentSecret(secret) {
+  if (typeof secret === "string")
+    return secret;
+  const value = secret.keys.get(secret.currentVersion);
+  if (!value)
+    throw new Error(`Secret version ${secret.currentVersion} not found in keys`);
+  return value;
+}
+function getAllSecrets(secret) {
+  if (typeof secret === "string")
+    return [{
+      version: 0,
+      value: secret
+    }];
+  const result = [];
+  for (const [version, value] of secret.keys)
+    result.push({
+      version,
+      value
+    });
+  if (secret.legacySecret && !result.some((s) => s.value === secret.legacySecret))
+    result.push({
+      version: -1,
+      value: secret.legacySecret
+    });
+  return result;
+}
+async function symmetricEncodeJWT(payload, secret, salt, expiresIn = 3600) {
+  const encryptionSecret = deriveEncryptionSecret(getCurrentSecret(secret), salt);
+  const thumbprint = await calculateJwkThumbprint({
+    kty: "oct",
+    k: encode4(encryptionSecret)
+  }, "sha256");
+  return await new EncryptJWT(payload).setProtectedHeader({
+    alg,
+    enc,
+    kid: thumbprint
+  }).setIssuedAt().setExpirationTime(now() + expiresIn).setJti(crypto.randomUUID()).encrypt(encryptionSecret);
+}
+var jwtDecryptOpts = {
+  clockTolerance: 15,
+  keyManagementAlgorithms: [alg],
+  contentEncryptionAlgorithms: [enc, "A256GCM"]
+};
+async function symmetricDecodeJWT(token, secret, salt) {
+  if (!token)
+    return null;
+  let hasKid = false;
+  try {
+    hasKid = decodeProtectedHeader(token).kid !== undefined;
+  } catch {
+    return null;
+  }
+  try {
+    const secrets = getAllSecrets(secret);
+    const { payload } = await jwtDecrypt(token, async (protectedHeader) => {
+      const kid = protectedHeader.kid;
+      if (kid !== undefined) {
+        for (const s of secrets) {
+          const encryptionSecret = deriveEncryptionSecret(s.value, salt);
+          if (kid === await calculateJwkThumbprint({
+            kty: "oct",
+            k: encode4(encryptionSecret)
+          }, "sha256"))
+            return encryptionSecret;
+        }
+        throw new Error("no matching decryption secret");
+      }
+      if (secrets.length === 1)
+        return deriveEncryptionSecret(secrets[0].value, salt);
+      return deriveEncryptionSecret(secrets[0].value, salt);
+    }, jwtDecryptOpts);
+    return payload;
+  } catch {
+    if (hasKid)
+      return null;
+    const secrets = getAllSecrets(secret);
+    if (secrets.length <= 1)
+      return null;
+    for (let i = 1;i < secrets.length; i++)
+      try {
+        const s = secrets[i];
+        const { payload } = await jwtDecrypt(token, deriveEncryptionSecret(s.value, salt), jwtDecryptOpts);
+        return payload;
+      } catch {
+        continue;
+      }
+    return null;
+  }
+}
+
+// node_modules/better-auth/dist/cookies/cookie-utils.mjs
+function tryDecode2(str) {
+  if (str.indexOf("%") === -1)
+    return str;
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return str;
+  }
+}
+var SECURE_COOKIE_PREFIX = "__Secure-";
+function splitSetCookieHeader(setCookie) {
+  if (!setCookie)
+    return [];
+  const result = [];
+  let start = 0;
+  let i = 0;
+  while (i < setCookie.length) {
+    if (setCookie[i] === ",") {
+      let j = i + 1;
+      while (j < setCookie.length && setCookie[j] === " ")
+        j++;
+      while (j < setCookie.length && setCookie[j] !== "=" && setCookie[j] !== ";" && setCookie[j] !== ",")
+        j++;
+      if (j < setCookie.length && setCookie[j] === "=") {
+        const part = setCookie.slice(start, i).trim();
+        if (part)
+          result.push(part);
+        start = i + 1;
+        while (start < setCookie.length && setCookie[start] === " ")
+          start++;
+        i = start;
+        continue;
+      }
+    }
+    i++;
+  }
+  const last = setCookie.slice(start).trim();
+  if (last)
+    result.push(last);
+  return result;
+}
+function parseSetCookieHeader(setCookie) {
+  const cookies = /* @__PURE__ */ new Map;
+  splitSetCookieHeader(setCookie).forEach((cookieString) => {
+    const [nameValue, ...attributes] = cookieString.split(";").map((part) => part.trim());
+    const [name, ...valueParts] = (nameValue || "").split("=");
+    const value = unquoteCookieValue(valueParts.join("="));
+    if (!name)
+      return;
+    const attrObj = { value: tryDecode2(value) };
+    attributes.forEach((attribute) => {
+      const [attrName, ...attrValueParts] = attribute.split("=");
+      const attrValue = attrValueParts.join("=");
+      const normalizedAttrName = attrName.trim().toLowerCase();
+      switch (normalizedAttrName) {
+        case "max-age":
+          attrObj["max-age"] = attrValue ? parseInt(attrValue.trim(), 10) : undefined;
+          break;
+        case "expires":
+          attrObj.expires = attrValue ? new Date(attrValue.trim()) : undefined;
+          break;
+        case "domain":
+          attrObj.domain = attrValue ? attrValue.trim() : undefined;
+          break;
+        case "path":
+          attrObj.path = attrValue ? attrValue.trim() : undefined;
+          break;
+        case "secure":
+          attrObj.secure = true;
+          break;
+        case "httponly":
+          attrObj.httponly = true;
+          break;
+        case "samesite":
+          attrObj.samesite = attrValue ? attrValue.trim().toLowerCase() : undefined;
+          break;
+        case "partitioned":
+          attrObj.partitioned = true;
+          break;
+        default:
+          attrObj[normalizedAttrName] = attrValue ? attrValue.trim() : true;
+          break;
+      }
+    });
+    cookies.set(name, attrObj);
+  });
+  return cookies;
+}
+var cookieNameRegex = /^[\x21\x23-\x27\x2A\x2B\x2D\x2E\x30-\x39\x41-\x5A\x5E\x5F\x60\x61-\x7A\x7C\x7E]+$/;
+var cookieValueRegex = /^[\x20\x21\x23-\x3A\x3C-\x5B\x5D-\x7E]*$/;
+function unquoteCookieValue(value) {
+  if (value.length < 2 || !value.startsWith('"') || !value.endsWith('"'))
+    return value;
+  return value.slice(1, -1);
+}
+function trimOWS(s) {
+  let start = 0;
+  let end = s.length;
+  while (start < end) {
+    const c = s.charCodeAt(start);
+    if (c !== 32 && c !== 9)
+      break;
+    start++;
+  }
+  while (end > start) {
+    const c = s.charCodeAt(end - 1);
+    if (c !== 32 && c !== 9)
+      break;
+    end--;
+  }
+  return start === 0 && end === s.length ? s : s.slice(start, end);
+}
+function parseCookies2(cookie) {
+  const cookieMap = /* @__PURE__ */ new Map;
+  if (cookie.length < 2)
+    return cookieMap;
+  for (const chunk of cookie.split(";")) {
+    const eq = chunk.indexOf("=");
+    if (eq === -1)
+      continue;
+    const key = trimOWS(chunk.slice(0, eq));
+    const val = unquoteCookieValue(trimOWS(chunk.slice(eq + 1)));
+    if (cookieNameRegex.test(key) && cookieValueRegex.test(val))
+      cookieMap.set(key, tryDecode2(val));
+  }
+  return cookieMap;
+}
+function setRequestCookie(headers, name, value) {
+  const cookieMap = parseCookies2(headers.get("cookie") || "");
+  if (cookieNameRegex.test(name))
+    cookieMap.set(name, value);
+  headers.set("cookie", Array.from(cookieMap, ([k, v]) => `${k}=${encodeURIComponent(v)}`).join("; "));
+}
+
 // node_modules/better-auth/dist/cookies/session-store.mjs
+init_json();
 init_zod();
 var MAX_COOKIE_SIZE = 4050;
 var MAX_COOKIE_CHUNKS = 100;
@@ -95098,7 +95153,7 @@ function parseCookieChunkIndex(cookieName, name) {
 }
 function readExistingChunks(cookieName, ctx) {
   const chunks = {};
-  const cookies = parseCookies(ctx.headers?.get("cookie") || "");
+  const cookies = parseCookies2(ctx.headers?.get("cookie") || "");
   for (const [name, value] of cookies) {
     if (name !== cookieName && parseCookieChunkIndex(cookieName, name) === null)
       continue;
@@ -95193,7 +95248,7 @@ function getChunkedCookie(ctx, cookieName) {
   const cookieHeader = ctx.headers?.get("cookie");
   if (!cookieHeader)
     return null;
-  for (const [name, val] of parseCookies(cookieHeader)) {
+  for (const [name, val] of parseCookies2(cookieHeader)) {
     const index = parseCookieChunkIndex(cookieName, name);
     if (index === null)
       continue;
@@ -95231,6 +95286,115 @@ var getSessionQuerySchema = optional(object({
   disableCookieCache: boolean3().meta({ description: "Disable cookie cache and fetch session from database" }).optional(),
   disableRefresh: boolean3().meta({ description: "Disable session refresh. Useful for checking session status, without updating the session" }).optional()
 }));
+
+// node_modules/better-auth/dist/utils/is-promise.mjs
+function isPromise(obj) {
+  return !!obj && (typeof obj === "object" || typeof obj === "function") && typeof obj.then === "function";
+}
+
+// node_modules/better-auth/dist/utils/time.mjs
+var SEC = 1000;
+var MIN = SEC * 60;
+var HOUR = MIN * 60;
+var DAY = HOUR * 24;
+var WEEK = DAY * 7;
+var MONTH = DAY * 30;
+var YEAR = DAY * 365.25;
+var REGEX2 = /^(\+|\-)? ?(\d+|\d+\.\d+) ?(seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo|years?|yrs?|y)(?: (ago|from now))?$/i;
+function parse7(value) {
+  const match = REGEX2.exec(value);
+  if (!match || match[4] && match[1])
+    throw new TypeError(`Invalid time string format: "${value}". Use formats like "7d", "30m", "1 hour", etc.`);
+  const n = parseFloat(match[2]);
+  const unit = match[3].toLowerCase();
+  let result;
+  switch (unit) {
+    case "years":
+    case "year":
+    case "yrs":
+    case "yr":
+    case "y":
+      result = n * YEAR;
+      break;
+    case "months":
+    case "month":
+    case "mo":
+      result = n * MONTH;
+      break;
+    case "weeks":
+    case "week":
+    case "w":
+      result = n * WEEK;
+      break;
+    case "days":
+    case "day":
+    case "d":
+      result = n * DAY;
+      break;
+    case "hours":
+    case "hour":
+    case "hrs":
+    case "hr":
+    case "h":
+      result = n * HOUR;
+      break;
+    case "minutes":
+    case "minute":
+    case "mins":
+    case "min":
+    case "m":
+      result = n * MIN;
+      break;
+    case "seconds":
+    case "second":
+    case "secs":
+    case "sec":
+    case "s":
+      result = n * SEC;
+      break;
+    default:
+      throw new TypeError(`Unknown time unit: "${unit}"`);
+  }
+  if (match[1] === "-" || match[4] === "ago")
+    return -result;
+  return result;
+}
+function sec(value) {
+  return Math.round(parse7(value) / 1000);
+}
+
+// node_modules/better-auth/dist/cookies/cache.mjs
+init_env();
+init_json();
+init_zod();
+var cookieCachePayloadSchema = looseObject({
+  session: sessionSchema.loose(),
+  user: userSchema.loose(),
+  updatedAt: number2(),
+  version: string2().optional()
+});
+var compactCookieCacheSchema = object({
+  session: record(string2(), unknown()),
+  expiresAt: number2(),
+  signature: string2()
+});
+function parseCookieCachePayload(value) {
+  const parsed = safeJSONParse(value);
+  if (parsed === null)
+    return null;
+  const result = cookieCachePayloadSchema.safeParse(parsed);
+  if (result.success)
+    return result.data;
+  logger.warn("Cookie cache payload failed schema validation", { issues: result.error.issues.map(({ code, path }) => ({
+    code,
+    path
+  })) });
+  return null;
+}
+function parseCompactCookieCache(value) {
+  const result = compactCookieCacheSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
 
 // node_modules/better-auth/dist/cookies/index.mjs
 init_env();
@@ -95642,6 +95806,437 @@ function deleteSessionCookie(ctx, skipDontRememberMe) {
     expireCookie(ctx, ctx.context.authCookies.dontRememberToken);
 }
 
+// node_modules/better-auth/dist/api/routes/session.mjs
+init_error2();
+init_zod();
+var getSession = () => createAuthEndpoint("/get-session", {
+  method: ["GET", "POST"],
+  operationId: "getSession",
+  query: getSessionQuerySchema,
+  requireHeaders: true,
+  metadata: { openapi: {
+    operationId: "getSession",
+    description: "Get the current session",
+    responses: { "200": {
+      description: "Success",
+      content: { "application/json": { schema: {
+        type: ["object", "null"],
+        properties: {
+          session: { $ref: "#/components/schemas/Session" },
+          user: { $ref: "#/components/schemas/User" }
+        },
+        required: ["session", "user"]
+      } } }
+    } }
+  } }
+}, async (ctx) => {
+  ctx.setHeader("cache-control", "no-store");
+  ctx.setHeader("pragma", "no-cache");
+  const deferSessionRefresh = ctx.context.options.session?.deferSessionRefresh;
+  const isPostRequest = ctx.method === "POST";
+  if (isPostRequest && !deferSessionRefresh)
+    throw APIError2.from("METHOD_NOT_ALLOWED", BASE_ERROR_CODES.METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED);
+  try {
+    const cookieCacheEnabled = ctx.context.options.session?.cookieCache?.enabled === true;
+    const sessionCookieToken = await ctx.getSignedCookie(ctx.context.authCookies.sessionToken.name, ctx.context.secret);
+    if (!sessionCookieToken && cookieCacheEnabled)
+      return null;
+    const sessionDataCookie = getChunkedCookie(ctx, ctx.context.authCookies.sessionData.name);
+    if (sessionDataCookie && !cookieCacheEnabled) {
+      const sessionStore = createSessionStore(ctx.context.authCookies.sessionData.name, ctx.context.authCookies.sessionData.attributes, ctx);
+      sessionStore.setCookies(sessionStore.clean());
+    }
+    if (!sessionCookieToken)
+      return null;
+    const shouldUseCookieCache = cookieCacheEnabled && !ctx.query?.disableCookieCache;
+    const sessionDataPayload = shouldUseCookieCache && sessionDataCookie ? await decodeCookieCache(ctx, sessionDataCookie) : null;
+    if (shouldUseCookieCache && sessionDataCookie && !sessionDataPayload)
+      expireCookie(ctx, ctx.context.authCookies.sessionData);
+    const dontRememberMe = await ctx.getSignedCookie(ctx.context.authCookies.dontRememberToken.name, ctx.context.secret);
+    if (sessionDataPayload?.session) {
+      const session = sessionDataPayload.session;
+      let shouldExpireCookieCache = session.session.token !== sessionCookieToken;
+      if (!shouldExpireCookieCache) {
+        const versionConfig = ctx.context.options.session?.cookieCache?.version;
+        let expectedVersion = "1";
+        if (versionConfig) {
+          if (typeof versionConfig === "string")
+            expectedVersion = versionConfig;
+          else if (typeof versionConfig === "function") {
+            const result = versionConfig(session.session, session.user);
+            expectedVersion = result instanceof Promise ? await result : result;
+          }
+        }
+        shouldExpireCookieCache = (session.version || "1") !== expectedVersion;
+      }
+      if (!shouldExpireCookieCache) {
+        const now = Date.now();
+        const cachedSessionExpiresAt = new Date(session.session.expiresAt).getTime();
+        shouldExpireCookieCache = sessionDataPayload.expiresAt < now || !Number.isFinite(cachedSessionExpiresAt) || cachedSessionExpiresAt < now;
+      }
+      if (shouldExpireCookieCache)
+        expireCookie(ctx, ctx.context.authCookies.sessionData);
+      else {
+        const cookieRefreshCache = ctx.context.sessionConfig.cookieRefreshCache;
+        if (cookieRefreshCache === false) {
+          ctx.context.session = session;
+          const parsedSession = parseSessionOutput(ctx.context.options, {
+            ...session.session,
+            expiresAt: new Date(session.session.expiresAt),
+            createdAt: new Date(session.session.createdAt),
+            updatedAt: new Date(session.session.updatedAt)
+          });
+          const parsedUser = parseUserOutput(ctx.context.options, {
+            ...session.user,
+            createdAt: new Date(session.user.createdAt),
+            updatedAt: new Date(session.user.updatedAt)
+          });
+          return ctx.json({
+            session: parsedSession,
+            user: parsedUser
+          });
+        }
+        const timeUntilExpiry = sessionDataPayload.expiresAt - Date.now();
+        const updateAge = cookieRefreshCache.updateAge * 1000;
+        const shouldSkipSessionRefresh = await getShouldSkipSessionRefresh();
+        if (timeUntilExpiry < updateAge && !shouldSkipSessionRefresh) {
+          const refreshedSession = {
+            session: { ...session.session },
+            user: session.user,
+            updatedAt: Date.now()
+          };
+          await setCookieCache(ctx, refreshedSession, false);
+          const sessionTokenOptions = ctx.context.authCookies.sessionToken.attributes;
+          const sessionTokenMaxAge = dontRememberMe ? undefined : ctx.context.sessionConfig.expiresIn;
+          await ctx.setSignedCookie(ctx.context.authCookies.sessionToken.name, session.session.token, ctx.context.secret, {
+            ...sessionTokenOptions,
+            maxAge: sessionTokenMaxAge
+          });
+          const parsedRefreshedSession = parseSessionOutput(ctx.context.options, {
+            ...refreshedSession.session,
+            expiresAt: new Date(refreshedSession.session.expiresAt),
+            createdAt: new Date(refreshedSession.session.createdAt),
+            updatedAt: new Date(refreshedSession.session.updatedAt)
+          });
+          const parsedRefreshedUser = parseUserOutput(ctx.context.options, {
+            ...refreshedSession.user,
+            createdAt: new Date(refreshedSession.user.createdAt),
+            updatedAt: new Date(refreshedSession.user.updatedAt)
+          });
+          ctx.context.session = {
+            session: parsedRefreshedSession,
+            user: parsedRefreshedUser
+          };
+          return ctx.json({
+            session: parsedRefreshedSession,
+            user: parsedRefreshedUser
+          });
+        }
+        const parsedSession = parseSessionOutput(ctx.context.options, {
+          ...session.session,
+          expiresAt: new Date(session.session.expiresAt),
+          createdAt: new Date(session.session.createdAt),
+          updatedAt: new Date(session.session.updatedAt)
+        });
+        const parsedUser = parseUserOutput(ctx.context.options, {
+          ...session.user,
+          createdAt: new Date(session.user.createdAt),
+          updatedAt: new Date(session.user.updatedAt)
+        });
+        ctx.context.session = {
+          session: parsedSession,
+          user: parsedUser
+        };
+        return ctx.json({
+          session: parsedSession,
+          user: parsedUser
+        });
+      }
+    }
+    const session = await ctx.context.internalAdapter.findSession(sessionCookieToken);
+    ctx.context.session = session;
+    if (!session || session.session.expiresAt < /* @__PURE__ */ new Date) {
+      deleteSessionCookie(ctx);
+      if (session) {
+        if (!deferSessionRefresh || isPostRequest)
+          await ctx.context.internalAdapter.deleteSession(session.session.token);
+      }
+      return ctx.json(null);
+    }
+    if (dontRememberMe || ctx.query?.disableRefresh) {
+      const parsedSession = parseSessionOutput(ctx.context.options, session.session);
+      const parsedUser = parseUserOutput(ctx.context.options, session.user);
+      return ctx.json({
+        session: parsedSession,
+        user: parsedUser
+      });
+    }
+    const expiresIn = ctx.context.sessionConfig.expiresIn;
+    const updateAge = ctx.context.sessionConfig.updateAge;
+    const shouldBeUpdated = session.session.expiresAt.valueOf() - expiresIn * 1000 + updateAge * 1000 <= Date.now();
+    const disableRefresh = ctx.query?.disableRefresh || ctx.context.options.session?.disableSessionRefresh;
+    const shouldSkipSessionRefresh = await getShouldSkipSessionRefresh();
+    const needsRefresh = shouldBeUpdated && !disableRefresh && !shouldSkipSessionRefresh;
+    if (deferSessionRefresh && !isPostRequest) {
+      await setCookieCache(ctx, session, !!dontRememberMe);
+      const parsedSession = parseSessionOutput(ctx.context.options, session.session);
+      const parsedUser = parseUserOutput(ctx.context.options, session.user);
+      return ctx.json({
+        session: parsedSession,
+        user: parsedUser,
+        needsRefresh
+      });
+    }
+    if (needsRefresh) {
+      const updatedSession = await ctx.context.internalAdapter.updateSession(session.session.token, {
+        expiresAt: getDate(ctx.context.sessionConfig.expiresIn, "sec"),
+        updatedAt: /* @__PURE__ */ new Date
+      });
+      if (!updatedSession) {
+        deleteSessionCookie(ctx);
+        throw APIError2.from("UNAUTHORIZED", BASE_ERROR_CODES.FAILED_TO_GET_SESSION);
+      }
+      const maxAge = ctx.context.sessionConfig.expiresIn;
+      await setSessionCookie(ctx, {
+        session: updatedSession,
+        user: session.user
+      }, false, { maxAge });
+      const parsedUpdatedSession = parseSessionOutput(ctx.context.options, updatedSession);
+      const parsedUser = parseUserOutput(ctx.context.options, session.user);
+      return ctx.json({
+        session: parsedUpdatedSession,
+        user: parsedUser
+      });
+    }
+    await setCookieCache(ctx, session, !!dontRememberMe);
+    const parsedSession = parseSessionOutput(ctx.context.options, session.session);
+    const parsedUser = parseUserOutput(ctx.context.options, session.user);
+    return ctx.json({
+      session: parsedSession,
+      user: parsedUser
+    });
+  } catch (error) {
+    if (isAPIError2(error))
+      throw error;
+    ctx.context.logger.error("INTERNAL_SERVER_ERROR", error);
+    throw APIError2.from("INTERNAL_SERVER_ERROR", BASE_ERROR_CODES.FAILED_TO_GET_SESSION);
+  }
+});
+var isStateful = (ctx) => hasServerSessionStore(ctx.context.options);
+var getSessionFromCtx = async (ctx, config) => {
+  if (ctx.context.session)
+    return ctx.context.session;
+  const session = await getSession()({
+    ...ctx,
+    method: "GET",
+    asResponse: false,
+    headers: ctx.headers,
+    returnHeaders: true,
+    returnStatus: false,
+    query: {
+      ...config,
+      ...ctx.query,
+      disableCookieCache: config?.disableCookieCache || ctx.query?.disableCookieCache,
+      disableRefresh: config?.disableRefresh || ctx.query?.disableRefresh
+    }
+  }).catch(() => {
+    return null;
+  });
+  if (!session) {
+    ctx.context.session = null;
+    return null;
+  }
+  if (session.headers)
+    session.headers.forEach((value, key) => {
+      const lowerKey = key.toLowerCase();
+      if (lowerKey === "cache-control" || lowerKey === "pragma")
+        return;
+      if (lowerKey === "set-cookie")
+        ctx.responseHeaders.append(key, value);
+      else
+        ctx.responseHeaders.set(key, value);
+    });
+  ctx.context.session = session.response;
+  return session.response;
+};
+var getAuthoritativeSessionFromCtx = async (ctx) => {
+  if (!isStateful(ctx))
+    return getSessionFromCtx(ctx);
+  ctx.context.session = null;
+  return getSessionFromCtx(ctx, { disableCookieCache: true });
+};
+var sessionMiddleware = createAuthMiddleware(async (ctx) => {
+  const session = await getSessionFromCtx(ctx);
+  if (!session?.session)
+    throw APIError2.from("UNAUTHORIZED", {
+      message: "Unauthorized",
+      code: "UNAUTHORIZED"
+    });
+  return { session };
+});
+var sensitiveSessionMiddleware = createAuthMiddleware(async (ctx) => {
+  const session = await getAuthoritativeSessionFromCtx(ctx);
+  if (!session?.session)
+    throw APIError2.from("UNAUTHORIZED", {
+      message: "Unauthorized",
+      code: "UNAUTHORIZED"
+    });
+  return { session };
+});
+var requestOnlySessionMiddleware = createAuthMiddleware(async (ctx) => {
+  const session = await getSessionFromCtx(ctx);
+  if (!session?.session && (ctx.request || ctx.headers))
+    throw APIError2.from("UNAUTHORIZED", {
+      message: "Unauthorized",
+      code: "UNAUTHORIZED"
+    });
+  return { session };
+});
+var freshSessionMiddleware = createAuthMiddleware(async (ctx) => {
+  const session = await getSessionFromCtx(ctx);
+  if (!session?.session)
+    throw APIError2.from("UNAUTHORIZED", {
+      message: "Unauthorized",
+      code: "UNAUTHORIZED"
+    });
+  if (ctx.context.sessionConfig.freshAge !== 0) {
+    const createdAt = new Date(session.session.createdAt).getTime();
+    const freshAge = ctx.context.sessionConfig.freshAge * 1000;
+    if (Date.now() - createdAt >= freshAge)
+      throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.SESSION_NOT_FRESH);
+  }
+  return { session };
+});
+var listSessions = () => createAuthEndpoint("/list-sessions", {
+  method: "GET",
+  operationId: "listUserSessions",
+  use: [freshSessionMiddleware],
+  requireHeaders: true,
+  metadata: { openapi: {
+    operationId: "listUserSessions",
+    description: "List all active sessions for the user",
+    responses: { "200": {
+      description: "Success",
+      content: { "application/json": { schema: {
+        type: "array",
+        items: { $ref: "#/components/schemas/Session" }
+      } } }
+    } }
+  } }
+}, async (ctx) => {
+  try {
+    const activeSessions = (await ctx.context.internalAdapter.listSessions(ctx.context.session.user.id, { onlyActiveSessions: true })).filter((session) => {
+      return session.expiresAt > /* @__PURE__ */ new Date;
+    });
+    return ctx.json(activeSessions.map((session) => parseSessionOutput(ctx.context.options, session)));
+  } catch (e) {
+    ctx.context.logger.error(e);
+    throw ctx.error("INTERNAL_SERVER_ERROR");
+  }
+});
+var revokeSession = createAuthEndpoint("/revoke-session", {
+  method: "POST",
+  body: object({ token: string2().meta({ description: "The token to revoke" }) }),
+  use: [sensitiveSessionMiddleware],
+  requireHeaders: true,
+  metadata: { openapi: {
+    description: "Revoke a single session",
+    requestBody: { content: { "application/json": { schema: {
+      type: "object",
+      properties: { token: {
+        type: "string",
+        description: "The token to revoke"
+      } },
+      required: ["token"]
+    } } } },
+    responses: { "200": {
+      description: "Success",
+      content: { "application/json": { schema: {
+        type: "object",
+        properties: { status: {
+          type: "boolean",
+          description: "Indicates if the session was revoked successfully"
+        } },
+        required: ["status"]
+      } } }
+    } }
+  } }
+}, async (ctx) => {
+  const token = ctx.body.token;
+  if ((await ctx.context.internalAdapter.findSession(token))?.session.userId === ctx.context.session.user.id)
+    try {
+      await ctx.context.internalAdapter.deleteSession(token);
+    } catch (error) {
+      ctx.context.logger.error(error && typeof error === "object" && "name" in error ? error.name : "", error);
+      throw APIError2.from("INTERNAL_SERVER_ERROR", {
+        message: "Internal Server Error",
+        code: "INTERNAL_SERVER_ERROR"
+      });
+    }
+  return ctx.json({ status: true });
+});
+var revokeSessions = createAuthEndpoint("/revoke-sessions", {
+  method: "POST",
+  use: [sensitiveSessionMiddleware],
+  requireHeaders: true,
+  metadata: { openapi: {
+    description: "Revoke all sessions for the user",
+    responses: { "200": {
+      description: "Success",
+      content: { "application/json": { schema: {
+        type: "object",
+        properties: { status: {
+          type: "boolean",
+          description: "Indicates if all sessions were revoked successfully"
+        } },
+        required: ["status"]
+      } } }
+    } }
+  } }
+}, async (ctx) => {
+  try {
+    await ctx.context.internalAdapter.deleteUserSessions(ctx.context.session.user.id);
+  } catch (error) {
+    ctx.context.logger.error(error && typeof error === "object" && "name" in error ? error.name : "", error);
+    throw APIError2.from("INTERNAL_SERVER_ERROR", {
+      message: "Internal Server Error",
+      code: "INTERNAL_SERVER_ERROR"
+    });
+  }
+  return ctx.json({ status: true });
+});
+var revokeOtherSessions = createAuthEndpoint("/revoke-other-sessions", {
+  method: "POST",
+  requireHeaders: true,
+  use: [sensitiveSessionMiddleware],
+  metadata: { openapi: {
+    description: "Revoke all other sessions for the user except the current one",
+    responses: { "200": {
+      description: "Success",
+      content: { "application/json": { schema: {
+        type: "object",
+        properties: { status: {
+          type: "boolean",
+          description: "Indicates if all other sessions were revoked successfully"
+        } },
+        required: ["status"]
+      } } }
+    } }
+  } }
+}, async (ctx) => {
+  const session = ctx.context.session;
+  if (!session.user)
+    throw APIError2.from("UNAUTHORIZED", {
+      message: "Unauthorized",
+      code: "UNAUTHORIZED"
+    });
+  const otherSessions = (await ctx.context.internalAdapter.listSessions(session.user.id)).filter((session) => {
+    return session.expiresAt > /* @__PURE__ */ new Date;
+  }).filter((session) => session.token !== ctx.context.session.session.token);
+  await Promise.all(otherSessions.map((session) => ctx.context.internalAdapter.deleteSession(session.token)));
+  return ctx.json({ status: true });
+});
+
 // node_modules/better-auth/dist/utils/validate-user-info.mjs
 init_error2();
 function assertValidUserInfoSource(source) {
@@ -95736,214 +96331,6 @@ function getStorageOption(identifier, config) {
   }
   return config;
 }
-
-// node_modules/@better-auth/core/dist/context/index.mjs
-init_global();
-
-// node_modules/@better-auth/core/dist/context/endpoint-context.mjs
-init_global();
-
-// node_modules/@better-auth/core/dist/async_hooks/index.mjs
-var AsyncLocalStoragePromise = import("async_hooks").then((mod) => mod.AsyncLocalStorage).catch((err) => {
-  if ("AsyncLocalStorage" in globalThis)
-    return globalThis.AsyncLocalStorage;
-  if (typeof window !== "undefined")
-    return null;
-  console.warn("[better-auth] Warning: AsyncLocalStorage is not available in this environment. Some features may not work as expected.");
-  console.warn("[better-auth] Please read more about this warning at https://better-auth.com/docs/installation#mount-handler");
-  console.warn("[better-auth] If you are using Cloudflare Workers, please see: https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag");
-  throw err;
-});
-async function getAsyncLocalStorage() {
-  const mod = await AsyncLocalStoragePromise;
-  if (mod === null)
-    throw new Error("getAsyncLocalStorage is only available in server code");
-  else
-    return mod;
-}
-
-// node_modules/@better-auth/core/dist/context/endpoint-context.mjs
-var getExistingEndpointContextStorage = () => {
-  return __getBetterAuthGlobal().context.endpointContextAsyncStorage;
-};
-var getOrCreateEndpointContextStorage = async () => {
-  const existing = getExistingEndpointContextStorage();
-  if (existing)
-    return existing;
-  const AsyncLocalStorage = await getAsyncLocalStorage();
-  const globalContext = __getBetterAuthGlobal().context;
-  return globalContext.endpointContextAsyncStorage ??= new AsyncLocalStorage;
-};
-function tryGetCurrentAuthEndpointContext() {
-  return __getCurrentEndpointContext();
-}
-function getCurrentAuthEndpointContext() {
-  const authEndpointContext = tryGetCurrentAuthEndpointContext();
-  if (!authEndpointContext)
-    throw new Error("No auth context found. Please make sure you are calling this function within a `runWithEndpointContext` callback.");
-  return authEndpointContext;
-}
-async function runWithEndpointContext(authEndpointContext, fn) {
-  return (await getOrCreateEndpointContextStorage()).run(authEndpointContext, fn);
-}
-
-// node_modules/@better-auth/core/dist/context/request-state.mjs
-init_global();
-var ensureAsyncStorage = async () => {
-  const betterAuthGlobal = __getBetterAuthGlobal();
-  const existing = betterAuthGlobal.context.requestStateAsyncStorage;
-  if (existing)
-    return existing;
-  const AsyncLocalStorage = await getAsyncLocalStorage();
-  betterAuthGlobal.context.requestStateAsyncStorage ??= new AsyncLocalStorage;
-  return betterAuthGlobal.context.requestStateAsyncStorage;
-};
-async function hasRequestState() {
-  return (await ensureAsyncStorage()).getStore() !== undefined;
-}
-async function getCurrentRequestState() {
-  const store = (await ensureAsyncStorage()).getStore();
-  if (!store)
-    throw new Error("No request state found. Please make sure you are calling this function within a `runWithRequestState` callback.");
-  return store;
-}
-async function runWithRequestState(store, fn) {
-  return (await ensureAsyncStorage()).run(store, fn);
-}
-function defineRequestState(initFn) {
-  const ref = Object.freeze({});
-  return {
-    get ref() {
-      return ref;
-    },
-    async get() {
-      const store = await getCurrentRequestState();
-      if (!store.has(ref)) {
-        const initialValue = await initFn();
-        store.set(ref, initialValue);
-        return initialValue;
-      }
-      return store.get(ref);
-    },
-    async set(value) {
-      (await getCurrentRequestState()).set(ref, value);
-    }
-  };
-}
-
-// node_modules/@better-auth/core/dist/context/transaction.mjs
-init_global();
-init_schema_check();
-var ensureAsyncStorage2 = async () => {
-  const betterAuthGlobal = __getBetterAuthGlobal();
-  const existing = betterAuthGlobal.context.adapterAsyncStorage;
-  if (existing)
-    return existing;
-  const AsyncLocalStorage = await getAsyncLocalStorage();
-  betterAuthGlobal.context.adapterAsyncStorage ??= new AsyncLocalStorage;
-  return betterAuthGlobal.context.adapterAsyncStorage;
-};
-var getCurrentAdapter = async (fallback) => {
-  return ensureAsyncStorage2().then((als) => {
-    return als.getStore()?.adapter || fallback;
-  }).catch(() => {
-    return fallback;
-  });
-};
-var runWithAdapter = async (adapter, fn) => {
-  let called = false;
-  return ensureAsyncStorage2().then(async (als) => {
-    called = true;
-    const pendingHooks = [];
-    let result;
-    let error;
-    let hasError = false;
-    try {
-      result = await als.run({
-        adapter,
-        pendingHooks,
-        isTransactionActive: false
-      }, fn);
-    } catch (err) {
-      error = err;
-      hasError = true;
-    }
-    for (const hook of pendingHooks)
-      await hook();
-    if (hasError)
-      throw error;
-    return result;
-  }).catch((err) => {
-    if (!called)
-      return fn();
-    throw err;
-  });
-};
-var runWithTransaction = async (adapter, fn, options) => {
-  let called = false;
-  return ensureAsyncStorage2().then(async (als) => {
-    called = true;
-    if (als.getStore()?.isTransactionActive)
-      return fn();
-    const pendingSchemaCheck = schemaCheckFor(adapter)?.();
-    if (pendingSchemaCheck)
-      await pendingSchemaCheck;
-    const pendingHooks = [];
-    let result;
-    let error;
-    let hasError = false;
-    try {
-      result = await adapter.transaction(async (trx) => {
-        return als.run({
-          adapter: trx,
-          pendingHooks,
-          isTransactionActive: true
-        }, fn);
-      });
-    } catch (e) {
-      hasError = true;
-      error = e;
-    }
-    if (hasError)
-      throw error;
-    for (const hook of pendingHooks)
-      try {
-        await hook();
-      } catch (error) {
-        if (!options?.onAfterCommitHookError)
-          throw error;
-        try {
-          await options.onAfterCommitHookError(error);
-        } catch {}
-      }
-    return result;
-  }).catch((err) => {
-    if (!called)
-      return fn();
-    throw err;
-  });
-};
-var queueAfterTransactionHook = async (hook, options) => {
-  const executeHook = async () => {
-    try {
-      await hook();
-    } catch (error) {
-      if (!options?.onError)
-        throw error;
-      await options.onError(error);
-    }
-  };
-  let storage;
-  try {
-    storage = await ensureAsyncStorage2();
-  } catch {
-    return executeHook();
-  }
-  const store = storage.getStore();
-  if (!store?.isTransactionActive)
-    return executeHook();
-  store.pendingHooks.push(executeHook);
-};
 
 // node_modules/better-auth/dist/db/with-hooks.mjs
 init_instrumentation();
@@ -96209,193 +96596,6 @@ function getWithHooks(adapter, ctx) {
 init_error2();
 init_id();
 init_json();
-
-// node_modules/@better-auth/core/dist/utils/ip.mjs
-init_env_impl();
-init_zod();
-var ipv4Schema = ipv42();
-var ipv6Schema = ipv62();
-function isValidIP(ip) {
-  return isIPv4(ip) || isIPv6(ip);
-}
-function isIPv4(ip) {
-  return validate(ipv4Schema, ip);
-}
-function isIPv6(ip) {
-  return validate(ipv6Schema, ip);
-}
-function extractIPv4FromMapped(ipv6) {
-  const lower = ipv6.toLowerCase();
-  if (lower.startsWith("::ffff:")) {
-    const ipv4Part = lower.substring(7);
-    if (isIPv4(ipv4Part))
-      return ipv4Part;
-  }
-  const parts = ipv6.split(":");
-  if (parts.length === 7 && parts[5]?.toLowerCase() === "ffff") {
-    const ipv4Part = parts[6];
-    if (ipv4Part && isIPv4(ipv4Part))
-      return ipv4Part;
-  }
-  if (lower.includes("::ffff:") || lower.includes(":ffff:")) {
-    const groups = expandIPv6(ipv6);
-    if (groups.length === 8 && groups[0] === "0000" && groups[1] === "0000" && groups[2] === "0000" && groups[3] === "0000" && groups[4] === "0000" && groups[5] === "ffff" && groups[6] && groups[7])
-      return `${Number.parseInt(groups[6].substring(0, 2), 16)}.${Number.parseInt(groups[6].substring(2, 4), 16)}.${Number.parseInt(groups[7].substring(0, 2), 16)}.${Number.parseInt(groups[7].substring(2, 4), 16)}`;
-  }
-  return null;
-}
-function expandIPv6(ipv6) {
-  if (ipv6.includes("::")) {
-    const sides = ipv6.split("::");
-    const left = sides[0] ? sides[0].split(":") : [];
-    const right = sides[1] ? sides[1].split(":") : [];
-    const missingGroups = 8 - left.length - right.length;
-    const zeros = Array(missingGroups).fill("0000");
-    const paddedLeft = left.map((g) => g.padStart(4, "0"));
-    const paddedRight = right.map((g) => g.padStart(4, "0"));
-    return [
-      ...paddedLeft,
-      ...zeros,
-      ...paddedRight
-    ];
-  }
-  return ipv6.split(":").map((g) => g.padStart(4, "0"));
-}
-function normalizeIPv6(ipv6, subnetPrefix) {
-  const groups = expandIPv6(ipv6);
-  if (subnetPrefix !== undefined && subnetPrefix < 128) {
-    let bitsRemaining = Math.max(0, Math.floor(subnetPrefix));
-    return groups.map((group) => {
-      if (bitsRemaining <= 0)
-        return "0000";
-      if (bitsRemaining >= 16) {
-        bitsRemaining -= 16;
-        return group;
-      }
-      const masked = Number.parseInt(group, 16) & (65535 << 16 - bitsRemaining & 65535);
-      bitsRemaining = 0;
-      return masked.toString(16).padStart(4, "0");
-    }).join(":").toLowerCase();
-  }
-  return groups.join(":").toLowerCase();
-}
-function normalizeIP(ip, options = {}) {
-  if (isIPv4(ip))
-    return ip.toLowerCase();
-  if (!isIPv6(ip))
-    return ip.toLowerCase();
-  const ipv4 = extractIPv4FromMapped(ip);
-  if (ipv4)
-    return ipv4.toLowerCase();
-  return normalizeIPv6(ip, options.ipv6Subnet ?? 64);
-}
-function ipToBytes(ip) {
-  if (isIPv4(ip))
-    return Uint8Array.from(ip.split(".").map((octet) => Number(octet)));
-  if (!isIPv6(ip))
-    return null;
-  const mapped = extractIPv4FromMapped(ip);
-  if (mapped)
-    return Uint8Array.from(mapped.split(".").map((octet) => Number(octet)));
-  const groups = expandIPv6(ip);
-  const bytes = new Uint8Array(16);
-  for (let i = 0;i < 8; i++) {
-    const group = Number.parseInt(groups[i] ?? "0", 16);
-    bytes[i * 2] = group >> 8 & 255;
-    bytes[i * 2 + 1] = group & 255;
-  }
-  return bytes;
-}
-var CIDR_PREFIX_PATTERN = /^\d+$/;
-function parseCIDR(value) {
-  const slash = value.lastIndexOf("/");
-  const bytes = ipToBytes(slash === -1 ? value : value.slice(0, slash));
-  if (!bytes)
-    return null;
-  const maxBits = bytes.length * 8;
-  if (slash === -1)
-    return {
-      bytes,
-      prefix: maxBits
-    };
-  const prefixPart = value.slice(slash + 1);
-  if (!CIDR_PREFIX_PATTERN.test(prefixPart))
-    return null;
-  const prefix = Number(prefixPart);
-  return prefix <= maxBits ? {
-    bytes,
-    prefix
-  } : null;
-}
-function matchesCIDR(ipBytes, net) {
-  if (ipBytes.length !== net.bytes.length)
-    return false;
-  let bitsRemaining = net.prefix;
-  for (let i = 0;i < ipBytes.length && bitsRemaining > 0; i++) {
-    const take = bitsRemaining >= 8 ? 8 : bitsRemaining;
-    const mask = take === 8 ? 255 : 255 << 8 - take & 255;
-    if (((ipBytes[i] ?? 0) & mask) !== ((net.bytes[i] ?? 0) & mask))
-      return false;
-    bitsRemaining -= 8;
-  }
-  return true;
-}
-function findInvalidTrustedProxies(entries) {
-  return entries.filter((entry) => parseCIDR(entry) === null);
-}
-function getIPFromHeader(value, options = {}) {
-  const forwardedIps = value.split(",").map((ip) => ip.trim()).filter(Boolean);
-  if (forwardedIps.length === 0)
-    return null;
-  const trustedProxies = (options.trustedProxies ?? []).map(parseCIDR).filter((proxy) => {
-    return proxy !== null;
-  });
-  if (trustedProxies.length > 0) {
-    for (let i = forwardedIps.length - 1;i >= 0; i--) {
-      const ip = forwardedIps[i];
-      const ipBytes = ip ? ipToBytes(ip) : null;
-      if (!ip || !ipBytes)
-        return null;
-      if (trustedProxies.some((proxy) => matchesCIDR(ipBytes, proxy)))
-        continue;
-      return normalizeIP(ip, { ipv6Subnet: options.ipv6Subnet });
-    }
-    return null;
-  }
-  if (forwardedIps.length !== 1)
-    return null;
-  const selectedIp = forwardedIps[0];
-  if (!selectedIp || !isValidIP(selectedIp))
-    return null;
-  return normalizeIP(selectedIp, { ipv6Subnet: options.ipv6Subnet });
-}
-var LOCALHOST_IP = "127.0.0.1";
-var DEFAULT_IP_HEADERS = ["x-forwarded-for"];
-function getIP(req, options) {
-  if (options.advanced?.ipAddress?.disableIpTracking)
-    return null;
-  const headers = "headers" in req ? req.headers : req;
-  const ipHeaders = options.advanced?.ipAddress?.ipAddressHeaders || DEFAULT_IP_HEADERS;
-  for (const key of ipHeaders) {
-    const value = "get" in headers ? headers.get(key) : headers[key];
-    if (typeof value === "string") {
-      const ip = getIPFromHeader(value, {
-        ipv6Subnet: options.advanced?.ipAddress?.ipv6Subnet,
-        trustedProxies: options.advanced?.ipAddress?.trustedProxies
-      });
-      if (ip)
-        return ip;
-    }
-  }
-  if (isTest() || isDevelopment())
-    return LOCALHOST_IP;
-  return null;
-}
-function createRateLimitKey(ip, path) {
-  return `${ip}|${path}`;
-}
-
-// node_modules/better-auth/dist/db/internal-adapter.mjs
 function getTTLSeconds(expiresAt, now = Date.now()) {
   const expiresMs = typeof expiresAt === "number" ? expiresAt : expiresAt.getTime();
   return Math.max(Math.floor((expiresMs - now) / 1000), 0);
@@ -97755,1072 +97955,6 @@ async function getTrustedProviders(options, request) {
   return (await trustedProviders(request) ?? []).filter((v) => Boolean(v));
 }
 
-// node_modules/better-auth/dist/utils/password.mjs
-init_error2();
-async function validatePassword(ctx, data) {
-  const credentialAccount = await ctx.context.internalAdapter.findCredentialAccount(data.userId);
-  const currentPassword = credentialAccount?.password;
-  if (!credentialAccount || !currentPassword)
-    return false;
-  return await ctx.context.password.verify({
-    hash: currentPassword,
-    password: data.password
-  });
-}
-async function checkPassword(userId, c) {
-  const credentialAccount = await c.context.internalAdapter.findCredentialAccount(userId);
-  const currentPassword = credentialAccount?.password;
-  const password = c.body.password;
-  if (!credentialAccount || !currentPassword || !password) {
-    if (password)
-      await c.context.password.hash(password);
-    throw APIError2.from("BAD_REQUEST", BASE_ERROR_CODES.INVALID_PASSWORD);
-  }
-  if (!await c.context.password.verify({
-    hash: currentPassword,
-    password
-  }))
-    throw APIError2.from("BAD_REQUEST", BASE_ERROR_CODES.INVALID_PASSWORD);
-  return true;
-}
-async function shouldRequirePassword(ctx, userId, allowPasswordless) {
-  if (!allowPasswordless)
-    return true;
-  const credentialAccount = await ctx.context.internalAdapter.findCredentialAccount(userId);
-  return Boolean(credentialAccount?.password);
-}
-
-// node_modules/@better-auth/core/dist/utils/is-api-error.mjs
-init_error2();
-function isAPIError2(error) {
-  return error instanceof APIError || error instanceof APIError2 || error?.name === "APIError";
-}
-
-// node_modules/@better-auth/core/dist/api/index.mjs
-var NO_STORE_HEADERS = {
-  "Cache-Control": "no-store",
-  Pragma: "no-cache"
-};
-function attachResponseHeadersToAPIError(responseHeaders, e) {
-  if (!isAPIError2(e) || !responseHeaders)
-    return;
-  Object.defineProperty(e, kAPIErrorHeaderSymbol, {
-    enumerable: false,
-    configurable: true,
-    value: responseHeaders,
-    writable: false
-  });
-}
-var optionsMiddleware = createMiddleware(async () => {
-  return {};
-});
-var createAuthMiddleware = createMiddleware.create({ use: [optionsMiddleware, createMiddleware(async () => {
-  return {};
-})] });
-var createEndpointWithAuthContext = createEndpoint.create({ use: [optionsMiddleware] });
-function wrapEndpointHandler(handler, options) {
-  const noStore = options.metadata?.noStore === true;
-  return async (context) => {
-    if (noStore)
-      for (const [name, value] of Object.entries(NO_STORE_HEADERS))
-        context.setHeader(name, value);
-    try {
-      return await runWithEndpointContext(context, () => handler(context));
-    } catch (error) {
-      attachResponseHeadersToAPIError(context.responseHeaders, error);
-      throw error;
-    }
-  };
-}
-function createAuthEndpoint(...args) {
-  if (args.length === 3) {
-    const [path, options, handler] = args;
-    return createEndpointWithAuthContext(path, options, wrapEndpointHandler(handler, options));
-  }
-  const [options, handler] = args;
-  return createEndpointWithAuthContext(options, wrapEndpointHandler(handler, options));
-}
-function withServerOnly(options) {
-  return {
-    ...options,
-    metadata: {
-      ...options.metadata,
-      SERVER_ONLY: true
-    }
-  };
-}
-createAuthEndpoint.serverOnly = (options, handler) => createAuthEndpoint(withServerOnly(options), handler);
-
-// node_modules/better-auth/dist/api/middlewares/origin-check.mjs
-init_error2();
-
-// node_modules/@better-auth/core/dist/utils/url.mjs
-function normalizePathname(requestUrl, basePath) {
-  let pathname;
-  try {
-    pathname = new URL(requestUrl).pathname.replace(/\/+$/, "") || "/";
-  } catch {
-    return "/";
-  }
-  const normalizedBasePath = basePath.replace(/\/+$/, "");
-  if (normalizedBasePath === "")
-    return pathname;
-  if (pathname === normalizedBasePath)
-    return "/";
-  if (pathname.startsWith(normalizedBasePath + "/"))
-    return pathname.slice(normalizedBasePath.length).replace(/\/+$/, "") || "/";
-  return pathname;
-}
-var URL_REFERENCE_ORIGIN = "https://better-auth.invalid";
-function appendQueryParams(input, params) {
-  const relative = input.startsWith("/");
-  if (input.startsWith("//") || input.startsWith("/\\"))
-    throw new TypeError("Expected an absolute or root-relative URL");
-  const parsedURL = relative ? new URL(input, URL_REFERENCE_ORIGIN) : new URL(input);
-  if (relative && parsedURL.origin !== URL_REFERENCE_ORIGIN)
-    throw new TypeError("Expected an absolute or root-relative URL");
-  const query = params.toString();
-  if (!query)
-    return input;
-  const separator = parsedURL.search.endsWith("&") ? "" : "&";
-  parsedURL.search = parsedURL.search ? `${parsedURL.search}${separator}${query}` : query;
-  return relative ? parsedURL.href.slice(parsedURL.origin.length) : parsedURL.href;
-}
-
-// node_modules/@better-auth/core/dist/utils/deprecate.mjs
-function deprecate(fn, message, logger) {
-  let warned = false;
-  return function(...args) {
-    if (!warned) {
-      (logger?.warn ?? console.warn)(`[Deprecation] ${message}`);
-      warned = true;
-    }
-    return fn.apply(this, args);
-  };
-}
-
-// node_modules/better-auth/dist/api/middlewares/origin-check.mjs
-function shouldSkipCSRFForBackwardCompat(ctx) {
-  return ctx.context.skipOriginCheck === true && ctx.context.options.advanced?.disableCSRFCheck === undefined;
-}
-function shouldSkipOriginCheck(ctx) {
-  const skipOriginCheck = ctx.context.skipOriginCheck;
-  if (skipOriginCheck === true)
-    return true;
-  if (Array.isArray(skipOriginCheck) && ctx.request)
-    try {
-      const basePath = new URL(ctx.context.baseURL).pathname;
-      const currentPath = normalizePathname(ctx.request.url, basePath);
-      return skipOriginCheck.some((skipPath) => {
-        const normalizedSkipPath = skipPath.replace(/\/+$/, "");
-        return currentPath === normalizedSkipPath || currentPath.startsWith(`${normalizedSkipPath}/`);
-      });
-    } catch {}
-  return false;
-}
-var logBackwardCompatWarning = deprecate(function logBackwardCompatWarning() {}, "disableOriginCheck: true currently also disables CSRF checks. In a future version, disableOriginCheck will ONLY disable URL validation. To keep CSRF disabled, add disableCSRFCheck: true to your config.");
-var originCheckMiddleware = createAuthMiddleware(async (ctx) => {
-  if (ctx.request?.method === "GET" || ctx.request?.method === "OPTIONS" || ctx.request?.method === "HEAD" || !ctx.request)
-    return;
-  await validateOrigin(ctx);
-  if (shouldSkipOriginCheck(ctx))
-    return;
-  const { body, query } = ctx;
-  const callbackURL = body?.callbackURL || query?.callbackURL;
-  const redirectURL = body?.redirectTo;
-  const errorCallbackURL = body?.errorCallbackURL;
-  const newUserCallbackURL = body?.newUserCallbackURL;
-  const validateURL = (url, label) => {
-    if (!url)
-      return;
-    if (typeof url !== "string")
-      throw APIError2.fromStatus("BAD_REQUEST", { message: `Invalid ${label}: expected a string` });
-    if (!ctx.context.isTrustedOrigin(url, { allowRelativePaths: label !== "origin" })) {
-      ctx.context.logger.error(`Invalid ${label}: ${url}`);
-      ctx.context.logger.info(`If it's a valid URL, please add ${url} to trustedOrigins in your auth config
-`, `Current list of trustedOrigins: ${ctx.context.trustedOrigins}`);
-      if (label === "origin")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ORIGIN);
-      if (label === "callbackURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_CALLBACK_URL);
-      if (label === "redirectURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_REDIRECT_URL);
-      if (label === "errorCallbackURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ERROR_CALLBACK_URL);
-      if (label === "newUserCallbackURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_NEW_USER_CALLBACK_URL);
-      throw APIError2.fromStatus("FORBIDDEN", { message: `Invalid ${label}` });
-    }
-  };
-  callbackURL && validateURL(callbackURL, "callbackURL");
-  redirectURL && validateURL(redirectURL, "redirectURL");
-  errorCallbackURL && validateURL(errorCallbackURL, "errorCallbackURL");
-  newUserCallbackURL && validateURL(newUserCallbackURL, "newUserCallbackURL");
-});
-var originCheck = (getValue) => createAuthMiddleware(async (ctx) => {
-  if (!ctx.request)
-    return;
-  if (shouldSkipOriginCheck(ctx))
-    return;
-  const callbackURL = getValue(ctx);
-  const validateURL = (url, label) => {
-    if (!url)
-      return;
-    if (!ctx.context.isTrustedOrigin(url, { allowRelativePaths: label !== "origin" })) {
-      ctx.context.logger.error(`Invalid ${label}: ${url}`);
-      ctx.context.logger.info(`If it's a valid URL, please add ${url} to trustedOrigins in your auth config
-`, `Current list of trustedOrigins: ${ctx.context.trustedOrigins}`);
-      if (label === "origin")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ORIGIN);
-      if (label === "callbackURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_CALLBACK_URL);
-      if (label === "redirectURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_REDIRECT_URL);
-      if (label === "errorCallbackURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ERROR_CALLBACK_URL);
-      if (label === "newUserCallbackURL")
-        throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_NEW_USER_CALLBACK_URL);
-      throw APIError2.fromStatus("FORBIDDEN", { message: `Invalid ${label}` });
-    }
-  };
-  const callbacks = Array.isArray(callbackURL) ? callbackURL : [callbackURL];
-  for (const url of callbacks)
-    validateURL(url, "callbackURL");
-});
-async function validateOrigin(ctx, forceValidate = false) {
-  const headers = ctx.request?.headers;
-  if (!headers || !ctx.request)
-    return;
-  const origin = headers.get("origin");
-  const originHeader = origin || headers.get("referer") || "";
-  const useCookies = headers.has("cookie");
-  if (ctx.context.skipCSRFCheck)
-    return;
-  if (shouldSkipCSRFForBackwardCompat(ctx)) {
-    ctx.context.options.advanced?.disableOriginCheck === true && logBackwardCompatWarning();
-    return;
-  }
-  if (shouldSkipOriginCheck(ctx))
-    return;
-  if (!(forceValidate || useCookies))
-    return;
-  const inferredBaseURL = origin === "null" && headers.get("sec-fetch-site") === "same-origin" ? getBaseURL(undefined, ctx.context.options.basePath, ctx.request, false, ctx.context.options.advanced?.trustedProxyHeaders) : undefined;
-  const originToValidate = (inferredBaseURL ? getOrigin(inferredBaseURL) : undefined) ?? originHeader;
-  if (!originToValidate || originToValidate === "null")
-    throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.MISSING_OR_NULL_ORIGIN);
-  const trustedOrigins = Array.isArray(ctx.context.options.trustedOrigins) ? ctx.context.trustedOrigins : [...ctx.context.trustedOrigins, ...(await ctx.context.options.trustedOrigins?.(ctx.request))?.filter((v) => Boolean(v)) || []];
-  if (!trustedOrigins.some((origin) => matchesOriginPattern(originToValidate, origin))) {
-    ctx.context.logger.error(`Invalid origin: ${originToValidate}`);
-    ctx.context.logger.info(`If it's a valid URL, please add ${originToValidate} to trustedOrigins in your auth config
-`, `Current list of trustedOrigins: ${trustedOrigins}`);
-    throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.INVALID_ORIGIN);
-  }
-}
-var formCsrfMiddleware = createAuthMiddleware(async (ctx) => {
-  if (!ctx.request)
-    return;
-  await validateFormCsrf(ctx);
-});
-async function validateFormCsrf(ctx) {
-  const req = ctx.request;
-  if (!req)
-    return;
-  if (ctx.context.skipCSRFCheck)
-    return;
-  if (shouldSkipCSRFForBackwardCompat(ctx))
-    return;
-  const headers = req.headers;
-  if (headers.has("cookie"))
-    return await validateOrigin(ctx);
-  const site = headers.get("Sec-Fetch-Site");
-  const mode = headers.get("Sec-Fetch-Mode");
-  const dest = headers.get("Sec-Fetch-Dest");
-  if (Boolean(site && site.trim() || mode && mode.trim() || dest && dest.trim())) {
-    if (site === "cross-site" && mode === "navigate") {
-      ctx.context.logger.error("Blocked cross-site navigation login attempt (CSRF protection)", {
-        secFetchSite: site,
-        secFetchMode: mode,
-        secFetchDest: dest
-      });
-      throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.CROSS_SITE_NAVIGATION_LOGIN_BLOCKED);
-    }
-    return await validateOrigin(ctx, true);
-  }
-  if (headers.get("origin") || headers.get("referer"))
-    return await validateOrigin(ctx, true);
-}
-
-// node_modules/better-auth/dist/api/rate-limiter/index.mjs
-init_error2();
-var memory = /* @__PURE__ */ new Map;
-var MEMORY_STORE_MAX_ENTRIES = 1e5;
-function pruneMemoryStore() {
-  const now = Date.now();
-  for (const [key, entry] of memory)
-    if (now >= entry.expiresAt)
-      memory.delete(key);
-  if (memory.size <= MEMORY_STORE_MAX_ENTRIES)
-    return;
-  const overflow = memory.size - MEMORY_STORE_MAX_ENTRIES;
-  let removed = 0;
-  for (const key of memory.keys()) {
-    memory.delete(key);
-    if (++removed >= overflow)
-      break;
-  }
-}
-function decideConsume(data, rule, now) {
-  const windowInMs = rule.window * 1000;
-  if (!data)
-    return {
-      next: {
-        key: "",
-        count: 1,
-        lastRequest: now
-      },
-      update: false,
-      allowed: true,
-      retryAfter: null
-    };
-  if (now - data.lastRequest >= windowInMs)
-    return {
-      next: {
-        ...data,
-        count: 1,
-        lastRequest: now
-      },
-      update: true,
-      allowed: true,
-      retryAfter: null
-    };
-  if (data.count >= rule.max)
-    return {
-      next: data,
-      update: true,
-      allowed: false,
-      retryAfter: getRetryAfter(data.lastRequest, rule.window)
-    };
-  return {
-    next: {
-      ...data,
-      count: data.count + 1,
-      lastRequest: now
-    },
-    update: true,
-    allowed: true,
-    retryAfter: null
-  };
-}
-function rateLimitResponse(retryAfter) {
-  return new Response(JSON.stringify({ message: "Too many requests. Please try again later." }), {
-    status: 429,
-    statusText: "Too Many Requests",
-    headers: { "X-Retry-After": retryAfter.toString() }
-  });
-}
-function getRetryAfter(lastRequest, window2) {
-  const now = Date.now();
-  const windowInMs = window2 * 1000;
-  return Math.ceil((lastRequest + windowInMs - now) / 1000);
-}
-function createDatabaseStorageWrapper(ctx) {
-  const model = "rateLimit";
-  const db = ctx.adapter;
-  let longestObservedWindow = Math.max(...getConfiguredRateLimitWindows(ctx));
-  const readRow = async (key) => {
-    const data = (await db.findMany({
-      model,
-      where: [{
-        field: "key",
-        value: key
-      }]
-    }))[0];
-    if (typeof data?.lastRequest === "bigint")
-      data.lastRequest = Number(data.lastRequest);
-    return data;
-  };
-  const consume = async (key, rule) => {
-    if (rule.window > longestObservedWindow)
-      longestObservedWindow = rule.window;
-    const windowInMs = rule.window * 1000;
-    const data = await readRow(key);
-    const now = Date.now();
-    if (!data)
-      try {
-        await db.create({
-          model,
-          data: {
-            key,
-            count: 1,
-            lastRequest: now
-          }
-        });
-        return {
-          allowed: true,
-          retryAfter: null
-        };
-      } catch (error) {
-        if (!await readRow(key))
-          throw error;
-        return consume(key, rule);
-      }
-    if (now - data.lastRequest >= windowInMs) {
-      if (await db.incrementOne({
-        model,
-        where: [{
-          field: "key",
-          value: key
-        }, {
-          field: "lastRequest",
-          operator: "lte",
-          value: data.lastRequest
-        }],
-        increment: {},
-        set: {
-          count: 1,
-          lastRequest: now
-        }
-      })) {
-        await deleteExpiredRows(now);
-        return {
-          allowed: true,
-          retryAfter: null
-        };
-      }
-      return consume(key, rule);
-    }
-    const windowStart = now - windowInMs;
-    if (await db.incrementOne({
-      model,
-      where: [
-        {
-          field: "key",
-          value: key
-        },
-        {
-          field: "lastRequest",
-          operator: "gt",
-          value: windowStart
-        },
-        {
-          field: "count",
-          operator: "lt",
-          value: rule.max
-        }
-      ],
-      increment: { count: 1 },
-      set: { lastRequest: now }
-    }))
-      return {
-        allowed: true,
-        retryAfter: null
-      };
-    const fresh = await readRow(key);
-    if (!fresh)
-      return consume(key, rule);
-    if (now - fresh.lastRequest >= windowInMs)
-      return consume(key, rule);
-    return {
-      allowed: false,
-      retryAfter: getRetryAfter(fresh.lastRequest, rule.window)
-    };
-  };
-  const deleteExpiredRows = async (now) => {
-    const cutoff = now - longestObservedWindow * 1000;
-    await ctx.runInBackgroundOrAwait(db.deleteMany({
-      model,
-      where: [{
-        field: "lastRequest",
-        operator: "lt",
-        value: cutoff
-      }]
-    }).then(() => {
-      return;
-    }).catch((e) => ctx.logger.error("Error pruning rate limit rows", e)));
-  };
-  return { consume };
-}
-function getConfiguredRateLimitWindows(ctx) {
-  const windows = [ctx.rateLimit.window, ...getDefaultSpecialRules().map((rule) => rule.window)];
-  for (const plugin of ctx.options.plugins || [])
-    if (plugin.rateLimit)
-      windows.push(...plugin.rateLimit.map((rule) => rule.window));
-  if (ctx.rateLimit.customRules) {
-    for (const customRule of Object.values(ctx.rateLimit.customRules))
-      if (customRule && typeof customRule !== "function")
-        windows.push(customRule.window);
-  }
-  const validWindows = windows.filter((window2) => Number.isFinite(window2) && window2 > 0);
-  return validWindows.length > 0 ? validWindows : [ctx.rateLimit.window];
-}
-function getRateLimitStorage(ctx, rateLimitSettings) {
-  if (ctx.options.rateLimit?.customStorage)
-    return ctx.options.rateLimit.customStorage;
-  const storage = ctx.rateLimit.storage;
-  if (storage === "secondary-storage") {
-    const ttlFor = (window2) => window2 ?? ctx.options.rateLimit?.window ?? 10;
-    const increment = ctx.options.secondaryStorage?.increment;
-    if (!increment)
-      throw new BetterAuthError("Secondary-storage rate limiting requires SecondaryStorage.increment.");
-    return { consume: async (key, rule) => {
-      if (await increment(key, ttlFor(rule.window)) <= rule.max)
-        return {
-          allowed: true,
-          retryAfter: null
-        };
-      return {
-        allowed: false,
-        retryAfter: rule.window
-      };
-    } };
-  } else if (storage === "memory") {
-    const ttlFor = (window2) => window2 ?? ctx.options.rateLimit?.window ?? 10;
-    return { async consume(key, rule) {
-      pruneMemoryStore();
-      const now = Date.now();
-      const entry = memory.get(key);
-      const decision = decideConsume(entry && now < entry.expiresAt ? entry.data : undefined, rule, now);
-      if (decision.allowed)
-        memory.set(key, {
-          data: {
-            ...decision.next,
-            key
-          },
-          expiresAt: now + ttlFor(rule.window) * 1000
-        });
-      return {
-        allowed: decision.allowed,
-        retryAfter: decision.retryAfter
-      };
-    } };
-  }
-  return createDatabaseStorageWrapper(ctx);
-}
-var ipWarningLogged = false;
-var NO_TRUSTED_IP_KEY = "no-trusted-ip";
-async function resolveRateLimitConfig(req, ctx) {
-  const basePath = new URL(ctx.baseURL).pathname;
-  const path = normalizePathname(req.url, basePath);
-  let currentWindow = ctx.rateLimit.window;
-  let currentMax = ctx.rateLimit.max;
-  const ip = getIP(req, ctx.options);
-  if (!ip && ctx.options.advanced?.ipAddress?.disableIpTracking)
-    return null;
-  if (!ip && !ipWarningLogged) {
-    ctx.logger.warn("Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.");
-    ipWarningLogged = true;
-  }
-  const key = createRateLimitKey(ip ?? NO_TRUSTED_IP_KEY, path);
-  const specialRule = getDefaultSpecialRules().find((rule) => rule.pathMatcher(path));
-  if (specialRule) {
-    currentWindow = specialRule.window;
-    currentMax = specialRule.max;
-  }
-  for (const plugin of ctx.options.plugins || [])
-    if (plugin.rateLimit) {
-      const matchedRule = plugin.rateLimit.find((rule) => rule.pathMatcher(path));
-      if (matchedRule) {
-        currentWindow = matchedRule.window;
-        currentMax = matchedRule.max;
-        break;
-      }
-    }
-  if (ctx.rateLimit.customRules) {
-    const _path = Object.keys(ctx.rateLimit.customRules).find((p) => {
-      if (p.includes("*"))
-        return wildcardMatch(p)(path);
-      return p === path;
-    });
-    if (_path) {
-      const customRule = ctx.rateLimit.customRules[_path];
-      const resolved = typeof customRule === "function" ? await customRule(req, {
-        window: currentWindow,
-        max: currentMax
-      }) : customRule;
-      if (resolved) {
-        currentWindow = resolved.window;
-        currentMax = resolved.max;
-      }
-      if (resolved === false)
-        return null;
-    }
-  }
-  return {
-    key,
-    currentWindow,
-    currentMax
-  };
-}
-async function onRequestRateLimit(req, ctx) {
-  if (!ctx.rateLimit.enabled)
-    return;
-  const config = await resolveRateLimitConfig(req, ctx);
-  if (!config)
-    return;
-  const { key, currentWindow, currentMax } = config;
-  const storage = getRateLimitStorage(ctx, { window: currentWindow });
-  const rule = {
-    window: currentWindow,
-    max: currentMax
-  };
-  const { allowed, retryAfter } = await storage.consume(key, rule);
-  if (!allowed)
-    return rateLimitResponse(retryAfter ?? currentWindow);
-}
-function getDefaultSpecialRules() {
-  return [{
-    pathMatcher(path) {
-      return path.startsWith("/sign-in") || path.startsWith("/sign-up") || path.startsWith("/change-password") || path.startsWith("/change-email");
-    },
-    window: 10,
-    max: 3
-  }, {
-    pathMatcher(path) {
-      return path === "/request-password-reset" || path === "/send-verification-email" || path.startsWith("/forget-password") || path === "/email-otp/send-verification-otp" || path === "/email-otp/request-password-reset";
-    },
-    window: 60,
-    max: 3
-  }];
-}
-
-// node_modules/better-auth/dist/api/state/oauth.mjs
-var { get: getRawOAuthState, set: setOAuthState } = defineRequestState(() => null);
-var { get: getOAuthServerContext, set: setOAuthServerContext } = defineRequestState(() => null);
-
-// node_modules/better-auth/dist/api/state/should-session-refresh.mjs
-var { get: getShouldSkipSessionRefresh, set: setShouldSkipSessionRefresh } = defineRequestState(() => false);
-
-// node_modules/better-auth/dist/api/routes/session.mjs
-init_error2();
-init_zod();
-var getSession = () => createAuthEndpoint("/get-session", {
-  method: ["GET", "POST"],
-  operationId: "getSession",
-  query: getSessionQuerySchema,
-  requireHeaders: true,
-  metadata: { openapi: {
-    operationId: "getSession",
-    description: "Get the current session",
-    responses: { "200": {
-      description: "Success",
-      content: { "application/json": { schema: {
-        type: ["object", "null"],
-        properties: {
-          session: { $ref: "#/components/schemas/Session" },
-          user: { $ref: "#/components/schemas/User" }
-        },
-        required: ["session", "user"]
-      } } }
-    } }
-  } }
-}, async (ctx) => {
-  ctx.setHeader("cache-control", "no-store");
-  ctx.setHeader("pragma", "no-cache");
-  const deferSessionRefresh = ctx.context.options.session?.deferSessionRefresh;
-  const isPostRequest = ctx.method === "POST";
-  if (isPostRequest && !deferSessionRefresh)
-    throw APIError2.from("METHOD_NOT_ALLOWED", BASE_ERROR_CODES.METHOD_NOT_ALLOWED_DEFER_SESSION_REQUIRED);
-  try {
-    const cookieCacheEnabled = ctx.context.options.session?.cookieCache?.enabled === true;
-    const sessionCookieToken = await ctx.getSignedCookie(ctx.context.authCookies.sessionToken.name, ctx.context.secret);
-    if (!sessionCookieToken && cookieCacheEnabled)
-      return null;
-    const sessionDataCookie = getChunkedCookie(ctx, ctx.context.authCookies.sessionData.name);
-    if (sessionDataCookie && !cookieCacheEnabled) {
-      const sessionStore = createSessionStore(ctx.context.authCookies.sessionData.name, ctx.context.authCookies.sessionData.attributes, ctx);
-      sessionStore.setCookies(sessionStore.clean());
-    }
-    if (!sessionCookieToken)
-      return null;
-    const shouldUseCookieCache = cookieCacheEnabled && !ctx.query?.disableCookieCache;
-    const sessionDataPayload = shouldUseCookieCache && sessionDataCookie ? await decodeCookieCache(ctx, sessionDataCookie) : null;
-    if (shouldUseCookieCache && sessionDataCookie && !sessionDataPayload)
-      expireCookie(ctx, ctx.context.authCookies.sessionData);
-    const dontRememberMe = await ctx.getSignedCookie(ctx.context.authCookies.dontRememberToken.name, ctx.context.secret);
-    if (sessionDataPayload?.session) {
-      const session = sessionDataPayload.session;
-      let shouldExpireCookieCache = session.session.token !== sessionCookieToken;
-      if (!shouldExpireCookieCache) {
-        const versionConfig = ctx.context.options.session?.cookieCache?.version;
-        let expectedVersion = "1";
-        if (versionConfig) {
-          if (typeof versionConfig === "string")
-            expectedVersion = versionConfig;
-          else if (typeof versionConfig === "function") {
-            const result = versionConfig(session.session, session.user);
-            expectedVersion = result instanceof Promise ? await result : result;
-          }
-        }
-        shouldExpireCookieCache = (session.version || "1") !== expectedVersion;
-      }
-      if (!shouldExpireCookieCache) {
-        const now = Date.now();
-        const cachedSessionExpiresAt = new Date(session.session.expiresAt).getTime();
-        shouldExpireCookieCache = sessionDataPayload.expiresAt < now || !Number.isFinite(cachedSessionExpiresAt) || cachedSessionExpiresAt < now;
-      }
-      if (shouldExpireCookieCache)
-        expireCookie(ctx, ctx.context.authCookies.sessionData);
-      else {
-        const cookieRefreshCache = ctx.context.sessionConfig.cookieRefreshCache;
-        if (cookieRefreshCache === false) {
-          ctx.context.session = session;
-          const parsedSession = parseSessionOutput(ctx.context.options, {
-            ...session.session,
-            expiresAt: new Date(session.session.expiresAt),
-            createdAt: new Date(session.session.createdAt),
-            updatedAt: new Date(session.session.updatedAt)
-          });
-          const parsedUser = parseUserOutput(ctx.context.options, {
-            ...session.user,
-            createdAt: new Date(session.user.createdAt),
-            updatedAt: new Date(session.user.updatedAt)
-          });
-          return ctx.json({
-            session: parsedSession,
-            user: parsedUser
-          });
-        }
-        const timeUntilExpiry = sessionDataPayload.expiresAt - Date.now();
-        const updateAge = cookieRefreshCache.updateAge * 1000;
-        const shouldSkipSessionRefresh = await getShouldSkipSessionRefresh();
-        if (timeUntilExpiry < updateAge && !shouldSkipSessionRefresh) {
-          const refreshedSession = {
-            session: { ...session.session },
-            user: session.user,
-            updatedAt: Date.now()
-          };
-          await setCookieCache(ctx, refreshedSession, false);
-          const sessionTokenOptions = ctx.context.authCookies.sessionToken.attributes;
-          const sessionTokenMaxAge = dontRememberMe ? undefined : ctx.context.sessionConfig.expiresIn;
-          await ctx.setSignedCookie(ctx.context.authCookies.sessionToken.name, session.session.token, ctx.context.secret, {
-            ...sessionTokenOptions,
-            maxAge: sessionTokenMaxAge
-          });
-          const parsedRefreshedSession = parseSessionOutput(ctx.context.options, {
-            ...refreshedSession.session,
-            expiresAt: new Date(refreshedSession.session.expiresAt),
-            createdAt: new Date(refreshedSession.session.createdAt),
-            updatedAt: new Date(refreshedSession.session.updatedAt)
-          });
-          const parsedRefreshedUser = parseUserOutput(ctx.context.options, {
-            ...refreshedSession.user,
-            createdAt: new Date(refreshedSession.user.createdAt),
-            updatedAt: new Date(refreshedSession.user.updatedAt)
-          });
-          ctx.context.session = {
-            session: parsedRefreshedSession,
-            user: parsedRefreshedUser
-          };
-          return ctx.json({
-            session: parsedRefreshedSession,
-            user: parsedRefreshedUser
-          });
-        }
-        const parsedSession = parseSessionOutput(ctx.context.options, {
-          ...session.session,
-          expiresAt: new Date(session.session.expiresAt),
-          createdAt: new Date(session.session.createdAt),
-          updatedAt: new Date(session.session.updatedAt)
-        });
-        const parsedUser = parseUserOutput(ctx.context.options, {
-          ...session.user,
-          createdAt: new Date(session.user.createdAt),
-          updatedAt: new Date(session.user.updatedAt)
-        });
-        ctx.context.session = {
-          session: parsedSession,
-          user: parsedUser
-        };
-        return ctx.json({
-          session: parsedSession,
-          user: parsedUser
-        });
-      }
-    }
-    const session = await ctx.context.internalAdapter.findSession(sessionCookieToken);
-    ctx.context.session = session;
-    if (!session || session.session.expiresAt < /* @__PURE__ */ new Date) {
-      deleteSessionCookie(ctx);
-      if (session) {
-        if (!deferSessionRefresh || isPostRequest)
-          await ctx.context.internalAdapter.deleteSession(session.session.token);
-      }
-      return ctx.json(null);
-    }
-    if (dontRememberMe || ctx.query?.disableRefresh) {
-      const parsedSession = parseSessionOutput(ctx.context.options, session.session);
-      const parsedUser = parseUserOutput(ctx.context.options, session.user);
-      return ctx.json({
-        session: parsedSession,
-        user: parsedUser
-      });
-    }
-    const expiresIn = ctx.context.sessionConfig.expiresIn;
-    const updateAge = ctx.context.sessionConfig.updateAge;
-    const shouldBeUpdated = session.session.expiresAt.valueOf() - expiresIn * 1000 + updateAge * 1000 <= Date.now();
-    const disableRefresh = ctx.query?.disableRefresh || ctx.context.options.session?.disableSessionRefresh;
-    const shouldSkipSessionRefresh = await getShouldSkipSessionRefresh();
-    const needsRefresh = shouldBeUpdated && !disableRefresh && !shouldSkipSessionRefresh;
-    if (deferSessionRefresh && !isPostRequest) {
-      await setCookieCache(ctx, session, !!dontRememberMe);
-      const parsedSession = parseSessionOutput(ctx.context.options, session.session);
-      const parsedUser = parseUserOutput(ctx.context.options, session.user);
-      return ctx.json({
-        session: parsedSession,
-        user: parsedUser,
-        needsRefresh
-      });
-    }
-    if (needsRefresh) {
-      const updatedSession = await ctx.context.internalAdapter.updateSession(session.session.token, {
-        expiresAt: getDate(ctx.context.sessionConfig.expiresIn, "sec"),
-        updatedAt: /* @__PURE__ */ new Date
-      });
-      if (!updatedSession) {
-        deleteSessionCookie(ctx);
-        throw APIError2.from("UNAUTHORIZED", BASE_ERROR_CODES.FAILED_TO_GET_SESSION);
-      }
-      const maxAge = ctx.context.sessionConfig.expiresIn;
-      await setSessionCookie(ctx, {
-        session: updatedSession,
-        user: session.user
-      }, false, { maxAge });
-      const parsedUpdatedSession = parseSessionOutput(ctx.context.options, updatedSession);
-      const parsedUser = parseUserOutput(ctx.context.options, session.user);
-      return ctx.json({
-        session: parsedUpdatedSession,
-        user: parsedUser
-      });
-    }
-    await setCookieCache(ctx, session, !!dontRememberMe);
-    const parsedSession = parseSessionOutput(ctx.context.options, session.session);
-    const parsedUser = parseUserOutput(ctx.context.options, session.user);
-    return ctx.json({
-      session: parsedSession,
-      user: parsedUser
-    });
-  } catch (error) {
-    if (isAPIError2(error))
-      throw error;
-    ctx.context.logger.error("INTERNAL_SERVER_ERROR", error);
-    throw APIError2.from("INTERNAL_SERVER_ERROR", BASE_ERROR_CODES.FAILED_TO_GET_SESSION);
-  }
-});
-var isStateful = (ctx) => hasServerSessionStore(ctx.context.options);
-var getSessionFromCtx = async (ctx, config) => {
-  if (ctx.context.session)
-    return ctx.context.session;
-  const session = await getSession()({
-    ...ctx,
-    method: "GET",
-    asResponse: false,
-    headers: ctx.headers,
-    returnHeaders: true,
-    returnStatus: false,
-    query: {
-      ...config,
-      ...ctx.query,
-      disableCookieCache: config?.disableCookieCache || ctx.query?.disableCookieCache,
-      disableRefresh: config?.disableRefresh || ctx.query?.disableRefresh
-    }
-  }).catch(() => {
-    return null;
-  });
-  if (!session) {
-    ctx.context.session = null;
-    return null;
-  }
-  if (session.headers)
-    session.headers.forEach((value, key) => {
-      const lowerKey = key.toLowerCase();
-      if (lowerKey === "cache-control" || lowerKey === "pragma")
-        return;
-      if (lowerKey === "set-cookie")
-        ctx.responseHeaders.append(key, value);
-      else
-        ctx.responseHeaders.set(key, value);
-    });
-  ctx.context.session = session.response;
-  return session.response;
-};
-var getAuthoritativeSessionFromCtx = async (ctx) => {
-  if (!isStateful(ctx))
-    return getSessionFromCtx(ctx);
-  ctx.context.session = null;
-  return getSessionFromCtx(ctx, { disableCookieCache: true });
-};
-var sessionMiddleware = createAuthMiddleware(async (ctx) => {
-  const session = await getSessionFromCtx(ctx);
-  if (!session?.session)
-    throw APIError2.from("UNAUTHORIZED", {
-      message: "Unauthorized",
-      code: "UNAUTHORIZED"
-    });
-  return { session };
-});
-var sensitiveSessionMiddleware = createAuthMiddleware(async (ctx) => {
-  const session = await getAuthoritativeSessionFromCtx(ctx);
-  if (!session?.session)
-    throw APIError2.from("UNAUTHORIZED", {
-      message: "Unauthorized",
-      code: "UNAUTHORIZED"
-    });
-  return { session };
-});
-var requestOnlySessionMiddleware = createAuthMiddleware(async (ctx) => {
-  const session = await getSessionFromCtx(ctx);
-  if (!session?.session && (ctx.request || ctx.headers))
-    throw APIError2.from("UNAUTHORIZED", {
-      message: "Unauthorized",
-      code: "UNAUTHORIZED"
-    });
-  return { session };
-});
-var freshSessionMiddleware = createAuthMiddleware(async (ctx) => {
-  const session = await getSessionFromCtx(ctx);
-  if (!session?.session)
-    throw APIError2.from("UNAUTHORIZED", {
-      message: "Unauthorized",
-      code: "UNAUTHORIZED"
-    });
-  if (ctx.context.sessionConfig.freshAge !== 0) {
-    const createdAt = new Date(session.session.createdAt).getTime();
-    const freshAge = ctx.context.sessionConfig.freshAge * 1000;
-    if (Date.now() - createdAt >= freshAge)
-      throw APIError2.from("FORBIDDEN", BASE_ERROR_CODES.SESSION_NOT_FRESH);
-  }
-  return { session };
-});
-var listSessions = () => createAuthEndpoint("/list-sessions", {
-  method: "GET",
-  operationId: "listUserSessions",
-  use: [freshSessionMiddleware],
-  requireHeaders: true,
-  metadata: { openapi: {
-    operationId: "listUserSessions",
-    description: "List all active sessions for the user",
-    responses: { "200": {
-      description: "Success",
-      content: { "application/json": { schema: {
-        type: "array",
-        items: { $ref: "#/components/schemas/Session" }
-      } } }
-    } }
-  } }
-}, async (ctx) => {
-  try {
-    const activeSessions = (await ctx.context.internalAdapter.listSessions(ctx.context.session.user.id, { onlyActiveSessions: true })).filter((session) => {
-      return session.expiresAt > /* @__PURE__ */ new Date;
-    });
-    return ctx.json(activeSessions.map((session) => parseSessionOutput(ctx.context.options, session)));
-  } catch (e) {
-    ctx.context.logger.error(e);
-    throw ctx.error("INTERNAL_SERVER_ERROR");
-  }
-});
-var revokeSession = createAuthEndpoint("/revoke-session", {
-  method: "POST",
-  body: object({ token: string2().meta({ description: "The token to revoke" }) }),
-  use: [sensitiveSessionMiddleware],
-  requireHeaders: true,
-  metadata: { openapi: {
-    description: "Revoke a single session",
-    requestBody: { content: { "application/json": { schema: {
-      type: "object",
-      properties: { token: {
-        type: "string",
-        description: "The token to revoke"
-      } },
-      required: ["token"]
-    } } } },
-    responses: { "200": {
-      description: "Success",
-      content: { "application/json": { schema: {
-        type: "object",
-        properties: { status: {
-          type: "boolean",
-          description: "Indicates if the session was revoked successfully"
-        } },
-        required: ["status"]
-      } } }
-    } }
-  } }
-}, async (ctx) => {
-  const token = ctx.body.token;
-  if ((await ctx.context.internalAdapter.findSession(token))?.session.userId === ctx.context.session.user.id)
-    try {
-      await ctx.context.internalAdapter.deleteSession(token);
-    } catch (error) {
-      ctx.context.logger.error(error && typeof error === "object" && "name" in error ? error.name : "", error);
-      throw APIError2.from("INTERNAL_SERVER_ERROR", {
-        message: "Internal Server Error",
-        code: "INTERNAL_SERVER_ERROR"
-      });
-    }
-  return ctx.json({ status: true });
-});
-var revokeSessions = createAuthEndpoint("/revoke-sessions", {
-  method: "POST",
-  use: [sensitiveSessionMiddleware],
-  requireHeaders: true,
-  metadata: { openapi: {
-    description: "Revoke all sessions for the user",
-    responses: { "200": {
-      description: "Success",
-      content: { "application/json": { schema: {
-        type: "object",
-        properties: { status: {
-          type: "boolean",
-          description: "Indicates if all sessions were revoked successfully"
-        } },
-        required: ["status"]
-      } } }
-    } }
-  } }
-}, async (ctx) => {
-  try {
-    await ctx.context.internalAdapter.deleteUserSessions(ctx.context.session.user.id);
-  } catch (error) {
-    ctx.context.logger.error(error && typeof error === "object" && "name" in error ? error.name : "", error);
-    throw APIError2.from("INTERNAL_SERVER_ERROR", {
-      message: "Internal Server Error",
-      code: "INTERNAL_SERVER_ERROR"
-    });
-  }
-  return ctx.json({ status: true });
-});
-var revokeOtherSessions = createAuthEndpoint("/revoke-other-sessions", {
-  method: "POST",
-  requireHeaders: true,
-  use: [sensitiveSessionMiddleware],
-  metadata: { openapi: {
-    description: "Revoke all other sessions for the user except the current one",
-    responses: { "200": {
-      description: "Success",
-      content: { "application/json": { schema: {
-        type: "object",
-        properties: { status: {
-          type: "boolean",
-          description: "Indicates if all other sessions were revoked successfully"
-        } },
-        required: ["status"]
-      } } }
-    } }
-  } }
-}, async (ctx) => {
-  const session = ctx.context.session;
-  if (!session.user)
-    throw APIError2.from("UNAUTHORIZED", {
-      message: "Unauthorized",
-      code: "UNAUTHORIZED"
-    });
-  const otherSessions = (await ctx.context.internalAdapter.listSessions(session.user.id)).filter((session) => {
-    return session.expiresAt > /* @__PURE__ */ new Date;
-  }).filter((session) => session.token !== ctx.context.session.session.token);
-  await Promise.all(otherSessions.map((session) => ctx.context.internalAdapter.deleteSession(session.token)));
-  return ctx.json({ status: true });
-});
-
 // node_modules/better-auth/dist/oauth2/account-key.mjs
 init_error2();
 function toOAuthProfileRecord(profile) {
@@ -98891,6 +98025,49 @@ function constantTimeEqual2(a, b) {
     c |= (i < aBuffer.length ? aBuffer[i] : 0) ^ (i < bBuffer.length ? bBuffer[i] : 0);
   return c === 0;
 }
+
+// node_modules/@better-auth/utils/dist/password.node.mjs
+import { randomBytes, scrypt } from "crypto";
+var config2 = {
+  N: 16384,
+  r: 16,
+  p: 1,
+  dkLen: 64
+};
+function generateKey(password, salt) {
+  return new Promise((resolve, reject) => {
+    scrypt(password.normalize("NFKC"), salt, config2.dkLen, {
+      N: config2.N,
+      r: config2.r,
+      p: config2.p,
+      maxmem: 128 * config2.N * config2.r * 2
+    }, (err, key) => {
+      if (err)
+        reject(err);
+      else
+        resolve(key);
+    });
+  });
+}
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString("hex");
+  const key = await generateKey(password, salt);
+  return `${salt}:${key.toString("hex")}`;
+}
+async function verifyPassword(hash, password) {
+  const [salt, key] = hash.split(":");
+  if (!salt || !key) {
+    throw new Error("Invalid password hash");
+  }
+  const targetKey = await generateKey(password, salt);
+  return targetKey.toString("hex") === key;
+}
+
+// node_modules/better-auth/dist/crypto/password.mjs
+var hashPassword$1 = hashPassword;
+var verifyPassword$1 = async ({ hash, password }) => {
+  return verifyPassword(hash, password);
+};
 
 // node_modules/better-auth/dist/crypto/random.mjs
 init_random();
@@ -101010,17 +100187,17 @@ function jsonParse(text) {
     return text;
   }
 }
-function isFunction2(value) {
+function isFunction(value) {
   return typeof value === "function";
 }
 function getFetch(options) {
   if (options == null ? undefined : options.customFetchImpl) {
     return options.customFetchImpl;
   }
-  if (typeof globalThis !== "undefined" && isFunction2(globalThis.fetch)) {
+  if (typeof globalThis !== "undefined" && isFunction(globalThis.fetch)) {
     return globalThis.fetch;
   }
-  if (typeof window !== "undefined" && isFunction2(window.fetch)) {
+  if (typeof window !== "undefined" && isFunction(window.fetch)) {
     return window.fetch;
   }
   throw new Error("No fetch implementation found");
@@ -106039,6 +105216,41 @@ var ok = createAuthEndpoint("/ok", {
   return ctx.json({ ok: true });
 });
 
+// node_modules/better-auth/dist/utils/password.mjs
+init_error2();
+async function validatePassword(ctx, data) {
+  const credentialAccount = await ctx.context.internalAdapter.findCredentialAccount(data.userId);
+  const currentPassword = credentialAccount?.password;
+  if (!credentialAccount || !currentPassword)
+    return false;
+  return await ctx.context.password.verify({
+    hash: currentPassword,
+    password: data.password
+  });
+}
+async function checkPassword(userId, c) {
+  const credentialAccount = await c.context.internalAdapter.findCredentialAccount(userId);
+  const currentPassword = credentialAccount?.password;
+  const password = c.body.password;
+  if (!credentialAccount || !currentPassword || !password) {
+    if (password)
+      await c.context.password.hash(password);
+    throw APIError2.from("BAD_REQUEST", BASE_ERROR_CODES.INVALID_PASSWORD);
+  }
+  if (!await c.context.password.verify({
+    hash: currentPassword,
+    password
+  }))
+    throw APIError2.from("BAD_REQUEST", BASE_ERROR_CODES.INVALID_PASSWORD);
+  return true;
+}
+async function shouldRequirePassword(ctx, userId, allowPasswordless) {
+  if (!allowPasswordless)
+    return true;
+  const credentialAccount = await ctx.context.internalAdapter.findCredentialAccount(userId);
+  return Boolean(credentialAccount?.password);
+}
+
 // node_modules/better-auth/dist/api/routes/password.mjs
 init_error2();
 init_id();
@@ -107942,6 +107154,795 @@ var router = (ctx, options) => {
     }
   });
 };
+
+// node_modules/better-auth/dist/db/adapter-base.mjs
+init_env();
+async function getBaseAdapter(options, handleDirectDatabase) {
+  let adapter;
+  if (!options.database) {
+    const tables = getAuthTables(options);
+    const memoryDB = Object.keys(tables).reduce((acc, key) => {
+      acc[key] = [];
+      return acc;
+    }, {});
+    await Promise.resolve().then(() => init_dist());
+    adapter = memoryAdapter(memoryDB)(options);
+  } else if (typeof options.database === "function")
+    adapter = options.database(options);
+  else
+    adapter = await handleDirectDatabase(options);
+  if (!adapter.transaction) {
+    logger.warn("Adapter does not correctly implement transaction function, patching it automatically. Please update your adapter implementation.");
+    adapter.transaction = async (cb) => {
+      return cb(adapter);
+    };
+  }
+  return adapter;
+}
+
+// node_modules/better-auth/dist/db/adapter-kysely.mjs
+init_error2();
+async function getAdapter(options) {
+  return getBaseAdapter(options, async (opts) => {
+    await Promise.resolve().then(() => init_kysely_adapter());
+    const { kysely, databaseType, transaction } = await createKyselyAdapter(opts);
+    if (!kysely)
+      throw new BetterAuthError("Failed to initialize database adapter");
+    return kyselyAdapter(kysely, {
+      type: databaseType || "sqlite",
+      debugLogs: opts.database && "debugLogs" in opts.database ? opts.database.debugLogs : false,
+      transaction
+    })(opts);
+  });
+}
+
+// node_modules/better-auth/dist/db/get-schema.mjs
+init_internal();
+function getSchema(config) {
+  const { indexesByTable, tables } = getAuthTablesWithResolvedIndexes(config);
+  const schema = {};
+  for (const key in tables) {
+    const table = tables[key];
+    const fields = table.fields;
+    const actualFields = {};
+    Object.entries(fields).forEach(([key, field]) => {
+      actualFields[field.fieldName || key] = field;
+      if (field.references) {
+        const refTable = tables[field.references.model];
+        if (refTable)
+          actualFields[field.fieldName || key].references = {
+            ...field.references,
+            model: refTable.modelName,
+            field: field.references.field
+          };
+      }
+    });
+    if (schema[table.modelName]) {
+      schema[table.modelName].fields = {
+        ...schema[table.modelName].fields,
+        ...actualFields
+      };
+      if (table.disableMigrations)
+        schema[table.modelName].disableMigrations = true;
+      continue;
+    }
+    schema[table.modelName] = {
+      fields: actualFields,
+      order: table.order || Infinity,
+      disableMigrations: table.disableMigrations
+    };
+  }
+  for (const [tableName, indexes] of indexesByTable)
+    if (schema[tableName])
+      schema[tableName].indexes = indexes;
+  return schema;
+}
+
+// node_modules/better-auth/dist/db/get-migration.mjs
+init_env();
+init_error2();
+init_dist3();
+init_adapter();
+init_internal();
+init_dist2();
+var map3 = {
+  postgres: {
+    string: [
+      "character varying",
+      "varchar",
+      "text",
+      "uuid"
+    ],
+    number: [
+      "int4",
+      "integer",
+      "bigint",
+      "smallint",
+      "numeric",
+      "real",
+      "double precision"
+    ],
+    boolean: ["bool", "boolean"],
+    date: [
+      "timestamptz",
+      "timestamp",
+      "date"
+    ],
+    json: ["json", "jsonb"]
+  },
+  mysql: {
+    string: [
+      "varchar",
+      "text",
+      "uuid"
+    ],
+    number: [
+      "integer",
+      "int",
+      "bigint",
+      "smallint",
+      "decimal",
+      "float",
+      "double"
+    ],
+    boolean: ["boolean", "tinyint"],
+    date: [
+      "timestamp",
+      "datetime",
+      "date"
+    ],
+    json: ["json"]
+  },
+  sqlite: {
+    string: ["TEXT"],
+    number: [
+      "INTEGER",
+      "REAL",
+      "BIGINT"
+    ],
+    boolean: ["INTEGER", "BOOLEAN"],
+    date: ["DATE", "INTEGER"],
+    json: ["TEXT"]
+  },
+  mssql: {
+    string: [
+      "varchar",
+      "nvarchar",
+      "uniqueidentifier"
+    ],
+    number: [
+      "int",
+      "bigint",
+      "smallint",
+      "decimal",
+      "float",
+      "double"
+    ],
+    boolean: ["bit", "smallint"],
+    date: [
+      "datetime2",
+      "date",
+      "datetime"
+    ],
+    json: ["varchar", "nvarchar"]
+  }
+};
+function createDatabaseIndexKey(tableName, indexName) {
+  return `${getPortableDatabaseIdentifierKey(tableName)}\x00${getPortableDatabaseIdentifierKey(indexName)}`;
+}
+function createDatabaseColumnKey(tableName, columnName) {
+  return `${tableName}\x00${columnName}`;
+}
+function databaseIndexMatches(existing, configured) {
+  return existing.unique === (configured.unique ?? false) && existing.validFullColumns && existing.columns.length === configured.columns.length && existing.columns.every((column, position) => column === configured.columns[position]);
+}
+function databaseValueIsTrue(value) {
+  if (typeof value === "boolean")
+    return value;
+  if (typeof value === "number")
+    return value !== 0;
+  return value === "1" || value?.toLowerCase() === "true" || value === "t";
+}
+function toDatabaseIndexMap(indexes) {
+  return new Map(indexes.map((index) => {
+    const columns = [...index.columns].sort((left, right) => left.position - right.position);
+    return [createDatabaseIndexKey(index.table, index.name), {
+      columns: columns.flatMap((column) => column.name === null ? [] : [column.name]),
+      name: index.name,
+      table: index.table,
+      unique: index.unique,
+      validFullColumns: index.valid && !index.partial && columns.length > 0 && columns.every((column) => column.name !== null && column.fullLength)
+    }];
+  }));
+}
+async function getDatabaseIndexMap(db, dbType, schemaName, tableNames, introspectIndexes) {
+  if (introspectIndexes)
+    return toDatabaseIndexMap(await introspectIndexes(tableNames));
+  let rows;
+  if (dbType === "sqlite")
+    rows = (await sql`
+				SELECT
+					tables.name AS "tableName",
+					index_list.name AS "indexName",
+					index_info.name AS "columnName",
+					index_list."unique" AS "isUnique",
+					index_list.partial AS "isPartial",
+					index_info.seqno AS "columnPosition"
+				FROM sqlite_master AS tables
+				INNER JOIN pragma_index_list(tables.name) AS index_list
+				INNER JOIN pragma_index_info(index_list.name) AS index_info
+				WHERE tables.type = 'table'
+			`.execute(db)).rows;
+  else if (dbType === "postgres")
+    rows = (await sql`
+				SELECT
+					table_class.relname AS "tableName",
+					index_class.relname AS "indexName",
+					index_attribute.attname AS "columnName",
+					index_data.indisunique AS "isUnique",
+					index_data.indisvalid AS "isValid",
+					(index_data.indpred IS NOT NULL) AS "isPartial",
+					index_column.ordinality AS "columnPosition"
+				FROM pg_class AS table_class
+				INNER JOIN pg_namespace AS table_namespace
+					ON table_namespace.oid = table_class.relnamespace
+				INNER JOIN pg_index AS index_data
+					ON index_data.indrelid = table_class.oid
+				INNER JOIN pg_class AS index_class
+					ON index_class.oid = index_data.indexrelid
+				INNER JOIN LATERAL unnest(index_data.indkey)
+					WITH ORDINALITY AS index_column(attribute_number, ordinality)
+					ON TRUE
+				LEFT JOIN pg_attribute AS index_attribute
+					ON index_attribute.attrelid = table_class.oid
+					AND index_attribute.attnum = index_column.attribute_number
+				WHERE table_namespace.nspname = ${schemaName}
+					AND table_class.relkind = 'r'
+					AND index_column.ordinality <= index_data.indnkeyatts
+			`.execute(db)).rows;
+  else if (dbType === "mysql")
+    rows = (await sql`
+				SELECT
+					table_name AS tableName,
+					index_name AS indexName,
+					column_name AS columnName,
+					non_unique AS nonUnique,
+					seq_in_index AS columnPosition,
+					sub_part AS prefixLength,
+					COALESCE(LOWER(comment) = 'disabled', FALSE) AS isDisabled
+				FROM information_schema.statistics
+				WHERE table_schema = DATABASE()
+			`.execute(db)).rows;
+  else
+    rows = (await sql`
+				SELECT
+					tables.name AS "tableName",
+					indexes.name AS "indexName",
+					columns.name AS "columnName",
+					indexes.is_unique AS "isUnique",
+					indexes.is_disabled AS "isDisabled",
+					indexes.is_hypothetical AS "isHypothetical",
+					indexes.has_filter AS "isPartial",
+					index_columns.key_ordinal AS "columnPosition"
+				FROM sys.indexes AS indexes
+				INNER JOIN sys.tables AS tables
+					ON indexes.object_id = tables.object_id
+				INNER JOIN sys.schemas AS table_schemas
+					ON table_schemas.schema_id = tables.schema_id
+				INNER JOIN sys.index_columns AS index_columns
+					ON index_columns.object_id = indexes.object_id
+					AND index_columns.index_id = indexes.index_id
+				INNER JOIN sys.columns AS columns
+					ON columns.object_id = index_columns.object_id
+					AND columns.column_id = index_columns.column_id
+				WHERE table_schemas.name = ${schemaName}
+					AND indexes.name IS NOT NULL
+					AND index_columns.key_ordinal > 0
+			`.execute(db)).rows;
+  const indexMetadata = /* @__PURE__ */ new Map;
+  for (const row of rows) {
+    const table = row.tableName ?? row.table_name ?? row.TABLE_NAME ?? row.tablename ?? row.tbl_name;
+    const name = row.indexName ?? row.index_name ?? row.INDEX_NAME ?? row.name;
+    const column = row.columnName ?? row.column_name ?? row.COLUMN_NAME;
+    if (!table || !name)
+      continue;
+    const key = createDatabaseIndexKey(table, name);
+    const nonUnique = row.nonUnique ?? row.non_unique ?? row.NON_UNIQUE;
+    const unique = nonUnique === undefined ? databaseValueIsTrue(row.isUnique ?? row.is_unique) : !databaseValueIsTrue(nonUnique);
+    const position = Number(row.columnPosition ?? row.column_position ?? row.keyOrdinal ?? row.key_ordinal ?? row.ordinality ?? row.seqInIndex ?? row.seq_in_index ?? row.SEQ_IN_INDEX ?? row.seqno ?? 0);
+    const indexColumn = {
+      fullLength: column !== undefined && column !== null && (row.prefixLength === undefined || row.prefixLength === null),
+      name: column ?? null,
+      position
+    };
+    const partial = databaseValueIsTrue(row.isPartial);
+    const valid = !databaseValueIsTrue(row.isDisabled) && !databaseValueIsTrue(row.isHypothetical) && (row.isValid === undefined || databaseValueIsTrue(row.isValid));
+    const existing = indexMetadata.get(key);
+    indexMetadata.set(key, existing ? {
+      ...existing,
+      columns: [...existing.columns, indexColumn],
+      partial: existing.partial || partial,
+      valid: existing.valid && valid
+    } : {
+      columns: [indexColumn],
+      name,
+      partial,
+      table,
+      unique,
+      valid
+    });
+  }
+  return toDatabaseIndexMap([...indexMetadata.values()]);
+}
+async function getDatabaseColumnBounds(db, dbType, schemaName) {
+  if (dbType !== "mysql" && dbType !== "mssql")
+    return /* @__PURE__ */ new Map;
+  let rows;
+  if (dbType === "mysql")
+    rows = (await sql`
+				SELECT
+					table_name AS tableName,
+					column_name AS columnName,
+					data_type AS dataType,
+					character_maximum_length AS characterMaximumLength
+				FROM information_schema.columns
+				WHERE table_schema = DATABASE()
+			`.execute(db)).rows;
+  else
+    rows = (await sql`
+				SELECT
+					tables.name AS "tableName",
+					columns.name AS "columnName",
+					types.name AS "dataType",
+					columns.max_length AS "maxLength"
+				FROM sys.columns AS columns
+				INNER JOIN sys.tables AS tables
+					ON tables.object_id = columns.object_id
+				INNER JOIN sys.schemas AS table_schemas
+					ON table_schemas.schema_id = tables.schema_id
+				INNER JOIN sys.types AS types
+					ON types.user_type_id = columns.user_type_id
+				WHERE table_schemas.name = ${schemaName}
+			`.execute(db)).rows;
+  return new Map(rows.flatMap((row) => {
+    const table = row.tableName ?? row.TABLE_NAME;
+    const column = row.columnName ?? row.COLUMN_NAME;
+    const dataType = (row.dataType ?? row.DATA_TYPE)?.toLowerCase();
+    if (!table || !column || !dataType)
+      return [];
+    if (dbType === "mysql") {
+      const characterLength = row.characterMaximumLength ?? row.CHARACTER_MAXIMUM_LENGTH;
+      const maxIndexBytes = characterLength === null || characterLength === undefined ? null : Number(characterLength) * 4;
+      return [[createDatabaseColumnKey(table, column), { maxIndexBytes }]];
+    }
+    const maxLength = Number(row.maxLength ?? -1);
+    return [[createDatabaseColumnKey(table, column), { maxIndexBytes: maxLength < 0 ? null : maxLength }]];
+  }));
+}
+function assertExistingTableIndexFits({ columnBounds, dbType, existingColumns, fields, indexes, index, table }) {
+  const byteBudget = dbType === "mysql" ? 3072 : 1700;
+  let requiredBytes = 0;
+  for (const column of index.columns) {
+    const field = fields[column];
+    if (!field)
+      continue;
+    if (field.type === "string" || Array.isArray(field.type)) {
+      if (!existingColumns.has(column)) {
+        const generatedLength = getDatabaseIndexStringLength({
+          columnName: column,
+          dialect: dbType,
+          fields,
+          indexes
+        });
+        requiredBytes += (generatedLength ?? 0) * (dbType === "mysql" ? 4 : 1);
+        continue;
+      }
+      const bound = columnBounds.get(createDatabaseColumnKey(table, column));
+      if (!bound?.maxIndexBytes)
+        throw new BetterAuthError(`Cannot create database index "${index.name}" on existing table "${table}" because column "${column}" is not bounded for ${dbType === "mysql" ? "MySQL" : "SQL Server"}. Change it to a bounded string column, resolve oversized values, then run the migration again.`);
+      requiredBytes += bound.maxIndexBytes;
+    } else
+      requiredBytes += 16;
+  }
+  if (requiredBytes > byteBudget)
+    throw new BetterAuthError(`Cannot create database index "${index.name}" on existing table "${table}" because its columns can exceed ${dbType === "mysql" ? "MySQL" : "SQL Server"}'s ${byteBudget}-byte index-key limit. Bound the indexed string columns to the generated schema lengths, resolve oversized values, then run the migration again.`);
+}
+var UnsafeMigrationError = class extends BetterAuthError {
+};
+function hasTimestampColumnDefault(field, dbType) {
+  return field.type === "date" && typeof field.defaultValue === "function" && (dbType === "postgres" || dbType === "mysql" || dbType === "mssql");
+}
+function hasStaticColumnDefault(field) {
+  return !(field.unique && field.required === false) && (field.type === "string" || field.type === "number" || field.type === "boolean") && field.defaultValue !== undefined && field.defaultValue !== null && typeof field.defaultValue !== "function";
+}
+async function tableHasRows(db, dbType, table) {
+  const probe = db.selectFrom(table).select(sql`1`.as("present"));
+  return (await (dbType === "mssql" ? probe.top(1) : probe.limit(1)).execute()).length > 0;
+}
+function matchType(columnDataType, fieldType, dbType) {
+  function normalize(type) {
+    return type.toLowerCase().split("(")[0].trim();
+  }
+  if (fieldType === "string[]" || fieldType === "number[]")
+    return columnDataType.toLowerCase().includes("json");
+  const types = map3[dbType];
+  return (Array.isArray(fieldType) ? types["string"].map((t) => t.toLowerCase()) : types[fieldType].map((t) => t.toLowerCase())).includes(normalize(columnDataType));
+}
+async function getMigrations(config, { throwOnUnsafe = true } = {}) {
+  const betterAuthSchema = getSchema(config);
+  const authTables = getAuthTables(config);
+  const logger = createLogger(config.logger);
+  const unsafeChanges = [];
+  const reportUnsafeChange = (message) => {
+    if (throwOnUnsafe)
+      throw new UnsafeMigrationError(message);
+    unsafeChanges.push(message);
+  };
+  let { kysely: db, databaseType: dbType, introspectIndexes } = await createKyselyAdapter(config);
+  if (!dbType) {
+    logger.warn("Could not determine database type, defaulting to sqlite. Please provide a type in the database options to avoid this.");
+    dbType = "sqlite";
+  }
+  if (!db) {
+    logger.error("Only kysely adapter is supported for migrations. You can use `generate` command to generate the schema, if you're using a different adapter.");
+    process.exit(1);
+  }
+  let currentSchema = dbType === "mssql" ? await getMssqlSchema(db) : "public";
+  if (dbType === "postgres") {
+    currentSchema = await getPostgresSchema(db);
+    logger.debug(`PostgreSQL migration: Using schema '${currentSchema}' (from search_path)`);
+    try {
+      const schemaCheck = await sql`
+				SELECT schema_name
+				FROM information_schema.schemata
+				WHERE schema_name = ${currentSchema}
+			`.execute(db);
+      if (!(schemaCheck.rows[0]?.schema_name ?? schemaCheck.rows[0]?.schemaName))
+        logger.warn(`Schema '${currentSchema}' does not exist. Tables will be inspected from available schemas. Consider creating the schema first or checking your database configuration.`);
+    } catch (error) {
+      logger.debug(`Could not verify schema existence: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  } else if (dbType === "mssql")
+    logger.debug(`SQL Server migration: Using schema '${currentSchema}' (from the current user's default schema)`);
+  const allTableMetadata = await db.introspection.getTables();
+  const databaseIndexMap = await getDatabaseIndexMap(db, dbType, currentSchema, allTableMetadata.map((table) => table.name), introspectIndexes);
+  const databaseColumnBounds = await getDatabaseColumnBounds(db, dbType, currentSchema);
+  let tableMetadata = allTableMetadata;
+  if (dbType === "postgres")
+    try {
+      const tablesInSchema = await sql`
+				SELECT table_name
+				FROM information_schema.tables
+				WHERE table_schema = ${currentSchema}
+				AND table_type = 'BASE TABLE'
+			`.execute(db);
+      const tableNamesInSchema = new Set(tablesInSchema.rows.map((row) => row.table_name ?? row.tableName));
+      tableMetadata = allTableMetadata.filter((table) => table.schema === currentSchema && tableNamesInSchema.has(table.name));
+      logger.debug(`Found ${tableMetadata.length} table(s) in schema '${currentSchema}': ${tableMetadata.map((t) => t.name).join(", ") || "(none)"}`);
+    } catch (error) {
+      logger.warn(`Could not filter tables by schema. Using all discovered tables. Error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  else if (dbType === "mssql")
+    tableMetadata = allTableMetadata.filter((table) => table.schema === currentSchema);
+  const schemaProblems = diffSchema(toPhysicalSchema(db, betterAuthSchema), toIntrospectedTables(tableMetadata)).filter((finding) => finding.kind === "unexpected-required-column").map((finding) => formatSchemaFinding(finding, "database"));
+  const toBeCreated = [];
+  const toBeAdded = [];
+  const toBeAddedIndexes = [];
+  const plannedIndexes = /* @__PURE__ */ new Map;
+  for (const [key, value] of Object.entries(betterAuthSchema)) {
+    if (value.disableMigrations)
+      continue;
+    const table = tableMetadata.find((table) => table.name === key);
+    for (const index of value.indexes ?? []) {
+      const name = index.name;
+      const indexKey = createDatabaseIndexKey(key, name);
+      const existingIndex = databaseIndexMap.get(indexKey);
+      if (existingIndex) {
+        if (!databaseIndexMatches(existingIndex, index))
+          throw new BetterAuthError(`Database index "${name}" on table "${key}" does not match the configured fields and uniqueness. Rename or replace the existing index, then run the migration again.`);
+        continue;
+      }
+      if (dbType === "sqlite" || dbType === "postgres") {
+        const indexOnAnotherTable = [...databaseIndexMap.values()].find((databaseIndex) => getPortableDatabaseIdentifierKey(databaseIndex.name) === getPortableDatabaseIdentifierKey(name) && getPortableDatabaseIdentifierKey(databaseIndex.table) !== getPortableDatabaseIdentifierKey(key));
+        if (indexOnAnotherTable)
+          throw new BetterAuthError(`Database index name "${name}" is already used by table "${indexOnAnotherTable.table}". Index names must be unique across the schema.`);
+      }
+      const plannedIndex = plannedIndexes.get(indexKey);
+      if (plannedIndex) {
+        if (!databaseIndexMatches({
+          columns: plannedIndex.columns,
+          name: plannedIndex.name,
+          table: key,
+          unique: plannedIndex.unique ?? false,
+          validFullColumns: true
+        }, index))
+          throw new BetterAuthError(`Database index name "${name}" identifies more than one index on table "${key}".`);
+        continue;
+      }
+      if (table && (dbType === "mysql" || dbType === "mssql"))
+        assertExistingTableIndexFits({
+          columnBounds: databaseColumnBounds,
+          dbType,
+          existingColumns: new Set(table.columns.map((column) => column.name)),
+          fields: value.fields,
+          index,
+          indexes: value.indexes ?? [],
+          table: key
+        });
+      plannedIndexes.set(indexKey, index);
+      toBeAddedIndexes.push({
+        table: key,
+        index,
+        name
+      });
+    }
+    if (!table) {
+      const tIndex = toBeCreated.findIndex((t) => t.table === key);
+      const tableData = {
+        table: key,
+        fields: value.fields,
+        order: value.order || Infinity
+      };
+      const insertIndex = toBeCreated.findIndex((t) => (t.order || Infinity) > tableData.order);
+      if (insertIndex === -1)
+        if (tIndex === -1)
+          toBeCreated.push(tableData);
+        else
+          toBeCreated[tIndex].fields = {
+            ...toBeCreated[tIndex].fields,
+            ...value.fields
+          };
+      else
+        toBeCreated.splice(insertIndex, 0, tableData);
+      continue;
+    }
+    const toBeAddedFields = {};
+    for (const [fieldName, field] of Object.entries(value.fields)) {
+      const column = table.columns.find((c) => c.name === fieldName);
+      if (!column) {
+        toBeAddedFields[fieldName] = field;
+        continue;
+      }
+      if (field.required !== false && column.isNullable)
+        logger.warn(`Column "${fieldName}" on table "${key}" stays nullable while the schema declares the field required, so existing rows can still hold null. Backfill every row for this column and enforce NOT NULL to remove the drift.`);
+      if (matchType(column.dataType, field.type, dbType))
+        continue;
+      else
+        logger.warn(`Field ${fieldName} in table ${key} has a different type in the database. Expected ${field.type} but got ${column.dataType}.`);
+    }
+    if (Object.keys(toBeAddedFields).length > 0)
+      toBeAdded.push({
+        table: key,
+        fields: toBeAddedFields,
+        order: value.order || Infinity
+      });
+  }
+  const migrations = [];
+  const useUUIDs = config.advanced?.database?.generateId === "uuid";
+  const useNumberId = config.advanced?.database?.generateId === "serial";
+  function getType(field, fieldName, tableIndexStringLength) {
+    const type = field.type;
+    const provider = dbType || "sqlite";
+    const typeMap = {
+      string: {
+        sqlite: "text",
+        postgres: "text",
+        mysql: tableIndexStringLength ? `varchar(${tableIndexStringLength})` : field.unique ? "varchar(255)" : field.references ? "varchar(36)" : field.sortable ? "varchar(255)" : field.index ? "varchar(255)" : "text",
+        mssql: tableIndexStringLength ? `varchar(${tableIndexStringLength})` : field.unique || field.sortable ? "varchar(255)" : field.references ? "varchar(36)" : "varchar(8000)"
+      },
+      boolean: {
+        sqlite: "integer",
+        postgres: "boolean",
+        mysql: "boolean",
+        mssql: "smallint"
+      },
+      number: {
+        sqlite: field.bigint ? "bigint" : "integer",
+        postgres: field.bigint ? "bigint" : "integer",
+        mysql: field.bigint ? "bigint" : "integer",
+        mssql: field.bigint ? "bigint" : "integer"
+      },
+      date: {
+        sqlite: "date",
+        postgres: "timestamptz",
+        mysql: "timestamp(3)",
+        mssql: sql`datetime2(3)`
+      },
+      json: {
+        sqlite: "text",
+        postgres: "jsonb",
+        mysql: "json",
+        mssql: "varchar(8000)"
+      },
+      id: {
+        postgres: useNumberId ? sql`integer GENERATED BY DEFAULT AS IDENTITY` : useUUIDs ? "uuid" : "text",
+        mysql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
+        mssql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
+        sqlite: useNumberId ? "integer" : "text"
+      },
+      foreignKeyId: {
+        postgres: useNumberId ? "integer" : useUUIDs ? "uuid" : "text",
+        mysql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
+        mssql: useNumberId ? "integer" : useUUIDs ? "varchar(36)" : "varchar(36)",
+        sqlite: useNumberId ? "integer" : "text"
+      },
+      "string[]": {
+        sqlite: "text",
+        postgres: "jsonb",
+        mysql: "json",
+        mssql: "varchar(8000)"
+      },
+      "number[]": {
+        sqlite: "text",
+        postgres: "jsonb",
+        mysql: "json",
+        mssql: "varchar(8000)"
+      }
+    };
+    if (fieldName === "id" || field.references?.field === "id") {
+      if (fieldName === "id")
+        return typeMap.id[provider];
+      return typeMap.foreignKeyId[provider];
+    }
+    if (Array.isArray(type))
+      return "text";
+    if (!(type in typeMap))
+      throw new Error(`Unsupported field type '${String(type)}' for field '${fieldName}'. Allowed types are: string, number, boolean, date, string[], number[]. If you need to store structured data, store it as a JSON string (type: "string") or split it into primitive fields. See https://better-auth.com/docs/advanced/schema#additional-fields`);
+    return typeMap[type][provider];
+  }
+  const getModelName = initGetModelName({
+    schema: authTables,
+    usePlural: false
+  });
+  const getFieldName = initGetFieldName({
+    schema: authTables,
+    usePlural: false
+  });
+  function getReferencePath(model, field) {
+    try {
+      return `${getModelName(model)}.${getFieldName({
+        model,
+        field
+      })}`;
+    } catch {
+      return `${model}.${field}`;
+    }
+  }
+  const deferredIndexes = [];
+  const getTableIndexStringLength = (tableName, fieldName) => {
+    if (dbType !== "mysql" && dbType !== "mssql")
+      return;
+    const table = betterAuthSchema[tableName];
+    if (!table)
+      return;
+    return getDatabaseIndexStringLength({
+      columnName: fieldName,
+      dialect: dbType,
+      fields: table.fields,
+      indexes: table.indexes ?? []
+    });
+  };
+  if (toBeAdded.length) {
+    const populatedTables = /* @__PURE__ */ new Map;
+    for (const table of toBeAdded)
+      for (const [fieldName, field] of Object.entries(table.fields)) {
+        const timestampDefault = hasTimestampColumnDefault(field, dbType);
+        const staticDefault = hasStaticColumnDefault(field);
+        if (field.required !== false && !timestampDefault && !staticDefault) {
+          let populated = populatedTables.get(table.table);
+          if (populated === undefined) {
+            populated = await tableHasRows(db, dbType, table.table);
+            populatedTables.set(table.table, populated);
+          }
+          if (populated) {
+            const textDetail = field.type === "string" ? " For a text column, every existing row ends up with the same empty string." : "";
+            reportUnsafeChange(`Cannot add required column "${fieldName}" to populated table "${table.table}": the schema declares no default value, so existing rows have no value to backfill. MySQL accepts this statement instead of rejecting it and fills every existing row with an implicit default for the column type, reporting a successful migration over corrupted data.${textDetail} Add the column as nullable, backfill a correct value for every row, then make it NOT NULL.`);
+          }
+        }
+        const type = getType(field, fieldName, getTableIndexStringLength(table.table, fieldName));
+        const builder = db.schema.alterTable(table.table);
+        if (field.index || field.unique) {
+          const indexName = getDatabaseFieldIndexName(table.table, fieldName, field.unique ?? false);
+          let indexBuilder = db.schema.createIndex(indexName).on(table.table).columns([fieldName]);
+          if (field.unique) {
+            indexBuilder = indexBuilder.unique();
+            if (field.required === false && dbType === "mssql")
+              indexBuilder = indexBuilder.where(fieldName, "is not", null);
+            if (field.required !== false && field.defaultValue !== undefined && field.defaultValue !== null && typeof field.defaultValue !== "function")
+              logger.warn(`Adding unique column "${fieldName}" to existing table "${table.table}" backfills every existing row with its default value. If the table has more than one row, creating the unique index "${indexName}" will fail; backfill distinct values manually, then re-run the migration or create the index yourself.`);
+          }
+          deferredIndexes.push(indexBuilder);
+        }
+        const built = builder.addColumn(fieldName, type, (col) => {
+          col = field.required !== false ? col.notNull() : col;
+          if (field.references)
+            col = col.references(getReferencePath(field.references.model, field.references.field)).onDelete(field.references.onDelete || "cascade");
+          if (timestampDefault)
+            if (dbType === "mysql")
+              col = col.defaultTo(sql`CURRENT_TIMESTAMP(3)`);
+            else
+              col = col.defaultTo(sql`CURRENT_TIMESTAMP`);
+          else if (staticDefault)
+            col = col.defaultTo(typeof field.defaultValue === "boolean" && (dbType === "sqlite" || dbType === "mssql") ? field.defaultValue ? 1 : 0 : field.defaultValue);
+          return col;
+        });
+        migrations.push(built);
+      }
+  }
+  if (toBeCreated.length)
+    for (const table of toBeCreated) {
+      const idType = getType({ type: useNumberId ? "number" : "string" }, "id");
+      let dbT = db.schema.createTable(table.table).addColumn("id", idType, (col) => {
+        if (useNumberId) {
+          if (dbType === "postgres")
+            return col.primaryKey().notNull();
+          else if (dbType === "sqlite")
+            return col.primaryKey().notNull();
+          else if (dbType === "mssql")
+            return col.identity().primaryKey().notNull();
+          return col.autoIncrement().primaryKey().notNull();
+        }
+        if (useUUIDs) {
+          if (dbType === "postgres")
+            return col.primaryKey().defaultTo(sql`pg_catalog.gen_random_uuid()`).notNull();
+          return col.primaryKey().notNull();
+        }
+        return col.primaryKey().notNull();
+      });
+      for (const [fieldName, field] of Object.entries(table.fields)) {
+        const type = getType(field, fieldName, getTableIndexStringLength(table.table, fieldName));
+        dbT = dbT.addColumn(fieldName, type, (col) => {
+          col = field.required !== false ? col.notNull() : col;
+          if (field.references)
+            col = col.references(getReferencePath(field.references.model, field.references.field)).onDelete(field.references.onDelete || "cascade");
+          if (field.unique)
+            col = col.unique();
+          if (field.type === "date" && typeof field.defaultValue === "function" && (dbType === "postgres" || dbType === "mysql" || dbType === "mssql"))
+            if (dbType === "mysql")
+              col = col.defaultTo(sql`CURRENT_TIMESTAMP(3)`);
+            else
+              col = col.defaultTo(sql`CURRENT_TIMESTAMP`);
+          return col;
+        });
+        if (field.index && !field.unique) {
+          const builder = db.schema.createIndex(getDatabaseFieldIndexName(table.table, fieldName, false)).on(table.table).columns([fieldName]);
+          deferredIndexes.push(builder);
+        }
+      }
+      migrations.push(dbT);
+    }
+  for (const { table, index, name } of toBeAddedIndexes) {
+    let builder = db.schema.createIndex(name).on(table).columns([...index.columns]);
+    if (index.unique)
+      builder = builder.unique();
+    deferredIndexes.push(builder);
+  }
+  for (const index of deferredIndexes)
+    migrations.push(index);
+  async function runMigrations() {
+    try {
+      for (const migration of migrations)
+        await migration.execute();
+    } finally {
+      if (migrations.length && config.database)
+        invalidateSchemaChecks(config.database);
+    }
+  }
+  async function compileMigrations() {
+    return migrations.map((m) => m.compile().sql).join(`;
+
+`) + ";";
+  }
+  return {
+    toBeCreated,
+    toBeAdded,
+    toBeAddedIndexes,
+    unsafeChanges,
+    schemaProblems,
+    runMigrations,
+    compileMigrations
+  };
+}
 
 // node_modules/better-auth/dist/utils/constants.mjs
 var DEFAULT_SECRET = "better-auth-secret-12345678901234567890";
@@ -116215,7 +116216,7 @@ function drizzle(...params) {
 // src/db/index.ts
 var pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: Number(process.env.DB_POOL_MAX || 10),
+  max: Number(process.env.DB_POOL_MAX || 4),
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
   keepAlive: true,
@@ -119705,6 +119706,80 @@ class OrderError extends Error {
   }
 }
 
+// src/utils/trust/access.ts
+var comeBackSentence = /\s*Please come back in .*$/i;
+var restoreSentence = /\s*(?:Verify your email to restore|Please restore) your account.*$/i;
+var longestPauseMs = 72 * 3600000;
+function restrictionEnd(endsAt, createdAt) {
+  return endsAt ?? new Date(createdAt.getTime() + longestPauseMs);
+}
+function pausedMessage(reason, endsAt, createdAt = new Date) {
+  const remaining = formatRemainingTime(restrictionEnd(endsAt, createdAt).getTime() - Date.now());
+  return `${reason.replace(comeBackSentence, "")} Please come back in ${remaining}.`;
+}
+function blockedMessage(reason) {
+  return `${reason.replace(restoreSentence, "").replace(comeBackSentence, "")} Please restore your account to continue.`;
+}
+function formatRemainingTime(diffMs) {
+  if (diffMs <= 0)
+    return "a few moments";
+  const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+  if (hours > 24) {
+    const days = Math.ceil(hours / 24);
+    return `${days} day${days > 1 ? "s" : ""}`;
+  }
+  return `${hours} hour${hours > 1 ? "s" : ""}`;
+}
+async function requireNoActiveTrustRestriction(tx, userId) {
+  const [restriction] = await tx.select({
+    id: trust_actions.id,
+    endsAt: trust_actions.endsAt,
+    createdAt: trust_actions.createdAt,
+    reason: trust_actions.reason
+  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(gt(trust_actions.endsAt, new Date), and(isNull2(trust_actions.endsAt), gt(trust_actions.createdAt, new Date(Date.now() - longestPauseMs)))))).orderBy(desc(trust_actions.createdAt)).limit(1);
+  if (restriction)
+    throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt, restriction.createdAt));
+}
+
+// src/utils/trust/read-account-block.ts
+async function readAccountBlock(userId) {
+  const open = await db2.select({
+    id: trust_actions.id,
+    actionType: trust_actions.actionType,
+    reason: trust_actions.reason,
+    endsAt: trust_actions.endsAt,
+    createdAt: trust_actions.createdAt
+  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]), isNull2(trust_actions.revokedAt)));
+  const blocked = open.find((row) => row.actionType === "blocked");
+  if (blocked)
+    return blockedMessage(blocked.reason);
+  const now = new Date;
+  const live = open.filter((row) => restrictionEnd(row.endsAt, row.createdAt) > now).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+  if (live)
+    return pausedMessage(live.reason, live.endsAt, live.createdAt);
+  if (open.length) {
+    await db2.transaction(async (tx) => {
+      await tx.update(trust_actions).set({ revokedAt: now, revocationReason: "Temporary restriction expired" }).where(inArray(trust_actions.id, open.map((row) => row.id)));
+      await tx.update(user).set({ isActive: true }).where(eq(user.id, userId));
+    });
+    return null;
+  }
+  return "Your account is paused. Please restore your account to continue.";
+}
+
+// src/utils/trust/read-login-block.ts
+async function readLoginBlock(userId) {
+  const [account] = await db2.select({ isActive: user.isActive }).from(user).where(eq(user.id, userId)).limit(1);
+  if (!account)
+    return null;
+  if (!account.isActive)
+    return readAccountBlock(userId);
+  const [pause] = await db2.select({ reason: trust_actions.reason, endsAt: trust_actions.endsAt, createdAt: trust_actions.createdAt }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt))).orderBy(desc(trust_actions.createdAt)).limit(1);
+  if (!pause || restrictionEnd(pause.endsAt, pause.createdAt) <= new Date)
+    return null;
+  return pausedMessage(pause.reason, pause.endsAt, pause.createdAt);
+}
+
 // src/utils/recaptcha/index.ts
 var VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 var warnedMissingSecret = false;
@@ -119830,6 +119905,17 @@ var auth = betterAuth({
       }
     }
   },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const reason = await readLoginBlock(session.userId);
+          if (reason)
+            throw new APIError2("FORBIDDEN", { message: reason, code: "ACCOUNT_RESTRICTED" });
+        }
+      }
+    }
+  },
   emailVerification: {
     autoSignInAfterVerification: true
   },
@@ -119854,67 +119940,6 @@ async function touchUserActivity(userId) {
   } catch (error) {
     console.error("Failed to update lastActiveAt for user", userId, error);
   }
-}
-
-// src/utils/trust/access.ts
-var comeBackSentence = /\s*Please come back in .*$/i;
-var restoreSentence = /\s*(?:Verify your email to restore|Please restore) your account.*$/i;
-var longestPauseMs = 72 * 3600000;
-function restrictionEnd(endsAt, createdAt) {
-  return endsAt ?? new Date(createdAt.getTime() + longestPauseMs);
-}
-function pausedMessage(reason, endsAt, createdAt = new Date) {
-  const remaining = formatRemainingTime(restrictionEnd(endsAt, createdAt).getTime() - Date.now());
-  return `${reason.replace(comeBackSentence, "")} Please come back in ${remaining}.`;
-}
-function blockedMessage(reason) {
-  return `${reason.replace(restoreSentence, "").replace(comeBackSentence, "")} Please restore your account to continue.`;
-}
-function formatRemainingTime(diffMs) {
-  if (diffMs <= 0)
-    return "a few moments";
-  const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-  if (hours > 24) {
-    const days = Math.ceil(hours / 24);
-    return `${days} day${days > 1 ? "s" : ""}`;
-  }
-  return `${hours} hour${hours > 1 ? "s" : ""}`;
-}
-async function requireNoActiveTrustRestriction(tx, userId) {
-  const [restriction] = await tx.select({
-    id: trust_actions.id,
-    endsAt: trust_actions.endsAt,
-    createdAt: trust_actions.createdAt,
-    reason: trust_actions.reason
-  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(gt(trust_actions.endsAt, new Date), and(isNull2(trust_actions.endsAt), gt(trust_actions.createdAt, new Date(Date.now() - longestPauseMs)))))).orderBy(desc(trust_actions.createdAt)).limit(1);
-  if (restriction)
-    throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt, restriction.createdAt));
-}
-
-// src/utils/trust/read-account-block.ts
-async function readAccountBlock(userId) {
-  const open = await db2.select({
-    id: trust_actions.id,
-    actionType: trust_actions.actionType,
-    reason: trust_actions.reason,
-    endsAt: trust_actions.endsAt,
-    createdAt: trust_actions.createdAt
-  }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]), isNull2(trust_actions.revokedAt)));
-  const blocked = open.find((row) => row.actionType === "blocked");
-  if (blocked)
-    return blockedMessage(blocked.reason);
-  const now = new Date;
-  const live = open.filter((row) => restrictionEnd(row.endsAt, row.createdAt) > now).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
-  if (live)
-    return pausedMessage(live.reason, live.endsAt, live.createdAt);
-  if (open.length) {
-    await db2.transaction(async (tx) => {
-      await tx.update(trust_actions).set({ revokedAt: now, revocationReason: "Temporary restriction expired" }).where(inArray(trust_actions.id, open.map((row) => row.id)));
-      await tx.update(user).set({ isActive: true }).where(eq(user.id, userId));
-    });
-    return null;
-  }
-  return "Your account is paused. Please restore your account to continue.";
 }
 
 // src/utils/user-status-cache/index.ts
@@ -126995,7 +127020,7 @@ var import_endpoints5 = __toESM(require_endpoints());
 var import_event_streams2 = __toESM(require_event_streams());
 var import_protocols6 = __toESM(require_protocols());
 var import_retry4 = __toESM(require_retry());
-var import_schema32 = __toESM(require_schema());
+var import_schema33 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/auth/httpAuthSchemeProvider.js
 var import_httpAuthSchemes = __toESM(require_httpAuthSchemes());
@@ -129158,7 +129183,7 @@ var _mw11 = (Command, cs, config, o) => [
 ];
 
 // node_modules/@aws-sdk/client-s3/dist-es/schemas/schemas_0.js
-var import_schema31 = __toESM(require_schema());
+var import_schema32 = __toESM(require_schema());
 
 // node_modules/@aws-sdk/client-s3/dist-es/models/S3ServiceException.js
 var import_client5 = __toESM(require_client3());
@@ -130528,10 +130553,10 @@ var _xawob = "x-amz-write-offset-bytes";
 var _xawrl = "x-amz-website-redirect-location";
 var _xs = "xsi:type";
 var n0 = "com.amazonaws.s3";
-var _s_registry = import_schema31.TypeRegistry.for(_s);
+var _s_registry = import_schema32.TypeRegistry.for(_s);
 var S3ServiceException$ = [-3, _s, "S3ServiceException", 0, [], []];
 _s_registry.registerError(S3ServiceException$, S3ServiceException);
-var n0_registry = import_schema31.TypeRegistry.for(n0);
+var n0_registry = import_schema32.TypeRegistry.for(n0);
 var AccessDenied$ = [
   -3,
   n0,
@@ -135562,7 +135587,7 @@ class S3Client extends import_client25.Client {
     const _config_10 = $resolveS3Config(_config_9, { session: [() => this, CreateSessionCommand] });
     const _config_11 = resolveRuntimeExtensions2(_config_10, configuration?.extensions || []);
     this.config = _config_11;
-    this.middlewareStack.use(import_schema32.getSchemaSerdePlugin(this.config));
+    this.middlewareStack.use(import_schema33.getSchemaSerdePlugin(this.config));
     this.middlewareStack.use(import_client24.getUserAgentPlugin(this.config));
     this.middlewareStack.use(import_retry4.getRetryPlugin(this.config));
     this.middlewareStack.use(import_protocols6.getContentLengthPlugin(this.config));
@@ -140931,17 +140956,19 @@ var buyerOrderGetRoute = new Elysia().use(sessionAuth).get("/orders/:id", async 
   }
 }, { role: ["buyer"], params: orderIdParams2 });
 // src/utils/trust/cancellation-policy.ts
+var cancellationWarningAt = 5;
+var cancellationPauseAt = 7;
 function resolveCancellationCooldownHours(cancelCount) {
   if (cancelCount >= 10)
     return 72;
   if (cancelCount >= 9)
     return 24;
-  if (cancelCount >= 7)
+  if (cancelCount >= cancellationPauseAt)
     return 12;
   return 0;
 }
 function resolveCancellationWarning(cancelCount) {
-  if (cancelCount >= 5 && cancelCount < 7) {
+  if (cancelCount >= cancellationWarningAt && cancelCount < cancellationPauseAt) {
     return `You have canceled ${cancelCount} reservations. To help market vendors plan surplus stock, please avoid frequent cancellations. Reaching 7 cancellations will temporarily pause reservations for 12 hours.`;
   }
   return null;
@@ -140955,6 +140982,40 @@ function resolveCancellationRestrictionMessage(cancelCount, endsAt) {
     remainingText,
     durationText
   };
+}
+
+// src/modules/buyer/services/buyer.order.cancel-penalty.ts
+async function applyBuyerCancellationPenalty(tx, buyerId, orderId) {
+  if (!trustActionPolicy.enabled)
+    return;
+  const windowStart = trustScoreWindowStart();
+  const [cancelRow] = await tx.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, buyerId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer"), windowStart ? gte(orders.cancelledAt, windowStart) : undefined));
+  const cancelCount = Number(cancelRow?.count ?? 0);
+  if (cancelCount < cancellationWarningAt)
+    return;
+  const cooldownHours = resolveCancellationCooldownHours(cancelCount);
+  const endsAt = cooldownHours > 0 ? new Date(Date.now() + cooldownHours * 3600000) : null;
+  const reason = endsAt ? resolveCancellationRestrictionMessage(cancelCount, endsAt).message : resolveCancellationWarning(cancelCount);
+  if (!reason)
+    return;
+  const kind = endsAt ? "cancellation-restriction" : "cancellation-warning";
+  const actionKey = `${trustPolicyVersion}:${buyerId}:${kind}:${cancelCount}:${orderId}`;
+  await tx.insert(trust_actions).values({
+    actionKey,
+    subjectId: buyerId,
+    actionType: endsAt ? "temporary_restriction" : "warning",
+    weightedPoints: cancelCount,
+    policyVersion: trustPolicyVersion,
+    reason,
+    sourceOrderId: orderId,
+    endsAt
+  }).onConflictDoNothing({ target: trust_actions.actionKey });
+  await queueTrustNotice(tx, {
+    noticeKey: `trust-action:${actionKey}`,
+    recipientId: buyerId,
+    orderId,
+    kind: endsAt ? "buyer_cancellation_restriction" : "buyer_cancellation_warning"
+  });
 }
 
 // src/modules/buyer/services/buyer.order.cancel.ts
@@ -140978,39 +141039,7 @@ async function cancelBuyerOrder(orderId, buyerId) {
       dedupeKey: `buyer-cancelled:${cancelled.id}`,
       orderId: cancelled.id
     });
-    const windowStart = trustScoreWindowStart();
-    const [cancelRow] = await tx.select({ count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.buyersId, buyerId), eq(orders.status, "cancelled"), eq(orders.cancelledBy, "buyer"), windowStart ? gte(orders.cancelledAt, windowStart) : undefined));
-    const cancelCount = Number(cancelRow?.count ?? 0);
-    const cooldownHours = resolveCancellationCooldownHours(cancelCount);
-    if (cooldownHours > 0) {
-      const endsAt = new Date(Date.now() + cooldownHours * 3600000);
-      const { message } = resolveCancellationRestrictionMessage(cancelCount, endsAt);
-      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}:${cancelled.id}`;
-      await tx.insert(trust_actions).values({
-        actionKey,
-        subjectId: buyerId,
-        actionType: "temporary_restriction",
-        weightedPoints: cancelCount,
-        policyVersion: trustPolicyVersion,
-        reason: message,
-        sourceOrderId: cancelled.id,
-        endsAt
-      }).onConflictDoNothing({ target: trust_actions.actionKey });
-    } else if (cancelCount >= 5) {
-      const warningMessage = resolveCancellationWarning(cancelCount);
-      if (warningMessage) {
-        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}:${cancelled.id}`;
-        await tx.insert(trust_actions).values({
-          actionKey,
-          subjectId: buyerId,
-          actionType: "warning",
-          weightedPoints: cancelCount,
-          policyVersion: trustPolicyVersion,
-          reason: warningMessage,
-          sourceOrderId: cancelled.id
-        }).onConflictDoNothing({ target: trust_actions.actionKey });
-      }
-    }
+    await applyBuyerCancellationPenalty(tx, buyerId, cancelled.id);
   });
   return getBuyerOrder(orderId, buyerId);
 }
@@ -141755,13 +141784,15 @@ async function getBuyerProfile(userId) {
   let trustRestriction = null;
   const [activeAction] = await db2.select({
     endsAt: trust_actions.endsAt,
+    createdAt: trust_actions.createdAt,
     weightedPoints: trust_actions.weightedPoints,
     reason: trust_actions.reason
   }).from(trust_actions).where(and(eq(trust_actions.subjectId, userId), eq(trust_actions.actionType, "temporary_restriction"), isNull2(trust_actions.revokedAt), or(isNull2(trust_actions.endsAt), gt(trust_actions.endsAt, new Date)))).orderBy(desc(trust_actions.createdAt)).limit(1);
   if (activeAction) {
     const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
     const remainingText = formatRemainingTime(diffMs);
-    const durationText = activeAction.weightedPoints >= 10 ? "3 days" : activeAction.weightedPoints >= 8 || activeAction.weightedPoints === 9 ? "24 hours" : "12 hours";
+    const hours = activeAction.endsAt ? Math.round((activeAction.endsAt.getTime() - activeAction.createdAt.getTime()) / 3600000) : 72;
+    const durationText = hours >= 72 ? "3 days" : hours >= 24 ? "24 hours" : "12 hours";
     trustRestriction = {
       message: activeAction.reason.includes("Please come back in") ? activeAction.reason : `${activeAction.reason} Please come back in ${remainingText}.`,
       remainingText,
@@ -141770,9 +141801,9 @@ async function getBuyerProfile(userId) {
   }
   let warningMessage = null;
   if (!trustRestriction) {
-    if (cancelRow >= 5 && cancelRow < 7) {
+    if (cancelRow >= cancellationWarningAt && cancelRow < cancellationPauseAt) {
       warningMessage = resolveCancellationWarning(cancelRow);
-    } else if (monitoring.weightedPoints >= 4 && monitoring.weightedPoints < 6) {
+    } else if (monitoring.weightedPoints >= trustActionPolicy.warningThreshold && monitoring.weightedPoints < trustActionPolicy.tier1Threshold) {
       warningMessage = "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.";
     }
   }
@@ -144439,7 +144470,7 @@ function normalizeEmail(email) {
 }
 async function hasRecoverableAction(email) {
   const [candidate] = await db2.select({ id: user.id, isActive: user.isActive }).from(user).where(eq(user.email, email)).limit(1);
-  if (!candidate || candidate.isActive)
+  if (!candidate)
     return false;
   const [action] = await db2.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, candidate.id), inArray(trust_actions.actionType, recoveryActionTypes), isNull2(trust_actions.revokedAt))).limit(1);
   return !!action;
@@ -144467,9 +144498,8 @@ async function verifyTrustRecovery(input) {
   const restoredAt = new Date;
   const restored = await db2.transaction(async (tx) => {
     const [candidate] = await tx.select({ id: user.id, isActive: user.isActive }).from(user).where(eq(user.email, email)).for("update").limit(1);
-    if (!candidate || candidate.isActive) {
+    if (!candidate)
       throw new OrderError(400, "This account does not need recovery");
-    }
     const actions = await tx.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.subjectId, candidate.id), inArray(trust_actions.actionType, recoveryActionTypes), isNull2(trust_actions.revokedAt))).for("update");
     if (!actions.length)
       throw new OrderError(400, "This account does not need recovery");

@@ -79,7 +79,8 @@ export function BuyerSiteHeader() {
             </Link>
 
             {/* Notifications Popover Trigger */}
-            <div ref={notificationRef} className="relative">
+            {/* Not positioned on phones, so the dropdown spans the whole header instead of hanging off the bell. */}
+            <div ref={notificationRef} className="sm:relative">
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((prev) => !prev)}

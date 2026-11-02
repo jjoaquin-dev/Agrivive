@@ -11,7 +11,7 @@ const triggerIdle = "text-neutral-600 hover:text-neutral-900";
 const triggerActive = "text-[#14231A] font-bold";
 
 // Price and distance dropdowns in the navbar search, beside the category. Filters are read from and written to the URL.
-export function MarketplaceHeaderFilters() {
+export function MarketplaceHeaderFilters({ variant = "inline" }: { variant?: "inline" | "pill" }) {
   const {
     filters,
     hasLocation,
@@ -23,15 +23,19 @@ export function MarketplaceHeaderFilters() {
 
   const priceActive = Boolean(filters.minPrice || filters.maxPrice);
   const distanceActive = hasLocation && Boolean(filters.radiusKm);
+  const pill = variant === "pill";
+  const base = pill
+    ? "inline-flex min-h-11 flex-1 items-center justify-between gap-1.5 whitespace-nowrap rounded-full border border-neutral-300 bg-white px-4 text-sm font-semibold transition-colors cursor-pointer"
+    : triggerBase;
   const priceLabel = priceActive ? `₱${filters.minPrice || "0"} – ₱${filters.maxPrice || "1000"}` : "Any price";
   const distanceLabel = distanceActive ? `Within ${filters.radiusKm}km` : "Any distance";
 
   return (
     <>
       <Popover.Root>
-        <Popover.Trigger type="button" className={`${triggerBase} ${priceActive ? triggerActive : triggerIdle}`}>
+        <Popover.Trigger type="button" className={`${base} ${priceActive ? triggerActive : triggerIdle}`}>
           <span>Price</span>
-          <span className="hidden font-normal opacity-80 lg:inline">{priceLabel}</span>
+          <span className={`font-normal opacity-80 ${pill ? "hidden" : "hidden lg:inline"}`}>{priceLabel}</span>
           <ChevronDown aria-hidden="true" className="size-3.5" />
         </Popover.Trigger>
         <Popover.Portal>
@@ -44,9 +48,9 @@ export function MarketplaceHeaderFilters() {
       </Popover.Root>
 
       <Popover.Root>
-        <Popover.Trigger type="button" className={`${triggerBase} ${distanceActive ? triggerActive : triggerIdle}`}>
+        <Popover.Trigger type="button" className={`${base} ${distanceActive ? triggerActive : triggerIdle}`}>
           <span>Distance</span>
-          <span className="hidden font-normal opacity-80 lg:inline">{distanceLabel}</span>
+          <span className={`font-normal opacity-80 ${pill ? "hidden" : "hidden lg:inline"}`}>{distanceLabel}</span>
           <ChevronDown aria-hidden="true" className="size-3.5" />
         </Popover.Trigger>
         <Popover.Portal>

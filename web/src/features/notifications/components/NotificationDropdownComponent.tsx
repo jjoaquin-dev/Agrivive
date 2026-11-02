@@ -34,7 +34,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
     <div
       role="dialog"
       aria-label="Notifications"
-      className="absolute right-0 top-full mt-2.5 w-[380px] sm:w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[#E5E2DA] bg-white shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      className="absolute inset-x-3 top-full mt-2 sm:inset-x-auto sm:right-0 sm:mt-2.5 sm:w-[420px] sm:max-w-[calc(100vw-2rem)] rounded-2xl border border-[#E5E2DA] bg-white shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
     >
       {/* Top Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
@@ -85,7 +85,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
       </div>
 
       {/* Scrollable Notifications List */}
-      <div data-lenis-prevent className="max-h-[380px] divide-y divide-neutral-100 overflow-y-auto px-2 pb-2">
+      <div data-lenis-prevent className="max-h-[min(380px,60dvh)] divide-y divide-neutral-100 overflow-y-auto px-2 pb-2">
         {loading && !notices.length ? (
           <div className="space-y-3 p-3">
             {[1, 2, 3].map((i) => (

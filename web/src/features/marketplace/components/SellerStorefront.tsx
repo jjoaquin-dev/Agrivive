@@ -22,7 +22,7 @@ function StorefrontLoading() {
       <PageContainer>
         <Skeleton className="h-40 rounded-2xl" />
         <Skeleton className="mt-8 h-8 w-56" />
-        <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {[1, 2, 3].map((item) => <Skeleton key={item} className="h-[380px] rounded-2xl" />)}
         </div>
       </PageContainer>
@@ -154,7 +154,7 @@ export function SellerStorefront() {
                 </Empty>
               ) : (
                 <>
-                  <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${error || loading ? "pointer-events-none opacity-70" : ""}`} inert={Boolean(error || loading)}>
+                  <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${error || loading ? "pointer-events-none opacity-70" : ""}`} inert={Boolean(error || loading)}>
                     {products.map((product) => <ProductCard key={product.id} product={product} />)}
                   </div>
                   {nextCursor ? (

@@ -26,7 +26,17 @@ The 12/24/48-hour inquiry clock is implemented by the scheduled job. The PDF's s
 
 `violation score for user = sum(weight for violation type × recorded occurrence/value)`
 
-Configured thresholds can lead to no action, warning, temporary restriction, or blocking. The current default configuration is 1 point for verified inquiry non-response, 2 points for verified seller cancellation, and 1 point for each completed-order 1–2-star rating signal; default thresholds are warning 3, temporary restriction 5, and blocked 8, with a seven-day default temporary restriction. These values are configurable prototype policy settings, not research-proven facts. They are disabled by default until manually validated (`TRUST_ACTIONS_ENABLED=false`).
+Configured thresholds can lead to no action, warning, temporary restriction, or blocking. Current defaults (`backend/src/utils/trust/policy.ts`, policy `monitoring-v3`): weights are 1 point for verified inquiry non-response, 1 for a 1–2-star rating, 2 for seller cancellation, 2 for misleading product information, 2 for inappropriate communication, and 3 for QR misuse (a serious violation that blocks at once). Only violations from the last 90 days count (`TRUST_SCORE_WINDOW_DAYS`).
+
+| Points | System action |
+|---|---|
+| 4–5 | Warning |
+| 6–7 | Paused 12 hours |
+| 8–9 | Paused 24 hours |
+| 10–11 | Paused 3 days |
+| 12 or more, or one serious violation | Blocked |
+
+These values are configurable prototype policy settings, not research-proven facts. Actions run unless `TRUST_ACTIONS_ENABLED=false`.
 
 Recorded reservations, QR state, pickup outcomes, communication timing, and review evidence may contribute in future policy revisions, but an unsupported report remains an allegation and contributes zero weighted points.
 
@@ -38,6 +48,18 @@ Recorded reservations, QR state, pickup outcomes, communication timing, and revi
 - Admin views remain read-only. Admins can monitor aggregate values but cannot approve reports, restore accounts, or change account state.
 - The web exposes Google registration/sign-in, email OTP recovery, buyer report/evidence submission, verified-purchase reviews, trust-aware restriction messages, and read-only action counts. The web does not add administrative mutation controls.
 - Correction requests, report evidence, and notices remain separate from public marketplace data. Invalidated source events no longer contribute to the monitoring score.
+
+## Buyer rules (system-only, not in the paper)
+
+The paper focuses on sellers, but the system also holds buyers accountable. Purpose: reservations hold a seller's stock for 24 hours, so a buyer who never comes, or keeps cancelling, ties up produce that could have sold and may spoil. Steps are gentle first (warning, then a short pause, then a block for serious or very repeated cases). Only recorded events count; a report alone does not.
+
+| Buyer behavior | System action |
+|---|---|
+| Cancels reservations (`cancellation-policy.ts`) | Warning at 5; paused 12 hours at 7, 24 hours at 9, 3 days at 10 (last 90 days) |
+| Reservation expires unpicked (`buyer.order.expire.ts`) | `buyer_failed_reservation` event, 2 points, warning notice, then the shared points table above |
+| Inactive 3 weeks / 1 month | Warning email / account deactivated |
+
+A paused buyer cannot reserve (`requireNoActiveTrustRestriction`) and sees how long is left.
 
 ## Fairness and privacy rules
 

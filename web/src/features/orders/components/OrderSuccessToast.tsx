@@ -29,9 +29,9 @@ export function OrderSuccessToast({
     <aside
       role="status"
       aria-live="polite"
-      className="fixed top-20 right-4 z-50 w-full max-w-sm sm:right-6 animate-in fade-in slide-in-from-top-3 duration-200"
+      className="fixed inset-x-4 top-[calc(env(safe-area-inset-top)+5rem)] z-50 sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm animate-in fade-in slide-in-from-top-3 duration-200"
     >
-      <Alert variant="success" className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-10 shadow-md backdrop-blur-md">
+      <Alert variant="success" className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-12 shadow-md backdrop-blur-md">
         <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
           <CheckCircle2 className="size-4" />
         </span>
@@ -46,7 +46,7 @@ export function OrderSuccessToast({
         <button
           type="button"
           onClick={onDismiss}
-          className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full text-emerald-700/60 transition-colors hover:bg-white hover:text-emerald-950 cursor-pointer"
+          className="absolute right-0.5 top-0.5 flex size-11 items-center justify-center rounded-full text-emerald-700/60 transition-colors hover:bg-white hover:text-emerald-950 cursor-pointer"
           aria-label="Dismiss notification"
         >
           <X className="size-4" />

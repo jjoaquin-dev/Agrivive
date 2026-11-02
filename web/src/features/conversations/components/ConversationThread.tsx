@@ -49,15 +49,15 @@ export function ConversationThread({
       aria-label={`Conversation with ${sellerName}`}
     >
       {/* Top Thread Header */}
-      <header className="flex items-center justify-between border-b border-[#F0F2EB] px-5 py-3.5">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3 border-b border-[#F0F2EB] px-4 py-3.5 sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={onBack}
-            className="flex size-8 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 lg:hidden"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 lg:hidden"
             aria-label="Back to messages"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-5" />
           </button>
           <div className="relative">
             <div className="size-10 overflow-hidden rounded-full ring-2 ring-[#457D00]/20">
@@ -81,7 +81,7 @@ export function ConversationThread({
             <p className="text-xs text-[#457D00] font-medium">Active now • Verified vendor</p>
           </div>
         </div>
-        {existing ? <ConversationStateButtons conversation={existing} onChanged={onStateChanged} /> : null}
+        {existing ? <div className="w-full sm:w-auto"><ConversationStateButtons conversation={existing} onChanged={onStateChanged} /></div> : null}
       </header>
 
       {/* Date Divider Pill */}

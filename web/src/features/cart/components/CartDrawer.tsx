@@ -145,7 +145,7 @@ export function CartDrawer() {
         {items.length > 0 ? (
           <SheetFooter className="border-t border-border/80 bg-white p-5">
             {trustRestriction || (checkoutError && isTrustAccessMessage(checkoutError)) ? (
-              <TrustAccessNotice message={trustRestriction || checkoutError} />
+              <TrustAccessNotice message={trustRestriction || checkoutError} onNavigate={() => setDrawerOpen(false)} />
             ) : checkoutError ? (
               <Alert variant="destructive" className="mb-3">
                 <AlertDescription>{checkoutError}</AlertDescription>

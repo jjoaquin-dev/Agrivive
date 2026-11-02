@@ -4,9 +4,9 @@ import { orders, trust_actions, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { formatRemainingTime } from "../../../utils/trust/access";
-import { trustScoreWindowStart } from "../../../utils/trust/policy";
+import { trustActionPolicy, trustScoreWindowStart } from "../../../utils/trust/policy";
 import { readTrustMonitoringScore } from "../../../utils/trust/score";
-import { resolveCancellationWarning } from "../../../utils/trust/cancellation-policy";
+import { cancellationPauseAt, cancellationWarningAt, resolveCancellationWarning } from "../../../utils/trust/cancellation-policy";
 
 export async function getBuyerProfile(userId: string) {
   const windowStart = trustScoreWindowStart();
@@ -49,6 +49,7 @@ export async function getBuyerProfile(userId: string) {
   const [activeAction] = await db
     .select({
       endsAt: trust_actions.endsAt,
+      createdAt: trust_actions.createdAt,
       weightedPoints: trust_actions.weightedPoints,
       reason: trust_actions.reason,
     })
@@ -67,12 +68,10 @@ export async function getBuyerProfile(userId: string) {
   if (activeAction) {
     const diffMs = activeAction.endsAt ? activeAction.endsAt.getTime() - Date.now() : 0;
     const remainingText = formatRemainingTime(diffMs);
-    const durationText =
-      activeAction.weightedPoints >= 10
-        ? "3 days"
-        : activeAction.weightedPoints >= 8 || activeAction.weightedPoints === 9
-          ? "24 hours"
-          : "12 hours";
+    const hours = activeAction.endsAt
+      ? Math.round((activeAction.endsAt.getTime() - activeAction.createdAt.getTime()) / 3_600_000)
+      : 72;
+    const durationText = hours >= 72 ? "3 days" : hours >= 24 ? "24 hours" : "12 hours";
 
     trustRestriction = {
       message: activeAction.reason.includes("Please come back in")
@@ -86,9 +85,9 @@ export async function getBuyerProfile(userId: string) {
   // If no restriction is active, check warnings
   let warningMessage: string | null = null;
   if (!trustRestriction) {
-    if (cancelRow >= 5 && cancelRow < 7) {
+    if (cancelRow >= cancellationWarningAt && cancelRow < cancellationPauseAt) {
       warningMessage = resolveCancellationWarning(cancelRow);
-    } else if (monitoring.weightedPoints >= 4 && monitoring.weightedPoints < 6) {
+    } else if (monitoring.weightedPoints >= trustActionPolicy.warningThreshold && monitoring.weightedPoints < trustActionPolicy.tier1Threshold) {
       warningMessage =
         "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.";
     }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QuantityStepper } from "@/src/components/QuantityStepper";
 import type { MarketplaceProduct } from "../types";
 
 interface ProductCardActionProps {
@@ -10,8 +11,8 @@ interface ProductCardActionProps {
   soldOut: boolean;
   quantityInCart: number;
   onAddToCart: (qty: number) => void;
-  onIncrement: () => void;
-  onDecrement: () => void;
+  onChangeQuantity: (qty: number) => void;
+  onRemove: () => void;
 }
 
 export function ProductCardAction({
@@ -19,18 +20,22 @@ export function ProductCardAction({
   soldOut,
   quantityInCart,
   onAddToCart,
-  onIncrement,
-  onDecrement,
+  onChangeQuantity,
+  onRemove,
 }: ProductCardActionProps) {
   const [selectedQty, setSelectedQty] = useState(1);
-  const maxStock = Math.max(1, Number(product.productQty) || 1);
+  const stock = Number(product.productQty);
+  const maxStock = Number.isFinite(stock) && stock > 0 ? stock : 1;
+  const startQty = Math.min(selectedQty, maxStock);
+  const stepperClass = "h-12 rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-sm";
+  const roundButton = "size-10 bg-white shadow-sm";
 
   if (soldOut) {
     return (
       <Button
         type="button"
         disabled
-        className="h-[42px] w-full rounded-full px-6 py-2.5 text-xs font-semibold uppercase tracking-wider opacity-60"
+        className="h-12 w-full rounded-full px-6 py-2.5 text-xs font-semibold uppercase tracking-wider opacity-60"
       >
         Sold out
       </Button>
@@ -39,73 +44,40 @@ export function ProductCardAction({
 
   if (quantityInCart > 0) {
     return (
-      <div className="flex h-[42px] w-full items-center justify-between rounded-full border border-agrivive-primary/20 bg-agrivive-background px-2 py-1 shadow-sm">
-        <button
-          type="button"
-          onClick={onDecrement}
-          aria-label="Decrease quantity"
-          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50"
-        >
-          <Minus className="size-3" />
-        </button>
-        <span className="text-xs font-semibold text-agrivive-primary">
-          {quantityInCart} in cart
-        </span>
-        <button
-          type="button"
-          onClick={onIncrement}
-          disabled={quantityInCart >= maxStock}
-          aria-label="Increase quantity"
-          className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-40"
-        >
-          <Plus className="size-3" />
-        </button>
+      <div className="flex h-12 w-full items-center justify-between gap-2 rounded-full border border-agrivive-primary/20 bg-agrivive-background px-1 shadow-sm">
+        <QuantityStepper
+          value={quantityInCart}
+          max={maxStock}
+          label={`${product.productName} quantity in cart`}
+          onChange={onChangeQuantity}
+          onRemove={onRemove}
+          className="min-w-0 flex-1"
+          buttonClassName={roundButton}
+        />
+        <span className="shrink-0 pr-3 text-xs font-semibold text-agrivive-primary">in cart</span>
       </div>
     );
   }
 
   return (
     <div className="flex w-full items-center gap-2">
-      <div className="flex h-[42px] w-[84px] shrink-0 items-center justify-between rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-sm">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setSelectedQty((prev) => Math.max(1, prev - 1));
-          }}
-          disabled={selectedQty <= 1}
-          aria-label="Decrease quantity"
-          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
-        >
-          <Minus className="size-3" />
-        </button>
-        <span className="text-center text-xs font-semibold tabular-nums text-neutral-900">
-          {selectedQty}
-        </span>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setSelectedQty((prev) => Math.min(maxStock, prev + 1));
-          }}
-          disabled={selectedQty >= maxStock}
-          aria-label="Increase quantity"
-          className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-700 shadow-sm transition active:scale-90 hover:bg-neutral-50 disabled:opacity-30"
-        >
-          <Plus className="size-3" />
-        </button>
-      </div>
+      <QuantityStepper
+        value={startQty}
+        max={maxStock}
+        label={`${product.productName} quantity`}
+        onChange={setSelectedQty}
+        className={`shrink-0 ${stepperClass}`}
+        buttonClassName={roundButton}
+      />
 
       <button
         type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          onAddToCart(selectedQty);
+          onAddToCart(startQty);
         }}
-        className="group flex min-h-[42px] flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#457D00]/90 px-6 py-2.5 text-xs font-semibold tracking-wide text-white shadow-sm transition-all active:scale-95 cursor-pointer"
+        className="group flex min-h-12 flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#457D00]/90 px-4 py-2.5 text-sm font-semibold tracking-wide text-white shadow-sm transition-all active:scale-95 cursor-pointer"
       >
         <ShoppingCart className="cart-wiggle-on-hover size-4 shrink-0 text-white" />
         <span className="truncate font-semibold">Add to Cart</span>

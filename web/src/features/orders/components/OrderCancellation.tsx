@@ -46,16 +46,16 @@ export function OrderCancellation({
   }
 
   return (
-    <div>
+    <div className="w-full sm:w-auto">
       <button
         type="button"
-        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200/80 bg-rose-50/60 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100/70 transition-colors cursor-pointer"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-rose-200/80 bg-rose-50/60 px-4 text-sm font-semibold text-rose-600 hover:bg-rose-100/70 transition-colors cursor-pointer"
         onClick={() => {
           setError("");
           setConfirming(true);
         }}
       >
-        <XCircle className="size-3.5 text-rose-500" aria-hidden="true" />
+        <XCircle className="size-4 text-rose-500" aria-hidden="true" />
         <span>Cancel reservation</span>
       </button>
 

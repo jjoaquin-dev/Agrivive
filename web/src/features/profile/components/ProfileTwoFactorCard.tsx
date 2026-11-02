@@ -76,16 +76,16 @@ export function ProfileTwoFactorCard({
 
   return (
     <Card className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-md">
-      <div className="flex items-center justify-between border-b border-border/70 pb-4">
-        <div>
-          <h2 className="font-heading text-lg font-bold text-neutral-900">Two-Factor Authentication</h2>
-          <p className="text-sm text-neutral-500">
+      <div className="flex items-start justify-between gap-4 border-b border-border/70 pb-5">
+        <div className="min-w-0 space-y-1.5">
+          <h2 className="font-heading text-lg font-bold leading-snug text-neutral-900">Two-Factor Authentication</h2>
+          <p className="text-sm leading-relaxed text-neutral-500">
             Protect your account with Google Authenticator, Authy, or 1Password.
           </p>
         </div>
         <Badge
           variant={isActive ? "default" : "outline"}
-          className={`gap-1.5 text-xs font-normal ${
+          className={`shrink-0 gap-1.5 whitespace-nowrap text-xs font-normal ${
             isActive ? "bg-emerald-50 text-emerald-700 border-emerald-200" : ""
           }`}
         >
@@ -128,8 +128,8 @@ export function ProfileTwoFactorCard({
           onFinish={handleBackupCodesFinish}
         />
       ) : (
-        <div className="space-y-4 pt-4">
-          <p className="text-xs leading-relaxed text-muted-foreground">
+        <div className="space-y-5 pt-5">
+          <p className="text-sm leading-7 text-muted-foreground">
             Two-factor authentication adds an extra layer of security. Whenever you sign in,
             you will be asked to enter a 6-digit verification code from your authenticator app.
           </p>
@@ -143,7 +143,7 @@ export function ProfileTwoFactorCard({
               </p>
             </div>
           ) : (
-            <div className="pt-1">
+            <div className="pt-2">
               <Button
                 type="button"
                 onClick={() => {

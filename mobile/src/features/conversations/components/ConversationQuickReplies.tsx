@@ -24,7 +24,7 @@ export function ConversationQuickReplies({ onSelect, shopName }: ConversationQui
           onPress={() => onSelect(reply)}
           accessibilityRole="button"
           accessibilityLabel={`Quick reply: ${reply}`}
-          hitSlop={{ top: 4, bottom: 4, left: 2, right: 2 }}
+          hitSlop={{ top: 2, bottom: 2, left: 2, right: 2 }}
           style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
         >
           <Text style={styles.chipText}>{reply}</Text>
@@ -37,16 +37,18 @@ export function ConversationQuickReplies({ onSelect, shopName }: ConversationQui
 const styles = StyleSheet.create({
   scroll: {
     flexGrow: 0,
+    flexShrink: 0,
     backgroundColor: colors.surface,
-    paddingVertical: spacing.xs,
   },
   container: {
     paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
     alignItems: "center",
     gap: spacing.sm,
   },
   chip: {
-    height: 36,
+    minHeight: 40,
+    flexShrink: 0,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: radii.full,
@@ -61,6 +63,8 @@ const styles = StyleSheet.create({
   chipText: {
     fontFamily: fonts.body.medium,
     fontSize: 13,
+    lineHeight: 18,
+    includeFontPadding: false,
     color: colors.primaryPressed,
   },
 });

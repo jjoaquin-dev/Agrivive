@@ -46,7 +46,7 @@ export function OrderSortDropdown({ value, onChange }: OrderSortDropdownProps) {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex h-10 min-h-[40px] items-center gap-2 rounded-full border border-[#E8E8E8] bg-white px-4 text-xs font-semibold text-[#14231A] shadow-sm transition hover:bg-neutral-50 cursor-pointer select-none outline-none"
+        className="inline-flex h-11 min-h-11 items-center gap-2 rounded-full border border-[#E8E8E8] bg-white px-4 text-xs font-semibold text-[#14231A] shadow-sm transition hover:bg-neutral-50 cursor-pointer select-none outline-none"
       >
         <span className="text-[#5F7367] font-normal">Sort By:</span>
         <span className="font-semibold text-[#14231A]">{SORT_LABELS[value]}</span>

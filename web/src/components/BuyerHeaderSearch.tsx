@@ -5,16 +5,8 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search } from "lucide-react";
 import { MarketplaceHeaderFilters } from "@/src/features/marketplace/components/MarketplaceHeaderFilters";
 import { HeaderCategoryDropdown } from "./HeaderCategoryDropdown";
+import { buildHeaderSearchUrl, navCategories } from "./headerSearchUrl";
 
-const navCategories = [
-  "All Categories",
-  "Leafy Greens",
-  "Fruit Vegetables",
-  "Root Vegetables",
-  "Pod Vegetables",
-  "Tuber Vegetables",
-  "Bulb Vegetables",
-];
 
 // Navbar search. On the marketplace it also shows the price and distance dropdowns beside the category.
 export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
@@ -38,14 +30,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
 
   function handleSearchSubmit(e: FormEvent) {
     e.preventDefault();
-    // Keep price and distance on the marketplace; other pages start a fresh search.
-    const params = new URLSearchParams(onMarketplace ? searchParams?.toString() : "");
-    params.delete("cursor");
-    params.delete("search");
-    params.delete("productType");
-    if (searchQuery.trim()) params.set("search", searchQuery.trim());
-    if (selectedCategory !== "All Categories") params.set("productType", selectedCategory);
-    router.push(`/marketplace?${params.toString()}`);
+    router.push(buildHeaderSearchUrl(searchParams?.toString() ?? "", onMarketplace, searchQuery, selectedCategory));
   }
 
   return (
@@ -73,7 +58,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
       </div>
       <button
         type="submit"
-        className="ml-1 flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#457D00] px-4 text-xs font-bold text-white transition-colors hover:bg-[#457D00]/90 cursor-pointer"
+        className="ml-1 flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#457D00] px-4 text-xs font-bold text-white transition-colors hover:bg-[#457D00]/90 cursor-pointer"
       >
         <Search aria-hidden="true" className="size-4" />
         <span>Search</span>

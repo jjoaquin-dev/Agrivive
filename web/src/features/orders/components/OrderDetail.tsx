@@ -121,7 +121,7 @@ export function OrderDetail() {
   if (!order) return null;
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-6 py-6 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-4 py-6 sm:px-6 text-foreground">
       <div className="mx-auto max-w-7xl">
         <Breadcrumbs items={[{ label: "Orders", href: "/orders" }, { label: "Order details" }]} />
 
@@ -147,7 +147,7 @@ export function OrderDetail() {
             <OrderMessages orderId={order.id} refreshKey={lastUpdated?.getTime() ?? 0} />
             {order.status === "completed" ? <OrderReviews order={order} /> : null}
 
-            <div className="flex items-center justify-between px-1 pt-2">
+            <div className="flex flex-col gap-3 px-1 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <OrderCancellation
                 order={order}
                 onCancelled={(updated) => { lastOrder.current = updated; setOrder(updated); }}
@@ -160,9 +160,9 @@ export function OrderDetail() {
               <button
                 type="button"
                 onClick={() => setShowReportModal(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-800 transition-colors cursor-pointer"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer sm:w-auto"
               >
-                <AlertTriangle className="size-3.5 text-neutral-400" />
+                <AlertTriangle className="size-4 text-[#FEA938]" aria-hidden="true" />
                 <span>Report an issue with this order</span>
               </button>
             </div>

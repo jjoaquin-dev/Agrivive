@@ -104,7 +104,7 @@ export function BuyerOrders() {
   }, [orders, activeTab, searchQuery, sortBy]);
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-6 py-6 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-4 py-6 sm:px-6 text-foreground">
       <PageContainer className="space-y-6">
         <div>
           <Breadcrumbs items={[{ label: "Orders" }]} />
@@ -130,7 +130,7 @@ export function BuyerOrders() {
             <RefreshCw className="size-4" />
             <AlertTitle className="text-sm font-semibold">Orders could not refresh</AlertTitle>
             <AlertDescription className="text-xs">{error}{orders.length ? " Previous reservations are shown below." : ""}</AlertDescription>
-            <Button type="button" variant="outline" className="mt-2 h-10 min-h-[40px] text-xs font-semibold" onClick={() => void load()}>Try again</Button>
+            <Button type="button" variant="outline" className="mt-2 h-11 min-h-11 text-xs font-semibold" onClick={() => void load()}>Try again</Button>
           </Alert>
         ) : null}
 
@@ -142,7 +142,7 @@ export function BuyerOrders() {
             <input
               type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by ID, produce name, status…"
-              className="h-10 min-h-[40px] w-full rounded-full border border-[#E8E8E8] bg-white pl-10 pr-4 text-xs sm:text-sm text-[#14231A] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
+              className="h-11 min-h-11 w-full rounded-full border border-[#E8E8E8] bg-white pl-10 pr-4 text-xs sm:text-sm text-[#14231A] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
             />
           </div>
           <OrderSortDropdown value={sortBy} onChange={setSortBy} />
@@ -163,7 +163,7 @@ export function BuyerOrders() {
                   : searchQuery ? "Try a different search query or clear your search." : "No orders found in this category."}
               </EmptyDescription>
             </EmptyHeader>
-            <Link href="/marketplace" className="h-10 min-h-[40px] px-5 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center gap-2 shadow-sm transition active:scale-95">
+            <Link href="/marketplace" className="h-11 min-h-11 px-5 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center gap-2 shadow-sm transition active:scale-95">
               Browse marketplace
             </Link>
           </Empty>
@@ -172,7 +172,7 @@ export function BuyerOrders() {
             {filteredOrders.map((order) => <OrderCard key={order.id} order={order} onCancel={setCancellingOrder} />)}
             {nextCursor && !error && activeTab === "all" ? (
               <div className="flex justify-center pt-3">
-                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="h-10 min-h-[40px] rounded-xl px-6 font-semibold text-xs border border-[#E8E8E8] bg-white hover:bg-neutral-50">
+                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="h-11 min-h-11 rounded-xl px-6 font-semibold text-xs border border-[#E8E8E8] bg-white hover:bg-neutral-50">
                   {loadingMore ? "Loading orders…" : "Load more orders"}
                 </Button>
               </div>

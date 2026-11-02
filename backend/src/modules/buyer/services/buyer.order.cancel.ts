@@ -1,15 +1,10 @@
-import { and, eq, gt, gte, sql } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { db } from "../../../db";
-import { orders, trust_actions } from "../../../db/schema";
+import { orders } from "../../../db/schema";
 import { restoreOrderStock } from "../../../utils/order-stock";
 import { OrderError } from "../../../utils/order-types";
 import { getBuyerOrder } from "./buyer.order.get";
-import {
-  resolveCancellationCooldownHours,
-  resolveCancellationRestrictionMessage,
-  resolveCancellationWarning,
-} from "../../../utils/trust/cancellation-policy";
-import { trustPolicyVersion, trustScoreWindowStart } from "../../../utils/trust/policy";
+import { applyBuyerCancellationPenalty } from "./buyer.order.cancel-penalty";
 import { createSellerNotification } from "../../../utils/seller-notifications";
 
 export async function cancelBuyerOrder(orderId: string, buyerId: string) {
@@ -49,52 +44,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
       orderId: cancelled.id,
     });
 
-    // Count recent buyer cancellations (same window as the score) to apply 5 (warning), 7 (12h), 9 (24h), 10 (3d) cooldown policy
-    const windowStart = trustScoreWindowStart();
-    const [cancelRow] = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(orders)
-      .where(
-        and(
-          eq(orders.buyersId, buyerId),
-          eq(orders.status, "cancelled"),
-          eq(orders.cancelledBy, "buyer"),
-          windowStart ? gte(orders.cancelledAt, windowStart) : undefined,
-        ),
-      );
-    const cancelCount = Number(cancelRow?.count ?? 0);
-    const cooldownHours = resolveCancellationCooldownHours(cancelCount);
-
-    if (cooldownHours > 0) {
-      const endsAt = new Date(Date.now() + cooldownHours * 3600000);
-      const { message } = resolveCancellationRestrictionMessage(cancelCount, endsAt);
-      const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-restriction:${cancelCount}:${cancelled.id}`;
-
-      await tx.insert(trust_actions).values({
-        actionKey,
-        subjectId: buyerId,
-        actionType: "temporary_restriction",
-        weightedPoints: cancelCount,
-        policyVersion: trustPolicyVersion,
-        reason: message,
-        sourceOrderId: cancelled.id,
-        endsAt,
-      }).onConflictDoNothing({ target: trust_actions.actionKey });
-    } else if (cancelCount >= 5) {
-      const warningMessage = resolveCancellationWarning(cancelCount);
-      if (warningMessage) {
-        const actionKey = `${trustPolicyVersion}:${buyerId}:cancellation-warning:${cancelCount}:${cancelled.id}`;
-        await tx.insert(trust_actions).values({
-          actionKey,
-          subjectId: buyerId,
-          actionType: "warning",
-          weightedPoints: cancelCount,
-          policyVersion: trustPolicyVersion,
-          reason: warningMessage,
-          sourceOrderId: cancelled.id,
-        }).onConflictDoNothing({ target: trust_actions.actionKey });
-      }
-    }
+    await applyBuyerCancellationPenalty(tx, buyerId, cancelled.id);
   });
 
   return getBuyerOrder(orderId, buyerId);

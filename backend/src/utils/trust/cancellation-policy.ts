@@ -1,14 +1,18 @@
 import { formatRemainingTime } from "./access";
 
+/** Reservations a buyer may cancel (in the score window) before a warning, and before the first pause. */
+export const cancellationWarningAt = 5;
+export const cancellationPauseAt = 7;
+
 export function resolveCancellationCooldownHours(cancelCount: number): number {
   if (cancelCount >= 10) return 72; // 3 days
   if (cancelCount >= 9) return 24;  // 24 hours
-  if (cancelCount >= 7) return 12;  // 12 hours
+  if (cancelCount >= cancellationPauseAt) return 12;  // 12 hours
   return 0; // 5-6 is warning only (no lock)
 }
 
 export function resolveCancellationWarning(cancelCount: number): string | null {
-  if (cancelCount >= 5 && cancelCount < 7) {
+  if (cancelCount >= cancellationWarningAt && cancelCount < cancellationPauseAt) {
     return `You have canceled ${cancelCount} reservations. To help market vendors plan surplus stock, please avoid frequent cancellations. Reaching 7 cancellations will temporarily pause reservations for 12 hours.`;
   }
   return null;

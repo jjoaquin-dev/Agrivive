@@ -118,7 +118,6 @@ export function MarketplaceFooter() {
                   Download Seller App <ArrowDownToLine className="size-3.5" />
                 </a>
               </li>
-              <li><Link href="/download-app" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">How to Install</Link></li>
             </ul>
           </div>
         </div>

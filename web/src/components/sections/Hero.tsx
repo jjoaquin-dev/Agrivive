@@ -54,12 +54,6 @@ export function Hero() {
               <Smartphone className="size-4 text-[#457D00]" aria-hidden="true" />
               <span>Get the Seller App</span>
             </a>
-            <Link
-              href="/download-app"
-              className="inline-flex min-h-12 items-center justify-center px-2 text-sm font-semibold text-[#457D00] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]"
-            >
-              How to install
-            </Link>
           </div>
         </div>
 

@@ -164,7 +164,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
       type="button"
       onClick={() => timelineRef.current?.timeScale(10)}
       id="splash-skip"
-      className="fixed bottom-4 right-4 z-[10000] inline-flex min-h-12 items-center rounded-full border border-neutral-300 bg-white/95 px-5 text-sm font-semibold text-neutral-800 shadow-md transition-transform hover:bg-white active:scale-95"
+      className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 z-[10000] inline-flex min-h-12 items-center rounded-full border border-neutral-300 bg-white/95 px-5 text-sm font-semibold text-neutral-800 shadow-md transition-transform hover:bg-white active:scale-95"
     >
       Skip
     </button>
