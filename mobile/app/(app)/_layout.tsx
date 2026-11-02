@@ -13,10 +13,15 @@ function CancelButton({ onPress }: { onPress: () => void }) {
 }
 
 export default function AppLayout() {
-  const { session, setup, isSessionPending, loadingSetup } = useAuth();
+  const { session, setup, setupError, isSessionPending, loadingSetup } = useAuth();
 
   if (!isSessionPending && !loadingSetup && session?.user && setup?.profileComplete && setup.passwordSetupRequired) {
     return <Redirect href="/(auth)/password-setup" />;
+  }
+
+  // The server closed this account (paused or blocked) while the app was open: go back to the screen that explains it.
+  if (!isSessionPending && !loadingSetup && session?.user && setupError && !setup) {
+    return <Redirect href="/" />;
   }
 
   return (

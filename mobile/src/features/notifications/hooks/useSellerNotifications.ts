@@ -7,6 +7,7 @@ import {
   markSellerNotificationRead,
 } from "../api/seller-notifications";
 import type { SellerNotification } from "../types";
+import { logApiError } from "../../../api/client";
 
 export function useSellerNotifications() {
   const [items, setItems] = useState<SellerNotification[]>([]);
@@ -33,7 +34,7 @@ export function useSellerNotifications() {
       setNextCursor(response.nextCursor);
       setUnreadCount(response.unreadCount);
     } catch (err: any) {
-      console.error("Failed to load seller notifications", err);
+      logApiError("Failed to load seller notifications", err);
       setError(err?.message || "Could not load notifications. Please try again.");
     } finally {
       setLoading(false);

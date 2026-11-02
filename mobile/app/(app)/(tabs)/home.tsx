@@ -16,6 +16,7 @@ import { DashboardOperationsHub } from "../../../src/features/dashboard/componen
 import { DashboardLowStockAlerts } from "../../../src/features/dashboard/components/DashboardLowStockAlerts";
 import { DashboardRecentActivity } from "../../../src/features/dashboard/components/DashboardRecentActivity";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../src/theme";
+import { logApiError } from "../../../src/api/client";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function HomeScreen() {
       const res = await fetchStockAdjustments({ limit: 4 });
       setRecentActivity(res.items);
     } catch (err) {
-      console.error("Failed to load recent activity", err);
+      logApiError("Failed to load recent activity", err);
       setActivityError(true);
     } finally {
       setLoadingActivity(false);
@@ -55,7 +56,7 @@ export default function HomeScreen() {
       setUnreadCount(notifRes.unreadCount);
       setOpenMessageCount(msgRes.unreadMessages ?? 0);
     } catch (err) {
-      console.error("Failed to load notification/message count", err);
+      logApiError("Failed to load notification/message count", err);
     }
   }, []);
 

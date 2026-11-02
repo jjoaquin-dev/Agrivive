@@ -3,6 +3,7 @@ import { useFocusEffect, useIsFocused } from "expo-router";
 import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { fetchSellerOrders } from "../api/seller-orders";
 import type { SellerOrder, SellerOrderFilter } from "../types";
+import { logApiError } from "../../../api/client";
 
 export function useSellerOrders() {
   const [filter, setFilter] = useState<SellerOrderFilter>("pending");
@@ -30,7 +31,7 @@ export function useSellerOrders() {
       setOrders((previous) => (reset ? response.orders : [...previous, ...response.orders]));
       setNextCursor(response.nextCursor);
     } catch (err: any) {
-      console.error("Failed to load seller orders", err);
+      logApiError("Failed to load seller orders", err);
       setError(err?.message || "Could not load orders. Please try again.");
     } finally {
       setLoading(false);

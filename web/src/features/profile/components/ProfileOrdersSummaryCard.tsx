@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ClipboardList, Clock, QrCode, ShoppingBag } from "lucide-react";
+import { ArrowRight, ClipboardList, Clock, QrCode } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,9 +39,7 @@ export function ProfileOrdersSummaryCard({ orders, loading, pendingCount }: Prof
         </div>
       ) : orders.length === 0 ? (
         <div className="py-8 text-center">
-          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-agrivive-background text-agrivive-primary">
-            <ShoppingBag className="size-6" />
-          </div>
+          <Image src="/brand/empty-orders.webp" alt="" width={360} height={334} sizes="112px" className="mx-auto h-auto w-28" />
           <p className="mt-3 text-sm font-semibold text-foreground">No reservations yet</p>
           <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
             Reserve fresh produce from verified local Davao stalls and collect directly at pickup.

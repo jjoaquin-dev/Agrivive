@@ -6,9 +6,16 @@ import { OrderError, type OrderTransaction } from "../order-types";
 const comeBackSentence = /\s*Please come back in .*$/i;
 const restoreSentence = /\s*(?:Verify your email to restore|Please restore) your account.*$/i;
 
+/** The longest pause is 3 days. A pause saved without an end time is treated as ending then, so it can never last forever. */
+const longestPauseMs = 72 * 3_600_000;
+
+export function restrictionEnd(endsAt: Date | null, createdAt: Date): Date {
+  return endsAt ?? new Date(createdAt.getTime() + longestPauseMs);
+}
+
 /** Paused: the reason that was stored when the pause began, plus how long is left. */
-export function pausedMessage(reason: string, endsAt: Date | null): string {
-  const remaining = formatRemainingTime(endsAt ? endsAt.getTime() - Date.now() : 0);
+export function pausedMessage(reason: string, endsAt: Date | null, createdAt: Date = new Date()): string {
+  const remaining = formatRemainingTime(restrictionEnd(endsAt, createdAt).getTime() - Date.now());
   return `${reason.replace(comeBackSentence, "")} Please come back in ${remaining}.`;
 }
 
@@ -32,6 +39,7 @@ export async function requireNoActiveTrustRestriction(tx: OrderTransaction, user
     .select({
       id: trust_actions.id,
       endsAt: trust_actions.endsAt,
+      createdAt: trust_actions.createdAt,
       reason: trust_actions.reason,
     })
     .from(trust_actions)
@@ -40,11 +48,11 @@ export async function requireNoActiveTrustRestriction(tx: OrderTransaction, user
         eq(trust_actions.subjectId, userId),
         eq(trust_actions.actionType, "temporary_restriction"),
         isNull(trust_actions.revokedAt),
-        or(isNull(trust_actions.endsAt), gt(trust_actions.endsAt, new Date())),
+        or(gt(trust_actions.endsAt, new Date()), and(isNull(trust_actions.endsAt), gt(trust_actions.createdAt, new Date(Date.now() - longestPauseMs)))),
       ),
     )
     .orderBy(desc(trust_actions.createdAt))
     .limit(1);
 
-  if (restriction) throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt));
+  if (restriction) throw new OrderError(403, pausedMessage(restriction.reason, restriction.endsAt, restriction.createdAt));
 }

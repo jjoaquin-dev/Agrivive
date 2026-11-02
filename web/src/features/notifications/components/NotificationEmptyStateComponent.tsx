@@ -23,10 +23,10 @@ export const NotificationEmptyStateComponent = ({
 
       {/* Center Icon Badge */}
       <Image
-        src="/brand/notifications-empty-bell.png"
+        src="/brand/empty-notifications.webp"
         alt=""
-        width={160}
-        height={109}
+        width={360}
+        height={246}
         className="relative mx-auto h-auto w-40"
       />
 

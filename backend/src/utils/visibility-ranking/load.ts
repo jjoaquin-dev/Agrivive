@@ -1,6 +1,6 @@
 import { and, eq, gte, gt, inArray, lte, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { listing_cycles, order_reviews, sellers_product, sellers_profile, user } from "../../db/schema";
+import { listing_cycles, order_reviews, product_reviews, sellers_product, sellers_profile, user } from "../../db/schema";
 import { createVisibilityCriteria } from "../ahp-topsis";
 import { getVegetableCycleIdentity, normalizeVegetableName } from "../vegetable-identity";
 
@@ -99,10 +99,15 @@ export async function loadEligibleVisibilityCandidates(evaluatedAt: Date) {
 
   const sellerIds = [...new Set(publicRows.map((row) => row.sellerId))];
   const [ratings, cycles] = await Promise.all([
+    // Same ratings the trust score reads: order ratings and product ratings together.
     db.select({
-      sellerId: order_reviews.sellerId,
-      reliability: sql<number>`avg(${order_reviews.rating})::double precision / 5.0`,
-    }).from(order_reviews).where(inArray(order_reviews.sellerId, sellerIds)).groupBy(order_reviews.sellerId),
+      sellerId: sql<string>`seller_id`,
+      reliability: sql<number>`avg(rating)::double precision / 5.0`,
+    }).from(sql`(
+      select ${order_reviews.sellerId} as seller_id, ${order_reviews.rating} as rating from ${order_reviews}
+      union all
+      select ${product_reviews.sellerId} as seller_id, ${product_reviews.rating} as rating from ${product_reviews}
+    ) as seller_ratings`).where(inArray(sql`seller_id`, sellerIds)).groupBy(sql`seller_id`),
     db.select({
       id: listing_cycles.id,
       sellerId: sellers_product.userId,

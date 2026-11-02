@@ -1,10 +1,10 @@
 import Elysia from "elysia";
 import { auth } from "..";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../../../db";
-import { trust_actions, user as users } from "../../../db/schema";
+import { user as users } from "../../../db/schema";
 import { touchUserActivity } from "../../../utils/user-activity";
-import { blockedMessage, pausedMessage } from "../../../utils/trust/access";
+import { readAccountBlock } from "../../../utils/trust/read-account-block";
 import { STATUS_CACHE_TTL_MS, userStatusCache } from "../../../utils/user-status-cache";
 
 export type Rtype = "admin" | "buyer" | "seller" | "stakeholder";
@@ -37,36 +37,15 @@ export const sessionAuth = new Elysia()
             return status(403, { message: "Account not found or access denied." });
           }
 
+          let isActive = Boolean(current.isActive);
           let blockReason: string | undefined;
-          if (!current.isActive) {
-            const [activeAction] = await db
-              .select({
-                actionType: trust_actions.actionType,
-                reason: trust_actions.reason,
-                endsAt: trust_actions.endsAt,
-              })
-              .from(trust_actions)
-              .where(
-                and(
-                  eq(trust_actions.subjectId, authSession.user.id),
-                  inArray(trust_actions.actionType, ["blocked", "temporary_restriction"]),
-                  isNull(trust_actions.revokedAt),
-                ),
-              )
-              .orderBy(desc(trust_actions.createdAt))
-              .limit(1);
-
-            if (activeAction) {
-              blockReason = activeAction.actionType === "blocked"
-                ? blockedMessage(activeAction.reason)
-                : pausedMessage(activeAction.reason, activeAction.endsAt);
-            } else {
-              blockReason = "Your account is paused. Please restore your account to continue.";
-            }
+          if (!isActive) {
+            blockReason = (await readAccountBlock(authSession.user.id)) ?? undefined;
+            if (!blockReason) isActive = true; // the pause had ended, so the account was opened again
           }
 
           cached = {
-            isActive: Boolean(current.isActive),
+            isActive,
             role: current.role ?? [],
             email: current.email,
             blockReason,

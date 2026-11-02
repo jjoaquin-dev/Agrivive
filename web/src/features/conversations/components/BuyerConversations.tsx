@@ -162,7 +162,7 @@ export function BuyerConversations() {
               />
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-[#E9EBE2] bg-white p-8 text-center shadow-sm">
-                <Image src="/brand/empty-chat-bubble.png" alt="" width={1133} height={765} sizes="160px" className="h-auto w-40 max-w-full" />
+                <Image src="/brand/empty-chat.webp" alt="" width={360} height={243} sizes="160px" className="h-auto w-40 max-w-full" />
                 <h2 className="mt-4 font-heading text-xl font-bold text-neutral-800">Choose a conversation</h2>
                 <p className="mt-2 max-w-sm text-sm text-[#7A8875]">
                   Select a message on the left or inquire on a marketplace produce to start chatting.

@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useFocusEffect } from "expo-router";
 import { fetchSellerProducts } from "../api/products";
 import type { InventorySummary, Product, ProductCategory, ProductScalingType } from "../types";
+import { logApiError } from "../../../api/client";
 
 export type InventoryFilterTab = "all" | "selling" | "low_stock" | "out_of_stock" | "archived";
 
@@ -37,7 +38,7 @@ export function useInventory() {
         setServerSummary(response.summary);
       }
     } catch (err: any) {
-      console.error("Failed to load seller products", err);
+      logApiError("Failed to load seller products", err);
       setError(err?.message || "Could not load products. Please check connection.");
     } finally {
       setLoading(false);

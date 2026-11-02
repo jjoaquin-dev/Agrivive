@@ -3,6 +3,7 @@ import { useFocusEffect, useIsFocused } from "expo-router";
 import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { fetchSellerMessages } from "../api/seller-messages";
 import type { SellerMessage, SellerMessageFilter } from "../types";
+import { logApiError } from "../../../api/client";
 
 export function useSellerMessages() {
   const [filter, setFilter] = useState<SellerMessageFilter>("open");
@@ -29,7 +30,7 @@ export function useSellerMessages() {
       setNextCursor(response.nextCursor);
       setOpenCount(response.openCount);
     } catch (err: any) {
-      console.error("Failed to load seller messages", err);
+      logApiError("Failed to load seller messages", err);
       setError(err?.message || "Could not load messages. Please try again.");
     } finally {
       setLoading(false);

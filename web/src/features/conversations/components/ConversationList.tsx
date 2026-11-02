@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ChevronRight, MessageSquare, Search, Store } from "lucide-react";
 import type { Conversation } from "../api";
@@ -120,7 +121,8 @@ export function ConversationList({
         ) : null}
 
         {!loading && filteredItems.length === 0 ? (
-          <div className="py-12 text-center text-xs text-[#8A9685]">
+          <div className="flex flex-col items-center py-10 text-center text-xs text-[#8A9685]">
+            <Image src="/brand/empty-chat.webp" alt="" width={360} height={243} sizes="112px" className="mb-3 h-auto w-28" />
             {search ? "No matching conversations" : "No messages yet. Chat with a seller from a product page."}
           </div>
         ) : null}

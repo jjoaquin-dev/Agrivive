@@ -1,0 +1,17 @@
+# EAS builds only need mobile/. Everything else in the monorepo stays out of the upload.
+/*
+!/mobile
+mobile/node_modules/
+mobile/dist/
+mobile/.expo/
+mobile/android/
+mobile/ios/
+.env
+.env.*
+!.env.example
+mobile/web-build/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision

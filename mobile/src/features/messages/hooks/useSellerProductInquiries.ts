@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
 import { fetchSellerProductInquiries, replyToProductInquiry } from "../api/product-inquiries";
 import type { SellerMessageFilter, SellerProductInquiryItem } from "../types";
+import { logApiError } from "../../../api/client";
 
 export function useSellerProductInquiries() {
   const [filter, setFilter] = useState<SellerMessageFilter>("open");
@@ -31,7 +32,7 @@ export function useSellerProductInquiries() {
         setOpenCount(response.openCount);
       }
     } catch (err: any) {
-      console.error("Failed to load seller product inquiries", err);
+      logApiError("Failed to load seller product inquiries", err);
       setError(err?.message || "Could not load listing questions.");
     } finally {
       setLoading(false);

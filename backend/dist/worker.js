@@ -29989,11 +29989,12 @@ Order: ${notice.orderId}` : ""}`;
 // src/utils/trust/expire-restrictions.ts
 async function expireTrustRestrictions(limit = 100) {
   const now = new Date;
-  const due = await db.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.actionType, "temporary_restriction"), isNull(trust_actions.revokedAt), lte(trust_actions.endsAt, now))).limit(limit);
+  const ended = or(lte(trust_actions.endsAt, now), and(isNull(trust_actions.endsAt), lte(trust_actions.createdAt, new Date(now.getTime() - 72 * 3600000))));
+  const due = await db.select({ id: trust_actions.id }).from(trust_actions).where(and(eq(trust_actions.actionType, "temporary_restriction"), isNull(trust_actions.revokedAt), ended)).limit(limit);
   let expired = 0;
   for (const row of due) {
     const didExpire = await db.transaction(async (tx) => {
-      const [action] = await tx.select().from(trust_actions).where(and(eq(trust_actions.id, row.id), eq(trust_actions.actionType, "temporary_restriction"), isNull(trust_actions.revokedAt), lte(trust_actions.endsAt, now))).for("update").limit(1);
+      const [action] = await tx.select().from(trust_actions).where(and(eq(trust_actions.id, row.id), eq(trust_actions.actionType, "temporary_restriction"), isNull(trust_actions.revokedAt), ended)).for("update").limit(1);
       if (!action)
         return false;
       await tx.update(trust_actions).set({
