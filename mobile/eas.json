@@ -8,7 +8,9 @@
       "environment": "preview",
       "bun": "1.4.2",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.agrivive.tech"
+        "EXPO_PUBLIC_API_URL": "https://api.agrivive.tech",
+        "EXPO_PUBLIC_WEB_URL": "https://agrivive.tech",
+        "EXPO_PUBLIC_RECAPTCHA_SITE_KEY": "6Ld3MgwuAAAAACWvNZFh7_UVs5FLcbOqMkiHd3pU"
       },
       "android": {
         "buildType": "apk"
@@ -23,7 +25,9 @@
       "bun": "1.4.2",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.agrivive.tech"
+        "EXPO_PUBLIC_API_URL": "https://api.agrivive.tech",
+        "EXPO_PUBLIC_WEB_URL": "https://agrivive.tech",
+        "EXPO_PUBLIC_RECAPTCHA_SITE_KEY": "6Ld3MgwuAAAAACWvNZFh7_UVs5FLcbOqMkiHd3pU"
       },
       "android": {
         "buildType": "app-bundle"

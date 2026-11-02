@@ -1,4 +1,6 @@
 import { apiRequest } from "@/src/lib/api";
+import { recaptchaHeaders } from "@/src/lib/recaptcha";
+import { LEGAL_VERSION } from "@/src/features/legal/content/version";
 
 export interface EmailCheckResult {
   exists: boolean;
@@ -31,11 +33,14 @@ export async function registerBuyerRole({
 }): Promise<void> {
   await apiRequest<unknown>("/auth/register-role", {
     method: "POST",
+    headers: await recaptchaHeaders("sign_up"),
     body: JSON.stringify({
       email,
       password,
       name,
       targetRole: "buyer",
+      acceptedTerms: true,
+      termsVersion: LEGAL_VERSION,
     }),
   });
 }

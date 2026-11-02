@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { SELLER_APK_URL } from "@/src/lib/appDownload";
+import { LegalLinks } from "@/src/features/legal/components/LegalLinks";
 import Link from "next/link";
 import { ArrowDownToLine, ArrowUpRight, Heart, MapPin } from "lucide-react";
 
@@ -109,7 +111,7 @@ export function MarketplaceFooter() {
               </li>
               <li>
                 <a
-                  href="/downloads/agrivive-seller.apk"
+                  href={SELLER_APK_URL}
                   download="agrivive-seller.apk"
                   className="inline-flex items-center gap-1.5 font-medium text-white hover:text-[#FCEC9A]"
                 >
@@ -131,6 +133,7 @@ export function MarketplaceFooter() {
         <div className="border-t border-white/10 py-8">
           <div className="flex flex-col items-center justify-between gap-4 text-xs text-emerald-50/60 sm:flex-row">
             <p>© 2026 Agrivive Marketplace. Fresh surplus vegetables rescued across Davao City.</p>
+            <LegalLinks />
             <p className="flex items-center gap-1">
               Made with <Heart className="size-3 text-agrivive-terracotta" /> for local market vendors &amp; shoppers
             </p>

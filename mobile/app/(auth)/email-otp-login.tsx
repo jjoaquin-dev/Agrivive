@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Mail, ShieldCheck } from "lucide-react-native";
 import { authClient } from "../../src/api/client";
+import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { InputComponent } from "../../src/components/InputComponent";
 import { OtpInputComponent } from "../../src/components/OtpInputComponent";
@@ -38,7 +39,7 @@ export default function EmailOtpLoginScreen() {
     setLoading(true);
     setError("");
     try {
-      const response = await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "sign-in" });
+      const response = await authClient.emailOtp.sendVerificationOtp({ email: cleanEmail, type: "sign-in" }, { headers: await recaptchaHeaders("send_code") });
       if (response.error) {
         setError(response.error.message || "Email sign-in is unavailable right now. Please use your password.");
         return;
@@ -84,7 +85,7 @@ export default function EmailOtpLoginScreen() {
     setLoading(true);
     setError("");
     try {
-      const response = await authClient.signIn.emailOtp({ email, otp: cleanOtp });
+      const response = await authClient.signIn.emailOtp({ email, otp: cleanOtp }, { headers: await recaptchaHeaders("sign_in") });
       if (response.error) {
         setError(response.error.message || "That code didn't work. Check it or send a new one.");
         return;

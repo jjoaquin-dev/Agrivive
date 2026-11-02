@@ -28481,6 +28481,8 @@ var user = pgTable("user", {
   isActive: boolean("is_active").default(true).notNull(),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }).defaultNow().notNull(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false).notNull(),
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  termsVersion: text("terms_version"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 });

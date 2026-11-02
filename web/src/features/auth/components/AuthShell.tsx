@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { preloadRecaptcha } from "@/src/lib/recaptcha";
 
 // ---------------------------------------------------------------------------
 // Video panel (looping brand video beside the auth form)
@@ -51,6 +52,10 @@ export function AuthShell({
   formMaxWidth = "max-w-[440px]",
   imagePosition = "left",
 }: AuthShellProps) {
+  useEffect(() => {
+    preloadRecaptcha();
+  }, []);
+
   // Form column ---------------------------------------------------------------
   const formColumn = (
     <section className="flex min-h-screen w-full flex-col justify-center bg-white px-6 py-10 sm:px-12 lg:px-16">
@@ -86,6 +91,17 @@ export function AuthShell({
 
         <Separator className="my-6 bg-agrivive-border/70" />
         <div className="text-center text-sm text-[#5F7367]">{footer}</div>
+        <p className="mt-4 text-center text-xs leading-relaxed text-[#5F7367]">
+          By continuing, you agree to our{" "}
+          <Link href="/terms" className="font-semibold text-[#457D00] hover:underline">Terms of Use</Link>
+          {" "}and{" "}
+          <Link href="/privacy" className="font-semibold text-[#457D00] hover:underline">Privacy Policy</Link>.
+          {" "}This site is protected by reCAPTCHA and the Google{" "}
+          <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>
+          {" "}and{" "}
+          <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a>
+          {" "}apply.
+        </p>
       </div>
     </section>
   );

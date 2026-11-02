@@ -1,8 +1,9 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, ChevronRight, History, Lock, LogOut, ShieldCheck, Star } from "lucide-react-native";
+import { Bell, ChevronRight, FileText, History, Lock, LogOut, Shield, ShieldCheck, Star } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { profileColors } from "../profileTokens";
+import { openLegalPage } from "../../legal/legalLinks";
 
 interface Props {
   twoFactorEnabled: boolean;
@@ -21,6 +22,8 @@ export function ProfileSettingsList({ twoFactorEnabled, onNotifications, onRevie
     { title: "Trust & Account Records", hint: "Verified events, ratings, and standing", icon: ShieldCheck, action: onTrust },
     { title: "Sign-in Safety", hint: "Password and sign-in code", icon: Lock, action: onSecurity, badge: twoFactorEnabled ? "On" : "Off" },
     { title: "Change History", hint: "Amount changes and past updates", icon: History, action: onActivity },
+    { title: "Privacy Policy", hint: "What we collect and how we use it", icon: Shield, action: () => void openLegalPage("privacy") },
+    { title: "Terms of Use", hint: "The rules for using Agrivive", icon: FileText, action: () => void openLegalPage("terms") },
   ];
 
   return (

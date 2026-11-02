@@ -12,6 +12,7 @@ export async function registerOrExpandRole(
     password: string;
     name?: string;
     targetRole: "buyer" | "seller";
+    termsVersion: string;
   },
 ) {
   const cleanEmail = input.email.trim().toLowerCase();
@@ -48,10 +49,14 @@ export async function registerOrExpandRole(
         headers,
       });
 
-      if (targetRole === "seller" && response?.user?.id) {
+      if (response?.user?.id) {
         await db
           .update(user)
-          .set({ role: ["seller"] })
+          .set({
+            ...(targetRole === "seller" ? { role: ["seller" as const] } : {}),
+            termsAcceptedAt: new Date(),
+            termsVersion: input.termsVersion,
+          })
           .where(eq(user.id, response.user.id));
       }
 

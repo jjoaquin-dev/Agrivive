@@ -5,6 +5,7 @@ export type AuthErrors = {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  terms?: string;
   code?: string;
   form?: string;
 };
@@ -32,6 +33,7 @@ export function validateSignUp(input: {
   email: string;
   password: string;
   confirmPassword: string;
+  acceptedTerms: boolean;
 }): AuthErrors {
   const errors: AuthErrors = {};
   if (!input.name.trim()) errors.name = "Enter your name.";
@@ -39,5 +41,6 @@ export function validateSignUp(input: {
   errors.password = validatePassword(input.password, true);
   if (!input.confirmPassword) errors.confirmPassword = "Confirm your password.";
   else if (input.password !== input.confirmPassword) errors.confirmPassword = "Passwords do not match.";
+  if (!input.acceptedTerms) errors.terms = "Agree to the Terms of Use and Privacy Policy to continue.";
   return Object.fromEntries(Object.entries(errors).filter(([, value]) => value)) as AuthErrors;
 }

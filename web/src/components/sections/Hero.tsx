@@ -1,4 +1,5 @@
 "use client";
+import { SELLER_APK_URL } from "@/src/lib/appDownload";
 
 import React, { useRef } from "react";
 import Image from "next/image";
@@ -46,7 +47,7 @@ export function Hero() {
             </Link>
 
             <a
-              href="/downloads/agrivive-seller.apk"
+              href={SELLER_APK_URL}
               download="agrivive-seller.apk"
               className="inline-flex min-h-[56px] whitespace-nowrap items-center justify-center gap-2 rounded-full border-2 border-[#457D00] px-7 text-base font-bold text-[#457D00] transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-[#457D00]/10 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >

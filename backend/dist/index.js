@@ -116331,6 +116331,8 @@ var user = pgTable("user", {
   isActive: boolean4("is_active").default(true).notNull(),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }).defaultNow().notNull(),
   twoFactorEnabled: boolean4("two_factor_enabled").default(false).notNull(),
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  termsVersion: text("terms_version"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date).notNull()
 });
@@ -116982,6 +116984,234 @@ var bearer = (options) => {
     options
   };
 };
+
+// node_modules/better-auth/dist/utils/middleware-response.mjs
+var middlewareResponse = ({ message, status, code }) => ({ response: new Response(JSON.stringify({
+  message,
+  code
+}), { status }) });
+
+// node_modules/better-auth/dist/plugins/captcha/constants.mjs
+var CAPTCHA_VERIFY_TIMEOUT_MS = 1e4;
+var defaultEndpoints = [
+  "/sign-up/email",
+  "/sign-in/email",
+  "/request-password-reset"
+];
+var Providers = {
+  CLOUDFLARE_TURNSTILE: "cloudflare-turnstile",
+  GOOGLE_RECAPTCHA: "google-recaptcha",
+  HCAPTCHA: "hcaptcha",
+  CAPTCHAFOX: "captchafox"
+};
+var siteVerifyMap = {
+  [Providers.CLOUDFLARE_TURNSTILE]: "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+  [Providers.GOOGLE_RECAPTCHA]: "https://www.google.com/recaptcha/api/siteverify",
+  [Providers.HCAPTCHA]: "https://api.hcaptcha.com/siteverify",
+  [Providers.CAPTCHAFOX]: "https://api.captchafox.com/siteverify"
+};
+
+// node_modules/better-auth/dist/plugins/captcha/error-codes.mjs
+init_error_codes();
+var EXTERNAL_ERROR_CODES = defineErrorCodes({
+  VERIFICATION_FAILED: "Captcha verification failed",
+  MISSING_RESPONSE: "Missing CAPTCHA response",
+  UNKNOWN_ERROR: "Something went wrong"
+});
+var INTERNAL_ERROR_CODES = defineErrorCodes({
+  MISSING_SECRET_KEY: "Missing secret key",
+  SERVICE_UNAVAILABLE: "CAPTCHA service unavailable"
+});
+
+// node_modules/better-auth/dist/plugins/captcha/utils.mjs
+var encodeToURLParams = (obj) => {
+  if (typeof obj !== "object" || obj === null || Array.isArray(obj))
+    throw new Error("Input must be a non-null object.");
+  const params = new URLSearchParams;
+  for (const [key, value] of Object.entries(obj))
+    if (value !== undefined && value !== null)
+      params.append(key, String(value));
+  return params.toString();
+};
+
+// node_modules/better-auth/dist/plugins/captcha/verify-handlers/captchafox.mjs
+var captchaFox = async ({ siteVerifyURL, captchaResponse, secretKey, siteKey, remoteIP }) => {
+  const response = await betterFetch(siteVerifyURL, {
+    method: "POST",
+    timeout: CAPTCHA_VERIFY_TIMEOUT_MS,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: encodeToURLParams({
+      secret: secretKey,
+      response: captchaResponse,
+      ...siteKey && { sitekey: siteKey },
+      ...remoteIP && { remoteIp: remoteIP }
+    })
+  });
+  if (!response.data || response.error)
+    throw new Error(INTERNAL_ERROR_CODES.SERVICE_UNAVAILABLE.message);
+  if (!response.data.success)
+    return middlewareResponse({
+      message: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.message,
+      code: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.code,
+      status: 403
+    });
+};
+
+// node_modules/better-auth/dist/plugins/captcha/verify-handlers/cloudflare-turnstile.mjs
+var cloudflareTurnstile = async ({ siteVerifyURL, captchaResponse, secretKey, remoteIP, expectedAction, allowedHostnames }) => {
+  const response = await betterFetch(siteVerifyURL, {
+    method: "POST",
+    timeout: CAPTCHA_VERIFY_TIMEOUT_MS,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      secret: secretKey,
+      response: captchaResponse,
+      ...remoteIP && { remoteip: remoteIP }
+    })
+  });
+  if (!response.data || response.error)
+    throw new Error(INTERNAL_ERROR_CODES.SERVICE_UNAVAILABLE.message);
+  const verificationFailed = () => middlewareResponse({
+    message: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.message,
+    code: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.code,
+    status: 403
+  });
+  if (!response.data.success)
+    return verificationFailed();
+  if (expectedAction && response.data.action !== expectedAction)
+    return verificationFailed();
+  if (allowedHostnames && allowedHostnames.length > 0 && !(response.data.hostname && allowedHostnames.includes(response.data.hostname)))
+    return verificationFailed();
+};
+
+// node_modules/better-auth/dist/plugins/captcha/verify-handlers/google-recaptcha.mjs
+var isV3 = (response) => {
+  return "score" in response && typeof response.score === "number";
+};
+var googleRecaptcha = async ({ siteVerifyURL, captchaResponse, secretKey, minScore = 0.5, remoteIP, expectedAction, allowedHostnames }) => {
+  const response = await betterFetch(siteVerifyURL, {
+    method: "POST",
+    timeout: CAPTCHA_VERIFY_TIMEOUT_MS,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: encodeToURLParams({
+      secret: secretKey,
+      response: captchaResponse,
+      ...remoteIP && { remoteip: remoteIP }
+    })
+  });
+  if (!response.data || response.error)
+    throw new Error(INTERNAL_ERROR_CODES.SERVICE_UNAVAILABLE.message);
+  const verificationFailed = () => middlewareResponse({
+    message: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.message,
+    code: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.code,
+    status: 403
+  });
+  if (!response.data.success || isV3(response.data) && response.data.score < minScore)
+    return verificationFailed();
+  if (expectedAction && response.data.action !== expectedAction)
+    return verificationFailed();
+  if (allowedHostnames && allowedHostnames.length > 0 && !allowedHostnames.includes(response.data.hostname))
+    return verificationFailed();
+};
+
+// node_modules/better-auth/dist/plugins/captcha/verify-handlers/h-captcha.mjs
+var hCaptcha = async ({ siteVerifyURL, captchaResponse, secretKey, siteKey, remoteIP }) => {
+  const response = await betterFetch(siteVerifyURL, {
+    method: "POST",
+    timeout: CAPTCHA_VERIFY_TIMEOUT_MS,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: encodeToURLParams({
+      secret: secretKey,
+      response: captchaResponse,
+      ...siteKey && { sitekey: siteKey },
+      ...remoteIP && { remoteip: remoteIP }
+    })
+  });
+  if (!response.data || response.error)
+    throw new Error(INTERNAL_ERROR_CODES.SERVICE_UNAVAILABLE.message);
+  if (!response.data.success)
+    return middlewareResponse({
+      message: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.message,
+      code: EXTERNAL_ERROR_CODES.VERIFICATION_FAILED.code,
+      status: 403
+    });
+};
+
+// node_modules/better-auth/dist/plugins/captcha/index.mjs
+var normalizeEndpointPath = (pathname, basePath) => {
+  let normalizedPathname = (pathname.startsWith(basePath) ? pathname.slice(basePath.length) : pathname).replace(/\/{2,}/g, "/");
+  if (!normalizedPathname.startsWith("/"))
+    normalizedPathname = `/${normalizedPathname}`;
+  if (normalizedPathname.length > 1 && normalizedPathname.endsWith("/"))
+    normalizedPathname = normalizedPathname.slice(0, -1);
+  return normalizedPathname;
+};
+var captcha = (options) => ({
+  id: "captcha",
+  version: PACKAGE_VERSION,
+  $ERROR_CODES: EXTERNAL_ERROR_CODES,
+  onRequest: async (request, ctx) => {
+    try {
+      const endpoints = options.endpoints?.length ? options.endpoints : defaultEndpoints;
+      const url = new URL(request.url);
+      const basePath = ctx.options.basePath ?? "/api/auth";
+      const pathname = normalizeEndpointPath(url.pathname, basePath);
+      if (!endpoints.some((endpoint) => endpoint.includes("*") ? wildcardMatch(endpoint)(pathname) : endpoint === pathname))
+        return;
+      if (!options.secretKey)
+        throw new Error(INTERNAL_ERROR_CODES.MISSING_SECRET_KEY.message);
+      const captchaResponse = request.headers.get("x-captcha-response");
+      const remoteUserIP = getIP(request, ctx.options) ?? undefined;
+      if (!captchaResponse)
+        return middlewareResponse({
+          message: EXTERNAL_ERROR_CODES.MISSING_RESPONSE.message,
+          code: EXTERNAL_ERROR_CODES.MISSING_RESPONSE.code,
+          status: 400
+        });
+      const handlerParams = {
+        siteVerifyURL: options.siteVerifyURLOverride || siteVerifyMap[options.provider],
+        captchaResponse,
+        secretKey: options.secretKey,
+        remoteIP: remoteUserIP
+      };
+      if (options.provider === Providers.CLOUDFLARE_TURNSTILE)
+        return await cloudflareTurnstile({
+          ...handlerParams,
+          expectedAction: options.expectedAction,
+          allowedHostnames: options.allowedHostnames
+        });
+      if (options.provider === Providers.GOOGLE_RECAPTCHA)
+        return await googleRecaptcha({
+          ...handlerParams,
+          minScore: options.minScore,
+          expectedAction: options.expectedAction,
+          allowedHostnames: options.allowedHostnames
+        });
+      if (options.provider === Providers.HCAPTCHA)
+        return await hCaptcha({
+          ...handlerParams,
+          siteKey: options.siteKey
+        });
+      if (options.provider === Providers.CAPTCHAFOX)
+        return await captchaFox({
+          ...handlerParams,
+          siteKey: options.siteKey
+        });
+    } catch (_error) {
+      const errorMessage = _error instanceof Error ? _error.message : undefined;
+      ctx.logger.error(errorMessage ?? "Unknown error", {
+        endpoint: request.url,
+        message: _error
+      });
+      return middlewareResponse({
+        message: EXTERNAL_ERROR_CODES.UNKNOWN_ERROR.message,
+        code: EXTERNAL_ERROR_CODES.UNKNOWN_ERROR.code,
+        status: 500
+      });
+    }
+  },
+  options
+});
 // node_modules/better-auth/dist/plugins/email-otp/error-codes.mjs
 init_error_codes();
 var EMAIL_OTP_ERROR_CODES = defineErrorCodes({
@@ -119466,6 +119696,58 @@ var expo = (options) => {
   };
 };
 
+// src/utils/order-types/index.ts
+class OrderError extends Error {
+  statusCode;
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+// src/utils/recaptcha/index.ts
+var VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
+var warnedMissingSecret = false;
+function isRecaptchaEnabled() {
+  return Boolean(process.env.RECAPTCHA_SECRET_KEY?.trim());
+}
+function recaptchaMinScore() {
+  const score = Number(process.env.RECAPTCHA_MIN_SCORE);
+  return Number.isFinite(score) && score > 0 && score <= 1 ? score : 0.5;
+}
+async function verifyRecaptcha(headers) {
+  const secret = process.env.RECAPTCHA_SECRET_KEY?.trim();
+  if (!secret) {
+    if (!warnedMissingSecret) {
+      warnedMissingSecret = true;
+      console.warn("RECAPTCHA_SECRET_KEY is not set. Captcha checks are skipped.");
+    }
+    return;
+  }
+  const token = headers.get("x-captcha-response")?.trim();
+  if (!token)
+    throw new OrderError(400, "Captcha check is missing. Please try again.");
+  const form = new URLSearchParams({ secret, response: token });
+  const ip = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (ip)
+    form.set("remoteip", ip);
+  let result;
+  try {
+    const response = await fetch(VERIFY_URL, {
+      method: "POST",
+      body: form,
+      signal: AbortSignal.timeout(1e4)
+    });
+    result = await response.json();
+  } catch (error) {
+    console.error("reCAPTCHA verification failed", error);
+    throw new OrderError(400, "Captcha check could not finish. Please try again.");
+  }
+  if (!result.success || (result.score ?? 0) < recaptchaMinScore()) {
+    throw new OrderError(400, "Captcha check failed. Please try again.");
+  }
+}
+
 // src/modules/auth/index.ts
 var auth = betterAuth({
   basePath: "/api/auth",
@@ -119516,7 +119798,19 @@ var auth = betterAuth({
       storeOTP: "hashed",
       sendVerificationOTP: ({ email, otp, type }) => sendAuthCode(email, otp, type)
     }),
-    twoFactor2({ issuer: "Agrivive" })
+    twoFactor2({ issuer: "Agrivive" }),
+    ...isRecaptchaEnabled() ? [
+      captcha({
+        provider: "google-recaptcha",
+        secretKey: process.env.RECAPTCHA_SECRET_KEY.trim(),
+        minScore: recaptchaMinScore(),
+        endpoints: [
+          "/sign-in/email",
+          "/sign-in/email-otp",
+          "/email-otp/send-verification-otp"
+        ]
+      })
+    ] : []
   ],
   user: {
     additionalFields: {
@@ -119559,15 +119853,6 @@ async function touchUserActivity(userId) {
     await db2.update(user).set({ lastActiveAt: new Date(now) }).where(eq(user.id, userId));
   } catch (error) {
     console.error("Failed to update lastActiveAt for user", userId, error);
-  }
-}
-
-// src/utils/order-types/index.ts
-class OrderError extends Error {
-  statusCode;
-  constructor(statusCode, message) {
-    super(message);
-    this.statusCode = statusCode;
   }
 }
 
@@ -119776,7 +120061,9 @@ var authRoleRegisterBody = t.Object({
   email: t.String({ format: "email" }),
   password: t.String({ minLength: 8 }),
   name: t.Optional(t.String()),
-  targetRole: t.Union([t.Literal("buyer"), t.Literal("seller")])
+  targetRole: t.Union([t.Literal("buyer"), t.Literal("seller")]),
+  acceptedTerms: t.Literal(true, { error: "Please agree to the Terms and Privacy Policy" }),
+  termsVersion: t.String({ minLength: 1, maxLength: 40 })
 });
 var authRoleCheckBody = t.Object({
   email: t.String({ format: "email" }),
@@ -119866,8 +120153,12 @@ async function registerOrExpandRole(headers, input) {
         },
         headers
       });
-      if (targetRole === "seller" && response?.user?.id) {
-        await db2.update(user).set({ role: ["seller"] }).where(eq(user.id, response.user.id));
+      if (response?.user?.id) {
+        await db2.update(user).set({
+          ...targetRole === "seller" ? { role: ["seller"] } : {},
+          termsAcceptedAt: new Date,
+          termsVersion: input.termsVersion
+        }).where(eq(user.id, response.user.id));
       }
       const resAny = response;
       return {
@@ -119944,6 +120235,7 @@ var authRoleRegisterRoute = new Elysia({ prefix: "/auth" }).post("/check-email",
   }
 }, { body: authRoleCheckBody }).post("/register-role", async ({ request, body, status }) => {
   try {
+    await verifyRecaptcha(request.headers);
     const result = await registerOrExpandRole(request.headers, body);
     return status(result.isNewAccount ? 201 : 200, result);
   } catch (error) {
@@ -144194,8 +144486,9 @@ async function verifyTrustRecovery(input) {
 }
 
 // src/modules/trust/index/trust.recovery.ts
-var trustRecoveryRoute = new Elysia({ name: "trust.recovery" }).post("/recovery/request", async ({ body, status }) => {
+var trustRecoveryRoute = new Elysia({ name: "trust.recovery" }).post("/recovery/request", async ({ request, body, status }) => {
   try {
+    await verifyRecaptcha(request.headers);
     return await requestTrustRecovery(body);
   } catch (error) {
     if (error instanceof OrderError)

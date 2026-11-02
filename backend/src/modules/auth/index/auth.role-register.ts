@@ -3,6 +3,7 @@ import { authRoleCheckBody, authRoleRegisterBody } from "../model/auth.role-regi
 import { checkEmailRoleStatus } from "../services/auth.role-check";
 import { registerOrExpandRole } from "../services/auth.role-expand";
 import { OrderError } from "../../../utils/order-types";
+import { verifyRecaptcha } from "../../../utils/recaptcha";
 
 function roleAuthFailure(error: unknown, status: (code: any, body: any) => any) {
   if (error instanceof OrderError) return status(error.statusCode, { message: error.message });
@@ -21,6 +22,7 @@ export const authRoleRegisterRoute = new Elysia({ prefix: "/auth" })
   }, { body: authRoleCheckBody })
   .post("/register-role", async ({ request, body, status }) => {
     try {
+      await verifyRecaptcha(request.headers);
       const result = await registerOrExpandRole(request.headers, body);
       return status(result.isNewAccount ? 201 : 200, result);
     } catch (error) {

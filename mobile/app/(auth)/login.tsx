@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { authClient } from "../../src/api/client";
+import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, spacing, radii, touchTargets } from "../../src/theme";
 import { Mail, Lock, ArrowLeft } from "lucide-react-native";
@@ -60,7 +61,7 @@ export default function LoginScreen() {
       const response = await authClient.signIn.email({
         email: email.trim().toLowerCase(),
         password,
-      });
+      }, { headers: await recaptchaHeaders("sign_in") });
 
       if (response.error) {
         const errorCode = (response.error as { code?: string }).code;
@@ -75,7 +76,7 @@ export default function LoginScreen() {
             const sendRes = await authClient.emailOtp.sendVerificationOtp({
               email: cleanEmail,
               type: "email-verification",
-            });
+            }, { headers: await recaptchaHeaders("send_code") });
             if (!sendRes?.error) sent = true;
           } catch (otpError) {
             console.warn("Could not send verification OTP after login", otpError);
@@ -119,7 +120,7 @@ export default function LoginScreen() {
             const sendRes = await authClient.emailOtp.sendVerificationOtp({
               email: cleanEmail,
               type: "email-verification",
-            });
+            }, { headers: await recaptchaHeaders("send_code") });
             if (!sendRes?.error) sent = true;
           } catch (otpErr) {
             console.warn("Could not automatically send verification OTP on login", otpErr);
