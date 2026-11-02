@@ -94,7 +94,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
           </div>
         ) : notices.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <Image src="/brand/notifications-empty-bell.png" alt="" width={96} height={65} className="h-auto w-24" />
+            <Image src="/brand/empty-notifications.webp" alt="" width={360} height={246} className="h-auto w-24" />
             <p className="mt-3 font-heading text-sm font-bold text-neutral-900">No notifications</p>
             <p className="mt-1 max-w-[240px] text-xs text-neutral-500">
               Reservation alerts and updates from sellers you follow will appear here.

@@ -155,7 +155,7 @@ export function BuyerOrders() {
         ) : filteredOrders.length === 0 ? (
           <Empty className="w-full max-w-none rounded-2xl border border-[#E8E8E8] bg-white p-8 shadow-sm">
             <EmptyHeader>
-              <Image src="/brand/orders-empty-box.png" alt="" width={512} height={475} sizes="144px" className="h-auto w-36" />
+              <Image src="/brand/empty-orders.webp" alt="" width={360} height={334} sizes="144px" className="h-auto w-36" />
               <EmptyTitle className="text-base font-bold text-[#14231A]">{counts.all === 0 ? "No reservations yet" : "No orders match"}</EmptyTitle>
               <EmptyDescription className="text-xs text-[#5F7367]">
                 {counts.all === 0

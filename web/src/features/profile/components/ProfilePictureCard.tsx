@@ -29,6 +29,7 @@ export function ProfilePictureCard({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -75,13 +76,15 @@ export function ProfilePictureCard({
 
       {/* Circular Avatar */}
       <div className="relative mt-6 mb-6 size-32 overflow-hidden rounded-full border-2 border-neutral-200/80 bg-[#F4F6EE] shadow-sm sm:size-36">
-        {imageUrl ? (
+        {imageUrl && failedUrl !== imageUrl ? (
           <Image
             src={imageUrl}
             alt={name}
             fill
             className="object-cover object-center"
             unoptimized
+            referrerPolicy="no-referrer"
+            onError={() => setFailedUrl(imageUrl)}
           />
         ) : (
           <div className="flex size-full items-center justify-center font-heading text-3xl font-bold text-[#457D00]">

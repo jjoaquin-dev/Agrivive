@@ -91,7 +91,7 @@ export function BuyerFavorites() {
         ) : visibleProducts.length === 0 ? (
           /* Empty State */
           <div className="mx-auto flex w-full max-w-none flex-col items-center justify-center rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-sm sm:p-12">
-            <Image src="/brand/favorites-empty.png" alt="" width={1254} height={1254} sizes="144px" className="mb-4 size-36 object-contain" />
+            <Image src="/brand/empty-favorites.webp" alt="" width={360} height={223} sizes="160px" className="mb-4 h-auto w-40 max-w-full" />
             <h2 className="font-heading text-lg font-bold text-neutral-900 sm:text-xl">
               No favorite produce yet
             </h2>

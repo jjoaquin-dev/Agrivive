@@ -133,7 +133,7 @@ export function CartDrawer() {
           </div>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-            <Image src="/brand/empty-cart-plus.png" alt="" width={850} height={890} sizes="160px" className="h-auto w-40 max-w-full" />
+            <Image src="/brand/empty-cart.webp" alt="" width={360} height={377} sizes="160px" className="h-auto w-40 max-w-full" />
             <h3 className="mt-4 font-heading text-lg font-bold">Your cart is empty</h3>
             <p className="mt-1 max-w-xs text-xs text-muted-foreground">Reserve fresh surplus produce from Davao public markets.</p>
             <Button render={<Link href="/marketplace" />} nativeButton={false} onClick={() => setDrawerOpen(false)} className="mt-5 min-h-12 rounded-xl px-6">
