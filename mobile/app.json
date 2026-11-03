@@ -8,7 +8,7 @@
     "icon": "./assets/agrivive-icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.agrivive.seller",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -54,7 +54,7 @@
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
             "enableMinifyInReleaseBuilds": true,
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": false
           }
         }
       ],
