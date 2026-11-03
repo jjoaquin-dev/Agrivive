@@ -15,7 +15,7 @@ function AuthVideoPanel() {
     <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-[#F2F3F0]">
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <video
-          src="/brand/sign-in-video.mp4"
+          poster="/brand/sign-in-poster.jpg"
           aria-label="Fresh produce from local markets"
           className="absolute inset-0 h-full w-full object-cover"
           autoPlay
@@ -23,7 +23,11 @@ function AuthVideoPanel() {
           loop
           playsInline
           preload="auto"
-        />
+        >
+          {/* WebM first for browsers built without H.264 (some Linux Chromium builds); MP4 for the rest. */}
+          <source src="/brand/sign-in-video.webm" type="video/webm" />
+          <source src="/brand/sign-in-video.mp4" type="video/mp4" />
+        </video>
       </div>
     </div>
   );
@@ -108,7 +112,7 @@ export function AuthShell({
 
   // Video column -------------------------------------------------------------
   const videoColumn = (
-    <div className="hidden py-5 pl-24 pr-5 lg:sticky lg:top-10 lg:flex lg:h-[80vh] lg:flex-col lg:self-start">
+    <div className="hidden py-5 pl-24 pr-5 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:self-start">
       <AuthVideoPanel />
     </div>
   );

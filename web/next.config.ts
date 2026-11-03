@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const s3Bucket = process.env.NEXT_PUBLIC_S3_BUCKET_NAME || process.env.AWS_S3_BUCKET_NAME || "agrivive-s3-5p3nb0";
@@ -7,6 +8,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   output: "standalone",
+  // Pin the project root to web/ so a lockfile higher up the repo is not mistaken for it.
+  outputFileTracingRoot: path.join(__dirname),
   experimental: {
     optimizePackageImports: ["lucide-react", "@base-ui/react"],
   },

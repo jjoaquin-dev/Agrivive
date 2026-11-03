@@ -21,6 +21,7 @@ import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSig
 import { PasswordChecklist } from "../../src/features/auth/components/PasswordChecklist";
 import { validateNewPassword } from "../../src/features/auth/passwordRules";
 import { TermsConsent } from "../../src/features/auth/components/TermsConsent";
+import { RecaptchaNotice } from "../../src/features/auth/components/RecaptchaNotice";
 import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
 import { LEGAL_VERSION } from "../../src/features/legal/legalLinks";
 
@@ -366,6 +367,7 @@ export default function RegisterScreen() {
             textStyle={styles.inlineButtonText}
           />
         </View>
+        <RecaptchaNotice />
       </ScrollView>
     </KeyboardAvoidingView>
   );

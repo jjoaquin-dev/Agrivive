@@ -10,6 +10,7 @@ import { OtpInputComponent } from "../../src/components/OtpInputComponent";
 import { useAuth } from "../../src/context/AuthContext";
 import { AuthScreenShell } from "../../src/features/auth/components/AuthScreenShell";
 import { AuthTextLink } from "../../src/features/auth/components/AuthTextLink";
+import { RecaptchaNotice } from "../../src/features/auth/components/RecaptchaNotice";
 import { AuthResendTimer } from "../../src/features/auth/components/AuthResendTimer";
 import { maskEmail } from "../../src/features/auth/maskEmail";
 import { colors, fonts, spacing } from "../../src/theme";
@@ -87,6 +88,10 @@ export default function EmailOtpLoginScreen() {
     try {
       const response = await authClient.signIn.emailOtp({ email, otp: cleanOtp }, { headers: await recaptchaHeaders("sign_in") });
       if (response.error) {
+        if ((response.error as { code?: string }).code === "ACCOUNT_RESTRICTED") {
+          router.replace({ pathname: "/(auth)/account-recovery", params: { email } });
+          return;
+        }
         setError(response.error.message || "That code didn't work. Check it or send a new one.");
         return;
       }
@@ -144,6 +149,7 @@ export default function EmailOtpLoginScreen() {
         </>
       )}
       <AuthTextLink label="Use my password instead" onPress={usePassword} />
+      <RecaptchaNotice />
     </AuthScreenShell>
   );
 }

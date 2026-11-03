@@ -19,6 +19,7 @@ import { InputComponent } from "../../src/components/InputComponent";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { safeBack } from "../../src/utils/safeBack";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
+import { RecaptchaNotice } from "../../src/features/auth/components/RecaptchaNotice";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -66,6 +67,10 @@ export default function LoginScreen() {
       if (response.error) {
         const errorCode = (response.error as { code?: string }).code;
         const msg = response.error.message?.toLowerCase() || "";
+        if (errorCode === "ACCOUNT_RESTRICTED") {
+          router.replace({ pathname: "/(auth)/account-recovery", params: { email: email.trim().toLowerCase() } });
+          return;
+        }
         const isEmailNotVerified =
           errorCode === "EMAIL_NOT_VERIFIED" || msg.includes("email not verified");
 
@@ -283,6 +288,7 @@ export default function LoginScreen() {
             </Pressable>
           </View>
         </View>
+        <RecaptchaNotice />
       </ScrollView>
     </KeyboardAvoidingView>
   );

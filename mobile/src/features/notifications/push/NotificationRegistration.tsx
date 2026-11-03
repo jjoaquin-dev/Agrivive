@@ -83,7 +83,6 @@ export function NotificationRegistration() {
   useEffect(() => {
     if (!session?.user?.id || Platform.OS !== "android") return;
     if (!isPushNotificationSupported()) {
-      console.log("[Push] Expo Go: Standalone or Development Build required for remote push tokens.");
       return;
     }
 
