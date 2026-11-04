@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 910" width="1400" height="910" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4D3A"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="910" fill="#F8F6F1"/>
+  <text x="700" y="40" text-anchor="middle" font-size="26" font-weight="700" fill="#1F4D3A">2.3.2.4 Flagging and Trust Mechanism</text>
+  <text x="700" y="64" text-anchor="middle" font-size="14" fill="#555">Verified events change the score. Reports are recorded as allegations only.</text>
+
+  <!-- Column headers -->
+  <rect x="20" y="80" width="400" height="44" rx="10" fill="#1F4D3A"/>
+  <text x="220" y="109" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">INPUT</text>
+  <rect x="440" y="80" width="520" height="44" rx="10" fill="#C98A10"/>
+  <text x="700" y="109" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">PROCESS</text>
+  <rect x="980" y="80" width="400" height="44" rx="10" fill="#5B3A8C"/>
+  <text x="1180" y="109" text-anchor="middle" font-size="20" font-weight="700" fill="#FFFFFF">OUTPUT</text>
+
+  <!-- INPUT cards -->
+  <rect x="20" y="140" width="400" height="220" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="40" y="168" font-size="15" font-weight="700" fill="#1F4D3A">1. Verified events (system)</text>
+  <text x="40" y="196" font-size="13" fill="#333">• Buyer inquiry unanswered for 48 hours (weight 1)</text>
+  <text x="40" y="220" font-size="13" fill="#333">• Seller cancels a confirmed order (weight 2)</text>
+  <text x="40" y="244" font-size="13" fill="#333">• Low rating, 1 or 2 stars, on a completed order (weight 1)</text>
+  <text x="40" y="268" font-size="13" fill="#333">• Buyer reservation expired without pickup (weight 2)</text>
+  <text x="40" y="300" font-size="12" font-style="italic" fill="#555">Each event counts once and adds its weight.</text>
+  <text x="40" y="330" font-size="12" font-style="italic" fill="#555">Written review text is stored but adds no points.</text>
+
+  <rect x="20" y="380" width="400" height="220" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="40" y="408" font-size="15" font-weight="700" fill="#1F4D3A">2. Reports (allegations)</text>
+  <text x="40" y="436" font-size="13" fill="#333">Reason options:</text>
+  <text x="40" y="460" font-size="13" fill="#333">• Pickup problem</text>
+  <text x="40" y="484" font-size="13" fill="#333">• Conduct</text>
+  <text x="40" y="508" font-size="13" fill="#333">• Inaccurate listing</text>
+  <text x="40" y="532" font-size="13" fill="#333">• Other</text>
+  <text x="40" y="564" font-size="12" font-style="italic" fill="#555">Stored as allegations. They do not change the score.</text>
+
+  <rect x="20" y="620" width="400" height="230" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="40" y="648" font-size="15" font-weight="700" fill="#1F4D3A">3. Account activity</text>
+  <text x="40" y="676" font-size="13" fill="#333">• Last active date is tracked for every user</text>
+  <text x="40" y="700" font-size="13" fill="#333">• 21 days inactive: warning notice</text>
+  <text x="40" y="724" font-size="13" fill="#333">• 30 days inactive: account blocked</text>
+  <text x="40" y="756" font-size="12" font-style="italic" fill="#555">Inactivity is checked separately from the score.</text>
+
+  <!-- Input to process arrow -->
+  <polygon points="425,430 445,430 445,420 465,440 445,460 445,450 425,450" fill="#1F4D3A"/>
+
+  <!-- PROCESS flow -->
+  <rect x="440" y="140" width="520" height="700" rx="10" fill="#FFFBF2" stroke="#C98A10"/>
+  <text x="460" y="168" font-size="15" font-weight="700" fill="#7A5A12">Decision flow</text>
+
+  <rect x="480" y="182" width="300" height="50" rx="8" fill="#FFF7E6" stroke="#C98A10"/>
+  <text x="630" y="206" text-anchor="middle" font-size="13" font-weight="700" fill="#7A5A12">1. Event recorded</text>
+  <text x="630" y="222" text-anchor="middle" font-size="11" fill="#333">Order, inquiry, or review</text>
+
+  <rect x="480" y="258" width="300" height="50" rx="8" fill="#FFF7E6" stroke="#C98A10" stroke-dasharray="5,3"/>
+  <text x="630" y="282" text-anchor="middle" font-size="13" font-weight="700" fill="#7A5A12">2. Verified event?</text>
+  <text x="630" y="298" text-anchor="middle" font-size="11" fill="#333">System events count, reports do not</text>
+
+  <rect x="800" y="258" width="140" height="50" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="870" y="280" text-anchor="middle" font-size="11" font-weight="700" fill="#333">Report: allegation</text>
+  <text x="870" y="296" text-anchor="middle" font-size="11" fill="#333">0 points</text>
+
+  <rect x="480" y="334" width="300" height="50" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="630" y="358" text-anchor="middle" font-size="13" font-weight="700" fill="#2B5A8A">3. Add weighted points</text>
+  <text x="630" y="374" text-anchor="middle" font-size="11" fill="#333">Score = sum of weight × count</text>
+
+  <rect x="480" y="410" width="300" height="50" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="630" y="434" text-anchor="middle" font-size="13" font-weight="700" fill="#2B5A8A">4. Compare with thresholds</text>
+  <text x="630" y="450" text-anchor="middle" font-size="11" fill="#333">Warning at 4, restriction at 6</text>
+
+  <rect x="480" y="486" width="300" height="50" rx="8" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="630" y="510" text-anchor="middle" font-size="13" font-weight="700" fill="#1F4D3A">Score 4 to 5: warning</text>
+  <text x="630" y="526" text-anchor="middle" font-size="11" fill="#333">Notice sent, no restriction</text>
+
+  <rect x="480" y="562" width="300" height="50" rx="8" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="630" y="586" text-anchor="middle" font-size="13" font-weight="700" fill="#1F4D3A">Score 6 or more: restriction</text>
+  <text x="630" y="602" text-anchor="middle" font-size="11" fill="#333">12, 24, or 72 hours by score</text>
+
+  <rect x="480" y="638" width="300" height="50" rx="8" fill="#FFF7E6" stroke="#C98A10" stroke-dasharray="5,3"/>
+  <text x="630" y="662" text-anchor="middle" font-size="13" font-weight="700" fill="#7A5A12">5. Notify user and log</text>
+  <text x="630" y="678" text-anchor="middle" font-size="11" fill="#333">Trust notice and action record</text>
+
+  <rect x="480" y="714" width="300" height="50" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="630" y="738" text-anchor="middle" font-size="13" font-weight="700" fill="#333">Inactivity check (daily)</text>
+  <text x="630" y="754" text-anchor="middle" font-size="11" fill="#333">21 days warning, 30 days block</text>
+
+  <!-- Flow arrows -->
+  <line x1="630" y1="232" x2="630" y2="256" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="780" y1="283" x2="798" y2="283" stroke="#777" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="790" y="276" text-anchor="middle" font-size="10" fill="#8A3B2A">no</text>
+  <line x1="630" y1="308" x2="630" y2="332" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="640" y="326" font-size="10" fill="#1F4D3A">yes</text>
+  <line x1="630" y1="384" x2="630" y2="408" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="630" y1="460" x2="630" y2="484" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="630" y1="536" x2="630" y2="560" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="630" y1="612" x2="630" y2="636" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="630" y1="688" x2="630" y2="712" stroke="#777" stroke-width="2" stroke-dasharray="4,3"/>
+
+  <!-- Process to output arrow -->
+  <polygon points="965,430 985,430 985,420 1005,440 985,460 985,450 965,450" fill="#5B3A8C"/>
+
+  <!-- OUTPUT cards -->
+  <rect x="980" y="140" width="400" height="130" rx="10" fill="#FFFFFF" stroke="#5B3A8C"/>
+  <text x="1000" y="168" font-size="15" font-weight="700" fill="#5B3A8C">1. Warning</text>
+  <text x="1000" y="194" font-size="13" fill="#333">Warning notice to the user.</text>
+  <text x="1000" y="218" font-size="13" fill="#333">Reached at 4 points. No restriction.</text>
+
+  <rect x="980" y="290" width="400" height="130" rx="10" fill="#FFFFFF" stroke="#5B3A8C"/>
+  <text x="1000" y="318" font-size="15" font-weight="700" fill="#5B3A8C">2. Temporary restriction</text>
+  <text x="1000" y="344" font-size="13" fill="#333">No new reservations while active.</text>
+  <text x="1000" y="368" font-size="13" fill="#333">12, 24, or 72 hours. Ends automatically.</text>
+
+  <rect x="980" y="440" width="400" height="130" rx="10" fill="#FFFFFF" stroke="#5B3A8C"/>
+  <text x="1000" y="468" font-size="15" font-weight="700" fill="#5B3A8C">3. Account blocked</text>
+  <text x="1000" y="494" font-size="13" fill="#333">Only after 30 days of inactivity.</text>
+  <text x="1000" y="518" font-size="13" fill="#333">Not triggered by the score.</text>
+
+  <rect x="980" y="590" width="400" height="130" rx="10" fill="#FFFFFF" stroke="#5B3A8C"/>
+  <text x="1000" y="618" font-size="15" font-weight="700" fill="#5B3A8C">4. User notification</text>
+  <text x="1000" y="644" font-size="13" fill="#333">Each action queues a notice to the user</text>
+  <text x="1000" y="668" font-size="13" fill="#333">and is recorded in the trust history.</text>
+
+  <rect x="980" y="740" width="400" height="100" rx="10" fill="#F1ECFA" stroke="#5B3A8C"/>
+  <text x="1000" y="770" font-size="15" font-weight="700" fill="#5B3A8C">Result</text>
+  <text x="1000" y="796" font-size="13" fill="#333">Fair reservations for buyers and sellers,</text>
+  <text x="1000" y="818" font-size="13" fill="#333">based on recorded events only.</text>
+
+  <text x="700" y="880" text-anchor="middle" font-size="13" fill="#555">Weights, thresholds, and durations are prototype settings that can be changed in configuration.</text>
+  <text x="700" y="900" text-anchor="middle" font-size="12" fill="#888">Trust actions can be switched on or off. Check the live setting before describing the feature as active.</text>
+</svg>

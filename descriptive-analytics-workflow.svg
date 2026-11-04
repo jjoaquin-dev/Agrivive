@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4D3A"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="1000" fill="#F8F6F1"/>
+  <text x="500" y="38" text-anchor="middle" font-size="24" font-weight="700" fill="#1F4D3A">Descriptive Sales Trend Analytics: Workflow</text>
+  <text x="500" y="62" text-anchor="middle" font-size="14" fill="#555">Historical marketplace records only. No forecasting.</text>
+
+  <!-- 1. Data sources -->
+  <text x="40" y="94" font-size="15" font-weight="700" fill="#1F4D3A">1. Data sources (historical records)</text>
+  <rect x="40" y="104" width="280" height="80" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="180" y="136" text-anchor="middle" font-size="14" font-weight="700" fill="#222">Surplus listing records</text>
+  <text x="180" y="158" text-anchor="middle" font-size="12" fill="#555">Posted quantity per listing cycle</text>
+  <rect x="360" y="104" width="280" height="80" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="500" y="136" text-anchor="middle" font-size="14" font-weight="700" fill="#222">Completed QR-pickup records</text>
+  <text x="500" y="158" text-anchor="middle" font-size="12" fill="#555">Sold only after seller QR scan</text>
+  <rect x="680" y="104" width="280" height="80" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="820" y="136" text-anchor="middle" font-size="14" font-weight="700" fill="#222">Completed order records</text>
+  <text x="820" y="158" text-anchor="middle" font-size="12" fill="#555">Subtotal and completed time</text>
+
+  <line x1="180" y1="184" x2="180" y2="212" stroke="#1F4D3A" stroke-width="2"/>
+  <line x1="500" y1="184" x2="500" y2="212" stroke="#1F4D3A" stroke-width="2"/>
+  <line x1="820" y1="184" x2="820" y2="212" stroke="#1F4D3A" stroke-width="2"/>
+  <rect x="180" y="212" width="640" height="6" rx="3" fill="#1F4D3A"/>
+  <line x1="500" y1="218" x2="500" y2="252" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- 2. Processing -->
+  <text x="40" y="246" font-size="15" font-weight="700" fill="#1F4D3A">2. Data processing and calculation</text>
+  <rect x="40" y="262" width="200" height="88" rx="10" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="140" y="296" text-anchor="middle" font-size="14" font-weight="700" fill="#2B5A8A">Validate and filter</text>
+  <text x="140" y="318" text-anchor="middle" font-size="12" fill="#333">Seller, product, unit, period</text>
+  <rect x="270" y="262" width="200" height="88" rx="10" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="370" y="296" text-anchor="middle" font-size="14" font-weight="700" fill="#2B5A8A">PostgreSQL retrieves</text>
+  <text x="370" y="318" text-anchor="middle" font-size="12" fill="#333">Stores and returns records</text>
+  <rect x="500" y="262" width="200" height="88" rx="10" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="600" y="296" text-anchor="middle" font-size="14" font-weight="700" fill="#2B5A8A">ElysiaJS calculates</text>
+  <text x="600" y="318" text-anchor="middle" font-size="12" fill="#333">Eq. 2 (STR) and Eq. 3 (STC)</text>
+  <rect x="730" y="262" width="200" height="88" rx="10" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="830" y="296" text-anchor="middle" font-size="14" font-weight="700" fill="#2B5A8A">Metrics computed</text>
+  <text x="830" y="318" text-anchor="middle" font-size="12" fill="#333">Posted, sold, revenue, repeats</text>
+
+  <line x1="240" y1="306" x2="268" y2="306" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="470" y1="306" x2="498" y2="306" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="700" y1="306" x2="728" y2="306" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- 3. Output: trends and KPIs -->
+  <text x="40" y="380" font-size="15" font-weight="700" fill="#1F4D3A">3. Analytics output (sales trends only)</text>
+  <rect x="40" y="390" width="440" height="165" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="60" y="414" font-size="14" font-weight="700" fill="#222">Sales trend visualizations</text>
+  <polyline points="80,480 100,460 120,468 145,438 150,438" fill="none" stroke="#1F4D3A" stroke-width="2.5"/>
+  <text x="115" y="520" text-anchor="middle" font-size="11" fill="#333">Completed sales</text>
+  <text x="115" y="534" text-anchor="middle" font-size="11" fill="#333">over time</text>
+  <rect x="220" y="458" width="14" height="30" fill="#2B5A8A"/>
+  <rect x="240" y="446" width="14" height="42" fill="#2B5A8A"/>
+  <rect x="260" y="434" width="14" height="54" fill="#2B5A8A"/>
+  <rect x="280" y="422" width="14" height="66" fill="#2B5A8A"/>
+  <text x="250" y="520" text-anchor="middle" font-size="11" fill="#333">Posted vs sold</text>
+  <text x="250" y="534" text-anchor="middle" font-size="11" fill="#333">quantity</text>
+  <circle cx="390" cy="462" r="26" fill="#E8F0EC"/>
+  <path d="M390,462 L390,436 A26,26 0 0,1 413,475 Z" fill="#C98A10"/>
+  <text x="390" y="520" text-anchor="middle" font-size="11" fill="#333">Sell-through</text>
+  <text x="390" y="534" text-anchor="middle" font-size="11" fill="#333">rate (%)</text>
+
+  <rect x="520" y="390" width="440" height="165" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <text x="540" y="414" font-size="14" font-weight="700" fill="#222">Key performance indicators</text>
+  <rect x="535" y="428" width="200" height="54" rx="8" fill="#E8F0EC"/>
+  <text x="635" y="460" text-anchor="middle" font-size="13" font-weight="700" fill="#1F4D3A">Total posted (kg)</text>
+  <rect x="745" y="428" width="200" height="54" rx="8" fill="#E8F0EC"/>
+  <text x="845" y="460" text-anchor="middle" font-size="13" font-weight="700" fill="#1F4D3A">Total sold (kg)</text>
+  <rect x="535" y="492" width="200" height="54" rx="8" fill="#FFF7E6"/>
+  <text x="635" y="524" text-anchor="middle" font-size="13" font-weight="700" fill="#7A5A12">Sell-through (%)</text>
+  <rect x="745" y="492" width="200" height="54" rx="8" fill="#FFF7E6"/>
+  <text x="845" y="524" text-anchor="middle" font-size="13" font-weight="700" fill="#7A5A12">Sales trend change (%)</text>
+
+  <!-- 4. Summary -->
+  <text x="40" y="580" font-size="15" font-weight="700" fill="#1F4D3A">4. Descriptive summary (fixed templates, no AI model)</text>
+  <rect x="40" y="590" width="920" height="100" rx="10" fill="#FFFFFF" stroke="#E5E2DA"/>
+  <rect x="70" y="612" width="260" height="60" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="200" y="636" text-anchor="middle" font-size="13" font-weight="700" fill="#333">ElysiaJS fills templates</text>
+  <text x="200" y="656" text-anchor="middle" font-size="11" fill="#555">Fixed sentence structure</text>
+  <rect x="370" y="612" width="260" height="60" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="500" y="636" text-anchor="middle" font-size="13" font-weight="700" fill="#333">Numbers from step 2</text>
+  <text x="500" y="656" text-anchor="middle" font-size="11" fill="#555">Same values as the KPIs</text>
+  <rect x="670" y="612" width="260" height="60" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="800" y="636" text-anchor="middle" font-size="13" font-weight="700" fill="#333">No AI model edits values</text>
+  <text x="800" y="656" text-anchor="middle" font-size="11" fill="#555">Text only, no new numbers</text>
+  <line x1="330" y1="642" x2="368" y2="642" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="630" y1="642" x2="668" y2="642" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- 5. Output display -->
+  <text x="40" y="722" font-size="15" font-weight="700" fill="#1F4D3A">5. Output display</text>
+  <rect x="40" y="732" width="920" height="190" rx="10" fill="#FFFFFF" stroke="#1F4D3A"/>
+  <rect x="70" y="752" width="260" height="150" rx="10" fill="#F3F3F3" stroke="#777"/>
+  <text x="200" y="778" text-anchor="middle" font-size="13" font-weight="700" fill="#222">Seller Analytics</text>
+  <polyline points="95,860 130,830 165,842 200,810 235,820 305,800" fill="none" stroke="#1F4D3A" stroke-width="2.5"/>
+  <text x="200" y="890" text-anchor="middle" font-size="11" fill="#555">Period · Product · Unit</text>
+
+  <text x="360" y="790" font-size="15" fill="#333">• Historical sales trends</text>
+  <text x="360" y="818" font-size="15" fill="#333">• Sell-through rate</text>
+  <text x="360" y="846" font-size="15" fill="#333">• Period-to-period sales change</text>
+  <text x="360" y="874" font-size="15" fill="#333">• Completed sales total and repeat listings</text>
+  <text x="360" y="902" font-size="15" fill="#333">• Descriptive summary text</text>
+
+  <text x="500" y="958" text-anchor="middle" font-size="13" fill="#555">Descriptive only. Does not forecast buyer demand or future sales.</text>
+  <text x="500" y="980" text-anchor="middle" font-size="12" fill="#888">Percentages truncated toward zero to two decimals. Sample data is illustrative, not production data.</text>
+</svg>
