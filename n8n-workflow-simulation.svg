@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4D3A"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="800" fill="#FFFFFF"/>
+  <text x="600" y="40" text-anchor="middle" font-size="24" font-weight="700" fill="#1F4D3A">Figure 6. n8n Marketing Boost Mechanism</text>
+  <text x="600" y="66" text-anchor="middle" font-size="14" fill="#555">Workflow nodes as named in agrivive-visibility-boost.json</text>
+
+  <!-- Connectors: row A -->
+  <line x1="210" y1="150" x2="248" y2="150" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="420" y1="150" x2="458" y2="150" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="438" y="142" text-anchor="middle" font-size="11" fill="#555">no</text>
+  <line x1="630" y1="150" x2="668" y2="150" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="840" y1="150" x2="878" y2="150" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="858" y="142" text-anchor="middle" font-size="11" fill="#555">no</text>
+  <line x1="965" y1="180" x2="965" y2="228" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="878" y1="260" x2="840" y2="260" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- Connectors: follow-up path -->
+  <line x1="335" y1="180" x2="335" y2="338" stroke="#C98A10" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="345" y="262" font-size="11" fill="#7A5A12">yes</text>
+  <line x1="420" y1="370" x2="458" y2="370" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="630" y1="370" x2="668" y2="370" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="840" y1="370" x2="878" y2="370" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="858" y="362" text-anchor="middle" font-size="11" fill="#555">yes</text>
+  <line x1="965" y1="400" x2="965" y2="448" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <line x1="878" y1="480" x2="840" y2="480" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- Row A: initial post -->
+  <rect x="40" y="120" width="170" height="60" rx="8" fill="#E8F0EC" stroke="#1F4D3A"/>
+  <text x="55" y="144" font-size="13" font-weight="700" fill="#1F4D3A">1. Boost Confirmed</text>
+  <text x="55" y="162" font-size="11" fill="#333">Webhook: boostId + reason</text>
+
+  <rect x="250" y="120" width="170" height="60" rx="8" fill="#FFF7E6" stroke="#C98A10" stroke-dasharray="5,3"/>
+  <text x="265" y="144" font-size="13" font-weight="700" fill="#7A5A12">2. Follow-Up Call?</text>
+  <text x="265" y="162" font-size="11" fill="#333">reason = follow_up?</text>
+
+  <rect x="460" y="120" width="170" height="60" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="475" y="144" font-size="13" font-weight="700" fill="#2B5A8A">3. Get Boost Context</text>
+  <text x="475" y="162" font-size="11" fill="#333">GET backend context</text>
+
+  <rect x="670" y="120" width="170" height="60" rx="8" fill="#FFF7E6" stroke="#C98A10" stroke-dasharray="5,3"/>
+  <text x="685" y="144" font-size="13" font-weight="700" fill="#7A5A12">3b. Already Posted?</text>
+  <text x="685" y="162" font-size="11" fill="#333">alreadyPosted?</text>
+  <text x="755" y="198" text-anchor="middle" font-size="11" fill="#8A3B2A">yes: stop, nothing sent</text>
+
+  <rect x="880" y="120" width="170" height="60" rx="8" fill="#F1ECFA" stroke="#5B3A8C"/>
+  <text x="895" y="144" font-size="13" font-weight="700" fill="#5B3A8C">4. Write Caption (Groq)</text>
+  <text x="895" y="162" font-size="11" fill="#333">Groq: caption JSON</text>
+
+  <rect x="880" y="228" width="170" height="60" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="895" y="252" font-size="13" font-weight="700" fill="#333">5. Format Caption</text>
+  <text x="895" y="270" font-size="11" fill="#333">Code: fallback caption</text>
+
+  <rect x="670" y="228" width="170" height="60" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="685" y="252" font-size="13" font-weight="700" fill="#2B5A8A">6. Post to Facebook</text>
+  <text x="685" y="270" font-size="11" fill="#333">Backend: FB and Instagram</text>
+  <text x="755" y="306" text-anchor="middle" font-size="11" fill="#1F4D3A">Post and record saved</text>
+
+  <!-- Row C: 6-hour price cut path -->
+  <rect x="250" y="338" width="170" height="60" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="265" y="362" font-size="13" font-weight="700" fill="#2B5A8A">7. Get Latest Context</text>
+  <text x="265" y="380" font-size="11" fill="#333">GET backend context</text>
+
+  <rect x="460" y="338" width="170" height="60" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="475" y="362" font-size="13" font-weight="700" fill="#2B5A8A">8. Reduce Price (API)</text>
+  <text x="475" y="380" font-size="11" fill="#333">Backend: max(P − D, floor)</text>
+
+  <rect x="670" y="338" width="170" height="60" rx="8" fill="#FFF7E6" stroke="#C98A10" stroke-dasharray="5,3"/>
+  <text x="685" y="362" font-size="13" font-weight="700" fill="#7A5A12">9. Price Reduced?</text>
+  <text x="685" y="380" font-size="11" fill="#333">reduced?</text>
+  <text x="755" y="416" text-anchor="middle" font-size="11" fill="#8A3B2A">no: stop, nothing posted</text>
+
+  <rect x="880" y="338" width="170" height="60" rx="8" fill="#F1ECFA" stroke="#5B3A8C"/>
+  <text x="895" y="362" font-size="13" font-weight="700" fill="#5B3A8C">10. Flash-Sale Caption</text>
+  <text x="895" y="380" font-size="11" fill="#333">Groq: flash-sale caption</text>
+
+  <rect x="880" y="448" width="170" height="60" rx="8" fill="#F3F3F3" stroke="#777"/>
+  <text x="895" y="472" font-size="13" font-weight="700" fill="#333">11. Format Flash-Sale</text>
+  <text x="895" y="490" font-size="11" fill="#333">Code: fallback caption</text>
+
+  <rect x="670" y="448" width="170" height="60" rx="8" fill="#EAF1F8" stroke="#2B5A8A"/>
+  <text x="685" y="472" font-size="13" font-weight="700" fill="#2B5A8A">12. Post Second Post</text>
+  <text x="685" y="490" font-size="11" fill="#333">Backend posts second post</text>
+
+  <!-- Backend lane -->
+  <rect x="40" y="590" width="1120" height="170" rx="10" fill="#F8F6F1" stroke="#E5E2DA"/>
+  <text x="60" y="618" font-size="15" font-weight="700" fill="#1F4D3A">Backend and worker (outside n8n, every 60 s)</text>
+  <text x="60" y="646" font-size="13" fill="#333">• First post saved: follow-up due = first post + 6 hours</text>
+  <text x="60" y="670" font-size="13" fill="#333">• Worker claims due row, sends reason follow_up</text>
+  <text x="60" y="694" font-size="13" fill="#333">• Failed call: retry in 15 minutes, up to 5 times</text>
+  <text x="620" y="646" font-size="13" fill="#333">• Cut: P_new = max(P_current − D, P_min)</text>
+  <text x="620" y="670" font-size="13" fill="#333">• After each post: next check in 6 hours</text>
+  <text x="620" y="694" font-size="13" fill="#333">• Stops: sold out, paused, at floor, new cycle</text>
+
+  <!-- Legend -->
+  <text x="600" y="790" text-anchor="middle" font-size="12" fill="#666">Green: workflow step  ·  Blue: backend call  ·  Purple: Groq AI (text only)  ·  Dashed: decision  ·  Sample flow for illustration</text>
+</svg>

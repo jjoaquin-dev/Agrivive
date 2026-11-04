@@ -1,0 +1,25 @@
+At Risk?,Task Name,Feature Type,Responsible,Story Points,Start Date,End Date,Duration in days,Status,Priority,Comments
+,SPRINT 1 - Identity and seller foundation,,,,07/27/2026,08/09/2026,14,Done,High,Sprint dates follow the proposal timeline; adjust to your real dates
+,Sign-up OTP login and role checks,Backend and Mobile,,,07/27/2026,08/09/2026,14,Done,High,FR-01 FR-02 and FR-09
+,Seller verification and profile edit,Backend and Mobile,,,07/27/2026,08/09/2026,14,Done,High,Seller verification and profile CRUD
+,Seller listing editing availability and photos,Backend and Mobile,,,07/27/2026,08/09/2026,14,Done,High,FR-03 listing fields and photo handling
+,SPRINT 2 - Discovery foundation,,,,08/10/2026,08/23/2026,14,Done,High,
+,Structured listings with Filipino vegetable names,Backend and Mobile,,,08/10/2026,08/23/2026,14,Done,High,FR-03 and FR-10
+,Buyer browse search filters and seller details,Web,,,08/10/2026,08/23/2026,14,Done,High,Marketplace MVP and product detail
+,Pickup location and navigation,Web and Mobile,,,08/10/2026,08/23/2026,14,Done,Medium,FR-14; GPS address autofill
+,SPRINT 3 - Transaction core,,,,08/24/2026,09/06/2026,14,Done,High,
+,Atomic reserve cancel and expire with stock checks,Backend,,,08/24/2026,09/06/2026,14,Done,High,FR-06 and FR-20; scheduled expiry job
+,24-hour QR pickup pass and seller scan,Backend and Mobile,,,08/24/2026,09/06/2026,14,Done,High,FR-12 and FR-13
+,Multi-store cart checkout,Web,,,08/24/2026,09/06/2026,14,Done,Medium,
+,SPRINT 4 - Promotion and insight,,,,09/07/2026,09/20/2026,14,In Progress,High,
+,Four-factor visibility ranking (AHP-TOPSIS),Backend,,,09/07/2026,09/20/2026,14,Done,High,FR-05; default policy since 2026-11-01
+,n8n promotion and Boost publishing,Backend and Integration,Yes,,09/07/2026,09/20/2026,14,In Progress,High,FR-18; Boost retry and stock sync fix in progress; VPS needs VISIBILITY_POLICY set
+,Descriptive analytics and advisories,Backend and Mobile,,,09/07/2026,09/20/2026,14,In Progress,Medium,FR-07 done; FR-21 and FR-22 weather and holiday advice needs a data check
+,SPRINT 5 - Accountability and restricted views,,,,09/21/2026,10/04/2026,14,In Progress,High,
+,Ratings reviews and reports,Backend and Web,,,09/21/2026,10/04/2026,14,In Progress,Medium,FR-08 and FR-15; reviews built and reports to confirm
+,Rule-based flagging and trust decisions,Backend,Yes,,09/21/2026,10/04/2026,14,In Progress,Medium,FR-23; trust actions gated by TRUST_ACTIONS_ENABLED
+,Stakeholder aggregate view without personal data,Backend,,,09/21/2026,10/04/2026,14,Needs check,Medium,FR-16
+,SPRINT 6 - Integration and beta,,,,10/05/2026,11/15/2026,42,In Progress,High,Extended to 11/15 to cover the remaining deployment and beta work
+,Buyer website UI enhancements and Stitch frames,Web and Design,,,10/05/2026,11/15/2026,42,In Progress,Medium,Hero video splash sign-in video Parkinsans cart profile cards deals row and empty states; landing phone layout not checked
+,Whole-journey tests privacy and failure checks,Testing,,,10/05/2026,11/15/2026,42,In Progress,High,Security and privacy targets; no automated test runner so owner tests manually
+,Production deployment and beta with participants,Deployment,Yes,,10/05/2026,11/15/2026,42,Not Started,High,Migrations in order: notifications then remove_seller_type then boost_follow_up; set VISIBILITY_POLICY and recreate API; then beta feedback
