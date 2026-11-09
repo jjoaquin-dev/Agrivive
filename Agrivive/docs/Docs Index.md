@@ -11,6 +11,7 @@ Home: [[00 Home]] · Delivery: [[Delivery Index]]
 ## Notes
 
 - [[docs/N8N-Boost-test-sheet|N8N-Boost-test-sheet]]
+- [[docs/UAT Beta Test Cases Buyer and Seller|UAT Beta Test Cases Buyer and Seller]]
 - [[docs/References|References]]
 - [[docs/WSV-AHP-TOPSIS-test-results|WSV-AHP-TOPSIS-test-results]]
 - [[docs/WSV-AHP-TOPSIS-test-sheet|WSV-AHP-TOPSIS-test-sheet]]

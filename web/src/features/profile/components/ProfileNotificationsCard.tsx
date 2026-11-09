@@ -2,7 +2,7 @@
 
 export function ProfileNotificationsCard() {
   return (
-    <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-md">
+    <div id="notifications" className="scroll-mt-24 rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-md">
       <div className="border-b border-border/70 pb-4">
         <h2 className="font-heading text-lg font-bold text-neutral-900">Pickup &amp; Restock Notifications</h2>
         <p className="text-sm text-neutral-500">

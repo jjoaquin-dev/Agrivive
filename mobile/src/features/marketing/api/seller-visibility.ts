@@ -17,6 +17,7 @@ export interface SellerVisibilityItem {
   policyVersion: string;
   score: number | null;
   rank?: number | null;
+  totalRanked?: number;
   reason?: string;
   criteria?: SellerVisibilityCriteria;
   normalizedCriteria?: SellerVisibilityCriteria;

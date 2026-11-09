@@ -2,6 +2,7 @@ import { Clock, MapPin } from "lucide-react";
 import { getDirectionsUrl } from "@/src/lib/maps";
 import type { MarketplaceSellerProfile } from "../types";
 import { SellerFollowButton } from "./SellerFollowButton";
+import { SellerRatingPill } from "./SellerRatingPill";
 import { SellerProfileAvatar } from "./SellerProfileAvatar";
 import { MessageSellerButton } from "./MessageSellerButton";
 
@@ -19,6 +20,7 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
             <h1 className="font-heading text-2xl sm:text-[26px] font-bold text-neutral-900 leading-tight">
               {seller.shopName}
             </h1>
+            <SellerRatingPill sellerId={seller.id} />
           </div>
 
           <div className="flex items-center gap-2 pt-0.5">

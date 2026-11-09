@@ -17,7 +17,6 @@ import type { MarketplaceProduct } from "../types";
 import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
 import { ProductImage } from "./ProductImage";
 import { ProductInfoCard } from "./ProductInfoCard";
-import { SellerReviewsSection } from "./SellerReviewsSection";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductQuestionsSection } from "./ProductQuestionsSection";
 
@@ -176,7 +175,6 @@ export function ProductDetail() {
         </div>
 
         {/* Reviews, Ratings, and Questions Sections (SimilarProduceSection removed) */}
-        <SellerReviewsSection sellerId={product.seller.id} shopName={product.seller.shopName} />
         <ProductReviewsSection productId={product.id} />
         <ProductQuestionsSection productId={product.id} productName={product.productName} />
       </div>
@@ -188,7 +186,7 @@ export function ProductDetail() {
         loading={ordering}
         error={showReserveModal ? orderError : ""}
         total={`₱${(Number(product.productPrice) * Number(quantity || 0)).toFixed(2)}`}
-        sellers={[{ sellerId: product.seller.id, shopName: product.seller.shopName, address: product.seller.detailAddress, lines: [`${quantity} ${product.scalingType} ${product.productName}`] }]}
+        sellers={[{ sellerId: product.seller.id, shopName: product.seller.shopName, address: product.seller.detailAddress, items: [{ id: product.id, name: product.productName, imageUrl: product.imageUrl, productType: product.productType, quantity: quantity || 0, unit: product.scalingType, price: Number(product.productPrice) }] }]}
       />
     </main>
   );

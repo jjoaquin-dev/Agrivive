@@ -36,8 +36,8 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
 
         {order.qrPayload && open ? (
           <div className="flex flex-col items-center">
-            <div className="flex size-[168px] items-center justify-center rounded-xl border border-[#F0F0F0] bg-white p-2">
-              <QRCodeSVG value={order.qrPayload} size={150} level="M" marginSize={1} className={order.qr.status === "active" ? "" : "opacity-30"} />
+            <div className="flex aspect-square w-full max-w-[280px] items-center justify-center rounded-xl border border-[#F0F0F0] bg-white p-3">
+              <QRCodeSVG value={order.qrPayload} size={256} style={{ width: "100%", height: "100%" }} level="M" marginSize={1} className={order.qr.status === "active" ? "" : "opacity-30"} />
             </div>
             <span className={`mt-3 rounded-full px-3 py-1 text-xs font-bold ${note.tone}`}>QR {note.label}</span>
             <p className="mt-2 max-w-[260px] text-center text-[12px] leading-relaxed text-neutral-500">{note.text}</p>

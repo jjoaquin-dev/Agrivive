@@ -8,7 +8,7 @@ import type { ConversationLaunchContext } from "../types";
 import { ConversationContextCard } from "./ConversationContextCard";
 import { ConversationMessageBubble } from "./ConversationMessageBubble";
 import { ConversationInput } from "./ConversationInput";
-import { ConversationStateButtons } from "./ConversationStateActions";
+import { ConversationRowMenu } from "./ConversationRowMenu";
 
 function displayName(context: ConversationLaunchContext) {
   return context.sellerShopName || context.sellerName || "Seller";
@@ -81,7 +81,7 @@ export function ConversationThread({
             <p className="text-xs text-[#457D00] font-medium">Active now • Verified vendor</p>
           </div>
         </div>
-        {existing ? <div className="w-full sm:w-auto"><ConversationStateButtons conversation={existing} onChanged={onStateChanged} /></div> : null}
+        {existing ? <ConversationRowMenu item={existing} onChanged={onStateChanged} horizontal /> : null}
       </header>
 
       {/* Date Divider Pill */}

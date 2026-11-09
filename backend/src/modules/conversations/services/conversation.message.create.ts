@@ -13,6 +13,7 @@ import { ConversationError } from "./conversation.error";
 import { publishConversationMessage } from "./conversation.realtime";
 import { enqueueConversationNotification } from "../../notifications/services/notifications.outbox.enqueue-conversation";
 import { ChatRuleError, HIDDEN_MESSAGE_TEXT, screenChatMessage } from "../../../utils/trust/chat-rules";
+import { queueBuyerReplyNotice } from "../../../utils/buyer-reply-notice";
 import { presignConversationMessageBody } from "../../../utils/s3-conversation";
 
 export async function createConversationMessage(userId: string, conversationId: string, input: SendConversationMessageBody) {
@@ -93,6 +94,14 @@ export async function createConversationMessage(userId: string, conversationId: 
         await tx.update(conversations).set({ awaitingReplySince: now, deadlineStage: 0 })
           .where(eq(conversations.id, conversationId));
       }
+    }
+
+    if (userId === conversation.sellerId) {
+      // One bell notice per chat per hour, so a back-and-forth does not flood the list.
+      await queueBuyerReplyNotice(tx, {
+        noticeKey: `chat-reply:${conversationId}:${Math.floor(now.getTime() / 3_600_000)}`,
+        buyerId: conversation.buyerId, kind: "seller_chat_reply",
+      });
     }
 
     const recipientUserId = userId === conversation.sellerId

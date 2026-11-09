@@ -7,7 +7,6 @@ const s3Region = process.env.NEXT_PUBLIC_AWS_REGION || process.env.AWS_REGION ||
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
-  output: "standalone",
   // Pin the project root to web/ so a lockfile higher up the repo is not mistaken for it.
   outputFileTracingRoot: path.join(__dirname),
   experimental: {

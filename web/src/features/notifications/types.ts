@@ -6,7 +6,10 @@ export type BuyerNoticeKind =
   | "trust_action_restriction"
   | "seller_new_listing"
   | "seller_price_drop"
-  | "seller_restock";
+  | "seller_restock"
+  | "seller_inquiry_reply"
+  | "seller_review_reply"
+  | "seller_chat_reply";
 
 export type BuyerNotice = {
   id: string;
@@ -17,6 +20,8 @@ export type BuyerNotice = {
   productName: string | null;
   productAvailable: boolean | null;
   kind: BuyerNoticeKind | string;
+  /** What happened, from the notice key (for example "order-confirmed"). Only on order notices. */
+  event?: string | null;
   price?: string | null;
   previousPrice?: string | null;
   reason?: string | null;
