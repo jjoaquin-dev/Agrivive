@@ -167,7 +167,7 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | POST | `/seller/product-images` | `backend/src/modules/seller/index/seller.product.image.ts` |
 | GET | `/seller/products/:id/share` | `backend/src/modules/seller/index/seller.product.share.ts` |
 | GET | `/seller/stock-adjustments` | `backend/src/modules/seller/index/seller.stock-adjustment.list.ts` |
-| GET | `/seller/weightedvisibility` | `backend/src/modules/seller/index/seller.weighted.surplus.visibility.ts` |
+| GET | `/seller/weightedvisibility` | `backend/src/modules/seller/index/seller.weighted.surplus.visibility.ts`. Each ranked item has `rank` (position among all sellers' listings, so a seller's own ranks can skip numbers) and `totalRanked` (how many listings are ranked). The app shows "Rank 6 of 40". |
 | GET | `/seller/orders` | `backend/src/modules/seller/index/seller.scan-order.ts` |
 | GET | `/seller/orders/:id` | `backend/src/modules/seller/index/seller.scan-order.ts` |
 | POST | `/seller/orders/scan` | `backend/src/modules/seller/index/seller.scan-order.ts` |

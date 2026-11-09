@@ -19,7 +19,7 @@ const peso = (value: number) => `₱${Number.isInteger(value) ? value : value.to
 
 function placement(item: SellerVisibilityItem) {
   if (item.score === null || !item.rank) return { label: "Not shown yet", line: item.reason || "Add stock and keep the listing on so buyers can see it.", tone: "warn" as const };
-  return { label: `Rank ${item.rank}`, line: "Buyers see higher ranks first.", tone: item.rank === 1 ? "good" as const : "quiet" as const };
+  return { label: item.totalRanked ? `Rank ${item.rank} of ${item.totalRanked}` : `Rank ${item.rank}`, line: "Buyers see higher ranks first.", tone: item.rank === 1 ? "good" as const : "quiet" as const };
 }
 
 const tones = {

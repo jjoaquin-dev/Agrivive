@@ -179494,6 +179494,7 @@ async function getSellerWeightedSurplusVisibility(sellerId) {
       ...base,
       score: Number(result.score.toFixed(4)),
       rank: result.rank,
+      totalRanked: ranking.results.length,
       criteria: result.criteria,
       normalizedCriteria: result.normalizedCriteria,
       weights: ranking.weights,
