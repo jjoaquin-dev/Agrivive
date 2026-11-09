@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
+import { usePolling } from "@/src/lib/usePolling";
 import { ApiError, isAbortError } from "@/src/lib/api";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { createBuyerOrder } from "@/src/features/orders/api/orders";
@@ -54,6 +55,17 @@ export function ProductDetail() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; controller.abort(); };
   }, [productId]);
+
+  // Quiet refresh so stock, price and sold-out changes show without a reload. The typed quantity is kept.
+  usePolling(async (signal) => {
+    const latest = await getMarketplaceProduct(productId, signal);
+    if (!signal.aborted) setProduct(latest);
+  }, {
+    enabled: Boolean(product) && !loading && !ordering && !showReserveModal,
+    intervalMs: 15_000,
+    runImmediately: false,
+    shouldStop: (reason) => reason instanceof ApiError && reason.status === 404,
+  });
 
   function promptBuyNow() {
     if (!product) return;

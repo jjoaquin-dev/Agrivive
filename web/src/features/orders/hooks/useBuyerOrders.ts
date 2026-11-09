@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authClient } from "@/src/lib/auth-client";
 import { ApiError } from "@/src/lib/api";
+import { usePolling } from "@/src/lib/usePolling";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { listBuyerOrders } from "../api/orders";
 
@@ -12,6 +13,7 @@ export function useBuyerOrders() {
   const currentUser = useRef(userId);
   currentUser.current = userId;
   const generation = useRef(0);
+  const extraPages = useRef(false);
   const cache = useRef<BuyerOrder[]>([]);
   const cacheOwner = useRef<string | null>(null);
   const [orders, setOrders] = useState<BuyerOrder[]>([]);
@@ -25,6 +27,7 @@ export function useBuyerOrders() {
     const requestedBy = currentUser.current;
     if (!requestedBy) return;
     const requestGeneration = generation.current;
+    extraPages.current = Boolean(cursor);
     if (cursor) setLoadingMore(true);
     else setLoading(cacheOwner.current !== requestedBy || cache.current.length === 0);
     setError("");
@@ -70,6 +73,17 @@ export function useBuyerOrders() {
     }
     void load();
   }, [userId, isPending, load]);
+
+  // Quiet refresh of the first page so status changes show without a reload. Skipped after "load more".
+  usePolling(async (signal) => {
+    const requestedBy = currentUser.current;
+    if (!requestedBy || extraPages.current) return;
+    const result = await listBuyerOrders(undefined);
+    if (signal.aborted || requestedBy !== currentUser.current) return;
+    cache.current = result.orders;
+    setOrders(result.orders);
+    setNextCursor(result.nextCursor);
+  }, { enabled: Boolean(userId) && !loading && !loadingMore && owner === userId, intervalMs: 20_000, runImmediately: false });
 
   const updateOrder = useCallback((updated: BuyerOrder) => {
     cache.current = cache.current.map((o) => (o.id === updated.id ? updated : o));

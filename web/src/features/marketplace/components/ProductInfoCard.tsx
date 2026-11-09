@@ -41,6 +41,10 @@ export function ProductInfoCard({
 }: ProductInfoCardProps) {
   const previousPrice = product.basePrice == null ? null : Number(product.basePrice);
   const currentPrice = Number(product.productPrice);
+  const stock = Number(product.productQty);
+  const stockText = stock.toLocaleString();
+  // Five or fewer left reads as a warning so buyers know to hurry.
+  const lowStock = !soldOut && stock <= 5;
   const isReduced = previousPrice !== null && previousPrice > currentPrice;
   const directionsUrl = getDirectionsUrl(
     product.seller.latitude,
@@ -79,13 +83,15 @@ export function ProductInfoCard({
                 /{product.scalingType}
               </span>
             </div>
-            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold tabular-nums ${
               soldOut
                 ? "border border-red-200 bg-red-50 text-red-700"
-                : "border border-[#D5E7C4] bg-[#F0F7EB] text-[#457D00]"
+                : lowStock
+                  ? "border border-amber-200 bg-amber-50 text-amber-800"
+                  : "border border-[#D5E7C4] bg-[#F0F7EB] text-[#457D00]"
             }`}>
-              {!soldOut && <Check className="size-3 text-[#457D00]" />}
-              {soldOut ? "Sold out" : `${Number(product.productQty).toLocaleString()} ${product.scalingType} available`}
+              {!soldOut && !lowStock && <Check className="size-3.5 text-[#457D00]" />}
+              {soldOut ? "Sold out" : `${lowStock ? "Only " : ""}${stockText} ${product.scalingType} ${lowStock ? "left" : "available"}`}
             </span>
           </div>
         </div>
@@ -147,9 +153,12 @@ export function ProductInfoCard({
 
         {/* Quantity Input */}
         <div className="space-y-1.5">
-          <label htmlFor="reservation-quantity" className="text-[12px] font-semibold text-foreground">
-            Quantity to reserve
-          </label>
+          <div className="flex items-baseline justify-between gap-2">
+            <label htmlFor="reservation-quantity" className="text-[12px] font-semibold text-foreground">
+              Quantity to reserve
+            </label>
+            {!soldOut ? <span className="text-[12px] text-muted-foreground">Max {stockText} {product.scalingType}</span> : null}
+          </div>
           <input
             id="reservation-quantity"
             type="number"

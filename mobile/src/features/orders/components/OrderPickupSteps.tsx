@@ -42,7 +42,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
       <CardComponent style={styles.card}>
         <Text style={styles.title}>Pickup time</Text>
         <Text style={styles.time}>{order.pickupStart ? `${pickupTime(order.pickupStart)} to ${new Date(order.pickupEnd!).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" })}` : "Set by the buyer"}</Text>
-        {open ? <Text style={styles.hint}>QR {order.qr.status === "active" ? "is active now" : order.qr.status === "not_yet_valid" ? "starts at the pickup time" : "has expired"}. It works until 15 minutes after the pickup time ends.</Text> : null}
+        {open ? <Text style={styles.hint}>QR {order.qr.status === "expired" ? "has expired" : "is active now"}. It works any time, even before the pickup time, until 15 minutes after it ends.</Text> : null}
         <View style={styles.steps} accessibilityLabel="Order progress">
           {stepNames.map((name, index) => {
             const done = !terminal && index <= current;
@@ -55,7 +55,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
       {open && !order.confirmedAt ? (
         <CardComponent style={styles.card}>
           <Text style={styles.title}>Confirm this order</Text>
-          <Text style={styles.hint}>If you do nothing for 3 hours after it was placed, it is confirmed for you. After that the buyer cannot cancel.</Text>
+          <Text style={styles.hint}>If you do nothing for 3 hours after it was placed, it is confirmed for you. After that the buyer cannot cancel. Scanning the buyer's QR also confirms it.</Text>
           <ButtonComponent title="Confirm Order" onPress={() => void run(() => confirmSellerOrder(order.id))} loading={busy} style={styles.button} />
         </CardComponent>
       ) : null}
@@ -63,9 +63,8 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
       {open && order.confirmedAt && !order.readyAt ? (
         <CardComponent style={styles.card}>
           <Text style={styles.title}>Get it ready</Text>
-          {!order.packedAt ? <ButtonComponent title="Mark Packed" onPress={() => void run(() => packSellerOrder(order.id))} loading={busy} variant="secondary" style={styles.button} /> : null}
-          <ButtonComponent title="Mark Ready for Pickup" onPress={() => void run(() => readySellerOrder(order.id))} loading={busy} style={styles.button} />
-          <Text style={styles.hint}>The order is completed only when you scan the buyer's QR at pickup.</Text>
+          <ButtonComponent title="Mark Ready for Pickup" onPress={() => void run(async () => { if (!order.packedAt) await packSellerOrder(order.id); return readySellerOrder(order.id); })} loading={busy} style={styles.button} />
+          <Text style={styles.hint}>You can scan the buyer's QR at any time, even before the pickup time. The order is completed only when you scan.</Text>
         </CardComponent>
       ) : null}
 
