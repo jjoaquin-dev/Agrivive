@@ -19,7 +19,7 @@ async function countOrders(signal: AbortSignal): Promise<Counts> {
   let cursor: string | undefined;
   for (let page = 0; page < 10; page++) {
     const res = await listBuyerOrders(cursor, signal);
-    for (const order of res.orders) counts[order.status]++;
+    for (const order of res.orders) if (order.status in counts) counts[order.status as keyof Counts]++;
     if (!res.nextCursor) break;
     cursor = res.nextCursor;
   }

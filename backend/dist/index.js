@@ -181194,6 +181194,17 @@ async function listSellerInquiries(sellerId, query = {}) {
   });
 }
 
+// src/utils/buyer-reply-notice/index.ts
+async function queueBuyerReplyNotice(tx, input) {
+  await tx.insert(trust_notices).values({
+    noticeKey: input.noticeKey,
+    recipientId: input.buyerId,
+    orderId: input.orderId ?? null,
+    kind: input.kind,
+    sentAt: new Date
+  }).onConflictDoNothing({ target: trust_notices.noticeKey });
+}
+
 // src/utils/pickup/away.ts
 var MAX_AWAY_MS = 14 * 86400000;
 async function awayOverlapMs(tx, sellerId, since, now) {
@@ -181268,6 +181279,12 @@ async function replySellerInquiry(sellerId, inquiryId, reply) {
       sourceId: inquiry.id
     }, now);
     const [updated] = await tx.update(order_inquiries).set({ reply: reply.trim(), repliedAt: now }).where(and(eq(order_inquiries.id, inquiryId), isNull2(order_inquiries.repliedAt))).returning();
+    await queueBuyerReplyNotice(tx, {
+      noticeKey: `inquiry-reply:${inquiry.id}`,
+      buyerId: inquiry.buyerId,
+      orderId: inquiry.orderId,
+      kind: "seller_inquiry_reply"
+    });
     return { updated, flagged: deadlines.flagged ? { orderId: inquiry.orderId, eventKey: deadlines.eventKey } : null };
   });
   if (flagged)
@@ -181420,6 +181437,12 @@ function respondSellerReview(sellerId, orderId, response) {
     const [review] = await tx.update(order_reviews).set({ sellerResponse: response.trim() }).where(and(eq(order_reviews.orderId, orderId), eq(order_reviews.sellerId, sellerId), isNull2(order_reviews.sellerResponse))).returning();
     if (!review)
       throw new OrderError(404, "Unanswered review not found");
+    await queueBuyerReplyNotice(tx, {
+      noticeKey: `review-reply:order:${review.id}`,
+      buyerId: review.buyerId,
+      orderId: review.orderId,
+      kind: "seller_review_reply"
+    });
     return review;
   });
 }
@@ -181431,6 +181454,12 @@ function respondSellerReviewById(sellerId, reviewId, response) {
     const [review] = await tx.update(order_reviews).set({ sellerResponse: response.trim() }).where(and(eq(order_reviews.id, reviewId), eq(order_reviews.sellerId, sellerId), isNull2(order_reviews.sellerResponse))).returning();
     if (!review)
       throw new OrderError(404, "Unanswered review not found");
+    await queueBuyerReplyNotice(tx, {
+      noticeKey: `review-reply:order:${review.id}`,
+      buyerId: review.buyerId,
+      orderId: review.orderId,
+      kind: "seller_review_reply"
+    });
     return review;
   });
 }
@@ -183131,6 +183160,11 @@ async function replySellerProductInquiry(sellerId, inquiryId, reply) {
     const [updated] = await tx.update(product_inquiries).set({ reply: text, repliedAt: now }).where(and(eq(product_inquiries.id, inquiryId), eq(product_inquiries.sellerId, sellerId), isNull2(product_inquiries.repliedAt))).returning();
     if (!updated)
       throw new OrderError(404, "Open product inquiry not found");
+    await queueBuyerReplyNotice(tx, {
+      noticeKey: `inquiry-reply:${inquiry.id}`,
+      buyerId: inquiry.buyerId,
+      kind: "seller_inquiry_reply"
+    });
     const [product] = await tx.select({ name: sellers_product.productName }).from(sellers_product).where(eq(sellers_product.id, inquiry.productId)).limit(1);
     const conversation = await findOrCreateDirectConversation(tx, {
       buyerId: inquiry.buyerId,
@@ -184937,8 +184971,10 @@ async function listBuyerNotices(buyerId) {
       detail: trust_notices.detail,
       createdAt: trust_notices.createdAt,
       sentAt: trust_notices.sentAt,
-      readAt: trust_notices.readAt
-    }).from(trust_notices).where(eq(trust_notices.recipientId, buyerId)).orderBy(desc(trust_notices.createdAt)).limit(100),
+      readAt: trust_notices.readAt,
+      shopName: sellers_profile.shopName,
+      noticeKey: trust_notices.noticeKey
+    }).from(trust_notices).leftJoin(orders, eq(orders.id, trust_notices.orderId)).leftJoin(sellers_profile, eq(sellers_profile.userId, orders.sellersId)).where(eq(trust_notices.recipientId, buyerId)).orderBy(desc(trust_notices.createdAt)).limit(100),
     db2.select({
       id: buyer_listing_notices.id,
       readAt: buyer_listing_notices.readAt,
@@ -184963,12 +184999,12 @@ async function listBuyerNotices(buyerId) {
   const available = productIds.length ? await db2.select({ id: sellers_product.id }).from(sellers_product).innerJoin(sellers_profile, eq(sellers_profile.userId, sellers_product.userId)).innerJoin(user, eq(user.id, sellers_product.userId)).where(and(inArray(sellers_product.id, productIds), eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), gt(sellers_product.productQty, "0"), gt(sellers_product.productPrice, "0"), isNotNull(sellers_product.publishedAt), marketplaceSellerVisibility())) : [];
   const availableIds = new Set(available.map((product) => product.id));
   return [
-    ...orderNotices.map((notice) => ({
+    ...orderNotices.map(({ noticeKey, ...notice }) => ({
       ...notice,
+      event: noticeKey.split(":")[0],
       productId: null,
       sellerId: null,
       productName: null,
-      shopName: null,
       productAvailable: null,
       price: null,
       previousPrice: null,
@@ -185518,6 +185554,18 @@ var buyerSellerFollowParams = t.Object({
   sellerId: t.String({ minLength: 1 })
 });
 
+// src/modules/buyer/services/buyer.seller.follow.list.ts
+async function listBuyerSellerFollows(buyerId) {
+  const rows = await db2.select({
+    sellerId: seller_follows.sellerId,
+    followedAt: seller_follows.createdAt,
+    shopName: sellers_profile.shopName,
+    address: sellers_profile.detailAddress,
+    image: user.image
+  }).from(seller_follows).innerJoin(user, eq(user.id, seller_follows.sellerId)).innerJoin(sellers_profile, and(eq(sellers_profile.userId, seller_follows.sellerId), eq(sellers_profile.isCurrent, true))).where(and(eq(seller_follows.buyerId, buyerId), eq(user.isActive, true))).orderBy(desc(seller_follows.createdAt)).limit(200);
+  return { sellers: rows };
+}
+
 // src/modules/buyer/services/buyer.seller.follow.eligible.ts
 async function requireFollowableSeller(buyerId, sellerId) {
   if (buyerId === sellerId)
@@ -185557,7 +185605,13 @@ function followFailure(error, status) {
   console.error(error);
   return status(500, { message: "Seller follow request failed" });
 }
-var buyerSellerFollowRoute = new Elysia().use(sessionAuth).get("/follows/:sellerId", async ({ session, params, status }) => {
+var buyerSellerFollowRoute = new Elysia().use(sessionAuth).get("/follows", async ({ session, status }) => {
+  try {
+    return await listBuyerSellerFollows(session.userId);
+  } catch (error) {
+    return followFailure(error, status);
+  }
+}, { role: ["buyer"] }).get("/follows/:sellerId", async ({ session, params, status }) => {
   try {
     return await readBuyerSellerFollow(session.userId, params.sellerId);
   } catch (error) {
@@ -188357,6 +188411,13 @@ async function createConversationMessage(userId, conversationId, input) {
       if (!timedByQuestion && !conversation.awaitingReplySince) {
         await tx.update(conversations).set({ awaitingReplySince: now, deadlineStage: 0 }).where(eq(conversations.id, conversationId));
       }
+    }
+    if (userId === conversation.sellerId) {
+      await queueBuyerReplyNotice(tx, {
+        noticeKey: `chat-reply:${conversationId}:${Math.floor(now.getTime() / 3600000)}`,
+        buyerId: conversation.buyerId,
+        kind: "seller_chat_reply"
+      });
     }
     const recipientUserId = userId === conversation.sellerId ? conversation.buyerId : conversation.sellerId;
     const notificationType = userId === conversation.sellerId ? "buyer_message" : "seller_message";
