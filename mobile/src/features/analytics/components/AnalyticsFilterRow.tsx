@@ -30,6 +30,8 @@ export function AnalyticsFilterRow({ range, onSelectRange, unit, onSelectUnit, p
   const [pickerOpen, setPickerOpen] = useState(false);
   const [datesOpen, setDatesOpen] = useState(false);
   const selected = products.find((p) => p.id === productId);
+  // The unit and the produce filters work together, so a sack chip never shows kilo-only produce.
+  const shown = unit ? products.filter((p) => p.scalingType === unit) : products;
 
   return (
     <View style={styles.container}>
@@ -67,7 +69,7 @@ export function AnalyticsFilterRow({ range, onSelectRange, unit, onSelectUnit, p
       <AnalyticsDateSheet visible={datesOpen} range={range} onApply={onSelectRange} onClose={() => setDatesOpen(false)} />
       <AnalyticsProduceSheet
         visible={pickerOpen}
-        products={products}
+        products={shown}
         selectedId={productId}
         onSelect={onSelectProduct}
         onClose={() => setPickerOpen(false)}

@@ -35,7 +35,7 @@ export function ReservePickupModal({ open, sellers, total, loading, error, onClo
         <div className="flex items-start justify-between gap-3 border-b border-[#E5E2DA] p-5">
           <div>
             <h2 className="font-heading text-lg font-bold">{step === "time" ? "Choose your pickup time" : "Review your reservation"}</h2>
-            <p className="text-xs text-neutral-600">{step === "time" ? "Today or tomorrow only, so produce is not held for too long." : "Check everything, then confirm."}</p>
+            <p className="text-xs text-neutral-600">{step === "time" ? "Two quick steps: pick a day, then a time." : "Check everything, then confirm."}</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="flex size-11 items-center justify-center rounded-full hover:bg-neutral-100"><X className="size-5" /></button>
         </div>
@@ -49,7 +49,10 @@ export function ReservePickupModal({ open, sellers, total, loading, error, onClo
           ) : (
             <section key={seller.sellerId} className="space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <h3 className="text-sm font-bold">{seller.shopName}</h3>
+                <div>
+                  <p className="text-xs text-neutral-500">Pickup from</p>
+                  <h3 className="text-base font-bold">{seller.shopName}</h3>
+                </div>
                 {sellers.length > 1 ? <button type="button" onClick={() => setLeft((current) => [...current, seller.sellerId])} className="min-h-11 text-xs font-semibold text-neutral-600 underline">Leave this stall out</button> : null}
               </div>
               <PickupPicker sellerId={seller.sellerId} value={ranges[seller.sellerId] ?? null} blocked={others(seller.sellerId)}

@@ -7,17 +7,7 @@ import { CardComponent } from "../../src/components/CardComponent";
 import { colors, fonts, spacing, touchTargets } from "../../src/theme";
 import { Pressable } from "react-native";
 import { fetchStall, saveStallHours, saveStallSettings, setAwayMode, setClosedToday, type Stall, type StallDay } from "../../src/features/orders/api/seller-pickup";
-import { minuteLabel, stepMinute, weekdayNames } from "../../src/features/stall/stallFormat";
-
-function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (next: number) => void }) {
-  return (
-    <View style={styles.stepper}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Earlier ${label}`} onPress={() => onChange(-1)} style={styles.stepButton}><Minus size={16} color={colors.primary} /></Pressable>
-      <Text style={styles.stepValue}>{minuteLabel(value)}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Later ${label}`} onPress={() => onChange(1)} style={styles.stepButton}><Plus size={16} color={colors.primary} /></Pressable>
-    </View>
-  );
-}
+import { StallHoursEditor } from "../../src/features/stall/components/StallHoursEditor";
 
 export default function StallSetupScreen() {
   const [stall, setStall] = useState<Stall | null>(null);
@@ -78,21 +68,7 @@ export default function StallSetupScreen() {
 
       <CardComponent style={styles.card}>
         <Text style={styles.cardTitle}>Opening hours</Text>
-        {days.map((day) => (
-          <View key={day.weekday} style={styles.dayRow}>
-            <View style={styles.dayHead}>
-              <Text style={styles.dayName}>{weekdayNames[day.weekday]}</Text>
-              <View style={styles.openRow}><Text style={styles.hint}>{day.isClosed ? "Closed" : "Open"}</Text>
-                <Switch value={!day.isClosed} onValueChange={(open) => change(day.weekday, { isClosed: !open, opensMinute: day.opensMinute >= day.closesMinute ? 480 : day.opensMinute, closesMinute: day.closesMinute <= day.opensMinute ? 1200 : day.closesMinute })} trackColor={{ true: colors.primary }} accessibilityLabel={`${weekdayNames[day.weekday]} open`} /></View>
-            </View>
-            {!day.isClosed ? (
-              <View style={styles.times}>
-                <View style={styles.timeRow}><Text style={styles.to}>From</Text><Stepper label="opening time" value={day.opensMinute} onChange={(d) => change(day.weekday, { opensMinute: stepMinute(day.opensMinute, d as 1 | -1, 0, day.closesMinute - 60) })} /></View>
-                <View style={styles.timeRow}><Text style={styles.to}>To</Text><Stepper label="closing time" value={day.closesMinute} onChange={(d) => change(day.weekday, { closesMinute: stepMinute(day.closesMinute, d as 1 | -1, day.opensMinute + 60, 1440) })} /></View>
-              </View>
-            ) : null}
-          </View>
-        ))}
+        <StallHoursEditor days={days} onChange={change} />
       </CardComponent>
 
       <CardComponent style={styles.card}>
@@ -130,14 +106,6 @@ const styles = StyleSheet.create({
   label: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text, marginTop: spacing.md },
   switchRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   switchText: { flex: 1 },
-  dayRow: { borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: spacing.md, marginTop: spacing.sm },
-  dayHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  dayName: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
-  openRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  times: { gap: spacing.sm, marginTop: spacing.sm },
-  timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  to: { fontFamily: fonts.body.regular, color: colors.textMuted },
-  stepper: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   stepButton: { width: touchTargets.min, height: touchTargets.min, borderRadius: touchTargets.min / 2, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   stepValue: { minWidth: 72, textAlign: "center", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
   limitRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.xs },

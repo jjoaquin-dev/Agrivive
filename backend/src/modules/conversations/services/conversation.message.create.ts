@@ -12,11 +12,8 @@ import type { SendConversationMessageBody } from "../model/conversation";
 import { ConversationError } from "./conversation.error";
 import { publishConversationMessage } from "./conversation.realtime";
 import { enqueueConversationNotification } from "../../notifications/services/notifications.outbox.enqueue-conversation";
-<<<<<<< Updated upstream
 import { ChatRuleError, HIDDEN_MESSAGE_TEXT, screenChatMessage } from "../../../utils/trust/chat-rules";
-=======
 import { queueBuyerReplyNotice } from "../../../utils/buyer-reply-notice";
->>>>>>> Stashed changes
 import { presignConversationMessageBody } from "../../../utils/s3-conversation";
 
 export async function createConversationMessage(userId: string, conversationId: string, input: SendConversationMessageBody) {

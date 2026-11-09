@@ -44,7 +44,11 @@
           "image": "./assets/brand/agrivive-logo-full.png",
           "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#F8F6F1"
+          "backgroundColor": "#F8F6F1",
+          "android": {
+            "image": "./assets/brand/agrivive-logo-icon.png",
+            "imageWidth": 150
+          }
         }
       ],
       [

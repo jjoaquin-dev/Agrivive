@@ -42,6 +42,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
 
       <View style={styles.chartWrapper}>
         <BarChart
+          key={bars.map((b: { value: number }) => b.value).join(",")}
           data={bars}
           barWidth={30}
           spacing={18}
@@ -60,8 +61,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
           noOfSections={4}
           width={chartWidth}
           height={170}
-          isAnimated
-        />
+          />
       </View>
 
       <View style={styles.left}>

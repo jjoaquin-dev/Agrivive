@@ -5,47 +5,25 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.xs,
   },
-  presetsSection: {
-    marginBottom: spacing.sm,
-  },
-  presetTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  presetsRow: {
-    gap: spacing.xs,
-  },
-  presetChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: radii.full,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  presetChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  presetChipText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: colors.text,
-  },
-  presetChipTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
   mapContainer: {
     borderRadius: radii.card,
     overflow: "hidden",
     borderWidth: 1.5,
     borderColor: colors.border,
     backgroundColor: colors.surfaceMuted,
+  },
+  expandButton: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 44,
+    height: 44,
+    borderRadius: radii.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
   },
   mapContainerError: {
     borderColor: colors.error,

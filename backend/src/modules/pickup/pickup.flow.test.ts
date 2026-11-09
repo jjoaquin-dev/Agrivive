@@ -258,19 +258,18 @@ describe("confirmation and cancellation", () => {
 });
 
 describe("QR pickup", () => {
-  test("only a valid scan inside the window completes the order, once", async () => {
+  test("a valid scan, even before the pickup time, completes the order once", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller(); const other = await addSeller();
     const id = await reserve(buyer, seller);
     const payload = await qr(id, seller.id);
-    expect((await fail(scanSellerOrder(seller.id, { qrPayload: payload }))).message).toContain("not valid yet");
-    await openWindow(id);
+    // Scanning before the pickup time is allowed: early buyers are served, and points only count for a no-show.
     expect((await fail(scanSellerOrder(other.id, { qrPayload: payload }))).statusCode).toBe(403);
     expect((await fail(scanSellerOrder(seller.id, { qrPayload: "v1.bad.bad" }))).statusCode).toBe(400);
     await scanSellerOrder(seller.id, { qrPayload: payload });
     expect((await orderRow(id)).status).toBe("completed");
     expect((await fail(scanSellerOrder(seller.id, { qrPayload: payload }))).message).toContain("already completed");
     const scans = (await pg.select().from(schema.order_qr_scans)).map((s) => s.result);
-    expect(scans).toEqual(expect.arrayContaining(["ok", "not_yet_valid", "wrong_seller", "invalid", "completed"]));
+    expect(scans).toEqual(expect.arrayContaining(["ok", "wrong_seller", "invalid", "completed"]));
   });
   test("the QR still works 15 minutes after the slot ends and is expired after that", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
@@ -674,6 +673,40 @@ describe("Away mode", () => {
     expect(await points(seller.id)).toBe(0);
     const notices = (await pg.select().from(schema.trust_notices)).map((n) => n.kind);
     expect(notices).toEqual(expect.arrayContaining(["inquiry_12h_reminder", "inquiry_24h_warning"]));
+  });
+});
+
+describe("seller reply deadlines (FTM-03 to FTM-05)", () => {
+  const kinds = async () => (await pg.select().from(schema.trust_notices)).map((n) => n.kind).filter((kind) => kind.startsWith("inquiry"));
+  async function ask(hoursAgo: number) {
+    const buyer = await addUser("buyer"); const seller = await addSeller();
+    const id = await reserve(buyer, seller);
+    await pg.insert(schema.order_inquiries).values({ orderId: id, buyerId: buyer, sellerId: seller.id, question: "Is it fresh?", createdAt: new Date(Date.now() - hoursAgo * HOUR) });
+    await processInquiryDeadlines();
+    return seller.id;
+  }
+  test("FTM-03 after 12 hours the seller gets a reminder and no points", async () => {
+    const seller = await ask(13);
+    expect(await kinds()).toEqual(["inquiry_12h_reminder"]);
+    expect(await points(seller)).toBe(0);
+  });
+  test("FTM-04 after 24 hours the seller gets a warning and the buyer is told, with no points yet", async () => {
+    const seller = await ask(25);
+    expect(await kinds()).toEqual(expect.arrayContaining(["inquiry_12h_reminder", "inquiry_24h_warning", "inquiry_24h_buyer_notice"]));
+    expect(await points(seller)).toBe(0);
+  });
+  test("FTM-05 after 48 hours the seller is marked non-responsive and gets 1 point, once", async () => {
+    const seller = await ask(49);
+    expect(await points(seller)).toBe(1);
+    await processInquiryDeadlines();
+    expect(await points(seller)).toBe(1);
+    const events = await pg.select().from(schema.trust_events).where(eq(schema.trust_events.subjectId, seller));
+    expect(events.map((e) => [e.kind, e.classification])).toEqual([["inquiry_non_response", "verified"]]);
+  });
+  test("FTM-01 a seller with no violations has 0 points and no action", async () => {
+    const seller = (await addSeller()).id;
+    expect(await points(seller)).toBe(0);
+    expect((await readTrustStanding(seller)).level).toBe("good");
   });
 });
 

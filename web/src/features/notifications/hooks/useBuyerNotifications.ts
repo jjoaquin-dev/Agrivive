@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { authClient } from "@/src/lib/auth-client";
 import { isAbortError } from "@/src/lib/api";
+import { usePolling } from "@/src/lib/usePolling";
 import { listBuyerNotices, markAllBuyerNoticesRead, markBuyerNoticeRead } from "../api/notices";
 import type { BuyerNotice } from "../types";
 
@@ -48,6 +49,12 @@ export function useBuyerNotifications() {
     void load(controller.signal);
     return () => controller.abort();
   }, [load, session?.user?.id, sessionPending]);
+
+  // Quiet refresh so new notices and the bell dot show up without a page reload.
+  usePolling(async (signal) => {
+    const result = await listBuyerNotices(signal);
+    if (!signal.aborted) setNotices(result);
+  }, { enabled: Boolean(session?.user) && !loading, intervalMs: 20_000, runImmediately: false });
 
   const unreadCount = useMemo(
     () => notices.filter((n) => !n.readAt).length,

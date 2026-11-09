@@ -9,7 +9,6 @@ import { getOrder } from "../../../utils/order-read";
 import { OrderError } from "../../../utils/order-types";
 import { createSellerNotification } from "../../../utils/seller-notifications";
 import { notifyBuyer } from "../../../utils/pickup/notify";
-import { formatManilaTime } from "../../../utils/pickup/manila";
 import { qrStatus } from "../../../utils/pickup/qr-window";
 
 /** A rejected scan, with the word we keep in the scan history. */
@@ -18,8 +17,8 @@ class ScanError extends OrderError {
 }
 
 /**
- * Completes a pickup. The QR must be real, belong to this seller's order, be inside its window (from the start of the
- * pickup time until 15 minutes after its end), and the order must still be open with no decline waiting.
+ * Completes a pickup. The QR must be real, belong to this seller's order, not be past its window (any time up to 15 minutes after
+ * the pickup time ends, so an early buyer can be served), and the order must still be open with no decline waiting.
  * Every try is saved in the scan history; only a valid scan completes the order, and only once.
  */
 export async function scanSellerOrder(sellerId: string, body: ScanOrderInput) {
@@ -71,9 +70,6 @@ async function completeScan(sellerId: string, orderId: string, body: ScanOrderIn
     const window = qrStatus(current.pickupStart, current.pickupEnd, now);
     if (window === "expired" || (current.expiresAt && current.expiresAt <= now)) {
       throw new ScanError("expired", 410, "This QR has expired and cannot be used. The buyer must place a new order.");
-    }
-    if (window === "not_yet_valid") {
-      throw new ScanError("not_yet_valid", 409, `This QR is not valid yet. It works from ${formatManilaTime(current.pickupStart!)}.`);
     }
     const [openDecline] = await tx.select({ id: order_declines.id }).from(order_declines)
       .where(and(eq(order_declines.orderId, orderId), inArray(order_declines.status, ["pending_seller"]))).limit(1);

@@ -8,6 +8,6 @@ export async function getSellerAnalytics(
   query: SellerAnalyticsQuery,
 ): Promise<SellerAnalyticsResponse> {
   const [metrics, insights] = await Promise.all([getSellerAnalyticsMetrics(sellerId, query), getSellerAnalyticsInsights(sellerId, query)]);
-  const generated = await generateSellerAnalyticsSummary(metrics);
-  return { ...metrics, insights, summary: generated.summary, summaryStatus: generated.status };
+  const generated = await generateSellerAnalyticsSummary(sellerId, metrics);
+  return { ...metrics, insights, summary: generated.summary, summaryStatus: generated.status, summarySource: generated.source };
 }

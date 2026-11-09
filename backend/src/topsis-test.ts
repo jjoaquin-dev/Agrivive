@@ -64,7 +64,7 @@ const pairwise_matrix:number[][] = criterias.map((ctr)=>[
 const powered_matrix = math.sum(
     math.dotPow(pairwise_matrix, 2),
     0
-).valueOf() as number[];
+).valueOf() as unknown as number[];
 
 const denominator = powered_matrix.map((pm)=> math.sqrt(pm))
 const normalized_matrix = math.dotDivide(pairwise_matrix,denominator)
@@ -79,7 +79,7 @@ const weight_of_criterion = math.dotMultiply(normalized_matrix,criteria_weights)
 const ideal_best = math.max(weight_of_criterion,0)
 const subtract_best = math.subtract(weight_of_criterion,ideal_best)
 const powered_best = math.dotPow(subtract_best,2) as number[][]
-const summed_best = math.sum(powered_best,1).valueOf() as number[]
+const summed_best = math.sum(powered_best,1).valueOf() as unknown as number[]
 const distance_to_ideal_best = summed_best.map((value)=> math.sqrt(value))
 
 
@@ -88,7 +88,7 @@ const distance_to_ideal_best = summed_best.map((value)=> math.sqrt(value))
 const ideal_worst = math.min(weight_of_criterion,0)
 const subtract_worst = math.subtract(weight_of_criterion,ideal_worst)
 const powered_worst = math.dotPow(subtract_worst,2) as number[][]
-const summed_worst = math.sum(powered_worst,1).valueOf() as number[]
+const summed_worst = math.sum(powered_worst,1).valueOf() as unknown as number[]
 const distance_to_ideal_worst = summed_worst.map((value)=> math.sqrt(value))
 
 

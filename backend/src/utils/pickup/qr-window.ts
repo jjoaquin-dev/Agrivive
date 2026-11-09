@@ -13,12 +13,13 @@ export function qrWindow(pickupStart: Date, pickupEnd: Date) {
   return { validFrom: pickupStart, validUntil: new Date(pickupEnd.getTime() + QR_GRACE_MINUTES * MINUTE_MS) };
 }
 
-/** Starts at the slot start and ends 15 minutes after the slot end (both ends included). */
+/**
+ * Works from the moment the reservation is made until 15 minutes after the slot end (that end is included).
+ * An early buyer is never turned away: points only count when the buyer does not show up by the end of the time.
+ */
 export function qrStatus(pickupStart: Date | null, pickupEnd: Date | null, now = new Date()): QrStatus {
   if (!pickupStart || !pickupEnd) return "active";
-  const { validFrom, validUntil } = qrWindow(pickupStart, pickupEnd);
-  if (now.getTime() < validFrom.getTime()) return "not_yet_valid";
-  if (now.getTime() > validUntil.getTime()) return "expired";
+  if (now.getTime() > qrWindow(pickupStart, pickupEnd).validUntil.getTime()) return "expired";
   return "active";
 }
 

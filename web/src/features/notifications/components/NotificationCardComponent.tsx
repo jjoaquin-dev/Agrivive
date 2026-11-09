@@ -34,22 +34,19 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
   const isGeneric = notice.kind in genericTitles;
   const isUnread = !notice.readAt;
 
-<<<<<<< Updated upstream
-  const title = isGeneric
-    ? genericTitles[notice.kind]
-=======
   const isInquiryReply = notice.kind === "seller_inquiry_reply";
   const isReviewReply = notice.kind === "seller_review_reply";
   const isChatReply = notice.kind === "seller_chat_reply";
   const isReply = isInquiryReply || isReviewReply || isChatReply;
 
-  const title = isInquiryReply
+  const title = isGeneric
+    ? genericTitles[notice.kind]
+    : isInquiryReply
     ? "Seller Answered Your Question"
     : isReviewReply
     ? "Seller Replied to Your Review"
     : isChatReply
     ? "New Reply From a Seller"
->>>>>>> Stashed changes
     : isRestriction
     ? "Reservations Temporarily Paused"
     : isWarning
@@ -66,17 +63,14 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? "Inquiry Awaiting Seller Response"
     : "Pickup Completed";
 
-<<<<<<< Updated upstream
   const description = isGeneric
     ? (notice.reason ?? "")
-=======
-  const description = isInquiryReply
+    : isInquiryReply
     ? "A seller answered your question. Open it to read the reply."
     : isReviewReply
     ? "A seller wrote a reply to the review you left."
     : isChatReply
     ? "A seller sent you a message. Open your chat to read it."
->>>>>>> Stashed changes
     : isTrustNotice
     ? (notice.reason || (isRestriction ? "Reservations on your account are temporarily paused." : "Please avoid frequent cancellations to keep your reservations active."))
     : isPriceDrop

@@ -30,7 +30,7 @@ const normalized_matrix = math.dotDivide(matrix,sum_matrix)
 
 //get criteria_weights
 
-const criteria_weights = math.mean(normalized_matrix,1).valueOf() as number[]
+const criteria_weights = math.mean(normalized_matrix,1).valueOf() as unknown as number[]
 
 return criteria_weights;
 

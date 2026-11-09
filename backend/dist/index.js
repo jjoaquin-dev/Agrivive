@@ -179635,10 +179635,7 @@ function qrWindow(pickupStart, pickupEnd) {
 function qrStatus(pickupStart, pickupEnd, now = new Date) {
   if (!pickupStart || !pickupEnd)
     return "active";
-  const { validFrom, validUntil } = qrWindow(pickupStart, pickupEnd);
-  if (now.getTime() < validFrom.getTime())
-    return "not_yet_valid";
-  if (now.getTime() > validUntil.getTime())
+  if (now.getTime() > qrWindow(pickupStart, pickupEnd).validUntil.getTime())
     return "expired";
   return "active";
 }
@@ -179666,7 +179663,7 @@ function pickupFields(order, now = new Date) {
     pickupStart: order.pickupStart,
     pickupEnd: order.pickupEnd,
     progress: orderProgress(order),
-    qr: { status: open ? status : "expired", validFrom: window2?.validFrom ?? null, validUntil: window2?.validUntil ?? null },
+    qr: { status: open ? status : "expired", validFrom: null, validUntil: window2?.validUntil ?? null },
     canCancel,
     cancelBlockedReason: open && order.confirmedAt ? CANCEL_BLOCKED_MESSAGE : null,
     disclaimer: PICKUP_DISCLAIMER
@@ -179973,9 +179970,6 @@ async function completeScan(sellerId, orderId, body) {
     const window2 = qrStatus(current.pickupStart, current.pickupEnd, now);
     if (window2 === "expired" || current.expiresAt && current.expiresAt <= now) {
       throw new ScanError("expired", 410, "This QR has expired and cannot be used. The buyer must place a new order.");
-    }
-    if (window2 === "not_yet_valid") {
-      throw new ScanError("not_yet_valid", 409, `This QR is not valid yet. It works from ${formatManilaTime(current.pickupStart)}.`);
     }
     const [openDecline] = await tx.select({ id: order_declines.id }).from(order_declines).where(and(eq(order_declines.orderId, orderId), inArray(order_declines.status, ["pending_seller"]))).limit(1);
     if (openDecline)
@@ -182580,9 +182574,9 @@ async function getSellerAnalyticsInsights(sellerId, query) {
   };
 }
 
-// src/modules/seller/services/seller.analytics.summary.ts
+// src/modules/seller/services/seller.analytics.summary.template.ts
 var pesos = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
-async function generateSellerAnalyticsSummary(analytics) {
+function buildTemplateSummary(analytics) {
   const { metrics, notComputable, period, filter } = analytics;
   const subject = filter.productName ? `${filter.productName} completed sales` : "Completed sales";
   const unitLabel = filter.unit === "kilo" ? "kg" : filter.unit ? `${filter.unit}s` : "units";
@@ -182606,14 +182600,114 @@ async function generateSellerAnalyticsSummary(analytics) {
   const revenueSentence = Number.isFinite(total) && total > 0 ? `Completed pickups totaled ${pesos.format(total)}.` : "";
   const recurringSentence = metrics.recurringListings > 0 ? `Repeat listings: ${metrics.recurringListings}.` : "";
   const sentences = [trendSentence, volumeSentence, revenueSentence, recurringSentence].filter(Boolean);
-  return { summary: sentences.join(" "), status: "generated" };
+  return sentences.join(" ");
+}
+
+// src/utils/groq/index.ts
+var endpoint = "https://api.groq.com/openai/v1/chat/completions";
+async function askGroq(input) {
+  const key = process.env.GROQ_API_KEY?.trim();
+  if (!key || key.startsWith("replace-with"))
+    return null;
+  const model = input.model || process.env.GROQ_SUMMARY_MODEL?.trim() || "openai/gpt-oss-20b";
+  const timeoutMs = Number(process.env.GROQ_TIMEOUT_MS) || 4000;
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(timeoutMs),
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        max_tokens: input.maxTokens ?? (model.includes("gpt-oss") ? 700 : 220),
+        ...model.includes("gpt-oss") ? { reasoning_effort: "low" } : {},
+        messages: [{ role: "system", content: input.system }, { role: "user", content: input.user }]
+      })
+    });
+    if (!response.ok) {
+      console.warn("Groq request failed", response.status);
+      return null;
+    }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (error) {
+    console.warn("Groq request did not finish", error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
+// src/modules/seller/services/seller.analytics.summary.check.ts
+var numberPattern = /\d[\d,]*(?:\.\d+)?/g;
+var numbersIn = (text) => (text.match(numberPattern) ?? []).map((token) => Number(token.replace(/,/g, ""))).filter(Number.isFinite);
+function summaryUsesOnlyFacts(summary, facts) {
+  const allowed = numbersIn(facts);
+  return numbersIn(summary).every((value) => allowed.some((fact) => Math.abs(fact - value) < 0.005 || Math.round(fact) === value || Math.abs(Math.round(fact * 10) / 10 - value) < 0.005));
+}
+
+// src/modules/seller/services/seller.analytics.summary.facts.ts
+function buildSummaryFacts(analytics) {
+  const { metrics: m, notComputable, filter } = analytics;
+  const word = filter.unit === "kilo" ? "kg" : filter.unit ? `${filter.unit}s` : "units";
+  const lines = [
+    `Produce: ${filter.productName ?? "all produce"}`,
+    Number(m.postedQuantity) > 0 ? `Posted for sale in these days: ${m.postedQuantity} ${word}` : "Posted for sale in these days: nothing new was posted (the pickups came from produce posted earlier)",
+    `Picked up by buyers: ${m.completedQuantity} ${word}`,
+    `Earned from pickups: \u20B1${m.completedSalesTotal}`,
+    `Cancelled: ${m.cancelledQuantity} ${word}`,
+    `Expired: ${m.expiredQuantity} ${word}`,
+    `Repeat listings: ${m.recurringListings}`,
+    notComputable.sellThroughRate || m.sellThroughRate === null ? "Share of posted produce that sold: cannot be worked out because nothing new was posted" : `Share of posted produce that sold: ${m.sellThroughRate.toFixed(2)}%`,
+    notComputable.completedQuantityChange || m.completedQuantityChange === null ? "Change from the days before: cannot be compared because there were no sales before" : `Change in picked up amount from the days before: ${m.completedQuantityChange.toFixed(2)}%`
+  ];
+  return lines.join(`
+`);
+}
+
+// src/modules/seller/services/seller.analytics.summary.groq.ts
+var system = [
+  "You write a short summary of a market seller's sales for the seller to read.",
+  "Use only the facts you are given. Do not add advice, guesses, reasons or any number that is not in the facts.",
+  "Write 2 or 3 short sentences in plain, simple words. Do not write dates. No lists, no markdown, no emojis.",
+  "Say kg for kilos. Say pesos with the peso sign. Say what the facts say about posting and do not say more."
+].join(" ");
+async function writeGroqSummary(analytics) {
+  const facts = buildSummaryFacts(analytics);
+  const text = (await askGroq({ system, user: `Facts:
+${facts}` }))?.replace(/[*_#`]/g, "").replace(/\s+/g, " ").trim();
+  if (!text || text.length < 20 || text.length > 600)
+    return null;
+  if (!summaryUsesOnlyFacts(text, facts)) {
+    console.warn("Groq summary used a number that was not in the facts; using the template");
+    return null;
+  }
+  return text;
+}
+
+// src/modules/seller/services/seller.analytics.summary.ts
+var cache5 = new Map;
+var MAX_ENTRIES = 300;
+var KEEP_MS = 30 * 60000;
+var RETRY_MS = 60000;
+async function generateSellerAnalyticsSummary(sellerId, analytics) {
+  const template = buildTemplateSummary(analytics);
+  const key = `${sellerId}:${buildSummaryFacts(analytics)}`;
+  const now = Date.now();
+  const saved = cache5.get(key);
+  if (saved && saved.expiresAt > now) {
+    return saved.summary ? { summary: saved.summary, status: "generated", source: "ai" } : { summary: template, status: "generated", source: "template" };
+  }
+  const written = await writeGroqSummary(analytics);
+  if (cache5.size >= MAX_ENTRIES)
+    cache5.delete(cache5.keys().next().value);
+  cache5.set(key, { summary: written, expiresAt: now + (written ? KEEP_MS : RETRY_MS) });
+  return written ? { summary: written, status: "generated", source: "ai" } : { summary: template, status: "generated", source: "template" };
 }
 
 // src/modules/seller/services/seller.analytics.ts
 async function getSellerAnalytics(sellerId, query) {
   const [metrics, insights] = await Promise.all([getSellerAnalyticsMetrics(sellerId, query), getSellerAnalyticsInsights(sellerId, query)]);
-  const generated = await generateSellerAnalyticsSummary(metrics);
-  return { ...metrics, insights, summary: generated.summary, summaryStatus: generated.status };
+  const generated = await generateSellerAnalyticsSummary(sellerId, metrics);
+  return { ...metrics, insights, summary: generated.summary, summaryStatus: generated.status, summarySource: generated.source };
 }
 
 // src/modules/seller/index/seller.analytics.ts
@@ -182708,9 +182802,9 @@ function fetchAdvisorySource(url, signal) {
 
 // src/modules/seller/services/seller.holidays.ts
 var CACHE_TTL_MS = 60 * 60 * 1000;
-var cache5 = new Map;
+var cache6 = new Map;
 async function fetchPhilippineHolidays(year) {
-  const cached = cache5.get(year);
+  const cached = cache6.get(year);
   if (cached && cached.expiresAt > Date.now())
     return cached.value;
   const controller = new AbortController;
@@ -182734,22 +182828,22 @@ async function fetchPhilippineHolidays(year) {
     clearTimeout(timeout);
   }
   if (value) {
-    cache5.set(year, { expiresAt: Date.now() + CACHE_TTL_MS, value });
+    cache6.set(year, { expiresAt: Date.now() + CACHE_TTL_MS, value });
   } else {
-    cache5.delete(year);
+    cache6.delete(year);
   }
   return value;
 }
 
 // src/modules/seller/services/seller.weather.ts
 var CACHE_TTL_MS2 = 10 * 60 * 1000;
-var cache6 = new Map;
+var cache7 = new Map;
 function finiteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
 async function fetchSellerWeather(latitude, longitude) {
   const key = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
-  const cached = cache6.get(key);
+  const cached = cache7.get(key);
   if (cached && cached.expiresAt > Date.now())
     return cached.value;
   const controller = new AbortController;
@@ -182806,9 +182900,9 @@ async function fetchSellerWeather(latitude, longitude) {
     clearTimeout(timeout);
   }
   if (value) {
-    cache6.set(key, { expiresAt: Date.now() + CACHE_TTL_MS2, value });
+    cache7.set(key, { expiresAt: Date.now() + CACHE_TTL_MS2, value });
   } else {
-    cache6.delete(key);
+    cache7.delete(key);
   }
   return value;
 }
@@ -185739,7 +185833,7 @@ async function createPickupDecline(buyerId, orderId, body) {
     throw new OrderError(404, "Order not found");
   if (orderRow.status !== "pending")
     throw new OrderError(409, "This order is no longer open for pickup.");
-  if (qrStatus(orderRow.pickupStart, orderRow.pickupEnd) !== "active")
+  if (qrStatus(orderRow.pickupStart, orderRow.pickupEnd) !== "active" || orderRow.pickupStart && orderRow.pickupStart > new Date)
     throw new OrderError(409, "You can decline only during your pickup time.");
   const { key, hash } = await storeDeclinePhoto(orderId, body.photo, "buyer", body.capturedAt);
   const result = await db2.transaction(async (tx) => {

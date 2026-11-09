@@ -15,6 +15,12 @@ on:
       - "mobile/**"
       - ".github/workflows/mobile-ci.yml"
 
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mobile:
     runs-on: ubuntu-latest
@@ -35,7 +41,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.4.4
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
