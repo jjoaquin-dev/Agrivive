@@ -114,7 +114,6 @@ export function ConversationList({
         </div>
       </div>
 
-<<<<<<< HEAD
       {view !== "inbox" ? (
         <button
           type="button"
@@ -128,11 +127,6 @@ export function ConversationList({
       /* Pill Filter Tabs */
       <div className="mt-2 flex items-center justify-between rounded-full bg-[#F5F6EE] p-1">
         {(["all", "unread", "important"] as TabType[]).map((tab) => {
-=======
-      {/* Pill Filter Tabs */}
-      <div className="mt-2 flex items-center overflow-x-auto rounded-full bg-[#F5F6EE] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {(["all", "unread", "important", "closed", "archived"] as TabType[]).map((tab) => {
->>>>>>> 157e0b4b8f6849ab1bbbb49656019b735d1fcf8c
           const isActive = activeTab === tab;
           return (
             <button
