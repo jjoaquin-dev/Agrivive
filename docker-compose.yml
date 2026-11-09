@@ -101,6 +101,33 @@ services:
       - caddy_config:/config
     restart: unless-stopped
 
+  n8n:
+    image: n8nio/n8n:1.100.1
+    network_mode: host
+    environment:
+      N8N_HOST: ${N8N_DOMAIN}
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: https://${N8N_DOMAIN}/
+      N8N_PROXY_HOPS: "1"
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      GENERIC_TIMEZONE: Asia/Manila
+      TZ: Asia/Manila
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+    volumes:
+      - n8n_data:/home/node/.n8n
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
 volumes:
   caddy_data:
   caddy_config:
+  n8n_data:
