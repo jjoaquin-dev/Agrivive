@@ -47,13 +47,13 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
       <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityHint="Shows the breakdown" style={cardStyles.card}>
         <Text style={cardStyles.title}>How Much Sold</Text>
         <View style={styles.rateRow}>
-          <Text style={styles.rate}>{rate === null ? "N/A" : `${rate.toFixed(0)}%`}</Text>
-          <Text style={styles.rateNote}>{metrics.completedQuantity} of {metrics.postedQuantity} {word} posted</Text>
+          <Text style={styles.rate}>{rate === null ? `${metrics.completedQuantity} ${word} sold` : `${rate.toFixed(0)}%`}</Text>
+          <Text style={styles.rateNote}>{rate === null ? "No new produce posted in these days" : `${metrics.completedQuantity} of ${metrics.postedQuantity} ${word} posted`}</Text>
         </View>
         <View style={styles.track}>
           <View style={[styles.fill, { width: `${Math.min(100, Math.max(0, rate ?? 0))}%` }]} />
         </View>
-        <Text style={styles.caption}>{rate === null ? "Nothing was posted in these days." : "Share of posted produce that was picked up"}</Text>
+        <Text style={styles.caption}>{rate === null ? "A share needs produce posted in these days. Tap to see what sold." : "Share of posted produce that was picked up"}</Text>
       </Pressable>
       <AnalyticsDetailSheet visible={open} title="Sold and Posted" subtitle="Where the produce you posted went." rows={movementRows(metrics, word)} onClose={() => setOpen(false)} />
     </>

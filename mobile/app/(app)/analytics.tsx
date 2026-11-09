@@ -36,6 +36,18 @@ export default function SellerAnalyticsScreen() {
   const [unit, setUnit] = useState<AnalyticsUnit | undefined>();
 
   const { analytics, loading, refreshing, error, refresh } = useSellerAnalytics(range, productId, unit);
+
+  // Picking a unit drops a produce of another unit. Picking a produce switches the unit to match, so the two never cancel each other out.
+  const selectUnit = (next: AnalyticsUnit | undefined) => {
+    setUnit(next);
+    const chosen = products.find((p) => p.id === productId);
+    if (next && chosen && chosen.scalingType !== next) setProductId(undefined);
+  };
+  const selectProduct = (id: string | undefined) => {
+    setProductId(id);
+    const chosen = products.find((p) => p.id === id);
+    if (chosen) setUnit(chosen.scalingType);
+  };
   const showSkeleton = loading && !refreshing;
 
   return (
@@ -54,9 +66,9 @@ export default function SellerAnalyticsScreen() {
           range={range}
           onSelectRange={setRange}
           unit={unit}
-          onSelectUnit={setUnit}
+          onSelectUnit={selectUnit}
           productId={productId}
-          onSelectProduct={setProductId}
+          onSelectProduct={selectProduct}
           products={products}
         />
 
@@ -89,7 +101,7 @@ export default function SellerAnalyticsScreen() {
                 changeNotComputable={analytics.notComputable.completedQuantityChange}
               />
               <AnalyticsQuickStats insights={analytics.insights} />
-              <AnalyticsDescriptiveSummary summary={analytics.summary} />
+              <AnalyticsDescriptiveSummary summary={analytics.summary} source={analytics.summarySource} />
               <AnalyticsTopProduce items={analytics.insights.topProduce} />
               <AnalyticsDailySales days={analytics.insights.dailySales} />
               <AnalyticsTapCard title="Where Your Produce Went" subtitle="The parts behind the chart." rows={movementRows(analytics.metrics, unitWord(unit))}>

@@ -3,6 +3,7 @@ import { Pressable, Text } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts } from "../../src/theme";
+import { OfflineBanner } from "../../src/components/OfflineBanner";
 import { DailyAdvisoryPopup } from "../../src/features/advisories/components/DailyAdvisoryPopup";
 
 function CancelButton({ onPress }: { onPress: () => void }) {
@@ -28,6 +29,7 @@ export default function AppLayout() {
   return (
     <>
     <DailyAdvisoryPopup />
+    <OfflineBanner />
     <Stack
       screenOptions={{
         headerStyle: {

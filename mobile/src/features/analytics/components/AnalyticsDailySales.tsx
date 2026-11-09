@@ -51,6 +51,7 @@ export function AnalyticsDailySales({ days }: { days: SellerAnalyticsInsights["d
       </Pressable>
       <View style={styles.chartWrapper}>
         <BarChart
+          key={data.map((d) => d.value).join(",")}
           data={data}
           barWidth={barWidth}
           spacing={gap}
@@ -68,8 +69,7 @@ export function AnalyticsDailySales({ days }: { days: SellerAnalyticsInsights["d
           yAxisLabelWidth={44}
           width={chartWidth}
           height={150}
-          isAnimated
-        />
+          />
       </View>
       <AnalyticsDetailSheet visible={open} title="Money By Day" subtitle="Your best days in these dates." onClose={() => setOpen(false)}
         rows={[{ label: "Total earned", value: pesoText(total), strong: true }, ...ranked.map((b) => ({ label: label(b), value: `${pesoText(b.sales)} · ${b.pickups} pickup${b.pickups === 1 ? "" : "s"}` })),

@@ -62,4 +62,6 @@ export type SellerAnalyticsResponse = SellerAnalyticsMetrics & {
   insights: SellerAnalyticsInsights;
   summary: string | null;
   summaryStatus: "generated" | "unavailable";
+  /** "ai" when Groq wrote it, "template" when it was built from fixed sentences. */
+  summarySource: "ai" | "template";
 };

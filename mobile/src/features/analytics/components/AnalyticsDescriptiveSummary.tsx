@@ -4,14 +4,14 @@ import { FileText } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
 
-export function AnalyticsDescriptiveSummary({ summary }: { summary: string | null }) {
+export function AnalyticsDescriptiveSummary({ summary, source }: { summary: string | null; source?: "ai" | "template" }) {
   return (
     <View style={cardStyles.card}>
       <View style={styles.header}>
         <View style={styles.icon}><FileText size={16} color={colors.primary} /></View>
         <View>
           <Text style={styles.title}>Summary</Text>
-          <Text style={cardStyles.subtitle}>Made from your numbers</Text>
+          <Text style={cardStyles.subtitle}>{source === "ai" ? "Written by AI from your numbers" : "Made from your numbers"}</Text>
         </View>
       </View>
       <Text style={summary ? styles.body : styles.empty}>{summary ?? "No summary for these days yet."}</Text>
