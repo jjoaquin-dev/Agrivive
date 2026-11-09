@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db";
 import { conversation_messages, conversation_participants, conversations, product_inquiries, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { queueBuyerReplyNotice } from "../../../utils/buyer-reply-notice";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { findOrCreateDirectConversation } from "../../conversations/services/conversation.direct.find-or-create";
 import { publishConversationMessage } from "../../conversations/services/conversation.realtime";
@@ -29,6 +30,9 @@ export async function replySellerProductInquiry(sellerId: string, inquiryId: str
       )).returning();
     if (!updated) throw new OrderError(404, "Open product inquiry not found");
 
+    await queueBuyerReplyNotice(tx, {
+      noticeKey: `inquiry-reply:${inquiry.id}`, buyerId: inquiry.buyerId, kind: "seller_inquiry_reply",
+    });
     const [product] = await tx.select({ name: sellers_product.productName }).from(sellers_product)
       .where(eq(sellers_product.id, inquiry.productId)).limit(1);
     const conversation = await findOrCreateDirectConversation(tx, {

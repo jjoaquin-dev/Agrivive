@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, RefreshCw } from "lucide-react";
 import { listMarketplaceDeals, listMarketplaceProducts } from "@/src/features/marketplace/api/marketplace";
 import type { MarketplaceProduct } from "@/src/features/marketplace/types";
-import { HomeFeaturedProduceCard } from "./HomeFeaturedProduceCard";
+import { ProductCard } from "@/src/features/marketplace/components/ProductCard";
 
 const isDiscounted = (p: MarketplaceProduct) => Boolean(p.basePrice) && Number(p.basePrice) > Number(p.productPrice);
 
@@ -103,7 +103,7 @@ export function HomeFeaturedProduce() {
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {products.map((product) => (
-              <HomeFeaturedProduceCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (

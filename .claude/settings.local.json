@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(python -)",
-      "Bash(python assets.py)"
+      "Bash(python assets.py)",
+      "Bash(python -c \"import reportlab;print\\(reportlab.Version\\)\")",
+      "Bash(python -c \"import markdown;print\\('md'\\)\")",
+      "Bash(python -c ' *)",
+      "WebSearch",
+      "Bash(cd \"C:/Users/Arianne Bartiquien/Desktop/Agrivive/mobile/src/features/analytics\"; grep -rniE \"sell.?through\" . ../../../app ../../../../backend/src/modules/seller | grep -v test | head -30; echo ---; grep -rniE \"pie|donut|Svg|Circle|Path|arc\" components/*.tsx | grep -iE \"import|pie|donut\" | head; echo ---; wc -l components/*.tsx | tail -30)",
+      "Bash(cd \"C:/Users/Arianne Bartiquien/Desktop/Agrivive/web/src/features/orders/components\"; sed -n 25,45p OrderQr.tsx; grep -n \"OrderQr\\\\|max-w\\\\|size-\\\\|w-\\\\[\" OrderQr.tsx | head; cd ../../../../..; grep -rn \"OrderQr\" web/src web/app --include=*.tsx | grep -v \"components/OrderQr.tsx\" | head -4; grep -rniE \"cancelled|expired|completed|Available|Sold\" web/src/features/orders --include=*.ts* | grep -iE \"label|:\\\\s*\\\\\"\" | head -15; cat mobile/src/features/orders/components/OrderStatusBadge.tsx | head -40)"
     ]
   },
   "hooks": {

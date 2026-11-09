@@ -70,6 +70,7 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | GET | `/buyer/wishlist` | `backend/src/modules/buyer/index/buyer.wishlist.list.ts` |
 | POST | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.save.ts` |
 | DELETE | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.remove.ts` |
+| GET | `/buyer/follows` | `backend/src/modules/buyer/index/buyer.seller.follow.ts` (buyer session; returns `{ "sellers": [{ "sellerId", "followedAt", "shopName", "address", "image" }] }`, newest first) |
 | GET, POST, DELETE | `/buyer/follows/:sellerId` | `backend/src/modules/buyer/index/buyer.seller.follow.ts` |
 | POST | `/buyer/checkouts` | `backend/src/modules/buyer/index/buyer.checkout.create.ts` |
 | POST | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.create.ts`. Reserving from your own stall returns `403`, adds 3 points and blocks the account. More than 5 orders in 7 days to one seller are marked `counts_for_ranking = false`. |

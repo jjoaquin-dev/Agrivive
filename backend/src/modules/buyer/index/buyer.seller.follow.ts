@@ -2,6 +2,7 @@ import Elysia from "elysia";
 import { sessionAuth } from "../../auth/services/auth.session";
 import { OrderError } from "../../../utils/order-types";
 import { buyerSellerFollowParams } from "../model/buyer.seller.follow";
+import { listBuyerSellerFollows } from "../services/buyer.seller.follow.list";
 import { readBuyerSellerFollow } from "../services/buyer.seller.follow.read";
 import { saveBuyerSellerFollow } from "../services/buyer.seller.follow.save";
 import { removeBuyerSellerFollow } from "../services/buyer.seller.follow.remove";
@@ -13,6 +14,10 @@ function followFailure(error: unknown, status: (code: any, body: any) => any) {
 }
 
 export const buyerSellerFollowRoute = new Elysia().use(sessionAuth)
+  .get("/follows", async ({ session, status }) => {
+    try { return await listBuyerSellerFollows(session.userId); }
+    catch (error) { return followFailure(error, status); }
+  }, { role: ["buyer"] })
   .get("/follows/:sellerId", async ({ session, params, status }) => {
     try { return await readBuyerSellerFollow(session.userId, params.sellerId); }
     catch (error) { return followFailure(error, status); }

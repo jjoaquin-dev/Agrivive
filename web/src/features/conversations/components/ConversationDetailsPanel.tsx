@@ -79,12 +79,6 @@ export function ConversationDetailsPanel({
           </Link>
         </div>
 
-        {/* Archive and block for this chat */}
-        {conversation && onStateChanged ? (
-          <div className="mt-3 w-full">
-            <ConversationStateButtons conversation={conversation} onChanged={onStateChanged} />
-          </div>
-        ) : null}
       </div>
 
       <div className="h-px bg-neutral-100 my-2" />
@@ -167,6 +161,13 @@ export function ConversationDetailsPanel({
           </Link>
         </div>
       )}
+
+      {/* Archive and block for this chat */}
+      {conversation && onStateChanged ? (
+        <div className="mt-2 w-full">
+          <ConversationStateButtons conversation={conversation} onChanged={onStateChanged} />
+        </div>
+      ) : null}
     </aside>
   );
 }

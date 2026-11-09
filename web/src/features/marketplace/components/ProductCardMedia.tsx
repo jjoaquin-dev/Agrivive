@@ -65,7 +65,7 @@ export function ProductCardMedia({
             Sold out
           </Badge>
         ) : isReduced ? (
-          <span className="inline-flex h-[28px] items-center rounded-full bg-[#FEC878] px-3 text-xs font-bold text-white shadow-sm">
+          <span className="inline-flex h-[28px] items-center rounded-full bg-[#FEA938] px-3 text-xs font-bold text-neutral-950 shadow-sm">
             {discountPct}% OFF
           </span>
         ) : null}

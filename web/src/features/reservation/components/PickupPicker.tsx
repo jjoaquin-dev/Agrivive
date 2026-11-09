@@ -1,26 +1,47 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Check } from "lucide-react";
 import { ApiError, isAbortError } from "@/src/lib/api";
 import { getPickupSlots, type PickupSlots } from "../api/reservation";
+import { PickupTimeDropdown } from "./PickupTimeDropdown";
 
 export type PickupRange = { start: string; end: string } | null;
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" });
+const manilaDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 const dayLabel = (date: string, index: number) =>
   `${index === 0 ? "Today" : "Tomorrow"} · ${new Date(`${date}T00:00:00+08:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" })}`;
+const periodOf = (iso: string) => {
+  const hour = Number(new Date(iso).toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Manila" })) % 24;
+  return hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+};
+const PERIODS = ["Morning", "Afternoon", "Evening"];
+
+function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: ReactNode }) {
+  return (
+    <section className="flex gap-3">
+      <span aria-hidden className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-[#457D00] text-white" : "border border-[#E5E2DA] text-neutral-600"}`}>
+        {done ? <Check className="size-3.5" /> : n}
+      </span>
+      <div className="min-w-0 flex-1 space-y-2">
+        <h4 className="text-sm font-bold">{title}</h4>
+        {children}
+      </div>
+    </section>
+  );
+}
 
 /**
- * Today/Tomorrow calendar with the seller's free 15-minute times. Tap a start time, then an end time.
- * The server checks every rule again when the order is confirmed.
+ * Two steps: pick a day (today or tomorrow), pick a time. Times come from the stall's own
+ * pickup hours, so only free 15-minute times are offered. The server re-checks every rule when the order is confirmed.
  */
 export function PickupPicker({ sellerId, value, onChange, blocked = [] }: {
   sellerId: string; value: PickupRange; onChange: (range: PickupRange) => void; blocked?: { start: string; end: string }[];
 }) {
   const [slots, setSlots] = useState<PickupSlots | null>(null);
   const [error, setError] = useState("");
-  const [dayIndex, setDayIndex] = useState(0);
-  const [first, setFirst] = useState<string | null>(null);
+  const [picked, setPicked] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -38,58 +59,60 @@ export function PickupPicker({ sellerId, value, onChange, blocked = [] }: {
     return () => controller.abort();
   }, [sellerId]);
 
-  const day = slots?.days[dayIndex];
-  const maxCells = slots ? Math.floor(slots.maxRangeMinutes / slots.stepMinutes) : 0;
   const taken = useMemo(() => blocked.map((range) => ({ s: new Date(range.start).getTime(), e: new Date(range.end).getTime() })), [blocked]);
   if (error) return <p role="alert" className="text-sm text-destructive">{error}</p>;
-  if (!slots || !day) return <div className="h-32 animate-pulse rounded-xl bg-[#F3F2EA]" aria-label="Loading pickup times" />;
+  if (!slots) return <div className="h-32 animate-pulse rounded-xl bg-[#F3F2EA]" aria-label="Loading pickup times" />;
 
-  function pick(index: number) {
-    const cells = day!.cells;
-    const cell = cells[index]!;
-    if (new Date(cell.start).getTime() < Date.now()) return;
-    if (first === null) { setFirst(cell.start); onChange({ start: cell.start, end: cell.end }); return; }
-    const firstIndex = cells.findIndex((item) => item.start === first);
-    const [from, to] = index >= firstIndex ? [firstIndex, index] : [index, firstIndex];
-    const run = cells.slice(from, to + 1);
-    if (run.length > maxCells || run.some((item) => !item.available || new Date(item.start).getTime() < Date.now())) { setFirst(cell.start); onChange({ start: cell.start, end: cell.end }); return; }
-    onChange({ start: run[0]!.start, end: run[run.length - 1]!.end });
-    setFirst(null);
+  // A saved choice decides the day, so coming back from the review step shows the right tab.
+  const savedDay = value ? slots.days.findIndex((item) => item.date === manilaDate(value.start)) : -1;
+  const dayIndex = picked ?? (savedDay >= 0 ? savedDay : 0);
+  const day = slots.days[dayIndex];
+  if (!day) return null;
+  const cells = day.cells;
+  const free = (i: number) => {
+    const cell = cells[i];
+    if (!cell) return false;
+    const s = new Date(cell.start).getTime();
+    return cell.available && s >= now && !taken.some((range) => s < range.e && range.s < new Date(cell.end).getTime());
+  };
+  const startIndex = value ? cells.findIndex((cell) => cell.start === value.start) : -1;
+  const fromGroups = PERIODS.map((label) => ({ label, items: cells.flatMap((cell, i) => (free(i) && periodOf(cell.start) === label ? [cell] : [])) })).filter((group) => group.items.length);
+  const hours = cells.length ? `${clock(cells[0]!.start)} to ${clock(cells[cells.length - 1]!.end)}` : "";
+
+  // One time = one 15-minute pickup window, which is what the server stores as start and end.
+  function chooseStart(start: string) {
+    const cell = cells.find((item) => item.start === start);
+    onChange(cell ? { start: cell.start, end: cell.end } : null);
   }
 
   return (
-    <div className="space-y-3">
-      <div role="tablist" className="grid grid-cols-2 gap-2">
-        {slots.days.map((item, index) => (
-          <button key={item.date} type="button" role="tab" aria-selected={index === dayIndex}
-            onClick={() => { setDayIndex(index); setFirst(null); onChange(null); }}
-            className={`min-h-12 rounded-xl border px-3 text-sm font-semibold transition active:translate-y-px ${index === dayIndex ? "border-[#457D00] bg-[#F0F7EB] text-[#244218]" : "border-[#E5E2DA] bg-white text-neutral-700"}`}>
-            {dayLabel(item.date, index)}
-          </button>
-        ))}
-      </div>
+    <div className="space-y-5">
+      <Step n={1} title="Pick a day" done>
+        <div role="tablist" className="grid grid-cols-2 gap-2">
+          {slots.days.map((item, index) => (
+            <button key={item.date} type="button" role="tab" aria-selected={index === dayIndex}
+              onClick={() => { if (index !== dayIndex) { setPicked(index); onChange(null); } }}
+              className={`min-h-12 rounded-xl border px-3 text-sm font-semibold transition active:translate-y-px ${index === dayIndex ? "border-[#457D00] bg-[#F0F7EB] text-[#244218]" : "border-[#E5E2DA] bg-white text-neutral-700"}`}>
+              {dayLabel(item.date, index)}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-neutral-600">You can only book today or tomorrow, so vegetables are not held for too long.</p>
+      </Step>
       {!day.open ? (
-        <p className="rounded-xl border border-[#E5E2DA] bg-[#FAFAF8] p-3 text-sm text-neutral-600">{day.reason || "No pickup times on this day."} Try the other day.</p>
+        <p className="rounded-xl border border-[#E5E2DA] bg-[#FAFAF8] p-3 text-sm text-neutral-600">{day.reason || "This stall has no pickup times on this day."} Try the other day.</p>
+      ) : fromGroups.length === 0 ? (
+        <p className="rounded-xl border border-[#E5E2DA] bg-[#FAFAF8] p-3 text-sm text-neutral-600">No free times left on this day. Try the other day.</p>
       ) : (
         <>
-          <p className="text-xs text-neutral-600">
-            Tap a start time, then an end time. You can pick up to {slots.maxRangeMinutes} minutes. The last 30 minutes before closing cannot be booked.
-          </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" role="group" aria-label="Pickup times">
-            {day.cells.map((cell, index) => {
-              const mine = taken.some((range) => new Date(cell.start).getTime() < range.e && range.s < new Date(cell.end).getTime());
-              const past = new Date(cell.start).getTime() < now;
-              const disabled = !cell.available || mine || past;
-              const selected = !!value && cell.start >= value.start && cell.end <= value.end;
-              return (
-                <button key={cell.start} type="button" disabled={disabled} onClick={() => pick(index)} aria-pressed={selected}
-                  className={`min-h-11 rounded-lg border px-1 text-xs font-semibold transition active:translate-y-px ${selected ? "border-[#457D00] bg-[#457D00] text-white" : disabled ? "cursor-not-allowed border-[#EEE] bg-[#F5F5F2] text-neutral-400 line-through" : "border-[#E5E2DA] bg-white text-neutral-800 hover:border-[#457D00]/50"}`}>
-                  {clock(cell.start)}
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-neutral-500">Crossed-out times are past, full, already yours, or you already have a pickup then.</p>
+          <Step n={2} title="Pick a time" done={startIndex >= 0}>
+            <PickupTimeDropdown value={startIndex >= 0 ? value!.start : ""} onChange={chooseStart}
+              groups={fromGroups.map((group) => ({ label: group.label, items: group.items.map((cell) => ({ value: cell.start, text: clock(cell.start) })) }))} />
+            <p className="text-xs text-neutral-600">
+              {value ? `Come to the stall any time from ${clock(value.start)} to ${clock(value.end)}. ` : "Pick when you plan to come. "}
+              This stall is open for pickup {hours}. The last 30 minutes before closing cannot be booked.
+            </p>
+          </Step>
         </>
       )}
     </div>
