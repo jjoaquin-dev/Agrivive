@@ -2,28 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { MessageSquare, Star } from "lucide-react";
-import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RatingStars } from "@/src/components/RatingStars";
 import { ApiError, isAbortError } from "@/src/lib/api";
-import { getProductReviewEligibility, getProductReviews } from "../api/marketplace";
-import type { ProductReviewEligibility, ProductReviewsResponse } from "../types";
-import { ProductReviewForm } from "./ProductReviewForm";
+import { getProductReviews } from "../api/marketplace";
+import type { ProductReviewsResponse } from "../types";
 import { ReviewSummaryCard } from "./ReviewSummaryCard";
-
-type EligibilityState =
-  | { kind: "loading" }
-  | { kind: "guest" }
-  | { kind: "ready"; data: ProductReviewEligibility }
-  | { kind: "error"; message: string };
 
 export function ProductReviewsSection({ productId }: { productId: string }) {
   const [data, setData] = useState<ProductReviewsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [eligibility, setEligibility] = useState<EligibilityState>({ kind: "loading" });
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -38,28 +29,11 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
     }
   }, [productId]);
 
-  const loadEligibility = useCallback(async (signal?: AbortSignal) => {
-    setEligibility({ kind: "loading" });
-    try {
-      const eligibilityData = await getProductReviewEligibility(productId, signal);
-      if (!signal?.aborted) setEligibility({ kind: "ready", data: eligibilityData });
-    } catch (reason) {
-      if (signal?.aborted || isAbortError(reason)) return;
-      if (reason instanceof ApiError && reason.status === 401) setEligibility({ kind: "guest" });
-      else setEligibility({ kind: "error", message: reason instanceof ApiError ? reason.message : "We could not check review access." });
-    }
-  }, [productId]);
-
   useEffect(() => {
     const controller = new AbortController();
     void load(controller.signal);
-    void loadEligibility(controller.signal);
     return () => controller.abort();
-  }, [load, loadEligibility]);
-
-  async function refreshAfterReview() {
-    await Promise.all([load(), loadEligibility()]);
-  }
+  }, [load]);
 
   return (
     <section id="product-reviews" aria-labelledby="product-reviews-heading" className="space-y-4 scroll-mt-24">
@@ -70,41 +44,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
         </h2>
       </div>
 
-      {eligibility.kind === "loading" ? (
-        <Skeleton className="h-32 rounded-2xl border border-[#E8E8E8] bg-white" aria-label="Checking review access" />
-      ) : eligibility.kind === "guest" ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
-          <div>
-            <p className="text-[14px] font-semibold text-foreground">Bought this produce?</p>
-            <p className="mt-1 text-[12px] text-muted-foreground">Sign in to leave a rating and comment after pickup is complete.</p>
-          </div>
-          <Link
-            className="inline-flex h-10 min-h-[40px] items-center rounded-xl bg-[#457D00] px-4 text-[14px] font-semibold text-white shadow-sm hover:bg-[#457D00]/90"
-            href={`/login?next=${encodeURIComponent(`/marketplace/${productId}#product-reviews`)}`}
-          >
-            Sign in to review
-          </Link>
-        </div>
-      ) : eligibility.kind === "error" ? (
-        <Alert variant="destructive" className="rounded-xl">
-          <AlertDescription>{eligibility.message}</AlertDescription>
-          <Button type="button" variant="outline" className="mt-3 rounded-xl border-[#E8E8E8]" onClick={() => void loadEligibility()}>
-            Try again
-          </Button>
-        </Alert>
-      ) : eligibility.data.purchases.length ? (
-        <div className="space-y-4">
-          <p className="text-[12px] text-muted-foreground">Your completed pickup lets you rate this product and add a comment.</p>
-          {eligibility.data.purchases.map((purchase) => (
-            <ProductReviewForm key={purchase.itemId} purchase={purchase} productId={productId} onSaved={() => void refreshAfterReview()} />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
-          <p className="text-[14px] font-semibold text-foreground">Reviews are open to buyers after pickup</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">Once you complete a pickup for this product, you can leave a rating and comment here.</p>
-        </div>
-      )}
+      <p className="text-[12px] text-muted-foreground">Buyers rate the produce from their order page after pickup. One rating covers every item in that order.</p>
 
       {loading ? (
         <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)]" aria-label="Loading product reviews">
@@ -137,6 +77,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
                 </div>
                 <div className="mt-2"><RatingStars rating={review.rating} /></div>
                 {review.review ? <p className="mt-2 text-[14px] leading-relaxed text-foreground/90">{review.review}</p> : null}
+                {review.photoUrl ? <img src={review.photoUrl} alt={`Photo from ${review.buyerName}`} loading="lazy" className="mt-3 h-28 w-28 rounded-xl border border-[#E8E8E8] object-cover" /> : null}
                 {review.sellerResponse ? (
                   <div className="mt-3 rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3 text-[12px]">
                     <div className="font-semibold text-[#457D00]">Seller response</div>
@@ -153,7 +94,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
             <MessageSquare className="size-5" />
           </div>
           <p className="mt-3 text-[14px] font-semibold text-[#14231A]">No product ratings yet</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">Buyers can leave a rating and comment after pickup is complete.</p>
+          <p className="mt-1 text-[12px] text-muted-foreground">Buyers can rate the produce after pickup is complete.</p>
         </div>
       )}
     </section>

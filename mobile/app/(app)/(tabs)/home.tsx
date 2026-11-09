@@ -1,3 +1,4 @@
+import { refreshAlerts, useAlertCounts } from "../../../src/features/alerts/alertStore";
 import React, { useState, useEffect, useCallback } from "react";
 import { StyleSheet, ScrollView, RefreshControl, View, Text, Pressable } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -7,8 +8,6 @@ import { useAuth } from "../../../src/context/AuthContext";
 import { useInventory } from "../../../src/features/inventory/hooks/useInventory";
 import { fetchStockAdjustments } from "../../../src/features/inventory/api/stock-adjustments";
 import type { StockAdjustment } from "../../../src/features/inventory/types";
-import { fetchSellerNotifications } from "../../../src/features/notifications/api/seller-notifications";
-import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
 import { DashboardHeader } from "../../../src/features/dashboard/components/DashboardHeader";
 import { DashboardTwinActions } from "../../../src/features/dashboard/components/DashboardTwinActions";
 import { DashboardMetrics } from "../../../src/features/dashboard/components/DashboardMetrics";
@@ -26,8 +25,7 @@ export default function HomeScreen() {
   const [recentActivity, setRecentActivity] = useState<StockAdjustment[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(true);
   const [activityError, setActivityError] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [openMessageCount, setOpenMessageCount] = useState(0);
+  const { notifications: unreadCount, messages: openMessageCount } = useAlertCounts();
 
   const loadRecentActivity = async () => {
     setLoadingActivity(true);
@@ -47,27 +45,14 @@ export default function HomeScreen() {
     void loadRecentActivity();
   }, []);
 
-  const loadUnreadCounts = useCallback(async () => {
-    try {
-      const [notifRes, msgRes] = await Promise.all([
-        fetchSellerNotifications({ limit: 1 }),
-        fetchConversationUnreadCount(),
-      ]);
-      setUnreadCount(notifRes.unreadCount);
-      setOpenMessageCount(msgRes.unreadMessages ?? 0);
-    } catch (err) {
-      logApiError("Failed to load notification/message count", err);
-    }
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      void loadUnreadCounts();
-    }, [loadUnreadCounts]),
+      void refreshAlerts();
+    }, []),
   );
 
   const handleRefresh = async () => {
-    await Promise.all([refresh(), loadRecentActivity(), loadUnreadCounts()]);
+    await Promise.all([refresh(), loadRecentActivity(), refreshAlerts()]);
   };
 
   const sellerName = setup?.account?.name || session?.user?.name || "Seller";

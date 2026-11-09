@@ -7,7 +7,7 @@ import { marketplaceSellerVisibility } from "../../marketplace/services/marketpl
 export async function listBuyerNotices(buyerId: string) {
   const [orderNotices, listingNotices, actionNotices] = await Promise.all([
     db.select({ id: trust_notices.id, orderId: trust_notices.orderId,
-    kind: trust_notices.kind, createdAt: trust_notices.createdAt, sentAt: trust_notices.sentAt,
+    kind: trust_notices.kind, detail: trust_notices.detail, createdAt: trust_notices.createdAt, sentAt: trust_notices.sentAt,
     readAt: trust_notices.readAt,
   }).from(trust_notices).where(eq(trust_notices.recipientId, buyerId))
       .orderBy(desc(trust_notices.createdAt)).limit(100),
@@ -45,7 +45,7 @@ export async function listBuyerNotices(buyerId: string) {
   const availableIds = new Set(available.map((product) => product.id));
   return [
     ...orderNotices.map((notice) => ({ ...notice, productId: null, sellerId: null,
-      productName: null, shopName: null, productAvailable: null, price: null, previousPrice: null, reason: null })),
+      productName: null, shopName: null, productAvailable: null, price: null, previousPrice: null, reason: notice.detail })),
     ...actionNotices.map((action) => ({
       id: `action:${action.id}`,
       kind: action.actionType === "temporary_restriction"

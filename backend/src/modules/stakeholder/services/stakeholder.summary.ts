@@ -1,10 +1,11 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { order_reports, ordered_items, orders, sellers_product, user, vegetable_catalog } from "../../../db/schema";
+import { readStakeholderTrends } from "./stakeholder.summary.trends";
 import type { StakeholderSummary } from "../model/stakeholder.summary";
 
 export async function readStakeholderSummary(): Promise<StakeholderSummary> {
-  const [users, listings, orderRows, reports, cropRows, rescueRows] = await Promise.all([
+  const [users, listings, orderRows, reports, cropRows, rescueRows, trends] = await Promise.all([
     db.select({
       sellers: sql<number>`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
       buyers: sql<number>`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`,
@@ -30,6 +31,7 @@ export async function readStakeholderSummary(): Promise<StakeholderSummary> {
       .from(ordered_items)
       .innerJoin(orders, eq(ordered_items.ordersId, orders.id))
       .where(eq(orders.status, "completed")),
+    readStakeholderTrends(),
   ]);
 
   const orderMap = Object.fromEntries(orderRows.map((r) => [r.status, Number(r.count)]));
@@ -41,6 +43,7 @@ export async function readStakeholderSummary(): Promise<StakeholderSummary> {
 
   return {
     generatedAt: new Date().toISOString(),
+    trends,
     users: users[0] ?? { sellers: 0, buyers: 0 },
     listings: listings[0] ?? { total: 0, active: 0 },
     orders: orderMap,

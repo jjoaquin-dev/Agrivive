@@ -2,33 +2,45 @@ import { describe, expect, test } from "bun:test";
 import { trustActionReason } from "./action-reason";
 import { blockedMessage, pausedMessage } from "./access";
 import { reportViolationKinds } from "./confirm-report";
-import { resolveTrustAction, resolveTrustDurationHours, trustActionPolicy, trustPolicyWeights, trustScoreWindowDays, trustScoreWindowStart, trustSeriousKinds } from "./policy";
+import { levelActionType, levelForScore, levelPauseHours, levelRank } from "./level";
+import { describeEvent } from "./notice-text";
+import { trustActionPolicy, trustPolicyWeights, trustScoreWindowDays, trustScoreWindowStart, trustSeriousKinds } from "./policy";
 
-describe("trust policy (Table 18)", () => {
-  test("no action below the warning level", () => {
-    expect(resolveTrustAction(0)).toBeNull();
-    expect(resolveTrustAction(trustActionPolicy.warningThreshold - 1)).toBeNull();
+describe("trust levels (Table 3 of the PDF)", () => {
+  const bands: [number, string][] = [[0, "good"], [1, "good"], [2, "notice"], [3, "notice"], [4, "warning"], [5, "warning"],
+    [6, "pause_24h"], [7, "pause_24h"], [8, "pause_3d"], [9, "pause_3d"], [10, "pause_3d"], [11, "pause_3d"], [12, "block"], [13, "block"], [40, "block"]];
+  for (const [points, level] of bands) {
+    test(`${points} points is ${level}`, () => expect(levelForScore(points)).toBe(level as never));
+  }
+  test("one serious violation blocks at any score", () => expect(levelForScore(0, true)).toBe("block"));
+  test("pauses last 24 hours and 3 days, nothing else lasts", () => {
+    expect(levelPauseHours("pause_24h")).toBe(24);
+    expect(levelPauseHours("pause_3d")).toBe(72);
+    expect(levelPauseHours("warning")).toBe(0);
+    expect(levelActionType("good")).toBeNull();
+    expect(levelActionType("notice")).toBe("notice");
+    expect(levelActionType("block")).toBe("blocked");
   });
-
-  test("warning, then temporary restriction, then blocking as the score grows", () => {
-    expect(resolveTrustAction(trustActionPolicy.warningThreshold)).toBe("warning");
-    expect(resolveTrustAction(trustActionPolicy.tier1Threshold)).toBe("temporary_restriction");
-    expect(resolveTrustAction(trustActionPolicy.tier3Threshold)).toBe("temporary_restriction");
-    expect(resolveTrustAction(trustActionPolicy.blockedThreshold)).toBe("blocked");
+  test("levels only go up the ladder", () => {
+    expect(levelRank("block")).toBeGreaterThan(levelRank("pause_3d"));
+    expect(levelRank("pause_3d")).toBeGreaterThan(levelRank("pause_24h"));
+    expect(levelRank("notice")).toBeGreaterThan(levelRank("good"));
   });
-
-  test("the blocking level sits above the last restriction tier", () => {
-    expect(trustActionPolicy.blockedThreshold).toBeGreaterThan(trustActionPolicy.tier3Threshold);
-    expect(resolveTrustDurationHours(trustActionPolicy.tier3Threshold)).toBe(72);
+  test("the blocking level sits above the 3-day pause", () => {
+    expect(trustActionPolicy.blockedThreshold).toBeGreaterThan(trustActionPolicy.tier2Threshold);
   });
+});
 
-  test("a serious violation blocks the account at any score", () => {
-    expect(resolveTrustAction(0, true)).toBe("blocked");
+describe("event weights (Tables 1 and 2)", () => {
+  test("every weight matches the PDF", () => {
+    expect(trustPolicyWeights).toMatchObject({
+      inquiry_non_response: 1, seller_cancellation: 2, low_rating: 1, misleading_product_info: 2, inappropriate_communication: 2,
+      seller_decline_fault: 2, qr_misuse: 3, buyer_failed_reservation: 2, buyer_late_cancellation: 1, buyer_invalid_decline: 1, buyer_false_photo: 2,
+    });
   });
-
-  test("every violation kind that can be confirmed has a weight, and serious kinds are weighted", () => {
-    for (const kind of Object.values(reportViolationKinds)) expect(trustPolicyWeights[kind as keyof typeof trustPolicyWeights]).toBeGreaterThan(0);
-    for (const kind of trustSeriousKinds) expect(trustPolicyWeights[kind as keyof typeof trustPolicyWeights]).toBeGreaterThan(0);
+  test("QR misuse and an order from your own stall are the serious kinds", () => expect(trustSeriousKinds).toEqual(["qr_misuse", "self_order"]));
+  test("only reasons that match a violation type can be confirmed by reports", () => {
+    expect(reportViolationKinds).toEqual({ listing_inaccurate: "misleading_product_info", conduct: "inappropriate_communication", qr_misuse: "qr_misuse" });
   });
 });
 
@@ -38,48 +50,28 @@ describe("trust messages", () => {
     expect(text).toContain("buyer questions");
     expect(text).not.toContain("picked up");
   });
-
-  test("a buyer who missed a pickup still gets the pickup message", () => {
-    expect(trustActionReason("temporary_restriction", "buyer_failed_reservation", "12 hours")).toContain("not picked up");
-    expect(trustActionReason("warning", "buyer_failed_reservation", "12 hours")).toContain("missed pickups");
-  });
-
-  test("unknown causes still give a plain message", () => {
-    expect(trustActionReason("temporary_restriction", undefined, "12 hours")).toContain("12 hours");
-    expect(trustActionReason("warning", null, "12 hours").length).toBeGreaterThan(10);
-  });
-
-  test("a pause ends with the time left and never repeats an old one", () => {
-    const endsAt = new Date(Date.now() + 5 * 3_600_000);
-    const text = pausedMessage("Your account is paused for 12 hours. Please come back in 12 hours.", endsAt);
-    expect(text.match(/come back in/gi)?.length).toBe(1);
-    expect(text).toMatch(/Please come back in \d+ hours?\.$/);
-  });
-
   test("a block says how to restore, so the app shows it as blocked and not paused", () => {
     expect(blockedMessage("Account has been inactive for more than 30 days.")).toMatch(/restore your account/i);
-    expect(blockedMessage(trustActionReason("blocked", "qr_misuse", "12 hours"))).not.toMatch(/come back in/i);
   });
-});
-
-describe("report confirmation", () => {
-  test("only reasons that match a violation type in the paper can be confirmed", () => {
-    expect(reportViolationKinds.listing_inaccurate).toBe("misleading_product_info");
-    expect(reportViolationKinds.conduct).toBe("inappropriate_communication");
-    expect(reportViolationKinds.qr_misuse).toBe("qr_misuse");
-    expect(reportViolationKinds.other).toBeUndefined();
-    expect(reportViolationKinds.pickup_problem).toBeUndefined();
+  test("a pause ends with the time left and never repeats an old one", () => {
+    const text = pausedMessage("Your account is paused for 24 hours. Please come back in 24 hours.", new Date(Date.now() + 5 * 3_600_000));
+    expect(text.match(/come back in/gi)?.length).toBe(1);
+  });
+  test("an event notice names the rule, the points, the level, how to avoid it and how to dispute", () => {
+    const text = describeEvent({ kind: "seller_cancellation", weight: 2, score: 4, level: "warning" });
+    for (const part of ["Rule:", "added 2 points", "score for the last 90 days is 4", "Warning", "How to avoid", "dispute it within 7 days"]) expect(text).toContain(part);
+  });
+  test("every missed pickup adds 2 points, with no free first miss", () => {
+    const text = describeEvent({ kind: "buyer_failed_reservation", weight: 2, score: 2, level: "notice" });
+    expect(text).toContain("added 2 points");
+    expect(text).not.toContain("warning only");
   });
 });
 
 describe("score window", () => {
-  test("old violations stop counting after the window", () => {
+  test("events leave the score exactly 90 days after they happened", () => {
     const now = new Date("2026-11-02T00:00:00Z");
-    const start = trustScoreWindowStart(now);
-    if (trustScoreWindowDays > 0) {
-      expect(start?.getTime()).toBe(now.getTime() - trustScoreWindowDays * 86_400_000);
-    } else {
-      expect(start).toBeNull();
-    }
+    expect(trustScoreWindowDays).toBe(90);
+    expect(trustScoreWindowStart(now)?.getTime()).toBe(now.getTime() - 90 * 86_400_000);
   });
 });

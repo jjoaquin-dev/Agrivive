@@ -1,5 +1,5 @@
 export class ConversationError extends Error {
-  constructor(public readonly statusCode: 400 | 403 | 404 | 409, message: string) {
+  constructor(public readonly statusCode: 400 | 403 | 404 | 409 | 429, message: string) {
     super(message);
     this.name = "ConversationError";
   }

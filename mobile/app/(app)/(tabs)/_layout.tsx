@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import { Platform } from "react-native";
 import { Tabs } from "expo-router";
 import {
@@ -10,26 +10,23 @@ import {
   Megaphone,
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
-import { fetchConversationUnreadCount } from "../../../src/features/conversations/api";
-import { useRefreshOnSignal } from "../../../src/hooks/useRefreshOnSignal";
+import { refreshAlerts, useAlertCounts, useAlertRefresh } from "../../../src/features/alerts/alertStore";
+
+const badgeStyle = {
+  backgroundColor: "#EF4444",
+  fontSize: 10,
+  fontFamily: fonts.body.semiBold,
+  color: "#FFFFFF",
+};
+const badge = (n: number) => (n > 0 ? (n > 9 ? "9+" : n) : undefined);
 
 export default function TabsLayout() {
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const checkUnread = useCallback(async () => {
-    try {
-      const res = await fetchConversationUnreadCount();
-      setUnreadCount(res.unreadMessages ?? 0);
-    } catch {}
-  }, []);
-
-  // No timer: refresh on open, on app foreground, and when a message push arrives.
-  useEffect(() => { void checkUnread(); }, [checkUnread]);
-  useRefreshOnSignal(checkUnread, { pushTypes: ["seller_message"] });
+  const { messages: unreadCount, orders: newOrders } = useAlertCounts();
+  useAlertRefresh();
 
   return (
     <Tabs
-      screenListeners={{ focus: () => void checkUnread() }}
+      screenListeners={{ focus: () => void refreshAlerts() }}
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.background,
@@ -79,6 +76,8 @@ export default function TabsLayout() {
         options={{
           headerShown: false,
           title: "Reservations",
+          tabBarBadge: badge(newOrders),
+          tabBarBadgeStyle: badgeStyle,
           tabBarIcon: ({ color, size }) => (
             <CalendarDays color={color} size={size || 22} />
           ),
@@ -103,14 +102,8 @@ export default function TabsLayout() {
         options={{
           headerShown: false,
           title: "Messages",
-          tabBarBadge:
-            unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount) : undefined,
-          tabBarBadgeStyle: {
-            backgroundColor: "#EF4444",
-            fontSize: 10,
-            fontFamily: fonts.body.semiBold,
-            color: "#FFFFFF",
-          },
+          tabBarBadge: badge(unreadCount),
+          tabBarBadgeStyle: badgeStyle,
           tabBarIcon: ({ color, size }) =>
             unreadCount > 0 ? (
               <MessageCircleMore color={color} size={size || 22} />

@@ -22,7 +22,7 @@ export async function notifyBoostStarted(boostId: string) {
       productId: row.productId,
       payload: {
         productName: row.productName,
-        // Set when the first post was saved: only a Priority Boost listing with a drop set up has a timer.
+        // Set when the first post was saved: a listing with a drop set up has a timer.
         willLowerPrice: row.followUpDueAt !== null,
       },
     }));

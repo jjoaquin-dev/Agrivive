@@ -4,6 +4,7 @@ import { order_inquiries, orders, trust_events, trust_notices } from "../../db/s
 import { OrderError, type OrderSide } from "../order-types";
 import type { OrderTransaction } from "../order-types";
 import { alertSellerOfTrustNotice } from "../seller-notifications";
+import { trustPolicyVersion, trustPolicyWeights } from "./policy";
 
 export function recordTrustEvent(tx: OrderTransaction, input: {
   eventKey: string;
@@ -12,8 +13,13 @@ export function recordTrustEvent(tx: OrderTransaction, input: {
   kind: string;
   classification: "verified" | "allegation";
   sourceId?: string;
+  /** Points. Left out for allegations (0) and old callers (the weight of the kind). */
+  weight?: number;
+  reason?: string;
 }) {
-  return tx.insert(trust_events).values(input).onConflictDoNothing({ target: trust_events.eventKey }).returning();
+  const weight = input.weight ?? (input.classification === "verified" ? trustPolicyWeights[input.kind as keyof typeof trustPolicyWeights] ?? 0 : 0);
+  return tx.insert(trust_events).values({ ...input, weight, policyVersion: trustPolicyVersion })
+    .onConflictDoNothing({ target: trust_events.eventKey }).returning();
 }
 
 export async function queueTrustNotice(tx: OrderTransaction, input: {
@@ -21,6 +27,8 @@ export async function queueTrustNotice(tx: OrderTransaction, input: {
   recipientId: string;
   orderId?: string | null;
   kind: string;
+  /** Full plain-words message shown in the app and email. */
+  detail?: string;
 }) {
   const rows = await tx.insert(trust_notices).values(input)
     .onConflictDoNothing({ target: trust_notices.noticeKey }).returning();

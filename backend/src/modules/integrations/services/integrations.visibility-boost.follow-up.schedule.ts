@@ -1,16 +1,13 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { seller_visibility_boosts, sellers_product } from "../../../db/schema";
-import { checkPriorityBoostGate } from "../../../utils/visibility-ranking/boost-gate";
 
 export const followUpDelayMs = 6 * 3_600_000;
 
 /**
- * Runs once when the first post is saved. AHP-TOPSIS decides here, while the listing is fresh, whether it is
- * Priority Boost, and the score and tier are saved on the boost. Only a Priority Boost listing gets the 6-hour price drops:
+ * Runs once when the first post is saved. A listing with auto-post on gets the 6-hour price drops:
  * with a drop amount and final price already set, the first drop is due 6 hours after the post; without them,
- * the seller is asked to set them at that time. Any other listing keeps its normal post and nothing more.
- * Never fails the post.
+ * the seller is asked to set them at that time. Never fails the post.
  */
 export async function scheduleBoostFollowUp(boostId: string, firstPostAt: Date) {
   try {
@@ -20,24 +17,22 @@ export async function scheduleBoostFollowUp(boostId: string, firstPostAt: Date) 
       amount: sellers_product.priceReductionAmount,
       minimumPrice: sellers_product.minimumPrice,
       enabled: sellers_product.priceReductionEnabled,
+      autoPost: sellers_product.autoPostEnabled,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
       .where(eq(seller_visibility_boosts.id, boostId)).limit(1);
-    if (!row || row.reason !== "initial") return;
+    // Follow-ups are automatic only for sellers who said yes to auto-post.
+    if (!row || row.reason !== "initial" || !row.autoPost) return;
 
-    const gate = await checkPriorityBoostGate(row.productId);
-    const priority = gate.allowed;
     const configured = row.enabled && Number(row.amount ?? 0) > 0 && row.minimumPrice !== null;
     const dueAt = new Date(firstPostAt.getTime() + followUpDelayMs);
 
     await db.update(seller_visibility_boosts).set({
-      priorityScore: gate.score === null ? null : gate.score.toFixed(4),
-      priorityTier: gate.tier ?? "Not Ranked",
-      followUpDueAt: priority && configured ? dueAt : null,
-      priceDropSetupAt: priority && !configured ? dueAt : null,
+      followUpDueAt: configured ? dueAt : null,
+      priceDropSetupAt: configured ? null : dueAt,
     }).where(and(
       eq(seller_visibility_boosts.id, boostId),
-      isNull(seller_visibility_boosts.priorityTier),
+      isNull(seller_visibility_boosts.priceDropSetupAt),
       isNull(seller_visibility_boosts.followUpDueAt),
       sql`${seller_visibility_boosts.followUpAttempts} = 0`,
     ));

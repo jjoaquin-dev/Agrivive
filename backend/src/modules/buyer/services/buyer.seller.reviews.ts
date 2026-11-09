@@ -1,6 +1,7 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { order_reviews, user } from "../../../db/schema";
+import { reviewCounts } from "../../../utils/trust/review-counts";
 
 export async function readSellerReviews(sellerId: string) {
   const [summary] = await db
@@ -14,7 +15,7 @@ export async function readSellerReviews(sellerId: string) {
       star1: sql<number>`count(case when ${order_reviews.rating} = 1 then 1 end)::int`,
     })
     .from(order_reviews)
-    .where(eq(order_reviews.sellerId, sellerId));
+    .where(and(eq(order_reviews.sellerId, sellerId), reviewCounts));
 
   const rows = await db
     .select({
@@ -27,7 +28,7 @@ export async function readSellerReviews(sellerId: string) {
     })
     .from(order_reviews)
     .leftJoin(user, eq(user.id, order_reviews.buyerId))
-    .where(eq(order_reviews.sellerId, sellerId))
+    .where(and(eq(order_reviews.sellerId, sellerId), reviewCounts))
     .orderBy(desc(order_reviews.createdAt))
     .limit(10);
 

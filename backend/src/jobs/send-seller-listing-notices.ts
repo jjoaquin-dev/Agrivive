@@ -1,6 +1,7 @@
 import { asc, isNull, sql } from "drizzle-orm";
 import { db } from "../db";
 import { buyer_listing_notices, seller_follows, seller_listing_events, user } from "../db/schema";
+import { emailListingNotices } from "./email-listing-notices";
 import { enqueueSellerListingNotifications } from "../modules/notifications/services/notifications.outbox.enqueue-listing";
 
 export async function sendSellerListingNotices(limit = 25) {
@@ -36,5 +37,7 @@ export async function sendSellerListingNotices(limit = 25) {
     noticesCreated += result.noticesCreated;
     pushJobsCreated += result.pushJobsCreated;
   }
-  return { processedEvents, noticesCreated, pushJobsCreated };
+  // An email problem must never stop the in-app notices or the other scheduled jobs.
+  const emailsSent = await emailListingNotices().catch((error) => { console.error("Follower emails failed", error); return 0; });
+  return { processedEvents, noticesCreated, pushJobsCreated, emailsSent };
 }

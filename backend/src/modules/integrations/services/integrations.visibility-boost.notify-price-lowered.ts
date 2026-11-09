@@ -18,7 +18,7 @@ export async function notifyBoostPriceLowered(boostId: string) {
       periods: sellers_product.priceReductionPeriodsApplied,
     }).from(sellers_product).where(eq(sellers_product.id, boost.productId)).limit(1);
     // The two newest saved posts: this round's post, and the one before it (the price it replaced).
-    const [, previousPost] = await db.select({ price: fb_post_logs.price }).from(fb_post_logs).where(and(
+    const [latestPost, previousPost] = await db.select({ price: fb_post_logs.price, caption: fb_post_logs.caption }).from(fb_post_logs).where(and(
       eq(fb_post_logs.productId, boost.productId),
       eq(fb_post_logs.status, "success"),
       gte(fb_post_logs.postedAt, boost.createdAt),
@@ -31,7 +31,11 @@ export async function notifyBoostPriceLowered(boostId: string) {
         kind: "price_lowered",
         dedupeKey: `price-lowered:${boost.productId}:${product.periods}`,
         productId: boost.productId,
-        payload: { productName: product.name, priceBefore: previousPost.price, priceAfter: product.price },
+        payload: {
+          productName: product.name, priceBefore: previousPost.price, priceAfter: product.price,
+          // The title and description that went out, without the order link line.
+          preview: (latestPost?.caption ?? "").split(/\n\s*\nOrder here:/)[0]?.trim() ?? "",
+        },
       });
     });
   } catch (error) {

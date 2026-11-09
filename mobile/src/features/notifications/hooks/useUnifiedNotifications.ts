@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useIsFocused, useRouter } from "expo-router";
 import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
+import { refreshAlerts } from "../../alerts/alertStore";
 import { useSellerNotifications } from "./useSellerNotifications";
 import { fetchSellerBoostPrompts, markAllSellerBoostPromptsRead } from "../../marketing/api/visibility-boosts";
 import { fetchConversations, markAllConversationsRead } from "../../conversations/api";
@@ -47,6 +48,9 @@ export function useUnifiedNotifications() {
 
   useEffect(() => { void loadData(true); }, [loadData]);
 
+  // Leaving this screen means notices were read, so the red dots must update.
+  useEffect(() => () => { void refreshAlerts(); }, []);
+
   const isFocused = useIsFocused();
   useRefreshOnSignal(() => loadData(true), { pushTypes: ["seller_message", "seller_alert"], enabled: isFocused });
 
@@ -87,6 +91,7 @@ export function useUnifiedNotifications() {
       markAllSellerBoostPromptsRead(),
       markAllConversationsRead(),
     ]);
+    void refreshAlerts();
   };
 
   const counts: Record<NotificationCategory, number> = {

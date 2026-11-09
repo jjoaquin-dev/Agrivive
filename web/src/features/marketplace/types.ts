@@ -21,6 +21,11 @@ export type MarketplaceSeller = {
   latitude: number | null;
   longitude: number | null;
   distanceKm: number | null;
+  /** Away: the seller cannot reply right now. Orders and pickup times stay as they are. */
+  away?: boolean;
+  awayUntil?: string | null;
+  closedToday?: boolean;
+  trustedSeller?: boolean;
 };
 
 export type MarketplaceSellerMapResult = {
@@ -61,9 +66,9 @@ export type MarketplaceProduct = {
   productType: MarketplaceProductType;
   condition: string | null;
   availability: "available" | "sold_out";
+  visibilityScore?: number | null;
   averageRating: string | null;
   reviewCount: number;
-  visibilityTier?: "Priority Boost" | "Standard Exposure" | "Basic/Hold" | null;
   seller: MarketplaceSeller;
 };
 
@@ -89,7 +94,7 @@ export type BuyerOrder = {
   checkoutId: string;
   buyerId: string;
   sellerId: string;
-  status: "pending" | "completed" | "cancelled" | "expired";
+  status: "pending" | "completed" | "cancelled" | "expired" | "declined";
   cancelledBy: string | null;
   cancellationReason: string | null;
   totalAmount: string | number;
@@ -98,6 +103,21 @@ export type BuyerOrder = {
   updatedAt: string;
   items: BuyerOrderItem[];
   qrPayload: string | null;
+  pickupStart: string | null;
+  pickupEnd: string | null;
+  confirmedAt: string | null;
+  expiredAt?: string | null;
+  confirmationMode: "manual" | "auto" | null;
+  progress: { steps: string[]; current: "placed" | "confirmed" | "preparing" | "ready" | "completed"; terminal: "expired" | "cancelled" | "declined" | null };
+  qr: { status: "not_yet_valid" | "active" | "expired"; validFrom: string | null; validUntil: string | null };
+  canCancel: boolean;
+  cancelBlockedReason: string | null;
+  disclaimer: string;
+  stall?: { shopName: string; address: string; latitude: number | null; longitude: number | null; instructions: string | null; phone: string | null; directionsUrl: string | null; away: boolean } | null;
+  decline?: { status: string; reason: string; reasonValid: boolean; sellerDueAt: string} | null;
+  excuse?: { status: string; reason: string } | null;
+  noShow?: { sequence: number; weight: number; excused: boolean } | null;
+  reschedules?: { id: string; status: string; reason: string; newStart: string; newEnd: string; oldStart: string; oldEnd: string }[];
 };
 
 export type BuyerOrderResponse = {
@@ -126,6 +146,7 @@ export type ProductReviewItem = {
   id: string;
   rating: number;
   review: string | null;
+  photoUrl: string | null;
   sellerResponse: string | null;
   createdAt: string;
   buyerName: string;
@@ -139,40 +160,16 @@ export type ProductReviewsResponse = {
   reviews: ProductReviewItem[];
 };
 
-export type ProductReviewEligibility = {
-  productId: string;
-  purchases: {
-    orderId: string;
-    itemId: string;
-    productName: string;
-    review: {
-      id: string;
-      rating: number;
-      review: string | null;
-      createdAt: string;
-    } | null;
-  }[];
-};
-
+/** One review per completed order: product stars, service stars, one comment, optional photo. */
 export type BuyerOrderReview = {
   id: string;
   orderId: string;
-  buyerId: string;
-  sellerId: string;
-  rating: number;
+  productRating: number | null;
+  serviceRating: number;
   review: string | null;
+  photoUrl: string | null;
   sellerResponse: string | null;
   createdAt: string;
-};
-
-export type BuyerProductReview = {
-  id: string;
-  orderId: string;
-  orderedItemId: string;
-  productId: string;
-  buyerId: string;
-  sellerId: string;
-  rating: number;
-  review: string | null;
-  createdAt: string;
+  updatedAt: string | null;
+  editableUntil: string;
 };

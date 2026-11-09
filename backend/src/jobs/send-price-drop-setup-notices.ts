@@ -4,7 +4,7 @@ import { seller_visibility_boosts as boosts, sellers_product as products } from 
 import { createSellerNotification } from "../utils/seller-notifications";
 
 /**
- * Six hours after a Priority Boost listing's first post, asks the seller to set the peso drop and the final price.
+ * Six hours after a boosted listing's first post, asks the seller to set the peso drop and the final price.
  * The saved time is kept so the Boost screen can still show it; the notified time makes this run once per boost.
  */
 export async function sendPriceDropSetupNotices(limit = 25) {

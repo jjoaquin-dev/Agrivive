@@ -4,7 +4,7 @@ import { listing_cycles, sellers_product, vegetable_catalog } from "../../../db/
 import { priceToCents, quantityToHundredths } from "../../../utils/order-amount";
 import { OrderError } from "../../../utils/order-types";
 import type { SellerProductCreate } from "../model/seller.product.create";
-import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { requireSellerMayList } from "../../../utils/seller-access";
 import { validateLowStockThreshold } from "../../../utils/product-threshold";
 import { validateProductImageReference } from "../../../utils/product-image";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
@@ -25,7 +25,7 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
   validatePriceReductionConfig(body.productPrice, body.priceReductionAmount, body.minimumPrice);
   const result = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
-    await requireVerifiedSeller(tx, userId);
+    await requireSellerMayList(tx, userId);
     const [catalog] = await tx.select({
       id: vegetable_catalog.id,
       filipinoName: vegetable_catalog.filipinoName,

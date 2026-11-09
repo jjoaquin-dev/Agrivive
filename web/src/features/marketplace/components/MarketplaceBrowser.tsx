@@ -88,7 +88,7 @@ function MarketplaceBrowserContent() {
           {/* 2. Categories */}
           <MarketplaceCategories />
 
-          {/* 3. Priority deals (hidden when there are none) */}
+          {/* 3. Top deals (hidden when there are none) */}
           <MarketplaceDealsRow />
 
           {/* 5. Results */}

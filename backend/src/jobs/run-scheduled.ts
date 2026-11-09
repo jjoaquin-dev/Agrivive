@@ -5,22 +5,36 @@ import { sendPendingTrustNotices } from "../utils/trust/send-notices";
 import { expireTrustRestrictions } from "../utils/trust/expire-restrictions";
 import { sendSellerListingNotices } from "./send-seller-listing-notices";
 import { deliverPushNotifications } from "./deliver-push-notifications";
+import { queueRankedBoost } from "./queue-ranked-boost";
 import { deliverSellerVisibilityBoosts } from "./deliver-seller-visibility-boosts";
 import { deliverSellerBoostFollowUps } from "./deliver-seller-boost-follow-ups";
 import { sendPriceDropSetupNotices } from "./send-price-drop-setup-notices";
+import { sendDailyAdvisoryNotices } from "./send-daily-advisory-notices";
 import { sendReservationEndingNotices } from "./send-reservation-ending-notices";
+import { autoConfirmOrders } from "../modules/pickup/services/pickup.order.auto-confirm";
+import { autoAcceptDeclines } from "../modules/pickup/services/pickup.decline.auto-accept";
+import { recordUnmarkedNoShows } from "../modules/pickup/services/pickup.order.no-show.auto";
+import { closeExpiredAway } from "../utils/pickup/away";
+import { recalculateActiveStandings } from "../utils/trust/recalculate";
 
 export async function runScheduledJobs() {
+  const autoConfirmed = await autoConfirmOrders();
   const expiredOrders = await expirePendingOrders();
+  const noShowsRecorded = await recordUnmarkedNoShows();
+  const declinesAccepted = await autoAcceptDeclines();
+  const awayEnded = await closeExpiredAway();
+  const standingsLowered = await recalculateActiveStandings();
   const reservationEndingNotices = await sendReservationEndingNotices();
   const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
   const trustRestrictionsExpired = await expireTrustRestrictions();
   const sellerListingNotices = await sendSellerListingNotices();
+  const rankedBoost = await queueRankedBoost();
   const sellerVisibilityBoosts = await deliverSellerVisibilityBoosts();
   const sellerBoostFollowUps = await deliverSellerBoostFollowUps();
   const priceDropSetupNotices = await sendPriceDropSetupNotices();
+  const dailyAdvisoryNotices = await sendDailyAdvisoryNotices();
   const pushNotifications = await deliverPushNotifications();
-  return { expiredOrders, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, pushNotifications };
+  return { autoConfirmed, expiredOrders, noShowsRecorded, declinesAccepted, awayEnded, standingsLowered, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, rankedBoost, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, dailyAdvisoryNotices, pushNotifications };
 }

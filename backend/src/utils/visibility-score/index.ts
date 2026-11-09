@@ -1,5 +1,7 @@
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 const hourMs = 60 * 60 * 1000;
+/** A listing counts as fully "aged" after this many hours. Typed here on purpose; the paper says 6. */
+export const freshnessWindowHours = 6;
 
 export type VisibilityScoreInput = {
   evaluatedAt: Date;
@@ -14,13 +16,12 @@ export function calculateVisibilityScore(input: VisibilityScoreInput) {
     !Number.isFinite(input.quantity) || !Number.isFinite(input.originalQuantity) ||
     input.originalQuantity <= 0) return null;
 
-  const postingAge = clamp((input.evaluatedAt.getTime() - input.publishedAt.getTime()) / (12 * hourMs));
+  const postingAge = clamp((input.evaluatedAt.getTime() - input.publishedAt.getTime()) / (freshnessWindowHours * hourMs));
   const remainingQuantity = clamp(input.quantity / input.originalQuantity);
   const recurrence = clamp(input.priorCycles / 3);
   const score = .40 * postingAge + .40 * remainingQuantity + .20 * recurrence;
   return {
     score,
-    tier: score >= .70 ? "priority" as const : score >= .40 ? "standard" as const : "basic" as const,
     inputs: { postingAge, remainingQuantity, recurrence, priorCycles: input.priorCycles },
   };
 }
@@ -79,55 +80,8 @@ export function marketplaceVisibilityScoreSql(evaluatedAt: Date, since: Date) {
       or ${sellers_product.originalQty} <= 0 or ${sellers_product.publishedAt} is null
       or ${sellers_product.publishedAt} > ${evaluatedAt} then null
     else
-      .40 * least(1, greatest(0, extract(epoch from (${evaluatedAt}::timestamptz - ${sellers_product.publishedAt})) / 43200.0))
+      .40 * least(1, greatest(0, extract(epoch from (${evaluatedAt}::timestamptz - ${sellers_product.publishedAt})) / ${sql.raw(String(freshnessWindowHours * 3600))}.0))
       + .40 * least(1, greatest(0, ${sellers_product.productQty} / nullif(${sellers_product.originalQty}, 0)))
       + .20 * least(1, greatest(0, ${priorCycles} / 3.0))
   end)::numeric, 9)::double precision`;
-}
-
-export function marketplacePriorCyclesSql(evaluatedAt: Date, since: Date) {
-  const currentCycleId = sql`(
-    select current_cycle.id from ${listing_cycles} as current_cycle
-    where current_cycle.product_id = ${sellers_product.id}
-      and current_cycle.started_at <= ${evaluatedAt}
-    order by current_cycle.started_at desc limit 1
-  )`;
-  const currentCatalogId = sql`coalesce(
-    (select current_cycle.vegetable_catalog_id from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    ${sellers_product.vegetableCatalogId}
-  )`;
-  const currentScalingType = sql`coalesce(
-    (select current_cycle.scaling_type from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    ${sellers_product.scalingType}
-  )`;
-  const vegetableKey = sql`coalesce(
-    (select current_cycle.vegetable_key from ${listing_cycles} as current_cycle
-      where current_cycle.product_id = ${sellers_product.id}
-        and current_cycle.started_at <= ${evaluatedAt}
-      order by current_cycle.started_at desc limit 1),
-    lower(regexp_replace(btrim(${sellers_product.productName}), '[[:space:]]+', ' ', 'g'))
-  )`;
-  return sql<number>`(
-    select count(*)::int from ${listing_cycles} as prior_cycle
-    inner join ${sellers_product} as prior_product on prior_product.id = prior_cycle.product_id
-    where prior_product.user_id = ${sellers_product.userId}
-      and (
-        (${currentCatalogId} is not null
-          and prior_cycle.vegetable_catalog_id = ${currentCatalogId}
-          and prior_cycle.scaling_type = ${currentScalingType})
-        or (${currentCatalogId} is null and prior_cycle.vegetable_catalog_id is null
-          and prior_cycle.scaling_type = ${currentScalingType}
-          and prior_cycle.vegetable_key = ${vegetableKey})
-      )
-      and prior_cycle.started_at >= ${since}
-      and prior_cycle.started_at < ${sellers_product.publishedAt}
-      and prior_cycle.started_at <= ${evaluatedAt}
-      and prior_cycle.id is distinct from ${currentCycleId}
-  )`;
 }

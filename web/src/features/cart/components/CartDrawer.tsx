@@ -13,7 +13,8 @@ import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNo
 import { useCart } from "../CartProvider";
 import { createCartCheckout } from "../api/cart";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
-import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
+import { ReservePickupModal, type ReserveSeller } from "@/src/features/reservation/components/ReservePickupModal";
+import type { PickupChoice } from "@/src/features/reservation/api/reservation";
 import { getBuyerProfile } from "@/src/features/profile/api/profile";
 import { CartSellerHeaderComponent } from "./CartSellerHeaderComponent";
 import { CartItemComponent } from "./CartItemComponent";
@@ -57,21 +58,30 @@ export function CartDrawer() {
     return Array.from(groups.entries());
   }, [items]);
 
+  const reserveSellers: ReserveSeller[] = Array.from(new Map(items.map((item) => [item.seller.id, item])).values()).map((first) => ({
+    sellerId: first.seller.id, shopName: first.seller.shopName, address: first.seller.detailAddress,
+    lines: items.filter((item) => item.seller.id === first.seller.id).map((item) => `${item.quantity} ${item.scalingType} ${item.productName}`),
+    amount: items.filter((item) => item.seller.id === first.seller.id).reduce((sum, item) => sum + Number(item.productPrice) * item.quantity, 0),
+  }));
+
   if (pathname === "/") return null;
 
-  async function handleCheckout() {
+  async function handleCheckout(pickups: PickupChoice[]) {
     if (!items.length || checkingOut) return;
     setCheckingOut(true);
     setCheckoutError("");
+    const chosen = new Set(pickups.map((pickup) => pickup.sellerId));
+    const reserved = items.filter((item) => chosen.has(item.seller.id));
     try {
-      const result = await createCartCheckout(items.map((item) => ({ productId: item.id, quantity: item.quantity })), crypto.randomUUID());
-      clear();
+      const result = await createCartCheckout(reserved.map((item) => ({ productId: item.id, quantity: item.quantity })), pickups, crypto.randomUUID());
+      if (reserved.length === items.length) clear(); else reserved.forEach((item) => removeItem(item.id));
       setShowReserveModal(false);
       setDrawerOpen(false);
       router.push(`/orders?checkout=${encodeURIComponent(result.checkoutId)}`);
     } catch (reason) {
-      setShowReserveModal(false);
+      if (reason instanceof ApiError && reason.status !== 409) { setCheckoutError(reason.message); if (reason.status !== 401) { setCheckingOut(false); if (reason.status === 403) setShowReserveModal(false); return; } }
       if (reason instanceof ApiError && reason.status === 401) {
+        setShowReserveModal(false);
         setDrawerOpen(false);
         router.push("/login?next=%2Fcart");
         return;
@@ -164,24 +174,22 @@ export function CartDrawer() {
               disabled={checkingOut || !isReady || Boolean(trustRestriction)}
               className="group min-h-12 h-12 w-full rounded-xl text-sm font-semibold active:translate-y-px"
             >
-              {checkingOut ? "Reserving…" : "Reserve cart for pickup"}<ArrowRight data-icon="inline-end" className="transition-transform duration-200 group-hover:translate-x-1" />
+              {checkingOut ? "Reserving…" : "Reserve for pickup"}<ArrowRight data-icon="inline-end" className="transition-transform duration-200 group-hover:translate-x-1" />
             </Button>
             <p className="pt-2 text-center text-xs text-muted-foreground">
-              Direct pickup payment at stall. No upfront card required.
+              Agrivive does not check produce quality. Please look over your items when you pick up.
             </p>
           </SheetFooter>
         ) : null}
 
-        <ConfirmationModalComponent
+        <ReservePickupModal
           open={showReserveModal}
-          onClose={() => setShowReserveModal(false)}
+          onClose={() => { setShowReserveModal(false); setCheckoutError(""); }}
           onConfirm={handleCheckout}
           loading={checkingOut}
-          variant="positive"
-          title="Confirm Reservation"
-          description={`Are you sure you want to reserve ${itemCount} item${itemCount > 1 ? "s" : ""} for ${money(total)}? You will pay directly to the stall at pickup.`}
-          confirmLabel="Reserve"
-          cancelLabel="No"
+          error={showReserveModal ? checkoutError : ""}
+          total={money(total)}
+          sellers={reserveSellers}
         />
       </SheetContent>
     </Sheet>

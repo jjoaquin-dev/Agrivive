@@ -10,7 +10,7 @@ type DropSetup = { amount?: number; minimumPrice?: number };
 
 /**
  * Turns the automatic 6-hour price drops on or off for one product. A drop amount and a final price can be sent
- * along; otherwise the saved ones are used. Price drops need a Priority Boost first post (saved when it posted).
+ * along; otherwise the saved ones are used.
  */
 export async function setSellerPriceReductionEnabled(sellerId: string, productId: string, enabled: boolean, setup: DropSetup = {}) {
   const result = await db.transaction(async (tx) => {
@@ -29,10 +29,9 @@ export async function setSellerPriceReductionEnabled(sellerId: string, productId
       throw new OrderError(409, "Set a drop amount and a final price first");
     }
 
-    // The newest first post that went out. Boosts saved before the tier was recorded have no tier and keep working.
+    // The newest first post that went out.
     const [boost] = await tx.select({
       id: seller_visibility_boosts.id,
-      tier: seller_visibility_boosts.priorityTier,
       setupAt: seller_visibility_boosts.priceDropSetupAt,
       dueAt: seller_visibility_boosts.followUpDueAt,
     }).from(seller_visibility_boosts).where(and(
@@ -42,9 +41,6 @@ export async function setSellerPriceReductionEnabled(sellerId: string, productId
       sql`exists (select 1 from ${fb_post_logs} where ${fb_post_logs.productId} = ${productId}
         and ${fb_post_logs.status} = 'success' and ${fb_post_logs.postedAt} >= ${seller_visibility_boosts.createdAt})`,
     )).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
-    if (enabled && boost?.tier && boost.tier !== "Priority Boost") {
-      throw new OrderError(409, `Price drops need Priority Boost. This listing was ${boost.tier} when it posted.`);
-    }
 
     await tx.update(sellers_product).set({
       priceReductionEnabled: enabled,

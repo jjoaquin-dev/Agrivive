@@ -1,177 +1,109 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MessageSquare, Star } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RatingPicker, RatingStars } from "@/src/components/RatingStars";
+import { RatingStars } from "@/src/components/RatingStars";
 import { ApiError, isAbortError } from "@/src/lib/api";
-import type { BuyerOrder, BuyerOrderReview, BuyerProductReview } from "@/src/features/marketplace/types";
-import {
-  createBuyerOrderReview,
-  createBuyerProductReview,
-  getBuyerOrderReview,
-  getBuyerProductReview,
-} from "../api/orders";
+import type { BuyerOrder, BuyerOrderReview } from "@/src/features/marketplace/types";
+import { getBuyerOrderReview } from "../api/orders";
+import { OrderReviewForm } from "./OrderReviewForm";
 
-type ExistingReviews = {
-  seller: BuyerOrderReview | null;
-  products: Record<string, BuyerProductReview | null>;
-};
+const dateFormat = { month: "short", day: "numeric", year: "numeric" } as const;
 
-function alreadyReviewed(error: unknown) {
-  return error instanceof ApiError && error.status === 404 ? null : Promise.reject(error);
-}
-
-function ReviewForm({
-  title,
-  itemName,
-  inputId,
-  existing,
-  submit,
-  onDuplicate,
-}: {
-  title: string;
-  itemName?: string;
-  inputId: string;
-  existing: { rating: number; review: string | null } | null;
-  submit: (rating: number, review: string) => Promise<{ rating: number; review: string | null }>;
-  onDuplicate: () => void;
-}) {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [saved, setSaved] = useState(existing);
-
-  useEffect(() => {
-    if (existing) setSaved(existing);
-  }, [existing]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (rating < 1 || saving) return;
-    setSaving(true);
-    setError("");
-    try {
-      setSaved(await submit(rating, comment.trim()));
-    } catch (reason) {
-      if (reason instanceof ApiError && reason.status === 409) {
-        setError("This review was already sent. We’re refreshing its status.");
-        onDuplicate();
-      } else {
-        setError(reason instanceof ApiError ? reason.message : "We could not save your review. Try again.");
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
-
+function SavedReview({ review, onEdit }: { review: BuyerOrderReview; onEdit: () => void }) {
+  const canEdit = new Date(review.editableUntil).getTime() > Date.now();
   return (
-    <Card className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
-      <CardHeader className="p-0 pb-3">
-        <CardTitle className="text-[18px] font-semibold text-foreground">{title}{itemName ? `: ${itemName}` : ""}</CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        {saved ? (
-          <div role="status" className="flex items-start gap-3">
-            <Star aria-hidden="true" className="mt-0.5 size-5 shrink-0 fill-amber-400 text-amber-400" />
-            <div>
-              <p className="font-semibold text-foreground">Your rating</p>
-              <div className="mt-1"><RatingStars rating={saved.rating} /></div>
-              {saved.review ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{saved.review}</p> : <p className="mt-2 text-sm text-muted-foreground">No comment added.</p>}
-            </div>
+    <div role="status" className="space-y-4">
+      <div className="flex items-start gap-3">
+        <Star aria-hidden="true" className="mt-0.5 size-5 shrink-0 fill-amber-400 text-amber-400" />
+        <div className="space-y-3">
+          <div>
+            <p className="font-semibold text-foreground">The produce</p>
+            {review.productRating ? <div className="mt-1"><RatingStars rating={review.productRating} /></div> : <p className="mt-1 text-sm text-muted-foreground">Not rated.</p>}
           </div>
-        ) : (
-          <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
-            <RatingPicker value={rating} onChange={setRating} label="Your rating" />
-            <label className="block text-xs font-semibold text-foreground" htmlFor={`review-comment-${inputId}`}>
-              Comment <span className="font-normal text-muted-foreground">(optional)</span>
-            </label>
-            <textarea
-              id={`review-comment-${inputId}`}
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              maxLength={2000}
-              rows={3}
-              placeholder="Share a few words about your experience"
-              className="w-full resize-y rounded-xl border border-[#E8E8E8] bg-white px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/20 focus-visible:border-[#457D00]"
-            />
-            {error ? <Alert variant="destructive" className="text-xs"><AlertDescription>{error}</AlertDescription></Alert> : null}
-            <Button type="submit" disabled={rating < 1 || saving} className="min-h-11 h-11 rounded-xl bg-[#457D00] px-5 text-[14px] font-semibold text-white hover:bg-[#457D00]/90 active:translate-y-px">
-              {saving ? "Saving…" : itemName ? "Post product review" : "Post seller review"}
-            </Button>
-          </form>
-        )}
-      </CardContent>
-    </Card>
+          <div>
+            <p className="font-semibold text-foreground">The seller</p>
+            <div className="mt-1"><RatingStars rating={review.serviceRating} /></div>
+          </div>
+          <p className="text-sm leading-6 text-muted-foreground">{review.review ?? "No comment added."}</p>
+          {review.photoUrl ? <img src={review.photoUrl} alt="Your review photo" className="h-32 w-32 rounded-xl border border-[#E8E8E8] object-cover" /> : null}
+          {review.sellerResponse ? (
+            <div className="rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3 text-sm">
+              <p className="font-semibold text-[#457D00]">Seller response</p>
+              <p className="mt-1 text-muted-foreground">{review.sellerResponse}</p>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      {canEdit ? (
+        <div>
+          <Button type="button" variant="outline" onClick={onEdit} className="min-h-12 rounded-xl px-5">Change my review</Button>
+          <p className="mt-2 text-xs text-muted-foreground">You can change it until {new Date(review.editableUntil).toLocaleDateString("en-PH", dateFormat)}.</p>
+        </div>
+      ) : <p className="text-xs text-muted-foreground">This review can no longer be changed.</p>}
+    </div>
   );
 }
 
 export function OrderReviews({ order }: { order: BuyerOrder }) {
-  const [reviews, setReviews] = useState<ExistingReviews | null>(null);
+  const [review, setReview] = useState<BuyerOrderReview | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadReviews = useCallback(async (signal?: AbortSignal) => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError("");
     try {
-      const [seller, ...productReviews] = await Promise.all([
-        getBuyerOrderReview(order.id, signal).catch(alreadyReviewed),
-        ...order.items.map((item) => getBuyerProductReview(order.id, item.id, signal).catch(alreadyReviewed)),
-      ]);
-      if (signal?.aborted) return;
-      setReviews({
-        seller,
-        products: Object.fromEntries(order.items.map((item, index) => [item.id, productReviews[index]])),
-      });
+      setReview(await getBuyerOrderReview(order.id, signal));
     } catch (reason) {
-      if (!signal?.aborted && !isAbortError(reason)) {
-        setError(reason instanceof ApiError ? reason.message : "We could not check your review status.");
-      }
+      if (signal?.aborted || isAbortError(reason)) return;
+      if (reason instanceof ApiError && reason.status === 404) setReview(null);
+      else setError(reason instanceof ApiError ? reason.message : "We could not check your review status.");
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, [order.id, order.items]);
+  }, [order.id]);
 
   useEffect(() => {
     const controller = new AbortController();
-    void loadReviews(controller.signal);
+    void load(controller.signal);
     return () => controller.abort();
-  }, [loadReviews]);
+  }, [load]);
 
-  if (loading) return <div className="space-y-4" aria-label="Loading review forms"><Skeleton className="h-44 rounded-2xl" /><Skeleton className="h-44 rounded-2xl" /></div>;
-  if (error || !reviews) {
-    return <Alert variant="destructive"><AlertDescription>{error || "We could not check your review status."}</AlertDescription><Button type="button" variant="outline" className="mt-3 min-h-11 rounded-xl" onClick={() => void loadReviews()}>Try again</Button></Alert>;
+  if (loading) return <div aria-label="Loading review form"><Skeleton className="h-64 rounded-2xl" /></div>;
+  if (error) {
+    return <Alert variant="destructive"><AlertDescription>{error}</AlertDescription><Button type="button" variant="outline" className="mt-3 min-h-11 rounded-xl" onClick={() => void load()}>Try again</Button></Alert>;
   }
 
   return (
     <section aria-labelledby="order-reviews-heading" className="space-y-4">
       <div>
         <h2 id="order-reviews-heading" className="font-heading text-xl font-bold">Rate your pickup</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Your feedback helps other buyers choose with care.</p>
+        <p className="mt-1 text-sm text-muted-foreground">One quick review for the produce and the seller.</p>
       </div>
-      <ReviewForm
-        title="Rate the seller"
-        inputId={`seller-${order.id}`}
-        existing={reviews.seller}
-        submit={(rating, review) => createBuyerOrderReview(order.id, rating, review)}
-        onDuplicate={() => void loadReviews()}
-      />
-      {order.items.map((item) => (
-        <ReviewForm
-          key={item.id}
-          title="Rate this product"
-          itemName={item.productName}
-          inputId={item.id}
-          existing={reviews.products[item.id]}
-          submit={(rating, review) => createBuyerProductReview(order.id, item.id, rating, review)}
-          onDuplicate={() => void loadReviews()}
-        />
-      ))}
+      <Card className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
+        <CardHeader className="p-0 pb-3"><CardTitle className="text-[18px] font-semibold text-foreground">{review && !editing ? "Your review" : review ? "Change your review" : "Your review"}</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          {notice ? <Alert className="mb-4 text-sm"><AlertDescription>{notice}</AlertDescription></Alert> : null}
+          {review && !editing ? (
+            <SavedReview review={review} onEdit={() => { setNotice(""); setEditing(true); }} />
+          ) : (
+            <OrderReviewForm
+              orderId={order.id}
+              existing={review}
+              onSaved={(saved, message) => { setReview(saved); setEditing(false); setNotice(message ?? ""); }}
+              onDuplicate={() => { setEditing(false); void load(); }}
+              onCancel={review ? () => setEditing(false) : undefined}
+            />
+          )}
+        </CardContent>
+      </Card>
       <p className="flex items-center gap-2 text-xs text-muted-foreground"><MessageSquare aria-hidden="true" className="size-4 text-agrivive-primary" />Only buyers with a completed pickup can leave a rating.</p>
     </section>
   );

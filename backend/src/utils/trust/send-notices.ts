@@ -21,6 +21,11 @@ const messages: Record<string, { subject: string; text: string }> = {
   inactivity_1m_blocked: { subject: "Agrivive account blocked due to inactivity", text: "Your account has been deactivated after 30 days of inactivity. Please follow the recovery process to restore access." },
 };
 
+const genericSubjects: Record<string, string> = {
+  trust_event: "Agrivive trust update", trust_action_notice: "Agrivive trust notice", trust_level_lowered: "Agrivive restriction ended",
+  order_update: "Agrivive order update", trust_decision: "Agrivive decision on your case",
+};
+
 export async function sendPendingTrustNotices(limit = 25) {
   let sent = 0;
   for (let i = 0; i < limit; i++) {
@@ -40,7 +45,9 @@ export async function sendPendingTrustNotices(limit = 25) {
     if (!notice) continue;
     const [recipient] = await db.select({ email: user.email }).from(user)
       .where(eq(user.id, notice.recipientId)).limit(1);
-    const message = messages[notice.kind];
+    const message = notice.detail
+      ? { subject: genericSubjects[notice.kind] ?? messages[notice.kind]?.subject ?? "Agrivive update", text: notice.detail }
+      : messages[notice.kind];
     if (!recipient || !message) continue;
     try {
       const details = `${message.text}${notice.orderId ? `\nOrder: ${notice.orderId}` : ""}`;

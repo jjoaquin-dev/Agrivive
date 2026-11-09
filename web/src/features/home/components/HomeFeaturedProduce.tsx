@@ -9,12 +9,11 @@ import { HomeFeaturedProduceCard } from "./HomeFeaturedProduceCard";
 
 const isDiscounted = (p: MarketplaceProduct) => Boolean(p.basePrice) && Number(p.basePrice) > Number(p.productPrice);
 
-// Shuffle, then rank boosted and discounted first. One listing per seller.
+// Discounted first, then the highest AHP-TOPSIS score. One listing per seller.
 function pickFeatured(candidates: MarketplaceProduct[], count: number) {
   const unique = [...new Map(candidates.map((p) => [p.id, p])).values()];
-  const rank = (p: MarketplaceProduct) =>
-    (p.visibilityTier === "Priority Boost" ? 0 : 1) + (isDiscounted(p) ? 0 : 2);
-  const shuffled = unique.sort(() => Math.random() - 0.5).sort((a, b) => rank(a) - rank(b));
+  const shuffled = unique.sort((a, b) =>
+    Number(isDiscounted(b)) - Number(isDiscounted(a)) || (b.visibilityScore ?? 0) - (a.visibilityScore ?? 0));
   const sellers = new Set<string>();
   return shuffled.filter((p) => {
     if (sellers.has(p.seller.id)) return false;

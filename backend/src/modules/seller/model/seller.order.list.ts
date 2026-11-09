@@ -5,6 +5,7 @@ export const sellerOrderStatus = t.Union([
   t.Literal("completed"),
   t.Literal("cancelled"),
   t.Literal("expired"),
+  t.Literal("declined"),
 ]);
 
 export const sellerOrderListQuery = t.Object({

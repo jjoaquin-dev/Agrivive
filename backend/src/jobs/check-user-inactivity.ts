@@ -9,7 +9,7 @@ export async function checkUserInactivity(limit = 100) {
   const threeWeeksAgo = new Date(now.getTime() - 21 * 24 * 3_600_000);
   const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 3_600_000);
 
-  // Only buyer and seller accounts follow the inactivity rule. Admin and stakeholder accounts are staff accounts.
+  // Only buyer and seller accounts follow the inactivity rule. Other roles are not timed.
   const isMarketplaceUser = sql`('buyer'::"role" = any(${user.role}) or 'seller'::"role" = any(${user.role}))`;
 
   let warningsIssued = 0;

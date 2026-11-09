@@ -64,13 +64,13 @@ export function mapUnifiedNotificationItems(input: {
       const date = parseDate(boost.createdAt);
       const isRead = Boolean(boost.readAt) || markedReadIds.has(`boost:${boost.id}`);
       list.push({
-        id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Boost Again?",
+        id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Price Lowered",
         subtitle: boost.priceBefore && boost.priceAfter
-          ? `${boost.productName} went from ₱${Number(boost.priceBefore).toFixed(2)} to ₱${Number(boost.priceAfter).toFixed(2)}. Post the new price.`
-          : `${boost.productName} has a new price. Post it on the Agrivive Facebook Page.`,
+          ? `${boost.productName} went from ₱${Number(boost.priceBefore).toFixed(2)} to ₱${Number(boost.priceAfter).toFixed(2)}. It was posted on the Agrivive page.`
+          : `${boost.productName} has a new price. It was posted on the Agrivive page.`,
         timestamp: formatRelativeTime(date), rawDate: date, read: isRead, urgent: false, iconType: "megaphone",
         primaryAction: {
-          label: "Boost Again",
+          label: "View Status",
           onPress: () => {
             markedReadIds.add(`boost:${boost.id}`);
             void markSellerBoostPromptRead(boost.id);

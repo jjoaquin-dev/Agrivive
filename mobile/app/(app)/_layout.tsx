@@ -3,6 +3,7 @@ import { Pressable, Text } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts } from "../../src/theme";
+import { DailyAdvisoryPopup } from "../../src/features/advisories/components/DailyAdvisoryPopup";
 
 function CancelButton({ onPress }: { onPress: () => void }) {
   return (
@@ -25,6 +26,8 @@ export default function AppLayout() {
   }
 
   return (
+    <>
+    <DailyAdvisoryPopup />
     <Stack
       screenOptions={{
         headerStyle: {
@@ -99,5 +102,6 @@ export default function AppLayout() {
       <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
       <Stack.Screen name="profile/security" options={{ headerShown: false }} />
     </Stack>
+    </>
   );
 }

@@ -12,11 +12,18 @@ import type { SendConversationMessageBody } from "../model/conversation";
 import { ConversationError } from "./conversation.error";
 import { publishConversationMessage } from "./conversation.realtime";
 import { enqueueConversationNotification } from "../../notifications/services/notifications.outbox.enqueue-conversation";
+import { ChatRuleError, HIDDEN_MESSAGE_TEXT, screenChatMessage } from "../../../utils/trust/chat-rules";
 import { presignConversationMessageBody } from "../../../utils/s3-conversation";
 
 export async function createConversationMessage(userId: string, conversationId: string, input: SendConversationMessageBody) {
   const body = input.message.trim();
   if (!body) throw new ConversationError(400, "Message is required");
+  // Spam and personal-data rules (Table 3). A message with a phone or email is saved hidden.
+  const screen = await screenChatMessage(userId, body, input.clientMessageId).catch((error) => {
+    if (error instanceof ChatRuleError) throw new ConversationError(429, error.message);
+    throw error;
+  });
+  const stored = screen.hidden ? HIDDEN_MESSAGE_TEXT : body;
 
   const result = await db.transaction(async (tx) => {
     const [conversation] = await tx.select().from(conversations).where(and(
@@ -43,7 +50,7 @@ export async function createConversationMessage(userId: string, conversationId: 
       conversationId,
       senderId: userId,
       clientMessageId: input.clientMessageId,
-      body,
+      body: stored,
       createdAt: now,
     }).returning();
     await tx.update(conversations).set({
@@ -66,7 +73,7 @@ export async function createConversationMessage(userId: string, conversationId: 
           productId,
           buyerId: userId,
           sellerId: conversation.sellerId,
-          question: body,
+          question: stored,
         }).onConflictDoNothing();
         timedByQuestion = true;
       } else if (conversation.contextType === "order" && conversation.orderId) {
@@ -77,7 +84,7 @@ export async function createConversationMessage(userId: string, conversationId: 
             orderId: conversation.orderId,
             buyerId: userId,
             sellerId: conversation.sellerId,
-            question: body,
+            question: stored,
           }).onConflictDoNothing();
           timedByQuestion = true;
         }
@@ -102,15 +109,15 @@ export async function createConversationMessage(userId: string, conversationId: 
       now,
     );
 
-    if (userId === conversation.sellerId) {
+    if (userId === conversation.sellerId && !screen.hidden) {
       // One thread per buyer and seller, so a reply answers everything this buyer has asked that is still open.
       // (The thread's context can change after a question was asked, so it is not used here.)
-      await tx.update(order_inquiries).set({ reply: body, repliedAt: now }).where(and(
+      await tx.update(order_inquiries).set({ reply: stored, repliedAt: now }).where(and(
         eq(order_inquiries.buyerId, conversation.buyerId),
         eq(order_inquiries.sellerId, userId),
         isNull(order_inquiries.repliedAt),
       ));
-      await tx.update(product_inquiries).set({ reply: body, repliedAt: now }).where(and(
+      await tx.update(product_inquiries).set({ reply: stored, repliedAt: now }).where(and(
         eq(product_inquiries.buyerId, conversation.buyerId),
         eq(product_inquiries.sellerId, userId),
         isNull(product_inquiries.repliedAt),

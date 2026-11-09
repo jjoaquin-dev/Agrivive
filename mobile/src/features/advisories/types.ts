@@ -1,4 +1,4 @@
-export type AdvisoryKind = "weather" | "holiday" | "location";
+export type AdvisoryKind = "weather" | "holiday" | "heat" | "location";
 
 export interface SellerAdvisoryWeatherDay {
   date: string;

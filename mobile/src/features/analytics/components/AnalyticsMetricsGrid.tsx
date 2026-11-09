@@ -1,8 +1,10 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
 import { formatRange, unitWord } from "../format";
+import { movementRows } from "../breakdown";
+import { AnalyticsDetailSheet } from "./AnalyticsDetailSheet";
 import type { AnalyticsUnit, SellerAnalyticsMetrics } from "../types";
 
 interface AnalyticsMetricsGridProps {
@@ -23,11 +25,13 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
   const up = change !== null && change > 0;
   const down = change !== null && change < 0;
   const rate = sellThroughNotComputable ? null : metrics.sellThroughRate;
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <View style={cardStyles.card}>
+      <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityHint="Shows the breakdown" style={cardStyles.card}>
         <Text style={cardStyles.title}>Sold</Text>
+        <Text style={cardStyles.subtitle}>Total picked up in these days. The arrow compares it with the days before.</Text>
         <Text style={styles.big}>{metrics.completedQuantity} {word}</Text>
         <Text style={styles.earned}>{peso(metrics.completedSalesTotal)} earned from pickups</Text>
         {change !== null ? (
@@ -38,9 +42,9 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
             </Text>
           </View>
         ) : null}
-      </View>
+      </Pressable>
 
-      <View style={cardStyles.card}>
+      <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityHint="Shows the breakdown" style={cardStyles.card}>
         <Text style={cardStyles.title}>How Much Sold</Text>
         <View style={styles.rateRow}>
           <Text style={styles.rate}>{rate === null ? "N/A" : `${rate.toFixed(0)}%`}</Text>
@@ -50,7 +54,8 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
           <View style={[styles.fill, { width: `${Math.min(100, Math.max(0, rate ?? 0))}%` }]} />
         </View>
         <Text style={styles.caption}>{rate === null ? "Nothing was posted in these days." : "Share of posted produce that was picked up"}</Text>
-      </View>
+      </Pressable>
+      <AnalyticsDetailSheet visible={open} title="Sold and Posted" subtitle="Where the produce you posted went." rows={movementRows(metrics, word)} onClose={() => setOpen(false)} />
     </>
   );
 }

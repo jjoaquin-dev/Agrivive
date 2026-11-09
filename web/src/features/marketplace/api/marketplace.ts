@@ -4,9 +4,7 @@ import type {
   MarketplaceProductResponse,
   MarketplaceSellerProfile,
   ProductReviewsResponse,
-  ProductReviewEligibility,
   SellerReviewsResponse,
-  BuyerProductReview,
 } from "../types";
 
 export function listMarketplaceProducts(params: URLSearchParams, signal?: AbortSignal) {
@@ -33,15 +31,4 @@ export function getSellerReviews(sellerId: string, signal?: AbortSignal) {
 
 export function getProductReviews(productId: string, signal?: AbortSignal) {
   return apiRequest<ProductReviewsResponse>(`/marketplace/products/${encodeURIComponent(productId)}/reviews`, { signal });
-}
-
-export function getProductReviewEligibility(productId: string, signal?: AbortSignal) {
-  return apiRequest<ProductReviewEligibility>(`/buyer/products/${encodeURIComponent(productId)}/review-eligibility`, { signal });
-}
-
-export function createProductReview(productId: string, orderId: string, itemId: string, rating: number, review: string) {
-  return apiRequest<BuyerProductReview>(`/buyer/orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}/review`, {
-    method: "POST",
-    body: JSON.stringify({ rating, review }),
-  });
 }

@@ -6,6 +6,9 @@ export const orderModel = t.Object({
     minimum: 0.01,
     maximum: 99_999_999,
   }),
+  /** The pickup range the buyer chose (ISO time). Rechecked on the server. */
+  pickupStart: t.String({ format: "date-time" }),
+  pickupEnd: t.String({ format: "date-time" }),
 });
 
 export type OrderInput = typeof orderModel.static;

@@ -38,7 +38,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
   return (
     <View style={cardStyles.card}>
       <Text style={cardStyles.title}>Where Your Produce Went</Text>
-      <Text style={cardStyles.subtitle}>Amount in {word}</Text>
+      <Text style={cardStyles.subtitle}>Amount in {word}. Shows how much you posted and what happened to it: picked up, waiting, cancelled or expired.</Text>
 
       <View style={styles.chartWrapper}>
         <BarChart

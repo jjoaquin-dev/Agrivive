@@ -14,7 +14,7 @@ interface Props {
   onSaved: () => void;
 }
 
-/** Priority Boost produce: how much the price drops every 6 hours, and the final price it never goes below. */
+/** How much the price drops every 6 hours, and the final price it never goes below. */
 export function PriceDropSetupSheet({ visible, productId, price, onClose, onSaved }: Props) {
   const [amount, setAmount] = useState("");
   const [finalPrice, setFinalPrice] = useState("");

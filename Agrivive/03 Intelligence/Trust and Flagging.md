@@ -1,7 +1,7 @@
 ---
 title: Trust and Flagging
 type: mechanism
-status: implemented; policy validation pending
+status: implemented to the Flagging and Trust PDF (monitoring-v4); not tested by the owner
 source_pages: [4, 7, 8, 22, 23]
 ---
 
@@ -45,8 +45,8 @@ Recorded reservations, QR state, pickup outcomes, communication timing, and revi
 - Verified events and completed-order rating signals are evaluated by the `monitoring-v3` policy when actions are enabled.
 - A warning is recorded and notified; a temporary restriction blocks seller and buyer transactional actions and removes the seller from public marketplace visibility until expiry; a blocked action sets the account inactive.
 - Temporary restrictions expire automatically through the scheduled job. A blocked account is restored only through the public recovery flow after the user verifies the existing email OTP mechanism. The recovery is audited in `trust_actions`.
-- Admin views remain read-only. Admins can monitor aggregate values but cannot approve reports, restore accounts, or change account state.
-- The web exposes Google registration/sign-in, email OTP recovery, buyer report/evidence submission, verified-purchase reviews, trust-aware restriction messages, and read-only action counts. The web does not add administrative mutation controls.
+- Agrivive has two user roles in the trust mechanism: buyer and seller. No person reviews, approves, rejects or changes a report, dispute, decline, trust point or penalty. The system applies the written rules and sends a notice with the result. The older read-only `/admin/performance` metrics route is outside the trust mechanism and changes nothing.
+- The web exposes Google registration/sign-in, email OTP recovery, buyer report/evidence submission, verified-purchase reviews, trust-aware restriction messages, and read-only action counts. The web adds no controls that let a person change a trust decision.
 - Correction requests, report evidence, and notices remain separate from public marketplace data. Invalidated source events no longer contribute to the monitoring score.
 
 ## Buyer rules (system-only, not in the paper)
@@ -84,3 +84,47 @@ The correction is: reputation systems → [54]; fake or manipulated reviews → 
 - **[58]** Jiang et al., vegetable postharvest quality/time-sensitivity research. [Agronomy / MDPI article](https://www.mdpi.com/2073-4395/9/11/724)
 
 **Source pages:** PDF pp. 4, 7–8, 22–23, 29–30; repository implementation as of 12 October 2026.
+
+## Update 2026-11-08 (monitoring-v4)
+
+The older tables in this note are replaced by the Flagging and Trust Mechanism PDF. Bands: 0-1 good standing, 2-3 notice, 4-5 warning, 6-7 pause 24 hours, 8-11 pause 3 days, 12+ block. A seller's pause or block also needs 10+ orders and a fault rate of 10%+. Weights: non-response 1, seller cancels a confirmed order 2, low rating 1 (reason written, or 2nd in 30 days), wrong listing 2, conduct 2, seller-fault decline 2, QR misuse 3 and block, missed pickup 2 (the first is 0), late cancellation 1, invalid decline 1, false photo 2. The buyer cancel counter was removed. Away mode, excuse, 7-day dispute, pickup decline, fault rate and Trusted Seller are built. Inactivity (21 and 30 days) is in `jobs/check-user-inactivity.ts`. See [[2026-11-08 Reservation QR Pickup and PDF Trust Mechanism]].
+
+## System decisions (no Admin) — 2026-11-08
+
+See [[2026-11-08 Remove Admin Role from Trust]]. Every decision below is made by the system from stored records and the existing rules. Nothing is invented where no rule exists; those cases are listed as limits.
+
+| Case | System rule |
+|---|---|
+| One report | An allegation, 0 points. |
+| Two different reporters, same reason | Confirmed; the event is recorded and points apply. A pair that already confirmed twice in 90 days cannot confirm a third time alone: the report waits at 0 points for a third independent reporter. Reciprocal reports on the same order are ignored. |
+| Dispute of a counted event (7 days) | Answered at once by checking the stored record against the rule that made the event. Upheld: the event stops counting and the score and level are recalculated. Rejected: the record still fits the rule. Unresolved: no stored record can settle it, so the event stays. |
+| Decline at pickup | Reason not allowed: buyer +1. Photo already used on another decline (hash match): buyer +2. Otherwise the seller answers in 24 hours; accepted, silent or disputed all end as seller fault (+2), because the system follows the allowed-reason table. |
+| Excuse for a missed pickup | Confirmed or rejected by the order's seller within the 24-hour and once-per-30-days limits. |
+| Blocked account | Restored only through the existing email-code recovery. |
+| Fault rate 15% or more | Shown as "High fault rate": Priority Boost and Trusted Seller are off. No person is asked to review it. |
+
+Limits that need a written system rule:
+- The system cannot judge what a photo shows, so a seller's dispute photo is stored with the record but cannot change a decline.
+- Events from confirmed reports cannot be settled by a dispute, because no stored record proves or disproves the allegation.
+- A seller who never answers an excuse leaves it pending; no timeout rule exists.
+- There is no appeal path for a blocked account other than recovery.
+
+References dated 2022 to 2026 that can replace the older ones: [[Trust and Flagging References 2022-2026]].
+
+## Flagging Rules Without Admin 2 — 2026-11-09
+
+The rule set in `Flagging Rules Without Admin 2.pdf` is now the live table. Delivery note: [[2026-11-09 Flagging Rules Without Admin]].
+
+| Rule | Points or result |
+|---|---|
+| Missed pickup (reservation ended) | Buyer +2 every time. No free first miss. |
+| Decline at pickup, seller accepts or stays silent 24 h | Seller +2 |
+| Decline at pickup, seller disputes | Nobody gets points. Order closes as declined at pickup. Produce not restocked. |
+| 3 reports by one buyer in 14 days, none confirmed | Reporter +1 for each group of 3 |
+| Review bomb: 5+ ratings of 1 or 2 stars from accounts under 7 days old, one seller, 24 h | Ratings ignored. Buyers 0 points and a notice. |
+| Order from own account | +3 and block at once |
+| More than 5 orders in 7 days, one buyer to one seller | 0 points. Extra orders leave seller counts and rankings. |
+| Same chat message 5+ times in 10 min | No sending for 10 min. 2nd time in 90 days +1 |
+| Phone or email in chat | Message hidden. 3rd time in 90 days +1 |
+
+Settings the PDF calls starting numbers (5 ratings, 24 h, 7 days, 5 orders in 7 days, 3 reports, 14 days) are constants in `utils/trust/review-bomb.ts`, `order-flood.ts`, `fake-reports.ts` and `chat-rules.ts`. Where the PDF says "2nd time" or "3rd time", the same step repeats on every 2nd or 3rd event after that.

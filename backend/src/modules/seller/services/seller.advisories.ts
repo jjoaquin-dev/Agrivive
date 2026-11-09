@@ -4,11 +4,13 @@ import { sellers_profile } from "../../../db/schema";
 import { requireActiveUser } from "../../../utils/order-access";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import type { SellerAdvisoriesResponse } from "../model/seller.advisories";
+import { heatAlertFor, holidayDueForAlert } from "../../../utils/advisory-alerts";
 import { fetchPhilippineHolidays } from "./seller.holidays";
 import { fetchSellerWeather } from "./seller.weather";
 
 const rainyCodes = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99]);
 
+/** Alerts at the stall: rain, heat (35 °C or more), and a public holiday exactly one day away. */
 function createReminders(
   weather: Awaited<ReturnType<typeof fetchSellerWeather>>,
   holidays: Awaited<ReturnType<typeof fetchPhilippineHolidays>>,
@@ -16,13 +18,12 @@ function createReminders(
   const reminders: SellerAdvisoriesResponse["reminders"] = [];
   if (weather) {
     const rainExpected = weather.forecast.some((day) => day.precipitationProbability >= 60 || rainyCodes.has(day.weatherCode));
-    const hotExpected = weather.forecast.some((day) => day.temperatureMaxC >= 35);
+    const heat = heatAlertFor(weather.forecast);
     if (rainExpected) reminders.push({ kind: "weather", message: "Rain is expected. Plan covered handling and inspect stored produce." });
-    if (hotExpected) reminders.push({ kind: "weather", message: "Hot weather is expected. Inspect stored produce and review handling plans." });
+    if (heat) reminders.push({ kind: "heat", message: `Heat alert: it may reach ${heat.temperatureMaxC}°C ${heat.when}. Keep your produce in the shade and check it often.` });
   }
-  if (holidays?.upcoming.length) {
-    reminders.push({ kind: "holiday", message: "Review pickup availability and selling plans around the upcoming public holiday." });
-  }
+  const holiday = holidayDueForAlert(holidays?.upcoming);
+  if (holiday) reminders.push({ kind: "holiday", message: `Tomorrow is ${holiday.name}. Check your pickup times and your stock.` });
   return reminders;
 }
 
@@ -51,7 +52,7 @@ export async function getSellerAdvisories(sellerId: string): Promise<SellerAdvis
       holidays: holidays ?? { available: false, upcoming: [] },
       reminders: [
         { kind: "location", message: "Add a seller location to receive local weather advisories." },
-        ...(holidays?.upcoming.length ? [{ kind: "holiday" as const, message: "Review pickup availability and selling plans around the upcoming public holiday." }] : []),
+        ...createReminders(null, holidays),
       ],
       sources: { weather: "unavailable", holidays: holidays ? "available" : "unavailable" },
     };

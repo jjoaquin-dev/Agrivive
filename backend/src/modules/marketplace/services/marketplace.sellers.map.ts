@@ -1,6 +1,7 @@
 import { and, asc, count, eq, gt, gte, ilike, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { order_reviews, sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
+import { reviewCounts } from "../../../utils/trust/review-counts";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { marketplaceDistanceExpression } from "./marketplace.distance";
@@ -69,6 +70,7 @@ export async function listMarketplaceSellersMap(query: MarketplaceSellersMapQuer
       reviewCount: sql<number>`count(*)::int`.as("review_count"),
     })
     .from(order_reviews)
+    .where(reviewCounts)
     .groupBy(order_reviews.sellerId)
     .as("seller_ratings");
 

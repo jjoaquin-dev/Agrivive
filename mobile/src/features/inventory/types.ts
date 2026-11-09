@@ -54,6 +54,8 @@ export interface Product {
   minimumPrice?: string | number | null;
   /** False when the seller paused the automatic 6-hour drops. */
   priceReductionEnabled?: boolean;
+  /** True when the seller allowed automatic follow-up posts for this listing. */
+  autoPostEnabled?: boolean;
   priceScheduleStartedAt?: string | null;
   nextPriceReductionAt?: string | null;
   productQty: string | number;

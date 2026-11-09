@@ -11,8 +11,8 @@ interface Props {
 /** The price drop rule, read from the product's own settings. */
 export function BoostPriceDropCard({ dropAmount, lowestPrice }: Props) {
   const text = dropAmount > 0 && lowestPrice
-      ? `If your produce is Priority Boost when it posts and has not sold 6 hours later, the price drops by ₱${dropAmount.toFixed(2)}. This repeats every 6 hours until your final price of ₱${lowestPrice.toFixed(2)}. It never goes lower.`
-      : "If your produce is Priority Boost when it posts, we ask you 6 hours later how much to drop the price. Otherwise your price stays the same.";
+      ? `If your produce has not sold 6 hours after it posts, the price drops by ₱${dropAmount.toFixed(2)}. This repeats every 6 hours until your final price of ₱${lowestPrice.toFixed(2)}. It never goes lower.`
+      : "6 hours after it posts, we ask you how much to drop the price. If you skip it, your price stays the same.";
   return (
     <View style={styles.card}>
       <Tag size={22} color={colors.primary} />

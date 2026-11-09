@@ -33,6 +33,7 @@ export const sellerAdvisoriesResponse = t.Object({
     kind: t.Union([
       t.Literal("weather"),
       t.Literal("holiday"),
+      t.Literal("heat"),
       t.Literal("location"),
     ]),
     message: t.String(),

@@ -1,8 +1,11 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { product_reviews, sellers_product, user } from "../../../db/schema";
+import { order_reviews, sellers_product, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { formatReviewBuyerName } from "../../../utils/review-format";
+import { reviewPhotoUrl } from "../../../utils/review-photo";
 
+/** Reviews for a product: the product stars buyers gave on orders that included it, with the shared comment and photo. */
 export async function listMarketplaceProductReviews(productId: string) {
   const [product] = await db
     .select({ id: sellers_product.id })
@@ -11,48 +14,47 @@ export async function listMarketplaceProductReviews(productId: string) {
     .limit(1);
   if (!product) throw new OrderError(404, "Marketplace product not found");
 
+  const hasProduct = and(
+    isNotNull(order_reviews.productRating),
+    sql`exists (select 1 from ordered_items where ordered_items.orders_id = ${order_reviews.orderId} and ordered_items.product_id = ${productId})`,
+  );
+  const stars = (value: number) => sql<number>`count(case when ${order_reviews.productRating} = ${value} then 1 end)::int`;
+
   const [summary] = await db
     .select({
       count: sql<number>`count(*)::int`,
-      average: sql<string>`round(avg(${product_reviews.rating})::numeric, 1)::text`,
-      star5: sql<number>`count(case when ${product_reviews.rating} = 5 then 1 end)::int`,
-      star4: sql<number>`count(case when ${product_reviews.rating} = 4 then 1 end)::int`,
-      star3: sql<number>`count(case when ${product_reviews.rating} = 3 then 1 end)::int`,
-      star2: sql<number>`count(case when ${product_reviews.rating} = 2 then 1 end)::int`,
-      star1: sql<number>`count(case when ${product_reviews.rating} = 1 then 1 end)::int`,
+      average: sql<string>`round(avg(${order_reviews.productRating})::numeric, 1)::text`,
+      star5: stars(5), star4: stars(4), star3: stars(3), star2: stars(2), star1: stars(1),
     })
-    .from(product_reviews)
-    .where(eq(product_reviews.productId, productId));
+    .from(order_reviews)
+    .where(hasProduct);
 
   const rows = await db
     .select({
-      id: product_reviews.id,
-      rating: product_reviews.rating,
-      review: product_reviews.review,
-      sellerResponse: product_reviews.sellerResponse,
-      createdAt: product_reviews.createdAt,
+      id: order_reviews.id,
+      rating: order_reviews.productRating,
+      review: order_reviews.review,
+      photoKey: order_reviews.photoKey,
+      sellerResponse: order_reviews.sellerResponse,
+      createdAt: order_reviews.createdAt,
       buyerName: user.name,
     })
-    .from(product_reviews)
-    .leftJoin(user, eq(user.id, product_reviews.buyerId))
-    .where(eq(product_reviews.productId, productId))
-    .orderBy(desc(product_reviews.createdAt))
+    .from(order_reviews)
+    .leftJoin(user, eq(user.id, order_reviews.buyerId))
+    .where(hasProduct)
+    .orderBy(desc(order_reviews.createdAt))
     .limit(10);
 
-  const reviews = rows.map((row) => {
-    const name = row.buyerName?.trim().split(/\s+/) ?? [];
-    const buyerName = name[0]
-      ? `${name[0]}${name[1]?.[0] ? ` ${name[1][0]}.` : ""}`
-      : "Verified buyer";
-    return {
-      id: row.id,
-      rating: row.rating,
-      review: row.review,
-      sellerResponse: row.sellerResponse,
-      createdAt: row.createdAt.toISOString(),
-      buyerName,
-    };
-  });
+  const photoUrls = await Promise.all(rows.map((row) => reviewPhotoUrl(row.photoKey)));
+  const reviews = rows.map((row, index) => ({
+    id: row.id,
+    rating: row.rating!,
+    review: row.review,
+    photoUrl: photoUrls[index] ?? null,
+    sellerResponse: row.sellerResponse,
+    createdAt: row.createdAt.toISOString(),
+    buyerName: formatReviewBuyerName(row.buyerName),
+  }));
 
   return {
     productId,

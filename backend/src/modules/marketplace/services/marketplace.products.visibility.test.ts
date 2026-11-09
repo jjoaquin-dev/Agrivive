@@ -21,8 +21,7 @@ function makeRow(n: number, ageHours: number, stockRatio: number, extra: { publi
     productQty: stockRatio * 10,
     originalQty: 10,
     publishedAt: extra.publishedAt ?? hoursAgo(ageHours),
-    ahpPriorCycles: extra.tied ? 1 : n % 4,
-    sellerReliability: extra.tied ? 0.7 : 0.5 + (n % 5) / 10,
+    sellerReliability: extra.tied ? 3.5 : 2.5 + (n % 5) / 2,
   };
 }
 

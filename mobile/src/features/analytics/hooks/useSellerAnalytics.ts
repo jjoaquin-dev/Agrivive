@@ -1,19 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchSellerAnalytics } from "../api/seller-analytics";
 import type { AnalyticsUnit, SellerAnalyticsResponse } from "../types";
+import type { DateRange } from "../dateRange";
 import { ApiError, logApiError } from "../../../api/client";
 
-function dateOnly(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-export function getAnalyticsRange(days: number) {
-  const end = new Date();
-  const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
-  return { from: dateOnly(start), to: dateOnly(end) };
-}
-
-export function useSellerAnalytics(days: number, productId?: string, unit?: AnalyticsUnit) {
+export function useSellerAnalytics(range: DateRange, productId?: string, unit?: AnalyticsUnit) {
   const [analytics, setAnalytics] = useState<SellerAnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,7 +15,7 @@ export function useSellerAnalytics(days: number, productId?: string, unit?: Anal
     else setLoading(true);
     setError(null);
     try {
-      setAnalytics(await fetchSellerAnalytics({ ...getAnalyticsRange(days), productId, unit }));
+      setAnalytics(await fetchSellerAnalytics({ from: range.from, to: range.to, productId, unit }));
     } catch (err: any) {
       logApiError("Failed to load seller analytics", err);
       if (err instanceof ApiError && [401, 403].includes(err.statusCode)) setAnalytics(null);
@@ -33,7 +24,7 @@ export function useSellerAnalytics(days: number, productId?: string, unit?: Anal
       setLoading(false);
       setRefreshing(false);
     }
-  }, [days, productId, unit]);
+  }, [range.from, range.to, productId, unit]);
 
   useEffect(() => {
     void load();

@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Bell, ChevronRight, FileText, History, Lock, LogOut, Shield, ShieldCheck, Star } from "lucide-react-native";
+import { Bell, CalendarClock, ChevronRight, FileText, History, Lock, LogOut, Shield, ShieldCheck, Star } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { profileColors } from "../profileTokens";
 import { openLegalPage } from "../../legal/legalLinks";
@@ -10,13 +10,15 @@ interface Props {
   onNotifications: () => void;
   onReviews: () => void;
   onTrust: () => void;
+  onStall: () => void;
   onSecurity: () => void;
   onActivity: () => void;
   onSignOut: () => void;
 }
 
-export function ProfileSettingsList({ twoFactorEnabled, onNotifications, onReviews, onTrust, onSecurity, onActivity, onSignOut }: Props) {
+export function ProfileSettingsList({ twoFactorEnabled, onNotifications, onReviews, onTrust, onStall, onSecurity, onActivity, onSignOut }: Props) {
   const items = [
+    { title: "Stall Hours & Away", hint: "Opening hours, Closed today, Away, pickup limits", icon: CalendarClock, action: onStall },
     { title: "Ratings & Reviews", hint: "See customer feedback and reply to reviews", icon: Star, action: onReviews },
     { title: "Notification Preferences", hint: "Manage alerts, sound, and pickup reminders", icon: Bell, action: onNotifications },
     { title: "Trust & Account Records", hint: "Verified events, ratings, and standing", icon: ShieldCheck, action: onTrust },

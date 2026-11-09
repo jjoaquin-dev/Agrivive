@@ -1,3 +1,4 @@
+import { useAlertCounts } from "../../alerts/alertStore";
 import React from "react";
 import { View, Text, Pressable, TextInput, ScrollView } from "react-native";
 import { ChevronDown, MoreVertical, Search, X } from "lucide-react-native";
@@ -31,12 +32,13 @@ const TABS: { id: InventoryFilterTab; label: string; fg: string; bg: string; cou
 export function InventoryListHeader({
   summary, listingCount, searchQuery, onSearch, category, onOpenCategory, filterTab, onFilterTab, onOpenNotifications, onOpenMenu,
 }: Props) {
+  const { notifications } = useAlertCounts();
   return (
     <View>
       <View style={styles.topBar}>
         <Text style={styles.title}>Listings</Text>
         <View style={styles.actions}>
-          <NotificationBellButton onPress={onOpenNotifications} />
+          <NotificationBellButton unreadCount={notifications} onPress={onOpenNotifications} />
           <Pressable onPress={onOpenMenu} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="More options">
             <MoreVertical size={20} color="#374151" />
           </Pressable>

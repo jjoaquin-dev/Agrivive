@@ -16,6 +16,7 @@ import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../src/theme";
 import { useSellerTrust } from "../../src/features/trust/hooks/useSellerTrust";
 import type { SellerTrustAction, SellerTrustEvent, SellerTrustNotice } from "../../src/features/trust/types";
+import { TrustStandingCard } from "../../src/features/trust/components/TrustStandingCard";
 import { TrustMonitoringSummary } from "../../src/features/trust/components/TrustMonitoringSummary";
 
 function trustLabel(kind: string) {
@@ -75,6 +76,7 @@ export default function SellerTrustScreen() {
 
         {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text><ButtonComponent title="Try Again" onPress={refresh} variant="secondary" style={styles.retryButton} /></View> : null}
 
+        <TrustStandingCard />
         <TrustMonitoringSummary monitoring={trust.monitoring} />
 
         {activeActions.length > 0 ? (

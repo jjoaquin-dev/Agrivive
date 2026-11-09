@@ -20,6 +20,7 @@ const icons: Record<string, IconType> = {
   boost_started: "megaphone",
   boost_posted: "celebration",
   boost_failed: "cross",
+  daily_advisory: "thermometer",
   inquiry_12h_reminder: "clock",
   inquiry_24h_warning: "clock",
 };
@@ -42,6 +43,9 @@ function actionFor(notice: SellerNotification, router: RouterInstance) {
       label: notice.category === "messages" ? "Reply" : "View Reservation",
       onPress: () => router.push({ pathname: "/(app)/orders/[id]", params: { id: orderId } }),
     };
+  }
+  if (notice.kind === "daily_advisory") {
+    return { label: "See Weather and Calendar", onPress: () => router.push("/(app)/advisories") };
   }
   if (notice.productId && notice.kind === "price_drop_setup") {
     const productId = notice.productId;

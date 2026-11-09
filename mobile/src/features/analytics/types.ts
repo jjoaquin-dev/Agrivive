@@ -14,7 +14,22 @@ export interface SellerAnalyticsMetrics {
   recurringListings: number;
 }
 
+export interface SellerAnalyticsInsights {
+  orders: { placed: number; pickedUp: number; cancelled: number; expired: number; declined: number };
+  averageOrder: number | null;
+  buyers: { total: number; returning: number };
+  topProduce: { name: string; unit: string; quantity: number; sales: number }[];
+  pickupsByWeekday: number[];
+  averageReplyMinutes: number | null;
+  rating: { average: number; count: number; stars: number[]; allTime: boolean } | null;
+  totalSales: number;
+  smallestOrder: number | null;
+  largestOrder: number | null;
+  dailySales: { date: string; sales: number; pickups: number }[];
+}
+
 export interface SellerAnalyticsResponse {
+  insights: SellerAnalyticsInsights;
   period: {
     from: string;
     to: string;

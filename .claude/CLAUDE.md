@@ -4,12 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @../AGENTS.md
 
-The root `AGENTS.md` above holds the binding conventions (module layout, one-exported-function-per-service-file, 200-line file limit, plain-word UI copy, UI/UX law citations, Obsidian vault notes, manual endpoint testing). The notes below cover what it does not, and where it is out of date.
-
-## Where AGENTS.md is stale
-
-- It says `web/` and `analytics/` hold no application code. `web/` is a Next.js 15 buyer site and `mobile/` is a full Expo app; `analytics/` is still empty. Both have their own `AGENTS.md` (`web/AGENTS.md` scopes the buyer site; `mobile/AGENTS.md` says to read the Expo SDK docs for the installed version before writing code).
-- Its list of modules is partial. `backend/src/modules/` also has `admin`, `conversations` (includes WebSocket realtime), `integrations` (protected n8n callbacks), `marketplace`, `notifications`, `stakeholder`, and `trust`.
+The root `AGENTS.md` above holds the binding conventions (Codebase Architecture Map, module layout, one-exported-function-per-service-file, 200-line file limit, plain-word UI copy, UI/UX law citations, Obsidian vault notes, manual endpoint testing). Consult its Codebase Architecture Map for file locations before searching.
 
 ## Working from a supplied specification
 
@@ -34,7 +29,8 @@ After each completed implementation:
 2. Create one dated changelog note in `Agrivive/04 Delivery/` named `YYYY-MM-DD <Task>.md`. Never edit or delete existing records.
 3. Replace the outdated content in `00-LATEST.md`, keeping it under 150 lines.
 4. Update architecture or decision notes only when a decision changed.
-5. Report whether the vault update succeeded.
+5. **Zero orphan notes**: Never leave a vault `.md` file floating without links. Every created or moved note must have an incoming link from its parent index (`Delivery Index YYYY-MM.md`, `Docs Index.md`, `Enhancements Index.md`, etc.) and an outgoing link/breadcrumb back to its parent hub.
+6. Report whether the vault update succeeded.
 
 Never record secrets or environment values in the vault.
 

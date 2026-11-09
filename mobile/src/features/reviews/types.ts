@@ -1,7 +1,12 @@
 export interface ReviewItem {
   id: string;
   orderId: string;
+  /** Service stars (pickup, communication, accuracy). This is the seller's trust rating. */
   rating: number;
+  serviceRating: number;
+  /** Product stars for the whole order. Null on older reviews. */
+  productRating: number | null;
+  photoUrl: string | null;
   review: string | null;
   sellerResponse: string | null;
   createdAt: string;
@@ -30,6 +35,3 @@ export interface SellerReviewsResponse {
 }
 
 export type ReviewFilter = "all" | "unanswered" | "replied";
-
-/** "pickup" reviews rate a whole collected order. "product" reviews rate one item in it. */
-export type ReviewKind = "pickup" | "product";

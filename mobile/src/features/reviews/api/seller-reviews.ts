@@ -1,8 +1,7 @@
 import { apiFetch } from "../../../api/client";
-import type { ReviewFilter, ReviewKind, SellerReviewsResponse } from "../types";
+import type { ReviewFilter, SellerReviewsResponse } from "../types";
 
 export interface FetchSellerReviewsParams {
-  kind?: ReviewKind;
   filter?: ReviewFilter;
   rating?: number;
   limit?: number;
@@ -19,17 +18,14 @@ export async function fetchSellerReviewsList(
   if (params.offset) query.set("offset", String(params.offset));
 
   const qs = query.toString();
-  const path = params.kind === "product" ? "/seller/product-reviews" : "/seller/reviews";
-  return apiFetch<SellerReviewsResponse>(`${path}${qs ? `?${qs}` : ""}`);
+  return apiFetch<SellerReviewsResponse>(`/seller/reviews${qs ? `?${qs}` : ""}`);
 }
 
 export async function replyToReview(
   reviewId: string,
   response: string,
-  kind: ReviewKind = "pickup",
 ): Promise<{ id: string; sellerResponse: string }> {
-  const path = kind === "product" ? "product-reviews" : "reviews";
-  return apiFetch(`/seller/${path}/${reviewId}/reply`, {
+  return apiFetch(`/seller/reviews/${reviewId}/reply`, {
     method: "POST",
     body: JSON.stringify({ response }),
   });

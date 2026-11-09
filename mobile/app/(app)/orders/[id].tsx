@@ -13,6 +13,7 @@ import { OrderCancelSheet } from "../../../src/features/orders/components/OrderC
 import { OrderItemsList } from "../../../src/features/orders/components/OrderItemsList";
 import { OrderStatusBadge } from "../../../src/features/orders/components/OrderStatusBadge";
 import { SellerOrderCommunication } from "../../../src/features/orders/components/SellerOrderCommunication";
+import { OrderPickupSteps } from "../../../src/features/orders/components/OrderPickupSteps";
 import { SellerOrderReportModal } from "../../../src/features/orders/components/SellerOrderReportModal";
 import type { SellerOrder } from "../../../src/features/orders/types";
 
@@ -65,7 +66,7 @@ export default function SellerOrderDetailScreen() {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
   if (error || !order) return <View style={styles.center}><Text style={styles.errorText}>{error || "Reservation not found."}</Text><ButtonComponent title="Try Again" onPress={loadOrder} variant="secondary" style={styles.retry} /></View>;
 
-  const canAct = order.status === "pending";
+  const canAct = order.status === "pending" && !order.decline;
   const reference = order.id.slice(0, 8).toUpperCase();
 
   return (
@@ -94,6 +95,8 @@ export default function SellerOrderDetailScreen() {
             </View>
           </View>
         ) : null}
+
+        <OrderPickupSteps order={order} onChanged={(next) => { setOrder(next); setLastUpdated(new Date()); }} />
 
         <CardComponent style={styles.card}>
           <Text style={styles.cardTitle}>Items</Text>

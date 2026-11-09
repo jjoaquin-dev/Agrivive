@@ -21,7 +21,7 @@ Only active listings that the seller confirms are still marketable are scored. E
 
 | Criterion | Normalized value (0–1) | Prototype reference |
 |---|---|---|
-| `P`: posting age | `min(hours since publication / 12, 1)` | 12 hours |
+| `P`: posting age | `min(hours since publication / 6, 1)` | 6 hours (was 12 until 2026-11-08) |
 | `Q`: remaining quantity | `current available quantity / originally posted quantity` | Original posting |
 | `R`: historical recurrence | `min(previous surplus instances / 3, 1)` | Same standardized vegetable and seller, previous 30 days |
 

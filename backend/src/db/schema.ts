@@ -135,6 +135,15 @@ export const sellers_profile = pgTable("sellers_profile", {
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
   pickupInstructions: text("pickup_instructions"),
+  /** How many pickups may overlap at the same time at this stall. */
+  pickupCapacity: integer("pickup_capacity").default(3).notNull(),
+  /** Longest pickup range a buyer may choose, in minutes ("Pick up within"). */
+  pickupWithinMinutes: integer("pickup_within_minutes").default(120).notNull(),
+  /** Manila date (YYYY-MM-DD) the stall is closed for. The weekly hours stay untouched. */
+  closedDate: text("closed_date"),
+  awayStartedAt: timestamp("away_started_at", { withTimezone: true }),
+  awayUntil: timestamp("away_until", { withTimezone: true }),
+  awayReason: text("away_reason"),
   isCurrent: boolean("is_current").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 
@@ -225,6 +234,9 @@ export const sellers_product = pgTable("sellers_product", {
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
   /** The seller can pause the automatic 6-hour drops without losing the amount or final price. */
   priceReductionEnabled: boolean("price_reduction_enabled").default(true).notNull(),
+  // The seller allowed automatic follow-up posts and re-boosts for this listing. Off until they accept.
+  autoPostEnabled: boolean("auto_post_enabled").default(false).notNull(),
+  autoPostAcceptedAt: timestamp("auto_post_accepted_at", { withTimezone: true }),
   priceScheduleStartedAt: timestamp("price_schedule_started_at", { withTimezone: true }),
   priceReductionPeriodsApplied: integer("price_reduction_periods_applied").default(0).notNull(),
   productQty: decimal("product_qty", {
@@ -300,6 +312,9 @@ export const buyer_listing_notices = pgTable("buyer_listing_notices", {
   buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   eventId: uuid("event_id").notNull().references(() => seller_listing_events.id, { onDelete: "cascade" }),
   readAt: timestamp("read_at", { withTimezone: true }),
+  /** Set when the follower's email about this update was sent. */
+  emailSentAt: timestamp("email_sent_at", { withTimezone: true }),
+  emailAttempts: smallint("email_attempts").default(0).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("buyer_listing_notices_buyer_event_unique").on(table.buyerId, table.eventId),
@@ -399,7 +414,7 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   lastError: text("last_error"),
-  // AHP-TOPSIS result saved when the first post went out. Only Priority Boost listings get the 6-hour price drops.
+  // AHP-TOPSIS result saved when the first post went out. Kept for old rows; no longer used.
   priorityScore: decimal("priority_score", { precision: 5, scale: 4 }),
   priorityTier: text("priority_tier"),
   priceDropSetupAt: timestamp("price_drop_setup_at", { withTimezone: true }),
@@ -431,6 +446,7 @@ export const order_status = pgEnum("order_status", [
   "completed",
   "cancelled",
   "expired",
+  "declined",
 ]);
 
 export const checkouts = pgTable(
@@ -467,6 +483,18 @@ export const orders = pgTable("orders", {
   cancelledBy: text("cancelled_by"),
   cancellationReason: text("cancellation_reason"),
   totalAmount: decimal("total_amount").notNull(),
+  /** The reserved pickup range. The QR works from pickupStart until pickupEnd + 15 minutes (= expiresAt). */
+  pickupStart: timestamp("pickup_start", { withTimezone: true }),
+  pickupEnd: timestamp("pickup_end", { withTimezone: true }),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  /** "manual" when the seller confirmed, "auto" after the 3-hour wait. */
+  confirmationMode: text("confirmation_mode"),
+  packedAt: timestamp("packed_at", { withTimezone: true }),
+  readyAt: timestamp("ready_at", { withTimezone: true }),
+  declinedAt: timestamp("declined_at", { withTimezone: true }),
+  noShowAt: timestamp("no_show_at", { withTimezone: true }),
+  /** False for extra orders from one buyer: more than 5 to the same seller in 7 days. They add 0 points and are left out of seller counts and rankings. */
+  countsForRanking: boolean("counts_for_ranking").default(true).notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
@@ -506,10 +534,19 @@ export const order_reviews = pgTable("order_reviews", {
   orderId: uuid("order_id").notNull().unique().references(() => orders.id, { onDelete: "cascade" }),
   buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  /** Service stars (pickup, communication, accuracy). The seller's trust rating is the average of this column. */
   rating: smallint("rating").notNull(),
+  /** Product stars for the whole order. Null on old reviews. Never feeds seller trust or ranking. */
+  productRating: smallint("product_rating"),
   review: text("review"),
+  /** Set by the review-bomb check. An ignored rating stays on file but never counts. */
+  ignoredAt: timestamp("ignored_at", { withTimezone: true }),
+  /** Private storage key of the optional photo. */
+  photoKey: text("photo_key"),
   sellerResponse: text("seller_response"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  /** Set when the buyer edits inside the edit window. */
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
 });
 
 export const order_reports = pgTable("order_reports", {
@@ -519,6 +556,10 @@ export const order_reports = pgTable("order_reports", {
   subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   reason: text("reason").notNull(),
   details: text("details").notNull(),
+  /** submitted | pending_corroboration | confirmed | rejected | disputed | overturned */
+  status: text("status").default("submitted").notNull(),
+  resolution: text("resolution"),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [uniqueIndex("order_reports_order_reporter_unique").on(table.orderId, table.reporterId)]);
 
@@ -611,6 +652,10 @@ export const trust_events = pgTable("trust_events", {
   kind: text("kind").notNull(),
   classification: text("classification").notNull(),
   sourceId: uuid("source_id"),
+  /** Points this event adds. Null on old rows, which use the weight of their kind. */
+  weight: integer("weight"),
+  /** Plain-words reason shown to the person. */
+  reason: text("reason"),
   policyVersion: text("policy_version").notNull().default("v1-warning-only"),
   invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -625,6 +670,8 @@ export const trust_notices = pgTable("trust_notices", {
   recipientId: text("recipient_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
   kind: text("kind").notNull(),
+  /** Full plain-words message: what happened, the rule, points, level, how long, how to avoid it, how to dispute. */
+  detail: text("detail"),
   attempts: integer("attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
@@ -646,6 +693,8 @@ export const trust_actions = pgTable("trust_actions", {
   actionKey: text("action_key").notNull().unique(),
   subjectId: text("subject_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   actionType: text("action_type").notNull(),
+  /** notice | warning | pause_24h | pause_3d | block. Null on old rows. */
+  level: text("level"),
   weightedPoints: integer("weighted_points").notNull(),
   policyVersion: text("policy_version").notNull(),
   reason: text("reason").notNull(),
@@ -759,3 +808,140 @@ export const seller_notification_settings = pgTable("seller_notification_setting
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+// ---------------------------------------------------------------------------
+// Pickup scheduling, QR pickup, declines, no-shows and trust disputes
+// ---------------------------------------------------------------------------
+
+export const seller_opening_hours = pgTable("seller_opening_hours", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  /** 0 = Sunday ... 6 = Saturday (Manila). */
+  weekday: smallint("weekday").notNull(),
+  isClosed: boolean("is_closed").default(false).notNull(),
+  /** Minutes after midnight, Manila time. */
+  opensMinute: smallint("opens_minute").notNull(),
+  closesMinute: smallint("closes_minute").notNull(),
+}, (table) => [uniqueIndex("seller_opening_hours_day_unique").on(table.sellerId, table.weekday)]);
+
+export const seller_away_periods = pgTable("seller_away_periods", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  reason: text("reason"),
+}, (table) => [index("seller_away_periods_seller_idx").on(table.sellerId, table.startedAt)]);
+
+export const order_status_history = pgTable("order_status_history", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  status: text("status").notNull(),
+  actorId: text("actor_id"),
+  note: text("note"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [index("order_status_history_order_idx").on(table.orderId, table.createdAt)]);
+
+export const order_qr_scans = pgTable("order_qr_scans", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  /** ok | invalid | expired | not_yet_valid | wrong_seller | cancelled | completed | not_confirmed | decline_open */
+  result: text("result").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [index("order_qr_scans_order_idx").on(table.orderId, table.createdAt)]);
+
+export const order_declines = pgTable("order_declines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().unique().references(() => orders.id, { onDelete: "cascade" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  reason: text("reason").notNull(),
+  reasonValid: boolean("reason_valid").notNull(),
+  details: text("details"),
+  items: jsonb("items").$type<{ itemId: string; quantity: number }[]>().notNull(),
+  isFull: boolean("is_full").notNull(),
+  photoKey: text("photo_key").notNull(),
+  photoHash: text("photo_hash").notNull(),
+  /** True when the same picture was already used on another decline. The system then closes it as false or reused. */
+  photoReused: boolean("photo_reused").default(false).notNull(),
+  declinedAt: timestamp("declined_at", { withTimezone: true }).defaultNow().notNull(),
+  sellerDueAt: timestamp("seller_due_at", { withTimezone: true }).notNull(),
+  sellerResponse: text("seller_response"),
+  sellerPhotoKey: text("seller_photo_key"),
+  sellerNote: text("seller_note"),
+  sellerRespondedAt: timestamp("seller_responded_at", { withTimezone: true }),
+  /** pending_seller | seller_fault | buyer_invalid | buyer_false_photo | disputed | overturned */
+  status: text("status").default("pending_seller").notNull(),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+}, (table) => [index("order_declines_status_idx").on(table.status, table.sellerDueAt)]);
+
+export const buyer_no_shows = pgTable("buyer_no_shows", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().unique().references(() => orders.id, { onDelete: "cascade" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  markedBy: text("marked_by").notNull(),
+  /** Which missed pickup this is for the buyer. Every one adds 2 points. */
+  sequence: integer("sequence").notNull(),
+  weight: integer("weight").notNull(),
+  excused: boolean("excused").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [index("buyer_no_shows_buyer_idx").on(table.buyerId, table.createdAt)]);
+
+export const order_excuses = pgTable("order_excuses", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().unique().references(() => orders.id, { onDelete: "cascade" }),
+  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  reason: text("reason").notNull(),
+  details: text("details"),
+  /** pending | confirmed | rejected */
+  status: text("status").default("pending").notNull(),
+  decidedBy: text("decided_by"),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [index("order_excuses_buyer_idx").on(table.buyerId, table.createdAt)]);
+
+export const order_reschedules = pgTable("order_reschedules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  proposedBy: text("proposed_by").notNull(),
+  reason: text("reason").notNull(),
+  oldStart: timestamp("old_start", { withTimezone: true }).notNull(),
+  oldEnd: timestamp("old_end", { withTimezone: true }).notNull(),
+  newStart: timestamp("new_start", { withTimezone: true }).notNull(),
+  newEnd: timestamp("new_end", { withTimezone: true }).notNull(),
+  /** pending | accepted | rejected | withdrawn */
+  status: text("status").default("pending").notNull(),
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("order_reschedules_order_idx").on(table.orderId, table.createdAt),
+  uniqueIndex("order_reschedules_one_pending").on(table.orderId).where(sql`${table.status} = 'pending'`),
+]);
+
+export const trust_disputes = pgTable("trust_disputes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id").notNull().references(() => trust_events.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  reason: text("reason").notNull(),
+  /** upheld | rejected | unresolved. The system decides when the dispute is sent. */
+  status: text("status").notNull(),
+  decision: text("decision"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+}, (table) => [
+  uniqueIndex("trust_disputes_one_per_event").on(table.eventId),
+  index("trust_disputes_status_idx").on(table.status, table.createdAt),
+]);
+
+export const seller_flags = pgTable("seller_flags", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  /** under_watch | needs_review | repeat_returns */
+  kind: text("kind").notNull(),
+  detail: text("detail"),
+  openedAt: timestamp("opened_at", { withTimezone: true }).defaultNow().notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+}, (table) => [
+  uniqueIndex("seller_flags_one_open").on(table.sellerId, table.kind).where(sql`${table.closedAt} is null`),
+  index("seller_flags_open_idx").on(table.kind, table.closedAt),
+]);

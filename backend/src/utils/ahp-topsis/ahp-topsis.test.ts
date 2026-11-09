@@ -1,122 +1,102 @@
 import { describe, expect, test } from "bun:test";
-import { calculateAHPWeights, createVisibilityCriteria } from "./index";
-import { getVisibilityTier, rankVisibilityCandidates } from "../visibility-ranking";
-
-// Test cases follow the WSV sheet: ID | Scenario | Expected Result.
-// These cover the ranking engine only. Feed, paging, sold-out and boost cases (WSV-006, 008, 009, 010) need the API and database.
+import { ahpPairwiseMatrix, calculateAHPWeights, createVisibilityCriteria, rankWithAHPAndTOPSIS } from "./index";
+import { rankVisibilityCandidates } from "../visibility-ranking";
 
 const now = new Date("2026-11-01T12:00:00Z");
 const hoursAgo = (hours: number) => new Date(now.getTime() - hours * 3_600_000);
 
-type Listing = { id: string; ageHours: number; stockRatio: number; sellerReliability: number; priorCycles: number };
+type Listing = { id: string; ageHours: number; basePrice: number; price: number; stock: number; sellerRating: number };
+const candidate = (listing: Listing) => ({ id: listing.id, publishedAt: hoursAgo(listing.ageHours), criteria: createVisibilityCriteria(listing) });
 
-const candidate = (listing: Listing) => ({
-  id: listing.id,
-  publishedAt: hoursAgo(listing.ageHours),
-  criteria: createVisibilityCriteria(listing),
-});
-
-// Five other active listings, from fresh and well stocked down to old and nearly gone.
-const feed: Listing[] = [
-  { id: "feed-A", ageHours: 2, stockRatio: 0.8, sellerReliability: 0.8, priorCycles: 1 },
-  { id: "feed-B", ageHours: 4, stockRatio: 0.6, sellerReliability: 0.7, priorCycles: 0 },
-  { id: "feed-C", ageHours: 8, stockRatio: 0.5, sellerReliability: 0.6, priorCycles: 2 },
-  { id: "feed-D", ageHours: 10, stockRatio: 0.3, sellerReliability: 0.5, priorCycles: 0 },
-  { id: "feed-E", ageHours: 11, stockRatio: 0.2, sellerReliability: 0.5, priorCycles: 1 },
-];
-
-function rankWithFeed(...added: Listing[]) {
-  return rankVisibilityCandidates([...feed, ...added].map(candidate)).results;
+// Plain-JS version of ahp-test.ts and topsis-test.ts, written without mathjs, to cross-check the engine.
+function reference(rows: number[][]) {
+  const n = 4;
+  const colSums = ahpPairwiseMatrix[0]!.map((_, c) => ahpPairwiseMatrix.reduce((s, r) => s + r[c]!, 0));
+  const weights = ahpPairwiseMatrix.map((r) => r.reduce((s, v, c) => s + v / colSums[c]!, 0) / n);
+  const norms = Array.from({ length: n }, (_, c) => Math.sqrt(rows.reduce((s, r) => s + r[c]! ** 2, 0)) || 1);
+  const v = rows.map((r) => r.map((x, c) => (x / norms[c]!) * weights[c]!));
+  const best = Array.from({ length: n }, (_, c) => Math.max(...v.map((r) => r[c]!)));
+  const worst = Array.from({ length: n }, (_, c) => Math.min(...v.map((r) => r[c]!)));
+  const d = (r: number[], t: number[]) => Math.sqrt(r.reduce((s, x, c) => s + (x - t[c]!) ** 2, 0));
+  return v.map((r) => d(r, worst) / (d(r, best) + d(r, worst)));
 }
 
-const find = (results: ReturnType<typeof rankWithFeed>, id: string) => results.find((result) => result.id === id)!;
+const veg: Listing[] = [
+  { id: "kalabasa", ageHours: 5, basePrice: 50, price: 45, stock: 20, sellerRating: 4.5 },
+  { id: "karot", ageHours: 2, basePrice: 60, price: 60, stock: 50, sellerRating: 4.5 },
+  { id: "sigarilyas", ageHours: 9, basePrice: 80, price: 60, stock: 5, sellerRating: 4.5 },
+];
 
 describe("AHP weights", () => {
-  test("Weights are freshness 0.40, stock 0.30, seller 0.20, repeat supply 0.10 and consistent", () => {
+  test("Same weights as ahp-test.ts and the judgments are consistent (CR 0.10 or less)", () => {
     const { weights, consistencyRatio } = calculateAHPWeights();
-    expect(weights.freshness).toBeCloseTo(0.4, 5);
-    expect(weights.stockAvailability).toBeCloseTo(0.3, 5);
-    expect(weights.sellerReliability).toBeCloseTo(0.2, 5);
-    expect(weights.recurrence).toBeCloseTo(0.1, 5);
-    expect(consistencyRatio).toBeLessThan(0.1);
+    expect(weights.postingAge).toBeCloseTo(0.3507, 4);
+    expect(weights.priceDrop).toBeCloseTo(0.3507, 4);
+    expect(weights.stockLevel).toBeCloseTo(0.1892, 4);
+    expect(weights.sellerReliability).toBeCloseTo(0.1093, 4);
+    expect(Object.values(weights).reduce((s, w) => s + w, 0)).toBeCloseTo(1, 10);
+    expect(consistencyRatio).toBeLessThanOrEqual(0.1);
+  });
+
+  test("Inconsistent judgments are refused", () => {
+    const bad = [[1, 9, 1 / 9, 1], [1 / 9, 1, 9, 1], [9, 1 / 9, 1, 1], [1, 1, 1, 1]];
+    expect(calculateAHPWeights(bad).consistencyRatio).toBeGreaterThan(0.1);
+    expect(() => rankWithAHPAndTOPSIS([{ id: "a", criteria: createVisibilityCriteria(veg[0]!) }], bad)).toThrow();
   });
 });
 
-describe("TOPSIS ranking", () => {
-  test("WSV-001 | Fresh tomatoes, full stock, well-rated seller | Priority Boost (0.60+) and first in the feed", () => {
-    const tomato = find(rankWithFeed({ id: "tomato", ageHours: 0.05, stockRatio: 1, sellerReliability: 0.9, priorCycles: 0 }), "tomato");
-    expect(tomato.tier).toBe("Priority Boost");
-    expect(tomato.score).toBeGreaterThanOrEqual(0.6);
-    expect(tomato.rank).toBe(1);
+describe("TOPSIS on raw criteria", () => {
+  test("Scores match the plain-JS reference of topsis-test.ts", () => {
+    const { results } = rankWithAHPAndTOPSIS(veg.map((v) => ({ id: v.id, criteria: createVisibilityCriteria(v) })));
+    const expected = reference(veg.map((v) => Object.values(createVisibilityCriteria(v))));
+    veg.forEach((v, i) => expect(results.find((r) => r.id === v.id)!.score).toBeCloseTo(expected[i]!, 10));
   });
 
-  test("WSV-002 | Cabbage, 6 hours old, half stock, average seller | Standard Exposure (0.40 to 0.59), middle of the feed", () => {
-    const results = rankWithFeed({ id: "cabbage", ageHours: 6, stockRatio: 0.5, sellerReliability: 0.6, priorCycles: 0 });
-    const cabbage = find(results, "cabbage");
-    expect(cabbage.tier).toBe("Standard Exposure");
-    expect(cabbage.score).toBeGreaterThanOrEqual(0.4);
-    expect(cabbage.score).toBeLessThan(0.6);
-    expect(cabbage.rank).toBeGreaterThan(1);
-    expect(cabbage.rank).toBeLessThan(results.length);
+  test("Raw values go in unscaled; the engine's own normalised values are 0 to 1", () => {
+    const [top] = rankWithAHPAndTOPSIS(veg.map((v) => ({ id: v.id, criteria: createVisibilityCriteria(v) }))).results;
+    expect(top!.criteria.postingAge).toBe(9);
+    expect(top!.criteria.priceDrop).toBe(20);
+    expect(top!.criteria.stockLevel).toBe(5);
+    for (const value of Object.values(top!.normalizedCriteria)) expect(value).toBeLessThanOrEqual(1);
   });
 
-  test("WSV-003 | Eggplant, over 12 hours old, 1 of 20 kg left, low-rated seller | Basic/Hold (below 0.40), last in the feed", () => {
-    const results = rankWithFeed({ id: "eggplant", ageHours: 13, stockRatio: 1 / 20, sellerReliability: 0.3, priorCycles: 0 });
-    const eggplant = find(results, "eggplant");
-    expect(eggplant.tier).toBe("Basic/Hold");
-    expect(eggplant.score).toBeLessThan(0.4);
-    expect(eggplant.rank).toBe(results.length);
+  test("Sigarilyas (oldest, biggest price drop) ranks first; ranks are 1..n and scores are descending", () => {
+    const { results } = rankVisibilityCandidates(veg.map(candidate));
+    expect(results.map((r) => r.id)).toEqual(["sigarilyas", "kalabasa", "karot"]);
+    expect(results.map((r) => r.rank)).toEqual([1, 2, 3]);
+    expect(results[0]!.score).toBeGreaterThan(results[1]!.score);
   });
 
-  test("WSV-004 | New seller with no reviews, fresh sitaw | Neutral 50% seller score and a fair rank", () => {
-    const results = rankWithFeed({ id: "sitaw", ageHours: 0.05, stockRatio: 1, sellerReliability: 0.5, priorCycles: 0 });
-    const sitaw = find(results, "sitaw");
-    expect(sitaw.criteria.sellerReliability).toBe(0.5);
-    expect(sitaw.tier).toBe("Priority Boost");
-    expect(sitaw.score).toBeGreaterThan(find(results, "feed-B").score);
+  test("A column that is all zero (no price drops anywhere) does not break the scores", () => {
+    const flat = veg.map((v) => ({ ...v, price: v.basePrice }));
+    const { results } = rankWithAHPAndTOPSIS(flat.map((v) => ({ id: v.id, criteria: createVisibilityCriteria(v) })));
+    for (const r of results) expect(Number.isFinite(r.score)).toBe(true);
   });
 
-  test("WSV-005 | Pechay from a seller with 3+ earlier listings vs a first-time seller | Repeat seller ranks higher", () => {
-    const base = { ageHours: 0.5, stockRatio: 1, sellerReliability: 0.7 };
-    const results = rankWithFeed({ id: "repeat", ...base, priorCycles: 3 }, { id: "first", ...base, priorCycles: 0 });
-    expect(find(results, "repeat").criteria.recurrence).toBe(1);
-    expect(find(results, "first").criteria.recurrence).toBe(0);
-    expect(find(results, "repeat").rank).toBeLessThan(find(results, "first").rank);
+  test("Missing base price counts as no price drop; bad numbers become 0", () => {
+    expect(createVisibilityCriteria({ ageHours: 1, basePrice: null, price: 10, stock: 3, sellerRating: 4 }).priceDrop).toBe(0);
+    expect(createVisibilityCriteria({ ageHours: NaN, basePrice: 5, price: 10, stock: -2, sellerRating: 4 })).toEqual(
+      { postingAge: 0, priceDrop: 0, stockLevel: 0, sellerReliability: 4 });
   });
 
-  test("WSV-007 | Carrots and Okra, same stock, rating and history, 5 minutes apart | Same order on every refresh, newer first", () => {
-    const base = { ageHours: 1, stockRatio: 1, sellerReliability: 0.7, priorCycles: 0 };
+  test("Same inputs rank the same on every refresh, newer first on a tie", () => {
+    const base = { ageHours: 1, basePrice: 10, price: 8, stock: 5, sellerRating: 4 };
     const okra = candidate({ id: "okra", ...base });
     const carrots = { ...candidate({ id: "carrots", ...base }), publishedAt: new Date(okra.publishedAt.getTime() - 5 * 60_000) };
-    for (const input of [[okra, carrots], [carrots, okra], [okra, carrots]]) {
-      const order = rankVisibilityCandidates(input).results.map((result) => result.id);
-      expect(order).toEqual(["okra", "carrots"]);
+    for (const input of [[okra, carrots], [carrots, okra]]) {
+      expect(rankVisibilityCandidates(input).results.map((r) => r.id)).toEqual(["okra", "carrots"]);
     }
   });
 });
 
 describe("Edge cases", () => {
-  test("A lone listing scores exactly 0.50 (Standard Exposure)", () => {
-    const [only] = rankVisibilityCandidates([candidate({ id: "lone", ageHours: 0, stockRatio: 1, sellerReliability: 1, priorCycles: 0 })]).results;
+  test("A lone listing scores exactly 0.50 and is rank 1", () => {
+    const [only] = rankVisibilityCandidates([candidate(veg[0]!)]).results;
     expect(only?.score).toBe(0.5);
-    expect(only?.tier).toBe("Standard Exposure");
+    expect(only?.rank).toBe(1);
   });
 
   test("An empty feed returns no results", () => {
     expect(rankVisibilityCandidates([]).results).toEqual([]);
-  });
-
-  test("Freshness hits 0 at 12 hours and repeat supply caps at 3 earlier listings", () => {
-    const criteria = createVisibilityCriteria({ ageHours: 30, stockRatio: 2, sellerReliability: 0.5, priorCycles: 9 });
-    expect(criteria.freshness).toBe(0);
-    expect(criteria.stockAvailability).toBe(1);
-    expect(criteria.recurrence).toBe(1);
-  });
-
-  test("Tier cut-offs: 0.60 is Priority Boost, 0.40 is Standard Exposure, below 0.40 is Basic/Hold", () => {
-    expect(getVisibilityTier(0.6)).toBe("Priority Boost");
-    expect(getVisibilityTier(0.5999)).toBe("Standard Exposure");
-    expect(getVisibilityTier(0.4)).toBe("Standard Exposure");
-    expect(getVisibilityTier(0.3999)).toBe("Basic/Hold");
   });
 });

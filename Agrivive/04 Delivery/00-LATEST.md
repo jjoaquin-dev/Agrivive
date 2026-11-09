@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-02 PST
+last_updated: 2026-11-09 PST
 status: active
 ---
 
@@ -11,17 +11,32 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-02 PST
+2026-11-09 PST
 
 ## Latest completed task
 
-Root `README.md` added. See [[2026-11-02 Root README]].
+Seller reminders: the daily popup now lists reminders, a holiday alert fires one day before a public holiday, and a heat alert fires at 35 °C. Rebuild API and the seller APK. See [[2026-11-09 Calendar Reminders Heat and Holiday Alerts]].
+
+Earlier: Prof feedback (Jara items): freshness window set to 6 hours everywhere; the seller Visibility card shows the closeness score as `89.4 / 100`; visibility factors read "Counts for 35%"; short descriptions added under each Sales Report chart; new [[AHP-TOPSIS Proof Pack]] with a 4-listing hand calculation, test table and change-one-value proof. Tiers 60/40 are not built, buyer price-drop alerts do not exist, and the repeat-listings table has no sell-through yet. Mobile typecheck and 6 boost tests pass; no phone check. See [[2026-11-08 Prof Feedback Jara Items]].
+
+Newest: trust rules now follow `Flagging Rules Without Admin 2.pdf` (missed pickup always +2, decline dispute gives no points, own-account order blocks, order flood, fake reports, review bomb, chat spam and personal data): see [[2026-11-09 Flagging Rules Without Admin]]. Migration `20261109120000_trust_rules_without_admin` is not applied anywhere. Earlier: Reservation, QR pickup and the full Flagging and Trust PDF mechanism built: stall hours, Closed today and Away, Today/Tomorrow pickup ranges with no overlapping pickups, 3-hour auto-confirm, QR valid to slot end + 15 minutes, decline at pickup, no-show, excuse, reschedule, PDF trust levels, seller fault rate, Trusted Seller, reports, and system-decided disputes. The Admin role was then removed from the trust mechanism: see [[2026-11-08 Remove Admin Role from Trust]]. Migration `20261108140000_pickup_trust_pdf` is not applied anywhere; rebuild API and worker. Tests pass file by file; not checked on a phone or browser. See [[2026-11-08 Reservation QR Pickup and PDF Trust Mechanism]]. Test plan for the older trust code: [[2026-11-08 Trust System Test Case Documents]].
+
+Publication-quality 18-page Technical Specification PDF generated (`Agrivive/docs/AHP-TOPSIS and n8n Boost Engine Technical Specification.pdf`) via Python ReportLab script (`scripts/generate_ahp_n8n_spec_pdf.py`). Follows the strict pipeline -> description -> step-by-step calculation pattern. Embeds two high-resolution 300-DPI visual diagrams (`Agrivive/docs/ahp_topsis_ipo_pipeline.png` and `Agrivive/docs/n8n_seller_flow_pipeline.png`), 28 detailed calculation tables, rigorous mathematical formulations using Google Carlito TrueType typesetting (`⁺`, `⁻`, `₱`, `∑`, `√`, `λ`, `²`), and authoritative academic research references (MCDM literature, perishability economics, automation architecture, and the 2026 Bartiquien, Jara & Marundan Capstone manuscript). Covers the AHP-TOPSIS Visibility Engine (Tables 1-13: raw produce matrix, 4x4 Saaty matrix, column sums, normalized matrix, criteria weights, consistency validation with CR = 0.0038, TOPSIS vector normalization, weighted matrix, ideal solutions, Euclidean separation distances, relative closeness, and the 6-hour lock rotation rule) and the n8n Marketing Boost Engine (Tables 14-28: 12-node registry, webhook payload, conditional routing, context retrieval, Groq prompt engineering, JSON formatting fallback, Facebook post persistence, dynamic 6h price drops with floor validation, flash-sale posts, and fault tolerance matrix). See [[2026-11-08 AHP-TOPSIS and n8n Technical Specification PDF]].
+
+Earlier: Authoritative Codebase Architecture Map and Zero-Guessing Policy established across `AGENTS.md`, `.claude/CLAUDE.md`, and root symlink `CLAUDE.md`. Replaced stale descriptions with complete module boundaries for `backend/` (all 11 modules and utils), `mobile/` (Expo Router tree & feature components), and `web/` (Next.js 15 App Router pages & libraries). Implemented mandatory map update rule on file creation to eliminate AI path guessing. See [[2026-11-08 Codebase Architecture Map and Zero-Guessing Policy]].
+
+Earlier: Zero Orphan Notes Policy enforced across `AGENTS.md` and `.claude/CLAUDE.md`: every newly created or edited Markdown (`.md`) file in the Obsidian vault must have both incoming links from its category index/hub and outgoing breadcrumbs back to the graph. All 8 existing unlinked docs were integrated, achieving 0 orphan files across the entire vault. See [[2026-11-08 No Floating Vault Notes Rule]].
+
+Earlier: One review per completed order, one screen: produce stars, seller stars, one optional comment, one optional photo, editable for 15 days. Seller trust rating = average of service stars; product stars never touch trust or ranking. Per-item review routes removed; `order_reviews` gained `product_rating`, `photo_key`, `updated_at`. Apply the migration, rebuild API, web and the seller APK. 95 backend tests pass (in-memory Postgres). See [[2026-11-08 One Review Per Order]].
+
+Earlier: AHP-TOPSIS rebuilt to four raw criteria with a six-hour boost lock (`AUTO_BOOST_ENABLED`, off by default). See [[2026-11-08 AHP-TOPSIS Raw Criteria and Six-Hour Rule]].
+
 New cart logo now used for the app icon, splash screen (transparent, cream start colour) and web favicon; the web layout no longer forces the old bag icon. Rebuild the APK to see it on phones.
 
 Seller app install guide at `/download-app`, linked from the Hero and both footers; all download links use one S3 address. See [[2026-11-02 Seller App Install Guide]].
 
 Privacy Policy, Terms of Use and Cookie Notice added on web; mobile links to them. Sign-up and seller registration now need an "I agree" box and store `terms_accepted_at` / `terms_version`. Google reCAPTCHA v3 protects sign-in, code sending, sign-up and account recovery (needs keys and the migration applied; legal contact placeholders still to fill). See [[2026-11-02 Legal Pages, Terms Consent and reCAPTCHA]].
-Mobile finished. Closed-account errors now log quietly and seller ranking reliability uses the same ratings as trust. See [[2026-11-02 Quiet Closed Account Logs and Shared Seller Rating]].
+Mobile finished. Closed-account errors now log quietly. Seller ranking reliability and trust both read service stars only (changed 2026-11-08).
 Trust alignment re-checked against a real PostgreSQL: one queue bug fixed, all other flows confirmed. See [[2026-11-02 Trust Alignment Verification]].
 Trust score now fades old violations after 90 days (`TRUST_SCORE_WINDOW_DAYS`), buyer cancel counter uses it too, env example defaults actions on. See [[2026-11-02 Trust Score Window and Defaults]].
 Trust numbers stay as own prototype settings; research (2022-2025) backs only the structure. See [[2026-11-02 Trust Numbers and Research Sources]].
@@ -45,27 +60,10 @@ Earlier: Mobile Profile flow redesigned from the Stitch screens: Profile page, E
 
 Earlier: The post after adding produce is now a normal post for any listing; only Priority Boost listings (score 0.60 or higher, checked once when the first post is saved) get the 6-hour price drops. 6 hours after the post the seller is asked to set the peso drop and final price, and saving it runs the first drop. Add Produce no longer asks for the drop. New migration `20261102120000_boost_priority_price_drop_setup` is not applied anywhere yet. Backend typecheck, 33 tests, builds, drizzle check and mobile typecheck and Android export passed; no device check. Rebuild and recreate the API and worker. See [[2026-11-02 Normal First Post and Priority Price Drops]].
 
-Earlier: Boost retry fix (stale "did not post" after a retry); see [[2026-11-02 Boost Retry Shows Old Failure]].
-
 Earlier: Fixed the Boost retry showing the old failure: a retried boost kept its old `sentAt` and old failed post logs, so the next screen said "did not post" while the list said "Posting now". Retry now clears `sentAt` and channels count only logs from the latest send. Typecheck, 33 tests and builds passed; no device check. Rebuild and recreate the API. See [[2026-11-02 Boost Retry Shows Old Failure]].
 
-Earlier: Buyer Messages empty state ("Choose a conversation") shows the new green chat-bubble illustration with its background removed (`web/public/brand/empty-chat-bubble.png`). Details: [[2026-11-02 Messages Empty State Chat Image]]. Validation: typecheck passed; seen in the browser pane at desktop width. Not checked: phone width.
+Earlier: Buyer cart, orders and Messages empty states now use new green illustrations (see the dated notes from 2026-11-02). Buyer Messages empty state ("Choose a conversation") shows the new green chat-bubble illustration with its background removed (`web/public/brand/empty-chat-bubble.png`). Details: [[2026-11-02 Messages Empty State Chat Image]]. Validation: typecheck passed; seen in the browser pane at desktop width. Not checked: phone width.
 
-Earlier: Buyer All Orders empty state shows the new green box illustration (`web/public/brand/empty-orders-box.png`) with its background removed. Details: [[2026-11-02 Orders Empty State Box Image]]. Validation: typecheck passed; not seen in the browser (sign-in required). Not checked: phone width.
-
-Earlier: Buyer cart empty state uses the new green cart illustration with its background removed (`web/public/brand/empty-cart-plus.png`). Details: [[2026-11-02 Empty Cart Image Swap]]. Validation: typecheck passed; checked in the browser pane at desktop width. Not checked: phone width.
-
-Earlier: Boost now opens only for Priority Boost listings (paper rule, owner choice), Add More keeps the cycle's original stock in sync with a repair migration (applied to dev, not yet on the VPS), and the seller Boost list shows official tier names. 33 tests pass. Rebuild the API; run migration `20261101190000_sync_cycle_original_qty` on the VPS when ready. See [[2026-11-01 Boost Rule and Stock Sync]].
-
-Earlier: Boost screen "Amount left" now uses the same original stock as the Listings screen and buyer feed (it showed 98% for a listing with 6 of 50 kg left). Rebuild and recreate the API on the VPS. See [[2026-11-01 Boost Amount Left Matches Feed]].
-
-Earlier: The `deploy/` folder is removed: `Caddyfile` is at the repo root, `scripts/vps-release.sh` kept for the CD workflows, and all env keys are in the root `.env.example`. See [[2026-11-01 Deploy Folder Removed]].
-
-Earlier: AHP-TOPSIS is now the default marketplace policy (unset or unknown `VISIBILITY_POLICY` uses it; only `visibility-v4` rolls back). The VPS `.env` and container still need updating. See [[2026-11-01 AHP-TOPSIS Default Policy]].
-
-Earlier: Fixed the baseline marketplace paging bug (page 2 repeated page 1 when scores tied; the score is now rounded to 9 decimals in the query). Moved the policy choice into `utils/visibility-ranking/policy.ts`. Added tests: 29 pass (AHP-TOPSIS engine, WSV-008 paging, WSV-010 policy switch) and a `bun test` step in backend CI. Verified read-only on the dev database for both policies; the running API needs a restart. See [[2026-11-01 Baseline Paging Fix and Policy Tests]] and [[2026-11-01 AHP-TOPSIS Test Cases]].
-
-Earlier: All 13 high-fidelity mobile UI mockups generated in Google Stitch (`AGRIVIVE MOBILE UI`, project `11184471743007910085`, design system `Lush Agro-Commerce`) covering the complete seller **Profile** flow: F1 (Profile tab verified & good standing), F2 (New seller setup checklist), F3 (Warning/limited standing), F4 (Avatar action sheet & uploading spinner), F5 (Edit Profile filled with phone error & sticky Save bar), F6 (Edit Profile leave-without-saving dialog), F7 (Setup step 2 pin not moved error & auto-scroll), F8 (Sign-in Safety password + Sign-in Code off), F9 (Sign-in Code step 2 QR & key), F9b (Sign-in Code step 3 6-digit boxes & invalid code error), F10 (Sign-in Code step 4 backup codes & copied badge), F11 (Sign-in Code on with in-card turn-off confirm), and F12 (Log Out confirmation dialog). Element-to-codebase mapping table, copy changes (plain words), and behavioral changes documented in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
 Priority deals row added under the marketplace hero (`GET /marketplace/products/deals`: AHP "Priority Boost" tier and at least 30% below base price). The marketplace was reordered so the products come before the seller map, and dead footer sort links and three unused components were removed. Details: [[2026-11-01 Priority Deals Row and Marketplace Reorder]]. Validation: backend typecheck and bundle passed, web typecheck and build passed. Not checked: the deals data path (backend not running) and the desktop and phone layout of the row.
 
 Previous task: Sign-in and sign-up side panel now plays the uploaded video (`web/public/brand/sign-in-video.mp4`) instead of the photo carousel, and it is shorter (80vh). Details: [[2026-10-31 Auth Video Panel]]. Follow-up: the video column was shifted right with more left padding ([[2026-10-31 Auth Video Shifted Right]]). Validation: `bun run typecheck` in `web/` passed. Not checked in a browser.

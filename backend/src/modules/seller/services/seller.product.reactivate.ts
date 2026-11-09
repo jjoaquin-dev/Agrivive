@@ -3,14 +3,14 @@ import { db } from "../../../db";
 import { listing_cycles, sellers_product } from "../../../db/schema";
 import { priceToCents } from "../../../utils/order-amount";
 import { OrderError } from "../../../utils/order-types";
-import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { requireSellerMayList } from "../../../utils/seller-access";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { queueFirstPublicListing } from "../../../utils/seller-listing-event";
 
 export function reactivateSellerProduct(sellerId: string, productId: string) {
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${sellerId}), 3)`);
-    await requireVerifiedSeller(tx, sellerId);
+    await requireSellerMayList(tx, sellerId);
     const [product] = await tx.select().from(sellers_product).where(and(
       eq(sellers_product.id, productId), eq(sellers_product.userId, sellerId),
     )).for("update").limit(1);

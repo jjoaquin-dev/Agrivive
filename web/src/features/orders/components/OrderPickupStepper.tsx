@@ -1,164 +1,70 @@
-import { AlertCircle, Check, CheckCircle2, Clock, Info, Package, Store, XCircle } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, ClipboardCheck, Clock, Info, PackageCheck, Send, Store, XCircle } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 
-interface OrderPickupStepperProps {
-  status: BuyerOrder["status"];
-  createdAt: string;
-  expiresAt: string | null;
-  shopName?: string;
-  cancellationReason?: string | null;
-}
+const clock = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" }) : "");
+const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" }) : "");
 
-function formatExpirationTime(dateStr: string | null): string {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true });
-  } catch {
-    return "";
-  }
-}
+const stepDefs = [
+  { id: "placed", label: "Placed", icon: Send },
+  { id: "confirmed", label: "Confirmed", icon: ClipboardCheck },
+  { id: "preparing", label: "Preparing", icon: PackageCheck },
+  { id: "ready", label: "Ready for pickup", icon: Store },
+  { id: "completed", label: "Completed", icon: Check },
+] as const;
 
-export function OrderPickupStepper({ status, createdAt, expiresAt, shopName, cancellationReason }: OrderPickupStepperProps) {
-  const isCancelled = status === "cancelled";
-  const isExpired = status === "expired";
-  const isCompleted = status === "completed";
-  const isPending = status === "pending";
-  const seller = shopName || "the stall vendor";
-  const untilTime = expiresAt ? formatExpirationTime(expiresAt) : "";
+const terminalCopy = {
+  expired: { label: "Expired", note: "The pickup QR ran out before the stall scanned it. Unclaimed items went back to the seller." },
+  cancelled: { label: "Cancelled", note: "This reservation was cancelled and the items went back to the seller." },
+  declined: { label: "Declined at pickup", note: "Declined produce goes back to the seller and is not put back on sale." },
+} as const;
 
-  const steps = [
-    {
-      id: "reserved",
-      label: "Reserved",
-      caption: new Date(createdAt).toLocaleDateString("en-PH", { month: "short", day: "numeric" }),
-      done: true,
-      current: false,
-      alert: false,
-      icon: Check,
-    },
-    {
-      id: "pickup",
-      label: "Ready for pickup",
-      caption: isPending ? "Present pass at stall" : "Visit stall",
-      done: isCompleted,
-      current: isPending,
-      alert: false,
-      icon: isPending ? Clock : isCompleted ? Check : Store,
-    },
-    {
-      id: "completed",
-      label: isCancelled ? "Cancelled" : isExpired ? "Expired" : "Completed",
-      caption: isCompleted
-        ? "Success"
-        : isCancelled
-          ? "Returned"
-          : isExpired
-            ? "Unclaimed"
-            : untilTime
-              ? `Until ${untilTime}`
-              : "Pending",
-      done: isCompleted,
-      current: isCancelled || isExpired,
-      alert: isCancelled || isExpired,
-      icon: isCancelled || isExpired ? XCircle : Package,
-    },
-  ];
-
-  const explanation = isPending
-    ? {
-        container: "bg-[#F0F5FF] border border-[#D0E2FF]",
-        icon: Info,
-        iconColor: "text-[#2563EB]",
-        titleColor: "text-[#1E3A8A]",
-        descColor: "text-[#2563EB]",
-        title: "Your order is ready at the stall!",
-        description: `Please present your pickup pass to ${seller} before the reservation expires.`,
-      }
-    : isExpired
-      ? {
-          container: "bg-[#FEF6F6] border border-[#FCD8D8]",
-          icon: AlertCircle,
-          iconColor: "text-[#DC2626]",
-          titleColor: "text-[#991B1B]",
-          descColor: "text-[#B91C1C]",
-          title: "This reservation has expired",
-          description: `The pickup window ended before the pass was scanned at the stall. Unclaimed items were returned to ${seller}'s inventory to avoid food waste.`,
-        }
-      : isCancelled
-        ? {
-            container: "bg-[#F9FAFB] border border-[#E5E7EB]",
-            icon: XCircle,
-            iconColor: "text-[#6B7280]",
-            titleColor: "text-[#1F2937]",
-            descColor: "text-[#4B5563]",
-            title: "This reservation was cancelled",
-            description: cancellationReason
-              ? `Reason: ${cancellationReason}. Items were returned to ${seller}'s inventory.`
-              : `This reservation was cancelled and items were returned to ${seller}'s inventory.`,
-          }
-        : {
-            container: "bg-[#F0FDF4] border border-[#DCFCE7]",
-            icon: CheckCircle2,
-            iconColor: "text-[#16A34A]",
-            titleColor: "text-[#14532D]",
-            descColor: "text-[#15803D]",
-            title: "Order completed at the stall!",
-            description: `Your pickup pass was verified by ${seller}. Thank you for helping reduce surplus food waste!`,
-          };
-
-  const ExplanationIcon = explanation.icon;
+/** The bar follows the order status saved on the server. "Ready" never shows as "Completed". */
+export function OrderPickupStepper({ order, shopName }: { order: BuyerOrder; shopName?: string }) {
+  const { progress } = order;
+  const currentIndex = stepDefs.findIndex((step) => step.id === progress.current);
+  const terminal = progress.terminal;
+  const seller = shopName || order.stall?.shopName || "the stall";
+  const completed = order.status === "completed";
+  const captions: Record<string, string> = {
+    placed: day(order.createdAt),
+    confirmed: order.confirmedAt ? (order.confirmationMode === "auto" ? "Automatically" : "By seller") : "Seller has 3 hours",
+    preparing: "Seller packing",
+    ready: order.pickupStart ? `${day(order.pickupStart)}, ${clock(order.pickupStart)}` : "At the stall",
+    completed: completed ? "Success" : "After scan",
+  };
+  const banner = terminal
+    ? { tone: terminal === "declined" ? "bg-[#FFF8E6] border-[#F4DFA5] text-[#6B4E00]" : "bg-[#F9FAFB] border-[#E5E7EB] text-[#374151]", Icon: terminal === "expired" ? AlertCircle : XCircle, title: `This reservation is ${terminalCopy[terminal].label.toLowerCase()}`, text: terminalCopy[terminal].note }
+    : completed
+      ? { tone: "bg-[#F0FDF4] border-[#DCFCE7] text-[#14532D]", Icon: CheckCircle2, title: "Order completed at the stall!", text: `Your pickup pass was verified by ${seller}. Thank you for helping reduce surplus food waste!` }
+      : order.confirmedAt
+        ? { tone: "bg-[#F0F5FF] border-[#D0E2FF] text-[#1E3A8A]", Icon: Info, title: progress.current === "ready" ? "Your order is ready for pickup" : "The seller confirmed your order", text: `Come to ${seller} ${order.pickupStart ? `between ${clock(order.pickupStart)} and ${clock(order.pickupEnd)}` : "at your pickup time"} and look over your items first.` }
+        : { tone: "bg-[#F0F5FF] border-[#D0E2FF] text-[#1E3A8A]", Icon: Clock, title: "Waiting for the seller to confirm", text: "You can cancel until the seller confirms. If they do not answer in 3 hours, the order is confirmed for you." };
+  const BannerIcon = banner.Icon;
 
   return (
-    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-6 shadow-sm" aria-label="Pickup progress">
-      <div className="relative flex items-center justify-between">
-        {/* Connecting track lines */}
-        <div className="absolute left-8 right-8 top-5 -translate-y-1/2 h-0.5 bg-[#E8E8E8]" aria-hidden="true" />
-        <div
-          className="absolute left-8 top-5 -translate-y-1/2 h-0.5 bg-[#457D00] transition-all duration-300"
-          style={{ width: isCompleted ? "calc(100% - 64px)" : isPending ? "50%" : "0%" }}
-          aria-hidden="true"
-        />
-
-        {steps.map((step) => {
+    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm sm:p-6" aria-label="Order progress">
+      <ol className="grid grid-cols-5 gap-1">
+        {stepDefs.map((step, index) => {
+          const done = !terminal && (completed || index < currentIndex);
+          const current = !terminal && index === currentIndex && !completed;
           const Icon = step.icon;
-          const circleClass = step.alert
-            ? "border-[#B85450] bg-red-50 text-[#B85450]"
-            : step.done
-              ? "border-[#457D00] bg-[#457D00] text-white"
-              : step.current
-                ? "border-2 border-[#457D00] bg-white text-[#457D00]"
-                : "border-2 border-[#E8E8E8] bg-white text-neutral-400";
-
-          const labelClass = step.alert
-            ? "text-[#B85450] font-bold"
-            : step.current
-              ? "text-[#457D00] font-bold"
-              : step.done
-                ? "text-[#14231A] font-semibold"
-                : "text-neutral-500 font-semibold";
-
+          const circle = done || (completed && index === currentIndex) ? "border-[#457D00] bg-[#457D00] text-white" : current ? "border-2 border-[#457D00] bg-white text-[#457D00]" : "border-2 border-[#E8E8E8] bg-white text-neutral-400";
           return (
-            <div key={step.id} className="relative z-10 flex flex-col items-center text-center">
-              <div className={`flex size-10 items-center justify-center rounded-full transition-all ${circleClass}`}>
-                <Icon className="size-4" aria-hidden="true" />
-              </div>
-              <span className={`mt-2 text-[14px] ${labelClass}`}>{step.label}</span>
-              <span className="mt-0.5 text-[12px] text-neutral-400">{step.caption}</span>
-            </div>
+            <li key={step.id} className="relative flex flex-col items-center text-center" aria-current={current ? "step" : undefined}>
+              {index > 0 ? <span aria-hidden="true" className={`absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2 ${done || (completed) || (!terminal && index <= currentIndex) ? "bg-[#457D00]" : "bg-[#E8E8E8]"}`} /> : null}
+              <span className={`relative z-10 flex size-10 items-center justify-center rounded-full ${circle}`}><Icon className="size-4" aria-hidden="true" /></span>
+              <span className={`mt-2 text-[11px] leading-tight sm:text-[13px] ${current ? "font-bold text-[#457D00]" : done ? "font-semibold text-[#14231A]" : "font-semibold text-neutral-500"}`}>{step.label}</span>
+              <span className="mt-0.5 hidden text-[11px] text-neutral-400 sm:block">{captions[step.id]}</span>
+            </li>
           );
         })}
-      </div>
-
-      {/* Explanation Banner matching Photo 2 */}
-      <div className={`mt-5 flex items-start gap-3 rounded-xl p-4 ${explanation.container}`}>
-        <ExplanationIcon className={`size-5 shrink-0 mt-0.5 ${explanation.iconColor}`} aria-hidden="true" />
+      </ol>
+      {terminal ? <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700"><XCircle className="size-4" />{terminalCopy[terminal].label}</p> : null}
+      <div className={`mt-5 flex items-start gap-3 rounded-xl border p-4 ${banner.tone}`}>
+        <BannerIcon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className={`text-[13px] font-bold sm:text-[14px] ${explanation.titleColor}`}>
-            {explanation.title}
-          </p>
-          <p className={`mt-0.5 text-[12px] leading-relaxed sm:text-[13px] ${explanation.descColor}`}>
-            {explanation.description}
-          </p>
+          <p className="text-[13px] font-bold sm:text-[14px]">{banner.title}</p>
+          <p className="mt-0.5 text-[12px] leading-relaxed sm:text-[13px]">{banner.text}</p>
         </div>
       </div>
     </div>

@@ -22,6 +22,11 @@ const text = (value: unknown, fallback: string) =>
 
 const code = (p: SellerNoticePayload) => text(p.code, "Your reservation");
 const product = (p: SellerNoticePayload) => text(p.productName, "Your listing");
+/** The title and description of an automatic post, shortened, on its own lines. Empty when there is none. */
+const preview = (p: SellerNoticePayload) => {
+  const post = text(p.preview, "");
+  return post ? `\n\nPost: ${post.length > 240 ? `${post.slice(0, 237)}...` : post}` : "";
+};
 
 export const sellerNoticeDefs = {
   new_reservation: {
@@ -31,7 +36,7 @@ export const sellerNoticeDefs = {
   },
   reservation_ending: {
     title: "Reservation Ends Soon", plural: "Reservations End Soon",
-    body: (p) => `${code(p)} has about an hour left. The buyer has not picked up yet.`,
+    body: (p) => `${code(p)} pickup time is almost over. The buyer has not picked up yet.`,
     level: "sound", topic: "orders", category: "reservations", target: "order", nightExempt: true,
   },
   reservation_ended: {
@@ -66,9 +71,9 @@ export const sellerNoticeDefs = {
   },
   price_lowered: {
     title: "Price Lowered", plural: "Prices Lowered",
-    body: (p) => p.priceBefore
+    body: (p) => (p.priceBefore
       ? `${product(p)} went from ₱${text(p.priceBefore, "?")} to ₱${text(p.priceAfter, "?")}. The new price was posted on the Agrivive Facebook Page.`
-      : `${product(p)} is now ₱${text(p.priceAfter, "lower")}. The new price was posted on the Agrivive Facebook Page.`,
+      : `${product(p)} is now ₱${text(p.priceAfter, "lower")}. The new price was posted on the Agrivive Facebook Page.`) + preview(p),
     level: "silent", topic: "boost", category: "listings", target: "notifications",
   },
   final_price_reached: {
@@ -85,7 +90,7 @@ export const sellerNoticeDefs = {
   },
   price_drop_setup: {
     title: "Set Your Price Drop", plural: "Set Your Price Drops",
-    body: (p) => `${product(p)} is a Priority Boost listing. Set how much the price drops every 6 hours, and your final price.`,
+    body: (p) => `${product(p)} was posted. Set how much the price drops every 6 hours, and your final price.`,
     level: "silent", topic: "boost", category: "listings", target: "listing",
   },
   boost_posted: {
@@ -97,6 +102,11 @@ export const sellerNoticeDefs = {
     title: "Boost Did Not Post", plural: "Boosts Did Not Post",
     body: (p) => `${product(p)} did not post on the Agrivive Facebook Page. Open Boost to try again.`,
     level: "silent", topic: "boost", category: "listings", target: "notifications",
+  },
+  daily_advisory: {
+    title: "Today's Weather and Calendar", plural: "Today's Weather and Calendar",
+    body: (p) => text(p.summary, "Open Advisories to see today's weather and the calendar."),
+    level: "silent", topic: "account", category: "listings", target: "notifications",
   },
   // Trust notices (stored in trust_notices, shown here with plain wording).
   seller_cancellation_warning: {
@@ -148,6 +158,31 @@ export const sellerNoticeDefs = {
     title: "Buyer Still Waiting", plural: "Buyers Still Waiting",
     body: () => "A buyer has waited 24 hours for your reply.",
     level: "sound", topic: "orders", category: "messages", target: "order",
+  },
+  order_update: {
+    title: "Order Update", plural: "Order Updates",
+    body: (p) => text(p.message, `${code(p)} has a new update.`),
+    level: "sound", topic: "orders", category: "reservations", target: "order", nightExempt: true,
+  },
+  trust_event: {
+    title: "Trust Update", plural: "Trust Updates",
+    body: () => "A trust event was recorded. Open Trust to see the rule, your points and how to dispute it.",
+    level: "sound", topic: "account", category: "trust", target: "trust", nightExempt: true,
+  },
+  trust_action_notice: {
+    title: "Trust Notice", plural: "Trust Notices",
+    body: () => "Your trust score reached the Notice level. Nothing is restricted. Open Trust for details.",
+    level: "silent", topic: "account", category: "trust", target: "trust",
+  },
+  trust_level_lowered: {
+    title: "Restriction Ended", plural: "Restrictions Ended",
+    body: () => "Your score fell and an earlier restriction ended.",
+    level: "silent", topic: "account", category: "trust", target: "trust",
+  },
+  trust_decision: {
+    title: "Review Decision", plural: "Review Decisions",
+    body: (p) => text(p.message, "A decision was made on your case."),
+    level: "sound", topic: "account", category: "trust", target: "trust", nightExempt: true,
   },
 } as const satisfies Record<string, SellerNoticeDef>;
 
