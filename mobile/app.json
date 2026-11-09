@@ -46,8 +46,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#F8F6F1",
           "android": {
-            "image": "./assets/brand/agrivive-logo-icon.png",
-            "imageWidth": 150
+            "image": "./assets/brand/agrivive-splash-android.png",
+            "imageWidth": 288
           }
         }
       ],
