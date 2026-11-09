@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-09 PST
+last_updated: 2026-11-10 PST
 status: active
 ---
 
@@ -11,11 +11,15 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-09 PST
+2026-11-10 PST
 
 ## Latest completed task
 
-Seller reminders: the daily popup now lists reminders, a holiday alert fires one day before a public holiday, and a heat alert fires at 35 °C. Rebuild API and the seller APK. See [[2026-11-09 Calendar Reminders Heat and Holiday Alerts]].
+README aligned with the current system (Supabase, 47 tables, one review per order, reservation pickup, no Priority Boost, no admin trust decisions), architecture and database diagrams added under `Agrivive/docs/`, CI workflows fixed and bun pinned to 1.4.4 (not pushed yet), and two stale Supabase objects dropped. See [[2026-11-10 README Diagrams and CI Fix]].
+
+Earlier: Schema cleanup and chat rules: dropped `product_reviews`, `priority_score`, `priority_tier` and `price_reduction_percent` (migration `20261109140000_drop_unused_columns`); web chats show only buyer chats and mobile only seller chats (`as=buyer|seller`); sellers can block, unblock and archive; one account can buy and sell (migration `20261109150000_sellers_can_buy`). Migrations not applied anywhere yet; back up first, apply, then deploy the rebuilt API. See [[2026-11-09 Schema Cleanup Chat Sides and Dual Roles]].
+
+Earlier: Seller reminders: the daily popup now lists reminders, a holiday alert fires one day before a public holiday, and a heat alert fires at 35 °C. Rebuild API and the seller APK. See [[2026-11-09 Calendar Reminders Heat and Holiday Alerts]].
 
 Beta testing: 10-case buyer and 10-case seller Pass/Fail sheet added, see [[2026-11-10 UAT Beta Test Cases]]. Not run by testers yet.
 
@@ -48,13 +52,7 @@ Recovery restarts the inactivity clock, returns real errors, and an ended pause 
 
 Earlier: Trust and Rating module aligned with the paper: blocking by score, reply timers for all questions and chats, confirmed report violations, seller answers to product reviews, correct pause and block messages. Details in [[2026-11-02 Trust and Rating Paper Alignment]].
 
-Earlier: Onboarding slides now use the new market photos. Details in [[2026-11-02 Onboarding Images]].
-
 Earlier: Restore Account screen rebuilt to match the other sign-in screens (one header, errors under the code, exactly 6 digits, success step with Continue or Sign In), and a restored seller is no longer stuck as "paused" for 30 seconds (status cache cleared on restore). Backend typecheck and builds and mobile typecheck passed; no phone check. Rebuild the API. See [[2026-11-02 Restore Account Screen Redesign]].
-
-Earlier: Mobile now uses the web's fonts, colours and logo; real password reset screen; sender photos on Messages questions; duplicate headers removed. Details in [[2026-11-02 Web Look, Password Reset and Messages Photos]].
-
-Earlier: Mobile sign-in screens (email code, sign-in code, backup code, Verify Your Email), App Start states, and the web password rule on mobile. Details in [[2026-11-02 Sign-In Screens and Password Rule]].
 
 Earlier: Weather & Holidays screen rebuilt to match Stitch F5 to F8 using only real `/seller/advisories` data and the seller profile (no sample values). Details in [[2026-11-02 Weather and Holidays Screen Redesign]].
 

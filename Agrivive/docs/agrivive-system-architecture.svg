@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 890" width="1600" height="890" font-family="DejaVu Sans, Arial, sans-serif">
+<defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#1d2b24"/></marker></defs>
+<rect width="1600" height="890" fill="#F8F6F1"/>
+<text x="40" y="38" font-size="24" font-weight="800" fill="#1F4D3A" text-anchor="start">AGRIVIVE SYSTEM ARCHITECTURE</text>
+<text x="40" y="60" font-size="13" font-weight="400" fill="#5b6b63" text-anchor="start">Clients, VPS containers, data stores and outside services</text>
+<rect x="40" y="80" width="330" height="76" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="40" y="80" width="6" height="76" rx="3" fill="#1F4D3A"/>
+<text x="58" y="106" font-size="16" font-weight="700" fill="#1F4D3A" text-anchor="start">Buyer Web App</text>
+<text x="58" y="126" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Next.js 15, runs in the browser</text>
+<rect x="400" y="80" width="330" height="76" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="400" y="80" width="6" height="76" rx="3" fill="#1F4D3A"/>
+<text x="418" y="106" font-size="16" font-weight="700" fill="#1F4D3A" text-anchor="start">Seller Mobile App</text>
+<text x="418" y="126" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Expo SDK 57, React Native (Android)</text>
+<rect x="760" y="80" width="330" height="76" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="760" y="80" width="6" height="76" rx="3" fill="#1F4D3A"/>
+<text x="778" y="106" font-size="16" font-weight="700" fill="#1F4D3A" text-anchor="start">Stakeholder and Admin Pages</text>
+<text x="778" y="126" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Web pages, read-only reports and metrics</text>
+<polyline points="205,156 205,206" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="565,156 565,206" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="925,156 925,206" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<text x="215" y="186" font-size="11.5" font-weight="600" fill="#1F4D3A" text-anchor="start">HTTPS: REST + WebSocket chat</text>
+<rect x="30" y="200" width="1110" height="490" rx="16" fill="#fff" stroke="#9aa79f" stroke-width="1.5" stroke-dasharray="8 6"/>
+<text x="46" y="222" font-size="13" font-weight="700" fill="#5b6b63" text-anchor="start">VPS  -  Docker Compose</text>
+<rect x="50" y="236" width="1070" height="44" rx="12" fill="#EAF1EC" stroke="#1F4D3A" stroke-width="1.5"/>
+<text x="70" y="264" font-size="14.5" font-weight="700" fill="#1F4D3A" text-anchor="start">Caddy reverse proxy  -  HTTPS, routes web and API traffic</text>
+<polyline points="180,280 180,310" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="590,280 590,310" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="50" y="310" width="260" height="250" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="50" y="310" width="6" height="250" rx="3" fill="#2F5DA8"/>
+<text x="68" y="336" font-size="16" font-weight="700" fill="#2F5DA8" text-anchor="start">web container</text>
+<text x="68" y="356" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Next.js 15 App Router</text>
+<text x="68" y="375" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Tailwind, Base UI, Leaflet</text>
+<text x="68" y="394" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start"></text>
+<text x="68" y="413" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Pages:</text>
+<text x="68" y="432" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Marketplace, Cart, Orders</text>
+<text x="68" y="451" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Messages, Notifications, Profile</text>
+<text x="68" y="470" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Stakeholder, Admin</text>
+<polyline points="310,430 340,430" fill="none" stroke="#2F5DA8" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="340" y="310" width="500" height="250" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="340" y="310" width="6" height="250" rx="3" fill="#D9822B"/>
+<text x="358" y="336" font-size="16" font-weight="700" fill="#D9822B" text-anchor="start">api container</text>
+<text x="358" y="356" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Bun + Elysia, Better Auth (email code, Google, 2-step), OpenAPI</text>
+<rect x="358" y="376" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="412" y="396" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">auth</text>
+<rect x="476" y="376" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="530" y="396" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">buyer</text>
+<rect x="594" y="376" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="648" y="396" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">seller</text>
+<rect x="712" y="376" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="766" y="396" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">marketplace</text>
+<rect x="358" y="416" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="412" y="436" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">pickup</text>
+<rect x="476" y="416" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="530" y="436" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">conversations</text>
+<rect x="594" y="416" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="648" y="436" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">notifications</text>
+<rect x="712" y="416" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="766" y="436" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">trust</text>
+<rect x="358" y="456" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="412" y="476" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">integrations</text>
+<rect x="476" y="456" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="530" y="476" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">stakeholder</text>
+<rect x="594" y="456" width="108" height="30" rx="8" fill="#FFF3E4" stroke="#D9822B" stroke-width="1"/>
+<text x="648" y="476" font-size="12.5" font-weight="600" fill="#1d2b24" text-anchor="middle">admin</text>
+<text x="358" y="505" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Routes - Models - Services (one exported function per service file)</text>
+<text x="358" y="525" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Session auth macro with roles: buyer, seller, stakeholder, admin</text>
+<rect x="870" y="310" width="250" height="250" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="870" y="310" width="6" height="250" rx="3" fill="#6B4E9B"/>
+<text x="888" y="336" font-size="16" font-weight="700" fill="#6B4E9B" text-anchor="start">worker container</text>
+<text x="888" y="356" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Runs jobs every 60 seconds:</text>
+<text x="888" y="375" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Order expiry and reminders</text>
+<text x="888" y="394" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Trust and inquiry checks</text>
+<text x="888" y="413" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Listing and price notices</text>
+<text x="888" y="432" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Ranked boost (AHP-TOPSIS)</text>
+<text x="888" y="451" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Boost and follow-up delivery</text>
+<text x="888" y="470" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Push delivery</text>
+<text x="888" y="489" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Daily weather and holiday notices</text>
+<rect x="50" y="580" width="1070" height="88" rx="12" fill="#F1EEF8" stroke="#6B4E9B" stroke-width="1.5"/>
+<text x="68" y="606" font-size="15" font-weight="700" fill="#6B4E9B" text-anchor="start">Shared logic (src/utils)</text>
+<text x="68" y="630" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">ahp-topsis - visibility-ranking - trust - order-access/amount/qr/stock - pickup - review-format</text>
+<text x="68" y="650" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">advisory-alerts - push-notifications - price-reduction - groq - s3 - recaptcha - email</text>
+<polyline points="590,560 590,580" fill="none" stroke="#6B4E9B" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="995,560 995,580" fill="none" stroke="#6B4E9B" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="180,560 180,580" fill="none" stroke="#6B4E9B" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="250,690 250,770" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="620,690 620,770" fill="none" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+<text x="262" y="735" font-size="11.5" font-weight="600" fill="#1F4D3A" text-anchor="start">read and write</text>
+<rect x="50" y="770" width="400" height="86" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="50" y="770" width="6" height="86" rx="3" fill="#2F5DA8"/>
+<text x="68" y="796" font-size="16" font-weight="700" fill="#2F5DA8" text-anchor="start">PostgreSQL (Drizzle ORM)</text>
+<text x="68" y="816" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Users, listings, orders, reviews, trust,</text>
+<text x="68" y="835" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">chats, boosts, post records</text>
+<rect x="470" y="770" width="300" height="86" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="470" y="770" width="6" height="86" rx="3" fill="#2F5DA8"/>
+<text x="488" y="796" font-size="16" font-weight="700" fill="#2F5DA8" text-anchor="start">S3 object storage</text>
+<text x="488" y="816" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">Product photos, avatars,</text>
+<text x="488" y="835" font-size="12.5" font-weight="400" fill="#1d2b24" text-anchor="start">chat files, review photos</text>
+<rect x="1170" y="20" width="420" height="760" rx="16" fill="#fff" stroke="#9aa79f" stroke-width="1.5" stroke-dasharray="8 6"/>
+<text x="1186" y="44" font-size="1" font-weight="400" fill="#1d2b24" text-anchor="start"></text>
+<text x="1380" y="16" font-size="11" font-weight="700" fill="#5b6b63" text-anchor="middle">OUTSIDE SERVICES  (called by the API, worker and n8n)</text>
+<rect x="1200" y="50" width="370" height="70" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="50" width="6" height="70" rx="3" fill="#D9822B"/>
+<text x="1218" y="74" font-size="14" font-weight="700" fill="#D9822B" text-anchor="start">n8n  -  Workflow Automation</text>
+<text x="1218" y="94" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Webhook /agrivive-visibility-boost</text>
+<rect x="1200" y="140" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="140" width="6" height="56" rx="3" fill="#D9822B"/>
+<text x="1218" y="164" font-size="14" font-weight="700" fill="#D9822B" text-anchor="start">Groq  -  GPT-OSS 20B</text>
+<text x="1218" y="184" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Writes post captions</text>
+<rect x="1200" y="220" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="220" width="6" height="56" rx="3" fill="#D9822B"/>
+<text x="1218" y="244" font-size="14" font-weight="700" fill="#D9822B" text-anchor="start">Facebook and Instagram Graph APIs</text>
+<text x="1218" y="264" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Public posts, called by the API</text>
+<rect x="1200" y="300" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="300" width="6" height="56" rx="3" fill="#2F5DA8"/>
+<text x="1218" y="324" font-size="14" font-weight="700" fill="#2F5DA8" text-anchor="start">Firebase Cloud Messaging</text>
+<text x="1218" y="344" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Push notices to the seller app</text>
+<rect x="1200" y="380" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="380" width="6" height="56" rx="3" fill="#2F5DA8"/>
+<text x="1218" y="404" font-size="14" font-weight="700" fill="#2F5DA8" text-anchor="start">Resend / Mailtrap</text>
+<text x="1218" y="424" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Email sign-in codes and notices</text>
+<rect x="1200" y="460" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="460" width="6" height="56" rx="3" fill="#1F4D3A"/>
+<text x="1218" y="484" font-size="14" font-weight="700" fill="#1F4D3A" text-anchor="start">Open-Meteo</text>
+<text x="1218" y="504" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Weather forecasts and heat alerts</text>
+<rect x="1200" y="540" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="540" width="6" height="56" rx="3" fill="#1F4D3A"/>
+<text x="1218" y="564" font-size="14" font-weight="700" fill="#1F4D3A" text-anchor="start">Nager.Date</text>
+<text x="1218" y="584" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Public holidays</text>
+<rect x="1200" y="620" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="620" width="6" height="56" rx="3" fill="#1F4D3A"/>
+<text x="1218" y="644" font-size="14" font-weight="700" fill="#1F4D3A" text-anchor="start">OpenStreetMap tiles</text>
+<text x="1218" y="664" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Stall map in web and app</text>
+<rect x="1200" y="700" width="370" height="56" rx="12" fill="#fff" stroke="#E5E2DA" stroke-width="1.5"/>
+<rect x="1200" y="700" width="6" height="56" rx="3" fill="#1F4D3A"/>
+<text x="1218" y="724" font-size="14" font-weight="700" fill="#1F4D3A" text-anchor="start">Google Sign-In and reCAPTCHA v3</text>
+<text x="1218" y="744" font-size="12" font-weight="400" fill="#5b6b63" text-anchor="start">Web sign-in and bot checks</text>
+<line x1="1155" y1="60" x2="1155" y2="725" stroke="#1d2b24" stroke-width="2"/>
+<polyline points="1155,248 1198,248" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,328 1198,328" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,408 1198,408" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,488 1198,488" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,568 1198,568" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,648 1198,648" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,728 1198,728" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1155,95 1198,95" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1140,430 1155,430" fill="none" stroke="#1d2b24" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1385,106 1385,138" fill="none" stroke="#D9822B" stroke-width="2" marker-end="url(#ah)"/>
+<polyline points="1198,60 1150,60 1150,250 1121,250" fill="none" stroke="#D9822B" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ah)"/>
+<text x="1135" y="230" font-size="11.5" font-weight="600" fill="#D9822B" text-anchor="end">n8n callbacks with service token</text>
+<text x="820" y="800" font-size="13" font-weight="700" fill="#5b6b63" text-anchor="start">Legend</text>
+<rect x="820" y="892" width="0" height="0" rx="12" fill="none" stroke="none" stroke-width="1.5"/>
+<rect x="820" y="816" width="14" height="14" rx="3" fill="#1F4D3A"/>
+<text x="842" y="828" font-size="12" font-weight="400" fill="#1d2b24" text-anchor="start">Client / web side</text>
+<rect x="820" y="892" width="0" height="0" rx="12" fill="none" stroke="none" stroke-width="1.5"/>
+<rect x="1010" y="816" width="14" height="14" rx="3" fill="#2F5DA8"/>
+<text x="1032" y="828" font-size="12" font-weight="400" fill="#1d2b24" text-anchor="start">Data and web server</text>
+<rect x="820" y="892" width="0" height="0" rx="12" fill="none" stroke="none" stroke-width="1.5"/>
+<rect x="1200" y="816" width="14" height="14" rx="3" fill="#D9822B"/>
+<text x="1222" y="828" font-size="12" font-weight="400" fill="#1d2b24" text-anchor="start">API and automation</text>
+<rect x="820" y="892" width="0" height="0" rx="12" fill="none" stroke="none" stroke-width="1.5"/>
+<rect x="1390" y="816" width="14" height="14" rx="3" fill="#6B4E9B"/>
+<text x="1412" y="828" font-size="12" font-weight="400" fill="#1d2b24" text-anchor="start">Worker and shared logic</text>
+</svg>

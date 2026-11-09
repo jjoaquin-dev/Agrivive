@@ -1,12 +1,13 @@
-import { and, eq, inArray, or } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../../../db";
 import { conversation_participants, conversations } from "../../../db/schema";
+import { conversationSideFilter, type ConversationSide } from "./conversation.scope";
 
-export async function markAllConversationsRead(userId: string) {
+export async function markAllConversationsRead(userId: string, side?: ConversationSide) {
   const userConvos = await db
     .select({ id: conversations.id })
     .from(conversations)
-    .where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)));
+    .where(conversationSideFilter(userId, side));
 
   if (userConvos.length === 0) return { updatedCount: 0 };
 

@@ -22,6 +22,7 @@ export function MessagesChipRow({
     { key: "produce", label: "Produce" },
     { key: "reservations", label: "Reservations" },
     { key: "questions", label: openCount > 0 ? `Questions ${openCount}` : "Questions" },
+    { key: "archived", label: "Archived" },
   ];
 
   return (

@@ -39,7 +39,7 @@ export type ConversationMessage = {
 type ConversationResult = { conversation: Conversation; message: ConversationMessage };
 
 export async function listConversations(signal?: AbortSignal, archived = false): Promise<Conversation[]> {
-  const res = await apiRequest<Conversation[] | { items: Conversation[]; nextCursor: string | null }>(`/conversations?limit=100&archived=${archived}`, { signal });
+  const res = await apiRequest<Conversation[] | { items: Conversation[]; nextCursor: string | null }>(`/conversations?limit=100&archived=${archived}&as=buyer`, { signal });
   return Array.isArray(res) ? res : res.items;
 }
 

@@ -227,8 +227,6 @@ export const sellers_product = pgTable("sellers_product", {
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }),
-  /** Unused since 2026-11-01: drops are a peso amount (priceReductionAmount). Kept for rollback. */
-  priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
   /** Pesos taken off every 6 hours after the first Boost post, down to minimumPrice. */
   priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
@@ -414,9 +412,6 @@ export const seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   lastError: text("last_error"),
-  // AHP-TOPSIS result saved when the first post went out. Kept for old rows; no longer used.
-  priorityScore: decimal("priority_score", { precision: 5, scale: 4 }),
-  priorityTier: text("priority_tier"),
   priceDropSetupAt: timestamp("price_drop_setup_at", { withTimezone: true }),
   priceDropSetupNotifiedAt: timestamp("price_drop_setup_notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -739,21 +734,6 @@ export const ordered_items = pgTable("ordered_items", {
 }, (table) => [
   index("ordered_items_orders_id_idx").on(table.ordersId),
   index("ordered_items_product_id_idx").on(table.productId),
-]);
-
-export const product_reviews = pgTable("product_reviews", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
-  orderedItemId: uuid("ordered_item_id").notNull().unique().references(() => ordered_items.id, { onDelete: "cascade" }),
-  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "restrict" }),
-  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  rating: smallint("rating").notNull(),
-  review: text("review"),
-  sellerResponse: text("seller_response"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-}, (table) => [
-  index("product_reviews_product_created_idx").on(table.productId, table.createdAt),
 ]);
 
 export const fb_post_logs = pgTable("fb_post_logs", {

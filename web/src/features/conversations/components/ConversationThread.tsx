@@ -130,12 +130,20 @@ export function ConversationThread({
       </div>
 
       {/* Message Composer Area */}
-      <ConversationInput
-        onSendMessage={thread.send}
-        sending={thread.sending}
-        requiresAuth={thread.requiresAuth}
-        error={thread.error}
-      />
+      {existing?.blocked ? (
+        <div role="status" className="mx-6 mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-center text-sm text-rose-800">
+          {existing.myBlockedAt
+            ? "You blocked this chat. Tap Unblock at the top to send messages again."
+            : "This chat was blocked, so you cannot send messages."}
+        </div>
+      ) : (
+        <ConversationInput
+          onSendMessage={thread.send}
+          sending={thread.sending}
+          requiresAuth={thread.requiresAuth}
+          error={thread.error}
+        />
+      )}
     </section>
   );
 }

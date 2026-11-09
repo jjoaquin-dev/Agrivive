@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationBubble } from "../../../src/features/conversations/components/ConversationBubble";
@@ -48,9 +48,25 @@ export default function ConversationDetailScreen() {
   const senderName = conversation?.buyerName || "Buyer";
   const avatarBg = useMemo(() => getAvatarColor(senderName), [senderName]);
   const initials = useMemo(() => getInitials(senderName), [senderName]);
-  const isClosed = conversation?.status === "closed";
+  const iBlocked = Boolean(conversation?.myBlockedAt);
+  const isBlocked = Boolean(conversation?.blocked);
+  const isClosed = conversation?.status === "closed" || isBlocked;
   const orderStatus = order?.status;
-  const closedReason = orderStatus && orderStatus !== "pending" ? closedReasons[orderStatus] : "You cannot send more messages.";
+  const confirmBlock = () => {
+    const run = async () => { const err = await chat.toggleBlock(); if (err) Alert.alert("Could Not Change", err); };
+    if (iBlocked) { void run(); return; }
+    Alert.alert("Block this buyer?", "Neither of you can send messages in this chat until you unblock.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Block", style: "destructive", onPress: () => void run() },
+    ]);
+  };
+  const toggleArchive = async () => {
+    const err = await chat.toggleArchive();
+    if (err) Alert.alert("Could Not Change", err);
+    else router.back();
+  };
+  const blockedReason = iBlocked ? "You blocked this buyer. Tap the block icon at the top to unblock." : "This chat was blocked, so you cannot send messages.";
+  const closedReason = isBlocked ? blockedReason : orderStatus && orderStatus !== "pending" ? closedReasons[orderStatus] : "You cannot send more messages.";
 
   const subtitle = conversation?.orderId
     ? `Order #${orderRef(conversation.orderId)}${isClosed && orderStatus === "completed" ? " • Completed" : ""}`
@@ -81,7 +97,7 @@ export default function ConversationDetailScreen() {
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ConversationHeaderBar senderName={senderName} subtitle={subtitle} avatarBg={avatarBg} initials={initials} buyerImage={conversation?.buyerImage} onInfo={openDetails} />
+        <ConversationHeaderBar senderName={senderName} subtitle={subtitle} avatarBg={avatarBg} initials={initials} buyerImage={conversation?.buyerImage} onInfo={openDetails} onBlock={conversation ? confirmBlock : undefined} blocked={iBlocked} onArchive={conversation ? toggleArchive : undefined} archived={Boolean(conversation?.archivedAt)} />
         {conversation ? <ConversationContextBanner conversation={conversation} order={order} product={product} onPress={openDetails} /> : null}
         {chat.paused ? <ConversationReconnectBanner /> : null}
 
@@ -129,6 +145,7 @@ export default function ConversationDetailScreen() {
         <ConversationComposer
           isClosed={Boolean(isClosed)}
           closedReason={closedReason}
+          closedTitle={isBlocked ? "This chat is blocked." : undefined}
           draft={chat.draft}
           onChangeDraft={chat.setDraft}
           inputRef={inputRef}

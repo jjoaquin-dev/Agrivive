@@ -1,14 +1,15 @@
-import { and, eq, or } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { conversations } from "../../../db/schema";
 import { ConversationError } from "./conversation.error";
 import { buildConversationSelect } from "./conversation.select";
 import { presentConversationRow } from "./conversation.present";
+import { conversationSideFilter, type ConversationSide } from "./conversation.scope";
 
-export async function getConversation(userId: string, conversationId: string) {
+export async function getConversation(userId: string, conversationId: string, side?: ConversationSide) {
   const [row] = await buildConversationSelect(userId)
     .where(and(
       eq(conversations.id, conversationId),
-      or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)),
+      conversationSideFilter(userId, side),
     ))
     .limit(1);
   if (!row) throw new ConversationError(404, "Conversation not found");

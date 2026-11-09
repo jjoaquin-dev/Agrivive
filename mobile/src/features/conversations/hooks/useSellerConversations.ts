@@ -4,7 +4,8 @@ import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { fetchConversations } from "../api";
 import type { Conversation } from "../types";
 
-export function useSellerConversations() {
+/** The seller chat list. Pass archived to get the archived ones; enabled=false waits until they are needed. */
+export function useSellerConversations(archived = false, enabled = true) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ export function useSellerConversations() {
     try {
       const response = await fetchConversations({
         limit: 20,
+        archived,
         cursor: reset ? undefined : nextCursor ?? undefined,
       });
       setConversations((prev) => (reset ? response.items : [...prev, ...response.items]));
@@ -37,11 +39,11 @@ export function useSellerConversations() {
   }, [nextCursor, conversations.length]);
 
   useFocusEffect(useCallback(() => {
-    void load(true);
-  }, []));
+    if (enabled) void load(true);
+  }, [enabled]));
 
   const isFocused = useIsFocused();
-  useRefreshOnSignal(() => load(true), { pushTypes: ["seller_message"], enabled: isFocused });
+  useRefreshOnSignal(() => load(true), { pushTypes: ["seller_message"], enabled: isFocused && enabled });
 
   const refresh = useCallback(() => {
     setRefreshing(true);

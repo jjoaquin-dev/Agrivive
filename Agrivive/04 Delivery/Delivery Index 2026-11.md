@@ -9,10 +9,12 @@ status: active
 Up: [[Delivery Index]] · Home: [[00 Home]] · Latest: [[00-LATEST]]
 Previous: [[Delivery Index 2026-10]]
 
-109 dated records. Records are never edited; this page only links them.
+112 dated records. Records are never edited; this page only links them.
 
 ## 2026-11-01
 
+- [[04 Delivery/2026-11-10 README Diagrams and CI Fix|README Alignment, Diagrams and CI Fix]]
+- [[04 Delivery/2026-11-09 Calendar Reminders Heat and Holiday Alerts|Calendar Reminders, Heat and Holiday Alerts]]
 - [[04 Delivery/2026-11-01 AHP-TOPSIS Default Policy|AHP-TOPSIS Default Policy]]
 - [[04 Delivery/2026-11-01 AHP-TOPSIS Test Cases|AHP-TOPSIS Test Cases]]
 - [[04 Delivery/2026-11-01 Auth Screens Match Stitch Reference|Auth Screens Match Stitch Reference]]
@@ -138,6 +140,7 @@ Previous: [[Delivery Index 2026-10]]
 - [[04 Delivery/2026-11-09 Flagging Rules Without Admin|Flagging Rules Without Admin]]
 - [[04 Delivery/2026-11-09 Leave Stall Out of Pickup Picker|Leave Stall Out of Pickup Picker]]
 - [[04 Delivery/2026-11-09 Follower Update Emails|Follower Update Emails]]
+- [[04 Delivery/2026-11-09 Schema Cleanup Chat Sides and Dual Roles|Schema Cleanup, Chat Sides and Dual Roles]]
 - [[04 Delivery/2026-11-08 One Review Per Order|One Review Per Order]]
 - [[04 Delivery/2026-11-08 No Floating Vault Notes Rule|No Floating Vault Notes Rule]]
 - [[04 Delivery/2026-11-08 AHP-TOPSIS and n8n Technical Specification PDF|AHP-TOPSIS and n8n Technical Specification PDF]]

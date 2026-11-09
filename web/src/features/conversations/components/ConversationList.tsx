@@ -114,6 +114,7 @@ export function ConversationList({
         </div>
       </div>
 
+<<<<<<< HEAD
       {view !== "inbox" ? (
         <button
           type="button"
@@ -127,22 +128,27 @@ export function ConversationList({
       /* Pill Filter Tabs */
       <div className="mt-2 flex items-center justify-between rounded-full bg-[#F5F6EE] p-1">
         {(["all", "unread", "important"] as TabType[]).map((tab) => {
+=======
+      {/* Pill Filter Tabs */}
+      <div className="mt-2 flex items-center overflow-x-auto rounded-full bg-[#F5F6EE] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {(["all", "unread", "important", "closed", "archived"] as TabType[]).map((tab) => {
+>>>>>>> 157e0b4b8f6849ab1bbbb49656019b735d1fcf8c
           const isActive = activeTab === tab;
           return (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize transition-all ${
+              className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full px-1 py-1 text-[11px] font-semibold capitalize transition-all ${
                 isActive
                   ? "bg-white text-[#202E1B] shadow-sm"
                   : "text-[#7A8875] hover:text-[#202E1B]"
               }`}
             >
               <span>{tab}</span>
-              {tab === "all" && (
-                <span className="inline-flex size-[18px] shrink-0 items-center justify-center rounded-full bg-[#D2E794] text-xs font-bold leading-none text-[#244218]">
-                  {items.length || 2}
+              {tab === "all" && items.some((i) => !i.archivedAt) && (
+                <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[#D2E794] text-[10px] font-bold leading-none text-[#244218]">
+                  {items.filter((i) => !i.archivedAt).length}
                 </span>
               )}
             </button>

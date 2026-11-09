@@ -4,12 +4,12 @@ import { Lock } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 
 /** Replaces the message box when the chat is closed, and says why in plain words. */
-export function ConversationClosedBar({ reason }: { reason: string }) {
+export function ConversationClosedBar({ reason, title = "This chat is closed." }: { reason: string; title?: string }) {
   return (
     <View style={styles.bar}>
       <View style={styles.title}>
         <Lock size={18} color={colors.textMuted} />
-        <Text style={styles.titleText}>This chat is closed.</Text>
+        <Text style={styles.titleText}>{title}</Text>
       </View>
       <Text style={styles.reason}>{reason}</Text>
     </View>

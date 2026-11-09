@@ -29857,7 +29857,6 @@ var sellers_product = pgTable("sellers_product", {
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }),
-  priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
   priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
   priceReductionEnabled: boolean("price_reduction_enabled").default(true).notNull(),
@@ -30009,8 +30008,6 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   lastError: text("last_error"),
-  priorityScore: decimal("priority_score", { precision: 5, scale: 4 }),
-  priorityTier: text("priority_tier"),
   priceDropSetupAt: timestamp("price_drop_setup_at", { withTimezone: true }),
   priceDropSetupNotifiedAt: timestamp("price_drop_setup_notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -30270,20 +30267,6 @@ var ordered_items = pgTable("ordered_items", {
 }, (table) => [
   index("ordered_items_orders_id_idx").on(table.ordersId),
   index("ordered_items_product_id_idx").on(table.productId)
-]);
-var product_reviews = pgTable("product_reviews", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
-  orderedItemId: uuid("ordered_item_id").notNull().unique().references(() => ordered_items.id, { onDelete: "cascade" }),
-  productId: uuid("product_id").notNull().references(() => sellers_product.id, { onDelete: "restrict" }),
-  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  rating: smallint("rating").notNull(),
-  review: text("review"),
-  sellerResponse: text("seller_response"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
-}, (table) => [
-  index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
 ]);
 var fb_post_logs = pgTable("fb_post_logs", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -31188,10 +31171,7 @@ async function readTrustMonitoringScore(subjectId, now = new Date) {
     withWeight: sql`count(${trust_events.weight})::int`
   }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull(trust_events.invalidatedAt), windowStart ? gte(trust_events.createdAt, windowStart) : undefined)).groupBy(trust_events.kind, trust_events.classification);
   const feedback = await db.execute(sql`
-    select (
-      (select count(*) from ${order_reviews} where ignored_at is null and length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql`and seller_id = ${subjectId}` : sql``})
-      + (select count(*) from ${product_reviews} where length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql`and seller_id = ${subjectId}` : sql``})
-    )::int as count`);
+    select count(*)::int as count from ${order_reviews} where ignored_at is null and length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql`and seller_id = ${subjectId}` : sql``}`);
   const [restored] = subjectId ? await db.select({ at: sql`max(${trust_actions.revokedAt})` }).from(trust_actions).where(and(eq(trust_actions.subjectId, subjectId), eq(trust_actions.actionType, "blocked"))) : [];
   const seriousRows = restored?.at ? await db.select({ count: sql`count(*)::int` }).from(trust_events).where(and(eq(trust_events.subjectId, subjectId), eq(trust_events.classification, "verified"), isNull(trust_events.invalidatedAt), inArray(trust_events.kind, [...trustSeriousKinds]), gt(trust_events.createdAt, new Date(restored.at)))) : null;
   const verified = rows.filter((row) => row.classification === "verified");
@@ -31671,6 +31651,7 @@ async function expireTrustRestrictions(limit = 100) {
 // src/jobs/email-listing-notices.ts
 var MAX_ATTEMPTS = 5;
 var MAX_AGE_HOURS = 24;
+var PAUSE_BETWEEN_EMAILS_MS = 1100;
 function content(event) {
   const { shopName, productName, metadata } = event;
   if (event.eventType === "price_drop") {
@@ -31686,7 +31667,9 @@ async function emailListingNotices(limit = 25) {
   const since = new Date(Date.now() - MAX_AGE_HOURS * 3600000);
   const pending = await db.select({ notice: buyer_listing_notices, event: seller_listing_events, email: user.email }).from(buyer_listing_notices).innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId)).innerJoin(user, eq(user.id, buyer_listing_notices.buyerId)).where(and(isNull(buyer_listing_notices.emailSentAt), lt(buyer_listing_notices.emailAttempts, MAX_ATTEMPTS), gte(buyer_listing_notices.createdAt, since), eq(user.isActive, true))).orderBy(asc(buyer_listing_notices.createdAt)).limit(limit);
   let sent = 0;
-  for (const { notice, event, email } of pending) {
+  for (const [index, { notice, event, email }] of pending.entries()) {
+    if (index > 0)
+      await new Promise((resolve) => setTimeout(resolve, PAUSE_BETWEEN_EMAILS_MS));
     const { subject, line } = content(event);
     const link = base ? `
 See it: ${base}/marketplace/${event.productId}` : "";
@@ -31698,6 +31681,12 @@ You get this because you follow ${event.shopName} on Agrivive. Unfollow the shop
       await db.update(buyer_listing_notices).set({ emailSentAt: new Date }).where(eq(buyer_listing_notices.id, notice.id));
       sent++;
     } catch (error) {
+      const slowDown = error instanceof Error && error.message.includes("(429)");
+      if (slowDown) {
+        await db.update(buyer_listing_notices).set({ emailAttempts: sql`greatest(${buyer_listing_notices.emailAttempts} - 1, 0)` }).where(eq(buyer_listing_notices.id, notice.id));
+        console.warn("Follower email paused: the mail service asked us to slow down.");
+        break;
+      }
       console.error("Follower email failed", { noticeId: notice.id, error });
     }
   }
