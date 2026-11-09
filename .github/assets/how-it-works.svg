@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" width="900" height="220" role="img" aria-labelledby="t d">
+  <title id="t">How a harvest moves</title>
+  <desc id="d">A crate of vegetables moves from Find to Reserve to Pick up to Boost, and starts again.</desc>
+  <style>
+    .bg { fill: #F8F6F1; }
+    .track { stroke: #E5E2DA; stroke-width: 6; stroke-linecap: round; fill: none; }
+    .fill { stroke: #457D00; stroke-width: 6; stroke-linecap: round; fill: none; stroke-dasharray: 660; stroke-dashoffset: 660; animation: draw 12s ease-in-out infinite; }
+    .node { fill: #FFFFFF; stroke: #457D00; stroke-width: 4; transform-box: fill-box; transform-origin: center; }
+    .n1 { animation: pop 12s ease-in-out infinite; animation-delay: 0s; }
+    .n2 { animation: pop 12s ease-in-out infinite; animation-delay: 2.4s; }
+    .n3 { animation: pop 12s ease-in-out infinite; animation-delay: 4.8s; }
+    .n4 { animation: pop 12s ease-in-out infinite; animation-delay: 7.2s; }
+    .label { font: 700 18px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #14231A; text-anchor: middle; }
+    .sub { font: 400 13px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #5F7367; text-anchor: middle; }
+    .num { font: 800 20px system-ui, -apple-system, "Segoe UI", sans-serif; fill: #457D00; text-anchor: middle; }
+    .crate { fill: #457D00; animation: ride 12s ease-in-out infinite; }
+    .leaf { fill: #8FC24A; animation: ride 12s ease-in-out infinite; }
+    @keyframes draw { 0% { stroke-dashoffset: 660; } 70%, 92% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 660; } }
+    @keyframes pop { 0%, 100% { transform: scale(1); fill: #FFFFFF; } 6% { transform: scale(1.18); fill: #E5F3D4; } 14% { transform: scale(1); fill: #E5F3D4; } 92% { fill: #E5F3D4; } }
+    @keyframes ride { 0% { transform: translateX(0); } 70%, 92% { transform: translateX(660px); } 100% { transform: translateX(0); } }
+    @media (prefers-reduced-motion: reduce) { .fill, .crate, .leaf, .node { animation: none; } .fill { stroke-dashoffset: 0; } }
+  </style>
+  <rect class="bg" width="900" height="220" rx="20"/>
+  <path class="track" d="M120 90 H780"/>
+  <path class="fill" d="M120 90 H780"/>
+  <circle class="node n1" cx="120" cy="90" r="30"/><text class="num" x="120" y="97">1</text>
+  <circle class="node n2" cx="340" cy="90" r="30"/><text class="num" x="340" y="97">2</text>
+  <circle class="node n3" cx="560" cy="90" r="30"/><text class="num" x="560" y="97">3</text>
+  <circle class="node n4" cx="780" cy="90" r="30"/><text class="num" x="780" y="97">4</text>
+  <text class="label" x="120" y="154">Find</text><text class="sub" x="120" y="176">Browse the market map</text>
+  <text class="label" x="340" y="154">Reserve</text><text class="sub" x="340" y="176">Stock held for you</text>
+  <text class="label" x="560" y="154">Pick up</text><text class="sub" x="560" y="176">Show the QR at the stall</text>
+  <text class="label" x="780" y="154">Boost</text><text class="sub" x="780" y="176">Posted, then priced down</text>
+  <g>
+    <rect class="crate" x="104" y="38" width="32" height="20" rx="4"/>
+    <circle class="leaf" cx="112" cy="34" r="5"/><circle class="leaf" cx="120" cy="30" r="5"/><circle class="leaf" cx="128" cy="34" r="5"/>
+  </g>
+</svg>

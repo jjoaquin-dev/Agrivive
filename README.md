@@ -35,6 +35,10 @@ Sellers list what they have left. Buyers reserve it from a map. A QR pickup pass
 
 > *Nothing is delivered. Nothing is held hostage in a warehouse. Fresh food moves from one pair of hands to another, and the whole story fits in a phone.*
 
+<p align="center">
+  <img src=".github/assets/how-it-works.svg" alt="A crate of vegetables moves from Find to Reserve to Pick up to Boost" width="860" />
+</p>
+
 ---
 
 ## 🎞️ Now Showing
@@ -43,9 +47,9 @@ Sellers list what they have left. Buyers reserve it from a map. A QR pickup pass
 |---|---|---|
 | 🗺️ | **Find** | Buyers browse a live market map and category shelves of surplus produce near them. |
 | 🧺 | **Reserve** | A cart that splits itself across sellers. Stock is held for a limited time, so nobody loses out. |
-| 🎟️ | **Pick up** | A Digital Pickup Pass (QR). The seller scans it, the order completes, both sides rate each other. |
+| 🎟️ | **Pick up** | A Digital Pickup Pass (QR) that works from the moment of the reservation until 15 minutes after the pickup time ends, so an early buyer is never turned away. The seller scans it, the order completes, and both sides rate each other. |
 | 🚀 | **Boost** | One tap and Agrivive writes the promotion with AI, posts it to Facebook and Instagram, then lowers the price every 6 hours until the seller's final price. |
-| 🧭 | **Rank** | AHP-TOPSIS decides who gets seen first. Priority Boost, Standard Exposure, Basic. No pay-to-win. |
+| 🧭 | **Rank** | AHP-TOPSIS decides who gets seen first, from listing age, price drop, stock and seller rating. No pay-to-win. |
 | 🛡️ | **Trust** | Weighted points for silence, cancellations and low ratings. Warnings, pauses, blocks, and a path back. |
 
 ---
@@ -57,8 +61,8 @@ Four roles, one account system. A person can hold both a Buyer and a Seller role
 | Role | Where they live | What they do |
 |---|---|---|
 | **Buyer** | Web ([`web/`](web)) | Browse the map, favorite sellers, reserve produce, chat, show the pickup pass, leave reviews. |
-| **Seller** | Mobile app ([`mobile/`](mobile)) | Add listings, set price drops, scan pickup passes, Boost a product, answer questions, read analytics, check weather and holidays. |
-| **Stakeholder** | Web | A read-only summary of marketplace activity, with a print layout. |
+| **Seller** | Mobile app ([`mobile/`](mobile)) | Set up the stall and its opening hours, add listings, set price drops, scan pickup passes, Boost a product, answer questions, read the sales report (with an AI-written summary), and check weather and holiday reminders. |
+| **Stakeholder** | Web | A read-only dashboard of marketplace activity: totals, a 30-day orders chart, and the most rescued produce. |
 | **Admin** | Web | Performance monitoring and trust oversight. |
 
 ---
@@ -85,6 +89,7 @@ flowchart LR
     P["🔔 FCM push"]
     E["✉️ Resend<br/>email codes"]
     G["🤖 reCAPTCHA v3"]
+    Q["🧠 Groq<br/>report summary"]
 
     W --> C
     M --> C
@@ -94,6 +99,7 @@ flowchart LR
     A --> S3
     A --> E
     A --> G
+    A --> Q
     K -->|"IDs only"| N
     N -->|"Bearer token<br/>fetches context"| A
     A --> FB
@@ -114,7 +120,7 @@ flowchart LR
 | **Database** | PostgreSQL (AWS Aurora), Drizzle ORM, hand-reviewed migrations |
 | **Web** | Next.js 15 App Router, React 19, Tailwind 3, GSAP + Lenis, Leaflet, Base UI, shadcn |
 | **Mobile** | Expo SDK 58, React Native 0.88, expo-router, Better Auth Expo client, EAS Build |
-| **Automation** | n8n workflow ([`n8n/workflows/`](n8n/workflows)) with Groq for promotion copy |
+| **Automation** | n8n workflow ([`n8n/workflows/`](n8n/workflows)) with Groq for promotion copy; the API also asks Groq for the seller report summary (with a built-in fallback) |
 | **Storage & mail** | AWS S3, Resend (Mailtrap in development) |
 | **Ops** | Docker Compose, Caddy, GitHub Actions (CI per app, manual CD) |
 
@@ -123,34 +129,40 @@ flowchart LR
 ## 🧠 The Smart Parts
 
 ### Fair visibility, by the numbers
-Listings are ranked with **AHP-TOPSIS**: weighted criteria (recency, rating reliability and more) produce a closeness score between 0 and 1.
+Listings are ranked with **AHP-TOPSIS**. Four criteria, all counted as "bigger is better", are weighted by AHP (consistency ratio about 0.004):
 
-| Closeness | Tier | Effect |
+| Criterion | Weight | Meaning |
 |---|---|---|
-| `≥ 0.60` | **Priority Boost** | Eligible for the Boost promotion flow |
-| `0.40 – 0.60` | **Standard Exposure** | Normal placement |
-| `< 0.40` | **Basic** | Lowest placement |
+| Posting age | 0.351 | Hours since the listing was posted. Produce that has waited longer is shown first. |
+| Price drop | 0.351 | Base price minus the current price. |
+| Stock level | 0.189 | Quantity left. |
+| Seller reliability | 0.109 | Average order service rating out of 5 (2.5 for a seller with no reviews). |
 
-See [`backend/src/utils/ahp-topsis`](backend/src/utils/ahp-topsis), [`visibility-score`](backend/src/utils/visibility-score) and [`promotion-eligibility`](backend/src/utils/promotion-eligibility).
+TOPSIS turns them into a closeness score between 0 and 1. Equal scores break by newest listing, then by id, so the order never flickers. The same ranking picks which listing the automatic Boost round posts next, and a listing is never picked again within 6 hours. Set `VISIBILITY_POLICY=visibility-v4` to roll back to the old formula.
+
+See [`backend/src/utils/ahp-topsis`](backend/src/utils/ahp-topsis), [`visibility-ranking`](backend/src/utils/visibility-ranking) and [`visibility-score`](backend/src/utils/visibility-score).
 
 ### Boost, the 6-hour countdown
 1. A seller adds a product and taps **Boost**.
-2. n8n and Groq write a title and description. The backend posts to Facebook and Instagram.
-3. Six hours later the worker wakes the same flow, lowers the price by the seller's peso amount (never below their final price), and posts again.
+2. n8n and Groq write a title and description. The backend posts to Facebook and Instagram. The first post is a normal post for any listing.
+3. Six hours later the seller is asked to set a peso drop and a final price. After that the worker lowers the price by that amount (never below the final price) every 6 hours and posts again.
 4. It repeats until the final price, a sellout, or the seller turns it off. A crash can never cause a double post.
 
 ### Trust, with a way back
-Violations carry weights: a seller who never answers (1), a seller cancellation (2), a buyer no-show (2), a 1 to 2 star rating (1), confirmed misleading information or rude messages (2), QR misuse (3).
+Violations carry weights: a seller who never answers (1), a seller cancellation of a confirmed order (2), a buyer no-show (2), a late buyer cancellation (1), a 1 to 2 star rating with a reason (1), confirmed misleading information or rude messages (2), QR misuse or ordering from your own stall (3 and an immediate block).
 
 ```
- 4 pts  →  warning
- 6 pts  →  12-hour pause
- 8 pts  →  24-hour pause
-10 pts  →  3-day pause
-12 pts  →  account blocked      (or one QR misuse)
+ 2 pts   →  notice
+ 4 pts   →  warning
+ 6 pts   →  24-hour pause
+ 8 pts   →  3-day pause
+12 pts   →  account blocked      (or one serious violation)
 ```
 
-Old mistakes fade after 90 days. Reply timers remind at 12 hours, warn at 24, and mark non-responsive at 48. Blocked accounts restore through an email code. Details live in [`backend/README.md`](backend/README.md).
+Old mistakes fade after 90 days. A seller's pause or block also needs a fault rate of 10% or more over at least 10 orders, and 15% or more turns off Priority Boost. Reply timers remind at 12 hours, warn at 24, and mark non-responsive at 48; Away mode stops that clock. Accounts inactive for 3 weeks get a warning and after 1 month are blocked. Blocked accounts restore through an email code. Details live in [`backend/README.md`](backend/README.md).
+
+### The seller report
+Sell-through rate (sold divided by posted), the change from the previous period, pesos earned, best sellers and busiest days, all for any dates the seller picks on a calendar. The short summary is written by Groq from those numbers only, checked so it cannot invent a figure, saved while the numbers stay the same, and replaced by fixed sentences if Groq is slow or off. It describes what happened; Agrivive does not predict sales or demand.
 
 ### Bot protection and consent
 Google **reCAPTCHA v3** guards sign-up, sign-in, code sending and account recovery. Every new account records when and which version of the Privacy Policy and Terms it accepted. Legal pages: [`/privacy`](https://agrivive.tech/privacy), [`/terms`](https://agrivive.tech/terms), [`/cookies`](https://agrivive.tech/cookies).
@@ -169,7 +181,7 @@ Agrivive/
 │   │   ├── plugins/        security headers, rate limit, validation
 │   │   ├── modules/        admin · auth · buyer · conversations · integrations
 │   │   │                   marketplace · notifications · seller · stakeholder · trust
-│   │   └── utils/          ahp-topsis · trust · visibility-* · s3 · email · recaptcha …
+│   │   └── utils/          ahp-topsis · trust · visibility-* · groq · s3 · email · recaptcha …
 │   └── drizzle/        timestamped migrations
 ├── web/                Next.js buyer site
 ├── mobile/             Expo seller app
@@ -220,11 +232,11 @@ Leave `RECAPTCHA_SECRET_KEY` empty locally and the captcha checks are skipped. F
 
 | App | Commands |
 |---|---|
-| Backend | `bunx tsc --noEmit` · `bun build src/index.ts --outdir dist --target bun` · `bun build src/worker.ts --outdir dist --target bun` · `bunx drizzle-kit check` |
+| Backend | `bun test` · `bunx tsc --noEmit` · `bun build src/index.ts --outdir dist --target bun` · `bun build src/worker.ts --outdir dist --target bun` · `bunx drizzle-kit check` |
 | Web | `bun run typecheck` · `bun run build` |
 | Mobile | `bun run typecheck` · `node ./node_modules/expo/bin/cli export --platform android` |
 
-There is no automated test runner. The owner verifies endpoints by hand in the OpenAPI UI or Postman. Note: `backend/dist/` is tracked in git because Docker runs `bun dist/index.js`, so rebuild and check `git status` before a release.
+Backend logic is covered by `bun test` (260 tests: ranking, reservations and pickup, trust and flagging, reviews, and the sales report), run from `backend/`. Endpoints are also checked by hand in the OpenAPI UI or Postman. Note: `backend/dist/` is tracked in git because Docker runs `bun dist/index.js`, so rebuild and check `git status` before a release.
 
 ---
 
@@ -232,7 +244,7 @@ There is no automated test runner. The owner verifies endpoints by hand in the O
 
 1. **Merge to `main`**, then run the manual CD workflow for what changed: [`backend-cd.yml`](.github/workflows/backend-cd.yml) or [`web-cd.yml`](.github/workflows/web-cd.yml). They ship a release to the VPS through [`scripts/vps-release.sh`](scripts/vps-release.sh).
 2. **Migrations are a release step.** Apply them on purpose, before the new API serves traffic.
-3. **Mobile** is built with EAS: `eas build --profile preview --platform android` makes the installable APK. Upload it to S3 and the website links to it. The page at `/download-app` walks sellers through installing it.
+3. **Mobile** is built with EAS: `eas build --profile preview --platform android` makes the installable APK, and `--profile production` makes the store bundle. Deploy the backend first, since the app depends on its latest changes. Upload it to S3 and the website links to it. The page at `/download-app` walks sellers through installing it.
 
 Public build variables (safe to expose): `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_WEB_URL`, `EXPO_PUBLIC_RECAPTCHA_SITE_KEY`. **Everything else is a secret and lives only in the server `.env`.** Never commit it.
 
