@@ -19,6 +19,8 @@ interface ConversationListProps {
   onRefresh: () => void;
   onLoadMore: () => void;
   onRetry: () => void;
+  /** Long press on a chat: opens its archive and block choices. */
+  onActions?: (conversation: Conversation) => void;
 }
 
 export function ConversationList({
@@ -32,6 +34,7 @@ export function ConversationList({
   onRefresh,
   onLoadMore,
   onRetry,
+  onActions,
 }: ConversationListProps) {
   const router = useRouter();
 
@@ -61,6 +64,16 @@ export function ConversationList({
         <View style={styles.centerBox}>
           <MessageCircle size={36} color={colors.textMuted} />
           <Text style={styles.emptyTitle}>No chats match "{searchQuery}".</Text>
+        </View>
+      );
+    }
+
+    if (filterTab === "archived") {
+      return (
+        <View style={styles.centerBox}>
+          <MessageCircle size={36} color={colors.textMuted} />
+          <Text style={styles.emptyTitle}>No archived chats</Text>
+          <Text style={styles.emptySub}>Open a chat and tap the archive icon to keep it here.</Text>
         </View>
       );
     }
@@ -106,6 +119,7 @@ export function ConversationList({
       renderItem={({ item }) => (
         <ConversationListItem
           conversation={item}
+          onLongPress={onActions ? () => onActions(item) : undefined}
           onPress={() =>
             router.push({ pathname: "/(app)/conversations/[id]", params: { id: item.id } })
           }

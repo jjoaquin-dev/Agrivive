@@ -5,6 +5,8 @@ import {
   fetchConversationMessages,
   markConversationRead,
   sendConversationMessage,
+  setConversationArchived,
+  setConversationBlocked,
   uploadConversationAttachment,
 } from "../api";
 import { useConversationSocket } from "./useConversationSocket";
@@ -51,6 +53,33 @@ export function useConversationDetail(id?: string) {
       active = false;
     };
   }, [id]);
+
+  /** Archive or unarchive this chat. Returns an error message, or null when it worked. */
+  const toggleArchive = useCallback(async (): Promise<string | null> => {
+    if (!id || !conversation) return null;
+    const next = !conversation.archivedAt;
+    try {
+      await setConversationArchived(id, next);
+      setConversation((c) => (c ? { ...c, archivedAt: next ? new Date().toISOString() : null } : c));
+      return null;
+    } catch (err: any) {
+      return err?.message || "Could not change this. Please try again.";
+    }
+  }, [id, conversation]);
+
+  /** Block or unblock this buyer. Returns an error message, or null when it worked. */
+  const toggleBlock = useCallback(async (): Promise<string | null> => {
+    if (!id || !conversation) return null;
+    const next = !conversation.myBlockedAt;
+    try {
+      await setConversationBlocked(id, next);
+      const stamp = next ? new Date().toISOString() : null;
+      setConversation((c) => (c ? { ...c, myBlockedAt: stamp, blocked: next } : c));
+      return null;
+    } catch (err: any) {
+      return err?.message || "Could not change this. Please try again.";
+    }
+  }, [id, conversation]);
 
   const { paused } = useConversationSocket(id, !loading, addMessage);
 
@@ -134,5 +163,7 @@ export function useConversationDetail(id?: string) {
     pickImage,
     send,
     retrySend,
+    toggleBlock,
+    toggleArchive,
   };
 }

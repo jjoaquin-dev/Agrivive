@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { Conversation } from "../types";
 import type { SortOption } from "../components/ConversationSortSheet";
 
-export type MessagesTabFilter = "all" | "unread" | "produce" | "reservations" | "questions";
+export type MessagesTabFilter = "all" | "unread" | "produce" | "reservations" | "questions" | "archived";
 
 export function useConversationFilters(conversations: Conversation[]) {
   const [filterTab, setFilterTab] = useState<MessagesTabFilter>("all");

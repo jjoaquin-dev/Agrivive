@@ -3,8 +3,9 @@ import { db } from "../../../db";
 import { conversation_participants, conversations } from "../../../db/schema";
 import { buildConversationSelect } from "./conversation.select";
 import { presentConversationRow } from "./conversation.present";
+import { conversationSideFilter, type ConversationSide } from "./conversation.scope";
 
-export async function listConversations(userId: string, limit = 50, cursor?: string, archived = false) {
+export async function listConversations(userId: string, limit = 50, cursor?: string, archived = false, side?: ConversationSide) {
   let before;
   if (cursor) {
     const [anchor] = await db
@@ -22,7 +23,7 @@ export async function listConversations(userId: string, limit = 50, cursor?: str
 
   const rows = await buildConversationSelect(userId)
     .where(and(
-      or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)),
+      conversationSideFilter(userId, side),
       archived ? isNotNull(conversation_participants.archivedAt) : isNull(conversation_participants.archivedAt),
       before,
     ))

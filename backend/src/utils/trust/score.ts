@@ -1,6 +1,6 @@
 import { and, eq, gt, gte, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { order_reviews, product_reviews, trust_actions, trust_events } from "../../db/schema";
+import { order_reviews, trust_actions, trust_events } from "../../db/schema";
 import { trustPolicyVersion, trustPolicyWeights, trustScoreWindowStart, trustSeriousKinds } from "./policy";
 
 const kindWeight = (kind: string) => trustPolicyWeights[kind as keyof typeof trustPolicyWeights] ?? 0;
@@ -21,10 +21,7 @@ export async function readTrustMonitoringScore(subjectId?: string, now = new Dat
   )).groupBy(trust_events.kind, trust_events.classification);
 
   const feedback = await db.execute(sql`
-    select (
-      (select count(*) from ${order_reviews} where ignored_at is null and length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql`and seller_id = ${subjectId}` : sql``})
-      + (select count(*) from ${product_reviews} where length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql`and seller_id = ${subjectId}` : sql``})
-    )::int as count`);
+    select count(*)::int as count from ${order_reviews} where ignored_at is null and length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql`and seller_id = ${subjectId}` : sql``}`);
 
   // A serious violation blocks the account once. After the person restores the account, only newer serious violations count.
   const [restored] = subjectId ? await db.select({ at: sql<Date | null>`max(${trust_actions.revokedAt})` }).from(trust_actions)

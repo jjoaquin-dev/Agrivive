@@ -6,6 +6,8 @@ import { sendEmail } from "../utils/email";
 const MAX_ATTEMPTS = 5;
 /** Updates older than this are not emailed, so a long outage never sends a flood of old news. */
 const MAX_AGE_HOURS = 24;
+/** Test inboxes (Mailtrap) allow about one email a second, so wait a little between sends. */
+const PAUSE_BETWEEN_EMAILS_MS = 1_100;
 
 function content(event: typeof seller_listing_events.$inferSelect) {
   const { shopName, productName, metadata } = event;
@@ -33,7 +35,8 @@ export async function emailListingNotices(limit = 25) {
       gte(buyer_listing_notices.createdAt, since), eq(user.isActive, true)))
     .orderBy(asc(buyer_listing_notices.createdAt)).limit(limit);
   let sent = 0;
-  for (const { notice, event, email } of pending) {
+  for (const [index, { notice, event, email }] of pending.entries()) {
+    if (index > 0) await new Promise((resolve) => setTimeout(resolve, PAUSE_BETWEEN_EMAILS_MS));
     const { subject, line } = content(event);
     const link = base ? `\nSee it: ${base}/marketplace/${event.productId}` : "";
     try {
@@ -42,6 +45,13 @@ export async function emailListingNotices(limit = 25) {
       await db.update(buyer_listing_notices).set({ emailSentAt: new Date() }).where(eq(buyer_listing_notices.id, notice.id));
       sent++;
     } catch (error) {
+      // "Too many emails" is not this notice's fault: give the try back and stop, so the next run sends it.
+      const slowDown = error instanceof Error && error.message.includes("(429)");
+      if (slowDown) {
+        await db.update(buyer_listing_notices).set({ emailAttempts: sql`greatest(${buyer_listing_notices.emailAttempts} - 1, 0)` }).where(eq(buyer_listing_notices.id, notice.id));
+        console.warn("Follower email paused: the mail service asked us to slow down.");
+        break;
+      }
       console.error("Follower email failed", { noticeId: notice.id, error });
     }
   }

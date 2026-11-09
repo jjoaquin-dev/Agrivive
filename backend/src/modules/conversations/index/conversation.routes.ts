@@ -16,6 +16,7 @@ import { setConversationParticipantState } from "../services/conversation.partic
 import {
   conversationListQuery,
   conversationParams,
+  conversationSideQuery,
   createConversationBody,
   sendConversationMessageBody,
 } from "../model/conversation";
@@ -32,17 +33,17 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     catch (error) { return failure(error, status); }
   }, { role: ["buyer"], body: createConversationBody })
   .get("/conversations", async ({ session, query, status }) => {
-    try { return await listConversations(session.userId, query.limit, query.cursor, query.archived ?? false); }
+    try { return await listConversations(session.userId, query.limit, query.cursor, query.archived ?? false, query.as); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], query: conversationListQuery })
-  .get("/conversations/unread-count", async ({ session, status }) => {
-    try { return await getConversationUnreadCount(session.userId); }
+  .get("/conversations/unread-count", async ({ session, query, status }) => {
+    try { return await getConversationUnreadCount(session.userId, query.as); }
     catch (error) { return failure(error, status); }
-  }, { role: ["buyer", "seller"] })
-  .get("/conversations/:id", async ({ session, params, status }) => {
-    try { return await getConversation(session.userId, params.id); }
+  }, { role: ["buyer", "seller"], query: conversationSideQuery })
+  .get("/conversations/:id", async ({ session, params, query, status }) => {
+    try { return await getConversation(session.userId, params.id, query.as); }
     catch (error) { return failure(error, status); }
-  }, { role: ["buyer", "seller"], params: conversationParams })
+  }, { role: ["buyer", "seller"], params: conversationParams, query: conversationSideQuery })
   .get("/conversations/:id/messages", async ({ session, params, status }) => {
     try { return await listConversationMessages(session.userId, params.id); }
     catch (error) { return failure(error, status); }
@@ -71,10 +72,10 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
     try { return await setConversationParticipantState(session.userId, params.id, { blockedAt: null }); }
     catch (error) { return failure(error, status); }
   }, { role: ["buyer", "seller"], params: conversationParams })
-  .post("/conversations/read-all", async ({ session, status }) => {
-    try { return await markAllConversationsRead(session.userId); }
+  .post("/conversations/read-all", async ({ session, query, status }) => {
+    try { return await markAllConversationsRead(session.userId, query.as); }
     catch (error) { return failure(error, status); }
-  }, { role: ["buyer", "seller"] })
+  }, { role: ["buyer", "seller"], query: conversationSideQuery })
   .post("/conversations/attachment", async ({ session, body, status }) => {
     try { return status(201, await uploadConversationAttachment(session.userId, body.file)); }
     catch (error) { return failure(error, status); }

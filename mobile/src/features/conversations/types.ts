@@ -20,6 +20,12 @@ export type Conversation = {
   lastMessageBody: string | null;
   lastMessageSenderId?: string | null;
   unreadCount: number;
+  /** When you archived this chat. Set only if you did it. */
+  archivedAt?: string | null;
+  /** When you blocked this chat. Set only if you did it. */
+  myBlockedAt?: string | null;
+  /** True when either person blocked the chat. */
+  blocked?: boolean;
 };
 
 export type ConversationMessage = {

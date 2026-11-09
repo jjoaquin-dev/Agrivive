@@ -5,6 +5,7 @@ import type { Conversation, ConversationContext, ConversationCreateResult, Conve
 export interface FetchConversationsParams {
   limit?: number;
   cursor?: string;
+  archived?: boolean;
 }
 
 export interface FetchConversationsResponse {
@@ -13,9 +14,10 @@ export interface FetchConversationsResponse {
 }
 
 export async function fetchConversations(params: FetchConversationsParams = {}): Promise<FetchConversationsResponse> {
-  const qs = new URLSearchParams();
+  const qs = new URLSearchParams({ as: "seller" });
   if (params.limit) qs.append("limit", params.limit.toString());
   if (params.cursor) qs.append("cursor", params.cursor);
+  if (params.archived) qs.append("archived", "true");
   const query = qs.toString();
   const res = await apiFetch<Conversation[] | FetchConversationsResponse>(`/conversations${query ? `?${query}` : ""}`);
   if (Array.isArray(res)) {
@@ -29,11 +31,11 @@ export function fetchConversationMessages(conversationId: string) {
 }
 
 export function fetchConversation(id: string) {
-  return apiFetch<Conversation>(`/conversations/${encodeURIComponent(id)}`);
+  return apiFetch<Conversation>(`/conversations/${encodeURIComponent(id)}?as=seller`);
 }
 
 export function fetchConversationUnreadCount() {
-  return apiFetch<{ unreadMessages: number; unreadConversations: number }>("/conversations/unread-count");
+  return apiFetch<{ unreadMessages: number; unreadConversations: number }>("/conversations/unread-count?as=seller");
 }
 
 export function createConversation(input: {
@@ -61,8 +63,16 @@ export function markConversationRead(conversationId: string) {
   return apiFetch(`/conversations/${encodeURIComponent(conversationId)}/read`, { method: "POST" });
 }
 
+export function setConversationArchived(conversationId: string, archived: boolean) {
+  return apiFetch<{ ok: true }>(`/conversations/${encodeURIComponent(conversationId)}/${archived ? "archive" : "unarchive"}`, { method: "POST" });
+}
+
+export function setConversationBlocked(conversationId: string, blocked: boolean) {
+  return apiFetch<{ ok: true }>(`/conversations/${encodeURIComponent(conversationId)}/${blocked ? "block" : "unblock"}`, { method: "POST" });
+}
+
 export function markAllConversationsRead() {
-  return apiFetch<{ updatedCount: number }>("/conversations/read-all", { method: "POST" });
+  return apiFetch<{ updatedCount: number }>("/conversations/read-all?as=seller", { method: "POST" });
 }
 
 export async function uploadConversationAttachment(imageUri: string, signal?: AbortSignal): Promise<{ url: string; filename: string }> {

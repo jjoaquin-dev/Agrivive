@@ -53,7 +53,8 @@ export async function registerOrExpandRole(
         await db
           .update(user)
           .set({
-            ...(targetRole === "seller" ? { role: ["seller" as const] } : {}),
+            // One account can buy and sell, so a new seller can also reserve from other stalls (never from their own).
+            ...(targetRole === "seller" ? { role: ["seller" as const, "buyer" as const] } : {}),
             termsAcceptedAt: new Date(),
             termsVersion: input.termsVersion,
           })

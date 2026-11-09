@@ -77042,7 +77042,6 @@ __export(exports_schema, {
   orders: () => orders,
   product_condition_enum: () => product_condition_enum,
   product_inquiries: () => product_inquiries,
-  product_reviews: () => product_reviews,
   product_stock_adjustments: () => product_stock_adjustments,
   product_type_enum: () => product_type_enum,
   roleEnum: () => roleEnum,
@@ -117698,7 +117697,6 @@ var sellers_product = pgTable("sellers_product", {
   imagUrl: text("image_url"),
   productPrice: decimal("product_price", { precision: 10, scale: 2 }),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }),
-  priceReductionPercent: decimal("price_reduction_percent", { precision: 5, scale: 2 }).default("0").notNull(),
   priceReductionAmount: decimal("price_reduction_amount", { precision: 10, scale: 2 }).default("0").notNull(),
   minimumPrice: decimal("minimum_price", { precision: 10, scale: 2 }),
   priceReductionEnabled: boolean4("price_reduction_enabled").default(true).notNull(),
@@ -117850,8 +117848,6 @@ var seller_visibility_boosts = pgTable("seller_visibility_boosts", {
   priceAfter: decimal("price_after", { precision: 10, scale: 2 }),
   sentAt: timestamp("sent_at", { withTimezone: true }),
   lastError: text("last_error"),
-  priorityScore: decimal("priority_score", { precision: 5, scale: 4 }),
-  priorityTier: text("priority_tier"),
   priceDropSetupAt: timestamp("price_drop_setup_at", { withTimezone: true }),
   priceDropSetupNotifiedAt: timestamp("price_drop_setup_notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -118111,20 +118107,6 @@ var ordered_items = pgTable("ordered_items", {
 }, (table) => [
   index("ordered_items_orders_id_idx").on(table.ordersId),
   index("ordered_items_product_id_idx").on(table.productId)
-]);
-var product_reviews = pgTable("product_reviews", {
-  id: uuid2("id").defaultRandom().primaryKey(),
-  orderId: uuid2("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
-  orderedItemId: uuid2("ordered_item_id").notNull().unique().references(() => ordered_items.id, { onDelete: "cascade" }),
-  productId: uuid2("product_id").notNull().references(() => sellers_product.id, { onDelete: "restrict" }),
-  buyerId: text("buyer_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  sellerId: text("seller_id").notNull().references(() => user.id, { onDelete: "cascade" }),
-  rating: smallint("rating").notNull(),
-  review: text("review"),
-  sellerResponse: text("seller_response"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
-}, (table) => [
-  index("product_reviews_product_created_idx").on(table.productId, table.createdAt)
 ]);
 var fb_post_logs = pgTable("fb_post_logs", {
   id: uuid2("id").defaultRandom().primaryKey(),
@@ -121558,7 +121540,7 @@ async function registerOrExpandRole(headers, input) {
       });
       if (response?.user?.id) {
         await db2.update(user).set({
-          ...targetRole === "seller" ? { role: ["seller"] } : {},
+          ...targetRole === "seller" ? { role: ["seller", "buyer"] } : {},
           termsAcceptedAt: new Date,
           termsVersion: input.termsVersion
         }).where(eq(user.id, response.user.id));
@@ -137266,6 +137248,7 @@ async function queueFirstPublicListing(tx, productId) {
 // src/jobs/email-listing-notices.ts
 var MAX_ATTEMPTS2 = 5;
 var MAX_AGE_HOURS = 24;
+var PAUSE_BETWEEN_EMAILS_MS = 1100;
 function content(event) {
   const { shopName, productName, metadata } = event;
   if (event.eventType === "price_drop") {
@@ -137281,7 +137264,9 @@ async function emailListingNotices(limit = 25) {
   const since = new Date(Date.now() - MAX_AGE_HOURS * 3600000);
   const pending = await db2.select({ notice: buyer_listing_notices, event: seller_listing_events, email: user.email }).from(buyer_listing_notices).innerJoin(seller_listing_events, eq(seller_listing_events.id, buyer_listing_notices.eventId)).innerJoin(user, eq(user.id, buyer_listing_notices.buyerId)).where(and(isNull2(buyer_listing_notices.emailSentAt), lt(buyer_listing_notices.emailAttempts, MAX_ATTEMPTS2), gte(buyer_listing_notices.createdAt, since), eq(user.isActive, true))).orderBy(asc(buyer_listing_notices.createdAt)).limit(limit);
   let sent = 0;
-  for (const { notice, event, email } of pending) {
+  for (const [index, { notice, event, email }] of pending.entries()) {
+    if (index > 0)
+      await new Promise((resolve) => setTimeout(resolve, PAUSE_BETWEEN_EMAILS_MS));
     const { subject, line } = content(event);
     const link = base ? `
 See it: ${base}/marketplace/${event.productId}` : "";
@@ -137293,6 +137278,12 @@ You get this because you follow ${event.shopName} on Agrivive. Unfollow the shop
       await db2.update(buyer_listing_notices).set({ emailSentAt: new Date }).where(eq(buyer_listing_notices.id, notice.id));
       sent++;
     } catch (error) {
+      const slowDown = error instanceof Error && error.message.includes("(429)");
+      if (slowDown) {
+        await db2.update(buyer_listing_notices).set({ emailAttempts: sql3`greatest(${buyer_listing_notices.emailAttempts} - 1, 0)` }).where(eq(buyer_listing_notices.id, notice.id));
+        console.warn("Follower email paused: the mail service asked us to slow down.");
+        break;
+      }
       console.error("Follower email failed", { noticeId: notice.id, error });
     }
   }
@@ -180933,10 +180924,7 @@ async function readTrustMonitoringScore(subjectId, now = new Date) {
     withWeight: sql3`count(${trust_events.weight})::int`
   }).from(trust_events).where(and(subjectId ? eq(trust_events.subjectId, subjectId) : undefined, isNull2(trust_events.invalidatedAt), windowStart ? gte(trust_events.createdAt, windowStart) : undefined)).groupBy(trust_events.kind, trust_events.classification);
   const feedback = await db2.execute(sql3`
-    select (
-      (select count(*) from ${order_reviews} where ignored_at is null and length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``})
-      + (select count(*) from ${product_reviews} where length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``})
-    )::int as count`);
+    select count(*)::int as count from ${order_reviews} where ignored_at is null and length(btrim(coalesce(review, ''))) > 0 ${subjectId ? sql3`and seller_id = ${subjectId}` : sql3``}`);
   const [restored] = subjectId ? await db2.select({ at: sql3`max(${trust_actions.revokedAt})` }).from(trust_actions).where(and(eq(trust_actions.subjectId, subjectId), eq(trust_actions.actionType, "blocked"))) : [];
   const seriousRows = restored?.at ? await db2.select({ count: sql3`count(*)::int` }).from(trust_events).where(and(eq(trust_events.subjectId, subjectId), eq(trust_events.classification, "verified"), isNull2(trust_events.invalidatedAt), inArray(trust_events.kind, [...trustSeriousKinds]), gt(trust_events.createdAt, new Date(restored.at)))) : null;
   const verified = rows.filter((row) => row.classification === "verified");
@@ -188485,25 +188473,34 @@ async function presentConversationRow(row) {
   };
 }
 
+// src/modules/conversations/services/conversation.scope.ts
+function conversationSideFilter(userId, side) {
+  if (side === "buyer")
+    return eq(conversations.buyerId, userId);
+  if (side === "seller")
+    return eq(conversations.sellerId, userId);
+  return or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId));
+}
+
 // src/modules/conversations/services/conversation.get.ts
-async function getConversation(userId, conversationId) {
-  const [row] = await buildConversationSelect(userId).where(and(eq(conversations.id, conversationId), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
+async function getConversation(userId, conversationId, side) {
+  const [row] = await buildConversationSelect(userId).where(and(eq(conversations.id, conversationId), conversationSideFilter(userId, side))).limit(1);
   if (!row)
     throw new ConversationError(404, "Conversation not found");
   return presentConversationRow(row);
 }
 
 // src/modules/conversations/services/conversation.unread-count.ts
-async function getConversationUnreadCount(userId) {
+async function getConversationUnreadCount(userId, side) {
   const [row] = await db2.select({
     unreadMessages: sql3`count(*)::int`,
     unreadConversations: sql3`count(distinct ${conversation_messages.conversationId})::int`
-  }).from(conversation_messages).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversation_messages.conversationId), eq(conversation_participants.userId, userId))).where(and(ne(conversation_messages.senderId, userId), gt(conversation_messages.createdAt, sql3`coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)`)));
+  }).from(conversation_messages).innerJoin(conversations, eq(conversations.id, conversation_messages.conversationId)).innerJoin(conversation_participants, and(eq(conversation_participants.conversationId, conversation_messages.conversationId), eq(conversation_participants.userId, userId))).where(and(conversationSideFilter(userId, side), ne(conversation_messages.senderId, userId), gt(conversation_messages.createdAt, sql3`coalesce(${conversation_participants.lastReadAt}, 'epoch'::timestamptz)`)));
   return { unreadMessages: row?.unreadMessages ?? 0, unreadConversations: row?.unreadConversations ?? 0 };
 }
 
 // src/modules/conversations/services/conversation.list.ts
-async function listConversations(userId, limit = 50, cursor, archived = false) {
+async function listConversations(userId, limit = 50, cursor, archived = false, side) {
   let before;
   if (cursor) {
     const [anchor] = await db2.select({ id: conversations.id, lastMessageAt: conversations.lastMessageAt }).from(conversations).where(and(eq(conversations.id, cursor), or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)))).limit(1);
@@ -188511,7 +188508,7 @@ async function listConversations(userId, limit = 50, cursor, archived = false) {
       before = or(lt(conversations.lastMessageAt, anchor.lastMessageAt), and(eq(conversations.lastMessageAt, anchor.lastMessageAt), lt(conversations.id, anchor.id)));
     }
   }
-  const rows = await buildConversationSelect(userId).where(and(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)), archived ? isNotNull(conversation_participants.archivedAt) : isNull2(conversation_participants.archivedAt), before)).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit + 1);
+  const rows = await buildConversationSelect(userId).where(and(conversationSideFilter(userId, side), archived ? isNotNull(conversation_participants.archivedAt) : isNull2(conversation_participants.archivedAt), before)).orderBy(desc(conversations.lastMessageAt), desc(conversations.id)).limit(limit + 1);
   const hasMore = rows.length > limit;
   const page = hasMore ? rows.slice(0, limit) : rows;
   const items = await Promise.all(page.map(presentConversationRow));
@@ -188531,8 +188528,8 @@ async function markConversationRead(userId, conversationId) {
 }
 
 // src/modules/conversations/services/conversation.read-all.ts
-async function markAllConversationsRead(userId) {
-  const userConvos = await db2.select({ id: conversations.id }).from(conversations).where(or(eq(conversations.buyerId, userId), eq(conversations.sellerId, userId)));
+async function markAllConversationsRead(userId, side) {
+  const userConvos = await db2.select({ id: conversations.id }).from(conversations).where(conversationSideFilter(userId, side));
   if (userConvos.length === 0)
     return { updatedCount: 0 };
   const ids = userConvos.map((c) => c.id);
@@ -188584,7 +188581,11 @@ async function setConversationParticipantState(userId, conversationId, change) {
 var conversationParams = t.Object({
   id: t.String({ format: "uuid" })
 });
+var conversationSideQuery = t.Object({
+  as: t.Optional(t.Union([t.Literal("buyer"), t.Literal("seller")]))
+});
 var conversationListQuery = t.Object({
+  as: t.Optional(t.Union([t.Literal("buyer"), t.Literal("seller")])),
   limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 50 })),
   cursor: t.Optional(t.String()),
   archived: t.Optional(t.Boolean())
@@ -188618,23 +188619,23 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   }
 }, { role: ["buyer"], body: createConversationBody }).get("/conversations", async ({ session, query, status }) => {
   try {
-    return await listConversations(session.userId, query.limit, query.cursor, query.archived ?? false);
+    return await listConversations(session.userId, query.limit, query.cursor, query.archived ?? false, query.as);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["buyer", "seller"], query: conversationListQuery }).get("/conversations/unread-count", async ({ session, status }) => {
+}, { role: ["buyer", "seller"], query: conversationListQuery }).get("/conversations/unread-count", async ({ session, query, status }) => {
   try {
-    return await getConversationUnreadCount(session.userId);
+    return await getConversationUnreadCount(session.userId, query.as);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["buyer", "seller"] }).get("/conversations/:id", async ({ session, params, status }) => {
+}, { role: ["buyer", "seller"], query: conversationSideQuery }).get("/conversations/:id", async ({ session, params, query, status }) => {
   try {
-    return await getConversation(session.userId, params.id);
+    return await getConversation(session.userId, params.id, query.as);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["buyer", "seller"], params: conversationParams }).get("/conversations/:id/messages", async ({ session, params, status }) => {
+}, { role: ["buyer", "seller"], params: conversationParams, query: conversationSideQuery }).get("/conversations/:id/messages", async ({ session, params, status }) => {
   try {
     return await listConversationMessages(session.userId, params.id);
   } catch (error) {
@@ -188676,13 +188677,13 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/read-all", async ({ session, status }) => {
+}, { role: ["buyer", "seller"], params: conversationParams }).post("/conversations/read-all", async ({ session, query, status }) => {
   try {
-    return await markAllConversationsRead(session.userId);
+    return await markAllConversationsRead(session.userId, query.as);
   } catch (error) {
     return failure2(error, status);
   }
-}, { role: ["buyer", "seller"] }).post("/conversations/attachment", async ({ session, body, status }) => {
+}, { role: ["buyer", "seller"], query: conversationSideQuery }).post("/conversations/attachment", async ({ session, body, status }) => {
   try {
     return status(201, await uploadConversationAttachment(session.userId, body.file));
   } catch (error) {

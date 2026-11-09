@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ChevronLeft, Info } from "lucide-react-native";
+import { Archive, ChevronLeft, Info, ShieldBan } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import { safeBack } from "../../../utils/safeBack";
 
@@ -13,9 +13,15 @@ interface ConversationHeaderBarProps {
   buyerImage?: string | null;
   /** Opens the order or listing this chat is about. Hidden when there is none. */
   onInfo?: () => void;
+  /** Opens the block or unblock choice. Hidden when not given. */
+  onBlock?: () => void;
+  blocked?: boolean;
+  /** Archives or unarchives the chat. Hidden when not given. */
+  onArchive?: () => void;
+  archived?: boolean;
 }
 
-export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials, buyerImage, onInfo }: ConversationHeaderBarProps) {
+export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials, buyerImage, onInfo, onBlock, blocked, onArchive, archived }: ConversationHeaderBarProps) {
   const router = useRouter();
   const [imgError, setImgError] = useState(false);
 
@@ -38,6 +44,16 @@ export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials
         {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
       </View>
 
+      {onArchive ? (
+        <Pressable onPress={onArchive} accessibilityRole="button" accessibilityLabel={archived ? "Move out of Archived" : "Archive this chat"} style={styles.iconButton}>
+          <Archive size={22} color={archived ? colors.primary : colors.textMuted} />
+        </Pressable>
+      ) : null}
+      {onBlock ? (
+        <Pressable onPress={onBlock} accessibilityRole="button" accessibilityLabel={blocked ? "Unblock this buyer" : "Block this buyer"} style={styles.iconButton}>
+          <ShieldBan size={22} color={blocked ? colors.error : colors.textMuted} />
+        </Pressable>
+      ) : null}
       {onInfo ? (
         <Pressable onPress={onInfo} accessibilityRole="button" accessibilityLabel="Open details" style={styles.iconButton}>
           <Info size={22} color={colors.textMuted} />

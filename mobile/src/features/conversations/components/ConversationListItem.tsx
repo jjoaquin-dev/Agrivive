@@ -7,6 +7,7 @@ import { formatRelativeTime, getAvatarColor, getInitials } from "../utils/avatar
 interface ConversationListItemProps {
   conversation: Conversation;
   onPress: () => void;
+  onLongPress?: () => void;
 }
 
 function parseLastMessage(body: string | null, isMine: boolean): string {
@@ -37,7 +38,7 @@ function getWaitingInfo(lastMessageAt: string) {
   return { label, color, bg };
 }
 
-export function ConversationListItem({ conversation, onPress }: ConversationListItemProps) {
+export function ConversationListItem({ conversation, onPress, onLongPress }: ConversationListItemProps) {
   const [imgError, setImgError] = useState(false);
   const buyerName = conversation.buyerName || "Buyer";
   const initials = getInitials(buyerName);
@@ -56,6 +57,7 @@ export function ConversationListItem({ conversation, onPress }: ConversationList
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       accessibilityRole="button"
       accessibilityLabel={`${buyerName}, ${tagLabel}${hasUnread ? `, ${conversation.unreadCount} unread` : ""}`}
       style={({ pressed }) => [styles.container, pressed && styles.pressed]}

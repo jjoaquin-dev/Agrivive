@@ -9,6 +9,7 @@ import { ConversationUploadStrip } from "./ConversationUploadStrip";
 interface ConversationComposerProps {
   isClosed: boolean;
   closedReason: string;
+  closedTitle?: string;
   draft: string;
   onChangeDraft: (text: string) => void;
   inputRef: React.RefObject<React.ElementRef<typeof TextInput> | null>;
@@ -23,9 +24,9 @@ interface ConversationComposerProps {
 }
 
 export function ConversationComposer({
-  isClosed, closedReason, draft, onChangeDraft, inputRef, photo, photoReady, onRemovePhoto, uploading, sending, onPickImage, onSend,
+  isClosed, closedReason, closedTitle, draft, onChangeDraft, inputRef, photo, photoReady, onRemovePhoto, uploading, sending, onPickImage, onSend,
 }: ConversationComposerProps) {
-  if (isClosed) return <ConversationClosedBar reason={closedReason} />;
+  if (isClosed) return <ConversationClosedBar reason={closedReason} title={closedTitle} />;
 
   const canSend = !sending && !uploading && (draft.trim().length > 0 || photoReady);
 
