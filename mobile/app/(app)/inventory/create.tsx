@@ -41,21 +41,25 @@ export default function CreateProductScreen() {
     router.replace(`/(app)/marketing/${boostFor.id}`);
   };
 
-  // Permission comes first; either answer moves on to the Boost sheet for the first post.
+  // Permission comes first. Yes moves on to the Boost sheet for the first post; Not Now ends the flow and opens the product.
   const answerPermission = async (accept: boolean) => {
     if (!permissionFor) return;
-    if (accept) {
-      setPermissionBusy(true);
-      setPermissionError("");
-      try {
-        await setAutoPostEnabled(permissionFor.id, true);
-      } catch (err: any) {
-        setPermissionError(err?.message || "Could not save this. Try again, or tap Not Now.");
-        setPermissionBusy(false);
-        return;
-      }
-      setPermissionBusy(false);
+    if (!accept) {
+      const productId = permissionFor.id;
+      setPermissionFor(null);
+      openProduct(productId);
+      return;
     }
+    setPermissionBusy(true);
+    setPermissionError("");
+    try {
+      await setAutoPostEnabled(permissionFor.id, true);
+    } catch (err: any) {
+      setPermissionError(err?.message || "Could not save this. Try again, or tap Not Now.");
+      setPermissionBusy(false);
+      return;
+    }
+    setPermissionBusy(false);
     setBoostFor(permissionFor);
     setPermissionFor(null);
   };

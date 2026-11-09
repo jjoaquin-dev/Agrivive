@@ -107,9 +107,9 @@ export default function ConversationDetailScreen() {
           keyExtractor={(item) => item.id}
           style={styles.thread}
           contentContainerStyle={styles.messages}
+          ListHeaderComponent={conversation?.orderId ? <ConversationReservationCard order={order} orderId={conversation.orderId} /> : undefined}
           ListFooterComponent={
             <View>
-              {conversation?.orderId ? <ConversationReservationCard order={order} orderId={conversation.orderId} /> : null}
               <ConversationOrderEvent order={order} />
               {failed ? <ConversationFailedBubble body={failed.body} message={failed.message} busy={chat.sending} onRetry={chat.retrySend} /> : null}
             </View>
