@@ -24,13 +24,12 @@ describe("Philippine time", () => {
 describe("QR validity", () => {
   const start = at("2026-11-09", "08:00");
   const end = at("2026-11-09", "09:00");
-  test("the window runs from the slot start to 15 minutes after the slot end", () => {
-    const window = qrWindow(start, end);
-    expect(window.validFrom).toEqual(start);
-    expect(window.validUntil).toEqual(at("2026-11-09", "09:15"));
+  test("the QR ends 15 minutes after the slot end", () => {
+    expect(qrWindow(start, end).validUntil).toEqual(at("2026-11-09", "09:15"));
   });
-  test("not valid one second before the start, valid at the start", () => {
-    expect(qrStatus(start, end, new Date(start.getTime() - 1000))).toBe("not_yet_valid");
+  test("an early buyer is never turned away: valid hours before the slot and at its start", () => {
+    expect(qrStatus(start, end, new Date(start.getTime() - 1000))).toBe("active");
+    expect(qrStatus(start, end, new Date(start.getTime() - 5 * 3_600_000))).toBe("active");
     expect(qrStatus(start, end, start)).toBe("active");
   });
   test("still valid at exactly 9:15, expired one second later", () => {

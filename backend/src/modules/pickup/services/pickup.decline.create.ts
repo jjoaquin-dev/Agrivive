@@ -37,7 +37,7 @@ export async function createPickupDecline(buyerId: string, orderId: string, body
   const [orderRow] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
   if (!orderRow || orderRow.buyersId !== buyerId) throw new OrderError(404, "Order not found");
   if (orderRow.status !== "pending") throw new OrderError(409, "This order is no longer open for pickup.");
-  if (qrStatus(orderRow.pickupStart, orderRow.pickupEnd) !== "active") throw new OrderError(409, "You can decline only during your pickup time.");
+  if (qrStatus(orderRow.pickupStart, orderRow.pickupEnd) !== "active" || (orderRow.pickupStart && orderRow.pickupStart > new Date())) throw new OrderError(409, "You can decline only during your pickup time.");
   const { key, hash } = await storeDeclinePhoto(orderId, body.photo, "buyer", body.capturedAt);
 
   const result = await db.transaction(async (tx) => {

@@ -29,7 +29,7 @@ export function pickupFields(order: OrderTimes, now = new Date()) {
     pickupStart: order.pickupStart,
     pickupEnd: order.pickupEnd,
     progress: orderProgress(order),
-    qr: { status: open ? status : "expired" as QrStatus, validFrom: window?.validFrom ?? null, validUntil: window?.validUntil ?? null },
+    qr: { status: open ? status : "expired" as QrStatus, validFrom: null, validUntil: window?.validUntil ?? null },
     canCancel,
     cancelBlockedReason: open && order.confirmedAt ? CANCEL_BLOCKED_MESSAGE : null,
     disclaimer: PICKUP_DISCLAIMER,

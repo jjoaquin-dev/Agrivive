@@ -483,7 +483,7 @@ export const orders = pgTable("orders", {
   cancelledBy: text("cancelled_by"),
   cancellationReason: text("cancellation_reason"),
   totalAmount: decimal("total_amount").notNull(),
-  /** The reserved pickup range. The QR works from pickupStart until pickupEnd + 15 minutes (= expiresAt). */
+  /** The reserved pickup range. The QR works from the moment of the reservation until pickupEnd + 15 minutes (= expiresAt). */
   pickupStart: timestamp("pickup_start", { withTimezone: true }),
   pickupEnd: timestamp("pickup_end", { withTimezone: true }),
   confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
