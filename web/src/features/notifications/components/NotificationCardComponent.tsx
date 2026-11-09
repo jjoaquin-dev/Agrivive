@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AlertTriangle, Check, Clock, Hourglass, RefreshCw, ShoppingBasket, Tag } from "lucide-react";
 import type { BuyerNotice } from "../types";
+import { specificTitle } from "../specificTitle";
 
 interface NotificationCardComponentProps {
   notice: BuyerNotice;
@@ -39,12 +40,12 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
   const isChatReply = notice.kind === "seller_chat_reply";
   const isReply = isInquiryReply || isReviewReply || isChatReply;
 
-  const title = isGeneric
+  const title = specificTitle(notice) ?? (isGeneric
     ? genericTitles[notice.kind]
     : isInquiryReply
     ? "Seller Answered Your Question"
     : isReviewReply
-    ? "Seller Replied to Your Review"
+    ? `Seller ${notice.shopName || ""} replied to your feedback${notice.orderId ? ` in your order RSV-${notice.orderId.slice(0, 4).toUpperCase()}` : ""}`.replace("Seller  ", "Seller ")
     : isChatReply
     ? "New Reply From a Seller"
     : isRestriction
@@ -61,7 +62,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? "Reservation Expiring Soon"
     : notice.kind === "inquiry_24h_buyer_notice"
     ? "Inquiry Awaiting Seller Response"
-    : "Pickup Completed";
+    : "Pickup Completed");
 
   const description = isGeneric
     ? (notice.reason ?? "")

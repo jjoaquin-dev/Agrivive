@@ -20,6 +20,8 @@ export type BuyerNotice = {
   productName: string | null;
   productAvailable: boolean | null;
   kind: BuyerNoticeKind | string;
+  /** What happened, from the notice key (for example "order-confirmed"). Only on order notices. */
+  event?: string | null;
   price?: string | null;
   previousPrice?: string | null;
   reason?: string | null;

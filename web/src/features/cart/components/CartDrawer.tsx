@@ -60,7 +60,9 @@ export function CartDrawer() {
 
   const reserveSellers: ReserveSeller[] = Array.from(new Map(items.map((item) => [item.seller.id, item])).values()).map((first) => ({
     sellerId: first.seller.id, shopName: first.seller.shopName, address: first.seller.detailAddress,
-    lines: items.filter((item) => item.seller.id === first.seller.id).map((item) => `${item.quantity} ${item.scalingType} ${item.productName}`),
+    items: items.filter((item) => item.seller.id === first.seller.id).map((item) => ({
+      id: item.id, name: item.productName, imageUrl: item.imageUrl, productType: item.productType, quantity: item.quantity, unit: item.scalingType, price: Number(item.productPrice),
+    })),
     amount: items.filter((item) => item.seller.id === first.seller.id).reduce((sum, item) => sum + Number(item.productPrice) * item.quantity, 0),
   }));
 

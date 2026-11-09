@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, inArray, isNotNull } from "drizzle-orm";
 import { db } from "../../../db";
-import { buyer_listing_notices, seller_listing_events, sellers_product, sellers_profile,
+import { buyer_listing_notices, orders, seller_listing_events, sellers_product, sellers_profile,
   trust_actions, trust_notices, user } from "../../../db/schema";
 import { marketplaceSellerVisibility } from "../../marketplace/services/marketplace.visibility";
 
@@ -8,8 +8,11 @@ export async function listBuyerNotices(buyerId: string) {
   const [orderNotices, listingNotices, actionNotices] = await Promise.all([
     db.select({ id: trust_notices.id, orderId: trust_notices.orderId,
     kind: trust_notices.kind, detail: trust_notices.detail, createdAt: trust_notices.createdAt, sentAt: trust_notices.sentAt,
-    readAt: trust_notices.readAt,
-  }).from(trust_notices).where(eq(trust_notices.recipientId, buyerId))
+    readAt: trust_notices.readAt, shopName: sellers_profile.shopName, noticeKey: trust_notices.noticeKey,
+  }).from(trust_notices)
+      .leftJoin(orders, eq(orders.id, trust_notices.orderId))
+      .leftJoin(sellers_profile, eq(sellers_profile.userId, orders.sellersId))
+      .where(eq(trust_notices.recipientId, buyerId))
       .orderBy(desc(trust_notices.createdAt)).limit(100),
     db.select({ id: buyer_listing_notices.id, readAt: buyer_listing_notices.readAt,
       createdAt: buyer_listing_notices.createdAt, productId: seller_listing_events.productId,
@@ -44,8 +47,9 @@ export async function listBuyerNotices(buyerId: string) {
     )) : [];
   const availableIds = new Set(available.map((product) => product.id));
   return [
-    ...orderNotices.map((notice) => ({ ...notice, productId: null, sellerId: null,
-      productName: null, shopName: null, productAvailable: null, price: null, previousPrice: null, reason: notice.detail })),
+    // event = the key prefix ("order-confirmed", "order-ready"...), so the web can name the exact update.
+    ...orderNotices.map(({ noticeKey, ...notice }) => ({ ...notice, event: noticeKey.split(":")[0], productId: null, sellerId: null,
+      productName: null, productAvailable: null, price: null, previousPrice: null, reason: notice.detail })),
     ...actionNotices.map((action) => ({
       id: `action:${action.id}`,
       kind: action.actionType === "temporary_restriction"

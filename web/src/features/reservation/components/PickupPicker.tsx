@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 import { ApiError, isAbortError } from "@/src/lib/api";
 import { getPickupSlots, type PickupSlots } from "../api/reservation";
+import { PickupTimeDropdown } from "./PickupTimeDropdown";
 
 export type PickupRange = { start: string; end: string } | null;
 
@@ -16,7 +17,6 @@ const periodOf = (iso: string) => {
   return hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
 };
 const PERIODS = ["Morning", "Afternoon", "Evening"];
-const selectClass = "min-h-12 w-full rounded-xl border border-[#E5E2DA] bg-white px-3 text-sm font-semibold disabled:bg-[#F5F5F2] disabled:text-neutral-400";
 
 function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: ReactNode }) {
   return (
@@ -106,14 +106,8 @@ export function PickupPicker({ sellerId, value, onChange, blocked = [] }: {
       ) : (
         <>
           <Step n={2} title="Pick a time" done={startIndex >= 0}>
-            <select aria-label="Pickup time" value={startIndex >= 0 ? value!.start : ""} onChange={(event) => chooseStart(event.target.value)} className={selectClass}>
-              <option value="">Choose a time…</option>
-              {fromGroups.map((group) => (
-                <optgroup key={group.label} label={group.label}>
-                  {group.items.map((cell) => <option key={cell.start} value={cell.start}>{clock(cell.start)}</option>)}
-                </optgroup>
-              ))}
-            </select>
+            <PickupTimeDropdown value={startIndex >= 0 ? value!.start : ""} onChange={chooseStart}
+              groups={fromGroups.map((group) => ({ label: group.label, items: group.items.map((cell) => ({ value: cell.start, text: clock(cell.start) })) }))} />
             <p className="text-xs text-neutral-600">
               {value ? `Come to the stall any time from ${clock(value.start)} to ${clock(value.end)}. ` : "Pick when you plan to come. "}
               This stall is open for pickup {hours}. The last 30 minutes before closing cannot be booked.

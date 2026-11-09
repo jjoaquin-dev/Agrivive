@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AlertTriangle, Bell, Clock, MessageSquare, Package, Sprout, Store, Tag } from "lucide-react";
 import type { BuyerNotice } from "../types";
+import { specificTitle } from "../specificTitle";
 
 interface NotificationItemComponentProps {
   notice: BuyerNotice;
@@ -51,7 +52,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
   const isReviewReply = notice.kind === "seller_review_reply";
   const isChatReply = notice.kind === "seller_chat_reply";
 
-  const title = isInquiryReply
+  const title = specificTitle(notice) ?? (isInquiryReply
     ? "Seller answered your question"
     : isReviewReply
     ? "Seller replied to your review"
@@ -71,7 +72,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
     ? "Reservation cancelled"
     : notice.kind === "inquiry_24h_buyer_notice"
     ? "Inquiry awaiting seller response"
-    : "Agrivive account update";
+    : "Agrivive account update");
 
   const description = isInquiryReply
     ? "A seller answered your question. Open it to read the reply."
@@ -91,7 +92,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
       : `${notice.productName || "Product"} is no longer available.`
     : isCancellation
     ? "The seller cancelled this reservation and items returned to stock."
-    : "Tap to review updates regarding your account or reservation.";
+    : notice.reason || "Tap to review updates regarding your account or reservation.";
 
   const targetHref = isChatReply || (isInquiryReply && !notice.orderId)
     ? "/messages"
