@@ -6,7 +6,6 @@
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "ahp": "bun run src/ahp-test.ts",
-    "topsis": "bun run src/topsis-test.ts",
     "worker": "bun run src/worker.ts",
     "worker:dev": "bun run --watch src/worker.ts",
     "db:migrate": "drizzle-kit migrate"

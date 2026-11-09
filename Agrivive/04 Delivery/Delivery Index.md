@@ -12,7 +12,7 @@ Home: [[00 Home]] · Snapshot: [[00-LATEST]]
 
 - [[Delivery Index 2026-09]] — 68 records
 - [[Delivery Index 2026-10]] — 270 records
-- [[Delivery Index 2026-11]] — 106 records
+- [[Delivery Index 2026-11]] — 112 records
 
 ## Reference notes
 

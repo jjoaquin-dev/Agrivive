@@ -30,5 +30,7 @@ Home: [[00 Home]] · Delivery: [[Delivery Index]]
 - [[docs/AHP-TOPSIS and n8n Boost Engine Technical Specification.pdf]]
 - [[docs/ahp_topsis_ipo_pipeline.png]]
 - [[docs/n8n_seller_flow_pipeline.png]]
+- [[docs/agrivive-system-architecture.png]] (system architecture diagram, 2026-11-09; editable source `agrivive-system-architecture.svg`)
+- [[docs/agrivive-database-erd.png]] (database tables and relationships, 47 tables, 2026-11-09; editable source `agrivive-database-erd.svg`)
 - [[docs/CAPSTONE 2 FILES - BARTIQUIEN, JARA, MARUNDAN.pdf]]
 - [[docs/Seller Mobile App - Alpha Test Reviewer.pdf]]

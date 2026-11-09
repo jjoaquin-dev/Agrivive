@@ -4,7 +4,12 @@ export const conversationParams = t.Object({
   id: t.String({ format: "uuid" }),
 });
 
+export const conversationSideQuery = t.Object({
+  as: t.Optional(t.Union([t.Literal("buyer"), t.Literal("seller")])),
+});
+
 export const conversationListQuery = t.Object({
+  as: t.Optional(t.Union([t.Literal("buyer"), t.Literal("seller")])),
   limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 50 })),
   cursor: t.Optional(t.String()),
   archived: t.Optional(t.Boolean()),

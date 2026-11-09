@@ -1,0 +1,493 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2652 1474" width="2652" height="1474" font-family="DejaVu Sans, Arial, sans-serif">
+<defs><marker id="a" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto"><path d="M0,0 L12,5 L0,10 z" fill="#1d2b24"/></marker></defs>
+<rect width="2652" height="1474" fill="#F8F6F1"/>
+<text x="30" y="40" font-size="26" font-weight="800" fill="#1F4D3A">AGRIVIVE DATABASE - TABLES AND RELATIONSHIPS</text>
+<text x="30" y="64" font-size="13" fill="#5b6b63">47 PostgreSQL tables from backend/src/db/schema.ts. Lines point from the table that holds the foreign key to the table it refers to. Purple column text refers to user.id.</text>
+<rect x="22" y="88" width="634" height="578" rx="14" fill="#2F5DA8" fill-opacity="0.07" stroke="#2F5DA8" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="36" y="111" font-size="15" font-weight="700" fill="#2F5DA8">Accounts and Notices</text>
+<rect x="22" y="690" width="634" height="450" rx="14" fill="#1F4D3A" fill-opacity="0.07" stroke="#1F4D3A" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="36" y="713" font-size="15" font-weight="700" fill="#1F4D3A">Seller Profile and Stall</text>
+<rect x="680" y="88" width="634" height="562" rx="14" fill="#1F4D3A" fill-opacity="0.07" stroke="#1F4D3A" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="694" y="111" font-size="15" font-weight="700" fill="#1F4D3A">Listings and Followers</text>
+<rect x="680" y="674" width="634" height="338" rx="14" fill="#D9822B" fill-opacity="0.07" stroke="#D9822B" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="694" y="697" font-size="15" font-weight="700" fill="#D9822B">Boost and Social Posts</text>
+<rect x="1338" y="88" width="634" height="754" rx="14" fill="#6B4E9B" fill-opacity="0.07" stroke="#6B4E9B" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="1352" y="111" font-size="15" font-weight="700" fill="#6B4E9B">Orders and Pickup</text>
+<rect x="1996" y="88" width="634" height="466" rx="14" fill="#B5532E" fill-opacity="0.07" stroke="#B5532E" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="2010" y="111" font-size="15" font-weight="700" fill="#B5532E">Reviews, Questions and Reports</text>
+<rect x="1996" y="578" width="634" height="306" rx="14" fill="#2F7D8C" fill-opacity="0.07" stroke="#2F7D8C" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="2010" y="601" font-size="15" font-weight="700" fill="#2F7D8C">Chat</text>
+<rect x="1996" y="908" width="634" height="482" rx="14" fill="#8A3B3B" fill-opacity="0.07" stroke="#8A3B3B" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="2010" y="931" font-size="15" font-weight="700" fill="#8A3B3B">Trust</text>
+<line x1="648" y1="543" x2="1664" y2="247" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="609" y1="522" x2="1017" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1006" y1="192" x2="988" y2="190" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="957" y1="298" x2="1006" y2="275" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="838" y1="298" x2="838" y2="236" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1156" y1="298" x2="1156" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="887" y1="426" x2="1058" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="886" y1="522" x2="1087" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1006" y1="579" x2="988" y2="579" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="838" y1="708" x2="838" y2="412" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="882" y1="708" x2="1112" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1156" y1="708" x2="1156" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="863" y1="884" x2="1121" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1664" y1="184" x2="1646" y2="182" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1625" y1="298" x2="1664" y2="278" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1358" y1="298" x2="1306" y2="274" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1814" y1="298" x2="1814" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1550" y1="442" x2="1725" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1814" y1="442" x2="1814" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1546" y1="554" x2="1752" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1814" y1="554" x2="1814" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1533" y1="698" x2="1768" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="1814" y1="698" x2="1814" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2004" y1="203" x2="1964" y2="203" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2322" y1="191" x2="1964" y2="199" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2004" y1="339" x2="1306" y2="227" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2322" y1="327" x2="1964" y2="239" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2276" y1="442" x2="2322" y2="423" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2017" y1="612" x2="1306" y2="274" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2107" y1="612" x2="1872" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2322" y1="673" x2="2304" y2="673" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2154" y1="756" x2="2154" y2="742" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2127" y1="942" x2="1848" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2419" y1="942" x2="1880" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2154" y1="1086" x2="2154" y2="1072" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2322" y1="1087" x2="2290" y2="1072" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2422" y1="1086" x2="1870" y2="284" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<line x1="2154" y1="1246" x2="2154" y2="1072" stroke="#1d2b24" stroke-opacity="0.45" stroke-width="1.5"/>
+<rect x="30" y="122" width="300" height="146" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M30,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="40" y="140" font-size="13.5" font-weight="700" fill="#fff">user</text>
+<text x="40" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="40" y="178" font-size="11.5" font-weight="400" fill="#1d2b24">name</text>
+<text x="40" y="194" font-size="11.5" font-weight="400" fill="#1d2b24">email</text>
+<text x="40" y="210" font-size="11.5" font-weight="400" fill="#1d2b24">emailVerified</text>
+<text x="40" y="226" font-size="11.5" font-weight="400" fill="#1d2b24">isActive</text>
+<text x="40" y="242" font-size="11.5" font-weight="400" fill="#1d2b24">lastActiveAt</text>
+<text x="40" y="258" font-size="11.5" font-weight="400" fill="#1d2b24">termsAcceptedAt</text>
+<rect x="348" y="122" width="300" height="98" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M348,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="358" y="140" font-size="13.5" font-weight="700" fill="#fff">session</text>
+<text x="358" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="358" y="178" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="358" y="194" font-size="11.5" font-weight="400" fill="#1d2b24">token</text>
+<text x="358" y="210" font-size="11.5" font-weight="400" fill="#1d2b24">expiresAt</text>
+<rect x="30" y="282" width="300" height="98" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M30,290 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="40" y="300" font-size="13.5" font-weight="700" fill="#fff">account</text>
+<text x="40" y="322" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="40" y="338" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="40" y="354" font-size="11.5" font-weight="400" fill="#1d2b24">providerId</text>
+<text x="40" y="370" font-size="11.5" font-weight="400" fill="#1d2b24">accountId</text>
+<rect x="348" y="282" width="300" height="98" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M348,290 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="358" y="300" font-size="13.5" font-weight="700" fill="#fff">verification</text>
+<text x="358" y="322" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="358" y="338" font-size="11.5" font-weight="400" fill="#1d2b24">identifier</text>
+<text x="358" y="354" font-size="11.5" font-weight="400" fill="#1d2b24">value</text>
+<text x="358" y="370" font-size="11.5" font-weight="400" fill="#1d2b24">expiresAt</text>
+<rect x="30" y="394" width="300" height="114" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M30,402 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="40" y="412" font-size="13.5" font-weight="700" fill="#fff">two_factor</text>
+<text x="40" y="434" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="40" y="450" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="40" y="466" font-size="11.5" font-weight="400" fill="#1d2b24">secret</text>
+<text x="40" y="482" font-size="11.5" font-weight="400" fill="#1d2b24">backupCodes</text>
+<text x="40" y="498" font-size="11.5" font-weight="400" fill="#1d2b24">lockedUntil</text>
+<rect x="348" y="394" width="300" height="114" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M348,402 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="358" y="412" font-size="13.5" font-weight="700" fill="#fff">notification_devices</text>
+<text x="358" y="434" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="358" y="450" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="358" y="466" font-size="11.5" font-weight="400" fill="#1d2b24">platform</text>
+<text x="358" y="482" font-size="11.5" font-weight="400" fill="#1d2b24">pushToken</text>
+<text x="358" y="498" font-size="11.5" font-weight="400" fill="#1d2b24">isEnabled</text>
+<rect x="30" y="522" width="300" height="130" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M30,530 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="40" y="540" font-size="13.5" font-weight="700" fill="#fff">notification_outbox</text>
+<text x="40" y="562" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="40" y="578" font-size="11.5" font-weight="600" fill="#6B4E9B">recipientUserId  →  user</text>
+<text x="40" y="594" font-size="11.5" font-weight="400" fill="#1d2b24">type</text>
+<text x="40" y="610" font-size="11.5" font-weight="400" fill="#1d2b24">payload</text>
+<text x="40" y="626" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<text x="40" y="642" font-size="11.5" font-weight="400" fill="#1d2b24">sentAt</text>
+<rect x="348" y="522" width="300" height="130" rx="8" fill="#fff" stroke="#2F5DA8" stroke-width="1.6"/>
+<path d="M348,530 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F5DA8"/>
+<text x="358" y="540" font-size="13.5" font-weight="700" fill="#fff">seller_notifications</text>
+<text x="358" y="562" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="358" y="578" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="358" y="594" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="358" y="610" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="358" y="626" font-size="11.5" font-weight="400" fill="#1d2b24">kind</text>
+<text x="358" y="642" font-size="11.5" font-weight="400" fill="#1d2b24">readAt</text>
+<rect x="30" y="724" width="300" height="146" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M30,732 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="40" y="742" font-size="13.5" font-weight="700" fill="#fff">sellers_profile</text>
+<text x="40" y="764" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="40" y="780" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="40" y="796" font-size="11.5" font-weight="400" fill="#1d2b24">shopName</text>
+<text x="40" y="812" font-size="11.5" font-weight="400" fill="#1d2b24">latitude</text>
+<text x="40" y="828" font-size="11.5" font-weight="400" fill="#1d2b24">longitude</text>
+<text x="40" y="844" font-size="11.5" font-weight="400" fill="#1d2b24">pickupInstructions</text>
+<text x="40" y="860" font-size="11.5" font-weight="400" fill="#1d2b24">awayUntil</text>
+<rect x="348" y="724" width="300" height="130" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M348,732 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="358" y="742" font-size="13.5" font-weight="700" fill="#fff">seller_opening_hours</text>
+<text x="358" y="764" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="358" y="780" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="358" y="796" font-size="11.5" font-weight="400" fill="#1d2b24">weekday</text>
+<text x="358" y="812" font-size="11.5" font-weight="400" fill="#1d2b24">isClosed</text>
+<text x="358" y="828" font-size="11.5" font-weight="400" fill="#1d2b24">opensMinute</text>
+<text x="358" y="844" font-size="11.5" font-weight="400" fill="#1d2b24">closesMinute</text>
+<rect x="30" y="884" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M30,892 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="40" y="902" font-size="13.5" font-weight="700" fill="#fff">seller_away_periods</text>
+<text x="40" y="924" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="40" y="940" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="40" y="956" font-size="11.5" font-weight="400" fill="#1d2b24">startedAt</text>
+<text x="40" y="972" font-size="11.5" font-weight="400" fill="#1d2b24">endedAt</text>
+<text x="40" y="988" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<rect x="348" y="884" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M348,892 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="358" y="902" font-size="13.5" font-weight="700" fill="#fff">seller_flags</text>
+<text x="358" y="924" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="358" y="940" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="358" y="956" font-size="11.5" font-weight="400" fill="#1d2b24">kind</text>
+<text x="358" y="972" font-size="11.5" font-weight="400" fill="#1d2b24">openedAt</text>
+<text x="358" y="988" font-size="11.5" font-weight="400" fill="#1d2b24">closedAt</text>
+<rect x="30" y="1012" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M30,1020 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="40" y="1030" font-size="13.5" font-weight="700" fill="#fff">seller_notification_settings</text>
+<text x="40" y="1052" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user (PK)</text>
+<text x="40" y="1068" font-size="11.5" font-weight="400" fill="#1d2b24">stockPrice</text>
+<text x="40" y="1084" font-size="11.5" font-weight="400" fill="#1d2b24">boost</text>
+<text x="40" y="1100" font-size="11.5" font-weight="400" fill="#1d2b24">account</text>
+<text x="40" y="1116" font-size="11.5" font-weight="400" fill="#1d2b24">nightMode</text>
+<rect x="688" y="122" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M688,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="698" y="140" font-size="13.5" font-weight="700" fill="#fff">vegetable_catalog</text>
+<text x="698" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="698" y="178" font-size="11.5" font-weight="400" fill="#1d2b24">filipinoName</text>
+<text x="698" y="194" font-size="11.5" font-weight="400" fill="#1d2b24">englishName</text>
+<text x="698" y="210" font-size="11.5" font-weight="400" fill="#1d2b24">scientificName</text>
+<text x="698" y="226" font-size="11.5" font-weight="400" fill="#1d2b24">isActive</text>
+<rect x="1006" y="122" width="300" height="162" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M1006,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="1016" y="140" font-size="13.5" font-weight="700" fill="#fff">sellers_product</text>
+<text x="1016" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1016" y="178" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="1016" y="194" font-size="11.5" font-weight="600" fill="#1d2b24">vegetableCatalogId  →  vegetable_catalog</text>
+<text x="1016" y="210" font-size="11.5" font-weight="400" fill="#1d2b24">productName</text>
+<text x="1016" y="226" font-size="11.5" font-weight="400" fill="#1d2b24">productPrice</text>
+<text x="1016" y="242" font-size="11.5" font-weight="400" fill="#1d2b24">basePrice</text>
+<text x="1016" y="258" font-size="11.5" font-weight="400" fill="#1d2b24">productQty</text>
+<text x="1016" y="274" font-size="11.5" font-weight="400" fill="#1d2b24">minimumPrice</text>
+<rect x="688" y="298" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M688,306 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="698" y="316" font-size="13.5" font-weight="700" fill="#fff">listing_cycles</text>
+<text x="698" y="338" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="698" y="354" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="698" y="370" font-size="11.5" font-weight="600" fill="#1d2b24">vegetableCatalogId  →  vegetable_catalog</text>
+<text x="698" y="386" font-size="11.5" font-weight="400" fill="#1d2b24">startedAt</text>
+<text x="698" y="402" font-size="11.5" font-weight="400" fill="#1d2b24">originalQty</text>
+<rect x="1006" y="298" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M1006,306 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="1016" y="316" font-size="13.5" font-weight="700" fill="#fff">product_stock_adjustments</text>
+<text x="1016" y="338" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1016" y="354" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="1016" y="370" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="1016" y="386" font-size="11.5" font-weight="400" fill="#1d2b24">delta</text>
+<text x="1016" y="402" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<rect x="688" y="426" width="300" height="82" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M688,434 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="698" y="444" font-size="13.5" font-weight="700" fill="#fff">buyer_saved_products</text>
+<text x="698" y="466" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="698" y="482" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="698" y="498" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<rect x="1006" y="426" width="300" height="82" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M1006,434 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="1016" y="444" font-size="13.5" font-weight="700" fill="#fff">seller_follows</text>
+<text x="1016" y="466" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1016" y="482" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="1016" y="498" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<rect x="688" y="522" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M688,530 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="698" y="540" font-size="13.5" font-weight="700" fill="#fff">seller_listing_events</text>
+<text x="698" y="562" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="698" y="578" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="698" y="594" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="698" y="610" font-size="11.5" font-weight="400" fill="#1d2b24">eventType</text>
+<text x="698" y="626" font-size="11.5" font-weight="400" fill="#1d2b24">processedAt</text>
+<rect x="1006" y="522" width="300" height="114" rx="8" fill="#fff" stroke="#1F4D3A" stroke-width="1.6"/>
+<path d="M1006,530 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#1F4D3A"/>
+<text x="1016" y="540" font-size="13.5" font-weight="700" fill="#fff">buyer_listing_notices</text>
+<text x="1016" y="562" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1016" y="578" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="1016" y="594" font-size="11.5" font-weight="600" fill="#1d2b24">eventId  →  seller_listing_events</text>
+<text x="1016" y="610" font-size="11.5" font-weight="400" fill="#1d2b24">readAt</text>
+<text x="1016" y="626" font-size="11.5" font-weight="400" fill="#1d2b24">emailSentAt</text>
+<rect x="688" y="708" width="300" height="162" rx="8" fill="#fff" stroke="#D9822B" stroke-width="1.6"/>
+<path d="M688,716 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#D9822B"/>
+<text x="698" y="726" font-size="13.5" font-weight="700" fill="#fff">seller_visibility_boosts</text>
+<text x="698" y="748" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="698" y="764" font-size="11.5" font-weight="600" fill="#1d2b24">listingCycleId  →  listing_cycles</text>
+<text x="698" y="780" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="698" y="796" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="698" y="812" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<text x="698" y="828" font-size="11.5" font-weight="400" fill="#1d2b24">priceBefore</text>
+<text x="698" y="844" font-size="11.5" font-weight="400" fill="#1d2b24">priceAfter</text>
+<text x="698" y="860" font-size="11.5" font-weight="400" fill="#1d2b24">followUpDueAt</text>
+<rect x="1006" y="708" width="300" height="114" rx="8" fill="#fff" stroke="#D9822B" stroke-width="1.6"/>
+<path d="M1006,716 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#D9822B"/>
+<text x="1016" y="726" font-size="13.5" font-weight="700" fill="#fff">fb_post_logs</text>
+<text x="1016" y="748" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1016" y="764" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="1016" y="780" font-size="11.5" font-weight="400" fill="#1d2b24">postType</text>
+<text x="1016" y="796" font-size="11.5" font-weight="400" fill="#1d2b24">facebookPostId</text>
+<text x="1016" y="812" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<rect x="688" y="884" width="300" height="114" rx="8" fill="#fff" stroke="#D9822B" stroke-width="1.6"/>
+<path d="M688,892 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#D9822B"/>
+<text x="698" y="902" font-size="13.5" font-weight="700" fill="#fff">instagram_post_logs</text>
+<text x="698" y="924" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="698" y="940" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="698" y="956" font-size="11.5" font-weight="400" fill="#1d2b24">postType</text>
+<text x="698" y="972" font-size="11.5" font-weight="400" fill="#1d2b24">instagramPostId</text>
+<text x="698" y="988" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<rect x="1346" y="122" width="300" height="82" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1346,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1356" y="140" font-size="13.5" font-weight="700" fill="#fff">checkouts</text>
+<text x="1356" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1356" y="178" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="1356" y="194" font-size="11.5" font-weight="400" fill="#1d2b24">createdAt</text>
+<rect x="1664" y="122" width="300" height="162" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1664,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1674" y="140" font-size="13.5" font-weight="700" fill="#fff">orders</text>
+<text x="1674" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1674" y="178" font-size="11.5" font-weight="600" fill="#1d2b24">checkoutId  →  checkouts</text>
+<text x="1674" y="194" font-size="11.5" font-weight="600" fill="#6B4E9B">buyersId  →  user</text>
+<text x="1674" y="210" font-size="11.5" font-weight="600" fill="#6B4E9B">sellersId  →  user</text>
+<text x="1674" y="226" font-size="11.5" font-weight="400" fill="#1d2b24">totalAmount</text>
+<text x="1674" y="242" font-size="11.5" font-weight="400" fill="#1d2b24">pickupStart</text>
+<text x="1674" y="258" font-size="11.5" font-weight="400" fill="#1d2b24">pickupEnd</text>
+<text x="1674" y="274" font-size="11.5" font-weight="400" fill="#1d2b24">completedAt</text>
+<rect x="1346" y="298" width="300" height="130" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1346,306 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1356" y="316" font-size="13.5" font-weight="700" fill="#fff">ordered_items</text>
+<text x="1356" y="338" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1356" y="354" font-size="11.5" font-weight="600" fill="#1d2b24">ordersId  →  orders</text>
+<text x="1356" y="370" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="1356" y="386" font-size="11.5" font-weight="400" fill="#1d2b24">quantity</text>
+<text x="1356" y="402" font-size="11.5" font-weight="400" fill="#1d2b24">unitPrice</text>
+<text x="1356" y="418" font-size="11.5" font-weight="400" fill="#1d2b24">subtotal</text>
+<rect x="1664" y="298" width="300" height="114" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1664,306 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1674" y="316" font-size="13.5" font-weight="700" fill="#fff">order_status_history</text>
+<text x="1674" y="338" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1674" y="354" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1674" y="370" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<text x="1674" y="386" font-size="11.5" font-weight="400" fill="#1d2b24">actorId</text>
+<text x="1674" y="402" font-size="11.5" font-weight="400" fill="#1d2b24">createdAt</text>
+<rect x="1346" y="442" width="300" height="98" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1346,450 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1356" y="460" font-size="13.5" font-weight="700" fill="#fff">order_qr_scans</text>
+<text x="1356" y="482" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1356" y="498" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1356" y="514" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="1356" y="530" font-size="11.5" font-weight="400" fill="#1d2b24">result</text>
+<rect x="1664" y="442" width="300" height="82" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1664,450 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1674" y="460" font-size="13.5" font-weight="700" fill="#fff">seller_scan_grace</text>
+<text x="1674" y="482" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1674" y="498" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="1674" y="514" font-size="11.5" font-weight="400" fill="#1d2b24">graceUntil</text>
+<rect x="1346" y="554" width="300" height="130" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1346,562 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1356" y="572" font-size="13.5" font-weight="700" fill="#fff">order_reschedules</text>
+<text x="1356" y="594" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1356" y="610" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1356" y="626" font-size="11.5" font-weight="400" fill="#1d2b24">proposedBy</text>
+<text x="1356" y="642" font-size="11.5" font-weight="400" fill="#1d2b24">oldStart</text>
+<text x="1356" y="658" font-size="11.5" font-weight="400" fill="#1d2b24">newStart</text>
+<text x="1356" y="674" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<rect x="1664" y="554" width="300" height="130" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1664,562 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1674" y="572" font-size="13.5" font-weight="700" fill="#fff">order_declines</text>
+<text x="1674" y="594" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1674" y="610" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1674" y="626" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="1674" y="642" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="1674" y="658" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<text x="1674" y="674" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<rect x="1346" y="698" width="300" height="130" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1346,706 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1356" y="716" font-size="13.5" font-weight="700" fill="#fff">buyer_no_shows</text>
+<text x="1356" y="738" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1356" y="754" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1356" y="770" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="1356" y="786" font-size="11.5" font-weight="400" fill="#1d2b24">sequence</text>
+<text x="1356" y="802" font-size="11.5" font-weight="400" fill="#1d2b24">weight</text>
+<text x="1356" y="818" font-size="11.5" font-weight="400" fill="#1d2b24">excused</text>
+<rect x="1664" y="698" width="300" height="114" rx="8" fill="#fff" stroke="#6B4E9B" stroke-width="1.6"/>
+<path d="M1664,706 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#6B4E9B"/>
+<text x="1674" y="716" font-size="13.5" font-weight="700" fill="#fff">order_excuses</text>
+<text x="1674" y="738" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="1674" y="754" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="1674" y="770" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="1674" y="786" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<text x="1674" y="802" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<rect x="2004" y="122" width="300" height="162" rx="8" fill="#fff" stroke="#B5532E" stroke-width="1.6"/>
+<path d="M2004,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#B5532E"/>
+<text x="2014" y="140" font-size="13.5" font-weight="700" fill="#fff">order_reviews</text>
+<text x="2014" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="178" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders (one per order)</text>
+<text x="2014" y="194" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="2014" y="210" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="2014" y="226" font-size="11.5" font-weight="400" fill="#1d2b24">rating</text>
+<text x="2014" y="242" font-size="11.5" font-weight="400" fill="#1d2b24">productRating</text>
+<text x="2014" y="258" font-size="11.5" font-weight="400" fill="#1d2b24">review</text>
+<text x="2014" y="274" font-size="11.5" font-weight="400" fill="#1d2b24">photoKey</text>
+<rect x="2322" y="122" width="300" height="130" rx="8" fill="#fff" stroke="#B5532E" stroke-width="1.6"/>
+<path d="M2322,130 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#B5532E"/>
+<text x="2332" y="140" font-size="13.5" font-weight="700" fill="#fff">order_inquiries</text>
+<text x="2332" y="162" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2332" y="178" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="2332" y="194" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="2332" y="210" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="2332" y="226" font-size="11.5" font-weight="400" fill="#1d2b24">question</text>
+<text x="2332" y="242" font-size="11.5" font-weight="400" fill="#1d2b24">reply</text>
+<rect x="2004" y="298" width="300" height="130" rx="8" fill="#fff" stroke="#B5532E" stroke-width="1.6"/>
+<path d="M2004,306 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#B5532E"/>
+<text x="2014" y="316" font-size="13.5" font-weight="700" fill="#fff">product_inquiries</text>
+<text x="2014" y="338" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="354" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="2014" y="370" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="2014" y="386" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="2014" y="402" font-size="11.5" font-weight="400" fill="#1d2b24">question</text>
+<text x="2014" y="418" font-size="11.5" font-weight="400" fill="#1d2b24">reply</text>
+<rect x="2322" y="298" width="300" height="130" rx="8" fill="#fff" stroke="#B5532E" stroke-width="1.6"/>
+<path d="M2322,306 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#B5532E"/>
+<text x="2332" y="316" font-size="13.5" font-weight="700" fill="#fff">order_reports</text>
+<text x="2332" y="338" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2332" y="354" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="2332" y="370" font-size="11.5" font-weight="600" fill="#6B4E9B">reporterId  →  user</text>
+<text x="2332" y="386" font-size="11.5" font-weight="600" fill="#6B4E9B">subjectId  →  user</text>
+<text x="2332" y="402" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<text x="2332" y="418" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<rect x="2004" y="442" width="300" height="98" rx="8" fill="#fff" stroke="#B5532E" stroke-width="1.6"/>
+<path d="M2004,450 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#B5532E"/>
+<text x="2014" y="460" font-size="13.5" font-weight="700" fill="#fff">order_report_evidence</text>
+<text x="2014" y="482" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="498" font-size="11.5" font-weight="600" fill="#1d2b24">reportId  →  order_reports</text>
+<text x="2014" y="514" font-size="11.5" font-weight="400" fill="#1d2b24">objectKey</text>
+<text x="2014" y="530" font-size="11.5" font-weight="400" fill="#1d2b24">contentType</text>
+<rect x="2004" y="612" width="300" height="130" rx="8" fill="#fff" stroke="#2F7D8C" stroke-width="1.6"/>
+<path d="M2004,620 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F7D8C"/>
+<text x="2014" y="630" font-size="13.5" font-weight="700" fill="#fff">conversations</text>
+<text x="2014" y="652" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="668" font-size="11.5" font-weight="600" fill="#6B4E9B">buyerId  →  user</text>
+<text x="2014" y="684" font-size="11.5" font-weight="600" fill="#6B4E9B">sellerId  →  user</text>
+<text x="2014" y="700" font-size="11.5" font-weight="600" fill="#1d2b24">productId  →  sellers_product</text>
+<text x="2014" y="716" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="2014" y="732" font-size="11.5" font-weight="400" fill="#1d2b24">lastMessageAt</text>
+<rect x="2322" y="612" width="300" height="114" rx="8" fill="#fff" stroke="#2F7D8C" stroke-width="1.6"/>
+<path d="M2322,620 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F7D8C"/>
+<text x="2332" y="630" font-size="13.5" font-weight="700" fill="#fff">conversation_participants</text>
+<text x="2332" y="652" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2332" y="668" font-size="11.5" font-weight="600" fill="#1d2b24">conversationId  →  conversations</text>
+<text x="2332" y="684" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="2332" y="700" font-size="11.5" font-weight="400" fill="#1d2b24">archivedAt</text>
+<text x="2332" y="716" font-size="11.5" font-weight="400" fill="#1d2b24">blockedAt</text>
+<rect x="2004" y="756" width="300" height="114" rx="8" fill="#fff" stroke="#2F7D8C" stroke-width="1.6"/>
+<path d="M2004,764 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#2F7D8C"/>
+<text x="2014" y="774" font-size="13.5" font-weight="700" fill="#fff">conversation_messages</text>
+<text x="2014" y="796" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="812" font-size="11.5" font-weight="600" fill="#1d2b24">conversationId  →  conversations</text>
+<text x="2014" y="828" font-size="11.5" font-weight="600" fill="#6B4E9B">senderId  →  user</text>
+<text x="2014" y="844" font-size="11.5" font-weight="400" fill="#1d2b24">body</text>
+<text x="2014" y="860" font-size="11.5" font-weight="400" fill="#1d2b24">createdAt</text>
+<rect x="2004" y="942" width="300" height="130" rx="8" fill="#fff" stroke="#8A3B3B" stroke-width="1.6"/>
+<path d="M2004,950 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#8A3B3B"/>
+<text x="2014" y="960" font-size="13.5" font-weight="700" fill="#fff">trust_events</text>
+<text x="2014" y="982" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="998" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="2014" y="1014" font-size="11.5" font-weight="600" fill="#6B4E9B">subjectId  →  user</text>
+<text x="2014" y="1030" font-size="11.5" font-weight="400" fill="#1d2b24">kind</text>
+<text x="2014" y="1046" font-size="11.5" font-weight="400" fill="#1d2b24">weight</text>
+<text x="2014" y="1062" font-size="11.5" font-weight="400" fill="#1d2b24">invalidatedAt</text>
+<rect x="2322" y="942" width="300" height="130" rx="8" fill="#fff" stroke="#8A3B3B" stroke-width="1.6"/>
+<path d="M2322,950 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#8A3B3B"/>
+<text x="2332" y="960" font-size="13.5" font-weight="700" fill="#fff">trust_notices</text>
+<text x="2332" y="982" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2332" y="998" font-size="11.5" font-weight="600" fill="#6B4E9B">recipientId  →  user</text>
+<text x="2332" y="1014" font-size="11.5" font-weight="600" fill="#1d2b24">orderId  →  orders</text>
+<text x="2332" y="1030" font-size="11.5" font-weight="400" fill="#1d2b24">kind</text>
+<text x="2332" y="1046" font-size="11.5" font-weight="400" fill="#1d2b24">sentAt</text>
+<text x="2332" y="1062" font-size="11.5" font-weight="400" fill="#1d2b24">readAt</text>
+<rect x="2004" y="1086" width="300" height="114" rx="8" fill="#fff" stroke="#8A3B3B" stroke-width="1.6"/>
+<path d="M2004,1094 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#8A3B3B"/>
+<text x="2014" y="1104" font-size="13.5" font-weight="700" fill="#fff">trust_corrections</text>
+<text x="2014" y="1126" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="1142" font-size="11.5" font-weight="600" fill="#1d2b24">eventId  →  trust_events</text>
+<text x="2014" y="1158" font-size="11.5" font-weight="600" fill="#6B4E9B">requesterId  →  user</text>
+<text x="2014" y="1174" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<text x="2014" y="1190" font-size="11.5" font-weight="400" fill="#1d2b24">outcome</text>
+<rect x="2322" y="1086" width="300" height="146" rx="8" fill="#fff" stroke="#8A3B3B" stroke-width="1.6"/>
+<path d="M2322,1094 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#8A3B3B"/>
+<text x="2332" y="1104" font-size="13.5" font-weight="700" fill="#fff">trust_actions</text>
+<text x="2332" y="1126" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2332" y="1142" font-size="11.5" font-weight="600" fill="#6B4E9B">subjectId  →  user</text>
+<text x="2332" y="1158" font-size="11.5" font-weight="600" fill="#1d2b24">sourceEventId  →  trust_events</text>
+<text x="2332" y="1174" font-size="11.5" font-weight="600" fill="#1d2b24">sourceOrderId  →  orders</text>
+<text x="2332" y="1190" font-size="11.5" font-weight="400" fill="#1d2b24">actionType</text>
+<text x="2332" y="1206" font-size="11.5" font-weight="400" fill="#1d2b24">level</text>
+<text x="2332" y="1222" font-size="11.5" font-weight="400" fill="#1d2b24">endsAt</text>
+<rect x="2004" y="1246" width="300" height="130" rx="8" fill="#fff" stroke="#8A3B3B" stroke-width="1.6"/>
+<path d="M2004,1254 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v18 h-300 z" fill="#8A3B3B"/>
+<text x="2014" y="1264" font-size="13.5" font-weight="700" fill="#fff">trust_disputes</text>
+<text x="2014" y="1286" font-size="11.5" font-weight="700" fill="#1d2b24">id (PK)</text>
+<text x="2014" y="1302" font-size="11.5" font-weight="600" fill="#1d2b24">eventId  →  trust_events</text>
+<text x="2014" y="1318" font-size="11.5" font-weight="600" fill="#6B4E9B">userId  →  user</text>
+<text x="2014" y="1334" font-size="11.5" font-weight="400" fill="#1d2b24">reason</text>
+<text x="2014" y="1350" font-size="11.5" font-weight="400" fill="#1d2b24">status</text>
+<text x="2014" y="1366" font-size="11.5" font-weight="400" fill="#1d2b24">decision</text>
+<polygon points="1664,247 1655,254 1653,245" fill="#1d2b24"/>
+<polygon points="1017,284 1011,293 1006,285" fill="#1d2b24"/>
+<polygon points="988,190 998,187 998,195" fill="#1d2b24"/>
+<polygon points="1006,275 999,283 995,275" fill="#1d2b24"/>
+<polygon points="838,236 842,246 834,246" fill="#1d2b24"/>
+<polygon points="1156,284 1160,294 1152,294" fill="#1d2b24"/>
+<polygon points="1058,284 1053,294 1048,287" fill="#1d2b24"/>
+<polygon points="1087,284 1084,295 1078,289" fill="#1d2b24"/>
+<polygon points="988,579 998,575 998,583" fill="#1d2b24"/>
+<polygon points="838,412 842,422 834,422" fill="#1d2b24"/>
+<polygon points="1112,284 1111,295 1103,291" fill="#1d2b24"/>
+<polygon points="1156,284 1160,294 1152,294" fill="#1d2b24"/>
+<polygon points="1121,284 1121,295 1113,292" fill="#1d2b24"/>
+<polygon points="1646,182 1657,179 1656,187" fill="#1d2b24"/>
+<polygon points="1664,278 1657,287 1653,279" fill="#1d2b24"/>
+<polygon points="1306,274 1317,274 1313,282" fill="#1d2b24"/>
+<polygon points="1814,284 1818,294 1810,294" fill="#1d2b24"/>
+<polygon points="1725,284 1720,294 1714,288" fill="#1d2b24"/>
+<polygon points="1814,284 1818,294 1810,294" fill="#1d2b24"/>
+<polygon points="1752,284 1749,295 1743,289" fill="#1d2b24"/>
+<polygon points="1814,284 1818,294 1810,294" fill="#1d2b24"/>
+<polygon points="1768,284 1767,295 1759,291" fill="#1d2b24"/>
+<polygon points="1814,284 1818,294 1810,294" fill="#1d2b24"/>
+<polygon points="1964,203 1974,199 1974,207" fill="#1d2b24"/>
+<polygon points="1964,199 1974,195 1974,203" fill="#1d2b24"/>
+<polygon points="1306,227 1317,224 1315,233" fill="#1d2b24"/>
+<polygon points="1964,239 1975,238 1973,246" fill="#1d2b24"/>
+<polygon points="2322,423 2314,431 2311,423" fill="#1d2b24"/>
+<polygon points="1306,274 1317,275 1313,282" fill="#1d2b24"/>
+<polygon points="1872,284 1881,290 1875,295" fill="#1d2b24"/>
+<polygon points="2304,673 2314,669 2314,677" fill="#1d2b24"/>
+<polygon points="2154,742 2158,752 2150,752" fill="#1d2b24"/>
+<polygon points="1848,284 1856,292 1848,295" fill="#1d2b24"/>
+<polygon points="1880,284 1890,289 1883,295" fill="#1d2b24"/>
+<polygon points="2154,1072 2158,1082 2150,1082" fill="#1d2b24"/>
+<polygon points="2290,1072 2301,1073 2297,1080" fill="#1d2b24"/>
+<polygon points="1870,284 1879,290 1872,295" fill="#1d2b24"/>
+<polygon points="2154,1072 2158,1082 2150,1082" fill="#1d2b24"/>
+</svg>
