@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApiError, isAbortError } from "@/src/lib/api";
+import { usePolling } from "@/src/lib/usePolling";
 import { listMarketplaceProducts } from "../api/marketplace";
 import { listMarketplaceSellersMap } from "../api/seller-map";
 import type { MarketplaceProduct, MarketplaceSellerMapResponse } from "../types";
@@ -23,12 +24,14 @@ export function useMarketplaceBrowser() {
   const [sellerMapLoading, setSellerMapLoading] = useState(true);
   const [sellerMapError, setSellerMapError] = useState("");
   const [sellerMapRetryKey, setSellerMapRetryKey] = useState(0);
+  const extraPagesLoaded = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(searchKey);
     setSearchInput(params.get("search") ?? "");
     const controller = new AbortController();
     let active = true;
+    extraPagesLoaded.current = false;
     setLoading(true);
     setError("");
     listMarketplaceProducts(params, controller.signal)
@@ -95,6 +98,15 @@ export function useMarketplaceBrowser() {
     navigateWithParams(params);
   }
 
+  // Quiet refresh of the first page. Skipped once the buyer has loaded more pages, so the list never jumps.
+  usePolling(async (signal) => {
+    if (extraPagesLoaded.current) return;
+    const result = await listMarketplaceProducts(new URLSearchParams(searchKey), signal);
+    if (signal.aborted || extraPagesLoaded.current) return;
+    setProducts(result.products);
+    setNextCursor(result.nextCursor);
+  }, { enabled: resultKey === searchKey && !loading && !error, intervalMs: 30_000, runImmediately: false });
+
   function handleRemoveSearch() {
     setSearchInput("");
     const params = new URLSearchParams(searchKey);
@@ -109,6 +121,7 @@ export function useMarketplaceBrowser() {
       const params = new URLSearchParams(searchKey);
       params.set("cursor", nextCursor);
       const result = await listMarketplaceProducts(params);
+      extraPagesLoaded.current = true;
       setProducts((current) => [...current, ...result.products]);
       setNextCursor(result.nextCursor);
     } catch (reason) {

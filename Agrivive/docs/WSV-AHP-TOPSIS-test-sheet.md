@@ -2,40 +2,40 @@
 
 **Project/System:** Agrivive
 **Tester:** Jara Joaquin T. Jara
-**Test Date:**
-**Build/Version:**
-**Environment:**
-**Overall Result:**
+**Test Date:** ____________________
+**Build/Version:** ____________________
+**Environment:** ____________________
+**Overall Result:** ____________________
 
-**Instruction:** Read each scenario, perform the action, and compare the actual result with the expected result. Mark P (Passed) or F (Failed) and add a short remark for any issue.
+**Instruction:** Read each test scenario carefully, perform the stated action, and compare the actual result with the expected result. Mark P for Passed or F for Failed and add a short remark for any issue found.
 
-## Preconditions (apply to WSV-001 to WSV-009)
+## Preconditions (apply to WSV-001 to WSV-012)
 
-1. In `backend/.env`, set `VISIBILITY_POLICY=visibility-ahptopsis-v1`, then restart the API.
-2. Seed a feed of at least 5 other active, marketable listings from sellers with complete public profiles (verified email, shop name, address, phone, map pin). Vary their age, remaining stock and seller rating.
-3. TOPSIS ranks each listing against the others in the feed. A score is only meaningful relative to that seeded set. A lone listing always scores exactly 0.50 (Standard Exposure).
-4. Weights: freshness 0.40, stock 0.30, seller reliability 0.20, recurrence 0.10.
-5. Freshness is `1 − age/12 h` (1.0 when new, 0 at 12 h or older).
-6. Tiers: Priority Boost at 0.60 or higher, Standard Exposure at 0.40 to below 0.60, Basic/Hold below 0.40.
-7. Seller reliability is average order rating ÷ 5, or 0.50 when the seller has no reviews.
-8. Recurrence is the seller's prior listing cycles of the same vegetable and unit in the last 30 days, divided by 3 and capped at 1.
+1. `VISIBILITY_POLICY` is not set to `visibility-v4` (AHP-TOPSIS is the default). Restart the API after any change to `backend/.env`.
+2. Seed a feed of at least 5 other active listings from sellers with complete public profiles. Vary their age, price drop, stock and seller rating.
+3. TOPSIS ranks each listing against the others. A score only means something compared with the same feed. A lone listing scores exactly 0.50.
+4. Criteria (all raw values, all counted as bigger is better): posting age in hours, price drop (base price minus current price), stock left, and seller reliability (average order service rating out of 5, or 2.5 with no reviews).
+5. Weights come from the AHP matrix: 0.351, 0.351, 0.189 and 0.109 in the order above.
+6. The six-hour freshness window only belongs to the old `visibility-v4` formula, not to AHP-TOPSIS.
 
 | Test Case ID | Test Scenario / Description | Expected Result | Actual Result | Status | Remarks |
-|---|---|---|---|---|---|
-| WSV-001 | Publish a brand-new active tomato listing (10 kg, ₱40/kg) with 100% stock, a clear photo and a pickup location, from an active, well-rated seller, into the seeded feed. | The listing publishes successfully. Its score is 0.60 or higher (Priority Boost), and it appears at or near the top of the marketplace feed. The API returns `visibilityTier: "priority"` and `visibilityPolicyVersion: "visibility-ahptopsis-v1"`. | | | |
-| WSV-002 | View an active cabbage listing published 6 hours ago with 50% stock left (5 of 10 kg) from an average-rated seller, in the seeded feed. | The API returns `visibilityTier: "standard"` (score 0.40 to below 0.60) and the listing sits in the middle of the feed, below fresher full-stock listings. | | | |
-| WSV-003 | View an active eggplant listing published over 12 hours ago with 1 kg left of 20 kg from an unrated or low-rated seller, in the seeded feed. | The API returns `visibilityTier: "basic"` (score below 0.40) and the listing sits near the bottom of the feed. | | | |
-| WSV-004 | Log in as a new seller with no order reviews and publish a fresh 15 kg sitaw listing. | The listing publishes without errors. Seller reliability is the neutral 0.50, and its rank is set by freshness and stock against the other listings. | | | |
-| WSV-005 | Publish a fresh pechay listing from a seller who has listed pechay (same unit) 3 or more times in the last 30 days. Compare it with a fresh pechay listing from a first-time seller with the same stock and rating. | Recurrence is 1.0 for the repeat seller and 0 for the first-time seller. The repeat seller's listing scores higher and ranks above the other. | | | |
-| WSV-006 | Reserve the last remaining kilograms of an active squash listing so that its quantity becomes 0. | The listing no longer appears in the marketplace feed (`productQty > 0` filter). On the product page `availability` is `sold_out`, the web page shows a "Sold out" state with ordering disabled, and further reservations are rejected. | | | |
-| WSV-007 | Publish two vegetable listings (for example Carrots and Okra) 5 minutes apart with the same starting stock, seller rating and cycle history. Refresh the feed several times. | The order stays the same on every refresh with no swapping. The more recently published listing ranks first. Exact score ties break by newest publish time, then by listing id. | | | |
-| WSV-008 | Open the buyer marketplace with more than 20 active listings. Scroll or tap Next Page using the returned `nextCursor` within 60 minutes. | Page 2 loads in descending score order with no duplicates and no skipped items, provided no listing is published and no stock changes between pages. A cursor older than 60 minutes returns 400 "Invalid marketplace cursor". | | | |
-| WSV-009 | Post a new listing on social media, then check the 6-hour rule (Seller Boost). As a seller, add produce, then answer "Post it on Facebook and Instagram?" with Preview Post. Do this once for a Priority Boost listing (score 0.60 or higher) and once for a listing below Priority Boost. | Both listings get a normal first post on the Facebook Page and Instagram, with no Priority check. When the first post is saved, AHP–TOPSIS runs once and the score and tier are saved. Only the Priority Boost listing gets the "Set Your Price Drop" notice 6 hours later, and its price drops every 6 hours until the final price. The other listing keeps its normal post, and the Boost screen says why price drops are off. | | | |
-| WSV-010 | Set `VISIBILITY_POLICY=visibility-v4` in `backend/.env`, restart the server and refresh the marketplace. Then set `VISIBILITY_POLICY=visibility-ahptopsis-v1`, restart and refresh. | With `visibility-v4`, the marketplace switches to the baseline formula (0.40 × posting age + 0.40 × remaining stock + 0.20 × recurrence, Priority at 0.70) with no errors, and the API reports `visibilityPolicyVersion: "visibility-v4"`. With `visibility-ahptopsis-v1`, AHP–TOPSIS ranking returns. | | | |
+| ------------ | --------------------------- | --------------- | ------------- | ------ | ------- |
+| WSV-001 | Check the criteria weights (AHP). Read the weights the engine computes from its pairwise matrix. | Weights are posting age 0.351, price drop 0.351, stock level 0.189 and seller reliability 0.109. They add up to 1. The consistency ratio is about 0.004, which is under the 0.10 limit. | | | |
+| WSV-002 | Compare an old listing with a new one (Posting Age). Seed a feed. Publish two listings with the same price, stock and seller rating, one posted 5 hours ago and one posted just now. | The older listing ranks above the newer one. Listing age counts as bigger is better, so produce that has waited longer is shown first. | | | |
+| WSV-003 | Compare a listing with a lower price against the same listing at full price (Price Drop). Use two listings with the same age, stock and seller rating. Lower the price of one with a price drop. | The listing with the bigger peso drop (base price minus current price) ranks higher. | | | |
+| WSV-004 | Compare a full-stock listing with a nearly empty one (Stock Level). Use two listings with the same age, price drop and seller rating, one with 20 kg and one with 2 kg. | The listing with more stock ranks higher. | | | |
+| WSV-005 | Compare a well-rated seller with a low-rated seller (Seller Reliability). Use two listings that are the same except for the seller's average order rating (for example 4.8 and 2.0). | The listing from the higher-rated seller ranks higher. Only the order service stars count. Product stars are not part of it. | | | |
+| WSV-006 | Publish a listing from a new seller with no reviews (Cold-Start). Log in as a seller with 0 reviews and publish a fresh sitaw listing. | The listing publishes with no error. The seller counts as 2.5 out of 5 (the middle of the scale), and the rank comes from the other three criteria. | | | |
+| WSV-007 | View a feed with only one eligible listing (Single Listing). Hide or sell out every other listing so only one remains. | The one listing scores exactly 0.50 and still appears in the feed. | | | |
+| WSV-008 | Hide listings from sellers who are not ready (Eligibility). Use a seller whose profile setup is not finished (for example no map pin saved yet), a seller whose email is not verified, and a seller who is paused or inactive, each with an active listing. Open the marketplace feed. Then finish the setup, verify the email or end the pause and refresh. | The listings from sellers who are not ready do not appear. A seller with a complete, active profile still appears. After the seller is ready, the listing appears again. | | | |
+| WSV-009 | Reserve the last remaining kilograms of a listing (Sold Out). Reserve so the quantity becomes 0. | The listing leaves the feed. The product page says Sold out, ordering is disabled, and more reservations are refused. | | | |
+| WSV-010 | Publish two listings 5 minutes apart with the same criteria (Tie-Breaking). Refresh the feed several times. | The order never changes between refreshes. When scores tie, the newer listing is first, then the larger listing id. | | | |
+| WSV-011 | Scroll the feed with more than 20 listings (Cursor Paging). Load page 2 with the returned cursor. Then try a cursor older than 60 minutes. | Page 2 follows in score order with no repeats and no skipped listings. An old cursor gives 400 "Invalid marketplace cursor". | | | |
+| WSV-012 | Switch the ranking back and forth (Safe Rollback). Set VISIBILITY_POLICY=visibility-v4, restart and refresh. Then set any other value or remove it, restart and refresh. | With visibility-v4 the old formula runs and the API says visibilityPolicyVersion visibility-v4. Any other value, or no value, gives AHP-TOPSIS (visibility-ahptopsis-v1). No errors either way. | | | |
 
 ## Known behaviors to keep in mind
 
-- **Baseline favors older listings.** Under `visibility-v4`, posting age is `age/12 h`, so older listings score higher. Under AHP–TOPSIS, older listings score lower. Do not compare tiers across the two policies.
-- **Sold-out items are not in the feed.** The "Sold out" badge appears on product pages, cards that still load the product, and the wishlist.
-- **Pagination re-ranks each page.** AHP–TOPSIS recalculates the ranking for the 500 newest candidates on every request. A new listing or a stock change between pages can shift relative scores and cause a duplicate or skipped item.
-- **Boost details.** The first post is a normal post for any listing. Priority Boost only decides whether the 6-hour price drops are offered. The score is checked once, when the first post is saved. To test the 6 hours without waiting, move `price_drop_setup_at` and `follow_up_due_at` into the past; the worker runs every 60 seconds.
+- **Older listings rank higher.** Posting age is bigger-is-better, so produce that has waited longer is shown first.
+- **Scores are relative.** The same listing can score differently when other listings join or leave the feed.
+- **Sold-out items are not in the feed.** The "Sold out" badge appears on product pages and the wishlist.
+- **Paging re-ranks each page.** A new listing or a stock change between pages can shift scores and cause a repeat or a skip.

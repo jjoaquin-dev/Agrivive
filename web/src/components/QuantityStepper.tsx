@@ -22,6 +22,17 @@ export function QuantityStepper({ value, max, label, onChange, onRemove, disable
 
   useEffect(() => setDraft(formatQuantity(value)), [value]);
 
+  // A typed amount is saved a moment after the buyer stops typing. Before, it was saved only when the box lost focus,
+  // so tapping Reserve right after typing could send the old amount while the box still showed the new one.
+  useEffect(() => {
+    const typed = Number(draft.replace(",", "."));
+    if (!Number.isFinite(typed) || typed <= 0 || draft.endsWith(".") || draft.endsWith(",")) return;
+    const next = clampQuantity(typed, max);
+    if (next === value) return;
+    const timer = setTimeout(() => onChange(next), 350);
+    return () => clearTimeout(timer);
+  }, [draft]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const atMax = Number.isFinite(max) && value >= max;
   const atMin = value <= QUANTITY_STEP && !onRemove;
 

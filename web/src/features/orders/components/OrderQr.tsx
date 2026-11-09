@@ -9,7 +9,7 @@ const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en
 
 const qrNote = {
   not_yet_valid: { label: "Not valid yet", tone: "bg-amber-50 text-amber-800", text: "Your QR starts working at the beginning of your pickup time." },
-  active: { label: "Active", tone: "bg-green-50 text-green-800", text: "Show this to the vendor. They will scan it to complete your pickup." },
+  active: { label: "Active", tone: "bg-green-50 text-green-800", text: "Show this to the vendor. You can use it any time before your pickup time ends. They will scan it to complete your pickup." },
   expired: { label: "Expired", tone: "bg-rose-50 text-rose-700", text: "This QR cannot be used or extended. Place a new order to get a new QR." },
 } as const;
 
@@ -41,7 +41,7 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
             </div>
             <span className={`mt-3 rounded-full px-3 py-1 text-xs font-bold ${note.tone}`}>QR {note.label}</span>
             <p className="mt-2 max-w-[260px] text-center text-[12px] leading-relaxed text-neutral-500">{note.text}</p>
-            {order.qr.validUntil ? <p className="mt-1 text-[11px] text-neutral-400">Works {clock(order.qr.validFrom)} to {clock(order.qr.validUntil)}, {date(order.qr.validFrom)}</p> : null}
+            {order.qr.validUntil ? <p className="mt-1 text-[11px] text-neutral-400">Works now until {clock(order.qr.validUntil)}, {date(order.qr.validUntil)}</p> : null}
           </div>
         ) : (
           <div className="rounded-xl bg-neutral-50 p-4 text-center">
