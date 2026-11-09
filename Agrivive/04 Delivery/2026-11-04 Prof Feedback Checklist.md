@@ -7,8 +7,8 @@ Owners: **Jara** (AHP-TOPSIS, n8n, Analytics) and **Arianne** (everything else)
 
 Tick `[x]` when done. Update the score here:
 
-- Jara: 0 / 23 done
-- Arianne: 1 / 26 done
+- Jara: 2 / 23 done
+- Arianne: 6 / 26 done
 
 ---
 
@@ -16,7 +16,7 @@ Tick `[x]` when done. Update the score here:
 
 ## A. Fix these first
 - [ ] **6 hours or 12 hours?** The code treats a listing as fresh for 12 hours, but we told the prof 6. One note in the vault also says 12. Pick one and make the paper, the notes and the code say the same thing. (The 6 hours is typed into the code, so it can't be changed from a setting.)
-- [ ] **Show the score out of 100.** The backend keeps it as 0 to 1 (like 0.974). The screen should show 97.4 / 100. Check that it does.
+- [x] **Show the score out of 100.** The backend keeps it as 0 to 1 (like 0.974). The screen should show 97.4 / 100. Check that it does.
 - [ ] **Fix the name "C".** The prof thought C means listing age. It means **closeness score** (how close a listing is to the best one). Look through the paper and notes for the wrong label.
 
 ## B. Ranking listings (AHP-TOPSIS) - do this first
@@ -43,7 +43,7 @@ What we already have (mobile app): month comparison, movement chart, repeat list
 - [ ] Sell-through rate: write the formula, use sample numbers, and check the dashboard gives the same answer.
 - [ ] The "often posted surplus vegetables" table must include sell-through. Check it does.
 - [ ] Test the pie chart with sample data so we can prove it is right.
-- [ ] Date or month filter. Check it works.
+- [x] Date or month filter. Check it works.
 - [ ] This month vs last month (example: carrot). Check it works.
 - [ ] Inventory vs sales chart. The prof asked where it is. Check it.
 - [ ] A short description under **every** chart (what the chart shows and what it means).
@@ -62,7 +62,7 @@ What we already have: the QR is valid for 24 hours, starting when the buyer orde
 - [ ] Scan test: try at least 3 phones and 2 lighting conditions. Write down how fast each scan was.
 - [ ] Make the QR big enough to read on a TV or projector.
 - [ ] Check that scanning only takes quantity **away**, never adds it back.
-- [ ] Show the QR states: available, sold, expired, cancelled, completed.
+- [x] Show the QR states: available, sold, expired, cancelled, completed.
 - [ ] Add one sentence: seller location on the map goes in the next objective.
 
 ### F idea: buyer picks the pickup time (not built yet)
@@ -100,9 +100,9 @@ The QR is valid only for the chosen slot, plus a short wait after it (say 30 min
 
 ## G. Calendar and reminders
 What we already have (mobile): reminder card, holiday card, weather section.
-- [ ] Reminders should show as a **popup**, not buttons. Check and change if needed.
-- [ ] Alert one day before a holiday. Write how many days ahead it alerts.
-- [ ] Show the heat alert.
+- [x] Reminders should show as a **popup**, not buttons. Check and change if needed.
+- [x] Alert one day before a holiday. Write how many days ahead it alerts.
+- [x] Show the heat alert.
 - [ ] Take a screenshot of a reminder for the paper.
 
 ## H. Rating and review
@@ -117,7 +117,7 @@ What we already have: points per bad action (no reply 1, seller cancels 2, low r
 - [ ] Explain what happens if the report is false. (Not checked in the code. Check, and add it if missing.)
 - [ ] Make a scenario table: what happened, points added, what action follows.
 - [ ] Explain why each point value was chosen.
-- [ ] Show the buyer no-show penalty (2 points).
+- [x] Show the buyer no-show penalty (2 points).
 - [ ] Say if buyers and sellers have separate trust scores. (Not checked.)
 - [ ] "Reported user activity": nothing like this in the code. Say it means the person who reported, or remove it.
 - [ ] Remove the last objective that came back (it repeats another).
@@ -135,3 +135,28 @@ Jara joins for the full run.
 2. Jara: ranking proof, then analytics. Arianne: trust table, then QR seller questions
 3. Then n8n, calendar, rating
 4. Last: demo run together
+
+---
+
+## Code and screen check (2026-11-10)
+Ticked only what the app already does. Paper and test-table items are not ticked.
+
+**Ticked:** score shows "97.4 / 100"; date filter works; order states show on screen; reminder popup on app open; holiday alert 1 day before; heat alert (35 C and up); buyer no-show gets 2 points by itself.
+
+**The checklist was wrong or out of date here:**
+- **6 vs 12 hours:** the ranking has no 12-hour window. It compares listing age against the other listings. The only fixed 6 hours are the old scoring formula and the boost wait. So the "6 or 12" item needs a new look.
+- **24-hour QR:** the QR now works until the buyer's pickup time ends, plus 15 minutes. It is not 24 hours from the order. The "F idea" box (buyer picks pickup time) looks partly built already. Check before building more.
+- **Buyer sees no rank:** the buyer data still carries the visibility score. It is not drawn on screen, but it is sent.
+- **Tier names:** "Priority Boost / Standard / Basic-Hold" do not appear on the seller screen. The card shows score and rank only.
+- **Hold listings:** no tier switch exists. Auto-post picks the top unlocked listing. The seller must make the first post by hand.
+
+**Not done in the app (so left unticked):**
+- Sell-through per item in the "posted again" table (it only shows a count).
+- This month vs last month per product (the comparison card exists but is not shown on the screen).
+- Inventory vs sales chart.
+- Charts have descriptions, but above the chart, not below it.
+- QR is 280px on web; no QR screen on mobile.
+- Scanning can add back stock when the seller hands over less than reserved.
+- Rating: 2 questions (produce, seller), one review per order, no product grouping.
+- False reports: only buyers are penalized, sellers are not.
+- Seed data for the demo: only the vegetable list exists.
