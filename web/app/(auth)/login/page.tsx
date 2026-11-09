@@ -39,6 +39,12 @@ export default function LoginPage() {
     const destination = getNextPathFromLocation();
     setNextPath(destination);
     const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "ACCOUNT_RESTRICTED") {
+      router.replace(withNextPath("/account-recovery?blocked=true", destination));
+      return;
+    }
+    const googleError = params.get("error_description") || params.get("error");
+    if (googleError) setErrors({ form: googleError });
     setNotices({
       verified: params.get("verified") === "true",
       restored: params.get("restored") === "true",

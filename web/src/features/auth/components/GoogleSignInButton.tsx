@@ -21,6 +21,8 @@ export function GoogleSignInButton({ nextPath }: { nextPath: string }) {
       const response = await authClient.signIn.social({
         provider: "google",
         callbackURL: `${window.location.origin}${sanitizeNextPath(nextPath)}`,
+        // A refused sign-in (for example a blocked account) comes back to the login page, not the API's root page.
+        errorCallbackURL: `${window.location.origin}/login`,
       });
       if (response?.data?.url) {
         window.location.href = response.data.url;
