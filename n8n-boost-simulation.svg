@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1120" width="1000" height="1120" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4D3A"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="1120" fill="#F8F6F1"/>
+  <text x="500" y="50" text-anchor="middle" font-size="26" font-weight="700" fill="#1F4D3A">n8n Marketing Boost: Step by Step</text>
+  <text x="500" y="80" text-anchor="middle" font-size="15" fill="#555">First post for one surplus vegetable listing</text>
+
+  <!-- Step 1 -->
+  <rect x="60" y="100" width="880" height="165" rx="12" fill="#FFFFFF" stroke="#E5E2DA"/>
+  <rect x="60" y="100" width="8" height="165" rx="4" fill="#1F4D3A"/>
+  <text x="95" y="134" font-size="18" font-weight="700" fill="#222">1  Seller triggers a Boost</text>
+  <rect x="640" y="114" width="270" height="26" rx="13" fill="#E8F0EC"/>
+  <text x="775" y="132" text-anchor="middle" font-size="13" fill="#1F4D3A">Seller app and Backend</text>
+  <text x="95" y="162" font-size="14" fill="#333">Checks: seller active and verified</text>
+  <text x="95" y="184" font-size="14" fill="#333">Listing active, marketable, in stock, has a photo</text>
+  <text x="95" y="206" font-size="14" fill="#333">Listing is Priority Boost tier (Figure 5 engine)</text>
+  <text x="95" y="228" font-size="14" fill="#333">No boost yet this cycle; no first post in the last 3 hours</text>
+  <text x="95" y="250" font-size="14" fill="#333">Saved in PostgreSQL with status: queued</text>
+
+  <line x1="500" y1="265" x2="500" y2="300" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="515" y="287" font-size="13" font-style="italic" fill="#555">queued boost row saved</text>
+
+  <!-- Step 2 -->
+  <rect x="60" y="300" width="880" height="150" rx="12" fill="#FFFFFF" stroke="#E5E2DA"/>
+  <rect x="60" y="300" width="8" height="150" rx="4" fill="#1F4D3A"/>
+  <text x="95" y="334" font-size="18" font-weight="700" fill="#222">2  Worker sends the job to n8n</text>
+  <rect x="640" y="314" width="270" height="26" rx="13" fill="#EAF1F8"/>
+  <text x="775" y="332" text-anchor="middle" font-size="13" fill="#2B5A8A">Worker, every 60 seconds</text>
+  <text x="95" y="362" font-size="14" fill="#333">Finds due boost records and claims each with a short lease</text>
+  <text x="95" y="384" font-size="14" fill="#333">Sends POST with boostId and reason only, no product data</text>
+  <text x="95" y="406" font-size="14" fill="#333">Service token in header; HTTPS required outside development</text>
+  <text x="95" y="428" font-size="14" fill="#333">Retries up to 5 times if n8n does not respond</text>
+
+  <line x1="500" y1="450" x2="500" y2="485" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="515" y="472" font-size="13" font-style="italic" fill="#555">POST: boostId and reason (Bearer token)</text>
+
+  <!-- Step 3 -->
+  <rect x="60" y="485" width="880" height="150" rx="12" fill="#FFFFFF" stroke="#E5E2DA"/>
+  <rect x="60" y="485" width="8" height="150" rx="4" fill="#1F4D3A"/>
+  <text x="95" y="519" font-size="18" font-weight="700" fill="#222">3  n8n fetches current listing facts</text>
+  <rect x="640" y="499" width="270" height="26" rx="13" fill="#E8F0EC"/>
+  <text x="775" y="517" text-anchor="middle" font-size="13" fill="#1F4D3A">n8n and Backend</text>
+  <text x="95" y="547" font-size="14" fill="#333">n8n calls a protected backend endpoint (GET context)</text>
+  <text x="95" y="569" font-size="14" fill="#333">Returns product name, unit, price, quantity, photo URL, link, shop name</text>
+  <text x="95" y="591" font-size="14" fill="#333">Always fresh data, nothing cached</text>
+  <text x="95" y="613" font-size="14" font-style="italic" fill="#7A5A12">Sample data: Pechay, ₱45 per kg, 12 kg left, Green Farm</text>
+
+  <line x1="500" y1="635" x2="500" y2="670" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="515" y="657" font-size="13" font-style="italic" fill="#555">GET context: current facts</text>
+
+  <!-- Step 4 -->
+  <rect x="60" y="670" width="880" height="165" rx="12" fill="#FFFFFF" stroke="#E5E2DA"/>
+  <rect x="60" y="670" width="8" height="165" rx="4" fill="#1F4D3A"/>
+  <text x="95" y="704" font-size="18" font-weight="700" fill="#222">4  n8n drafts the caption</text>
+  <rect x="640" y="684" width="270" height="26" rx="13" fill="#F5EEDF"/>
+  <text x="775" y="702" text-anchor="middle" font-size="13" fill="#7A5A12">n8n and Groq (gpt-oss-20b)</text>
+  <text x="95" y="732" font-size="14" fill="#333">Sends only: product name, unit, price, shop name</text>
+  <text x="95" y="754" font-size="14" fill="#333">Model returns JSON: { "caption": "..." }</text>
+  <text x="95" y="776" font-size="14" fill="#333">Rules: use given facts only, keep numbers, no links, no urgency</text>
+  <text x="95" y="798" font-size="14" font-style="italic" fill="#7A5A12">Sample caption: Fresh Pechay is now available at ₱45.00 per kg from Green Farm!</text>
+  <text x="95" y="820" font-size="14" fill="#333">If caption is missing or invalid, a fixed default caption is used</text>
+
+  <line x1="500" y1="835" x2="500" y2="870" stroke="#1F4D3A" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="515" y="857" font-size="13" font-style="italic" fill="#555">Caption sent back to backend</text>
+
+  <!-- Step 5 -->
+  <rect x="60" y="870" width="880" height="180" rx="12" fill="#FFFFFF" stroke="#E5E2DA"/>
+  <rect x="60" y="870" width="8" height="180" rx="4" fill="#1F4D3A"/>
+  <text x="95" y="904" font-size="18" font-weight="700" fill="#222">5  Backend publishes the post</text>
+  <rect x="640" y="884" width="270" height="26" rx="13" fill="#F3E6E1"/>
+  <text x="775" y="902" text-anchor="middle" font-size="13" fill="#8A3B2A">Backend, Facebook and Instagram</text>
+  <text x="95" y="932" font-size="14" fill="#333">Remove any link the model wrote</text>
+  <text x="95" y="954" font-size="14" fill="#333">Use template if the current price is missing from the caption</text>
+  <text x="95" y="976" font-size="14" fill="#333">Add product link with tracking tags</text>
+  <text x="95" y="998" font-size="14" fill="#333">Save a pending post record first (no double posting)</text>
+  <text x="95" y="1020" font-size="14" fill="#333">Post photo and caption to Facebook, then Instagram; save each result</text>
+  <text x="95" y="1042" font-size="14" fill="#333">Set follow-up for +6 hours and notify seller that the boost started</text>
+
+  <text x="500" y="1092" text-anchor="middle" font-size="14" fill="#555">Backend controls price, link and post record. n8n only moves data and drafts text.</text>
+  <text x="500" y="1112" text-anchor="middle" font-size="12" fill="#888">Sample data in steps 3 and 4 is illustrative, not a real listing.</text>
+</svg>

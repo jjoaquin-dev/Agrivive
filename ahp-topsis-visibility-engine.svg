@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 520" width="1040" height="520" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="1040" height="520" fill="#FFFFFF"/>
+  <text x="520" y="42" text-anchor="middle" font-size="24" font-weight="700" fill="#1F4D3A">2.3.2.1 AHP–TOPSIS Multi-Criteria Decision Visibility Engine</text>
+
+  <!-- Connectors -->
+  <polygon points="256,255 270,265 256,275" fill="#1F4D3A"/>
+  <polygon points="516,255 530,265 516,275" fill="#1F4D3A"/>
+  <polygon points="776,255 790,265 776,275" fill="#1F4D3A"/>
+
+  <!-- Panel 1: Input -->
+  <rect x="20" y="70" width="230" height="330" rx="10" fill="#FFFFFF" stroke="#1F4D3A" stroke-width="1.5"/>
+  <rect x="20" y="70" width="230" height="60" rx="10" fill="#1F4D3A"/>
+  <rect x="20" y="110" width="230" height="20" fill="#1F4D3A"/>
+  <circle cx="44" cy="100" r="13" fill="#FFFFFF"/>
+  <text x="44" y="105" text-anchor="middle" font-size="14" font-weight="700" fill="#1F4D3A">1</text>
+  <text x="66" y="93" font-size="13" font-weight="700" fill="#FFFFFF">INPUT:</text>
+  <text x="66" y="113" font-size="13" font-weight="700" fill="#FFFFFF">ELIGIBLE LISTINGS</text>
+
+  <text x="35" y="158" font-size="13" font-weight="700" fill="#333">Four criteria:</text>
+  <rect x="35" y="168" width="200" height="44" rx="8" fill="#E8F0EC"/>
+  <text x="47" y="186" font-size="13" font-weight="700" fill="#1F4D3A">C1  Listing Recency</text>
+  <text x="47" y="202" font-size="11" fill="#555">Hours since publish</text>
+  <rect x="35" y="218" width="200" height="44" rx="8" fill="#E8F0EC"/>
+  <text x="47" y="236" font-size="13" font-weight="700" fill="#1F4D3A">C2  Stock Availability</text>
+  <text x="47" y="252" font-size="11" fill="#555">Remaining ÷ original stock</text>
+  <rect x="35" y="268" width="200" height="44" rx="8" fill="#E8F0EC"/>
+  <text x="47" y="286" font-size="13" font-weight="700" fill="#1F4D3A">C3  Seller Reliability</text>
+  <text x="47" y="302" font-size="11" fill="#555">Rating ÷ 5; 0.50 if none</text>
+  <rect x="35" y="318" width="200" height="44" rx="8" fill="#E8F0EC"/>
+  <text x="47" y="336" font-size="13" font-weight="700" fill="#1F4D3A">C4  Surplus Recurrence</text>
+  <text x="47" y="352" font-size="11" fill="#555">Past listings, last 30 days</text>
+
+  <text x="35" y="382" font-size="11" fill="#555">Eligible: active, verified seller,</text>
+  <text x="35" y="396" font-size="11" fill="#555">in stock, complete seller profile</text>
+
+  <!-- Panel 2: AHP -->
+  <rect x="280" y="70" width="230" height="330" rx="10" fill="#FFFFFF" stroke="#2E3A7A" stroke-width="1.5"/>
+  <rect x="280" y="70" width="230" height="60" rx="10" fill="#2E3A7A"/>
+  <rect x="280" y="110" width="230" height="20" fill="#2E3A7A"/>
+  <circle cx="304" cy="100" r="13" fill="#FFFFFF"/>
+  <text x="304" y="105" text-anchor="middle" font-size="14" font-weight="700" fill="#2E3A7A">2</text>
+  <text x="326" y="93" font-size="13" font-weight="700" fill="#FFFFFF">AHP:</text>
+  <text x="326" y="113" font-size="13" font-weight="700" fill="#FFFFFF">SET CRITERIA WEIGHTS</text>
+
+  <text x="395" y="162" text-anchor="middle" font-size="12" fill="#333">Pairwise comparison</text>
+  <text x="395" y="178" text-anchor="middle" font-size="12" fill="#333">→ consistency check (CR &lt; 0.10)</text>
+
+  <rect x="295" y="198" width="200" height="130" rx="8" fill="#F1F2F8" stroke="#2E3A7A" stroke-width="1"/>
+  <text x="395" y="218" text-anchor="middle" font-size="13" font-weight="700" fill="#2E3A7A">Criteria Weights</text>
+  <text x="310" y="242" font-size="12" fill="#333">C1 Listing Recency</text>
+  <text x="480" y="242" text-anchor="end" font-size="12" font-weight="700" fill="#333">0.400</text>
+  <text x="310" y="266" font-size="12" fill="#333">C2 Stock Availability</text>
+  <text x="480" y="266" text-anchor="end" font-size="12" font-weight="700" fill="#333">0.300</text>
+  <text x="310" y="290" font-size="12" fill="#333">C3 Seller Reliability</text>
+  <text x="480" y="290" text-anchor="end" font-size="12" font-weight="700" fill="#333">0.200</text>
+  <text x="310" y="314" font-size="12" fill="#333">C4 Surplus Recurrence</text>
+  <text x="480" y="314" text-anchor="end" font-size="12" font-weight="700" fill="#333">0.100</text>
+
+  <text x="395" y="356" text-anchor="middle" font-size="12" fill="#555">Weights sum to 1.00</text>
+  <text x="395" y="374" text-anchor="middle" font-size="12" fill="#555">Consistency ratio ≈ 0</text>
+
+  <!-- Panel 3: TOPSIS -->
+  <rect x="540" y="70" width="230" height="330" rx="10" fill="#FFFFFF" stroke="#5B3A8C" stroke-width="1.5"/>
+  <rect x="540" y="70" width="230" height="60" rx="10" fill="#5B3A8C"/>
+  <rect x="540" y="110" width="230" height="20" fill="#5B3A8C"/>
+  <circle cx="564" cy="100" r="13" fill="#FFFFFF"/>
+  <text x="564" y="105" text-anchor="middle" font-size="14" font-weight="700" fill="#5B3A8C">3</text>
+  <text x="586" y="93" font-size="13" font-weight="700" fill="#FFFFFF">TOPSIS:</text>
+  <text x="586" y="113" font-size="13" font-weight="700" fill="#FFFFFF">SCORE AND RANK</text>
+
+  <text x="655" y="162" text-anchor="middle" font-size="12" fill="#333">1. Normalize each criterion</text>
+  <text x="655" y="186" text-anchor="middle" font-size="12" fill="#333">2. Apply AHP weights</text>
+  <text x="655" y="210" text-anchor="middle" font-size="12" fill="#333">3. Find ideal best and worst</text>
+  <text x="655" y="234" text-anchor="middle" font-size="12" fill="#333">4. Measure distance to each</text>
+
+  <rect x="555" y="252" width="200" height="54" rx="8" fill="#F3EFF8"/>
+  <text x="655" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#5B3A8C">5. Closeness score C*</text>
+  <text x="655" y="292" text-anchor="middle" font-size="12" fill="#5B3A8C">C* = D- / (D+ + D-)</text>
+
+  <text x="655" y="336" text-anchor="middle" font-size="12" fill="#333">6. Rank: highest score first</text>
+  <text x="655" y="362" text-anchor="middle" font-size="12" fill="#555">Score range: 0 to 1</text>
+
+  <!-- Panel 4: Output -->
+  <rect x="800" y="70" width="230" height="330" rx="10" fill="#FFFFFF" stroke="#1F4D3A" stroke-width="1.5"/>
+  <rect x="800" y="70" width="230" height="60" rx="10" fill="#1F4D3A"/>
+  <rect x="800" y="110" width="230" height="20" fill="#1F4D3A"/>
+  <circle cx="824" cy="100" r="13" fill="#FFFFFF"/>
+  <text x="824" y="105" text-anchor="middle" font-size="14" font-weight="700" fill="#1F4D3A">4</text>
+  <text x="846" y="93" font-size="13" font-weight="700" fill="#FFFFFF">OUTPUT:</text>
+  <text x="846" y="113" font-size="13" font-weight="700" fill="#FFFFFF">VISIBILITY LEVEL</text>
+
+  <rect x="815" y="146" width="200" height="72" rx="8" fill="#F1ECFA" stroke="#5B3A8C" stroke-width="1"/>
+  <text x="915" y="172" text-anchor="middle" font-size="15" font-weight="700" fill="#5B3A8C">Priority Boost</text>
+  <text x="915" y="192" text-anchor="middle" font-size="12" fill="#333">C* ≥ 0.60</text>
+  <text x="915" y="208" text-anchor="middle" font-size="11" fill="#555">May qualify for n8n promotion</text>
+
+  <rect x="815" y="230" width="200" height="72" rx="8" fill="#E8F0EC" stroke="#1F4D3A" stroke-width="1"/>
+  <text x="915" y="256" text-anchor="middle" font-size="15" font-weight="700" fill="#1F4D3A">Standard Exposure</text>
+  <text x="915" y="276" text-anchor="middle" font-size="12" fill="#333">0.40 ≤ C* &lt; 0.60</text>
+  <text x="915" y="292" text-anchor="middle" font-size="11" fill="#555">Normal placement</text>
+
+  <rect x="815" y="314" width="200" height="72" rx="8" fill="#E8ECF2" stroke="#2E3A7A" stroke-width="1"/>
+  <text x="915" y="340" text-anchor="middle" font-size="15" font-weight="700" fill="#2E3A7A">Basic/Hold</text>
+  <text x="915" y="360" text-anchor="middle" font-size="12" fill="#333">C* &lt; 0.40</text>
+  <text x="915" y="376" text-anchor="middle" font-size="11" fill="#555">Shown last</text>
+
+  <!-- Footer -->
+  <rect x="60" y="420" width="920" height="46" rx="23" fill="#F8F6F1" stroke="#E5E2DA"/>
+  <circle cx="98" cy="443" r="11" fill="#1F4D3A"/>
+  <text x="98" y="448" text-anchor="middle" font-size="13" font-weight="700" fill="#FFFFFF">i</text>
+  <text x="520" y="448" text-anchor="middle" font-size="13" fill="#333">Visibility priority supports listing promotion. The score does not verify freshness or safety, or guarantee a sale.</text>
+  <text x="520" y="500" text-anchor="middle" font-size="11" fill="#888">Weights and score limits are Agrivive prototype settings, not universal agricultural standards.</text>
+</svg>
