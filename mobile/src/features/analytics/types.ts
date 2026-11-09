@@ -48,4 +48,5 @@ export interface SellerAnalyticsResponse {
   };
   summary: string | null;
   summaryStatus: "generated" | "unavailable";
+  summarySource?: "ai" | "template";
 }

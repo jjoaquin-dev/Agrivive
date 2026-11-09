@@ -102,7 +102,7 @@ export default function ProfileEditScreen() {
           <Text style={styles.fieldLabel}>Stall Location on Map</Text>
           <MapPickerComponent initialCoordinates={coordinates} error={errors.coordinates}
             onCoordinatesChange={(next) => { setCoordinates(next); setErrors((prev) => ({ ...prev, coordinates: undefined, general: undefined })); }} />
-          <Text style={styles.hint}>Drag the pin or tap the map to place your stall.</Text>
+          <Text style={styles.hint}>Drag the pin or tap the map to place your stall. Open the map full screen to place it exactly.</Text>
           <InputComponent label="Address" placeholder="Stall details" multiline numberOfLines={2} value={detailAddress} error={errors.detailAddress} onChangeText={change(setDetailAddress, "detailAddress")} />
           <InputComponent label="Contact Phone" placeholder="09123456789" keyboardType="phone-pad" value={phoneNumber} error={errors.phoneNumber} onChangeText={change(setPhoneNumber, "phoneNumber")} />
         </ScrollView>

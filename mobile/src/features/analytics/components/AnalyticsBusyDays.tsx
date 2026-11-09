@@ -25,6 +25,7 @@ export function AnalyticsBusyDays({ counts }: { counts: number[] }) {
         <Text style={cardStyles.subtitle}>{best >= 0 ? `Most pickups happen on ${full[best]}.` : "No pickups in these days yet."}</Text>
         <View style={styles.chartWrapper}>
           <BarChart
+            key={data.map((d: { value: number }) => d.value).join(",")}
             data={data}
             barWidth={26}
             spacing={Math.max(6, Math.floor((chartWidth - 7 * 26 - 8) / 7))}
@@ -42,8 +43,7 @@ export function AnalyticsBusyDays({ counts }: { counts: number[] }) {
             noOfSections={4}
             width={chartWidth}
             height={130}
-            isAnimated
-          />
+              />
         </View>
       </View>
     </AnalyticsTapCard>

@@ -25,13 +25,13 @@ export function AnalyticsOrderResults({ orders }: { orders: SellerAnalyticsInsig
         {orders.placed > 0 ? (
           <View style={styles.donut}>
             <PieChart
+              key={parts.map((p) => p.value).join(",")}
               data={parts.filter((p) => p.value > 0).map((p) => ({ value: p.value, color: p.color }))}
               donut
               radius={80}
               innerRadius={52}
               innerCircleColor={colors.surface}
-              isAnimated
-              centerLabelComponent={() => (
+                    centerLabelComponent={() => (
                 <View style={styles.center}><Text style={styles.centerValue}>{orders.placed}</Text><Text style={styles.centerNote}>orders</Text></View>
               )}
             />

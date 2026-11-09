@@ -53,7 +53,10 @@ export class ApiError extends Error {
   }
 }
 
-const API_TIMEOUT_MS = 10_000;
+// Slow mobile data needs more than 10 seconds, so reads wait 20.
+const API_TIMEOUT_MS = 20_000;
+const OFFLINE_MESSAGE = "We could not reach Agrivive. Check your internet connection and try again.";
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Called when the server says this account is paused or blocked, so the app can show that screen from anywhere. */
 let accountClosedHandler: ((message: string) => void) | null = null;
@@ -88,10 +91,10 @@ function createRequestController(signal?: AbortSignal | null, timeoutMs = API_TI
   };
 }
 
-export async function apiFetch<T = any>(
+async function apiFetchOnce<T>(
   path: string,
-  options: RequestInit = {},
-  timeoutMs = API_TIMEOUT_MS,
+  options: RequestInit,
+  timeoutMs: number,
 ): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
@@ -137,13 +140,25 @@ export async function apiFetch<T = any>(
     return data as T;
   } catch (error) {
     if (request.signal.aborted && !options.signal?.aborted) {
-      throw new ApiError(
-        408,
-        "Could not connect to Agrivive. Check that the backend is running and your phone is on the same Wi-Fi.",
-      );
+      throw new ApiError(408, OFFLINE_MESSAGE);
     }
+    // fetch fails with a plain TypeError when there is no signal at all.
+    if (error instanceof TypeError) throw new ApiError(0, OFFLINE_MESSAGE);
     throw error;
   } finally {
     request.cleanup();
+  }
+}
+
+/** Reads are tried twice when the connection drops, because weak signal often works on the second try. Writes are never repeated. */
+export async function apiFetch<T = any>(path: string, options: RequestInit = {}, timeoutMs = API_TIMEOUT_MS): Promise<T> {
+  const isRead = !options.method || options.method.toUpperCase() === "GET";
+  try {
+    return await apiFetchOnce<T>(path, options, timeoutMs);
+  } catch (error) {
+    const connectionFailed = error instanceof ApiError && (error.statusCode === 408 || error.statusCode === 0);
+    if (!isRead || !connectionFailed || options.signal?.aborted) throw error;
+    await wait(800);
+    return apiFetchOnce<T>(path, options, timeoutMs);
   }
 }

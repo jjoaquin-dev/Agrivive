@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { StyleSheet, View, Text, ScrollView, KeyboardAvoidingView, Platform, Pressable } from "react-native";
+import { Alert, StyleSheet, View, Text, ScrollView, KeyboardAvoidingView, Platform, Pressable } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../src/context/AuthContext";
@@ -11,6 +11,10 @@ import { profileColors } from "../../../src/features/profile/profileTokens";
 import { InputComponent } from "../../../src/components/InputComponent";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { MapPickerComponent, Coordinates, DAVAO_CITY_COORDINATES } from "../../../src/components/MapPickerComponent";
+import { StallHoursSetupSection } from "../../../src/features/stall/components/StallHoursSetupSection";
+import { defaultHours, type HoursDay } from "../../../src/features/stall/components/StallHoursEditor";
+import { saveStallHours } from "../../../src/features/orders/api/seller-pickup";
+import { validateSellerSetup, type SellerSetupErrors } from "../../../src/features/profile/sellerSetupValidation";
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
@@ -26,46 +30,19 @@ export default function ProfileSetupScreen() {
   const [shopName, setShopName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [detailAddress, setDetailAddress] = useState("");
+  // The last address filled in by a market or GPS pick. If the seller has not typed over it, the next pick replaces it.
+  const filledAddress = useRef("");
   const [coordinates, setCoordinates] = useState<Coordinates>(
     DAVAO_CITY_COORDINATES,
   );
 
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{
-    personName?: string;
-    shopName?: string;
-    phoneNumber?: string;
-    detailAddress?: string;
-    coordinates?: string;
-    general?: string;
-  }>({});
+  const [hours, setHours] = useState<HoursDay[]>(defaultHours);
+  const [errors, setErrors] = useState<SellerSetupErrors>({});
 
   const validate = () => {
-    const newErrors: typeof errors = {};
-    if (!personName.trim()) {
-      newErrors.personName = "Please enter your full personal name.";
-    }
-    if (!phoneNumber.trim()) {
-      newErrors.phoneNumber = "Please enter your contact phone number.";
-    } else if (phoneNumber.trim().length < 7) {
-      newErrors.phoneNumber = "Please enter a valid phone number (at least 7 digits).";
-    }
-    if (!shopName.trim()) {
-      newErrors.shopName = "Please enter your stall or shop name.";
-    }
-    if (!detailAddress.trim()) {
-      newErrors.detailAddress = "Please enter your stall address or market section.";
-    }
-    if (
-      !coordinates ||
-      typeof coordinates.latitude !== "number" ||
-      typeof coordinates.longitude !== "number"
-    ) {
-      newErrors.coordinates = "Please set your stall location on the map.";
-    }
-
+    const newErrors = validateSellerSetup({ personName, phoneNumber, shopName, detailAddress, coordinates, hours });
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) {
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       return false;
@@ -88,6 +65,12 @@ export default function ProfileSetupScreen() {
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
       });
+      // The stall exists now. If the hours do not save, the seller can set them later in Stall Hours.
+      try {
+        await saveStallHours(hours);
+      } catch {
+        Alert.alert("Hours Not Saved", "Your stall is ready, but your opening hours did not save. Set them in Stall Hours before buyers reserve.");
+      }
 
       const setup = await refreshSetup();
 
@@ -149,11 +132,14 @@ export default function ProfileSetupScreen() {
             onChangeText={(text) => { setShopName(text); clear("shopName"); }} />
 
           <Text style={styles.fieldLabel}>Stall Location</Text>
-          <Text style={styles.fieldHint}>Pick your public market below, or tap the map to place your pin.</Text>
+          <Text style={styles.fieldHint}>Tap the map to place your pin, or use My GPS Location. Open the map full screen to place it exactly.</Text>
           <MapPickerComponent initialCoordinates={coordinates} error={errors.coordinates}
             onCoordinatesChange={(newCoords, suggestedAddress) => {
               setCoordinates(newCoords);
-              if (suggestedAddress && !detailAddress.trim()) setDetailAddress(suggestedAddress);
+              if (suggestedAddress && (!detailAddress.trim() || detailAddress === filledAddress.current)) {
+                setDetailAddress(suggestedAddress);
+                filledAddress.current = suggestedAddress;
+              }
               clear("coordinates");
             }} />
           <View style={styles.afterMap}>
@@ -162,6 +148,8 @@ export default function ProfileSetupScreen() {
           </View>
           <InputComponent label="Phone Number" placeholder="09123456789" keyboardType="phone-pad" value={phoneNumber} error={errors.phoneNumber}
             hint="Buyers contact you about reservations" onChangeText={(text) => { setPhoneNumber(text); clear("phoneNumber"); }} />
+          <StallHoursSetupSection days={hours} error={errors.hours}
+            onChange={(weekday, patch) => { setHours((rows) => rows.map((row) => (row.weekday === weekday ? { ...row, ...patch } : row))); clear("hours"); }} />
         </ScrollView>
         <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           <ButtonComponent title="Save and Continue" icon={<ArrowRight size={18} color={colors.white} />} onPress={handleSaveProfile} loading={loading} />

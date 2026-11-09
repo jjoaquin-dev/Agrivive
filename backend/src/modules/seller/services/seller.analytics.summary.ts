@@ -1,45 +1,32 @@
 import type { SellerAnalyticsMetrics } from "../model/seller.analytics";
+import { buildTemplateSummary } from "./seller.analytics.summary.template";
+import { writeGroqSummary } from "./seller.analytics.summary.groq";
+import { buildSummaryFacts } from "./seller.analytics.summary.facts";
 
-const pesos = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+type Entry = { summary: string | null; expiresAt: number };
+const cache = new Map<string, Entry>();
+const MAX_ENTRIES = 300;
+const KEEP_MS = 30 * 60_000;
+// A failed try is remembered briefly so a rate limit is not hit again on every refresh.
+const RETRY_MS = 60_000;
 
-export async function generateSellerAnalyticsSummary(
-  analytics: SellerAnalyticsMetrics,
-): Promise<{ summary: string; status: "generated" }> {
-  const { metrics, notComputable, period, filter } = analytics;
-  const subject = filter.productName ? `${filter.productName} completed sales` : "Completed sales";
-  const unitLabel = filter.unit === "kilo" ? "kg" : filter.unit ? `${filter.unit}s` : "units";
+export type SellerSummary = { summary: string; status: "generated"; source: "ai" | "template" };
 
-  // 1. Period-to-Period Sales Trend (Equation 3)
-  let trendSentence = "";
-  if (notComputable.completedQuantityChange || metrics.completedQuantityChange === null) {
-    trendSentence = Number(metrics.completedQuantity) > 0
-      ? `${subject} trend could not be compared because no completed sales were recorded in the previous period (${period.previousFrom} to ${period.previousTo}).`
-      : `No completed pickup sales were recorded from ${period.from} to ${period.to}.`;
-  } else if (metrics.completedQuantityChange > 0) {
-    trendSentence = `${subject} increased by ${metrics.completedQuantityChange.toFixed(2)}% compared to the previous period.`;
-  } else if (metrics.completedQuantityChange < 0) {
-    trendSentence = `${subject} decreased by ${Math.abs(metrics.completedQuantityChange).toFixed(2)}% compared to the previous period.`;
-  } else {
-    trendSentence = `${subject} remained unchanged compared to the previous period.`;
+/**
+ * The report summary. Groq writes it from the computed numbers; the same facts reuse the saved text for 30 minutes, and any change in them writes a new one.
+ * If Groq is off, slow, rate limited or writes a number it was not given, the template text is used instead.
+ */
+export async function generateSellerAnalyticsSummary(sellerId: string, analytics: SellerAnalyticsMetrics): Promise<SellerSummary> {
+  const template = buildTemplateSummary(analytics);
+  // Keyed on the exact facts Groq sees: new data changes a fact, so it always gets a fresh summary.
+  const key = `${sellerId}:${buildSummaryFacts(analytics)}`;
+  const now = Date.now();
+  const saved = cache.get(key);
+  if (saved && saved.expiresAt > now) {
+    return saved.summary ? { summary: saved.summary, status: "generated", source: "ai" } : { summary: template, status: "generated", source: "template" };
   }
-
-  // 2. Volume and Sell-Through Rate (Equation 2)
-  let volumeSentence = "";
-  if (notComputable.sellThroughRate || metrics.sellThroughRate === null) {
-    volumeSentence = "Sell-through could not be calculated because no surplus was posted during this period.";
-  } else {
-    volumeSentence = `A total of ${metrics.completedQuantity} ${unitLabel} was recorded as sold from the ${metrics.postedQuantity} ${unitLabel} posted, resulting in a ${metrics.sellThroughRate.toFixed(2)}% sell-through rate.`;
-  }
-
-  // 3. Revenue total and repeat listings
-  const total = Number(metrics.completedSalesTotal);
-  const revenueSentence = Number.isFinite(total) && total > 0
-    ? `Completed pickups totaled ${pesos.format(total)}.`
-    : "";
-  const recurringSentence = metrics.recurringListings > 0
-    ? `Repeat listings: ${metrics.recurringListings}.`
-    : "";
-
-  const sentences = [trendSentence, volumeSentence, revenueSentence, recurringSentence].filter(Boolean);
-  return { summary: sentences.join(" "), status: "generated" };
+  const written = await writeGroqSummary(analytics);
+  if (cache.size >= MAX_ENTRIES) cache.delete(cache.keys().next().value as string);
+  cache.set(key, { summary: written, expiresAt: now + (written ? KEEP_MS : RETRY_MS) });
+  return written ? { summary: written, status: "generated", source: "ai" } : { summary: template, status: "generated", source: "template" };
 }
