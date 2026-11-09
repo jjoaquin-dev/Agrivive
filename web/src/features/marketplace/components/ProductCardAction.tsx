@@ -27,8 +27,8 @@ export function ProductCardAction({
   const stock = Number(product.productQty);
   const maxStock = Number.isFinite(stock) && stock > 0 ? stock : 1;
   const startQty = Math.min(selectedQty, maxStock);
-  const stepperClass = "h-12 rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-sm";
-  const roundButton = "size-10 bg-white shadow-sm";
+  const stepperClass = "h-12 rounded-full border border-neutral-200/80 bg-neutral-100/80 px-1 shadow-sm [&_input]:w-7";
+  const roundButton = "size-9 bg-white shadow-sm";
 
   if (soldOut) {
     return (
@@ -60,7 +60,7 @@ export function ProductCardAction({
   }
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <div className="flex w-full flex-wrap items-center gap-2">
       <QuantityStepper
         value={startQty}
         max={maxStock}
@@ -77,10 +77,10 @@ export function ProductCardAction({
           e.stopPropagation();
           onAddToCart(startQty);
         }}
-        className="group flex min-h-12 flex-1 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#457D00]/90 px-4 py-2.5 text-sm font-semibold tracking-wide text-white shadow-sm transition-all active:scale-95 cursor-pointer"
+        className="group flex min-h-12 flex-1 min-w-[7.75rem] items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[#457D00] hover:bg-[#457D00]/90 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-all active:scale-95 cursor-pointer"
       >
         <ShoppingCart className="cart-wiggle-on-hover size-4 shrink-0 text-white" />
-        <span className="truncate font-semibold">Add to Cart</span>
+        <span className="font-semibold">Add to Cart</span>
       </button>
     </div>
   );

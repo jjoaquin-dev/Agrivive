@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(python -)",
-      "Bash(python assets.py)"
+      "Bash(python assets.py)",
+      "Bash(python -c \"import reportlab;print\\(reportlab.Version\\)\")",
+      "Bash(python -c \"import markdown;print\\('md'\\)\")",
+      "Bash(python -c ' *)",
+      "WebSearch"
     ]
   },
   "hooks": {

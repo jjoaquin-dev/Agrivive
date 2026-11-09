@@ -91,15 +91,18 @@ export function useBuyerNotifications() {
   const markAllRead = useCallback(async () => {
     if (!unreadCount) return;
     setSaving(true);
+    const before = notices;
     setNotices((curr) =>
       curr.map((n) => ({ ...n, readAt: n.readAt ?? new Date().toISOString() }))
     );
     try {
       await markAllBuyerNoticesRead();
+    } catch {
+      setNotices(before); // the server did not save it, so show them as unread again
     } finally {
       setSaving(false);
     }
-  }, [unreadCount]);
+  }, [unreadCount, notices]);
 
   return {
     notices: filteredNotices,

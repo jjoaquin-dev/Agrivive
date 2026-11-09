@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db";
 import { order_inquiries } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
+import { queueBuyerReplyNotice } from "../../../utils/buyer-reply-notice";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { evaluateTrustAction } from "../../../utils/trust/evaluate-action";
 import { recordReplyDeadlines } from "../../../utils/trust/response-deadlines";
@@ -22,6 +23,10 @@ export async function replySellerInquiry(sellerId: string, inquiryId: string, re
     }, now);
     const [updated] = await tx.update(order_inquiries).set({ reply: reply.trim(), repliedAt: now })
       .where(and(eq(order_inquiries.id, inquiryId), isNull(order_inquiries.repliedAt))).returning();
+    await queueBuyerReplyNotice(tx, {
+      noticeKey: `inquiry-reply:${inquiry.id}`, buyerId: inquiry.buyerId,
+      orderId: inquiry.orderId, kind: "seller_inquiry_reply",
+    });
     return { updated, flagged: deadlines.flagged ? { orderId: inquiry.orderId, eventKey: deadlines.eventKey } : null };
   });
   if (flagged) await evaluateTrustAction(sellerId, flagged.orderId, flagged.eventKey, "inquiry_non_response");

@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
-import { ChevronRight, MessageSquare, Search, Store } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, MessageSquare, MoreHorizontal, Search, Store } from "lucide-react";
 import type { Conversation } from "../api";
 import { ConversationRowMenu } from "./ConversationRowMenu";
 
@@ -19,7 +19,8 @@ function displayName(item: Conversation) {
   return item.sellerShopName || item.sellerName || "Seller";
 }
 
-type TabType = "all" | "unread" | "important" | "closed" | "archived";
+type TabType = "all" | "unread" | "important";
+type ViewType = "inbox" | "archived" | "blocked";
 
 export function ConversationList({
   items,
@@ -38,11 +39,27 @@ export function ConversationList({
 }) {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<ViewType>("inbox");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnOutside = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
+  }, [menuOpen]);
 
   const filteredItems = useMemo(() => {
-    // Archived chats live only under the Archived tab.
-    let list = items.filter((i) => Boolean(i.archivedAt) === (activeTab === "archived"));
-    if (activeTab === "unread") list = list.filter((i) => i.unreadCount > 0);
+    // Archived and blocked chats stay out of the inbox; each has its own view.
+    let list = items.filter((i) =>
+      view === "archived" ? i.archivedAt && !i.myBlockedAt
+        : view === "blocked" ? i.myBlockedAt
+        : !i.archivedAt && !i.myBlockedAt
+    );
+    if (view === "inbox" && activeTab === "unread") list = list.filter((i) => i.unreadCount > 0);
     const query = search.trim().toLowerCase();
     if (!query) return list;
     return list.filter((item) =>
@@ -50,7 +67,7 @@ export function ConversationList({
         v?.toLowerCase().includes(query)
       )
     );
-  }, [items, search, activeTab]);
+  }, [items, search, activeTab, view]);
 
   return (
     <aside
@@ -68,14 +85,48 @@ export function ConversationList({
             <p className="text-xs text-[#8A9685]">All communications</p>
           </div>
         </div>
-        <button type="button" aria-label="Messages settings" className="text-[#A6B0A2] hover:text-[#25431D] transition">
-          <ChevronRight className="size-4" />
-        </button>
+        <div ref={menuRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="More message options"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="flex size-8 items-center justify-center rounded-full text-[#A6B0A2] transition hover:bg-[#F0F2EB] hover:text-[#25431D] cursor-pointer"
+          >
+            <MoreHorizontal className="size-4" />
+          </button>
+          {menuOpen ? (
+            <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-40 rounded-2xl border border-[#E9EBE2] bg-white p-1.5 shadow-md">
+              {([["archived", "View Archived"], ["blocked", "View Blocked"]] as const).map(([next, label]) => (
+                <button
+                  key={next}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { setView(next); setMenuOpen(false); }}
+                  className="flex w-full items-center rounded-xl px-3 py-2 text-left text-xs font-semibold text-[#25431D] hover:bg-[#F6F8ED] cursor-pointer"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      {/* Pill Filter Tabs */}
+      {view !== "inbox" ? (
+        <button
+          type="button"
+          onClick={() => setView("inbox")}
+          className="mt-2 flex items-center gap-1.5 rounded-full bg-[#F5F6EE] px-3 py-2 text-xs font-semibold text-[#25431D] cursor-pointer hover:bg-[#EEF5E3]"
+        >
+          <ArrowLeft className="size-3.5" aria-hidden="true" />
+          {view === "archived" ? "Archived chats" : "Blocked chats"} · Back to all
+        </button>
+      ) : (
+      /* Pill Filter Tabs */
       <div className="mt-2 flex items-center justify-between rounded-full bg-[#F5F6EE] p-1">
-        {(["all", "unread", "important", "closed", "archived"] as TabType[]).map((tab) => {
+        {(["all", "unread", "important"] as TabType[]).map((tab) => {
           const isActive = activeTab === tab;
           return (
             <button
@@ -98,6 +149,7 @@ export function ConversationList({
           );
         })}
       </div>
+      )}
 
       {/* Search Input Bar */}
       <div className="relative mt-3.5">
@@ -133,15 +185,18 @@ export function ConversationList({
             const title = displayName(item);
 
             return (
-              <div key={item.id} className="flex items-center gap-1">
+              <div
+                key={item.id}
+                className={`flex items-center gap-1 rounded-2xl pr-1.5 transition-all ${
+                  isSelected
+                    ? "border border-[#E3EBCE] bg-[#F6F8ED] shadow-sm"
+                    : "border border-transparent hover:bg-[#FAF9F5]"
+                }`}
+              >
               <button
                 type="button"
                 onClick={() => onSelect(item)}
-                className={`flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-2.5 text-left transition-all ${
-                  isSelected
-                    ? "border border-[#E3EBCE] bg-[#F6F8ED] shadow-sm"
-                    : "hover:bg-[#FAF9F5]"
-                }`}
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-2.5 text-left"
               >
                 {/* Avatar with status capsule */}
                 <div className="relative shrink-0">

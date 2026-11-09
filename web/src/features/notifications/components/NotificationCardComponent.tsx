@@ -34,8 +34,22 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
   const isGeneric = notice.kind in genericTitles;
   const isUnread = !notice.readAt;
 
+<<<<<<< Updated upstream
   const title = isGeneric
     ? genericTitles[notice.kind]
+=======
+  const isInquiryReply = notice.kind === "seller_inquiry_reply";
+  const isReviewReply = notice.kind === "seller_review_reply";
+  const isChatReply = notice.kind === "seller_chat_reply";
+  const isReply = isInquiryReply || isReviewReply || isChatReply;
+
+  const title = isInquiryReply
+    ? "Seller Answered Your Question"
+    : isReviewReply
+    ? "Seller Replied to Your Review"
+    : isChatReply
+    ? "New Reply From a Seller"
+>>>>>>> Stashed changes
     : isRestriction
     ? "Reservations Temporarily Paused"
     : isWarning
@@ -52,12 +66,21 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? "Inquiry Awaiting Seller Response"
     : "Pickup Completed";
 
+<<<<<<< Updated upstream
   const description = isGeneric
     ? (notice.reason ?? "")
+=======
+  const description = isInquiryReply
+    ? "A seller answered your question. Open it to read the reply."
+    : isReviewReply
+    ? "A seller wrote a reply to the review you left."
+    : isChatReply
+    ? "A seller sent you a message. Open your chat to read it."
+>>>>>>> Stashed changes
     : isTrustNotice
     ? (notice.reason || (isRestriction ? "Reservations on your account are temporarily paused." : "Please avoid frequent cancellations to keep your reservations active."))
     : isPriceDrop
-    ? `${notice.shopName || "A stall you follow"} lowered the price of ${notice.productName || "produce"}${notice.price ? ` to ₱${notice.price}` : ""}${notice.previousPrice ? ` (was ₱${notice.previousPrice})` : ""}! Reserve yours before stock runs out.`
+    ? `${notice.shopName || "A stall you follow"} lowered the price of ${notice.productName || "produce"}${notice.price ? ` to ₱${notice.price}` : ""}${notice.previousPrice ? ` (was ₱${notice.previousPrice}${Number(notice.previousPrice) > Number(notice.price) && Number(notice.price) > 0 ? `, ${Math.round(((Number(notice.previousPrice) - Number(notice.price)) / Number(notice.previousPrice)) * 100)}% off` : ""})` : ""}! Reserve yours before stock runs out.`
     : isRestock
     ? `${notice.shopName || "A stall you follow"} restocked fresh ${notice.productName || "produce"}. Available now for stall pickup.`
     : isListing
@@ -66,7 +89,9 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? `Your reservation for '${notice.productName || "Surplus Produce"}' at ${notice.shopName || "Seller Stall"} expires in 2 hours. Present your QR pass now.`
     : "Thank you for rescuing surplus produce! Your pickup was successfully verified.";
 
-  const targetHref = isProduce
+  const targetHref = isChatReply || (isInquiryReply && !notice.orderId)
+    ? "/messages"
+    : isProduce
     ? notice.productAvailable && notice.productId
       ? `/marketplace/${notice.productId}`
       : notice.sellerId
@@ -182,7 +207,9 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
                 : "text-[#1B4D36]"
             }`}
           >
-            {isTrustNotice
+            {isReply
+              ? isReviewReply ? "View Review" : "Read Reply"
+              : isTrustNotice
               ? "View Orders"
               : isProduce
               ? notice.productAvailable ? "View Details" : "Browse Stall"

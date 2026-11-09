@@ -1,7 +1,8 @@
-import { RefreshCw, Search } from "lucide-react";
+import Image from "next/image";
+import { RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MarketplaceProduct } from "../types";
 import { ProductCard } from "./ProductCard";
@@ -52,7 +53,7 @@ export function MarketplaceProductGrid({
     return (
       <Empty className="min-h-72 border-border/80 bg-white/70 py-12">
         <EmptyHeader>
-          <EmptyMedia variant="icon"><Search /></EmptyMedia>
+          <Image src="/brand/empty-marketplace.webp" alt="" width={480} height={395} sizes="160px" className="mb-2 h-auto w-40" />
           <EmptyTitle>No listings match yet</EmptyTitle>
           <EmptyDescription>Try a wider search or change your filters.</EmptyDescription>
         </EmptyHeader>

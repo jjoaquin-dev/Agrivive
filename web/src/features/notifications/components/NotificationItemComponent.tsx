@@ -21,6 +21,12 @@ function formatRelativeTime(dateStr: string): string {
   return `${days}d ago`;
 }
 
+function offPercent(notice: BuyerNotice): string {
+  const was = Number(notice.previousPrice);
+  const now = Number(notice.price);
+  return was > now && now > 0 ? `, ${Math.round(((was - now) / was) * 100)}% off` : "";
+}
+
 function formatDateTime(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
     weekday: "short",
@@ -41,7 +47,17 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
   const isTrustNotice = isWarning || isRestriction;
   const isUnread = !notice.readAt;
 
-  const title = isRestriction
+  const isInquiryReply = notice.kind === "seller_inquiry_reply";
+  const isReviewReply = notice.kind === "seller_review_reply";
+  const isChatReply = notice.kind === "seller_chat_reply";
+
+  const title = isInquiryReply
+    ? "Seller answered your question"
+    : isReviewReply
+    ? "Seller replied to your review"
+    : isChatReply
+    ? "New reply from a seller"
+    : isRestriction
     ? "Reservations paused"
     : isWarning
     ? "Cancellation advisory"
@@ -57,10 +73,16 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
     ? "Inquiry awaiting seller response"
     : "Agrivive account update";
 
-  const description = isTrustNotice
+  const description = isInquiryReply
+    ? "A seller answered your question. Open it to read the reply."
+    : isReviewReply
+    ? "A seller wrote a reply to the review you left."
+    : isChatReply
+    ? "A seller sent you a message. Open your chat to read it."
+    : isTrustNotice
     ? (notice.reason || "Please review your recent reservation cancellations to maintain account standing.")
     : isPriceDrop
-    ? `${notice.productName || "Produce"} is now ₱${notice.price || ""}${notice.previousPrice ? ` (was ₱${notice.previousPrice})` : ""}.`
+    ? `${notice.productName || "Produce"} is now ₱${notice.price || ""}${notice.previousPrice ? ` (was ₱${notice.previousPrice}${offPercent(notice)})` : ""}.`
     : isRestock
     ? `${notice.productName || "Produce"} is back in stock and ready for reservation.`
     : isListing
@@ -71,7 +93,9 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
     ? "The seller cancelled this reservation and items returned to stock."
     : "Tap to review updates regarding your account or reservation.";
 
-  const targetHref = isProduce
+  const targetHref = isChatReply || (isInquiryReply && !notice.orderId)
+    ? "/messages"
+    : isProduce
     ? notice.productAvailable && notice.productId
       ? `/marketplace/${notice.productId}`
       : notice.sellerId
@@ -157,7 +181,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
               isRestriction ? "bg-rose-600 hover:bg-rose-700" : isWarning ? "bg-amber-600 hover:bg-amber-700" : "bg-[#457D00] hover:bg-[#457D00]/90"
             }`}
           >
-            {isTrustNotice ? "View orders" : isProduce ? "View produce" : isCancellation ? "View order" : "Details"}
+            {isChatReply || isInquiryReply ? "Read reply" : isReviewReply ? "View review" : isTrustNotice ? "View orders" : isProduce ? "View produce" : isCancellation ? "View order" : "Details"}
           </Link>
         </div>
       </div>

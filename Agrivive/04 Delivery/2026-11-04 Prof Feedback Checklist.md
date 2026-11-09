@@ -8,7 +8,7 @@ Owners: **Jara** (AHP-TOPSIS, n8n, Analytics) and **Arianne** (everything else)
 Tick `[x]` when done. Update the score here:
 
 - Jara: 0 / 23 done
-- Arianne: 0 / 26 done
+- Arianne: 1 / 26 done
 
 ---
 
@@ -53,7 +53,7 @@ What we already have (mobile app): month comparison, movement chart, repeat list
 # ARIANNE
 
 ## E. Fix this first
-- [ ] **Trust: the prof heard "12 hours no reply".** The real steps are: reminder at 12 hours, warning at 24 hours, flagged at 48 hours. Tell the prof the real steps.
+- [x] **Trust: the prof heard "12 hours no reply".** The real steps are: reminder at 12 hours, warning at 24 hours, flagged at 48 hours. Tell the prof the real steps.
 
 ## F. QR code for reservations
 What we already have: the QR is valid for 24 hours, starting when the buyer orders. Orders can be completed, cancelled or expired. Note: `02 Product/Reservation and QR Pickup.md`.
@@ -64,6 +64,39 @@ What we already have: the QR is valid for 24 hours, starting when the buyer orde
 - [ ] Check that scanning only takes quantity **away**, never adds it back.
 - [ ] Show the QR states: available, sold, expired, cancelled, completed.
 - [ ] Add one sentence: seller location on the map goes in the next objective.
+
+### F idea: buyer picks the pickup time (not built yet)
+A seller-controlled limit sits on top of the buyer's chosen time. The buyer picks the time, the seller decides how far ahead it can be. The system never judges the produce itself.
+
+**1. Buyer picks a pickup time, within three limits**
+
+| Limit | Set by | Solves |
+|---|---|---|
+| Opening hours (per day, e.g. Mon–Sat 6:00–17:00) | Seller | No 10 PM pickups. Only open times can be chosen. |
+| "Pick up by" date on each product | Seller | Listed Sept 17, ordered Sept 18, buyer wants Sept 20. The seller sets the last day; the calendar greys out later days. |
+| Furthest day ahead (default 2 days, seller can lower it) | Seller | Safe default if the seller sets no "Pick up by" date. |
+
+The QR is valid only for the chosen slot, plus a short wait after it (say 30 minutes). Then it shows Expired and the stock goes back automatically. Rule: *Your QR works only in the time you picked. It cannot be extended. A new order gives a new QR.* This still answers "cannot be extended, new order = new QR".
+
+**2. Wording (no freshness claims)**
+- Label it "Pick up by" or "Seller's pickup limit". Never "fresh until".
+- Show the listing date as plain information: "Listed Sept 17".
+- One line at checkout: "Agrivive does not check the quality of produce. Please look at it when you pick up."
+
+**3. Bad buyers who reserve and don't show up** (builds on the existing trust points)
+- Limit open reservations per buyer, e.g. 3 at a time.
+- New buyers can pick only today or tomorrow. After a few completed pickups, they can pick further ahead.
+- A QR that expires unscanned gives the buyer trust points. Enough points blocks new reservations. Sellers can also mark "Did not come" for the same effect.
+- Cancel only until a cutoff, e.g. 2 hours before the slot. After that, a cancel counts as a no-show.
+- Reminder before pickup: "Pickup today at 3:00 PM. Tap if you can't come." This frees the stock early.
+- Optional slot limit: seller sets a maximum number of reservations per slot.
+
+**4. Fits the checklist**
+- 12:00 order, 6:00 next day pickup: allowed if the seller is open at 6:00 and "Pick up by" is not before that. Ask real sellers what their usual gap is and use it as the default.
+- Scan only takes quantity away: unchanged. Expiry restores stock only once.
+- QR states Available, Sold, Expired, Cancelled, Completed all stay.
+
+**Would change in code:** seller opening-hours table, product "pick up by" field, pickup start and end on orders, order-expiry job uses slot end instead of "order time + 24h", buyer slot picker on web and mobile.
 
 ## G. Calendar and reminders
 What we already have (mobile): reminder card, holiday card, weather section.

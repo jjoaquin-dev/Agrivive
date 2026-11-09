@@ -6,7 +6,10 @@ export type BuyerNoticeKind =
   | "trust_action_restriction"
   | "seller_new_listing"
   | "seller_price_drop"
-  | "seller_restock";
+  | "seller_restock"
+  | "seller_inquiry_reply"
+  | "seller_review_reply"
+  | "seller_chat_reply";
 
 export type BuyerNotice = {
   id: string;
