@@ -2,12 +2,13 @@ import { createHash } from "node:crypto";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { checkouts, orders } from "../../../db/schema";
-import { requireActiveUser } from "../../../utils/order-access";
+import { requireCanReserve } from "../../../utils/order-access";
 import { ensureOrderQrSecret } from "../../../utils/order-qr";
 import { OrderError } from "../../../utils/order-types";
+import { blockSelfOrder } from "../../../utils/trust/self-order";
 import type { CheckoutInput } from "../model/buyer.checkout.create";
 import { getBuyerOrder } from "./buyer.order.get";
-import { createSellerOrder } from "./buyer.order.persist";
+import { createSellerOrder, parsePickup } from "./buyer.order.persist";
 import { reserveOrderItem } from "./buyer.order.reserve";
 import { enqueueOrderNotification } from "../../notifications/services/notifications.outbox.enqueue-order";
 
@@ -23,9 +24,10 @@ function normalizeItems(items: CheckoutInput["items"]) {
   return normalized;
 }
 
-function requestFingerprint(items: CheckoutInput["items"]) {
+function requestFingerprint(items: CheckoutInput["items"], pickups: CheckoutInput["pickups"]) {
+  const sortedPickups = [...pickups].sort((a, b) => a.sellerId.localeCompare(b.sellerId));
   return createHash("sha256")
-    .update(JSON.stringify(items.map((item) => ({ productId: item.productId, quantity: item.quantity }))))
+    .update(JSON.stringify({ items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })), pickups: sortedPickups }))
     .digest("hex");
 }
 
@@ -40,7 +42,8 @@ export async function createCartCheckout(
     throw new OrderError(400, "Invalid Idempotency-Key header");
   }
   const items = normalizeItems(body.items);
-  const fingerprint = requestFingerprint(items);
+  await blockSelfOrder(buyerId, items.map((item) => item.productId));
+  const fingerprint = requestFingerprint(items, body.pickups);
 
   const result = await db.transaction(async (tx) => {
     await tx.execute(sql`
@@ -68,7 +71,7 @@ export async function createCartCheckout(
       return { checkoutId: existing.id, orderIds: previousOrders.map((order) => order.id), replayed: true };
     }
 
-    await requireActiveUser(tx, buyerId, "buyer");
+    await requireCanReserve(tx, buyerId);
     const reservedItems = [];
     for (const item of items) {
       reservedItems.push(await reserveOrderItem(tx, buyerId, item.productId, item.quantity));
@@ -86,10 +89,12 @@ export async function createCartCheckout(
       bySeller.set(item.sellerId, sellerItems);
     }
 
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const pickupBySeller = new Map(body.pickups.map((pickup) => [pickup.sellerId, pickup]));
     const orderIds: string[] = [];
-    for (const [sellerId, sellerItems] of bySeller) {
-      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, expiresAt);
+    for (const [sellerId, sellerItems] of [...bySeller].sort(([a], [b]) => a.localeCompare(b))) {
+      const pickup = pickupBySeller.get(sellerId);
+      if (!pickup) throw new OrderError(400, "Choose a pickup time for every seller in your cart.");
+      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, parsePickup(pickup.pickupStart, pickup.pickupEnd));
       orderIds.push(orderId);
       const summary = sellerItems.map((i) => `${i.quantity} ${i.scalingType} ${i.productName}`).join(", ");
       await enqueueOrderNotification(

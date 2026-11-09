@@ -24,6 +24,7 @@ const closedReasons = {
   completed: "The order has been completed. You cannot send more messages.",
   cancelled: "The order was cancelled. You cannot send more messages.",
   expired: "The order has expired. You cannot send more messages.",
+  declined: "The pickup was declined. You cannot send more messages.",
 } as const;
 
 export default function ConversationDetailScreen() {

@@ -4,6 +4,7 @@ import { X } from "lucide-react-native";
 import type { Product } from "../../inventory/types";
 import { colors, fonts, spacing } from "../../../theme";
 import { AutoPriceDropSwitches } from "./AutoPriceDropSwitches";
+import { AutoPostSwitches } from "./AutoPostSwitches";
 
 interface Props {
   visible: boolean;
@@ -11,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-/** The Boost settings. Today there is one: turn automatic price drops on or off for each listing. */
+/** The Boost settings: Auto-Post and automatic price drops, on or off for each listing. */
 export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
   const hasAny = products.some((product) => Number(product.priceReductionAmount ?? 0) > 0 && product.minimumPrice != null);
   return (
@@ -27,6 +28,7 @@ export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
             </Pressable>
           </View>
           <ScrollView style={styles.body} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled bounces={false}>
+            <AutoPostSwitches products={products} />
             <AutoPriceDropSwitches products={products} />
             {!hasAny ? <Text style={styles.empty}>No listing has automatic price drops. Set a drop amount and a final price in Edit Listing to use them.</Text> : null}
           </ScrollView>

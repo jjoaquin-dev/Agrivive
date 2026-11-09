@@ -46,7 +46,7 @@ export const privacyPolicy: LegalDocument = {
       items: [
         "Buyers see a seller's shop name, listings, ratings, and pickup area.",
         "Sellers see the buyer name and order details for orders placed with them.",
-        "Agrivive administrators see account and order records to keep the service safe.",
+        "Agrivive uses account and order records, checked by automatic rules, to keep the service safe.",
         "Partners who help us run the service: Amazon Web Services (hosting and file storage), Google (sign-in and reCAPTCHA), Resend or Mailtrap (email), Firebase (push alerts), and Meta (Facebook and Instagram posts a seller starts).",
         "We do not sell your personal data.",
       ],

@@ -22,7 +22,7 @@ export function AnalyticsUnitDistribution({ summary }: AnalyticsUnitDistribution
     <View style={cardStyles.card}>
       <View style={styles.header}>
         <Text style={cardStyles.title}>Stock Right Now</Text>
-        <Text style={cardStyles.subtitle}>All produce, today</Text>
+        <Text style={cardStyles.subtitle}>All produce, today. Shows how much of your stock is in each way of selling (sack, kilo or pile).</Text>
       </View>
 
       {totalUnits > 0 ? (

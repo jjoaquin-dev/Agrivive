@@ -7,6 +7,9 @@ import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { calculateVisibilityScore } from "../../../utils/visibility-score";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { marketplaceSellerVisibility } from "./marketplace.visibility";
+import { PICKUP_DISCLAIMER } from "../../../utils/pickup/progress";
+import { manilaDateKey } from "../../../utils/pickup/manila";
+import { readTrustStanding } from "../../../utils/trust/standing";
 
 export async function getMarketplaceProduct(productId: string) {
   const rows = await db.select({ id: sellers_product.id })
@@ -75,8 +78,10 @@ export async function getMarketplaceProduct(productId: string) {
     originalQuantity: Number(productRow.originalQty),
     priorCycles,
   });
+  const standing = await readTrustStanding(profile.userId);
   return {
     id: productRow.id,
+    pickupDisclaimer: PICKUP_DISCLAIMER,
     productName: productRow.productName,
     imageUrl: await getProductImageDisplayUrl(productRow.imagUrl, profile.userId),
     productPrice: productRow.productPrice,
@@ -86,7 +91,6 @@ export async function getMarketplaceProduct(productId: string) {
     productType: productRow.productType,
     condition: productRow.condition,
     visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
-    visibilityTier: visibility?.tier ?? null,
     visibilityEvaluatedAt: evaluatedAt.toISOString(),
     availability: Number(productRow.productQty ?? 0) > 0 ? "available" : "sold_out",
     seller: {
@@ -99,6 +103,11 @@ export async function getMarketplaceProduct(productId: string) {
       latitude: profile.latitude,
       longitude: profile.longitude,
       distanceKm: null,
+      /** Away: the seller cannot reply right now. Orders and pickup times are not changed. */
+      away: !!profile.awayUntil && profile.awayUntil > evaluatedAt,
+      awayUntil: profile.awayUntil && profile.awayUntil > evaluatedAt ? profile.awayUntil : null,
+      closedToday: profile.closedDate === manilaDateKey(evaluatedAt),
+      trustedSeller: standing.trusted,
     },
   };
 }

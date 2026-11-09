@@ -1,10 +1,11 @@
-import { and, desc, eq, lte } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, lte, ne } from "drizzle-orm";
 import { db } from "../../../db";
 import { listing_cycles, seller_visibility_boosts, sellers_product } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getFirstPostCooldownEnd } from "../../../utils/boost-cooldown";
 import { isBoostStuck } from "./seller.visibility-boost.used";
-import { requireVerifiedSeller } from "../../../utils/seller-access";
+import { requireSellerMayList } from "../../../utils/seller-access";
+import { readTrustStanding } from "../../../utils/trust/standing";
 
 // A second first post soon after the last one looks like spam on the Page.
 async function requireFirstPostGap(tx: Parameters<typeof getFirstPostCooldownEnd>[0], productId: string) {
@@ -16,11 +17,18 @@ async function requireFirstPostGap(tx: Parameters<typeof getFirstPostCooldownEnd
 
 /**
  * One post per listing cycle. The first post is a normal post for any listing; the 6-hour price drops after it
- * are the follow-up rule's job and need Priority Boost (checked when the post is saved).
+ * are the follow-up rule's job.
  */
-export async function queueSellerVisibilityBoost(sellerId: string, productId: string) {
+export async function queueSellerVisibilityBoost(sellerId: string, productId: string, options: { nextRound?: boolean } = {}) {
+  // A seller whose fault rate is 15% or more ("High fault rate"), or who is paused, cannot use Priority Boost.
+  const standing = await readTrustStanding(sellerId);
+  if (!standing.canBoost) {
+    throw new OrderError(409, standing.needsReview
+      ? "Priority Boost is off because your fault rate is 15% or more."
+      : "Priority Boost is off while your account is paused.");
+  }
   return db.transaction(async (tx) => {
-    await requireVerifiedSeller(tx, sellerId);
+    await requireSellerMayList(tx, sellerId);
     const now = new Date();
     const [product] = await tx.select().from(sellers_product).where(and(
       eq(sellers_product.id, productId),
@@ -39,7 +47,27 @@ export async function queueSellerVisibilityBoost(sellerId: string, productId: st
     if (!cycle) throw new OrderError(409, "This listing cycle is not ready to boost");
 
     const currentPeriod = product.priceReductionPeriodsApplied ?? 0;
-    const boostKey = `${cycle.id}:initial`;
+    // The ranking flow can boost the same listing again once its 6-hour lock is over: each round gets its own key.
+    let boostKey = `${cycle.id}:initial`;
+    if (options.nextRound) {
+      const [latest] = await tx.select({ createdAt: seller_visibility_boosts.createdAt })
+        .from(seller_visibility_boosts).where(and(
+          eq(seller_visibility_boosts.productId, productId),
+          eq(seller_visibility_boosts.listingCycleId, cycle.id),
+          eq(seller_visibility_boosts.reason, "initial"),
+        )).orderBy(desc(seller_visibility_boosts.createdAt)).limit(1);
+      if (latest) {
+        if (latest.createdAt.getTime() + 6 * 3_600_000 > now.getTime()) {
+          throw new OrderError(409, "This listing is still locked for 6 hours after its last boost");
+        }
+        const [{ rounds }] = await tx.select({ rounds: count() }).from(seller_visibility_boosts).where(and(
+          eq(seller_visibility_boosts.productId, productId),
+          eq(seller_visibility_boosts.listingCycleId, cycle.id),
+          eq(seller_visibility_boosts.reason, "initial"),
+        ));
+        boostKey = `${cycle.id}:initial:${rounds}`;
+      }
+    }
 
     const [created] = await tx.insert(seller_visibility_boosts).values({
       listingCycleId: cycle.id,
@@ -58,6 +86,14 @@ export async function queueSellerVisibilityBoost(sellerId: string, productId: st
     if (created) {
       // Throwing here rolls the new boost back, so nothing is queued.
       await requireFirstPostGap(tx, productId);
+      // A new round takes over the 6-hour price drops, so the older round stops its own.
+      if (boostKey !== `${cycle.id}:initial`) {
+        await tx.update(seller_visibility_boosts).set({ followUpDueAt: null }).where(and(
+          eq(seller_visibility_boosts.productId, productId),
+          ne(seller_visibility_boosts.id, created.id),
+          isNotNull(seller_visibility_boosts.followUpDueAt),
+        ));
+      }
       return { boostId: created.id, status: created.status, reason: "initial" as const, productId };
     }
 

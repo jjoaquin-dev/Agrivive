@@ -1,6 +1,6 @@
-import { and, eq, exists, isNotNull, isNull, lte, notExists, or } from "drizzle-orm";
+import { and, eq, exists, gt, isNotNull, isNull, lte, notExists, or } from "drizzle-orm";
 import { db } from "../../db";
-import { conversation_participants, conversations, order_inquiries, product_inquiries, user } from "../../db/schema";
+import { conversation_participants, conversations, order_inquiries, product_inquiries, sellers_profile, user } from "../../db/schema";
 import { evaluateTrustAction } from "./evaluate-action";
 import { recordReplyDeadlines } from "./response-deadlines";
 
@@ -26,6 +26,7 @@ export async function processChatDeadlines(now: Date, limit: number) {
       isNotNull(conversation_participants.blockedAt),
     ))),
     exists(db.select({ one: user.id }).from(user).where(and(eq(user.id, conversations.sellerId), eq(user.isActive, true)))),
+    notExists(db.select({ one: sellers_profile.id }).from(sellers_profile).where(and(eq(sellers_profile.userId, conversations.sellerId), gt(sellers_profile.awayUntil, new Date())))),
     // An open question from the same buyer is timed on its own, so the chat is left out to avoid counting one ignored buyer twice.
     notExists(db.select({ one: order_inquiries.id }).from(order_inquiries).where(and(
       eq(order_inquiries.buyerId, conversations.buyerId), eq(order_inquiries.sellerId, conversations.sellerId), isNull(order_inquiries.repliedAt),

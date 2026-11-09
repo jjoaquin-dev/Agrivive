@@ -25,6 +25,7 @@ status: active
 
 - [[Reservation and QR Pickup]]
 - [[Weighted Surplus Visibility]]
+- [[AHP-TOPSIS Proof Pack]]
 - [[Marketing Boost]]
 - [[Seller Analytics]]
 - [[Contextual Advisories]]
@@ -40,6 +41,14 @@ status: active
 - [[Open Decisions]]
 - [[Source and Reading Guide]]
 - [[2026-09-20 Vault Creation]] — creation and verification record
+
+## Maps of everything else
+
+- [[Delivery Index]] — every dated delivery record, by month
+- [[Enhancements Index]] — numbered enhancement notes
+- [[Docs Index]] — test sheets, results, references, PDFs
+- [[Boost Ranking Flow AHP-TOPSIS]] — AHP-TOPSIS boost flow and its n8n steps
+- [[Welcome]] — entry note
 
 ## Current focus
 

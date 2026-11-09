@@ -1,7 +1,6 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { Clock, TrendingDown } from "lucide-react-native";
-import { ButtonComponent } from "../../../components/ButtonComponent";
+import { Clock } from "lucide-react-native";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme";
 import { formatBoostTime, type RunningPriceDrop } from "../types";
 
@@ -9,13 +8,10 @@ const peso = (value: number) => `₱${value.toFixed(2)}`;
 
 interface Props {
   item: RunningPriceDrop;
-  busy: boolean;
-  onLowerNow: () => void;
 }
 
-/** A listing waiting for its next automatic price drop, with a button to lower the price now instead of waiting. */
-export function RunningPriceDropCard({ item, busy, onLowerNow }: Props) {
-  const hours = item.waitUntil ? Math.max(1, Math.ceil((new Date(item.waitUntil).getTime() - Date.now()) / 3_600_000)) : 0;
+/** A listing waiting for its next automatic price drop. The drop runs on its own; there is nothing to tap. */
+export function RunningPriceDropCard({ item }: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -33,17 +29,6 @@ export function RunningPriceDropCard({ item, busy, onLowerNow }: Props) {
           <Text style={styles.nextText}>Next automatic drop: {formatBoostTime(item.nextDropAt)}</Text>
         </View>
       ) : null}
-      {item.available || item.waitUntil ? (
-        <ButtonComponent
-          title={item.available ? "Lower Price Now" : `Lower price again in about ${hours} hour${hours === 1 ? "" : "s"}`}
-          variant="secondary"
-          onPress={onLowerNow}
-          loading={busy}
-          disabled={!item.available}
-          icon={<TrendingDown size={18} color={colors.primary} />}
-          style={styles.button}
-        />
-      ) : item.message ? <Text style={styles.note}>{item.message}</Text> : null}
     </View>
   );
 }

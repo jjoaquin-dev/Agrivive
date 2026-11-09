@@ -1,11 +1,11 @@
+import { readProductRatings } from "../../../utils/product-rating";
 import { and, desc, eq, gt, gte, ilike, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { order_reviews, product_reviews, sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
+import { order_reviews, sellers_product, sellers_profile, user, vegetable_catalog } from "../../../db/schema";
 import { ahpTopsisPolicyVersion } from "../../../utils/ahp-topsis";
-import { resolveVisibilityPolicy, scoreTier, type MarketplaceVisibilityPolicy } from "../../../utils/visibility-ranking/policy";
+import { resolveVisibilityPolicy, type MarketplaceVisibilityPolicy } from "../../../utils/visibility-ranking/policy";
 import { OrderError } from "../../../utils/order-types";
 import { marketplaceVisibilityScoreSql } from "../../../utils/visibility-score";
-import { marketplacePriorCyclesSql } from "../../../utils/visibility-score";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 import type { MarketplaceProductsQuery } from "../model/marketplace.products";
 import { marketplaceDistanceExpression } from "./marketplace.distance";
@@ -83,7 +83,6 @@ export function serializeProduct(row: any, imageUrl: string | null, distanceKm: 
     condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     visibilityScore: visibilityScore === null ? null : Number(visibilityScore.toFixed(4)),
-    visibilityTier: scoreTier(visibilityScore, policyVersion),
     visibilityPolicyVersion: policyVersion,
     averageRating: rating.average,
     reviewCount: rating.count,
@@ -139,15 +138,11 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
     productQty: sellers_product.productQty, originalQty: sellers_product.originalQty, scalingType: sellers_product.scalingType,
     productType: sellers_product.productType, condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt, visibilityScore,
-    ahpPriorCycles: useAHP ? marketplacePriorCyclesSql(evaluatedAt, since) : sql<number>`0`,
-    // Same ratings the trust score reads: order ratings and product ratings together.
+    // The seller's trust rating: the average of the service stars. Product stars are not part of it.
     sellerReliability: useAHP ? sql<number>`coalesce((
-      select avg(rating)::double precision / 5.0 from (
-        select ${order_reviews.rating} as rating from ${order_reviews} where ${order_reviews.sellerId} = ${sellers_product.userId}
-        union all
-        select ${product_reviews.rating} as rating from ${product_reviews} where ${product_reviews.sellerId} = ${sellers_product.userId}
-      ) as seller_ratings
-    ), 0.5)` : sql<number>`0.5`,
+      select avg(${order_reviews.rating})::double precision from ${order_reviews}
+      where ${order_reviews.sellerId} = ${sellers_product.userId} and ${order_reviews.ignoredAt} is null
+    ), 2.5)` : sql<number>`2.5`,
     sellerId: sellers_profile.userId, sellerName: user.name, shopName: sellers_profile.shopName,
     detailAddress: sellers_profile.detailAddress,
     pickupInstructions: sellers_profile.pickupInstructions, latitude: sellers_profile.latitude,
@@ -165,13 +160,7 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
   const orderedRows = ahpRanking?.orderedRows ?? rows;
   const ahpScores = ahpRanking?.scores ?? new Map<string, number>();
   const page = orderedRows.slice(0, limit);
-  const ratingRows = page.length ? await db.select({
-    productId: product_reviews.productId,
-    count: sql<number>`count(*)::int`,
-    average: sql<string>`round(avg(${product_reviews.rating})::numeric, 1)::text`,
-  }).from(product_reviews).where(inArray(product_reviews.productId, page.map((row) => row.id)))
-    .groupBy(product_reviews.productId) : [];
-  const ratingsByProduct = new Map(ratingRows.map((rating) => [rating.productId, rating]));
+  const ratingsByProduct = await readProductRatings(page.map((row) => row.id));
   const products = await Promise.all(page.map(async (row) => serializeProduct(
     row,
     await getProductImageDisplayUrl(row.imagUrl, row.sellerId),

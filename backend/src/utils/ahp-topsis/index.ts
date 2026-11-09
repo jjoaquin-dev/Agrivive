@@ -1,39 +1,50 @@
-const criterionCount = 4;
-const consistencyRandomIndex = 0.9;
+import { all, create } from "mathjs";
+
+const math = create(all);
+
+// mathjs types its results loosely; these just say what shape they really have.
+const vec = (value: unknown) => value as number[];
+const mat = (value: unknown) => value as number[][];
 
 export const ahpTopsisPolicyVersion = "visibility-ahptopsis-v1" as const;
 
-export const ahpPairwiseMatrix = [
-  [1, 1.333333, 2, 4],
-  [0.75, 1, 1.5, 3],
-  [0.5, 0.666667, 1, 2],
-  [0.25, 0.333333, 0.5, 1],
-] as const;
+/*
+ * Criteria, in matrix order (all raw values; AHP-TOPSIS does the scaling itself):
+ * 1. Posting age     hours since the listing was published
+ * 2. Price drop      base price minus current price, per unit
+ * 3. Stock level     quantity left
+ * 4. Seller reliability  average rating, out of 5
+ */
+export const criterionKeys = ["postingAge", "priceDrop", "stockLevel", "sellerReliability"] as const;
+
+// Saaty scale judgments, same matrix as ahp-test.ts.
+export const ahpPairwiseMatrix: number[][] = [
+  [1, 1, 2, 3],
+  [1, 1, 2, 3],
+  [1 / 2, 1 / 2, 1, 2],
+  [1 / 3, 1 / 3, 1 / 2, 1],
+];
+
+// Saaty random index for 4 criteria.
+const consistencyRandomIndex = 0.9;
+export const maxConsistencyRatio = 0.1;
 
 export type VisibilityCriteria = {
-  freshness: number;
-  stockAvailability: number;
+  postingAge: number;
+  priceDrop: number;
+  stockLevel: number;
   sellerReliability: number;
-  recurrence: number;
 };
 
-export type AHPAlternative = {
-  id: string;
-  criteria: VisibilityCriteria;
-};
-
-export type AHPWeights = {
-  freshness: number;
-  stockAvailability: number;
-  sellerReliability: number;
-  recurrence: number;
-};
+export type AHPAlternative = { id: string; criteria: VisibilityCriteria };
+export type AHPWeights = VisibilityCriteria;
 
 export type AHPResult = {
   id: string;
   score: number;
   rank: number;
   criteria: VisibilityCriteria;
+  normalizedCriteria: VisibilityCriteria;
   weightedCriteria: VisibilityCriteria;
   distanceToIdeal: number;
   distanceToWorst: number;
@@ -45,94 +56,84 @@ export type AHPRanking = {
   results: AHPResult[];
 };
 
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
+const toValues = (criteria: VisibilityCriteria) => criterionKeys.map((key) => criteria[key]);
+const toCriteria = (values: number[]) => Object.fromEntries(
+  criterionKeys.map((key, index) => [key, values[index] ?? 0]),
+) as VisibilityCriteria;
 
-function criterionValues(criteria: VisibilityCriteria): number[] {
-  return [criteria.freshness, criteria.stockAvailability, criteria.sellerReliability, criteria.recurrence];
-}
-
-function valuesToCriteria(values: number[]): VisibilityCriteria {
-  return {
-    freshness: values[0] ?? 0,
-    stockAvailability: values[1] ?? 0,
-    sellerReliability: values[2] ?? 0,
-    recurrence: values[3] ?? 0,
-  };
-}
-
+/** Clean raw inputs: unusable numbers become 0, nothing else is rescaled. */
 export function createVisibilityCriteria(input: {
   ageHours: number;
-  stockRatio: number;
-  sellerReliability: number;
-  priorCycles: number;
+  basePrice?: number | null;
+  price?: number | null;
+  stock: number;
+  sellerRating: number;
 }): VisibilityCriteria {
+  const safe = (value: number) => (Number.isFinite(value) ? Math.max(0, value) : 0);
+  const drop = input.basePrice != null && input.price != null ? input.basePrice - input.price : 0;
   return {
-    freshness: clamp(1 - Math.max(0, input.ageHours) / 12),
-    stockAvailability: clamp(input.stockRatio),
-    sellerReliability: clamp(input.sellerReliability),
-    recurrence: clamp(input.priorCycles / 3),
+    postingAge: safe(input.ageHours),
+    priceDrop: safe(drop),
+    stockLevel: safe(input.stock),
+    sellerReliability: safe(input.sellerRating),
   };
 }
 
-export function calculateAHPWeights(matrix: readonly (readonly number[])[] = ahpPairwiseMatrix) {
-  if (matrix.length !== criterionCount || matrix.some((row) => row.length !== criterionCount)) {
+/** AHP: column sums, normalise, row means are the weights; then the consistency check. */
+export function calculateAHPWeights(matrix: number[][] = ahpPairwiseMatrix) {
+  const size = criterionKeys.length;
+  if (matrix.length !== size || matrix.some((row) => row.length !== size)) {
     throw new Error("AHP pairwise matrix must be 4 by 4");
   }
-  const geometricMeans = matrix.map((row) => Math.pow(row.reduce((product, value) => product * value, 1), 1 / criterionCount));
-  const total = geometricMeans.reduce((sum, value) => sum + value, 0);
-  const weights = geometricMeans.map((value) => value / total);
-  const lambdaRatios = matrix.map((row, rowIndex) =>
-    row.reduce((sum, value, columnIndex) => sum + value * weights[columnIndex], 0) / weights[rowIndex]);
-  const lambdaMax = lambdaRatios.reduce((sum, value) => sum + value, 0) / criterionCount;
-  const consistencyIndex = (lambdaMax - criterionCount) / (criterionCount - 1);
+  const columnSums = vec(math.sum(matrix, 0));
+  const normalized = math.dotDivide(matrix, columnSums);
+  const weights = vec(math.mean(normalized, 1));
+
+  const weightedSum = vec(math.multiply(matrix, weights));
+  const lambdaMax = math.mean(vec(math.dotDivide(weightedSum, weights)));
+  const consistencyIndex = (lambdaMax - size) / (size - 1);
   const consistencyRatio = Math.max(0, consistencyIndex / consistencyRandomIndex);
 
-  return {
-    weights: valuesToCriteria(weights),
-    consistencyRatio,
-  };
+  return { weights: toCriteria(weights), consistencyRatio, lambdaMax, consistencyIndex };
 }
 
-export function rankWithAHPAndTOPSIS(
-  alternatives: AHPAlternative[],
-  matrix: readonly (readonly number[])[] = ahpPairwiseMatrix,
-): AHPRanking {
+/** TOPSIS on raw criteria, weighted by AHP. Every criterion counts as "bigger is better". */
+export function rankWithAHPAndTOPSIS(alternatives: AHPAlternative[], matrix: number[][] = ahpPairwiseMatrix): AHPRanking {
   const { weights, consistencyRatio } = calculateAHPWeights(matrix);
+  if (consistencyRatio > maxConsistencyRatio) {
+    throw new Error(`AHP judgments are not consistent (CR ${consistencyRatio.toFixed(4)}); redo them`);
+  }
   if (alternatives.length === 0) return { weights, consistencyRatio, results: [] };
 
-  const rawColumns = Array.from({ length: criterionCount }, (_, criterionIndex) =>
-    alternatives.map((alternative) => criterionValues(alternative.criteria)[criterionIndex] ?? 0));
-  const normalizedColumns = rawColumns.map((column) => {
-    const length = Math.sqrt(column.reduce((sum, value) => sum + value ** 2, 0));
-    return length === 0 ? column.map(() => 0) : column.map((value) => value / length);
+  const decision = alternatives.map((alternative) => toValues(alternative.criteria));
+  // Vector normalisation: value / sqrt(sum of squares of its column). An all-zero column stays 0.
+  const denominators = vec(math.sum(math.dotPow(decision, 2), 0)).map((sum) => {
+    const root = Math.sqrt(sum);
+    return root === 0 ? 1 : root;
   });
-  const weightValues = criterionValues(weights);
-  const weightedRows = alternatives.map((_, alternativeIndex) =>
-    normalizedColumns.map((column, criterionIndex) => column[alternativeIndex] * weightValues[criterionIndex]));
-  const idealBest = Array.from({ length: criterionCount }, (_, criterionIndex) =>
-    Math.max(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
-  const idealWorst = Array.from({ length: criterionCount }, (_, criterionIndex) =>
-    Math.min(...weightedRows.map((row) => row[criterionIndex] ?? 0)));
+  const normalized = mat(math.dotDivide(decision, denominators));
+  const weighted = mat(math.dotMultiply(normalized, toValues(weights)));
 
-  const results = alternatives.map((alternative, alternativeIndex) => {
-    const weighted = weightedRows[alternativeIndex] ?? [];
-    const distanceToIdeal = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealBest[index] ?? 0)) ** 2, 0));
-    const distanceToWorst = Math.sqrt(weighted.reduce((sum, value, index) => sum + (value - (idealWorst[index] ?? 0)) ** 2, 0));
-    const denominator = distanceToIdeal + distanceToWorst;
+  const idealBest = vec(math.max(weighted, 0));
+  const idealWorst = vec(math.min(weighted, 0));
+  const distance = (row: number[], ideal: number[]) =>
+    Math.sqrt(Number(math.sum(math.dotPow(math.subtract(row, ideal), 2))));
+
+  const results = alternatives.map((alternative, index) => {
+    const distanceToIdeal = distance(weighted[index]!, idealBest);
+    const distanceToWorst = distance(weighted[index]!, idealWorst);
+    const total = distanceToIdeal + distanceToWorst;
     return {
       id: alternative.id,
-      score: denominator === 0 ? 0.5 : distanceToWorst / denominator,
+      score: total === 0 ? 0.5 : distanceToWorst / total,
       rank: 0,
       criteria: alternative.criteria,
-      weightedCriteria: valuesToCriteria(weighted),
+      normalizedCriteria: toCriteria(normalized[index]!),
+      weightedCriteria: toCriteria(weighted[index]!),
       distanceToIdeal,
       distanceToWorst,
     };
   }).sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
 
-  return {
-    weights,
-    consistencyRatio,
-    results: results.map((result, index) => ({ ...result, rank: index + 1 })),
-  };
+  return { weights, consistencyRatio, results: results.map((result, index) => ({ ...result, rank: index + 1 })) };
 }

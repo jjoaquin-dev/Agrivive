@@ -24,6 +24,7 @@ import { OrderItemsCard } from "./OrderItemsCard";
 import { OrderReportModal } from "./OrderReportModal";
 import { OrderMessages } from "./OrderMessages";
 import { OrderCancellation } from "./OrderCancellation";
+import { OrderPickupActions } from "./OrderPickupActions";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 
 export function OrderDetail() {
@@ -135,13 +136,8 @@ export function OrderDetail() {
 
         <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <section className="flex flex-col gap-5 lg:col-span-2">
-            <OrderPickupStepper
-              status={order.status}
-              createdAt={order.createdAt}
-              expiresAt={order.expiresAt}
-              shopName={products[0]?.seller.shopName}
-              cancellationReason={order.cancellationReason}
-            />
+            <OrderPickupStepper order={order} shopName={products[0]?.seller.shopName} />
+            <OrderPickupActions order={order} onChanged={(updated) => { lastOrder.current = updated; setOrder(updated); }} />
             <OrderItemsCard items={order.items} status={order.status} />
             <OrderSellerCard order={order} product={products[0]} />
             <OrderMessages orderId={order.id} refreshKey={lastUpdated?.getTime() ?? 0} />
@@ -172,7 +168,7 @@ export function OrderDetail() {
 
           <aside className="flex flex-col gap-5 lg:col-span-1">
             <div className="sticky top-6 flex flex-col gap-5">
-              <OrderQr payload={order.qrPayload} status={order.status} orderId={order.id} shopName={products[0]?.seller.shopName} totalAmount={order.totalAmount} />
+              <OrderQr order={order} buyerName={session?.user?.name} shopName={products[0]?.seller.shopName} />
               <OrderPaymentBreakdown order={order} />
             </div>
           </aside>

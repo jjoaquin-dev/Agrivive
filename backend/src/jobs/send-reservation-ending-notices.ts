@@ -3,9 +3,9 @@ import { db } from "../db";
 import { orders, seller_notifications } from "../db/schema";
 import { createSellerNotification } from "../utils/seller-notifications";
 
-const warningWindowMs = 60 * 60 * 1000;
+const warningWindowMs = 30 * 60 * 1000;
 
-/** Warns the seller once per reservation when about an hour is left. */
+/** Warns the seller once per reservation, only after pickup time has started and the QR is about to stop. */
 export async function sendReservationEndingNotices(limit = 100) {
   const now = new Date();
   const due = await db.select({ id: orders.id, sellerId: orders.sellersId })
@@ -13,6 +13,7 @@ export async function sendReservationEndingNotices(limit = 100) {
     .where(and(
       eq(orders.status, "pending"),
       gt(orders.expiresAt, now),
+      sql`coalesce(${orders.pickupStart}, ${now.toISOString()}::timestamptz) <= ${now.toISOString()}::timestamptz`,
       lte(orders.expiresAt, new Date(now.getTime() + warningWindowMs)),
       sql`not exists (select 1 from ${seller_notifications} where ${seller_notifications.dedupeKey} = 'reservation-ending:' || ${orders.id}::text)`,
     ))

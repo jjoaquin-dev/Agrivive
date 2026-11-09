@@ -1,6 +1,6 @@
-import { and, eq, exists, isNull, lte, or } from "drizzle-orm";
+import { and, eq, exists, gt, isNull, lte, notExists, or } from "drizzle-orm";
 import { db } from "../../db";
-import { order_inquiries, product_inquiries, user } from "../../db/schema";
+import { order_inquiries, product_inquiries, sellers_profile, user } from "../../db/schema";
 import { evaluateTrustAction } from "./evaluate-action";
 import { processChatDeadlines } from "./process-chats";
 import { recordReplyDeadlines } from "./response-deadlines";
@@ -8,8 +8,11 @@ import { recordReplyDeadlines } from "./response-deadlines";
 const hoursAgo = (now: Date, hours: number) => new Date(now.getTime() - hours * 3_600_000);
 
 /** Only sellers who can still reply are timed. Checking it in the query keeps skipped rows from crowding out the rest. */
-const activeSeller = (sellerId: typeof order_inquiries.sellerId | typeof product_inquiries.sellerId) =>
-  exists(db.select({ one: user.id }).from(user).where(and(eq(user.id, sellerId), eq(user.isActive, true))));
+const activeSeller = (sellerId: typeof order_inquiries.sellerId | typeof product_inquiries.sellerId) => and(
+  exists(db.select({ one: user.id }).from(user).where(and(eq(user.id, sellerId), eq(user.isActive, true)))),
+  // A seller who is Away is not timed; the clock resumes when Away ends.
+  notExists(db.select({ one: sellers_profile.id }).from(sellers_profile).where(and(eq(sellers_profile.userId, sellerId), gt(sellers_profile.awayUntil, new Date())))),
+);
 
 async function processOrderInquiries(now: Date, limit: number) {
   const dueCondition = or(

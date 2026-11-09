@@ -14,8 +14,8 @@ interface Props {
 const benefits = [
   { title: "Reach more buyers", text: "Get your produce seen by more people." },
   {
-    title: "Price drops for Priority listings",
-    text: "If your produce is Priority Boost when it posts, we ask you 6 hours later how much to drop the price every 6 hours. Otherwise the price stays the same.",
+    title: "Price drops every 6 hours",
+    text: "6 hours after it posts, we ask you how much to drop the price every 6 hours. If you skip it, the price stays the same.",
   },
   { title: "Share on Facebook and Instagram", text: "Your product can appear on both Agrivive pages." },
 ];

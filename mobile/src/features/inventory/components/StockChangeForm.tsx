@@ -47,7 +47,7 @@ export const StockChangeForm: React.FC<StockChangeFormProps> = ({
     const publishedTime = product.publishedAt ? new Date(product.publishedAt).getTime() : NaN;
     return isNaN(publishedTime) ? 0 : (Date.now() - publishedTime) / (1000 * 60 * 60);
   }, [product.publishedAt]);
-  const isAgingBatch = actionType === "in" && currentQty > 0 && hoursOld >= 12;
+  const isAgingBatch = actionType === "in" && currentQty > 0 && hoursOld >= 6;
   const currentPrice = parseFloat(product.productPrice as string) || 0;
   const startPrice = product.basePrice != null ? parseFloat(product.basePrice as string) || currentPrice : currentPrice;
 

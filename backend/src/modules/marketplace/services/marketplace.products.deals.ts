@@ -1,6 +1,7 @@
+import { readProductRatings } from "../../../utils/product-rating";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { product_reviews, sellers_product, sellers_profile, user } from "../../../db/schema";
+import { sellers_product, sellers_profile, user } from "../../../db/schema";
 import { ahpTopsisPolicyVersion } from "../../../utils/ahp-topsis";
 import { getProductImageDisplayUrl } from "../../../utils/product-image";
 import { loadEligibleVisibilityCandidates } from "../../../utils/visibility-ranking/load";
@@ -19,9 +20,8 @@ export async function listMarketplaceDeals(limit: number) {
     id: candidate.cycleId, publishedAt: candidate.publishedAt, criteria: candidate.criteria,
   })));
   const productIdByCycle = new Map(candidates.map((candidate) => [candidate.cycleId, candidate.productId]));
-  const priorityResults = ranking.results.filter((result) => result.tier === "Priority Boost");
-  const scoreByProduct = new Map(priorityResults.map((result) => [productIdByCycle.get(result.id)!, result.score]));
-  const orderedProductIds = priorityResults.map((result) => productIdByCycle.get(result.id)!);
+  const scoreByProduct = new Map(ranking.results.map((result) => [productIdByCycle.get(result.id)!, result.score]));
+  const orderedProductIds = ranking.results.map((result) => productIdByCycle.get(result.id)!);
 
   const rows = orderedProductIds.length ? await db.select({
     id: sellers_product.id, productName: sellers_product.productName, imagUrl: sellers_product.imagUrl,
@@ -44,13 +44,7 @@ export async function listMarketplaceDeals(limit: number) {
     return [row];
   }).slice(0, limit);
 
-  const ratingRows = deals.length ? await db.select({
-    productId: product_reviews.productId,
-    count: sql<number>`count(*)::int`,
-    average: sql<string>`round(avg(${product_reviews.rating})::numeric, 1)::text`,
-  }).from(product_reviews).where(inArray(product_reviews.productId, deals.map((row) => row.id)))
-    .groupBy(product_reviews.productId) : [];
-  const ratingsByProduct = new Map(ratingRows.map((rating) => [rating.productId, rating]));
+  const ratingsByProduct = await readProductRatings(deals.map((row) => row.id));
 
   const products = await Promise.all(deals.map(async (row) => {
     const rating = ratingsByProduct.get(row.id);

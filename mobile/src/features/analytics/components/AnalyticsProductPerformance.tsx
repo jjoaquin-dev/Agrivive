@@ -26,7 +26,7 @@ export function AnalyticsProductPerformance({ products }: { products: Product[] 
   return (
     <View style={cardStyles.card}>
       <Text style={cardStyles.title}>Your Produce</Text>
-      <Text style={cardStyles.subtitle}>All produce, today</Text>
+      <Text style={cardStyles.subtitle}>All produce, today. Shows how much of each produce is left, so you can see what is selling slowly.</Text>
 
       <View style={styles.filters}>
         {FILTERS.map((f) => {

@@ -9,6 +9,7 @@ import openapi from "@elysia/openapi";
 import { sellerRoute } from "./modules/seller";
 import { buyerRoute } from "./modules/buyer";
 import { adminRoute } from "./modules/admin";
+import { pickupRoute } from "./modules/pickup";
 import { marketplaceRoute } from "./modules/marketplace";
 import { stakeholderRoute } from "./modules/stakeholder";
 import { integrationsSocialProductImageRoute } from "./modules/integrations/index/integrations.social-product-image";
@@ -63,6 +64,7 @@ const app = new Elysia()
   .use(conversationsRoute)
   .use(notificationsRoute)
   .use(trustRoute)
+  .use(pickupRoute)
   .use(integrationsSocialProductImageRoute)
   .use(integrationsVisibilityBoostRoute)
   .use(integrationsVisibilityBoostFacebookPostRoute)

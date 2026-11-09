@@ -1,27 +1,23 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { ChevronDown } from "lucide-react-native";
+import { CalendarDays, ChevronDown } from "lucide-react-native";
 import { colors } from "../../../theme";
 import type { AnalyticsUnit } from "../types";
 import type { Product } from "../../inventory/types";
 import { filterRowStyles as styles } from "./AnalyticsFilterRow.styles";
+import { AnalyticsDateSheet } from "./AnalyticsDateSheet";
+import { formatRange, type DateRange } from "../dateRange";
 import { AnalyticsProduceSheet } from "./AnalyticsProduceSheet";
 
 interface AnalyticsFilterRowProps {
-  days: number;
-  onSelectDays: (days: number) => void;
+  range: DateRange;
+  onSelectRange: (range: DateRange) => void;
   unit: AnalyticsUnit | undefined;
   onSelectUnit: (unit: AnalyticsUnit | undefined) => void;
   productId: string | undefined;
   onSelectProduct: (productId: string | undefined) => void;
   products: Product[];
 }
-
-const periods = [
-  { days: 7, label: "7 Days" },
-  { days: 30, label: "30 Days" },
-  { days: 90, label: "90 Days" },
-];
 
 const unitOptions: { value: AnalyticsUnit | undefined; label: string }[] = [
   { value: undefined, label: "All" },
@@ -30,28 +26,18 @@ const unitOptions: { value: AnalyticsUnit | undefined; label: string }[] = [
   { value: "pile", label: "Piles" },
 ];
 
-export function AnalyticsFilterRow({ days, onSelectDays, unit, onSelectUnit, productId, onSelectProduct, products }: AnalyticsFilterRowProps) {
+export function AnalyticsFilterRow({ range, onSelectRange, unit, onSelectUnit, productId, onSelectProduct, products }: AnalyticsFilterRowProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [datesOpen, setDatesOpen] = useState(false);
   const selected = products.find((p) => p.id === productId);
 
   return (
     <View style={styles.container}>
-      <View style={styles.segmented}>
-        {periods.map((p) => {
-          const active = days === p.days;
-          return (
-            <Pressable
-              key={p.days}
-              onPress={() => onSelectDays(p.days)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              style={[styles.segment, active && styles.segmentActive]}
-            >
-              <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{p.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Pressable onPress={() => setDatesOpen(true)} accessibilityRole="button" accessibilityLabel="Choose dates" style={styles.dateButton}>
+        <CalendarDays size={18} color={colors.primary} />
+        <Text style={styles.dateText}>{formatRange(range)}</Text>
+        <ChevronDown size={16} color={colors.textMuted} />
+      </Pressable>
 
       <View style={styles.row}>
         <View style={styles.unitRow}>
@@ -78,6 +64,7 @@ export function AnalyticsFilterRow({ days, onSelectDays, unit, onSelectUnit, pro
         ) : null}
       </View>
 
+      <AnalyticsDateSheet visible={datesOpen} range={range} onApply={onSelectRange} onClose={() => setDatesOpen(false)} />
       <AnalyticsProduceSheet
         visible={pickerOpen}
         products={products}

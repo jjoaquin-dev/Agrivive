@@ -9,9 +9,10 @@ const batchSize = 50;
 
 /** Why the rule is over for this boost, or null while a price cut is still possible. */
 async function endedReason(boost: {
-  listingCycleId: string; productId: string; enabled: boolean; active: boolean; marketable: boolean;
+  listingCycleId: string; productId: string; enabled: boolean; autoPost: boolean; active: boolean; marketable: boolean;
   quantity: string | null; amount: string | null; minimumPrice: string | null; price: string | null;
 }) {
+  if (!boost.autoPost) return "not_enabled";
   if (!boost.enabled || !boost.active || !boost.marketable || Number(boost.quantity ?? 0) <= 0) return "unavailable";
   if (Number(boost.amount ?? 0) <= 0 || boost.minimumPrice === null) return "not_enabled";
   if (Number(boost.price ?? 0) <= Number(boost.minimumPrice)) return "at_floor";
@@ -39,6 +40,7 @@ export async function deliverSellerBoostFollowUps() {
     listingCycleId: boosts.listingCycleId,
     productId: boosts.productId,
     enabled: products.priceReductionEnabled,
+    autoPost: products.autoPostEnabled,
     active: products.isActive,
     marketable: products.isMarketable,
     quantity: products.productQty,

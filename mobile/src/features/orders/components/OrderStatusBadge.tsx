@@ -8,6 +8,7 @@ const labels: Record<SellerOrderStatus, string> = {
   completed: "Picked up",
   cancelled: "Cancelled",
   expired: "Expired",
+  declined: "Declined at pickup",
 };
 
 const tones: Record<SellerOrderStatus, { fg: string; bg: string; border: string }> = {
@@ -15,6 +16,7 @@ const tones: Record<SellerOrderStatus, { fg: string; bg: string; border: string 
   completed: { fg: colors.success, bg: "rgba(22, 163, 74, 0.10)", border: "rgba(22, 163, 74, 0.25)" },
   cancelled: { fg: colors.error, bg: "#FEF2F2", border: "#FECACA" },
   expired: { fg: colors.textMuted, bg: "#F3F1EA", border: colors.border },
+  declined: { fg: colors.warning, bg: "#FFF7ED", border: "#FED7AA" },
 };
 
 export function OrderStatusBadge({ status }: { status: SellerOrderStatus }) {

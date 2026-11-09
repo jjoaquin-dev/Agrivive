@@ -1,4 +1,5 @@
 import type { OrderTransaction } from "../order-types";
+import { awayOverlapMs } from "../pickup/away";
 import { queueTrustNotice, recordTrustEvent } from "./index";
 
 export interface PendingReply {
@@ -15,7 +16,9 @@ export type ReplyDeadlineStage = 1 | 2 | 3;
 
 /** The paper's seller responsiveness schedule (Table 17): 12 hours reminder, 24 hours warning and buyer notice, 48 hours non-responsive. */
 export async function recordReplyDeadlines(tx: OrderTransaction, pending: PendingReply, now: Date) {
-  const hours = (now.getTime() - pending.since.getTime()) / 3_600_000;
+  // The clock stops while the seller's Away mode is on.
+  const away = await awayOverlapMs(tx, pending.sellerId, pending.since, now);
+  const hours = (now.getTime() - pending.since.getTime() - away) / 3_600_000;
   if (hours >= 12) await queueTrustNotice(tx, {
     noticeKey: `inquiry-reminder:${pending.key}`, recipientId: pending.sellerId,
     orderId: pending.orderId, kind: "inquiry_12h_reminder",

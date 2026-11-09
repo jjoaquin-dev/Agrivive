@@ -13,19 +13,15 @@ function errorMessage(status: string) {
   return status === "failed" ? "We could not send this boost. You can try again." : null;
 }
 
-/** Where the 6-hour price drops stand for a boost whose first post is out. Priority Boost was decided when it posted. */
+/** Where the 6-hour price drops stand for a boost whose first post is out. */
 function readPriceDropRule(boost: {
-  followUpDueAt: Date | null; priorityScore: string | null; priorityTier: string | null; priceDropSetupAt: Date | null;
+  followUpDueAt: Date | null; priceDropSetupAt: Date | null;
 }, dropsOn: boolean, now: Date) {
-  const priority = boost.priorityTier === null || boost.priorityTier === "Priority Boost";
-  const state = !priority ? "not_priority"
-    : boost.followUpDueAt ? "on"
+  const state = boost.followUpDueAt ? "on"
     : boost.priceDropSetupAt ? (boost.priceDropSetupAt <= now ? "set_up_now" : "waiting_6h")
     : dropsOn ? "ended" : "off";
   return {
     state,
-    score: boost.priorityScore === null ? null : Number(boost.priorityScore),
-    tier: boost.priorityTier,
     setupAt: boost.priceDropSetupAt ? boost.priceDropSetupAt.toISOString() : null,
     nextDropAt: boost.followUpDueAt ? boost.followUpDueAt.toISOString() : null,
   };
@@ -71,8 +67,6 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
       createdAt: seller_visibility_boosts.createdAt,
       sentAt: seller_visibility_boosts.sentAt,
       followUpDueAt: seller_visibility_boosts.followUpDueAt,
-      priorityScore: seller_visibility_boosts.priorityScore,
-      priorityTier: seller_visibility_boosts.priorityTier,
       priceDropSetupAt: seller_visibility_boosts.priceDropSetupAt,
     }).from(seller_visibility_boosts)
       .innerJoin(sellers_product, eq(sellers_product.id, seller_visibility_boosts.productId))
@@ -89,7 +83,7 @@ export async function readSellerVisibilityBoost(sellerId: string, productId: str
     // Posting is blocked for a few hours after the last first post. Say so up front instead of failing on tap.
     const waitUntil = hasRoom && !boost ? await getFirstPostCooldownEnd(tx, productId) : null;
     const waitHours = waitUntil ? Math.max(1, Math.ceil((waitUntil.getTime() - Date.now()) / 3_600_000)) : 0;
-    // Any listing can post. Priority Boost only decides the 6-hour price drops, and it is saved when the post goes out.
+    // Any listing can post; the ranking and the 6-hour lock decide which one is boosted.
     const canBoost = hasRoom && !waitUntil;
     const currentPriceNum = Number(product.currentPrice ?? 0);
     const basePriceNum = Number(product.basePrice ?? product.currentPrice ?? 0);

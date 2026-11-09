@@ -78,7 +78,7 @@ export default function ProfileOverviewScreen() {
         <ProfileStallCard coordinates={coordinates} detailAddress={profile?.detailAddress || "No stall address yet"} pickupInstructions={(profile as any)?.pickupInstructions}
           phoneNumber={profile?.phoneNumber || "Not set"} email={email} onEdit={goEdit} />
         <ProfileSettingsList twoFactorEnabled={Boolean(setup?.twoFactorEnabled)} onNotifications={() => router.push("/(app)/notifications")} onReviews={() => router.push("/(app)/reviews")}
-          onTrust={() => router.push("/(app)/trust")} onSecurity={() => router.push("/(app)/profile/security")} onActivity={() => router.push("/(app)/activity")} onSignOut={() => setConfirmLogout(true)} />
+          onTrust={() => router.push("/(app)/trust")} onStall={() => router.push("/(app)/stall")} onSecurity={() => router.push("/(app)/profile/security")} onActivity={() => router.push("/(app)/activity")} onSignOut={() => setConfirmLogout(true)} />
         {sellerId ? <Text style={styles.footer}>Seller ID {sellerId}</Text> : null}
       </ScrollView>
       <ProfilePhotoSheet visible={avatar.sheetOpen} onTake={avatar.takePhoto} onChoose={avatar.choosePhoto} onClose={avatar.closeSheet} />

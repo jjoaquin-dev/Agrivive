@@ -35,25 +35,20 @@ export async function getSellerWeightedSurplusVisibility(sellerId: string) {
       } else if (Number(product.productPrice) <= 0) {
         reason = "Price must be greater than zero";
       }
-      return { ...base, score: null, tier: null, rank: null, reason };
+      return { ...base, score: null, rank: null, reason };
     }
-    const tierNormalized = result.tier.toLowerCase().includes("priority")
-      ? "priority"
-      : result.tier.toLowerCase().includes("standard")
-      ? "standard"
-      : "basic";
     return {
       ...base,
       score: Number(result.score.toFixed(4)),
-      tier: tierNormalized,
       rank: result.rank,
       criteria: result.criteria,
+      normalizedCriteria: result.normalizedCriteria,
+      weights: ranking.weights,
       inputs: {
-        postingAge: result.criteria.freshness,
-        remainingQuantity: result.criteria.stockAvailability,
+        postingAge: result.criteria.postingAge,
+        priceDrop: result.criteria.priceDrop,
+        stockLevel: result.criteria.stockLevel,
         sellerReliability: result.criteria.sellerReliability,
-        recurrence: result.criteria.recurrence,
-        priorCycles: Math.round(result.criteria.recurrence * 3),
         vegetableKey: candidate.productName,
       },
       distances: {

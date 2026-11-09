@@ -23,6 +23,19 @@ export function OrderCancellation({
   const [error, setError] = useState("");
 
   if (order.status !== "pending") return null;
+  if (!order.canCancel) {
+    const reason = order.cancelBlockedReason ?? "Buyer cancellation is no longer available.";
+    return (
+      <div className="group relative w-full sm:w-auto">
+        <button type="button" disabled aria-disabled="true" aria-describedby="cancel-blocked-reason"
+          className="inline-flex min-h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-neutral-100 px-4 text-sm font-semibold text-neutral-400">
+          <XCircle className="size-4" aria-hidden="true" /><span>Cancel reservation</span>
+        </button>
+        <span id="cancel-blocked-reason" role="tooltip" className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden w-72 rounded-lg bg-neutral-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block group-focus-within:block">{reason}</span>
+        <p className="mt-2 text-xs text-neutral-500 sm:hidden">{reason}</p>
+      </div>
+    );
+  }
 
   async function cancel() {
     setCancelling(true);

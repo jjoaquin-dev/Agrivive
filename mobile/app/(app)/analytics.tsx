@@ -14,19 +14,28 @@ import { AnalyticsOrderOutcomes } from "../../src/features/analytics/components/
 import { AnalyticsRepeatListings } from "../../src/features/analytics/components/AnalyticsRepeatListings";
 import { AnalyticsProductPerformance } from "../../src/features/analytics/components/AnalyticsProductPerformance";
 import { AnalyticsDescriptiveSummary } from "../../src/features/analytics/components/AnalyticsDescriptiveSummary";
+import { AnalyticsQuickStats } from "../../src/features/analytics/components/AnalyticsQuickStats";
+import { AnalyticsTopProduce } from "../../src/features/analytics/components/AnalyticsTopProduce";
+import { AnalyticsBusyDays } from "../../src/features/analytics/components/AnalyticsBusyDays";
+import { AnalyticsDailySales } from "../../src/features/analytics/components/AnalyticsDailySales";
+import { AnalyticsOrderResults } from "../../src/features/analytics/components/AnalyticsOrderResults";
+import { AnalyticsTapCard } from "../../src/features/analytics/components/AnalyticsTapCard";
+import { movementRows } from "../../src/features/analytics/breakdown";
+import { unitWord } from "../../src/features/analytics/format";
 import { AnalyticsSkeleton } from "../../src/features/analytics/components/AnalyticsSkeleton";
 import { cardStyles } from "../../src/features/analytics/analyticsCard";
+import { lastDays, type DateRange } from "../../src/features/analytics/dateRange";
 import type { AnalyticsUnit } from "../../src/features/analytics/types";
 import { colors, fonts, radii, spacing } from "../../src/theme";
 
 export default function SellerAnalyticsScreen() {
   const router = useRouter();
   const { products, summary, refresh: refreshInventory } = useInventory();
-  const [days, setDays] = useState(30);
+  const [range, setRange] = useState<DateRange>(() => lastDays(30));
   const [productId, setProductId] = useState<string | undefined>();
   const [unit, setUnit] = useState<AnalyticsUnit | undefined>();
 
-  const { analytics, loading, refreshing, error, refresh } = useSellerAnalytics(days, productId, unit);
+  const { analytics, loading, refreshing, error, refresh } = useSellerAnalytics(range, productId, unit);
   const showSkeleton = loading && !refreshing;
 
   return (
@@ -42,8 +51,8 @@ export default function SellerAnalyticsScreen() {
       >
         <AnalyticsHeader period={analytics?.period} />
         <AnalyticsFilterRow
-          days={days}
-          onSelectDays={setDays}
+          range={range}
+          onSelectRange={setRange}
           unit={unit}
           onSelectUnit={setUnit}
           productId={productId}
@@ -79,8 +88,18 @@ export default function SellerAnalyticsScreen() {
                 sellThroughNotComputable={analytics.notComputable.sellThroughRate}
                 changeNotComputable={analytics.notComputable.completedQuantityChange}
               />
-              <AnalyticsMovementChart metrics={analytics.metrics} unit={unit} />
-              <AnalyticsOrderOutcomes metrics={analytics.metrics} unit={unit} />
+              <AnalyticsQuickStats insights={analytics.insights} />
+              <AnalyticsDescriptiveSummary summary={analytics.summary} />
+              <AnalyticsTopProduce items={analytics.insights.topProduce} />
+              <AnalyticsDailySales days={analytics.insights.dailySales} />
+              <AnalyticsTapCard title="Where Your Produce Went" subtitle="The parts behind the chart." rows={movementRows(analytics.metrics, unitWord(unit))}>
+                <AnalyticsMovementChart metrics={analytics.metrics} unit={unit} />
+              </AnalyticsTapCard>
+              <AnalyticsOrderResults orders={analytics.insights.orders} />
+              <AnalyticsTapCard title="Picked Up or Not" subtitle="The parts behind the percentages." rows={movementRows(analytics.metrics, unitWord(unit))}>
+                <AnalyticsOrderOutcomes metrics={analytics.metrics} unit={unit} />
+              </AnalyticsTapCard>
+              <AnalyticsBusyDays counts={analytics.insights.pickupsByWeekday} />
               <AnalyticsRepeatListings count={analytics.metrics.recurringListings} />
               <AnalyticsUnitDistribution summary={summary} />
               <AnalyticsProductPerformance products={products} />
@@ -98,7 +117,6 @@ export default function SellerAnalyticsScreen() {
                 <ChevronRight size={20} color={colors.textMuted} />
               </Pressable>
 
-              <AnalyticsDescriptiveSummary summary={analytics.summary} />
             </>
           ) : (
             <View style={styles.empty}>

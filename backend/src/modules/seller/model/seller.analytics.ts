@@ -42,7 +42,24 @@ export type SellerAnalyticsMetrics = {
   };
 };
 
+export type SellerAnalyticsInsights = {
+  orders: { placed: number; pickedUp: number; cancelled: number; expired: number; declined: number };
+  averageOrder: number | null;
+  buyers: { total: number; returning: number };
+  topProduce: { name: string; unit: string; quantity: number; sales: number }[];
+  /** Pickups per day, Sunday first, in Philippine time. */
+  pickupsByWeekday: number[];
+  averageReplyMinutes: number | null;
+  /** stars[0] is the number of 1-star reviews, stars[4] the 5-star ones. allTime is true when no review fell in these days. */
+  rating: { average: number; count: number; stars: number[]; allTime: boolean } | null;
+  totalSales: number;
+  smallestOrder: number | null;
+  largestOrder: number | null;
+  dailySales: { date: string; sales: number; pickups: number }[];
+};
+
 export type SellerAnalyticsResponse = SellerAnalyticsMetrics & {
+  insights: SellerAnalyticsInsights;
   summary: string | null;
   summaryStatus: "generated" | "unavailable";
 };

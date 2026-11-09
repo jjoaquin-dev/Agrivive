@@ -8,6 +8,9 @@ import { useEffect, useState } from "react";
 import { ApiError, isAbortError } from "@/src/lib/api";
 import { useCart } from "@/src/features/cart/CartProvider";
 import { createBuyerOrder } from "@/src/features/orders/api/orders";
+import { ReservePickupModal } from "@/src/features/reservation/components/ReservePickupModal";
+import { useReservationStatus } from "@/src/features/reservation/useReservationStatus";
+import type { PickupChoice } from "@/src/features/reservation/api/reservation";
 import { getMarketplaceProduct } from "../api/marketplace";
 import type { MarketplaceProduct } from "../types";
 import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
@@ -30,6 +33,7 @@ export function ProductDetail() {
   const [cartMessage, setCartMessage] = useState("");
   const [showReserveModal, setShowReserveModal] = useState(false);
   const { addItem, removeItem } = useCart();
+  const reservation = useReservationStatus();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -62,24 +66,25 @@ export function ProductDetail() {
     setShowReserveModal(true);
   }
 
-  async function executeBuyNow() {
-    if (!product) return;
+  async function executeBuyNow(pickups: PickupChoice[]) {
+    if (!product || !pickups[0]) return;
     const parsedQuantity = Number(quantity);
     setOrdering(true);
     setOrderError("");
     try {
-      const order = await createBuyerOrder(product.id, parsedQuantity, crypto.randomUUID());
+      const order = await createBuyerOrder(product.id, parsedQuantity, { pickupStart: pickups[0].pickupStart, pickupEnd: pickups[0].pickupEnd }, crypto.randomUUID());
       removeItem(product.id);
       setShowReserveModal(false);
       router.push(`/orders/${order.id}`);
     } catch (reason) {
-      setShowReserveModal(false);
       if (reason instanceof ApiError && reason.status === 401) {
+        setShowReserveModal(false);
         const returnPath = `/marketplace/${product.id}?quantity=${encodeURIComponent(quantity)}`;
         router.push(`/login?next=${encodeURIComponent(returnPath)}`);
         return;
       }
       setOrderError(reason instanceof ApiError ? reason.message : "We could not create the reservation.");
+      if (reason instanceof ApiError && reason.status === 403) setShowReserveModal(false);
     } finally { setOrdering(false); }
   }
 
@@ -153,6 +158,8 @@ export function ProductDetail() {
             cartMessage={cartMessage}
             onAddToCart={handleAddToCart}
             onBuyNow={promptBuyNow}
+            reserveBlockedReason={reservation && !reservation.canReserve ? reservation.reason : null}
+            reserveWarning={reservation?.warning ?? null}
           />
         </div>
 
@@ -162,16 +169,14 @@ export function ProductDetail() {
         <ProductQuestionsSection productId={product.id} productName={product.productName} />
       </div>
 
-      <ConfirmationModalComponent
+      <ReservePickupModal
         open={showReserveModal}
-        onClose={() => setShowReserveModal(false)}
+        onClose={() => { setShowReserveModal(false); setOrderError(""); }}
         onConfirm={executeBuyNow}
         loading={ordering}
-        variant="positive"
-        title="Confirm Reservation"
-        description={`Are you sure you want to reserve ${quantity} ${product?.scalingType || "kilo"} of ${product?.productName}? You will pay directly to the stall at pickup.`}
-        confirmLabel="Reserve"
-        cancelLabel="No"
+        error={showReserveModal ? orderError : ""}
+        total={`₱${(Number(product.productPrice) * Number(quantity || 0)).toFixed(2)}`}
+        sellers={[{ sellerId: product.seller.id, shopName: product.seller.shopName, address: product.seller.detailAddress, lines: [`${quantity} ${product.scalingType} ${product.productName}`] }]}
       />
     </main>
   );

@@ -2,7 +2,7 @@ import { db } from "../../db";
 
 export type OrderTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type OrderSide = "buyer" | "seller";
-export type OrderStatus = "pending" | "completed" | "cancelled" | "expired";
+export type OrderStatus = "pending" | "completed" | "cancelled" | "expired" | "declined";
 
 export class OrderError extends Error {
   constructor(

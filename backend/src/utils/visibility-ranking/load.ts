@@ -1,11 +1,12 @@
-import { and, eq, gte, gt, inArray, lte, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, lte, sql } from "drizzle-orm";
 import { db } from "../../db";
-import { listing_cycles, order_reviews, product_reviews, sellers_product, sellers_profile, user } from "../../db/schema";
+import { listing_cycles, order_reviews, sellers_product, sellers_profile, user } from "../../db/schema";
+import { reviewCounts } from "../../utils/trust/review-counts";
 import { createVisibilityCriteria } from "../ahp-topsis";
-import { getVegetableCycleIdentity, normalizeVegetableName } from "../vegetable-identity";
 
 const hourMs = 60 * 60 * 1000;
-const dayMs = 24 * hourMs;
+// A seller with no reviews yet gets the middle of the 1 to 5 scale.
+const neutralRating = 2.5;
 
 export type EligibleVisibilityCandidate = {
   id: string;
@@ -43,7 +44,6 @@ function hasPublicSellerProfile(row: {
 }
 
 export async function loadEligibleVisibilityCandidates(evaluatedAt: Date) {
-  const since = new Date(evaluatedAt.getTime() - 30 * dayMs);
   const latestCycleStartedAt = sql`(
     select max(current_cycle.started_at)
     from listing_cycles as current_cycle
@@ -68,12 +68,10 @@ export async function loadEligibleVisibilityCandidates(evaluatedAt: Date) {
     longitude: sellers_profile.longitude,
     publishedAt: sellers_product.publishedAt,
     price: sellers_product.productPrice,
+    basePrice: sellers_product.basePrice,
     quantity: sellers_product.productQty,
     // Same original stock the buyer feed uses; the cycle value does not grow when a seller adds more stock.
     originalQuantity: sql<string>`coalesce(${sellers_product.originalQty}, ${listing_cycles.originalQty})`,
-    cycleVegetableCatalogId: listing_cycles.vegetableCatalogId,
-    cycleVegetableKey: listing_cycles.vegetableKey,
-    cycleScalingType: listing_cycles.scalingType,
   }).from(listing_cycles)
     .innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId))
     .innerJoin(user, eq(user.id, sellers_product.userId))
@@ -98,43 +96,14 @@ export async function loadEligibleVisibilityCandidates(evaluatedAt: Date) {
   if (!publicRows.length) return [];
 
   const sellerIds = [...new Set(publicRows.map((row) => row.sellerId))];
-  const [ratings, cycles] = await Promise.all([
-    // Same ratings the trust score reads: order ratings and product ratings together.
-    db.select({
-      sellerId: sql<string>`seller_id`,
-      reliability: sql<number>`avg(rating)::double precision / 5.0`,
-    }).from(sql`(
-      select ${order_reviews.sellerId} as seller_id, ${order_reviews.rating} as rating from ${order_reviews}
-      union all
-      select ${product_reviews.sellerId} as seller_id, ${product_reviews.rating} as rating from ${product_reviews}
-    ) as seller_ratings`).where(inArray(sql`seller_id`, sellerIds)).groupBy(sql`seller_id`),
-    db.select({
-      id: listing_cycles.id,
-      sellerId: sellers_product.userId,
-      vegetableCatalogId: listing_cycles.vegetableCatalogId,
-      scalingType: listing_cycles.scalingType,
-      vegetableKey: listing_cycles.vegetableKey,
-      startedAt: listing_cycles.startedAt,
-    }).from(listing_cycles)
-      .innerJoin(sellers_product, eq(sellers_product.id, listing_cycles.productId))
-      .where(and(
-        inArray(sellers_product.userId, sellerIds),
-        gte(listing_cycles.startedAt, since),
-        lte(listing_cycles.startedAt, evaluatedAt),
-      )),
-  ]);
-  const ratingsBySeller = new Map(ratings.map((rating) => [rating.sellerId, Number(rating.reliability ?? 0.5)]));
+  // The seller's trust rating: the average of the service stars. Product stars are not part of it.
+  const ratings = await db.select({
+    sellerId: order_reviews.sellerId,
+    reliability: sql<number>`avg(${order_reviews.rating})::double precision`,
+  }).from(order_reviews).where(and(inArray(order_reviews.sellerId, sellerIds), reviewCounts)).groupBy(order_reviews.sellerId);
+  const ratingsBySeller = new Map(ratings.map((rating) => [rating.sellerId, Number(rating.reliability ?? neutralRating)]));
 
   return publicRows.map((row) => {
-    const identity = getVegetableCycleIdentity(
-      row.cycleVegetableCatalogId,
-      row.cycleVegetableKey || normalizeVegetableName(row.productName),
-      row.cycleScalingType,
-    );
-    const priorCycles = cycles.filter((cycle) =>
-      cycle.sellerId === row.sellerId && cycle.startedAt < row.publishedAt! &&
-      getVegetableCycleIdentity(cycle.vegetableCatalogId, cycle.vegetableKey, cycle.scalingType) === identity,
-    ).length;
     return {
       id: row.cycleId,
       cycleId: row.cycleId,
@@ -151,9 +120,10 @@ export async function loadEligibleVisibilityCandidates(evaluatedAt: Date) {
       originalQuantity: row.originalQuantity,
       criteria: createVisibilityCriteria({
         ageHours: (evaluatedAt.getTime() - row.publishedAt!.getTime()) / hourMs,
-        stockRatio: Number(row.quantity) / Number(row.originalQuantity),
-        sellerReliability: ratingsBySeller.get(row.sellerId) ?? 0.5,
-        priorCycles,
+        basePrice: row.basePrice === null ? null : Number(row.basePrice),
+        price: Number(row.price),
+        stock: Number(row.quantity),
+        sellerRating: ratingsBySeller.get(row.sellerId) ?? neutralRating,
       }),
     } satisfies EligibleVisibilityCandidate;
   });

@@ -26,7 +26,7 @@ export const StockFreshnessWarningModal: React.FC<StockFreshnessWarningModalProp
     <View style={styles.sheet}>
       <View style={styles.handle} />
       <View style={styles.badge}><Clock size={28} color={colors.warning} /></View>
-      <Text style={styles.title}>This batch is over 12 hours old</Text>
+      <Text style={styles.title}>This batch is over 6 hours old</Text>
       <Text style={styles.description}>
         This {productName} batch was posted {Math.floor(hoursOld)} hours ago. Fresh vegetables sell faster when listed as a new harvest, rather than mixed with an older batch.
       </Text>

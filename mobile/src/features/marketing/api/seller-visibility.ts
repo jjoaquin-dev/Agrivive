@@ -1,18 +1,13 @@
 import { apiFetch } from "../../../api/client";
 
 export interface SellerVisibilityCriteria {
-  freshness: number;
-  stockAvailability: number;
+  postingAge: number;
+  priceDrop: number;
+  stockLevel: number;
   sellerReliability: number;
-  recurrence: number;
 }
 
-export interface SellerVisibilityInputs {
-  postingAge: number;
-  remainingQuantity: number;
-  sellerReliability?: number;
-  recurrence: number;
-  priorCycles: number;
+export interface SellerVisibilityInputs extends SellerVisibilityCriteria {
   vegetableKey: string;
 }
 
@@ -21,10 +16,11 @@ export interface SellerVisibilityItem {
   evaluatedAt: string;
   policyVersion: string;
   score: number | null;
-  tier: "priority" | "standard" | "basic" | null;
   rank?: number | null;
   reason?: string;
   criteria?: SellerVisibilityCriteria;
+  normalizedCriteria?: SellerVisibilityCriteria;
+  weights?: SellerVisibilityCriteria;
   inputs?: SellerVisibilityInputs;
 }
 

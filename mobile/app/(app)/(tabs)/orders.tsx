@@ -16,6 +16,7 @@ const filters: { id: SellerOrderFilter; label: string }[] = [
   { id: "completed", label: "Picked up" },
   { id: "cancelled", label: "Cancelled" },
   { id: "expired", label: "Expired" },
+  { id: "declined", label: "Declined" },
   { id: "all", label: "All" },
 ];
 

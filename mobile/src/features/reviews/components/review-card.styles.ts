@@ -50,6 +50,24 @@ export const styles = StyleSheet.create({
     gap: 2,
     marginBottom: spacing.xs,
   },
+  ratingLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  ratingLabel: {
+    width: 64,
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  reviewPhoto: {
+    width: 96,
+    height: 96,
+    borderRadius: radii.input,
+    marginTop: spacing.xs,
+  },
   itemsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",

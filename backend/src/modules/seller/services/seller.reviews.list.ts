@@ -1,8 +1,10 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../../../db";
 import { order_reviews, ordered_items, user } from "../../../db/schema";
+import { reviewCounts } from "../../../utils/trust/review-counts";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { formatReviewBuyerName } from "../../../utils/review-format";
+import { reviewPhotoUrl } from "../../../utils/review-photo";
 
 export interface SellerReviewsQueryOptions {
   filter?: "all" | "unanswered" | "replied";
@@ -32,9 +34,9 @@ export async function readSellerReviewsList(
       unansweredCount: sql<number>`count(case when ${order_reviews.sellerResponse} is null then 1 end)::int`,
     })
     .from(order_reviews)
-    .where(eq(order_reviews.sellerId, sellerId));
+    .where(and(eq(order_reviews.sellerId, sellerId), reviewCounts));
 
-  const conditions = [eq(order_reviews.sellerId, sellerId)];
+  const conditions = [eq(order_reviews.sellerId, sellerId), reviewCounts];
   if (options.filter === "unanswered") {
     conditions.push(sql`${order_reviews.sellerResponse} is null`);
   } else if (options.filter === "replied") {
@@ -49,6 +51,8 @@ export async function readSellerReviewsList(
       id: order_reviews.id,
       orderId: order_reviews.orderId,
       rating: order_reviews.rating,
+      productRating: order_reviews.productRating,
+      photoKey: order_reviews.photoKey,
       review: order_reviews.review,
       sellerResponse: order_reviews.sellerResponse,
       createdAt: order_reviews.createdAt,
@@ -80,11 +84,15 @@ export async function readSellerReviewsList(
     }
   }
 
-  const reviews = rows.map((r) => {
+  const photoUrls = await Promise.all(rows.map((r) => reviewPhotoUrl(r.photoKey)));
+  const reviews = rows.map((r, index) => {
     return {
       id: r.id,
       orderId: r.orderId,
       rating: r.rating,
+      serviceRating: r.rating,
+      productRating: r.productRating,
+      photoUrl: photoUrls[index] ?? null,
       review: r.review,
       sellerResponse: r.sellerResponse,
       createdAt: r.createdAt.toISOString(),

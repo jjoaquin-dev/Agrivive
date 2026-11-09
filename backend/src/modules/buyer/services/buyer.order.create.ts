@@ -1,19 +1,20 @@
 import { createHash } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
+import { blockSelfOrder } from "../../../utils/trust/self-order";
 import { db } from "../../../db";
 import { checkouts, orders } from "../../../db/schema";
-import { requireActiveUser } from "../../../utils/order-access";
+import { requireCanReserve } from "../../../utils/order-access";
 import { ensureOrderQrSecret } from "../../../utils/order-qr";
 import { OrderError } from "../../../utils/order-types";
 import type { OrderInput } from "../model/buyer.order.create";
 import { getBuyerOrder } from "./buyer.order.get";
-import { createSellerOrder } from "./buyer.order.persist";
+import { createSellerOrder, parsePickup } from "./buyer.order.persist";
 import { reserveOrderItem } from "./buyer.order.reserve";
 import { enqueueOrderNotification } from "../../notifications/services/notifications.outbox.enqueue-order";
 
-function requestFingerprint(productId: string, quantity: number) {
+function requestFingerprint(productId: string, quantity: number, pickupStart: string, pickupEnd: string) {
   return createHash("sha256")
-    .update(`${productId.toLowerCase()}:${quantity}`)
+    .update(`${productId.toLowerCase()}:${quantity}:${pickupStart}:${pickupEnd}`)
     .digest("hex");
 }
 
@@ -23,12 +24,13 @@ export async function createDirectOrder(
   rawKey: string,
 ) {
   const { productId, quantity } = body;
+  await blockSelfOrder(buyerId, [productId]);
   ensureOrderQrSecret();
   const idempotencyKey = rawKey.trim();
   if (!idempotencyKey || idempotencyKey.length > 128) {
     throw new OrderError(400, "Invalid Idempotency-Key header");
   }
-  const fingerprint = requestFingerprint(productId, quantity);
+  const fingerprint = requestFingerprint(productId, quantity, body.pickupStart, body.pickupEnd);
 
   const result = await db.transaction(async (tx) => {
     await tx.execute(sql`
@@ -63,7 +65,7 @@ export async function createDirectOrder(
       return { orderId: previousOrder.id, replayed: true };
     }
 
-    await requireActiveUser(tx, buyerId, "buyer");
+    await requireCanReserve(tx, buyerId);
     const item = await reserveOrderItem(tx, buyerId, productId, quantity);
     const [checkout] = await tx
       .insert(checkouts)
@@ -79,7 +81,7 @@ export async function createDirectOrder(
       buyerId,
       item.sellerId,
       [item],
-      new Date(Date.now() + 24 * 60 * 60 * 1000),
+      parsePickup(body.pickupStart, body.pickupEnd),
     );
     await enqueueOrderNotification(
       tx,

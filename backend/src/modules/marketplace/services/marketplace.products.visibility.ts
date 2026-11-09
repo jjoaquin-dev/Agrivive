@@ -14,9 +14,10 @@ type MarketplaceVisibilityRow = {
   distanceKm: number | null;
   visibilityScore: number | null;
   productQty: unknown;
+  productPrice?: unknown;
+  basePrice?: unknown;
   originalQty: unknown;
   publishedAt: Date | null;
-  ahpPriorCycles: number | null;
   sellerReliability: number | null;
 };
 
@@ -33,9 +34,10 @@ export function rankMarketplaceProductsWithAHP(
       id: row.id,
       criteria: createVisibilityCriteria({
         ageHours: (evaluatedAt.getTime() - publishedAt.getTime()) / (60 * 60 * 1000),
-        stockRatio: Number(row.productQty) / originalQuantity,
-        sellerReliability: Number(row.sellerReliability ?? 0.5),
-        priorCycles: Number(row.ahpPriorCycles ?? 0),
+        basePrice: row.basePrice == null ? null : Number(row.basePrice),
+        price: row.productPrice == null ? null : Number(row.productPrice),
+        stock: Number(row.productQty),
+        sellerRating: Number(row.sellerReliability ?? 2.5),
       }),
     }];
   });

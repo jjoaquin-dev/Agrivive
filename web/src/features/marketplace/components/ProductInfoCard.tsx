@@ -22,6 +22,8 @@ interface ProductInfoCardProps {
   cartMessage: string;
   onAddToCart: () => void;
   onBuyNow: () => void;
+  reserveBlockedReason?: string | null;
+  reserveWarning?: string | null;
 }
 
 export function ProductInfoCard({
@@ -34,6 +36,8 @@ export function ProductInfoCard({
   cartMessage,
   onAddToCart,
   onBuyNow,
+  reserveBlockedReason = null,
+  reserveWarning = null,
 }: ProductInfoCardProps) {
   const previousPrice = product.basePrice == null ? null : Number(product.basePrice);
   const currentPrice = Number(product.productPrice);
@@ -126,6 +130,14 @@ export function ProductInfoCard({
           </p>
         </div>
 
+        {product.seller.away || product.seller.closedToday || product.seller.trustedSeller ? (
+          <div className="flex flex-wrap gap-2 text-[12px] font-semibold">
+            {product.seller.trustedSeller ? <span className="rounded-full bg-[#E5F3D4] px-3 py-1 text-[#244218]">Trusted Seller</span> : null}
+            {product.seller.away ? <span className="rounded-full bg-[#FFF3D6] px-3 py-1 text-[#6B4E00]">Away: replies may be slow. Pickups are not changed.</span> : null}
+            {product.seller.closedToday ? <span className="rounded-full bg-neutral-100 px-3 py-1 text-neutral-700">Closed today. Choose tomorrow.</span> : null}
+          </div>
+        ) : null}
+
         {/* Error or Cart Notice */}
         {orderError ? isTrustAccessMessage(orderError)
           ? <TrustAccessNotice message={orderError} />
@@ -161,21 +173,31 @@ export function ProductInfoCard({
             variant="outline"
             onClick={onAddToCart}
             disabled={soldOut || ordering}
-            className="h-10 min-h-[40px] rounded-xl border border-[#D5DAC6] bg-[#F9F8F1] text-[14px] font-semibold text-neutral-800 hover:bg-[#F3F2EA]"
+            className="h-12 min-h-12 rounded-xl border border-[#D5DAC6] bg-[#F9F8F1] text-[14px] font-semibold text-neutral-800 hover:bg-[#F3F2EA]"
           >
             <ShoppingCart className="size-4" />Add to cart
           </Button>
           <Button
             type="button"
             onClick={onBuyNow}
-            disabled={soldOut || ordering}
-            className="h-10 min-h-[40px] rounded-xl bg-[#457D00] text-[14px] font-semibold text-white shadow-sm hover:bg-[#457D00]/90"
+            disabled={soldOut || ordering || Boolean(reserveBlockedReason)}
+            className="h-12 min-h-12 rounded-xl bg-[#457D00] text-[14px] font-semibold text-white shadow-sm hover:bg-[#457D00]/90 active:translate-y-px"
           >
-            {ordering ? "Reserving…" : "Buy now"}
+            {ordering ? "Reserving…" : "Reserve for pickup"}
           </Button>
         </div>
+        {reserveBlockedReason ? (
+          <Alert variant="destructive" className="rounded-xl" role="alert">
+            <AlertDescription><strong>You cannot reserve right now.</strong> {reserveBlockedReason}</AlertDescription>
+          </Alert>
+        ) : reserveWarning ? (
+          <Alert className="rounded-xl border-amber-300 bg-amber-50 text-amber-900"><AlertDescription>{reserveWarning}</AlertDescription></Alert>
+        ) : null}
+        <p className="text-[12px] font-semibold leading-relaxed text-neutral-800">
+          Agrivive does not check produce quality. Please look over your items when you pick up.
+        </p>
         <p className="text-[12px] leading-relaxed text-muted-foreground">
-          Payment happens directly at pickup. Reservations expire after 24 hours.
+          Payment happens directly at pickup. You pick a time today or tomorrow.
         </p>
       </div>
     </div>

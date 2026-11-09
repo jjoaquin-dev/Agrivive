@@ -1,6 +1,6 @@
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "../../../db";
-import { orders } from "../../../db/schema";
+import { order_status_history, orders } from "../../../db/schema";
 import { restoreOrderStock } from "../../../utils/order-stock";
 import { OrderError } from "../../../utils/order-types";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
@@ -18,7 +18,7 @@ export async function cancelSellerOrder(sellerId: string, orderId: string, reaso
     }).where(and(
       eq(orders.id, orderId), eq(orders.sellersId, sellerId),
       eq(orders.status, "pending"), gt(orders.expiresAt, now),
-    )).returning({ id: orders.id, buyerId: orders.buyersId });
+    )).returning({ id: orders.id, buyerId: orders.buyersId, confirmedAt: orders.confirmedAt });
     if (!cancelled) {
       const [current] = await tx.select({ sellerId: orders.sellersId, status: orders.status, expiresAt: orders.expiresAt })
         .from(orders).where(eq(orders.id, orderId)).limit(1);
@@ -28,10 +28,12 @@ export async function cancelSellerOrder(sellerId: string, orderId: string, reaso
       throw new OrderError(409, "Order is no longer pending");
     }
     await restoreOrderStock(tx, cancelled.id);
-    await recordTrustEvent(tx, { eventKey: `seller-cancel:${orderId}`, orderId, subjectId: sellerId,
-      kind: "seller_cancellation", classification: "verified" });
-    await queueTrustNotice(tx, { noticeKey: `seller-cancel-warning:${orderId}`, recipientId: sellerId,
-      orderId, kind: "seller_cancellation_warning" });
+    await tx.insert(order_status_history).values({ orderId, status: "cancelled", actorId: sellerId, note: "Cancelled by the seller" });
+    // Only cancelling an order the seller confirmed (or that was confirmed for them) adds points. Declining an unconfirmed request does not.
+    if (cancelled.confirmedAt) {
+      await recordTrustEvent(tx, { eventKey: `seller-cancel:${orderId}`, orderId, subjectId: sellerId,
+        kind: "seller_cancellation", classification: "verified" });
+    }
     await queueTrustNotice(tx, { noticeKey: `seller-cancel-buyer:${orderId}`, recipientId: cancelled.buyerId,
       orderId, kind: "seller_cancellation_buyer" });
   });

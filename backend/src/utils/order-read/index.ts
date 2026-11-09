@@ -4,6 +4,8 @@ import { ordered_items, orders, sellers_product } from "../../db/schema";
 import { issueOrderQr } from "../order-qr";
 import { OrderError, type OrderSide, type OrderStatus } from "../order-types";
 import { getProductImageDisplayUrl } from "../product-image";
+import { pickupFields } from "../pickup/progress";
+import { readOrderDetailExtras } from "../pickup/order-extras";
 
 type OrderRow = typeof orders.$inferSelect;
 type OrderItem = typeof ordered_items.$inferSelect;
@@ -36,8 +38,16 @@ async function orderView(row: OrderRow, items: OrderItemRow[], side: OrderSide) 
     cancellationReason: row.cancellationReason,
     totalAmount: row.totalAmount,
     expiresAt: row.expiresAt,
+    confirmedAt: row.confirmedAt,
+    confirmationMode: row.confirmationMode,
+    packedAt: row.packedAt,
+    readyAt: row.readyAt,
+    declinedAt: row.declinedAt,
+    expiredAt: row.expiredAt,
+    noShowAt: row.noShowAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    ...pickupFields(row),
     items: displayItems,
     qrPayload:
       side === "buyer" &&
@@ -65,7 +75,7 @@ export async function getOrder(orderId: string, userId: string, side: OrderSide)
   }).from(ordered_items)
     .innerJoin(sellers_product, eq(ordered_items.productId, sellers_product.id))
     .where(eq(ordered_items.ordersId, row.id));
-  return orderView(row, items, side);
+  return { ...(await orderView(row, items, side)), ...(await readOrderDetailExtras(row, side)) };
 }
 
 export async function listOrders(

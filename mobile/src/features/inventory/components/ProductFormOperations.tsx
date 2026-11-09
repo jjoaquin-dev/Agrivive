@@ -91,7 +91,7 @@ export const ProductFormOperations: React.FC<ProductFormOperationsProps> = ({
         <View style={styles.pricingIcon}><TrendingDown size={16} color={colors.primary} /></View>
         <Text style={styles.sectionLabel}>Price drop (optional)</Text>
       </View>
-      <Text style={[styles.sectionHint, { marginBottom: spacing.md }]}>If your produce is Priority Boost when it is posted, the price goes down by this amount every 6 hours. Leave it empty to keep one price.</Text>
+      <Text style={[styles.sectionHint, { marginBottom: spacing.md }]}>After your produce is posted, the price goes down by this amount every 6 hours. Leave it empty to keep one price.</Text>
       <InputComponent
         label="Drop by (₱) every 6 hours"
         placeholder="e.g. 1.25"

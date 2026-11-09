@@ -36,6 +36,7 @@ export function AnalyticsOrderOutcomes({ metrics }: AnalyticsOrderOutcomesProps)
   return (
     <View style={cardStyles.card}>
       <Text style={cardStyles.title}>Pickup Results</Text>
+      <Text style={cardStyles.subtitle}>Of the orders that ended in these days, the share that was picked up and the share that was not.</Text>
       {total > 0 ? (
         <View style={styles.list}>
           <Row label="Picked Up" percent={pickedUp} color={colors.primary} />

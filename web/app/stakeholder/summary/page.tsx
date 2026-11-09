@@ -8,6 +8,9 @@ import { Card } from "@/components/ui/card";
 import { getStakeholderSummary, type StakeholderSummary } from "@/src/features/stakeholder/api/summary";
 import { StakeholderHeaderComponent } from "./components/StakeholderHeaderComponent";
 import { StakeholderKpiGridComponent } from "./components/StakeholderKpiGridComponent";
+import { StakeholderHighlightsComponent } from "./components/StakeholderHighlightsComponent";
+import { StakeholderTrendChartComponent } from "./components/StakeholderTrendChartComponent";
+import { StakeholderTopProduceComponent } from "./components/StakeholderTopProduceComponent";
 import { StakeholderCropCategoryComponent } from "./components/StakeholderCropCategoryComponent";
 import { StakeholderOrderStatusComponent } from "./components/StakeholderOrderStatusComponent";
 import { StakeholderPrintLayoutComponent } from "./components/StakeholderPrintLayoutComponent";
@@ -68,6 +71,9 @@ export default function StakeholderSummaryPage() {
                   onDownloadPdf={handleDownloadPdf}
                 />
                 <StakeholderKpiGridComponent data={data} />
+                <StakeholderHighlightsComponent data={data} />
+                <StakeholderTrendChartComponent daily={data.trends.daily} />
+                <StakeholderTopProduceComponent items={data.trends.topProduce} />
                 <StakeholderCropCategoryComponent categories={data.cropCategories} />
                 <StakeholderOrderStatusComponent
                   orders={data.orders}

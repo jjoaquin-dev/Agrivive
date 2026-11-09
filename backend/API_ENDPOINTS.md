@@ -72,7 +72,7 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | DELETE | `/buyer/wishlist/:productId` | `backend/src/modules/buyer/index/buyer.wishlist.remove.ts` |
 | GET, POST, DELETE | `/buyer/follows/:sellerId` | `backend/src/modules/buyer/index/buyer.seller.follow.ts` |
 | POST | `/buyer/checkouts` | `backend/src/modules/buyer/index/buyer.checkout.create.ts` |
-| POST | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.create.ts` |
+| POST | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.create.ts`. Reserving from your own stall returns `403`, adds 3 points and blocks the account. More than 5 orders in 7 days to one seller are marked `counts_for_ranking = false`. |
 | GET | `/buyer/orders` | `backend/src/modules/buyer/index/buyer.order.list.ts` |
 | GET | `/buyer/orders/:id` | `backend/src/modules/buyer/index/buyer.order.get.ts` |
 | POST | `/buyer/orders/:id/cancel` | `backend/src/modules/buyer/index/buyer.order.cancel.ts` |
@@ -86,13 +86,22 @@ Buyer routes require a signed-in active buyer except the public seller rating/re
 | POST | `/buyer/notices/read-all` | `backend/src/modules/buyer/index/buyer.notices.read.ts` |
 | GET | `/buyer/products/:id/inquiries` | `backend/src/modules/buyer/index/buyer.product.inquiry.ts` |
 | POST | `/buyer/products/:id/inquiries` | `backend/src/modules/buyer/index/buyer.product.inquiry.ts` |
-| GET | `/buyer/products/:id/review-eligibility` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
 | GET | `/buyer/orders/:id/review` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
-| POST | `/buyer/orders/:id/review` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
-| GET | `/buyer/orders/:id/items/:itemId/review` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
-| POST | `/buyer/orders/:id/items/:itemId/review` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
+| POST | `/buyer/orders/:id/review` | `backend/src/modules/buyer/index/buyer.order.review.ts`. Review-bomb check: 5 or more 1 to 2 star ratings from accounts under 7 days old in 24 hours are ignored (kept on file, left out of averages and trust). |
+| PATCH | `/buyer/orders/:id/review` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
+| POST | `/buyer/orders/:id/review/photo` | `backend/src/modules/buyer/index/buyer.order.review.ts` |
 | GET | `/buyer/sellers/:id/rating` | Public; `backend/src/modules/buyer/index/buyer.order.review.ts` |
 | GET | `/buyer/sellers/:id/reviews` | Public; `backend/src/modules/buyer/index/buyer.order.review.ts` |
+
+**One review per completed order.** A buyer gives one review per order: product stars for the whole order, service stars for the seller (pickup, communication, accuracy), one optional comment and one optional photo. The earlier one-review-per-item routes (`/buyer/orders/:id/items/:itemId/review`, `/buyer/products/:id/review-eligibility`, `/seller/product-reviews*`) were removed.
+
+- `POST /buyer/orders/:id/review` (buyer; order must be `completed`). Body `{ "productRating": 1-5, "serviceRating": 1-5, "review"?: "<=2000 chars" }`. Returns 201 `{ id, orderId, serviceRating, rating, productRating, review, photoUrl, sellerResponse, createdAt, updatedAt, editableUntil }` (`rating` equals `serviceRating`). 404 when the order is not the buyer's, 409 `Only completed orders can be reviewed` (pending, cancelled, expired) or `Order already reviewed`, 422 for stars outside 1-5 or a missing star row.
+- `PATCH /buyer/orders/:id/review` (buyer). Body: any of `productRating`, `serviceRating`, `review` (an empty `review` removes the comment). Updates the same review. 400 when nothing is sent, 404 when there is no review, 403 `Reviews can only be changed for 15 days` after `editableUntil` (15 days after the review was posted).
+- `POST /buyer/orders/:id/review/photo` (buyer, `multipart/form-data`, field `file`: JPG, PNG or WebP, up to 5 MB). Adds or replaces the photo. Same 15-day window. 400 for a wrong or fake image.
+- `GET /buyer/orders/:id/review` (buyer) and `GET /seller/orders/:id/review` (seller) return the shape above. `photoUrl` is a signed link that expires in one hour.
+- `GET /seller/reviews` rows now also carry `serviceRating`, `productRating` and `photoUrl`. `POST /seller/reviews/:id/reply` and `POST /seller/orders/:id/review-response` answer the one review once.
+- `GET /marketplace/products/:id/reviews` returns the product stars buyers gave on orders that included the product (one rating counts once per product in that order), each with the shared comment, `photoUrl` and `sellerResponse`.
+- **Seller trust rating** = average of `serviceRating` across orders (`GET /buyer/sellers/:id/rating`, ranking reliability). A service rating of 1 or 2 adds one trust point per order (`low_rating`). Product stars never feed trust points, the seller rating or visibility ranking.
 
 Buyer order responses include `imageUrl` as a signed product image URL when the ordered listing has a valid image, `productType` for the fallback label, and `null` when the image is unavailable. This supports the marketplace order preview and order-detail image surfaces without changing order ownership or status behavior.
 
@@ -122,7 +131,7 @@ Buyer and seller chat. All routes need a signed-in buyer or seller (cookie or be
 | GET | `/conversations/unread-count` | `{ "unreadMessages": 3, "unreadConversations": 2 }`. Counts messages from the other person that came after the user's last read time. |
 | GET | `/conversations/:id` | One chat, same fields as an item in `GET /conversations` (including `unreadCount` and `lastMessageSenderId`). Another person's chat returns 404 `Conversation not found`. |
 | GET | `/conversations/:id/messages` | Messages of one chat. |
-| POST | `/conversations/:id/messages` | Send a message. |
+| POST | `/conversations/:id/messages` | Send a message. A phone number or email is saved as a hidden message (3rd in 90 days adds 1 point). The same message 5 times in 10 minutes returns `429` and pauses sending for 10 minutes (2nd time in 90 days adds 1 point). |
 | POST | `/conversations/:id/read` | Mark one chat read. |
 | POST | `/conversations/read-all` | Mark all chats read. |
 
@@ -180,10 +189,9 @@ Seller routes require a signed-in seller; most listing and order routes also req
 | PATCH | `/seller/notification-settings` | `backend/src/modules/seller/index/seller.notification-settings.ts` |
 | GET | `/seller/analytics/summary` | `backend/src/modules/seller/index/seller.analytics.ts` |
 | GET | `/seller/advisories` | `backend/src/modules/seller/index/seller.advisories.ts` |
-| GET | `/seller/product-reviews` | `backend/src/modules/seller/index/seller.product-review.ts` |
-| POST | `/seller/product-reviews/:id/reply` | `backend/src/modules/seller/index/seller.product-review.ts` |
 
-`GET /seller/product-reviews` (same query as `GET /seller/reviews`: `filter` = `all|unanswered|replied`, `rating` 1-5, `limit`, `offset`) returns `{ "summary": { "count", "average", "breakdown", "unansweredCount" }, "reviews": [{ "id", "orderId", "rating", "review", "sellerResponse", "createdAt", "buyerName", "items": ["<product name>"] }] }` for single-product reviews. `POST /seller/product-reviews/:id/reply` (body `{ "response": "Thank you!" }`) answers one review once; a second answer returns 404. `GET /marketplace/products/:id/reviews` now includes `sellerResponse` on each review.
+`GET /seller/advisories` `reminders[].kind` is `weather`, `heat`, `holiday` or `location`. `heat` appears when a forecast day reaches 35 °C. `holiday` appears only when a public holiday is exactly one day away (Philippine date). `holidays.upcoming` still lists the next 14 days.
+
 
 Reports (`POST /buyer/orders/:id/report` and `POST /seller/orders/:id/report`) accept the reasons `pickup_problem`, `conduct`, `listing_inaccurate`, `qr_misuse` and `other`. When different people report the same reason about the same person, it becomes a confirmed violation: `listing_inaccurate` = misleading product information, `conduct` = inappropriate communication, `qr_misuse` = QR-code misuse (serious: blocks the account). `pickup_problem` and `other` never count by themselves.
 
@@ -229,17 +237,18 @@ The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due
 
 **Old "boost again" prompts.** Apply `backend/drizzle/20261101180000_dismiss_boost_prompts`: it marks every leftover `prompt` boost as `dismissed`. Until it runs, those rows are shown as skipped (never "Needs your choice") and listing chips no longer return `priceDropPrompt`. `POST /seller/products/:id/boost` on a listing that is already boosted now returns `409` ("This listing is already boosted. Lower the price from the Price Drops tab.") instead of answering as if a new boost started.
 
-**First post is normal; Priority Boost decides the 6-hour price drops.** `POST /seller/products/:id/boost` is open to any listing (the seller is asked "Post it on Facebook and Instagram?" after adding produce). It no longer returns the Priority Boost `409`; the other `409`s stay (not available, no photo, 3-hour first-post gap, already boosted). A boost already started for the cycle (for example a failed one) can be retried. When the first Facebook post is saved, the backend runs the AHP–TOPSIS check once (`checkPriorityBoostGate`, score 0.60 or higher) and saves `priority_score`, `priority_tier` (`Priority Boost`, `Standard Exposure`, `Basic/Hold` or `Not Ranked`) on the boost. Only a Priority Boost listing gets the 6-hour rule: with a drop amount and final price already set, `follow_up_due_at` = first post + 6 hours; without them, `price_drop_setup_at` = first post + 6 hours, and the worker sends the seller a **Set Your Price Drop** notice (`price_drop_setup`, once per boost, `price_drop_setup_notified_at`). Any other tier keeps the normal post and nothing more. `GET /seller/products/:id/boost` returns `eligibility.canBoost` (room and no wait; headline `"Ready to Post"` or `"Posted"`) and `priceDropRule`: `null` until the first post is out, then `{ "state": "waiting_6h" | "set_up_now" | "on" | "not_priority" | "ended" | "off", "score": 0.0-1.0 | null, "tier": string | null, "setupAt": ISO | null, "nextDropAt": ISO | null }`. Boosts saved before this change have no tier and keep their old behavior. `POST /seller/products/:id/price-drop` and `reduce-price` return `409` "Price drops need Priority Boost" for a boost whose tier is not Priority Boost. Apply `backend/drizzle/20261102120000_boost_priority_price_drop_setup` before testing.
+**First post is normal; Priority Boost decides the 6-hour price drops.** `POST /seller/products/:id/boost` is open to any listing (the seller is asked "Post it on Facebook and Instagram?" after adding produce). It no longer returns the Priority Boost `409`; the other `409`s stay (not available, no photo, 3-hour first-post gap, already boosted). A boost already started for the cycle (for example a failed one) can be retried. When the first Facebook post is saved, the backend runs the AHP–TOPSIS check once (`checkPriorityBoostGate`, score 0.60 or higher) and saves `priority_score`, `priority_tier` (`Priority Boost`, `Standard Exposure`, `Basic/Hold` or `Not Ranked`) on the boost. Only a Priority Boost listing gets the 6-hour rule: with a drop amount and final price already set, `follow_up_due_at` = first post + 6 hours; without them, `price_drop_setup_at` = first post + 6 hours, and the worker sends the seller a **Set Your Price Drop** notice (`price_drop_setup`, once per boost, `price_drop_setup_notified_at`). Any other tier keeps the normal post and nothing more. `GET /seller/products/:id/boost` returns `eligibility.canBoost` (room and no wait; headline `"Ready to Post"` or `"Posted"`) and `priceDropRule`: `null` until the first post is out, then `{ "state": "waiting_6h" | "set_up_now" | "on" | "not_priority" | "ended" | "off", "score": 0.0-1.0 | null, "tier": string | null, "setupAt": ISO | null, "nextDropAt": ISO | null }`. Boosts saved before this change have no tier and keep their old behavior. Apply `backend/drizzle/20261102120000_boost_priority_price_drop_setup` before testing.
 
 **Original stock on Add More.** `POST /seller/products/:id/stock-adjustments` with a positive `delta` on a running listing now raises the current listing cycle's original stock together with the product's, so the Boost "Amount left" and seller analytics match the Listings screen. Apply `backend/drizzle/20261101190000_sync_cycle_original_qty` to repair older listings: it copies the larger product original stock to the current cycle and touches no other rows.
 
-**Running price drops (seller, session).** `GET /seller/price-drops/running`: `{ "items": [{ "boostId", "productId", "productName", "imageUrl", "currentPrice", "lowestPrice", "dropAmount", "nextDropAt": "ISO", "available": true, "message": null, "waitUntil": null }] }`, one per listing whose 6-hour rule is running (drops on, listing active). `available` and `message` say whether `POST /seller/products/:id/price-drop` can run now. The app shows these on the Price Drops tab, not on the Running tab.
+**Running price drops (seller, session).** `GET /seller/price-drops/running`: `{ "items": [{ "boostId", "productId", "productName", "imageUrl", "currentPrice", "lowestPrice", "dropAmount", "nextDropAt": "ISO", "available": true, "message": null, "waitUntil": null }] }`, one per listing whose 6-hour rule is running (drops on, listing active). `available` and `message` are kept for old clients; the app no longer has a button to lower the price by hand. The app shows these on the Price Drops tab, not on the Running tab.
 
-**Lower the price now (seller, session, role `seller`).** `POST /seller/products/:id/price-drop`, no body. It moves the next 6-hour round of the listing's running boost to now; the worker (or an immediate send) then calls n8n with `reason: "follow_up"`, so n8n lowers the price by the seller's amount and posts it, exactly like the automatic round, and the 6 hours start again after it. `200 { "boostId", "productId" }`. `409` with a plain message when it cannot run: not boosted yet or first post not out ("Boost this listing first" / "Wait for your first post to go out"), drops off or no amount/final price ("Automatic price drops are off for this listing"), already at the final price, listing not available, or a lower price was posted less than 3 hours ago ("A lower price was just posted. You can lower it again in about N hours."). `GET /seller/products/:id/boost` returns the same answer as `eligibility.priceDrop: { available, message, waitUntil }`.
+**Lower the price now: removed.** `POST /seller/products/:id/price-drop` no longer exists. Follow-ups are automatic and only for listings with Auto-Post on; the only manual step is the first post.
 
 **Automatic price drops: history and on/off (seller, `Authorization` session, role `seller`).** Apply `backend/drizzle/20261101170000_price_reduction_enabled` first (adds `sellers_product.price_reduction_enabled`, default `true`; seller product reads return it as `priceReductionEnabled`).
 - `GET /seller/price-drops?limit=20&cursor=<postedAt>`: Facebook posts that announced a lower price than the post before them, newest first. Response: `{ "items": [{ "id", "productId", "productName", "imageUrl", "caption", "priceBefore": 70, "priceAfter": 60, "postedAt": "ISO", "postUrl" }], "nextCursor": "ISO|null" }`.
-- `PATCH /seller/products/:id/price-reduction` body `{ "enabled": false }`: `200 { "productId", "enabled" }`. Off clears the pending 6-hour timer, keeps the amount and final price, and `reduce-price` returns `not_enabled`. On needs a drop amount and `minimumPrice` (else `409` "Set a drop amount and a final price in Edit Listing first") and, if the first post already went out, starts a new 6-hour wait. The Boost screen's drop card shows "price stays the same" while it is off. Another seller's product returns `404`. **Set up in one call:** body `{ "enabled": true, "amount": 3, "minimumPrice": 20 }` saves the peso drop and final price (checked against the selling price) and turns the rule on; the response is `200 { "productId", "enabled", "dropNow" }`. `409` "Price drops need Priority Boost. This listing was Standard Exposure when it posted." if the listing was not Priority Boost when it posted. For a Priority boost waiting for its setup, the first drop is due at `price_drop_setup_at` (6 hours after the post), or right away (`dropNow: true`) if that time has passed.
+- `PATCH /seller/products/:id/auto-post` (seller, Bearer session) body `{ "enabled": true }`: `200 { "productId", "enabled" }`. The seller's yes or no to automatic follow-up posts for one listing (the 6-hour price drop and flash-sale post, and posting again when the listing ranks again). The first post stays manual. Default is off. On saves `auto_post_accepted_at`; off clears any waiting follow-up. Another seller's product returns `404`. The seller product responses include `autoPostEnabled`. The mobile app asks right after a product is added and has the switch in Boost Settings.
+- `PATCH /seller/products/:id/price-reduction` body `{ "enabled": false }`: `200 { "productId", "enabled" }`. Off clears the pending 6-hour timer, keeps the amount and final price, and `reduce-price` returns `not_enabled`. On needs a drop amount and `minimumPrice` (else `409` "Set a drop amount and a final price in Edit Listing first") and, if the first post already went out, starts a new 6-hour wait. The Boost screen's drop card shows "price stays the same" while it is off. Another seller's product returns `404`. **Set up in one call:** body `{ "enabled": true, "amount": 3, "minimumPrice": 20 }` saves the peso drop and final price (checked against the selling price) and turns the rule on; the response is `200 { "productId", "enabled", "dropNow" }`. For a boost waiting for its setup, the first drop is due at `price_drop_setup_at` (6 hours after the post), or right away (`dropNow: true`) if that time has passed.
 
 ### Boost progress for the app
 
@@ -307,6 +316,68 @@ Phone alerts: events of the same kind inside one 60-second window (`PUSH_SELLER_
 | GET | `/stakeholder/summary` | Stakeholder role | `backend/src/modules/stakeholder/index/stakeholder.summary.ts` |
 
 This response contains aggregate counts only. Add approved stakeholder emails to the server-side `STAKEHOLDER_EMAILS` list; the client cannot set its own role.
+
+## Pickup, QR, declines and trust (Flagging and Trust PDF)
+
+All times are Asia/Manila. Buyers can pick up **today or tomorrow** only. Pickup times move in 15-minute steps. Every rule is checked again on the server when the order is created.
+
+### Stall setup (seller)
+
+| Method | Path | Body | Notes |
+|---|---|---|---|
+| GET | `/seller/stall` | none | Weekly hours, `closedToday`, `away`, `pickupCapacity`, `pickupWithinMinutes`. |
+| PUT | `/seller/stall/hours` | `{ "days": [{ "weekday": 0-6, "isClosed": false, "opensMinute": 480, "closesMinute": 1200 }] }` | Exactly 7 days. Minutes after midnight. Open days need 1 hour or more. Buyers cannot reserve until hours are saved. |
+| PUT | `/seller/stall/settings` | `{ "pickupCapacity": 3, "pickupWithinMinutes": 120 }` | Capacity = pickups that may overlap. Range = longest range a buyer can pick. |
+| PUT | `/seller/stall/closed-today` | `{ "closed": true }` | Hides today's times only. Weekly hours stay. |
+| PUT | `/seller/stall/away` | `{ "away": true, "days": 14, "reason": "Harvest" }` | At most 14 days. Stops the 48-hour reply clock. Orders, pickup times and QR codes do not change. |
+
+### Reserving (buyer)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/buyer/reservation-status` | `{ canReserve, reason, level, warning }`. Paused or blocked buyers get `canReserve: false` with the reason. |
+| GET | `/buyer/sellers/:sellerId/pickup-slots` | Today and tomorrow in 15-minute cells with `available`, `full`, `busy`. |
+| POST | `/buyer/orders` | Header `Idempotency-Key`. Body `{ "productId", "quantity", "pickupStart": "2026-11-09T02:00:00Z", "pickupEnd": "2026-11-09T03:00:00Z" }`. 409 for overlap with another of the buyer's open orders (any seller), full capacity, closed, outside hours, last 30 minutes before closing. 403 for paused or blocked buyers. |
+| POST | `/buyer/checkouts` | Same, with `items` and `pickups: [{ "sellerId", "pickupStart", "pickupEnd" }]` (one per seller). |
+| POST | `/buyer/orders/:id/cancel` | Only before the seller (or the 3-hour rule) confirms. After that: 409 "This order has already been confirmed by the seller. Buyer cancellation is no longer available." Within 3 hours of pickup adds 1 trust point. |
+
+Order responses now include `pickupStart`, `pickupEnd`, `confirmedAt`, `confirmationMode` (`manual` or `auto`), `packedAt`, `readyAt`, `progress` (`placed, confirmed, preparing, ready, completed` plus `terminal`), `qr` (`status`: `not_yet_valid | active | expired`, `validFrom`, `validUntil`), `canCancel`, `cancelBlockedReason`, `disclaimer`, and on the detail route `stall` (address, directions link, away), `decline`, `excuse`, `noShow`, `reschedules`, `history`. The QR works from `pickupStart` until `pickupEnd` + 15 minutes.
+
+### Seller order steps
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/seller/orders/:id/confirm` | Manual confirmation. The worker confirms by itself 3 hours after the order was placed. |
+| POST | `/seller/orders/:id/pack` / `/ready` | After confirmation. "Ready" does not complete the order. |
+| POST | `/seller/orders/scan` | Completes only with a valid QR inside its window, once. Every try is saved in `order_qr_scans`. |
+| POST | `/seller/orders/:id/no-show` | Only after the pickup time and QR time are over. First no-show = warning, 0 points; later = 2 points. The worker records it after 1 hour if the seller does not. |
+| POST | `/seller/orders/:id/reschedule` | `{ pickupStart, pickupEnd, reason }`. Nothing changes until the buyer accepts. |
+| POST | `/buyer/orders/:id/reschedule/respond` | `{ "accept": true }`. Accepting moves the pickup and QR window. |
+| POST | `/seller/orders/:id/excuse/decide` | `{ "accept": true }`. |
+
+### Decline at pickup
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/buyer/orders/:id/decline` | `multipart/form-data`: `reason` (`spoiled, wilted_far, wrong_item, short_weight, contamination` are valid; `small_size, changed_mind, no_longer_wants, arrived_late` are not), optional `details`, optional `items` (JSON `[{itemId, quantity}]`, whole order if left out), `capturedAt`, `photo` (JPG/PNG/WebP under 5 MB, taken in the app in the last 10 minutes). A reason that is not allowed closes at once (buyer +1, stock restored). A photo already used before goes to an admin. |
+| POST | `/seller/orders/:id/decline/respond` | `multipart/form-data`: `action` = `accept` or `dispute`, optional `note`, `photo`. 24 hours; silence counts as accepted. A dispute saves the note and photo and ends the wait at once: nobody gets points, the order closes as declined at pickup, and the produce is not put back in stock. |
+| POST | `/buyer/orders/:id/excuse` | `{ "reason": "rain|sick|no_transport|other", "details" }`. 24 hours after the order expired, once per 30 days. |
+
+Outcomes, all decided by the system: allowed reason with a new photo and the seller accepts or stays silent for 24 hours = seller +2 (declined amount is **not** put back in stock); the seller disputes = nobody gets points, status `disputed`, declined amount **not** put back in stock; reason not allowed = buyer +1 (stock restored); photo already used on another decline = buyer +2 (stock restored). One trust event per order.
+
+### Trust (user)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/trust/me` | Score (90 days), level, events with `canDispute`, and for sellers the fault rate, Bayesian rating, `trustedSeller`, `underWatch`, `needsReview`, `canBoost`. |
+| POST | `/trust/events/:id/dispute` | `{ "reason" }` (10+ letters). Within 7 days of the event. The system answers at once by checking the stored order, rating, decline or question record against the rule that made the event. Response adds `result` (`upheld`, `rejected` or `unresolved`) and `because`. `upheld` removes the event and recalculates the score; `unresolved` (events from reports, no record to check) leaves the event counting. |
+| POST | `/buyer/orders/:id/report`, `/seller/orders/:id/report` | `details` needs 20+ characters. One report per order per person. Two different people on the same reason confirm it. A pair that confirmed twice in 90 days needs a third independent reporter; until then it stays an allegation at 0 points. |
+
+Levels: 0-1 good standing, 2-3 notice, 4-5 warning, 6-7 pause 24 hours, 8-11 pause 3 days, 12+ block. A seller's pause or block also needs 10+ orders and a fault rate of 10%+, otherwise the seller stays at Warning ("Under watch"). Fault rate 15%+ = "High fault rate": no Priority Boost, no Trusted Seller badge.
+
+### Scheduled jobs (worker, every 60 seconds)
+
+3-hour auto-confirmation, order expiry (QR + 15 minutes), unmarked no-shows after 1 hour, 24-hour decline auto-accept, ended Away periods, level recalculation when points fade, 12/24/48-hour reply timers (paused while Away), notices. Each step is one conditional database update, so running twice does nothing twice.
 
 ## Database migration
 

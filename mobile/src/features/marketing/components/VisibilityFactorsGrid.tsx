@@ -7,17 +7,27 @@ interface VisibilityFactorsGridProps {
   item: SellerVisibilityItem;
 }
 
-function percent(value: number | undefined): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? Math.round(Math.min(1, Math.max(0, value)) * 100) : null;
+const fallbackWeights = { postingAge: 0.3507, priceDrop: 0.3507, stockLevel: 0.1892, sellerReliability: 0.1093 };
+
+function barPercent(value: number | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.round(Math.min(1, Math.max(0, value)) * 100) : 0;
 }
 
-/** The four things that decide how high a listing shows, biggest first. */
+function hoursText(hours: number | undefined) {
+  if (typeof hours !== "number") return "—";
+  return hours < 1 ? "Under 1 hour" : `${Math.floor(hours)} hr`;
+}
+
+/** The four things that decide how high a listing shows, biggest weight first. The bar shows how this listing compares with the others. */
 export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
+  const raw = item.criteria ?? item.inputs;
+  const weights = item.weights ?? fallbackWeights;
+  const bars = item.normalizedCriteria;
   const factors = [
-    { label: "Fresh", weight: 40, value: percent(item.criteria?.freshness ?? item.inputs?.postingAge) },
-    { label: "Amount left", weight: 30, value: percent(item.criteria?.stockAvailability ?? item.inputs?.remainingQuantity) },
-    { label: "Reliability", weight: 20, value: percent(item.criteria?.sellerReliability ?? item.inputs?.sellerReliability) },
-    { label: "Sells often", weight: 10, value: percent(item.criteria?.recurrence ?? item.inputs?.recurrence) },
+    { label: "Time Posted", weight: weights.postingAge, bar: bars?.postingAge, text: hoursText(raw?.postingAge) },
+    { label: "Price Drop", weight: weights.priceDrop, bar: bars?.priceDrop, text: raw ? `₱${raw.priceDrop.toFixed(2)}` : "—" },
+    { label: "Amount left", weight: weights.stockLevel, bar: bars?.stockLevel, text: raw ? `${Number(raw.stockLevel.toFixed(2))}` : "—" },
+    { label: "Reliability", weight: weights.sellerReliability, bar: bars?.sellerReliability, text: raw ? `${raw.sellerReliability.toFixed(1)} / 5` : "—" },
   ];
 
   return (
@@ -27,16 +37,16 @@ export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
           <View style={styles.row}>
             <Text style={styles.label}>
               {factor.label}
-              <Text style={styles.weight}> · {factor.weight}% of score</Text>
+              <Text style={styles.weight}> · Counts for {Math.round(factor.weight * 100)}%</Text>
             </Text>
-            <Text style={styles.value}>{factor.value === null ? "—" : `${factor.value}%`}</Text>
+            <Text style={styles.value}>{factor.text}</Text>
           </View>
           <View style={styles.track}>
-            <View style={[styles.fill, { width: `${factor.value ?? 0}%` }]} />
+            <View style={[styles.fill, { width: `${barPercent(factor.bar)}%` }]} />
           </View>
         </View>
       ))}
-      <Text style={styles.note}>Fresher, bigger, reliable listings show higher.</Text>
+      <Text style={styles.note}>Older listings, bigger price drops, more stock and better ratings show higher.</Text>
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View, Text } from "react-native";
-import { AlertTriangle, CloudRain, CalendarDays } from "lucide-react-native";
+import { AlertTriangle, CloudRain, CalendarDays, Thermometer } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { AdvisoryKind } from "../types";
 
@@ -10,6 +10,7 @@ interface ContextualReminderCardProps {
 
 function getReminderIcon(kind: AdvisoryKind) {
   if (kind === "weather") return <CloudRain size={16} color={colors.warning} />;
+  if (kind === "heat") return <Thermometer size={16} color={colors.warning} />;
   if (kind === "holiday") return <CalendarDays size={16} color={colors.warning} />;
   return <AlertTriangle size={16} color={colors.warning} />;
 }

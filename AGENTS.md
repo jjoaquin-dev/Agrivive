@@ -2,7 +2,106 @@
 
 ## Project Structure & Module Organization
 
-The application lives in `backend/`, a Bun, TypeScript, and Elysia API. `backend/src/index.ts` starts the server. Keep feature modules under `backend/src/modules/<module>/` (plural). Shared database code is in `backend/src/db/`, plugins are in `backend/src/plugins/`, and Drizzle migrations are in `backend/drizzle/`. `.github/workflows/backend-ci.yml` defines CI. `mobile/` currently contains design guidance and image assets, while `analytics/` and `web/` contain no tracked application codez.
+## Project Structure & Architecture Map
+
+This repository is a monorepo containing three core applications, shared deployment orchestration, and an Obsidian project vault:
+1. `backend/`: Bun + Elysia + Drizzle (PostgreSQL) + Better Auth API.
+2. `mobile/`: Expo SDK 57 / React Native seller-facing app (Expo Router).
+3. `web/`: Next.js 15 App Router buyer marketplace (Tailwind CSS, Base UI, Leaflet).
+4. `Agrivive/`: Persistent Obsidian development knowledge vault.
+5. `n8n/workflows/`: Automated marketing and social notification workflows.
+
+### Zero-Guessing Codebase Architecture Map
+
+Both Antigravity and Claude Code MUST use these exact paths. Never guess or speculate on file locations. Look up the destination in this map before performing reads or edits.
+
+#### 1. Backend (`backend/`)
+- **Server Entry**: `backend/src/index.ts`
+- **Database & Schema**: `backend/src/db/schema.ts` and `backend/src/db/index.ts` (Migrations in `backend/drizzle/`)
+- **Auth Configuration**: `backend/src/modules/auth/index.ts` (Better Auth plugins: bearer, emailOTP, twoFactor, expo)
+- **Shared Plugins**: `backend/src/plugins/` (`sessionAuth.ts`, etc.)
+- **Shared Utilities**: `backend/src/utils/`
+  - `ahp-topsis/`: Multi-criteria vegetable visibility ranking algorithm
+  - `email/`: Mailtrap & Resend transactional email delivery
+  - `order-access/`, `order-amount/`, `order-qr/`, `order-read/`, `order-stock/`, `order-types/`: Shared reservation logic
+  - `pickup/`: Verification and order completion utilities
+  - `seller-notifications/`: Server-side push notification payloads & triggers
+  - `trust/`: Trust scores, flags, and account recovery
+  - `visibility-ranking/`: Ranking policy selection (`ahp-topsis` vs `visibility-v4`)
+- **Feature Modules** (`backend/src/modules/<module>/`):
+  Each module follows the strict 3-folder layout:
+  - `index/<feature>.ts`: Elysia route instances & header validation
+  - `model/<feature>.ts`: Request body validation schemas & DTO types
+  - `services/<feature>.ts`: Business logic & DB transactions (**strictly 1 exported function per file**)
+  *Active modules*:
+  - `admin/`: Read-only system metrics (`/admin/performance`); no trust or penalty decisions
+  - `auth/`: User authentication, session refresh, email verification, password management
+  - `buyer/`: Buyer reservation creation, cancellation, and order queries
+  - `conversations/`: In-app buyer-seller chat & WebSocket realtime messaging
+  - `integrations/`: Protected n8n webhook callbacks & social marketing automation
+  - `marketplace/`: Public produce feed, stall geolocation, and ranking policies
+  - `notifications/`: Notification dispatch and category queries
+  - `pickup/`: QR verification and order handover
+  - `seller/`: Seller scanning (`seller.scan-order.ts`), handover, and stall management
+  - `stakeholder/`: City agriculturist / market admin analytics & reports
+  - `trust/`: Trust recovery (`trust.recovery.ts`), seller standing, and moderation actions
+
+#### 2. Seller Mobile App (`mobile/`)
+- **Root Layout & Navigation**:
+  - `mobile/app/_layout.tsx`: Root auth guard, session initialization & font loader
+  - `mobile/app/(auth)/_layout.tsx`: Auth navigation stack
+  - `mobile/app/(app)/_layout.tsx`: Main app modal & navigation stack
+  - `mobile/app/(app)/(tabs)/_layout.tsx`: Bottom tab bar (`home`, `inventory`, `orders`, `messages`, `profile`)
+- **Screens (`mobile/app/`)**:
+  - `(auth)/`: `login.tsx`, `register.tsx`, `onboarding.tsx`, `email-otp-login.tsx`, `verify-email.tsx`, `two-factor.tsx`, `account-recovery.tsx`, `password-setup.tsx`
+  - `(app)/(tabs)/`: `home.tsx`, `inventory.tsx`, `orders.tsx`, `messages.tsx`, `profile.tsx`
+  - `(app)/`: `orders/[id].tsx`, `orders/scan.tsx`, `activity.tsx`, `advisories.tsx`, `notifications.tsx`, `profile/edit.tsx`, `profile/security.tsx`, `profile/setup.tsx`
+- **Feature Modules (`mobile/src/features/<feature>/`)**:
+  - `orders/`: Components (`OrderCard.tsx`, `OrderHandoverSheet.tsx`, `OrderItemsList.tsx`, `OrderStatusBadge.tsx`), types, formatters
+  - `inventory/`: Components (`ProductCard.tsx`, `StockAdjustModal.tsx`), catalog hooks, types
+  - `notifications/`: Components (`NotificationTimelineCard.tsx`, `NotificationSettingsSheet.tsx`, `NotificationCategoryTabs.tsx`), hooks, mappers
+  - `profile/`: Components (`ProfileHeroCard.tsx`, `SignInCodeCard.tsx`, `TotpStepper.tsx`, `ProfileSetupChecklist.tsx`), hooks, tokens
+  - `auth/`: Components (`PasswordForm.tsx`, `GoogleSignInButton.tsx`), API endpoints
+  - `trust/`: API (`recovery.ts`) and moderation cards
+  - `marketing/`: Components (`AutoPriceDropSheet.tsx`, boost preview sheets), hooks
+  - `advisories/`: Components (`WeatherHeroCard.tsx`, `UpcomingHolidaysCard.tsx`, `ContextualReminderCard.tsx`), hooks
+  - `dashboard/`: Components (`DashboardHeader.tsx`, operations hub cards)
+- **Shared Components & Utilities**:
+  - `mobile/src/components/`: `ButtonComponent.tsx`, `InputComponent.tsx`, `OtpInputComponent.tsx`, `PaginationControl.tsx`, `ConfirmDialogComponent.tsx`, `NotificationBellButton.tsx`
+  - `mobile/src/theme/index.ts`: Design system tokens (colors, typography scale, spacing, radii, touch targets)
+  - `mobile/src/context/AuthContext.tsx`: Session state, setup refresh & user profile
+  - `mobile/src/api/client.ts`: Authenticated Better Auth API client
+
+#### 3. Buyer Web App (`web/`)
+- **App Router Pages (`web/app/`)**:
+  - `layout.tsx`, `page.tsx`: Root marketplace storefront
+  - `marketplace/`: Product feed, filter bars, search, and produce detail views
+  - `orders/`: Buyer order list, order details, and digital pickup pass
+  - `(auth)/`: Web login, register, and verification
+  - `admin/`, `cart/`, `messages/`, `notifications/`, `profile/`, `sellers/`, `stakeholder/`: Role-specific buyer pages
+  - `terms/`, `privacy/`, `cookies/`, `download-app/`: Legal & utility pages
+- **Components & Library (`web/src/`)**:
+  - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
+  - `web/src/features/`: Buyer domain logic & data hooks
+  - `web/src/lib/`: API fetch utilities & auth helpers
+
+#### 4. Project Vault & History (`Agrivive/`)
+- `Agrivive/04 Delivery/00-LATEST.md`: Current sprint snapshot (read this first)
+- `Agrivive/04 Delivery/YYYY-MM-DD <Task>.md`: Historical task deliveries
+- `Agrivive/docs/`: Test sheets, verification logs, and documentation indexes
+
+---
+
+### Strict Anti-Guessing & Map Maintenance Policy
+
+1. **Check the Map First**: Both Antigravity and Claude Code must look up files in the **Codebase Architecture Map** before running searches. Never guess, assume framework boilerplate paths, or scan unrelated folders.
+2. **Deterministic File Naming**:
+   - In `backend`: A feature `X.Y` always lives across `index/X.Y.ts`, `model/X.Y.ts`, and `services/X.Y.ts`.
+   - In `mobile`: A route `/path` strictly maps to `mobile/app/(app)/path.tsx` and its feature components to `mobile/src/features/<feature>/components/`.
+3. **Mandatory Map Update on File Creation**:
+   Whenever creating, renaming, moving, or deleting a route, screen, backend module, or major feature folder:
+   - You **MUST** update this Codebase Architecture Map in `AGENTS.md` before finishing your turn.
+   - Keep module names, route paths, and feature directories completely in sync with reality.
 
 Organize each module and shared utility as follows:
 
@@ -74,6 +173,19 @@ When the user supplies a specification, treat it as the completed plan:
 ## Obsidian Vault Updates
 
 The Obsidian vault is in `Agrivive/`. After making project changes, create or update a Markdown note in the vault with the date, what changed, why, the affected file paths, and verification performed. When creating a commit, update the same note with the commit hash and message. Group related changes in one note.
+
+### Zero Orphan Notes Policy (No Floating Markdown Files)
+
+Every Markdown (`.md`) file created anywhere in the vault (`Agrivive/`) MUST be connected to the vault knowledge graph. Never leave a file floating without links:
+
+1. **Incoming Link Required**: Every new note must be linked from its appropriate index, hub, or Map of Content (MOC):
+   - Dated delivery records in `Agrivive/04 Delivery/` must be linked in `Agrivive/04 Delivery/Delivery Index.md` (and its monthly sub-index such as `Delivery Index YYYY-MM.md`) and referenced in `Agrivive/04 Delivery/00-LATEST.md`.
+   - Enhancement notes in `Agrivive/05 Enhancements/` must be linked in `Agrivive/05 Enhancements/Enhancements Index.md`.
+   - Audit notes in `Agrivive/06 Audits and Discrepancies/` must be linked in `Agrivive/06 Audits and Discrepancies/00 Audits and Discrepancies Index.md`.
+   - Documentation, test sheets, and references in `Agrivive/docs/` must be linked in `Agrivive/docs/Docs Index.md`.
+   - Foundational or structural notes must be linked in `Agrivive/00 Home.md`.
+2. **Outgoing / Breadcrumb Link Required**: Every note must contain at least one link pointing back to its parent index, hub, or relevant upstream note (e.g., `Up: [[Delivery Index 2026-11]]` or `Parent: [[Docs Index]]`).
+3. **Verification**: After creating any vault note, verify that it has both incoming and outgoing links and that no orphan file was introduced.
 
 ## Testing Guidelines
 

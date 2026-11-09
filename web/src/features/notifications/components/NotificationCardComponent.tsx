@@ -29,10 +29,14 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
   const isCancellation = notice.kind === "seller_cancellation_buyer";
   const isWarning = notice.kind === "trust_action_warning" || notice.kind.includes("warning");
   const isRestriction = notice.kind === "trust_action_restriction" || notice.kind.includes("restriction");
-  const isTrustNotice = isWarning || isRestriction;
+  const isTrustNotice = (isWarning || isRestriction) && !notice.kind.startsWith("trust_event");
+  const genericTitles: Record<string, string> = { order_update: "Order update", trust_event: "Trust update", trust_decision: "Decision on your case", trust_level_lowered: "Restriction ended", trust_action_notice: "Trust notice" };
+  const isGeneric = notice.kind in genericTitles;
   const isUnread = !notice.readAt;
 
-  const title = isRestriction
+  const title = isGeneric
+    ? genericTitles[notice.kind]
+    : isRestriction
     ? "Reservations Temporarily Paused"
     : isWarning
     ? "Account Notice: Cancellation Advisory"
@@ -48,7 +52,9 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? "Inquiry Awaiting Seller Response"
     : "Pickup Completed";
 
-  const description = isTrustNotice
+  const description = isGeneric
+    ? (notice.reason ?? "")
+    : isTrustNotice
     ? (notice.reason || (isRestriction ? "Reservations on your account are temporarily paused." : "Please avoid frequent cancellations to keep your reservations active."))
     : isPriceDrop
     ? `${notice.shopName || "A stall you follow"} lowered the price of ${notice.productName || "produce"}${notice.price ? ` to ₱${notice.price}` : ""}${notice.previousPrice ? ` (was ₱${notice.previousPrice})` : ""}! Reserve yours before stock runs out.`
@@ -151,7 +157,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           )}
         </div>
 
-        <p className="mt-1 text-[13px] leading-relaxed text-neutral-600">
+        <p className="mt-1 whitespace-pre-line text-[13px] leading-relaxed text-neutral-600">
           {description}
         </p>
 

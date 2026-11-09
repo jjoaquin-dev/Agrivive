@@ -5,8 +5,8 @@ import { fb_post_logs } from "../../db/schema";
 /** Hours between two price drop posts for the same product. */
 export const priceDropPostGapHours = 3;
 
-/** Hours between two first posts for the same product. */
-export const firstPostGapHours = 3;
+/** Hours a product stays locked after its boost post (the six-hour rule). */
+export const firstPostGapHours = 6;
 
 type Executor = Pick<typeof db, "select">;
 

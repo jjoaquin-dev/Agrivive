@@ -6,7 +6,7 @@ import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { formatRemainingTime } from "../../../utils/trust/access";
 import { trustActionPolicy, trustScoreWindowStart } from "../../../utils/trust/policy";
 import { readTrustMonitoringScore } from "../../../utils/trust/score";
-import { cancellationPauseAt, cancellationWarningAt, resolveCancellationWarning } from "../../../utils/trust/cancellation-policy";
+import { describeLevelChange } from "../../../utils/trust/notice-text";
 
 export async function getBuyerProfile(userId: string) {
   const windowStart = trustScoreWindowStart();
@@ -71,7 +71,7 @@ export async function getBuyerProfile(userId: string) {
     const hours = activeAction.endsAt
       ? Math.round((activeAction.endsAt.getTime() - activeAction.createdAt.getTime()) / 3_600_000)
       : 72;
-    const durationText = hours >= 72 ? "3 days" : hours >= 24 ? "24 hours" : "12 hours";
+    const durationText = hours >= 72 ? "3 days" : "24 hours";
 
     trustRestriction = {
       message: activeAction.reason.includes("Please come back in")
@@ -85,11 +85,8 @@ export async function getBuyerProfile(userId: string) {
   // If no restriction is active, check warnings
   let warningMessage: string | null = null;
   if (!trustRestriction) {
-    if (cancelRow >= cancellationWarningAt && cancelRow < cancellationPauseAt) {
-      warningMessage = resolveCancellationWarning(cancelRow);
-    } else if (monitoring.weightedPoints >= trustActionPolicy.warningThreshold && monitoring.weightedPoints < trustActionPolicy.tier1Threshold) {
-      warningMessage =
-        "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.";
+    if (monitoring.weightedPoints >= trustActionPolicy.warningThreshold && monitoring.weightedPoints < trustActionPolicy.tier1Threshold) {
+      warningMessage = `${describeLevelChange("warning", monitoring.weightedPoints, "buyer")} Pick up on time, or cancel early, to avoid a pause.`;
     }
   }
 

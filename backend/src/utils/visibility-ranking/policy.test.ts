@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { baselinePolicyVersion, resolveVisibilityPolicy, scoreTier } from "./policy";
+import { baselinePolicyVersion, resolveVisibilityPolicy } from "./policy";
 
 // WSV-010 | Change VISIBILITY_POLICY and refresh the marketplace |
 // Rolls back to the baseline without errors, and switching back restores AHP-TOPSIS. AHP-TOPSIS is the default.
@@ -25,21 +25,6 @@ describe("WSV-010 visibility policy switch", () => {
   test("A missing, empty or unknown setting uses AHP-TOPSIS instead of failing", () => {
     for (const setting of [undefined, "", "   ", "visibility-ahptopsis", "ahp", "visibility-v5"]) {
       expect(resolveVisibilityPolicy(setting)).toBe("visibility-ahptopsis-v1");
-    }
-  });
-
-  test("Priority starts at 0.70 on the baseline and at 0.60 on AHP-TOPSIS", () => {
-    expect(scoreTier(0.65, "visibility-v4")).toBe("standard");
-    expect(scoreTier(0.7, "visibility-v4")).toBe("priority");
-    expect(scoreTier(0.6, "visibility-ahptopsis-v1")).toBe("priority");
-    expect(scoreTier(0.5999, "visibility-ahptopsis-v1")).toBe("standard");
-  });
-
-  test("Standard starts at 0.40 and a listing with no score has no tier, on both policies", () => {
-    for (const policy of ["visibility-v4", "visibility-ahptopsis-v1"] as const) {
-      expect(scoreTier(0.4, policy)).toBe("standard");
-      expect(scoreTier(0.3999, policy)).toBe("basic");
-      expect(scoreTier(null, policy)).toBeNull();
     }
   });
 });

@@ -16,7 +16,6 @@ export async function requireVerifiedSeller(
     emailVerified: user.emailVerified,
   }).from(user).where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive) throw new OrderError(403, "Account is inactive");
-  if (!allowTrustAccess) await requireNoActiveTrustRestriction(tx, sellerId);
   if (!account.emailVerified) {
     throw new OrderError(403, "Email OTP verification is required");
   }
@@ -28,13 +27,18 @@ export async function requireVerifiedSeller(
   }
 }
 
+/** A paused seller keeps serving orders but cannot add listings or use Priority Boost. Blocked sellers cannot sign in at all. */
+export async function requireSellerMayList(tx: OrderTransaction, sellerId: string) {
+  await requireVerifiedSeller(tx, sellerId);
+  await requireNoActiveTrustRestriction(tx, sellerId);
+}
+
 export async function requireSellerScanAccess(tx: OrderTransaction, sellerId: string, orderId: string) {
   const [account] = await tx.select({ isActive: user.isActive, roles: user.role }).from(user)
     .where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive || !account.roles?.includes("seller")) {
     throw new OrderError(403, "Seller account is inactive");
   }
-  await requireNoActiveTrustRestriction(tx, sellerId);
   try {
     await requireVerifiedSeller(tx, sellerId);
     return;
@@ -53,7 +57,6 @@ export async function sellerReadableOrderIds(tx: OrderTransaction, sellerId: str
   const [account] = await tx.select({ isActive: user.isActive, roles: user.role }).from(user)
     .where(eq(user.id, sellerId)).limit(1);
   if (!account?.isActive || !account.roles?.includes("seller")) throw new OrderError(403, "Seller account is inactive");
-  await requireNoActiveTrustRestriction(tx, sellerId);
   try {
     await requireVerifiedSeller(tx, sellerId);
     return null;

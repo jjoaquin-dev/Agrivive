@@ -87,7 +87,7 @@ export async function getSellerAnalyticsMetrics(
         expiredAt: orders.expiredAt,
       })
       .from(orders)
-      .where(eq(orders.sellersId, sellerId));
+      .where(and(eq(orders.sellersId, sellerId), eq(orders.countsForRanking, true)));
     const orderById = new Map(sellerOrders.map((order) => [order.id, order]));
 
     const selected = new Set(productIds);

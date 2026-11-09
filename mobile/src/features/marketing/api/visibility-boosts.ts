@@ -72,6 +72,14 @@ export function setAutoPriceDropEnabled(productId: string, enabled: boolean, set
   });
 }
 
+/** The seller's yes or no to automatic follow-up posts for one listing. */
+export function setAutoPostEnabled(productId: string, enabled: boolean) {
+  return apiFetch<{ productId: string; enabled: boolean }>(`/seller/products/${productId}/auto-post`, {
+    method: "PATCH",
+    body: JSON.stringify({ enabled }),
+  });
+}
+
 /** Brings the next automatic price drop forward to now. n8n lowers the price and posts it within a minute. */
 export function requestPriceDropNow(productId: string) {
   return apiFetch<{ boostId: string; productId: string }>(`/seller/products/${productId}/price-drop`, { method: "POST" });

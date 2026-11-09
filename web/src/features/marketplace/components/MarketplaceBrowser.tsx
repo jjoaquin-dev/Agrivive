@@ -84,7 +84,7 @@ function MarketplaceBrowserContent() {
             onSearchSubmit={handleSearch}
           />
 
-          {/* 2. Priority deals (hidden when there are none) */}
+          {/* 2. Top deals (hidden when there are none) */}
           <MarketplaceDealsRow />
 
           {/* 5. Results */}

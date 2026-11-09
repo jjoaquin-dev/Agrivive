@@ -5,7 +5,6 @@ import { sellerPriceDropHistoryQuery, sellerPriceReductionToggleBody } from "../
 import { listSellerPriceDropHistory } from "../services/seller.price-reduction.history.list";
 import { setSellerPriceReductionEnabled } from "../services/seller.price-reduction.toggle";
 import { listSellerRunningPriceDrops } from "../services/seller.price-reduction.running.list";
-import { requestSellerPriceDropNow } from "../services/seller.price-reduction.drop-now";
 import { deliverSellerBoostFollowUps } from "../../../jobs/deliver-seller-boost-follow-ups";
 import { sellerProductFailure } from "./seller.product.failure";
 
@@ -29,12 +28,4 @@ export const sellerPriceReductionRoute = new Elysia().use(sessionAuth)
       if (saved.dropNow) void deliverSellerBoostFollowUps().catch((error) => console.error("Immediate price drop delivery failed", error));
       return saved;
     } catch (error) { return sellerProductFailure(error, status); }
-  }, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody })
-  .post("/products/:id/price-drop", async ({ session, params, status }) => {
-    try {
-      const queued = await requestSellerPriceDropNow(session.userId, params.id);
-      // Send it to n8n now; the worker's next pass is the safety net.
-      void deliverSellerBoostFollowUps().catch((error) => console.error("Immediate price drop delivery failed", error));
-      return queued;
-    } catch (error) { return sellerProductFailure(error, status); }
-  }, { role: ["seller"], params: sellerProductId });
+  }, { role: ["seller"], params: sellerProductId, body: sellerPriceReductionToggleBody });

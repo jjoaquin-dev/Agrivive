@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { Check, CornerDownRight, MessageSquare, Star } from "lucide-react-native";
 import type { ReviewItem } from "../types";
 import { ReviewReplyComposer } from "./ReviewReplyComposer";
@@ -9,6 +9,14 @@ interface ReviewCardProps {
   review: ReviewItem;
   onSubmitReply: (reviewId: string, reply: string) => Promise<void>;
 }
+
+const Stars: React.FC<{ value: number }> = ({ value }) => (
+  <View style={styles.starRow}>
+    {[1, 2, 3, 4, 5].map((s) => (
+      <Star key={s} size={14} color="#EAB308" fill={s <= value ? "#EAB308" : "transparent"} />
+    ))}
+  </View>
+);
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply }) => {
   const [isReplying, setIsReplying] = useState(false);
@@ -53,16 +61,16 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
         <Text style={styles.dateText}>{formattedDate}</Text>
       </View>
 
-      <View style={styles.starRow}>
-        {[1, 2, 3, 4, 5].map((s) => (
-          <Star
-            key={s}
-            size={14}
-            color="#EAB308"
-            fill={s <= review.rating ? "#EAB308" : "transparent"}
-          />
-        ))}
+      <View style={styles.ratingLine}>
+        <Text style={styles.ratingLabel}>Seller</Text>
+        <Stars value={review.serviceRating ?? review.rating} />
       </View>
+      {review.productRating ? (
+        <View style={styles.ratingLine}>
+          <Text style={styles.ratingLabel}>Produce</Text>
+          <Stars value={review.productRating} />
+        </View>
+      ) : null}
 
       {review.items && review.items.length > 0 ? (
         <View style={styles.itemsWrap}>
@@ -79,6 +87,10 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
       ) : (
         <Text style={styles.noCommentText}>No written comment</Text>
       )}
+
+      {review.photoUrl ? (
+        <Image source={{ uri: review.photoUrl }} style={styles.reviewPhoto} accessibilityLabel="Photo from the buyer" />
+      ) : null}
 
       {review.sellerResponse ? (
         <View style={styles.responseBox}>
