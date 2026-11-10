@@ -187931,6 +187931,9 @@ async function finishInstagramPost(logId, result) {
 }
 
 // src/modules/integrations/services/integrations.social-publish-instagram.ts
+var RATE_LIMIT_CODES = new Set([4, 17, 32, 613, 80002]);
+var COOL_DOWN_MS = 60 * 60000;
+var coolDownUntil = 0;
 function describe2(result, status) {
   const code = result.error?.code ? `code ${result.error.code}${result.error.error_subcode ? `/${result.error.error_subcode}` : ""}` : `HTTP ${status}`;
   return [code, result.error?.message?.slice(0, 160)].filter(Boolean).join(": ");
@@ -187951,19 +187954,21 @@ async function graph(url, token, body) {
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
     console.error("Instagram Graph API call failed", { status: response.status, ...result.error });
+    if (result.error?.code && RATE_LIMIT_CODES.has(result.error.code))
+      coolDownUntil = Date.now() + COOL_DOWN_MS;
     throw new OrderError(502, `Instagram could not publish this post (${describe2(result, response.status)})`);
   }
   return result;
 }
 async function waitUntilReady(host, containerId, token) {
-  for (let attempt = 0;attempt < 6; attempt++) {
+  for (let attempt = 0;attempt < 5; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     const result = await graph(`${host}/${containerId}?fields=status_code`, token);
     if (result.status_code === "FINISHED")
       return;
     if (result.status_code === "ERROR" || result.status_code === "EXPIRED") {
       throw new OrderError(502, "Instagram could not publish this post (the photo was not accepted)");
     }
-    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   throw new OrderError(502, "Instagram could not publish this post (the photo took too long to check)");
 }
@@ -187973,6 +187978,8 @@ async function publishInstagramPhoto(imageUrl, caption) {
   const version = process.env.META_GRAPH_API_VERSION?.trim();
   if (!instagramId || !token || !version)
     throw new OrderError(503, "Instagram publishing is not configured");
+  if (Date.now() < coolDownUntil)
+    throw new OrderError(503, "Instagram is busy right now. It will work again in about an hour.");
   const host = `https://graph.facebook.com/${version}`;
   const created = await graph(`${host}/${instagramId}/media`, token, new URLSearchParams({ image_url: imageUrl, caption }));
   if (!created.id)
