@@ -12,7 +12,7 @@
 
 ![Bun](https://img.shields.io/badge/Bun-1.4-000000?style=for-the-badge&logo=bun&logoColor=white)
 ![Elysia](https://img.shields.io/badge/Elysia-API-8B5CF6?style=for-the-badge)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-AWS_Aurora-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![Expo](https://img.shields.io/badge/Expo-SDK_58-000020?style=for-the-badge&logo=expo&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-Boost_Engine-EA4B71?style=for-the-badge&logo=n8n&logoColor=white)
@@ -82,12 +82,13 @@ flowchart LR
         C["Caddy<br/>HTTPS + proxy"]
         A["⚙️ API<br/>Bun + Elysia<br/>+ WebSocket chat"]
         K["⏱️ Worker<br/>every 60 s"]
+        N["🔁 n8n<br/>self-hosted"]
     end
 
-    DB[("🐘 PostgreSQL<br/>Supabase")]
+    DB[("🐘 PostgreSQL<br/>AWS Aurora")]
     S3[("🪣 S3<br/>photos + APK")]
     X["⛅ Open-Meteo<br/>Nager.Date"]
-    N["🔁 n8n + Groq<br/>promotion copy"]
+    GQ["✍️ Groq<br/>promotion copy"]
     FB["📣 Facebook<br/>Instagram"]
     P["🔔 FCM push"]
     E["✉️ Resend<br/>email codes"]
@@ -99,6 +100,7 @@ flowchart LR
     W --> T
     M --> C
     C --> A
+    C --> N
     A --> DB
     K --> DB
     A --> S3
@@ -108,6 +110,7 @@ flowchart LR
     A --> X
     K -->|"IDs only"| N
     N -->|"Bearer token<br/>fetches context"| A
+    N --> GQ
     A --> FB
     K --> P
     A --> P
@@ -115,7 +118,7 @@ flowchart LR
 
 **Two processes, one codebase.** [`src/index.ts`](backend/src/index.ts) serves HTTP. [`src/worker.ts`](backend/src/worker.ts) runs the scheduled jobs: reservation expiry, trust and reply timers, new-listing notices, ranked Boost rounds, Boost follow-ups and price cuts, push delivery, and the daily weather and holiday notices. Run exactly one worker.
 
-**n8n gets IDs, never secrets.** The worker tells n8n only *which* boost to run. n8n then calls back into protected `/integrations/*` routes with a service token to fetch the current facts. Credentials for Meta, FCM, S3 and email stay server-side.
+**n8n gets IDs, never secrets.** n8n runs as a container on the same VPS (its own HTTPS domain through Caddy, its data in a Docker volume, a fixed `N8N_ENCRYPTION_KEY`). The worker tells n8n only *which* boost to run. n8n then calls back into protected `/integrations/*` routes with a service token to fetch the current facts. Credentials for Meta, FCM, S3 and email stay server-side. If Instagram answers with a rate-limit error, the API pauses Instagram posts for an hour and tells the seller plainly, while Facebook keeps posting.
 
 ---
 
@@ -136,13 +139,13 @@ flowchart LR
 | Layer | Tech |
 |---|---|
 | **API** | Bun, Elysia, TypeScript (strict), Better Auth (email OTP, Google, 2FA), OpenAPI |
-| **Database** | PostgreSQL on Supabase (47 tables), Drizzle ORM, hand-reviewed migrations |
+| **Database** | PostgreSQL on AWS Aurora (47 tables), Drizzle ORM, hand-reviewed migrations |
 | **Web** | Next.js 15 App Router, React 19, Tailwind 3, GSAP + Lenis, Leaflet, Base UI, shadcn |
 | **Mobile** | Expo SDK 58, React Native 0.88, expo-router, Better Auth Expo client, EAS Build |
 | **Automation** | n8n workflow ([`n8n/workflows/`](n8n/workflows)) with Groq (`openai/gpt-oss-20b`) for promotion copy; the API also asks Groq for the seller report summary (with a built-in fallback) |
 | **Storage, mail & push** | AWS S3, Resend (Mailtrap in development), Firebase Cloud Messaging |
 | **Outside data** | Open-Meteo (weather), Nager.Date (holidays), OpenStreetMap (map tiles), Facebook and Instagram Graph APIs |
-| **Ops** | Docker Compose, Caddy, GitHub Actions (CI per app, manual CD) |
+| **Ops** | Docker Compose (API, worker, web, Caddy, n8n), Caddy, GitHub Actions (CI per app, manual CD) |
 
 ---
 
@@ -219,8 +222,8 @@ Agrivive/
 ├── n8n/workflows/      exported Boost workflow (no credentials)
 ├── Agrivive/           Obsidian vault: the development record
 ├── .github/workflows/  CI per app, manual CD
-├── docker-compose.yml  API · worker · web · Caddy
-└── Caddyfile           HTTPS and routing
+├── docker-compose.yml  API · worker · web · Caddy · n8n
+└── Caddyfile           HTTPS and routing (web, API, n8n domains)
 ```
 
 Each backend module follows one shape: `index/` routes, `model/` request schemas, `services/` database and business logic (one exported function per file). Shared logic used by several modules lives in `src/utils/<name>/index.ts`.
@@ -273,7 +276,9 @@ Backend logic is covered by `bun test` (260 tests: ranking, reservations and pic
 
 ## 🚢 Premiere (Deploy)
 
-1. **Merge to `main`**, then run the manual CD workflow for what changed: [`backend-cd.yml`](.github/workflows/backend-cd.yml) or [`web-cd.yml`](.github/workflows/web-cd.yml). They ship a release to the VPS through [`scripts/vps-release.sh`](scripts/vps-release.sh).
+1. **Merge to `main`**, then run the manual CD workflow for what changed: [`backend-cd.yml`](.github/workflows/backend-cd.yml) or [`web-cd.yml`](.github/workflows/web-cd.yml). They ship a release to the VPS through [`scripts/vps-release.sh`](scripts/vps-release.sh). By hand on the VPS: `git pull && docker compose up --build -d`. A change to `.env` needs `docker compose up -d`, since `restart` does not reload it.
+   - Set `WEB_DOMAIN`, `API_DOMAIN`, `N8N_DOMAIN` and `N8N_ENCRYPTION_KEY` in the root `.env` before starting Caddy and n8n. Point each domain's DNS at the VPS and open ports 80 and 443.
+   - Import [`n8n/workflows/agrivive-visibility-boost.json`](n8n/workflows/agrivive-visibility-boost.json) once, attach the two Header Auth credentials (the service token for the API nodes, the Groq key for the caption nodes), then publish it.
 2. **Migrations are a release step.** Apply them on purpose, before the new API serves traffic.
 3. **Mobile** is built with EAS: `eas build --profile preview --platform android` makes the installable APK, and `--profile production` makes the store bundle. Deploy the backend first, since the app depends on its latest changes. Upload it to S3 and the website links to it. The page at `/download-app` walks sellers through installing it.
 
