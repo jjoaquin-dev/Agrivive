@@ -9,7 +9,7 @@ interface AppLoadingScreenProps {
 
 /**
  * Same logo, same spot as the phone's own start screen so nothing jumps. There is no spinner: the start screen stays still.
- * Android 12 and newer cut the start screen logo into a circle, so Android uses the square icon in both places.
+ * Android 12 and newer cut the start screen logo into a circle, so Android uses a padded square copy of the cart logo in both places.
  * The caption shows after 1.5s and Try Again after 10s.
  */
 const androidLogo = Platform.OS === "android";
@@ -29,7 +29,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
   return (
     <View style={styles.screen}>
       <Image
-        source={androidLogo ? require("../../../assets/brand/agrivive-logo-icon.png") : require("../../../assets/brand/agrivive-logo-full.png")}
+        source={androidLogo ? require("../../../assets/brand/agrivive-splash-android.png") : require("../../../assets/brand/agrivive-logo-full.png")}
         style={androidLogo ? styles.iconLogo : styles.logo}
         resizeMode="contain"
         accessibilityLabel="Agrivive"
@@ -45,7 +45,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
   logo: { width: 280, height: 81 },
-  iconLogo: { width: 150, height: 161 },
+  iconLogo: { width: 288, height: 288 },
   extra: { position: "absolute", left: 0, right: 0, top: "50%", marginTop: 90, alignItems: "center" },
   caption: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
 });
