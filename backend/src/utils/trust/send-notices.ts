@@ -6,9 +6,10 @@ import { sendEmail } from "../email";
 const messages: Record<string, { subject: string; text: string }> = {
   seller_cancellation_warning: { subject: "Agrivive order cancellation warning", text: "You cancelled a pending buyer order. This event was recorded in your trust history." },
   seller_cancellation_buyer: { subject: "Agrivive order cancelled", text: "The seller cancelled your order. Reserved stock was restored." },
-  inquiry_12h_reminder: { subject: "Agrivive inquiry reminder", text: "A buyer inquiry has been waiting for your reply for 12 hours." },
-  inquiry_24h_warning: { subject: "Agrivive inquiry warning", text: "A buyer inquiry has been waiting for your reply for 24 hours." },
-  inquiry_24h_buyer_notice: { subject: "Agrivive inquiry update", text: "The seller has not replied to your inquiry after 24 hours." },
+  inquiry_12h_reminder: { subject: "Agrivive inquiry reminder", text: "A buyer inquiry has been waiting for your reply for 12 open hours of your stall." },
+  inquiry_24h_warning: { subject: "Agrivive inquiry warning", text: "A buyer inquiry has been waiting for your reply for 24 open hours of your stall." },
+  inquiry_24h_buyer_notice: { subject: "Agrivive inquiry update", text: "The seller has not replied to your inquiry after 24 hours of the stall being open." },
+  pickup_closing_soon: { subject: "Agrivive pickup reminder", text: "The stall closes in 30 minutes. Please pick up your order soon." },
   trust_event_corrected: { subject: "Agrivive trust record corrected", text: "A trust event was invalidated after its source data was rechecked." },
   trust_action_warning: { subject: "Agrivive trust warning", text: "Your verified trust history reached the warning threshold. Review your account activity and keep future transactions responsive." },
   trust_action_restriction: { subject: "Agrivive temporary restriction", text: "Your account has a temporary restriction because verified trust events reached the configured restriction threshold. The restriction will expire automatically unless a newer action applies." },

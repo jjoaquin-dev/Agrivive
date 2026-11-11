@@ -26,6 +26,8 @@ status: active
 - [[Reservation and QR Pickup]]
 - [[Weighted Surplus Visibility]]
 - [[AHP-TOPSIS Proof Pack]]
+- [[AHP-TOPSIS Criteria Basis]]
+- [[Vegetable Catalog Sources]]
 - [[Marketing Boost]]
 - [[Seller Analytics]]
 - [[Contextual Advisories]]

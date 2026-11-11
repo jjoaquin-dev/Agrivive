@@ -17,7 +17,7 @@ function title(kind: string) { return titles[kind] || "Seller account update"; }
 function description(kind: string) {
   switch (kind) {
     case "seller_cancellation_warning": return "A cancelled pending order was added to your trust history.";
-    case "inquiry_12h_reminder": return "A buyer has been waiting for your answer for 12 hours.";
+    case "inquiry_12h_reminder": return "A buyer has been waiting for your answer for 12 open hours of your stall.";
     case "inquiry_24h_warning": return "Please answer the buyer before the inquiry becomes overdue.";
     case "inquiry_24h_buyer_notice": return "The buyer was informed that the inquiry is still unanswered.";
     case "trust_event_corrected": return "A trust event was corrected after its source was checked.";

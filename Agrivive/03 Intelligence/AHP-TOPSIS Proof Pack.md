@@ -6,6 +6,8 @@ last_updated: 2026-11-08
 
 # AHP-TOPSIS Proof Pack
 
+Where the criteria come from: [[AHP-TOPSIS Criteria Basis]].
+
 Answers the prof checklist of 2026-11-04 (Jara, sections A to D). Every number below was produced by the real engine (`backend/src/utils/ahp-topsis`) and checked by hand. Related: [[Weighted Surplus Visibility]], [[Marketing Boost]], [[Seller Analytics]], [[Boost Ranking Flow AHP-TOPSIS]], [[2026-11-08 Prof Feedback Jara Items]].
 
 ## Words used (kept apart on purpose)

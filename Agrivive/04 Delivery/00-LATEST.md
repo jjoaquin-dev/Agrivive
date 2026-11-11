@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-10 PST
+last_updated: 2026-11-11 PST
 status: active
 ---
 
@@ -11,11 +11,13 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-10 PST
+2026-11-11 PST
 
 ## Latest completed task
 
-README aligned with the current system (Supabase, 47 tables, one review per order, reservation pickup, no Priority Boost, no admin trust decisions), architecture and database diagrams added under `Agrivive/docs/`, CI workflows fixed and bun pinned to 1.4.4 (not pushed yet), and two stale Supabase objects dropped. See [[2026-11-10 README Diagrams and CI Fix]].
+Stall hours drive seller penalties: reply timers count open hours only, buyers get a 30-minute closing reminder, and the mobile hours editor is alarm-style (time once, pick weekdays, Open 24 hours). See [[2026-11-11 Stall Hours Reply Clock and Closing Reminder]]. Rebuild the APK and deploy the API and worker.
+
+Earlier: README aligned with the current system (Supabase, 47 tables, one review per order, reservation pickup, no Priority Boost, no admin trust decisions), architecture and database diagrams added under `Agrivive/docs/`, CI workflows fixed and bun pinned to 1.4.4 (not pushed yet), and two stale Supabase objects dropped. See [[2026-11-10 README Diagrams and CI Fix]].
 
 Earlier: Schema cleanup and chat rules: dropped `product_reviews`, `priority_score`, `priority_tier` and `price_reduction_percent` (migration `20261109140000_drop_unused_columns`); web chats show only buyer chats and mobile only seller chats (`as=buyer|seller`); sellers can block, unblock and archive; one account can buy and sell (migration `20261109150000_sellers_can_buy`). Migrations not applied anywhere yet; back up first, apply, then deploy the rebuilt API. See [[2026-11-09 Schema Cleanup Chat Sides and Dual Roles]].
 

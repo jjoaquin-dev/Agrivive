@@ -11,6 +11,7 @@ import { deliverSellerBoostFollowUps } from "./deliver-seller-boost-follow-ups";
 import { sendPriceDropSetupNotices } from "./send-price-drop-setup-notices";
 import { sendDailyAdvisoryNotices } from "./send-daily-advisory-notices";
 import { sendReservationEndingNotices } from "./send-reservation-ending-notices";
+import { sendClosingSoonNotices } from "./send-closing-soon-notices";
 import { autoConfirmOrders } from "../modules/pickup/services/pickup.order.auto-confirm";
 import { autoAcceptDeclines } from "../modules/pickup/services/pickup.decline.auto-accept";
 import { recordUnmarkedNoShows } from "../modules/pickup/services/pickup.order.no-show.auto";
@@ -25,6 +26,7 @@ export async function runScheduledJobs() {
   const awayEnded = await closeExpiredAway();
   const standingsLowered = await recalculateActiveStandings();
   const reservationEndingNotices = await sendReservationEndingNotices();
+  const closingSoonNotices = await sendClosingSoonNotices();
   const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
@@ -36,5 +38,5 @@ export async function runScheduledJobs() {
   const priceDropSetupNotices = await sendPriceDropSetupNotices();
   const dailyAdvisoryNotices = await sendDailyAdvisoryNotices();
   const pushNotifications = await deliverPushNotifications();
-  return { autoConfirmed, expiredOrders, noShowsRecorded, declinesAccepted, awayEnded, standingsLowered, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, rankedBoost, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, dailyAdvisoryNotices, pushNotifications };
+  return { autoConfirmed, expiredOrders, noShowsRecorded, declinesAccepted, awayEnded, standingsLowered, reservationEndingNotices, closingSoonNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, rankedBoost, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, dailyAdvisoryNotices, pushNotifications };
 }

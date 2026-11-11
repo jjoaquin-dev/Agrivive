@@ -66,10 +66,11 @@ async function addUser(role: "buyer" | "seller") {
   await pg.insert(schema.user).values({ id, name: `${role}${seq}`, email: `${id}@t.dev`, role: [role], emailVerified: true });
   return id;
 }
-async function addSeller(opts: { capacity?: number } = {}) {
+/** `allDay` is a 24-hour stall, so waiting time equals clock time. */
+async function addSeller(opts: { capacity?: number; allDay?: boolean } = {}) {
   const id = await addUser("seller");
   await pg.insert(schema.sellers_profile).values({ userId: id, shopName: `Stall ${id}`, detailAddress: "Market Rd", phoneNumber: "09171234567", latitude: 14.6, longitude: 121, pickupCapacity: opts.capacity ?? 3 });
-  await pg.insert(schema.seller_opening_hours).values([0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ sellerId: id, weekday, isClosed: false, opensMinute: 6 * 60, closesMinute: 20 * 60 })));
+  await pg.insert(schema.seller_opening_hours).values([0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ sellerId: id, weekday, isClosed: false, opensMinute: opts.allDay ? 0 : 6 * 60, closesMinute: opts.allDay ? 1440 : 20 * 60 })));
   const [product] = await pg.insert(schema.sellers_product).values({ userId: id, productName: "Tomato", productType: "Leafy Greens", scalingType: "kilo", productPrice: "20", productQty: "100", originalQty: "100", isMarketable: true, publishedAt: new Date() }).returning();
   return { id, productId: product!.id };
 }
@@ -654,7 +655,7 @@ describe("Away mode", () => {
     expect((await readStall(seller.id)).away.active).toBe(false);
   });
   test("time spent Away does not count; the remaining wait still can", async () => {
-    const buyer = await addUser("buyer"); const seller = await addSeller();
+    const buyer = await addUser("buyer"); const seller = await addSeller({ allDay: true });
     const id = await reserve(buyer, seller);
     await pg.insert(schema.seller_away_periods).values({ sellerId: seller.id, startedAt: new Date(Date.now() - 40 * HOUR), endedAt: new Date(Date.now() - 2 * HOUR) });
     await pg.insert(schema.order_inquiries).values({ orderId: id, buyerId: buyer, sellerId: seller.id, question: "Is it fresh?", createdAt: new Date(Date.now() - 49 * HOUR) });
@@ -666,7 +667,7 @@ describe("Away mode", () => {
     expect(await points(seller.id)).toBe(1);
   });
   test("a reply at 47 hours is never flagged", async () => {
-    const buyer = await addUser("buyer"); const seller = await addSeller();
+    const buyer = await addUser("buyer"); const seller = await addSeller({ allDay: true });
     const id = await reserve(buyer, seller);
     await pg.insert(schema.order_inquiries).values({ orderId: id, buyerId: buyer, sellerId: seller.id, question: "Is it fresh?", createdAt: new Date(Date.now() - 47 * HOUR) });
     await processInquiryDeadlines();
@@ -678,9 +679,10 @@ describe("Away mode", () => {
 
 describe("seller reply deadlines (FTM-03 to FTM-05)", () => {
   const kinds = async () => (await pg.select().from(schema.trust_notices)).map((n) => n.kind).filter((kind) => kind.startsWith("inquiry"));
-  async function ask(hoursAgo: number) {
-    const buyer = await addUser("buyer"); const seller = await addSeller();
+  async function ask(hoursAgo: number, closeStallAfter = false) {
+    const buyer = await addUser("buyer"); const seller = await addSeller({ allDay: true });
     const id = await reserve(buyer, seller);
+    if (closeStallAfter) await pg.update(schema.seller_opening_hours).set({ isClosed: true }).where(eq(schema.seller_opening_hours.sellerId, seller.id));
     await pg.insert(schema.order_inquiries).values({ orderId: id, buyerId: buyer, sellerId: seller.id, question: "Is it fresh?", createdAt: new Date(Date.now() - hoursAgo * HOUR) });
     await processInquiryDeadlines();
     return seller.id;
@@ -702,6 +704,11 @@ describe("seller reply deadlines (FTM-03 to FTM-05)", () => {
     expect(await points(seller)).toBe(1);
     const events = await pg.select().from(schema.trust_events).where(eq(schema.trust_events.subjectId, seller));
     expect(events.map((e) => [e.kind, e.classification])).toEqual([["inquiry_non_response", "verified"]]);
+  });
+  test("hours the stall is closed do not count toward the timers", async () => {
+    const seller = await ask(100, true);
+    expect(await kinds()).toEqual([]);
+    expect(await points(seller)).toBe(0);
   });
   test("FTM-01 a seller with no violations has 0 points and no action", async () => {
     const seller = (await addSeller()).id;
