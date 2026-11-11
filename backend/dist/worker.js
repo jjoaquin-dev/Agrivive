@@ -31059,7 +31059,7 @@ var isPauseOrBlock = (level) => rank[level] >= rank.pause_24h;
 
 // src/utils/trust/notice-text.ts
 var eventCopy = {
-  inquiry_non_response: { what: "A buyer's question went 48 hours without an answer.", rule: "Unanswered buyer question after 48 hours adds 1 point. Reminders at 12 and 24 hours carry 0 points, and the clock stops while Away mode is on.", avoid: "Answer buyer questions within 12 hours, or turn on Away mode when you cannot reply." },
+  inquiry_non_response: { what: "A buyer's question went 48 open hours without an answer.", rule: "Unanswered buyer question after 48 open hours adds 1 point. Reminders at 12 and 24 open hours carry 0 points. The clock counts only the hours your stall is open, and it stops while Away mode is on.", avoid: "Answer buyer questions within 12 open hours, or turn on Away mode when you cannot reply." },
   seller_cancellation: { what: "You cancelled a confirmed order.", rule: "A seller who cancels a confirmed order gets 2 points.", avoid: "Only confirm orders you can fill, and keep your stock numbers correct." },
   low_rating: { what: "A buyer gave a low rating (1 or 2 stars) on a completed order.", rule: "A low rating counts 1 point when the buyer wrote a reason, or when it is your 2nd low rating in 30 days.", avoid: "Pack fresh produce that matches the listing and answer buyers politely." },
   misleading_product_info: { what: "Two different people reported that your listing information was wrong.", rule: "Confirmed wrong listing information adds 2 points and counts in your fault rate.", avoid: "Keep amounts, prices and descriptions exact." },
@@ -31333,16 +31333,12 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, tri
 
 // src/utils/pickup/away.ts
 var MAX_AWAY_MS = 14 * 86400000;
-async function awayOverlapMs(tx, sellerId, since, now) {
+async function awayIntervals(tx, sellerId, since, now) {
   const periods = await tx.select().from(seller_away_periods).where(and(eq(seller_away_periods.sellerId, sellerId), lt(seller_away_periods.startedAt, now), or(isNull(seller_away_periods.endedAt), gt(seller_away_periods.endedAt, since))));
-  let total = 0;
-  for (const period of periods) {
-    const end = Math.min(now.getTime(), (period.endedAt ?? new Date(period.startedAt.getTime() + MAX_AWAY_MS)).getTime());
-    const start = Math.max(since.getTime(), period.startedAt.getTime());
-    if (end > start)
-      total += end - start;
-  }
-  return total;
+  return periods.map((period) => [
+    Math.max(since.getTime(), period.startedAt.getTime()),
+    Math.min(now.getTime(), (period.endedAt ?? new Date(period.startedAt.getTime() + MAX_AWAY_MS)).getTime())
+  ]);
 }
 async function closeExpiredAway(now = new Date) {
   const ended = await db.update(sellers_profile).set({ awayStartedAt: null, awayUntil: null, awayReason: null }).where(and(sql`${sellers_profile.awayUntil} is not null`, lt(sellers_profile.awayUntil, now))).returning({ id: sellers_profile.userId });
@@ -31352,10 +31348,72 @@ async function closeExpiredAway(now = new Date) {
   return ended.length;
 }
 
+// src/utils/pickup/manila.ts
+var MANILA_OFFSET_MS = 8 * 3600000;
+var MINUTE_MS = 60000;
+function manilaParts(date) {
+  const shifted = new Date(date.getTime() + MANILA_OFFSET_MS);
+  return {
+    dateKey: shifted.toISOString().slice(0, 10),
+    weekday: shifted.getUTCDay(),
+    minute: shifted.getUTCHours() * 60 + shifted.getUTCMinutes()
+  };
+}
+function manilaDateKey(date) {
+  return manilaParts(date).dateKey;
+}
+function manilaInstant(dateKey, minute) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d) + minute * MINUTE_MS - MANILA_OFFSET_MS);
+}
+function addDaysKey(dateKey, days) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+// src/utils/pickup/open-hours.ts
+function openSpans(hours, closedDate, since, now) {
+  const from = since.getTime();
+  const to = now.getTime();
+  if (to <= from)
+    return [];
+  if (!hours.length)
+    return [[from, to]];
+  const spans = [];
+  const last = manilaDateKey(now);
+  for (let key = manilaDateKey(since);key <= last; key = addDaysKey(key, 1)) {
+    const day = hours.find((row) => row.weekday === new Date(`${key}T00:00:00Z`).getUTCDay());
+    if (!day || day.isClosed || key === closedDate)
+      continue;
+    const start = Math.max(from, manilaInstant(key, day.opensMinute).getTime());
+    const end = Math.min(to, manilaInstant(key, day.closesMinute).getTime());
+    if (end > start)
+      spans.push([start, end]);
+  }
+  return spans;
+}
+function sumWithoutAway(open, away) {
+  let total = 0;
+  for (const [start, end] of open) {
+    let left = end - start;
+    for (const [awayStart, awayEnd] of away) {
+      const overlap = Math.min(end, awayEnd) - Math.max(start, awayStart);
+      if (overlap > 0)
+        left -= overlap;
+    }
+    total += Math.max(0, left);
+  }
+  return total;
+}
+async function countedWaitMs(tx, sellerId, since, now) {
+  const hours = await tx.select().from(seller_opening_hours).where(eq(seller_opening_hours.sellerId, sellerId));
+  const open = openSpans(hours, null, since, now);
+  return sumWithoutAway(open, await awayIntervals(tx, sellerId, since, now));
+}
+
 // src/utils/trust/response-deadlines.ts
 async function recordReplyDeadlines(tx, pending, now) {
-  const away = await awayOverlapMs(tx, pending.sellerId, pending.since, now);
-  const hours = (now.getTime() - pending.since.getTime() - away) / 3600000;
+  const hours = await countedWaitMs(tx, pending.sellerId, pending.since, now) / 3600000;
   if (hours >= 12)
     await queueTrustNotice(tx, {
       noticeKey: `inquiry-reminder:${pending.key}`,
@@ -31566,9 +31624,10 @@ function resolveEmailProvider() {
 var messages = {
   seller_cancellation_warning: { subject: "Agrivive order cancellation warning", text: "You cancelled a pending buyer order. This event was recorded in your trust history." },
   seller_cancellation_buyer: { subject: "Agrivive order cancelled", text: "The seller cancelled your order. Reserved stock was restored." },
-  inquiry_12h_reminder: { subject: "Agrivive inquiry reminder", text: "A buyer inquiry has been waiting for your reply for 12 hours." },
-  inquiry_24h_warning: { subject: "Agrivive inquiry warning", text: "A buyer inquiry has been waiting for your reply for 24 hours." },
-  inquiry_24h_buyer_notice: { subject: "Agrivive inquiry update", text: "The seller has not replied to your inquiry after 24 hours." },
+  inquiry_12h_reminder: { subject: "Agrivive inquiry reminder", text: "A buyer inquiry has been waiting for your reply for 12 open hours of your stall." },
+  inquiry_24h_warning: { subject: "Agrivive inquiry warning", text: "A buyer inquiry has been waiting for your reply for 24 open hours of your stall." },
+  inquiry_24h_buyer_notice: { subject: "Agrivive inquiry update", text: "The seller has not replied to your inquiry after 24 hours of the stall being open." },
+  pickup_closing_soon: { subject: "Agrivive pickup reminder", text: "The stall closes in 30 minutes. Please pick up your order soon." },
   trust_event_corrected: { subject: "Agrivive trust record corrected", text: "A trust event was invalidated after its source data was rechecked." },
   trust_action_warning: { subject: "Agrivive trust warning", text: "Your verified trust history reached the warning threshold. Review your account activity and keep future transactions responsive." },
   trust_action_restriction: { subject: "Agrivive temporary restriction", text: "Your account has a temporary restriction because verified trust events reached the configured restriction threshold. The restriction will expire automatically unless a newer action applies." },
@@ -74390,8 +74449,40 @@ async function sendReservationEndingNotices(limit = 100) {
   return created;
 }
 
-// src/utils/pickup/manila.ts
-var MANILA_OFFSET_MS = 8 * 3600000;
+// src/utils/pickup/rules.ts
+var is24Hours = (day) => day.opensMinute === 0 && day.closesMinute === 1440;
+
+// src/jobs/send-closing-soon-notices.ts
+var WARNING_MS = 30 * 60000;
+async function sendClosingSoonNotices(limit = 500) {
+  const now = new Date;
+  const today = manilaParts(now);
+  const rows = await db.select({
+    orderId: orders.id,
+    buyerId: orders.buyersId,
+    sellerId: orders.sellersId,
+    opensMinute: seller_opening_hours.opensMinute,
+    closesMinute: seller_opening_hours.closesMinute,
+    closedDate: sellers_profile.closedDate
+  }).from(orders).innerJoin(seller_opening_hours, and(eq(seller_opening_hours.sellerId, orders.sellersId), eq(seller_opening_hours.weekday, today.weekday), eq(seller_opening_hours.isClosed, false))).innerJoin(sellers_profile, and(eq(sellers_profile.userId, orders.sellersId), eq(sellers_profile.isCurrent, true))).where(and(eq(orders.status, "pending"), gt(orders.expiresAt, now))).limit(limit);
+  let queued = 0;
+  for (const row of rows) {
+    if (is24Hours(row) || row.closedDate === today.dateKey)
+      continue;
+    const closesAt = manilaInstant(today.dateKey, row.closesMinute).getTime();
+    if (now.getTime() < closesAt - WARNING_MS || now.getTime() >= closesAt)
+      continue;
+    const made = await db.transaction((tx) => queueTrustNotice(tx, {
+      noticeKey: `closing-soon:${row.orderId}:${today.dateKey}`,
+      recipientId: row.buyerId,
+      orderId: row.orderId,
+      kind: "pickup_closing_soon"
+    }));
+    if (made.length)
+      queued++;
+  }
+  return queued;
+}
 
 // src/utils/pickup/qr-window.ts
 var AUTO_CONFIRM_HOURS = 3;
@@ -74586,6 +74677,7 @@ async function runScheduledJobs() {
   const awayEnded = await closeExpiredAway();
   const standingsLowered = await recalculateActiveStandings();
   const reservationEndingNotices = await sendReservationEndingNotices();
+  const closingSoonNotices = await sendClosingSoonNotices();
   const userInactivity = await checkUserInactivity();
   const inquiriesProcessed = await processInquiryDeadlines();
   const noticesSent = await sendPendingTrustNotices();
@@ -74597,7 +74689,7 @@ async function runScheduledJobs() {
   const priceDropSetupNotices = await sendPriceDropSetupNotices();
   const dailyAdvisoryNotices = await sendDailyAdvisoryNotices();
   const pushNotifications = await deliverPushNotifications();
-  return { autoConfirmed, expiredOrders, noShowsRecorded, declinesAccepted, awayEnded, standingsLowered, reservationEndingNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, rankedBoost, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, dailyAdvisoryNotices, pushNotifications };
+  return { autoConfirmed, expiredOrders, noShowsRecorded, declinesAccepted, awayEnded, standingsLowered, reservationEndingNotices, closingSoonNotices, userInactivity, inquiriesProcessed, noticesSent, trustRestrictionsExpired, sellerListingNotices, rankedBoost, sellerVisibilityBoosts, sellerBoostFollowUps, priceDropSetupNotices, dailyAdvisoryNotices, pushNotifications };
 }
 
 // src/worker.ts

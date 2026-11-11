@@ -1,5 +1,5 @@
 import type { OrderTransaction } from "../order-types";
-import { awayOverlapMs } from "../pickup/away";
+import { countedWaitMs } from "../pickup/open-hours";
 import { queueTrustNotice, recordTrustEvent } from "./index";
 
 export interface PendingReply {
@@ -14,11 +14,10 @@ export interface PendingReply {
 
 export type ReplyDeadlineStage = 1 | 2 | 3;
 
-/** The paper's seller responsiveness schedule (Table 17): 12 hours reminder, 24 hours warning and buyer notice, 48 hours non-responsive. */
+/** The paper's seller responsiveness schedule (Table 17): 12 open hours reminder, 24 open hours warning and buyer notice, 48 open hours non-responsive. Only hours the stall is open count. */
 export async function recordReplyDeadlines(tx: OrderTransaction, pending: PendingReply, now: Date) {
-  // The clock stops while the seller's Away mode is on.
-  const away = await awayOverlapMs(tx, pending.sellerId, pending.since, now);
-  const hours = (now.getTime() - pending.since.getTime() - away) / 3_600_000;
+  // The clock runs only while the stall is open. It stops when the stall is closed or the seller's Away mode is on.
+  const hours = (await countedWaitMs(tx, pending.sellerId, pending.since, now)) / 3_600_000;
   if (hours >= 12) await queueTrustNotice(tx, {
     noticeKey: `inquiry-reminder:${pending.key}`, recipientId: pending.sellerId,
     orderId: pending.orderId, kind: "inquiry_12h_reminder",

@@ -11,13 +11,16 @@ export type Range = { start: Date; end: Date };
 
 export const rangesOverlap = (a: Range, b: Range) => a.start.getTime() < b.end.getTime() && b.start.getTime() < a.end.getTime();
 
+/** A stall set to 24 hours never closes, so it has no closing buffer. */
+export const is24Hours = (day: { opensMinute: number; closesMinute: number }) => day.opensMinute === 0 && day.closesMinute === 1440;
+
 /** The bookable minutes of one Manila date, or a reason it is closed. */
 export function dayWindow(rules: StallRules, dateKey: string) {
   if (rules.closedDate === dateKey) return { open: false as const, reason: "The stall is closed on this day." };
   const weekday = new Date(`${dateKey}T00:00:00Z`).getUTCDay();
   const day = rules.hours.find((row) => row.weekday === weekday);
   if (!day || day.isClosed) return { open: false as const, reason: "The stall is closed on this day." };
-  return { open: true as const, opensMinute: day.opensMinute, latestEndMinute: day.closesMinute - CLOSING_BUFFER_MINUTES };
+  return { open: true as const, opensMinute: day.opensMinute, latestEndMinute: is24Hours(day) ? 1440 : day.closesMinute - CLOSING_BUFFER_MINUTES };
 }
 
 /** Every rule that depends only on the stall, the clock and the chosen range. Capacity and buyer conflicts are checked against the database. */

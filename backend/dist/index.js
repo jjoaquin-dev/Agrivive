@@ -180816,7 +180816,7 @@ var isPauseOrBlock = (level) => rank[level] >= rank.pause_24h;
 
 // src/utils/trust/notice-text.ts
 var eventCopy = {
-  inquiry_non_response: { what: "A buyer's question went 48 hours without an answer.", rule: "Unanswered buyer question after 48 hours adds 1 point. Reminders at 12 and 24 hours carry 0 points, and the clock stops while Away mode is on.", avoid: "Answer buyer questions within 12 hours, or turn on Away mode when you cannot reply." },
+  inquiry_non_response: { what: "A buyer's question went 48 open hours without an answer.", rule: "Unanswered buyer question after 48 open hours adds 1 point. Reminders at 12 and 24 open hours carry 0 points. The clock counts only the hours your stall is open, and it stops while Away mode is on.", avoid: "Answer buyer questions within 12 open hours, or turn on Away mode when you cannot reply." },
   seller_cancellation: { what: "You cancelled a confirmed order.", rule: "A seller who cancels a confirmed order gets 2 points.", avoid: "Only confirm orders you can fill, and keep your stock numbers correct." },
   low_rating: { what: "A buyer gave a low rating (1 or 2 stars) on a completed order.", rule: "A low rating counts 1 point when the buyer wrote a reason, or when it is your 2nd low rating in 30 days.", avoid: "Pack fresh produce that matches the listing and answer buyers politely." },
   misleading_product_info: { what: "Two different people reported that your listing information was wrong.", rule: "Confirmed wrong listing information adds 2 points and counts in your fault rate.", avoid: "Keep amounts, prices and descriptions exact." },
@@ -181207,22 +181207,57 @@ async function queueBuyerReplyNotice(tx, input) {
 
 // src/utils/pickup/away.ts
 var MAX_AWAY_MS = 14 * 86400000;
-async function awayOverlapMs(tx, sellerId, since, now) {
+async function awayIntervals(tx, sellerId, since, now) {
   const periods = await tx.select().from(seller_away_periods).where(and(eq(seller_away_periods.sellerId, sellerId), lt(seller_away_periods.startedAt, now), or(isNull2(seller_away_periods.endedAt), gt(seller_away_periods.endedAt, since))));
-  let total = 0;
-  for (const period of periods) {
-    const end = Math.min(now.getTime(), (period.endedAt ?? new Date(period.startedAt.getTime() + MAX_AWAY_MS)).getTime());
-    const start = Math.max(since.getTime(), period.startedAt.getTime());
+  return periods.map((period) => [
+    Math.max(since.getTime(), period.startedAt.getTime()),
+    Math.min(now.getTime(), (period.endedAt ?? new Date(period.startedAt.getTime() + MAX_AWAY_MS)).getTime())
+  ]);
+}
+
+// src/utils/pickup/open-hours.ts
+function openSpans(hours, closedDate, since, now) {
+  const from = since.getTime();
+  const to = now.getTime();
+  if (to <= from)
+    return [];
+  if (!hours.length)
+    return [[from, to]];
+  const spans = [];
+  const last = manilaDateKey(now);
+  for (let key = manilaDateKey(since);key <= last; key = addDaysKey(key, 1)) {
+    const day = hours.find((row) => row.weekday === new Date(`${key}T00:00:00Z`).getUTCDay());
+    if (!day || day.isClosed || key === closedDate)
+      continue;
+    const start = Math.max(from, manilaInstant(key, day.opensMinute).getTime());
+    const end = Math.min(to, manilaInstant(key, day.closesMinute).getTime());
     if (end > start)
-      total += end - start;
+      spans.push([start, end]);
+  }
+  return spans;
+}
+function sumWithoutAway(open, away) {
+  let total = 0;
+  for (const [start, end] of open) {
+    let left = end - start;
+    for (const [awayStart, awayEnd] of away) {
+      const overlap = Math.min(end, awayEnd) - Math.max(start, awayStart);
+      if (overlap > 0)
+        left -= overlap;
+    }
+    total += Math.max(0, left);
   }
   return total;
+}
+async function countedWaitMs(tx, sellerId, since, now) {
+  const hours = await tx.select().from(seller_opening_hours).where(eq(seller_opening_hours.sellerId, sellerId));
+  const open = openSpans(hours, null, since, now);
+  return sumWithoutAway(open, await awayIntervals(tx, sellerId, since, now));
 }
 
 // src/utils/trust/response-deadlines.ts
 async function recordReplyDeadlines(tx, pending, now) {
-  const away = await awayOverlapMs(tx, pending.sellerId, pending.since, now);
-  const hours = (now.getTime() - pending.since.getTime() - away) / 3600000;
+  const hours = await countedWaitMs(tx, pending.sellerId, pending.since, now) / 3600000;
   if (hours >= 12)
     await queueTrustNotice(tx, {
       noticeKey: `inquiry-reminder:${pending.key}`,
@@ -184211,6 +184246,7 @@ function getBuyerOrder(orderId, buyerId) {
 var PICKUP_STEP_MINUTES = 15;
 var CLOSING_BUFFER_MINUTES = 30;
 var rangesOverlap = (a, b) => a.start.getTime() < b.end.getTime() && b.start.getTime() < a.end.getTime();
+var is24Hours = (day) => day.opensMinute === 0 && day.closesMinute === 1440;
 function dayWindow(rules, dateKey) {
   if (rules.closedDate === dateKey)
     return { open: false, reason: "The stall is closed on this day." };
@@ -184218,7 +184254,7 @@ function dayWindow(rules, dateKey) {
   const day = rules.hours.find((row) => row.weekday === weekday);
   if (!day || day.isClosed)
     return { open: false, reason: "The stall is closed on this day." };
-  return { open: true, opensMinute: day.opensMinute, latestEndMinute: day.closesMinute - CLOSING_BUFFER_MINUTES };
+  return { open: true, opensMinute: day.opensMinute, latestEndMinute: is24Hours(day) ? 1440 : day.closesMinute - CLOSING_BUFFER_MINUTES };
 }
 function validatePickupRange(range, rules, now) {
   if (!rules.hours.length)

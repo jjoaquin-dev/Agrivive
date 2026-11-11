@@ -4,7 +4,7 @@ export type EventCopy = { what: string; rule: string; avoid: string };
 
 /** What happened, which rule applied and how to avoid it, for every kind of event. */
 export const eventCopy: Record<string, EventCopy> = {
-  inquiry_non_response: { what: "A buyer's question went 48 hours without an answer.", rule: "Unanswered buyer question after 48 hours adds 1 point. Reminders at 12 and 24 hours carry 0 points, and the clock stops while Away mode is on.", avoid: "Answer buyer questions within 12 hours, or turn on Away mode when you cannot reply." },
+  inquiry_non_response: { what: "A buyer's question went 48 open hours without an answer.", rule: "Unanswered buyer question after 48 open hours adds 1 point. Reminders at 12 and 24 open hours carry 0 points. The clock counts only the hours your stall is open, and it stops while Away mode is on.", avoid: "Answer buyer questions within 12 open hours, or turn on Away mode when you cannot reply." },
   seller_cancellation: { what: "You cancelled a confirmed order.", rule: "A seller who cancels a confirmed order gets 2 points.", avoid: "Only confirm orders you can fill, and keep your stock numbers correct." },
   low_rating: { what: "A buyer gave a low rating (1 or 2 stars) on a completed order.", rule: "A low rating counts 1 point when the buyer wrote a reason, or when it is your 2nd low rating in 30 days.", avoid: "Pack fresh produce that matches the listing and answer buyers politely." },
   misleading_product_info: { what: "Two different people reported that your listing information was wrong.", rule: "Confirmed wrong listing information adds 2 points and counts in your fault rate.", avoid: "Keep amounts, prices and descriptions exact." },
