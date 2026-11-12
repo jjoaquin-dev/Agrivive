@@ -14,9 +14,9 @@ export const defaultHours = (): HoursDay[] =>
 function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (direction: 1 | -1) => void }) {
   return (
     <View style={styles.stepper}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Earlier ${label}`} onPress={() => onChange(-1)} style={styles.stepButton}><Minus size={16} color={colors.primary} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Earlier ${label}`} onPress={() => onChange(-1)} style={styles.stepButton}><Minus size={14} color={colors.primary} /></Pressable>
       <Text style={styles.stepValue}>{minuteLabel(value)}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Later ${label}`} onPress={() => onChange(1)} style={styles.stepButton}><Plus size={16} color={colors.primary} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Later ${label}`} onPress={() => onChange(1)} style={styles.stepButton}><Plus size={14} color={colors.primary} /></Pressable>
     </View>
   );
 }
@@ -38,7 +38,7 @@ function ScheduleCardView({ card, onChange, onTime }: { card: ScheduleCard; onCh
           <View style={styles.timeRow}><Text style={styles.to}>To</Text><Stepper label="closing time" value={card.closesMinute} onChange={(d) => onTime({ closesMinute: stepMinute(card.closesMinute, d, card.opensMinute + 60, 1440) })} /></View>
         </View>
       ) : null}
-      <Text style={styles.hint}>Repeats on</Text>
+      <Text style={styles.sectionLabel}>Days</Text>
       <View style={styles.chips}>
         {weekOrder.map((weekday) => {
           const on = card.weekdays.includes(weekday);
@@ -80,27 +80,29 @@ export function StallHoursEditor({ days, onChange }: { days: HoursDay[]; onChang
       <Pressable accessibilityRole="button" onPress={() => setDrafts((rows) => [...rows, { opensMinute: 480, closesMinute: 1200, weekdays: [] }])} style={styles.add}>
         <Plus size={16} color={colors.primary} /><Text style={styles.addText}>Add another schedule</Text>
       </Pressable>
-      <Text style={styles.hint}>Days you do not pick stay closed. Buyers get a reminder 30 minutes before you close.</Text>
+      <Text style={styles.hint}>Days you do not pick stay closed. Buyers should pick up 30 minutes before you close, and their QR still works until closing time.</Text>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  hint: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 2 },
-  card: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: spacing.md, marginTop: spacing.sm },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.xs },
-  chip: { minHeight: touchTargets.min, minWidth: touchTargets.min, paddingHorizontal: spacing.sm, borderRadius: touchTargets.min / 2, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  hint: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: spacing.xs },
+  sectionLabel: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted, marginTop: spacing.md, marginBottom: spacing.xs },
+  // Cream block on the white card: the card holds the blocks, each block holds one schedule.
+  card: { backgroundColor: "#FBFAF7", borderWidth: 1, borderColor: "#F3F1EC", borderRadius: 12, padding: spacing.md, marginTop: spacing.sm },
+  chips: { flexDirection: "row", gap: 4 },
+  chip: { flex: 1, aspectRatio: 1, borderRadius: 999, borderWidth: 1, borderColor: "#EEECE6", backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
+  chipText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.text },
   chipTextOn: { color: "#FFFFFF" },
   add: { flexDirection: "row", alignItems: "center", gap: spacing.xs, minHeight: touchTargets.min, marginTop: spacing.sm },
   addText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
   dayHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   dayName: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
-  times: { gap: spacing.sm, marginTop: spacing.sm },
+  times: { gap: spacing.xs, marginTop: spacing.xs },
   timeRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  to: { fontFamily: fonts.body.regular, color: colors.textMuted },
-  stepper: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  stepButton: { width: touchTargets.min, height: touchTargets.min, borderRadius: touchTargets.min / 2, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  stepValue: { minWidth: 72, textAlign: "center", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
+  to: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
+  stepper: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  stepButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#EEECE6", alignItems: "center", justifyContent: "center" },
+  stepValue: { minWidth: 76, textAlign: "center", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
 });

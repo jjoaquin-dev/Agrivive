@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { TrendingUp } from "lucide-react-native";
 import { colors, fonts, radii, spacing, shadows } from "../../../theme";
+import { dash } from "../dashboardTokens";
 import type { InventorySummary } from "../../inventory/types";
 
 interface DashboardUnitTotalsProps {
@@ -40,12 +41,12 @@ export const DashboardUnitTotals: React.FC<DashboardUnitTotalsProps> = ({ unitTo
 
 const styles = StyleSheet.create({
   unitTotalsCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: dash.card,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: dash.border,
     padding: spacing.base,
-    ...shadows.card,
+    ...dash.shadow,
   },
   unitTotalsHeader: {
     flexDirection: "row",

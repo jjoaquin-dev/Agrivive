@@ -1,9 +1,10 @@
 import React from "react";
 import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { ArrowRight, ExternalLink } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import { formatBoostTime, type PriceDropHistoryItem } from "../types";
 import { PlatformBadge } from "./PlatformBadge";
+import { surface } from "../../../theme/surface";
 
 const peso = (value: number) => `₱${value.toFixed(2)}`;
 
@@ -39,7 +40,7 @@ export function PriceDropHistoryCard({ item }: { item: PriceDropHistoryItem }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginTop: spacing.sm, ...shadows.card },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.base, marginTop: spacing.sm, ...surface.shadow },
   header: { flexDirection: "row", gap: spacing.sm, alignItems: "center" },
   photo: { width: 52, height: 52, borderRadius: radii.sm + 4, backgroundColor: colors.surfaceMuted },
   placeholder: { backgroundColor: colors.primaryLight },

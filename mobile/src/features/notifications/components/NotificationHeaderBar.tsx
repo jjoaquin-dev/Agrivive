@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ChevronLeft, CheckCheck, Settings } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 import { safeBack } from "../../../utils/safeBack";
 
 interface Props {
@@ -40,10 +41,10 @@ export function NotificationHeaderBar({ unreadCount, onMarkAllRead, onOpenSettin
 }
 
 const styles = StyleSheet.create({
-  container: { height: 56, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.base, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  container: { height: 56, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.base, backgroundColor: surface.page, borderBottomWidth: 1, borderBottomColor: surface.border },
   button: { width: 44, height: 44, borderRadius: radii.full, alignItems: "center", justifyContent: "center" },
   left: { marginLeft: -spacing.sm },
   right: { flexDirection: "row", alignItems: "center", marginRight: -spacing.sm },
-  title: { position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
+  title: { position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none", fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   disabled: { opacity: 0.35 },
 });

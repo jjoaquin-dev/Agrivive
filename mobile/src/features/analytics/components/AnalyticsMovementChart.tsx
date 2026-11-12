@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { colors, fonts, spacing } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
@@ -15,7 +15,8 @@ const num = (value: string) => Math.max(0, Number(value) || 0);
 
 /** Our bar chart: where the posted produce went. Colors match the Sales Report frames. */
 export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChartProps) {
-  const chartWidth = Math.max(Dimensions.get("window").width - 96, 240);
+  const { width: windowWidth } = useWindowDimensions();
+  const chartWidth = Math.max(windowWidth - 96, 240);
   const word = unitWord(unit);
   const posted = num(metrics.postedQuantity);
   const completed = num(metrics.completedQuantity);
@@ -50,7 +51,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
           roundedTop
           roundedBottom={false}
           hideRules={false}
-          rulesColor="#F3F1EA"
+          rulesColor="#F6F5F1"
           yAxisColor="transparent"
           xAxisColor={colors.border}
           yAxisTextStyle={styles.axisText}

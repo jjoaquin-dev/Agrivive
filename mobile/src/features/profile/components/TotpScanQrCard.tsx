@@ -55,11 +55,11 @@ const styles = StyleSheet.create({
   qr: { alignSelf: "center", padding: spacing.base, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, backgroundColor: colors.white },
   rule: { height: 1, backgroundColor: profileColors.border, marginVertical: spacing.base },
   manual: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.text, marginBottom: spacing.sm },
-  keyBox: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm, backgroundColor: "#F3F1EA", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.button, padding: spacing.sm, paddingLeft: spacing.md },
+  keyBox: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm, backgroundColor: "#F6F5F1", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.card, padding: spacing.sm, paddingLeft: spacing.md },
   key: { flex: 1, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", fontSize: 14, fontWeight: "700", color: colors.text },
   copy: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radii.button, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.white },
   copyText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
   fine: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: spacing.xs },
-  help: { flexDirection: "row", gap: spacing.sm, alignItems: "flex-start", backgroundColor: "#FAFAF7", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.button, padding: spacing.md, marginTop: spacing.base },
+  help: { flexDirection: "row", gap: spacing.sm, alignItems: "flex-start", backgroundColor: "#FAFAF7", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.base },
   helpText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted },
 });

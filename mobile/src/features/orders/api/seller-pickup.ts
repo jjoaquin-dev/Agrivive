@@ -29,12 +29,8 @@ export async function answerPickupDecline(orderId: string, input: { action: "acc
 export interface StallDay { weekday: number; isClosed: boolean; opensMinute: number; closesMinute: number; configured: boolean }
 export interface Stall {
   shopName: string; hours: StallDay[]; hoursConfigured: boolean; closedToday: boolean;
-  pickupCapacity: number; pickupWithinMinutes: number;
-  away: { active: boolean; startedAt: string | null; until: string | null; reason: string | null };
 }
 
 export const fetchStall = () => apiFetch<Stall>("/seller/stall");
 export const saveStallHours = (days: Omit<StallDay, "configured">[]) => apiFetch<Stall>("/seller/stall/hours", { method: "PUT", body: JSON.stringify({ days }) });
-export const saveStallSettings = (input: { pickupCapacity: number; pickupWithinMinutes: number }) => apiFetch<Stall>("/seller/stall/settings", { method: "PUT", body: JSON.stringify(input) });
 export const setClosedToday = (closed: boolean) => apiFetch<Stall>("/seller/stall/closed-today", { method: "PUT", body: JSON.stringify({ closed }) });
-export const setAwayMode = (away: boolean, days?: number, reason?: string) => apiFetch<Stall>("/seller/stall/away", { method: "PUT", body: JSON.stringify({ away, days, reason }) });

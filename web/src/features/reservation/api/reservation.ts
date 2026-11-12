@@ -11,15 +11,22 @@ export type ReservationStatus = {
   warning: string | null;
 };
 
-export type PickupCell = { start: string; end: string; available: boolean; full: boolean; busy: boolean };
-export type PickupDay = { date: string; open: boolean; reason: string; cells: PickupCell[] };
-export type PickupSlots = { shopName: string; stepMinutes: number; maxRangeMinutes: number; capacity: number; days: PickupDay[] };
-export type PickupChoice = { sellerId: string; pickupStart: string; pickupEnd: string };
+export type ReservationTerms = {
+  shopName: string;
+  is24Hours: boolean;
+  opensMinute: number;
+  closesMinute: number;
+  closingBufferMinutes: number;
+  /** ISO time the reservation must be picked up by. */
+  pickupBy: string;
+  /** ISO time the QR stops working: closing time, or the deadline for a 24-hour stall. */
+  qrUntil: string;
+};
 
 export function getReservationStatus(signal?: AbortSignal) {
   return apiRequest<ReservationStatus>("/buyer/reservation-status", { signal });
 }
 
-export function getPickupSlots(sellerId: string, signal?: AbortSignal) {
-  return apiRequest<PickupSlots>(`/buyer/sellers/${encodeURIComponent(sellerId)}/pickup-slots`, { signal });
+export function getReservationTerms(sellerId: string, signal?: AbortSignal) {
+  return apiRequest<ReservationTerms>(`/buyer/sellers/${encodeURIComponent(sellerId)}/reservation-terms`, { signal });
 }

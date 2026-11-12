@@ -15,13 +15,13 @@ export function getBuyerOrder(id: string, signal?: AbortSignal) {
   return apiRequest<BuyerOrder>(`/buyer/orders/${encodeURIComponent(id)}`, { signal });
 }
 
-export function createBuyerOrder(productId: string, quantity: number, pickup: { pickupStart: string; pickupEnd: string }, idempotencyKey: string) {
+export function createBuyerOrder(productId: string, quantity: number, idempotencyKey: string) {
   return apiRequest<BuyerOrder>("/buyer/orders", {
     method: "POST",
     headers: {
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({ productId, quantity, ...pickup }),
+    body: JSON.stringify({ productId, quantity }),
   });
 }
 

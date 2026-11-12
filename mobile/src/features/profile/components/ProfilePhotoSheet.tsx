@@ -57,11 +57,11 @@ const styles = StyleSheet.create({
   list: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: profileColors.border },
   divider: { height: 1, backgroundColor: profileColors.border },
   option: { flexDirection: "row", alignItems: "center", minHeight: 64, paddingVertical: spacing.sm },
-  pressed: { backgroundColor: "#F3F1EA" },
+  pressed: { backgroundColor: "#F6F5F1" },
   optionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
   optionText: { flex: 1 },
   optionTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   optionHint: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
-  cancel: { minHeight: 52, borderRadius: radii.button, backgroundColor: "#F3F1EA", alignItems: "center", justifyContent: "center", marginTop: spacing.md },
+  cancel: { minHeight: 52, borderRadius: radii.button, backgroundColor: "#F6F5F1", alignItems: "center", justifyContent: "center", marginTop: spacing.md },
   cancelText: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.textMuted },
 });

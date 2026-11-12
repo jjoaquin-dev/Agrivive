@@ -5,6 +5,7 @@ import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts } from "../../src/theme";
 import { OfflineBanner } from "../../src/components/OfflineBanner";
 import { DailyAdvisoryPopup } from "../../src/features/advisories/components/DailyAdvisoryPopup";
+import { surface } from "../../src/theme/surface";
 
 function CancelButton({ onPress }: { onPress: () => void }) {
   return (
@@ -32,8 +33,9 @@ export default function AppLayout() {
     <OfflineBanner />
     <Stack
       screenOptions={{
+        headerBackTitle: "Back",
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: surface.page,
         },
         headerTintColor: colors.primary,
         headerTitleStyle: {
@@ -43,7 +45,7 @@ export default function AppLayout() {
         },
         headerShadowVisible: false,
         contentStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: surface.page,
         },
       }}
     >

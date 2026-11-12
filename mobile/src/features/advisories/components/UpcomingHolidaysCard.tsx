@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Info } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 interface UpcomingHolidaysCardProps {
   holidays: { available: boolean; upcoming: Array<{ date: string; name: string; localName: string }> };
@@ -60,19 +61,19 @@ export const UpcomingHolidaysCard: React.FC<UpcomingHolidaysCardProps> = ({ holi
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...shadows.card },
-  title: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text, marginBottom: spacing.md },
-  empty: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.textMuted },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...surface.shadow },
+  title: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text, marginBottom: spacing.md },
+  empty: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   rowGap: { marginTop: spacing.md },
   dateBox: { width: 56, alignItems: "center", paddingVertical: 8, borderRadius: 10, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border },
-  dateMonth: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.textMuted, letterSpacing: 0.5 },
+  dateMonth: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted, letterSpacing: 0.5 },
   dateDay: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, marginTop: 2 },
   info: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing.xs },
   name: { flex: 1, fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
   away: { fontFamily: fonts.heading.bold, fontSize: 12, color: colors.primary },
-  localName: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  tip: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: "#F3F1EA" },
-  tipText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  localName: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: 2 },
+  tip: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: "#F6F5F1" },
+  tipText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted },
 });

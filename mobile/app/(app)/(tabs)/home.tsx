@@ -16,6 +16,7 @@ import { DashboardLowStockAlerts } from "../../../src/features/dashboard/compone
 import { DashboardRecentActivity } from "../../../src/features/dashboard/components/DashboardRecentActivity";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../src/theme";
 import { logApiError } from "../../../src/api/client";
+import { dash } from "../../../src/features/dashboard/dashboardTokens";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -149,7 +150,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: dash.page,
   },
   container: {
     paddingHorizontal: spacing.base,
@@ -158,13 +159,13 @@ const styles = StyleSheet.create({
   errorCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
+    backgroundColor: dash.card,
     borderRadius: radii.card,
     borderWidth: 1,
     borderColor: "#FED7AA",
     padding: spacing.md,
     marginBottom: spacing.base,
-    ...shadows.card,
+    ...dash.shadow,
   },
   errorIconWrap: {
     width: 36,

@@ -27,7 +27,7 @@ export function MobileHeaderSearch({ onDone }: { onDone: () => void }) {
     <form
       role="search"
       onSubmit={submit}
-      className="flex min-h-12 w-full items-center rounded-full border border-neutral-300 bg-neutral-50/70 p-1 pl-4 transition-all focus-within:border-[#457D00] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#457D00]/20"
+      className="flex min-h-12 w-full items-center rounded-full border border-neutral-300 bg-neutral-50/70 p-1 pl-4 transition-all focus-within:border-neutral-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-neutral-300/60"
     >
       <Search aria-hidden="true" className="size-4 shrink-0 text-neutral-500" />
       <input
@@ -37,7 +37,7 @@ export function MobileHeaderSearch({ onDone }: { onDone: () => void }) {
         placeholder="Search vegetable name..."
         aria-label="Search vegetables"
         enterKeyHint="search"
-        className="min-w-0 flex-1 border-none bg-transparent px-2.5 text-base text-neutral-800 shadow-none outline-none placeholder:text-neutral-500 focus:outline-none focus:ring-0"
+        className="min-w-0 flex-1 border-none bg-transparent px-2.5 text-base text-neutral-800 shadow-none outline-none placeholder:text-neutral-500 focus:outline-none focus:ring-0 focus-visible:!outline-none"
       />
       <button type="submit" className="flex min-h-10 shrink-0 items-center rounded-full bg-[#457D00] px-5 text-sm font-bold text-white transition-colors hover:bg-[#386400] active:scale-[0.97]">
         Search

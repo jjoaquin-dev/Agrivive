@@ -28,7 +28,7 @@ export function BoostProductHeader({ name, imageUrl, price, unit }: Props) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  photo: { width: 52, height: 52, borderRadius: radii.input, overflow: "hidden", backgroundColor: colors.primarySurface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  photo: { width: 52, height: 52, borderRadius: radii.input, overflow: "hidden", backgroundColor: colors.primarySurface, borderWidth: 1, borderColor: "#F3F1EC", alignItems: "center", justifyContent: "center" },
   image: { width: "100%", height: "100%" },
   copy: { flex: 1, minWidth: 0 },
   name: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },

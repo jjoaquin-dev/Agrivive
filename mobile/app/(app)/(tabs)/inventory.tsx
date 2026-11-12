@@ -10,6 +10,7 @@ import { InventoryEmptyState } from "../../../src/features/inventory/components/
 import { CategorySheet } from "../../../src/features/inventory/components/CategorySheet";
 import { PaginationControl } from "../../../src/components/PaginationControl";
 import { colors, fonts, radii, shadows, spacing } from "../../../src/theme";
+import { surface } from "../../../src/theme/surface";
 
 export default function InventoryScreen() {
   const router = useRouter();
@@ -137,12 +138,12 @@ export default function InventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.surface },
+  screen: { flex: 1, backgroundColor: surface.page },
   listContent: { paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: 96 },
   fab: { position: "absolute", bottom: spacing.lg, right: spacing.lg, width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center", ...shadows.elevated },
   fabPressed: { backgroundColor: colors.primaryPressed, transform: [{ scale: 0.95 }] },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.25)", alignItems: "flex-end", paddingTop: 64, paddingRight: spacing.base },
-  menuCard: { width: 240, backgroundColor: colors.surface, borderRadius: radii.card, paddingVertical: spacing.sm, borderWidth: 1, borderColor: colors.border, ...shadows.elevated },
+  menuCard: { width: 240, maxWidth: "85%", backgroundColor: colors.surface, borderRadius: radii.card, paddingVertical: spacing.sm, borderWidth: 1, borderColor: colors.border, ...shadows.elevated },
   menuItem: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.base, minHeight: 48 },
   menuItemText: { fontFamily: fonts.body.medium, fontSize: 14, color: "#374151" },
 });

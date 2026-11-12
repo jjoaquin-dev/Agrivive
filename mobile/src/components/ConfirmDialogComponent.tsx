@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   message: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 21, color: colors.textMuted, marginTop: spacing.xs },
   row: { flexDirection: "row", gap: spacing.md, marginTop: spacing.lg },
   btn: { flex: 1, minHeight: 48, borderRadius: radii.button, alignItems: "center", justifyContent: "center" },
-  cancel: { backgroundColor: "#F3F1EA", borderWidth: 1, borderColor: colors.border },
+  cancel: { backgroundColor: "#F6F5F1", borderWidth: 1, borderColor: colors.border },
   cancelText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
   confirm: { backgroundColor: colors.error },
   confirmText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.white },

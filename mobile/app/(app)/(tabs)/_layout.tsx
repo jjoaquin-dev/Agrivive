@@ -11,6 +11,8 @@ import {
 } from "lucide-react-native";
 import { colors, fonts } from "../../../src/theme";
 import { refreshAlerts, useAlertCounts, useAlertRefresh } from "../../../src/features/alerts/alertStore";
+import { surface } from "../../../src/theme/surface";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const badgeStyle = {
   backgroundColor: "#EF4444",
@@ -22,6 +24,7 @@ const badge = (n: number) => (n > 0 ? (n > 9 ? "9+" : n) : undefined);
 
 export default function TabsLayout() {
   const { messages: unreadCount, orders: newOrders } = useAlertCounts();
+  const bottomPad = Math.max(useSafeAreaInsets().bottom, 8);
   useAlertRefresh();
 
   return (
@@ -29,7 +32,7 @@ export default function TabsLayout() {
       screenListeners={{ focus: () => void refreshAlerts() }}
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: surface.page,
         },
         headerShadowVisible: false,
         headerTintColor: colors.primary,
@@ -42,10 +45,10 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: "#636B63",
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E2DA",
+          borderTopColor: "#EEECE6",
           borderTopWidth: 1,
-          height: Platform.OS === "ios" ? 84 : 64,
-          paddingBottom: Platform.OS === "ios" ? 22 : 8,
+          height: 56 + bottomPad,
+          paddingBottom: bottomPad,
           paddingTop: 8,
         },
         tabBarLabelStyle: {

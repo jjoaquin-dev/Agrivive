@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import { QrCode, Plus } from "lucide-react-native";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../theme";
+import { dash } from "../dashboardTokens";
 
 interface DashboardTwinActionsProps {
   onAddProduct: () => void;
@@ -52,14 +53,14 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { gap: spacing.sm, marginBottom: spacing.lg },
-  primaryCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, backgroundColor: colors.primary, borderRadius: radii.card, padding: spacing.base, minHeight: 72, ...shadows.card },
-  secondaryCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, minHeight: 72, ...shadows.card },
+  container: { gap: spacing.md, marginBottom: spacing.xl },
+  primaryCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, backgroundColor: colors.primary, borderRadius: radii.card, padding: spacing.base, minHeight: 76, ...dash.shadow },
+  secondaryCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, backgroundColor: dash.card, borderRadius: radii.card, borderWidth: 1, borderColor: dash.border, padding: spacing.base, minHeight: 76, ...dash.shadow },
   textWrap: { flex: 1 },
-  primaryTitle: { ...typography.sectionHeading, fontFamily: fonts.heading.bold, color: colors.white },
-  primarySubtitle: { ...typography.labelSmall, color: "rgba(255, 255, 255, 0.88)", marginTop: 2 },
-  secondaryTitle: { ...typography.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text },
-  secondaryHint: { ...typography.labelSmall, color: colors.textMuted, marginTop: 2 },
+  primaryTitle: { ...typography.sectionHeading, fontSize: 16, fontFamily: fonts.heading.bold, color: colors.white },
+  primarySubtitle: { ...typography.label, color: "rgba(255, 255, 255, 0.88)", marginTop: 2 },
+  secondaryTitle: { ...typography.sectionHeading, fontSize: 16, fontFamily: fonts.heading.bold, color: colors.text },
+  secondaryHint: { ...typography.label, color: colors.textMuted, marginTop: 2 },
   plusWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255, 255, 255, 0.2)", alignItems: "center", justifyContent: "center" },
   qrWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   cardPressed: { transform: [{ scale: 0.99 }], opacity: 0.92 },

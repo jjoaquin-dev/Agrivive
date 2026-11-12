@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Globe, MoreHorizontal } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import { PlatformBadge, platformName, type Platform } from "./PlatformBadge";
+import { surface } from "../../../theme/surface";
 
 interface Props {
   name: string;
@@ -71,12 +72,12 @@ export function BoostPostPreview({ name, imageUrl, price, quantity, unit }: Prop
 const styles = StyleSheet.create({
   label: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.textMuted, marginBottom: spacing.sm },
   tabs: { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.md },
-  tab: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 56, padding: spacing.sm, borderRadius: radii.card, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.white },
+  tab: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 56, padding: spacing.sm, borderRadius: radii.card, borderWidth: 1.5, borderColor: "#F3F1EC", backgroundColor: colors.white },
   tabActive: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
   tabCopy: { flex: 1 },
   tabName: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
   tabAccount: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted },
-  card: { backgroundColor: colors.white, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md, ...shadows.card },
+  card: { backgroundColor: colors.white, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.md, ...surface.shadow },
   head: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.sm },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   avatarText: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.white },

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Dimensions } from "react-native";
+import { useWindowDimensions } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { colors, fonts, spacing } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
@@ -30,12 +30,13 @@ export function AnalyticsDailySales({ days }: { days: SellerAnalyticsInsights["d
   const total = bars.reduce((a, b) => a + b.sales, 0);
   const best = max > 0 ? bars.find((b) => b.sales === max) : undefined;
   const label = (b: { from: string; to: string }) => (b.from === b.to ? dayText(b.from) : `${dayText(b.from)} – ${dayText(b.to)}`);
-  const chartWidth = Math.max(Dimensions.get("window").width - 120, 220);
+  const { width: windowWidth } = useWindowDimensions();
+  const chartWidth = Math.max(windowWidth - 120, 220);
   const gap = bars.length > 20 ? 3 : 8;
   const barWidth = Math.max(4, Math.min(30, Math.floor((chartWidth - 8 - bars.length * gap) / bars.length)));
   const data = bars.map((bar, i) => ({
     value: bar.sales,
-    frontColor: bar.sales === 0 ? "#E5E2DA" : picked === i || (picked === null && bar === best) ? colors.primary : "#7FB596",
+    frontColor: bar.sales === 0 ? "#EEECE6" : picked === i || (picked === null && bar === best) ? colors.primary : "#7FB596",
     label: i === 0 || i === bars.length - 1 || i === Math.floor(bars.length / 2) ? dayText(bar.from) : "",
     labelWidth: 48,
     onPress: () => setPicked(picked === i ? null : i),
@@ -58,7 +59,7 @@ export function AnalyticsDailySales({ days }: { days: SellerAnalyticsInsights["d
           initialSpacing={4}
           roundedTop
           hideRules={false}
-          rulesColor="#F3F1EA"
+          rulesColor="#F6F5F1"
           yAxisColor="transparent"
           xAxisColor={colors.border}
           yAxisTextStyle={styles.axisText}

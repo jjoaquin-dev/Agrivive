@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Archive, ChevronLeft, Info, ShieldBan } from "lucide-react-native";
+import { Archive, ChevronLeft, Flag, ShieldBan } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import { safeBack } from "../../../utils/safeBack";
 
@@ -11,8 +11,8 @@ interface ConversationHeaderBarProps {
   avatarBg: string;
   initials: string;
   buyerImage?: string | null;
-  /** Opens the order or listing this chat is about. Hidden when there is none. */
-  onInfo?: () => void;
+  /** Opens the report form for this buyer's order. Hidden when the chat has no order. */
+  onReport?: () => void;
   /** Opens the block or unblock choice. Hidden when not given. */
   onBlock?: () => void;
   blocked?: boolean;
@@ -21,7 +21,7 @@ interface ConversationHeaderBarProps {
   archived?: boolean;
 }
 
-export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials, buyerImage, onInfo, onBlock, blocked, onArchive, archived }: ConversationHeaderBarProps) {
+export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials, buyerImage, onReport, onBlock, blocked, onArchive, archived }: ConversationHeaderBarProps) {
   const router = useRouter();
   const [imgError, setImgError] = useState(false);
 
@@ -54,9 +54,9 @@ export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials
           <ShieldBan size={22} color={blocked ? colors.error : colors.textMuted} />
         </Pressable>
       ) : null}
-      {onInfo ? (
-        <Pressable onPress={onInfo} accessibilityRole="button" accessibilityLabel="Open details" style={styles.iconButton}>
-          <Info size={22} color={colors.textMuted} />
+      {onReport ? (
+        <Pressable onPress={onReport} accessibilityRole="button" accessibilityLabel="Report this buyer" style={styles.iconButton}>
+          <Flag size={22} color={colors.textMuted} />
         </Pressable>
       ) : null}
     </View>
@@ -64,7 +64,7 @@ export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials
 }
 
 const styles = StyleSheet.create({
-  navBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface },
+  navBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: "#F3F1EC", backgroundColor: "#FDFDFD" },
   iconButton: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   avatarBox: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   avatarImage: { width: 44, height: 44, borderRadius: 22 },

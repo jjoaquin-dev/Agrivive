@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center" },
   icon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
   text: { flex: 1 },
-  title: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   line: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: 2 },
   points: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text, marginTop: spacing.xs },
   pointsValue: { fontFamily: fonts.heading.bold },

@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   scroll: { flex: 1 },
   content: { padding: spacing.base, paddingBottom: spacing.xl },
-  bar: { backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.base, paddingTop: spacing.md },
+  bar: { backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: "#F3F1EC", paddingHorizontal: spacing.base, paddingTop: spacing.md },
   loader: { marginTop: spacing.md },
   error: { color: colors.error, fontFamily: fonts.body.medium, fontSize: 14, lineHeight: 20, marginTop: spacing.md },
   action: { minHeight: 52 },

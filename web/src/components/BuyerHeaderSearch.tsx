@@ -36,7 +36,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
   return (
     <form
       onSubmit={handleSearchSubmit}
-      className={`hidden min-w-0 md:flex flex-1 items-center rounded-full border p-1 pl-4 transition-all focus-within:border-[#457D00] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#457D00]/20 ${
+      className={`hidden min-w-0 md:flex flex-1 items-center rounded-full border p-1 pl-4 transition-all focus-within:border-neutral-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-neutral-300/60 ${
         onGreen ? "max-w-4xl border-white bg-white" : "max-w-xl border-neutral-300 bg-neutral-50/70"
       }`}
     >
@@ -45,7 +45,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder="Search vegetable name..."
-        className="min-w-[120px] w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
+        className="min-w-[120px] w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:!outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
       />
       <HeaderCategoryDropdown
         categories={navCategories}

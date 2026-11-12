@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
   pill: { backgroundColor: colors.primaryLight, borderRadius: 9999, paddingHorizontal: 10, paddingVertical: 3 },
   pillText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.primary },
   bars: { flexDirection: "row", gap: 8, marginTop: spacing.sm },
-  bar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#E5E2DA" },
+  bar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#EEECE6" },
   barOn: { backgroundColor: colors.primary },
 });

@@ -72,13 +72,13 @@ export function ConversationContextBanner({ conversation, order, product, onPres
 }
 
 const styles = StyleSheet.create({
-  banner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: spacing.base, paddingVertical: spacing.sm, minHeight: 64 },
+  banner: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "#FDFDFD", borderBottomWidth: 1, borderBottomColor: "#F3F1EC", paddingHorizontal: spacing.base, paddingVertical: spacing.sm, minHeight: 64 },
   pressed: { backgroundColor: colors.surfaceMuted },
   thumbBox: { width: 48, height: 48, borderRadius: radii.sm + 2, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   thumb: { width: 48, height: 48 },
   textColumn: { flex: 1 },
-  title: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   detail: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
   pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radii.full, maxWidth: 130 },
-  pillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
 });

@@ -15,6 +15,9 @@ import { ProfileSetupChecklist } from "../../../src/features/profile/components/
 import { ProfileStallCard } from "../../../src/features/profile/components/ProfileStallCard";
 import { ProfileSettingsList } from "../../../src/features/profile/components/ProfileSettingsList";
 import { ProfilePhotoSheet } from "../../../src/features/profile/components/ProfilePhotoSheet";
+import { ProfileQuickActions } from "../../../src/features/profile/components/ProfileQuickActions";
+import { ProfileLogoutButton } from "../../../src/features/profile/components/ProfileLogoutButton";
+import { useProfileActions } from "../../../src/features/profile/hooks/useProfileActions";
 import { profileColors } from "../../../src/features/profile/profileTokens";
 import { colors, fonts, spacing } from "../../../src/theme";
 
@@ -23,6 +26,7 @@ export default function ProfileOverviewScreen() {
   const { session, setup, refreshSetup, signOut } = useAuth();
   const { trust, loading: trustLoading, error: trustError } = useSellerTrust();
   const avatar = useProfileAvatar();
+  const actions = useProfileActions();
   const [refreshing, setRefreshing] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
@@ -74,11 +78,14 @@ export default function ProfileOverviewScreen() {
         <ProfileHeroCard shopName={shopName} sellerName={sellerName} avatarUrl={setup?.account?.image || session?.user?.image}
           isVerified={isVerified} memberSince={memberSince} uploadingAvatar={avatar.uploading} onPickAvatar={avatar.openSheet} onEditProfile={goEdit} />
         {setup && setup.nextStep !== "ready" ? <ProfileSetupChecklist steps={steps} onContinue={continueSetup} /> : null}
+        <ProfileQuickActions closedToday={actions.closedToday} toReply={actions.toReply} saving={actions.saving} failed={actions.failed}
+          onToggleClosed={(next) => void actions.toggleClosed(next)} onReviews={() => router.push("/(app)/reviews")} />
         <ProfileStandingCard trust={trust} loading={trustLoading} failed={Boolean(trustError)} isActive={(session?.user as any)?.isActive !== false} onPress={() => router.push("/(app)/trust")} />
         <ProfileStallCard coordinates={coordinates} detailAddress={profile?.detailAddress || "No stall address yet"} pickupInstructions={(profile as any)?.pickupInstructions}
           phoneNumber={profile?.phoneNumber || "Not set"} email={email} onEdit={goEdit} />
-        <ProfileSettingsList twoFactorEnabled={Boolean(setup?.twoFactorEnabled)} onNotifications={() => router.push("/(app)/notifications")} onReviews={() => router.push("/(app)/reviews")}
-          onTrust={() => router.push("/(app)/trust")} onStall={() => router.push("/(app)/stall")} onSecurity={() => router.push("/(app)/profile/security")} onActivity={() => router.push("/(app)/activity")} onSignOut={() => setConfirmLogout(true)} />
+        <ProfileSettingsList twoFactorEnabled={Boolean(setup?.twoFactorEnabled)} onNotifications={() => router.push("/(app)/notifications")}
+          onTrust={() => router.push("/(app)/trust")} onStall={() => router.push("/(app)/stall")} onSecurity={() => router.push("/(app)/profile/security")} onActivity={() => router.push("/(app)/activity")} />
+        <ProfileLogoutButton onPress={() => setConfirmLogout(true)} />
         {sellerId ? <Text style={styles.footer}>Seller ID {sellerId}</Text> : null}
       </ScrollView>
       <ProfilePhotoSheet visible={avatar.sheetOpen} onTake={avatar.takePhoto} onChoose={avatar.choosePhoto} onClose={avatar.closeSheet} />

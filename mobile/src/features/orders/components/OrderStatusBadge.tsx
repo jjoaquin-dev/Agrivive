@@ -15,7 +15,7 @@ const tones: Record<SellerOrderStatus, { fg: string; bg: string; border: string 
   pending: { fg: colors.warning, bg: "#FFF7ED", border: "#FED7AA" },
   completed: { fg: colors.success, bg: "rgba(22, 163, 74, 0.10)", border: "rgba(22, 163, 74, 0.25)" },
   cancelled: { fg: colors.error, bg: "#FEF2F2", border: "#FECACA" },
-  expired: { fg: colors.textMuted, bg: "#F3F1EA", border: colors.border },
+  expired: { fg: colors.textMuted, bg: "#F6F5F1", border: colors.border },
   declined: { fg: colors.warning, bg: "#FFF7ED", border: "#FED7AA" },
 };
 
@@ -37,6 +37,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 11,
+    fontSize: 12,
   },
 });

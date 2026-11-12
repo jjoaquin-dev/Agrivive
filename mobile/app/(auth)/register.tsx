@@ -24,6 +24,8 @@ import { TermsConsent } from "../../src/features/auth/components/TermsConsent";
 import { RecaptchaNotice } from "../../src/features/auth/components/RecaptchaNotice";
 import { recaptchaHeaders } from "../../src/features/auth/recaptcha";
 import { LEGAL_VERSION } from "../../src/features/legal/legalLinks";
+import { surface } from "../../src/theme/surface";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface EmailCheckResult {
   exists: boolean;
@@ -229,6 +231,8 @@ export default function RegisterScreen() {
     }
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
@@ -236,7 +240,7 @@ export default function RegisterScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.base }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
@@ -376,10 +380,13 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: surface.page,
   },
   scrollContent: {
     flexGrow: 1,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.base,
     paddingBottom: spacing.xxl,
@@ -401,19 +408,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.base,
   },
   header: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xl + spacing.xs,
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 26,
+    fontSize: 28,
+    lineHeight: 34,
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   subtitle: {
     fontFamily: fonts.body.regular,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textMuted,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   errorBox: {
     backgroundColor: "rgba(184, 84, 80, 0.1)",
@@ -458,12 +466,12 @@ const styles = StyleSheet.create({
   },
   verificationNoteText: {
     fontFamily: fonts.body.regular,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textMuted,
     lineHeight: 18,
   },
   submitButton: {
-    marginTop: spacing.sm,
+    marginTop: spacing.base,
     borderRadius: radii.button,
     minHeight: touchTargets.min,
     backgroundColor: colors.primary,
@@ -475,7 +483,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.base,
   },
   footerPrompt: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textMuted,
   },
   inlineButton: {

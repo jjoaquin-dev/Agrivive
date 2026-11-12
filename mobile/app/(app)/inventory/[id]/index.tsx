@@ -9,6 +9,7 @@ import { getSellerProductShare } from "../../../../src/features/inventory/api/pr
 import { ProductDetailsSummary } from "../../../../src/features/inventory/components/ProductDetailsSummary";
 import { ProductHistoryCard } from "../../../../src/features/inventory/components/ProductHistoryCard";
 import { ArchiveConfirmSheet } from "../../../../src/features/inventory/components/ArchiveConfirmSheet";
+import { surface } from "../../../../src/theme/surface";
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -161,9 +162,9 @@ export default function ProductDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: surface.page },
   container: { padding: spacing.base, paddingBottom: spacing.xl },
-  center: { flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center", padding: spacing.xl },
+  center: { flex: 1, backgroundColor: surface.page, justifyContent: "center", alignItems: "center", padding: spacing.xl },
   centerSub: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: spacing.sm, textAlign: "center" },
   errorTitle: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   retry: { marginTop: spacing.base, minHeight: 48, paddingHorizontal: spacing.xl, borderRadius: radii.button, backgroundColor: colors.primary, justifyContent: "center" },
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
   dangerText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.error },
   bar: { flexDirection: "row", gap: spacing.md, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.lg },
   barButton: { flex: 1, minHeight: 50, borderRadius: radii.button, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm },
-  barSecondary: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border },
+  barSecondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   barPrimary: { backgroundColor: colors.primary },
   barSecondaryText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
   barPrimaryText: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.white },

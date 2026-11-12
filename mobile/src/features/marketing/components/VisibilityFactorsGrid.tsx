@@ -52,7 +52,7 @@ export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.md, gap: spacing.sm },
+  container: { backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: "#F3F1EC", borderRadius: radii.card, padding: spacing.md, marginTop: spacing.md, gap: spacing.sm },
   item: { gap: 6 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   label: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
@@ -60,5 +60,5 @@ const styles = StyleSheet.create({
   value: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
   track: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
   fill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
-  note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm },
+  note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, borderTopWidth: 1, borderTopColor: "#F3F1EC", paddingTop: spacing.sm },
 });

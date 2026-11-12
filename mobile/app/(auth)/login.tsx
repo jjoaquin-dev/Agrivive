@@ -20,6 +20,8 @@ import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { safeBack } from "../../src/utils/safeBack";
 import { GoogleSignInButton } from "../../src/features/auth/components/GoogleSignInButton";
 import { RecaptchaNotice } from "../../src/features/auth/components/RecaptchaNotice";
+import { surface } from "../../src/theme/surface";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -162,6 +164,8 @@ export default function LoginScreen() {
 
   const handleForgotPassword = () => router.push("/(auth)/forgot-password");
 
+  const insets = useSafeAreaInsets();
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardContainer}
@@ -169,7 +173,7 @@ export default function LoginScreen() {
       keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.base }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
@@ -297,10 +301,13 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: surface.page,
   },
   scrollContent: {
     flexGrow: 1,
+    width: "100%",
+    maxWidth: 520,
+    alignSelf: "center",
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.base,
     paddingBottom: spacing.xxl,
@@ -322,19 +329,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.base,
   },
   header: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xl + spacing.xs,
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 26,
+    fontSize: 28,
+    lineHeight: 34,
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   subtitle: {
     fontFamily: fonts.body.regular,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textMuted,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   errorBox: {
     backgroundColor: "rgba(184, 84, 80, 0.08)",
@@ -355,14 +363,14 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     color: colors.text,
-    fontSize: 14,
-    fontWeight: "500",
-    marginBottom: spacing.xs,
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: spacing.sm,
   },
   inputRounded: {
     borderRadius: radii.input,
-    borderColor: colors.border,
-    borderWidth: 1.5,
+    borderColor: surface.border,
+    borderWidth: 1,
     minHeight: touchTargets.min,
     backgroundColor: colors.surface,
   },
@@ -373,7 +381,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.primary,
     fontWeight: "600",
   },
@@ -382,10 +390,10 @@ const styles = StyleSheet.create({
     minHeight: touchTargets.min,
     backgroundColor: colors.primary,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 0,
   },
   submitButtonText: {
     fontSize: 16,
@@ -399,7 +407,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
   },
   footerPrompt: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textMuted,
     fontFamily: fonts.body.regular,
   },
@@ -422,7 +430,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "500",
     paddingHorizontal: spacing.md,
   },
@@ -430,6 +438,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderRadius: radii.button,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: surface.border,
   },
 });

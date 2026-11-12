@@ -22,11 +22,11 @@ interface Props {
 }
 
 const TABS: { id: InventoryFilterTab; label: string; fg: string; bg: string; count: (s: InventorySummary) => number }[] = [
-  { id: "all", label: "All", fg: colors.text, bg: "#F3F1EA", count: (s) => s.totalProducts },
-  { id: "selling", label: "Selling", fg: colors.text, bg: "#F3F1EA", count: (s) => Math.max(0, s.activeCount - s.outOfStockCount) },
+  { id: "all", label: "All", fg: colors.text, bg: "#F6F5F1", count: (s) => s.totalProducts },
+  { id: "selling", label: "Selling", fg: colors.text, bg: "#F6F5F1", count: (s) => Math.max(0, s.activeCount - s.outOfStockCount) },
   { id: "low_stock", label: "Running low", fg: colors.warning, bg: "#FFF7ED", count: (s) => s.lowStockCount },
   { id: "out_of_stock", label: "Sold out", fg: colors.error, bg: "#FEF2F2", count: (s) => s.outOfStockCount },
-  { id: "archived", label: "Archived", fg: colors.textMuted, bg: "#F3F1EA", count: (s) => s.archivedCount },
+  { id: "archived", label: "Archived", fg: colors.textMuted, bg: "#F6F5F1", count: (s) => s.archivedCount },
 ];
 
 export function InventoryListHeader({

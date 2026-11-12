@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   labels: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   name: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
   value: { fontFamily: fonts.body.semiBold, fontSize: 14 },
-  track: { height: 10, borderRadius: 4, backgroundColor: "#F3F1EA", overflow: "hidden" },
+  track: { height: 10, borderRadius: 4, backgroundColor: "#F6F5F1", overflow: "hidden" },
   fill: { height: "100%", borderRadius: 4 },
   note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
 });

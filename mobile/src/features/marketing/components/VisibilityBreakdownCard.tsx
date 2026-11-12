@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ChevronDown, ChevronUp, Star } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerVisibilityItem } from "../api/seller-visibility";
 import type { Product } from "../../inventory/types";
 import { VisibilityFactorsGrid } from "./VisibilityFactorsGrid";
 import { BoostChip } from "./BoostChip";
 import { hasActiveBoost } from "../types";
+import { surface } from "../../../theme/surface";
 
 interface VisibilityBreakdownCardProps {
   item: SellerVisibilityItem;
@@ -25,7 +26,7 @@ function placement(item: SellerVisibilityItem) {
 const tones = {
   good: { bg: "rgba(22, 163, 74, 0.10)", fg: colors.success },
   warn: { bg: "#FFF7ED", fg: colors.warning },
-  quiet: { bg: "#F3F1EA", fg: colors.textMuted },
+  quiet: { bg: "#F6F5F1", fg: colors.textMuted },
 };
 
 export function VisibilityBreakdownCard({ item, productName, product, onBoost }: VisibilityBreakdownCardProps) {
@@ -95,24 +96,24 @@ export function VisibilityBreakdownCard({ item, productName, product, onBoost }:
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...shadows.card },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.base, marginBottom: spacing.md, ...surface.shadow },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm },
   titleLine: { flex: 1, flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
-  productName: { flexShrink: 1, fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
-  code: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  productName: { flexShrink: 1, fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },
+  code: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
   badge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radii.full },
-  badgeText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
-  line: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.text, marginTop: spacing.sm },
+  badgeText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
+  line: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.text, marginTop: spacing.sm },
   lineQuiet: { color: colors.textMuted },
   scoreRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm },
   segments: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
   segmentOn: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
-  scoreText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  scoreText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
   dropChip: { alignSelf: "flex-start", backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA", borderRadius: radii.full, paddingHorizontal: spacing.sm, paddingVertical: 4, marginTop: spacing.sm },
-  dropText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
-  actionRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
-  whyButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, minHeight: 48, borderRadius: radii.button, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  whyText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
+  dropText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.warning },
+  actionRow: { flexDirection: "row", gap: spacing.md, marginTop: spacing.base },
+  whyButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, minHeight: 48, borderRadius: radii.button, borderWidth: 1, borderColor: "#F3F1EC", backgroundColor: colors.surface },
+  whyText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
   boostButton: { flex: 1, alignItems: "center", justifyContent: "center", minHeight: 48, borderRadius: radii.button, backgroundColor: colors.primary },
-  boostText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.white },
+  boostText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.white },
 });

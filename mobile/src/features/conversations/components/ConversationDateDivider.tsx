@@ -14,6 +14,6 @@ export function ConversationDateDivider({ label }: { label: string }) {
 
 const styles = StyleSheet.create({
   row: { alignItems: "center", marginVertical: spacing.md },
-  chip: { backgroundColor: colors.border, borderRadius: radii.full, paddingHorizontal: spacing.md, paddingVertical: 4 },
+  chip: { backgroundColor: "#F4F3EE", borderRadius: radii.full, paddingHorizontal: spacing.md, paddingVertical: 4 },
   text: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
 });

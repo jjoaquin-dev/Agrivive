@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import { Plus, Minus, History } from "lucide-react-native";
 import { colors, fonts, radii, spacing, shadows, typography } from "../../../theme";
+import { dash } from "../dashboardTokens";
 import type { StockAdjustment } from "../../inventory/types";
 import { SkeletonBlock, SkeletonCard } from "./DashboardSkeleton";
 
@@ -117,15 +118,15 @@ export const DashboardRecentActivity: React.FC<DashboardRecentActivityProps> = (
 
 const styles = StyleSheet.create({
   container: { marginBottom: spacing.xxl },
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.sm },
-  sectionHeading: { ...typography.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text },
+  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
+  sectionHeading: { ...typography.sectionHeading, ...dash.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text },
   seeAllButton: { flexDirection: "row", alignItems: "center", paddingVertical: spacing.xs },
   seeAllText: { ...typography.label, fontFamily: fonts.body.semiBold, color: colors.primary },
   skeletonRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, padding: spacing.md },
-  emptyCard: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, alignItems: "center", gap: spacing.sm, ...shadows.card },
+  emptyCard: { backgroundColor: dash.card, borderRadius: radii.card, borderWidth: 1, borderColor: dash.border, padding: spacing.base, alignItems: "center", gap: spacing.sm, ...dash.shadow },
   emptySub: { ...typography.labelSmall, color: colors.textMuted, textAlign: "center" },
   list: { gap: spacing.sm },
-  activityRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md, ...shadows.card },
+  activityRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, backgroundColor: dash.card, borderRadius: radii.card, borderWidth: 1, borderColor: dash.border, padding: spacing.md, ...dash.shadow },
   iconWrap: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   activityBody: { flex: 1 },
   titleLine: { flexDirection: "row", alignItems: "center", gap: spacing.sm },

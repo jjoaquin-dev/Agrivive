@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-11 PST
+last_updated: 2026-11-12 PST
 status: active
 ---
 
@@ -15,7 +15,29 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Stall hours drive seller penalties: reply timers count open hours only, buyers get a 30-minute closing reminder, and the mobile hours editor is alarm-style (time once, pick weekdays, Open 24 hours). See [[2026-11-11 Stall Hours Reply Clock and Closing Reminder]]. Rebuild the APK and deploy the API and worker.
+Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
+
+Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].
+
+Earlier: Seller Boost hub screens cleaned up (website white, light borders, clearer type). See [[2026-11-12 Seller Boost Screens Cleanup]].
+
+Earlier: Seller Messages list and chat cleaned up; filter chips only show when useful. See [[2026-11-11 Seller Messages Screens Cleanup]].
+
+Earlier: Seller Notifications screen cleaned up (cards, highlighted new reservations, messages and questions) and the Show pagination is a soft pill card again. See [[2026-11-11 Seller Notifications Screen Cleanup]].
+
+Earlier: Seller app: pill buttons and text fields, pill search and dropdowns, text-only pagination, lighter borders and fills everywhere, Listings pages in the website white. See [[2026-11-11 Seller App Pill Controls and Quiet Borders]].
+
+Earlier: Seller Reservations list, detail and Report a Problem screens cleaned up (website white, one pickup card, highlighted next step). See [[2026-11-11 Seller Reservations Screens Cleanup]].
+
+Earlier: Seller dashboard (Home tab) cleaned up: website white, faint borders, one heading size and even spacing. See [[2026-11-11 Seller Dashboard Visual Cleanup]].
+
+Earlier: Seller Profile page regrouped: quick actions (close store today, reviews to reply), settings in three groups, separate solid red Log Out, whiter background and lighter borders. See [[2026-11-11 Seller Profile Regrouped With Quick Actions]].
+
+Earlier: Seller Stall Hours screen simplified (Away switch and Pickup limits removed, day circles in one row). Away is now automatic: shown to buyers after 30 minutes without using the app; orders and the 3-hour auto-confirm are unaffected. See [[2026-11-11 Stall Hours Cleanup and Automatic Away]].
+
+Earlier: Reserving no longer asks the buyer to pick a time. One confirmation shows the seller's hours, "pick it up on or before" (24 hours later for 24-hour stalls, else 30 minutes before closing), a missed-pickup warning and Cancel / Reserve. Also: seller page shows opening hours, nine category cards (Stem, Flower, Seed added) in one row, notifications null fix. Rebuild API and web; mobile not checked. See [[2026-11-11 Reserve Confirmation Replaces Pickup Time Picker]].
+
+Earlier: Stall hours drive seller penalties: reply timers count open hours only, buyers get a 30-minute closing reminder, and the mobile hours editor is alarm-style (time once, pick weekdays, Open 24 hours). See [[2026-11-11 Stall Hours Reply Clock and Closing Reminder]]. Rebuild the APK and deploy the API and worker.
 
 Earlier: README aligned with the current system (Supabase, 47 tables, one review per order, reservation pickup, no Priority Boost, no admin trust decisions), architecture and database diagrams added under `Agrivive/docs/`, CI workflows fixed and bun pinned to 1.4.4 (not pushed yet), and two stale Supabase objects dropped. See [[2026-11-10 README Diagrams and CI Fix]].
 

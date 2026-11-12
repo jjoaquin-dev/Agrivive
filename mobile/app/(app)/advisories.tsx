@@ -14,6 +14,7 @@ import { ContextualReminderCard } from "../../src/features/advisories/components
 import { WeatherForecastSection } from "../../src/features/advisories/components/WeatherForecastSection";
 import { UpcomingHolidaysCard } from "../../src/features/advisories/components/UpcomingHolidaysCard";
 import { colors, fonts, radii, spacing } from "../../src/theme";
+import { surface } from "../../src/theme/surface";
 
 export default function SellerAdvisoriesScreen() {
   const router = useRouter();
@@ -62,6 +63,8 @@ export default function SellerAdvisoriesScreen() {
           <>
             {!hasPin ? <AdvisoriesNoPinCard onAddPin={() => router.push("/(app)/profile/edit")} /> : null}
 
+            <ContextualReminderCard reminders={reminders} />
+
             {hasPin && current ? (
               <WeatherHeroCard
                 temperatureC={current.temperatureC}
@@ -72,8 +75,6 @@ export default function SellerAdvisoriesScreen() {
               />
             ) : null}
             {hasPin && !current ? <AdvisoriesWeatherDownCard onRetry={refresh} /> : null}
-
-            <ContextualReminderCard reminders={reminders} />
 
             {hasPin ? <WeatherForecastSection forecast={advisories.weather?.forecast ?? []} /> : null}
 
@@ -90,7 +91,7 @@ export default function SellerAdvisoriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1, backgroundColor: surface.page },
   content: { paddingHorizontal: spacing.base, paddingTop: spacing.xs, paddingBottom: spacing.xxl },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   muted: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.xs },
@@ -99,5 +100,5 @@ const styles = StyleSheet.create({
   retry: { marginTop: spacing.sm },
   empty: { alignItems: "center", paddingVertical: spacing.xxxl },
   emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text, marginBottom: spacing.xs },
-  footer: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted, textAlign: "center", marginTop: spacing.base },
+  footer: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, textAlign: "center", marginTop: spacing.lg, paddingHorizontal: spacing.base },
 });

@@ -54,16 +54,16 @@ const RuleRow: React.FC<{ label: string; valid: boolean }> = ({ label, valid }) 
 );
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card, padding: spacing.md, gap: spacing.sm },
+  card: { backgroundColor: "#FBFAF7", borderWidth: 1, borderColor: "#F3F1EC", borderRadius: radii.card, padding: spacing.base, gap: spacing.sm },
   strengthRow: { flexDirection: "row", justifyContent: "space-between" },
-  strengthTitle: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted },
-  strengthLabel: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted },
+  strengthTitle: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.textMuted },
+  strengthLabel: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.textMuted },
   bars: { flexDirection: "row", gap: 6 },
-  bar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#E5E2DA" },
+  bar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#EEECE6" },
   rules: { gap: 6, marginTop: 2 },
-  ruleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  ruleRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   tick: { width: 16, height: 16, borderRadius: 8, backgroundColor: "#D1D5DB", alignItems: "center", justifyContent: "center" },
   tickValid: { backgroundColor: "#059669" },
-  ruleText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  ruleText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
   ruleTextValid: { fontFamily: fonts.body.semiBold, color: "#047857" },
 });

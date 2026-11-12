@@ -67,7 +67,7 @@ async function completeScan(sellerId: string, orderId: string, body: ScanOrderIn
     if (current.status !== "pending") {
       throw new ScanError("expired", 409, "Order is no longer pending");
     }
-    const window = qrStatus(current.pickupStart, current.pickupEnd, now);
+    const window = qrStatus(current.pickupStart, current.pickupEnd, now, current.expiresAt);
     if (window === "expired" || (current.expiresAt && current.expiresAt <= now)) {
       throw new ScanError("expired", 410, "This QR has expired and cannot be used. The buyer must place a new order.");
     }

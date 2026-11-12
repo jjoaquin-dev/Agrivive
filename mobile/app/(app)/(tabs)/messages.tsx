@@ -45,6 +45,19 @@ export default function SellerMessagesScreen() {
     [direct.conversations],
   );
 
+  // A type filter only helps when the chats are mixed; with one type it would show the same list as All.
+  const tabsInUse = useMemo(() => {
+    const list = direct.conversations;
+    const produce = list.some((c) => c.contextType === "product" || c.contextType === "seller");
+    const reservations = list.some((c) => c.contextType === "order");
+    return {
+      unread: totalDirectUnread > 0,
+      produce: produce && reservations,
+      reservations: produce && reservations,
+      questions: web.openCount > 0,
+    };
+  }, [direct.conversations, totalDirectUnread, web.openCount]);
+
   const handleMarkAllRead = async () => {
     if (markingAll || totalDirectUnread <= 0) return;
     setMarkingAll(true);
@@ -81,6 +94,7 @@ export default function SellerMessagesScreen() {
         onSelectTab={filters.setFilterTab}
         unreadCount={totalDirectUnread}
         openCount={web.openCount}
+        available={tabsInUse}
       />
 
       <ConversationSortSheet

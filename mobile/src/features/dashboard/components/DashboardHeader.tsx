@@ -60,7 +60,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <Text style={styles.sellerName} numberOfLines={1}>{sellerName}</Text>
         {shopName ? (
           <View style={styles.locationRow}>
-            <Store size={12} color={colors.primary} />
+            <Store size={14} color={colors.primary} />
             <Text style={styles.locationText} numberOfLines={1}>{shopName}</Text>
           </View>
         ) : null}
@@ -72,14 +72,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.base },
+  header: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: spacing.lg },
   avatarButton: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   avatarImage: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full },
   avatarText: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.primaryPressed },
   verifiedBadge: { position: "absolute", right: -2, bottom: -2, width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, borderWidth: 1.5, borderColor: colors.white, alignItems: "center", justifyContent: "center" },
   identity: { flex: 1 },
-  greetingText: { ...typography.labelSmall, color: colors.textMuted },
-  sellerName: { ...typography.sectionHeading, color: colors.text },
+  greetingText: { ...typography.label, color: colors.textMuted },
+  sellerName: { ...typography.screenTitle, color: colors.text },
   locationRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: 2 },
-  locationText: { ...typography.labelSmall, flex: 1, color: colors.textMuted },
+  locationText: { ...typography.label, flex: 1, color: colors.textMuted },
 });

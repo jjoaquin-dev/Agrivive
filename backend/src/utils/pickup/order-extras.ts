@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { buyer_no_shows, order_declines, order_excuses, order_reschedules, order_status_history, orders, sellers_profile, user } from "../../db/schema";
 import type { OrderSide } from "../order-types";
+import { isSellerAway } from "./seller-presence";
 
 type OrderRow = typeof orders.$inferSelect;
 
@@ -10,8 +11,8 @@ export async function readOrderDetailExtras(row: OrderRow, side: OrderSide) {
   const [stall] = await db.select({
     shopName: sellers_profile.shopName, address: sellers_profile.detailAddress, latitude: sellers_profile.latitude,
     longitude: sellers_profile.longitude, instructions: sellers_profile.pickupInstructions, phone: sellers_profile.phoneNumber,
-    awayUntil: sellers_profile.awayUntil,
-  }).from(sellers_profile).where(eq(sellers_profile.userId, row.sellersId)).limit(1);
+    lastActiveAt: user.lastActiveAt,
+  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(eq(sellers_profile.userId, row.sellersId)).limit(1);
   const [buyer] = side === "seller" ? await db.select({ name: user.name }).from(user).where(eq(user.id, row.buyersId)).limit(1) : [];
   const [decline] = await db.select().from(order_declines).where(eq(order_declines.orderId, row.id)).limit(1);
   const [excuse] = await db.select().from(order_excuses).where(eq(order_excuses.orderId, row.id)).limit(1);
@@ -22,7 +23,7 @@ export async function readOrderDetailExtras(row: OrderRow, side: OrderSide) {
     ? `https://www.google.com/maps/dir/?api=1&destination=${stall.latitude},${stall.longitude}` : null;
   return {
     stall: stall ? { shopName: stall.shopName, address: stall.address, latitude: stall.latitude, longitude: stall.longitude,
-      instructions: stall.instructions, phone: stall.phone, directionsUrl: directions, away: !!stall.awayUntil && stall.awayUntil > new Date() } : null,
+      instructions: stall.instructions, phone: stall.phone, directionsUrl: directions, away: isSellerAway(stall.lastActiveAt) } : null,
     buyerName: buyer?.name ?? null,
     decline: decline ? {
       id: decline.id, reason: decline.reason, reasonValid: decline.reasonValid, details: decline.details, items: decline.items, isFull: decline.isFull,

@@ -5,7 +5,7 @@ import {
   Text,
   Image,
   FlatList,
-  Dimensions,
+  useWindowDimensions,
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,8 +14,8 @@ import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, spacing, radii, touchTargets } from "../../src/theme";
 import { ArrowRight } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
+import { surface } from "../../src/theme/surface";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface OnboardingSlide {
   id: string;
@@ -49,6 +49,10 @@ const SLIDES: OnboardingSlide[] = [
 ];
 
 export default function OnboardingScreen() {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // The picture takes about a third of the height (never huge on a tablet, never tiny on a small phone).
+  const heroWidth = Math.min(screenWidth - spacing.base * 2, 520);
+  const heroHeight = Math.max(200, Math.min(Math.round(screenHeight * 0.38), 420));
   const router = useRouter();
   const { completeOnboarding } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -82,7 +86,7 @@ export default function OnboardingScreen() {
 
   const handleMomentumScrollEnd = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
+    const index = Math.round(offsetX / screenWidth);
     setCurrentIndex(index);
   };
 
@@ -119,8 +123,8 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         renderItem={({ item }) => (
-          <View style={styles.slide}>
-            <View style={styles.heroContainer}>
+          <View style={[styles.slide, { width: screenWidth }]}>
+            <View style={[styles.heroContainer, { width: heroWidth, height: heroHeight }]}>
               <Image source={item.image} style={styles.heroImage} resizeMode="cover" />
             </View>
             <View style={styles.textContainer}>
@@ -167,7 +171,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: surface.page,
   },
   topBar: {
     flexDirection: "row",
@@ -193,21 +197,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   slide: {
-    width: SCREEN_WIDTH,
     alignItems: "center",
   },
   heroContainer: {
-    width: SCREEN_WIDTH - spacing.base * 2,
-    height: 360,
     borderRadius: radii.card,
     overflow: "hidden",
     backgroundColor: colors.surfaceMuted,
     marginTop: spacing.xs,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 0,
   },
   heroImage: {
     width: "100%",
@@ -215,23 +216,24 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: "center",
-    marginTop: spacing.lg,
+    maxWidth: 560,
+    marginTop: spacing.xl,
     paddingHorizontal: spacing.xl,
   },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 26,
+    fontSize: 28,
     color: colors.text,
     textAlign: "center",
     marginBottom: spacing.sm,
-    lineHeight: 32,
+    lineHeight: 34,
   },
   description: {
     fontFamily: fonts.body.regular,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textMuted,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 24,
     paddingHorizontal: spacing.xs,
   },
   footer: {
@@ -249,7 +251,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#E5E2DA",
+    backgroundColor: "#E4E2DB",
     marginHorizontal: 4,
   },
   indicatorActive: {
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.primary,
     textAlign: "center",
   },

@@ -34,7 +34,7 @@ export function ProfileStallCard({ coordinates, detailAddress, pickupInstruction
         </Pressable>
       </View>
       <View style={styles.map}>
-        <MapPickerComponent initialCoordinates={coordinates} height={140} readOnly />
+        <MapPickerComponent initialCoordinates={coordinates} height={120} readOnly />
       </View>
       <Text style={styles.address}>{detailAddress}</Text>
       {pickupInstructions ? (
@@ -53,16 +53,16 @@ export function ProfileStallCard({ coordinates, detailAddress, pickupInstruction
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.base, marginBottom: spacing.base },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md },
-  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },
   editHit: { minHeight: 44, minWidth: 44, alignItems: "flex-end", justifyContent: "center" },
-  edit: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.primary },
-  map: { borderRadius: radii.button, overflow: "hidden", borderWidth: 1, borderColor: profileColors.border, marginBottom: spacing.md },
-  address: { fontFamily: fonts.heading.bold, fontSize: 16, lineHeight: 22, color: colors.text },
+  edit: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
+  map: { borderRadius: radii.card, overflow: "hidden", borderWidth: 1, borderColor: profileColors.border, marginBottom: spacing.md },
+  address: { fontFamily: fonts.body.semiBold, fontSize: 14, lineHeight: 20, color: colors.text },
   noteRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
   note: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   rule: { height: 1, backgroundColor: profileColors.border, marginVertical: spacing.md },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 36 },
-  label: { fontFamily: fonts.body.regular, fontSize: 15, color: colors.textMuted },
-  value: { flex: 1, textAlign: "right", fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
+  label: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
+  value: { flex: 1, textAlign: "right", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
 });

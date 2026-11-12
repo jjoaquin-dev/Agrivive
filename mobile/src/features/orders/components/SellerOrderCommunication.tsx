@@ -13,6 +13,7 @@ import { ApiError } from "../../../api/client";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { CardComponent } from "../../../components/CardComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { surface } from "../../../theme/surface";
 import {
   fetchSellerInquiries,
   fetchSellerReview,
@@ -97,7 +98,7 @@ export function SellerOrderCommunication({ orderId }: { orderId: string }) {
   };
 
   return (
-    <CardComponent style={styles.card}>
+    <CardComponent style={{ ...styles.card, ...surface.cardStyle }}>
       <View style={styles.headingRow}>
         <MessageCircle size={19} color={colors.primary} />
         <Text style={styles.heading}>Buyer Questions</Text>
@@ -198,13 +199,13 @@ const styles = StyleSheet.create({
   muted: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted },
   label: { fontFamily: fonts.body.semiBold, fontSize: 14, lineHeight: 20, color: colors.text, marginBottom: spacing.xs },
   message: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 21, color: colors.text },
-  replyBox: { backgroundColor: colors.background, borderRadius: radii.input, padding: spacing.md, marginTop: spacing.md },
+  replyBox: { backgroundColor: "#F8F8F5", borderRadius: radii.input, padding: spacing.md, marginTop: spacing.md },
   formGroup: { marginTop: spacing.md },
-  input: { minHeight: touchTargets.min * 2, borderWidth: 1, borderColor: colors.border, borderRadius: radii.input, padding: spacing.md, color: colors.text, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, textAlignVertical: "top", backgroundColor: colors.surface },
+  input: { minHeight: touchTargets.min * 2, borderWidth: 1, borderColor: surface.border, borderRadius: radii.input, padding: spacing.md, color: colors.text, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, textAlignVertical: "top", backgroundColor: surface.card },
   inputError: { borderColor: colors.error },
   fieldError: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.error, marginTop: spacing.xs },
   formButton: { marginTop: spacing.sm },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.lg },
+  divider: { height: 1, backgroundColor: surface.border, marginVertical: spacing.lg },
   ratingRow: { flexDirection: "row", alignItems: "center", marginBottom: spacing.xs },
   ratingText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text, marginLeft: spacing.xs },
   errorText: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.error },

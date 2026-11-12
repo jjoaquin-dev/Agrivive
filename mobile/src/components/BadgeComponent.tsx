@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     color: colors.primaryPressed,
   },
   neutral: {
-    backgroundColor: "#F3F1EA",
+    backgroundColor: "#F6F5F1",
   },
   neutralText: {
     color: colors.text,

@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   text: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, marginBottom: spacing.md },
   list: { gap: spacing.xs, marginBottom: spacing.md },
   item: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.text },
-  how: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.surfaceMuted, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md, marginBottom: spacing.md },
+  how: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.surfaceMuted, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.md, marginBottom: spacing.md },
   howText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted },
   error: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.error, marginBottom: spacing.sm },
   primary: { minHeight: 52 },

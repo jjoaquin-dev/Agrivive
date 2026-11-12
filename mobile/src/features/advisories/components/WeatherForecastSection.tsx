@@ -1,9 +1,10 @@
 import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { Droplet } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerAdvisoryWeatherDay } from "../types";
 import { getWeatherConditionName } from "./WeatherHeroCard";
+import { surface } from "../../../theme/surface";
 
 interface WeatherForecastSectionProps {
   forecast: SellerAdvisoryWeatherDay[];
@@ -48,19 +49,19 @@ export const WeatherForecastSection: React.FC<WeatherForecastSectionProps> = ({ 
 );
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...shadows.card },
-  title: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text, marginBottom: spacing.md },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...surface.shadow },
+  title: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text, marginBottom: spacing.sm },
   unavailable: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center" },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10 },
-  rowBorder: { borderTopWidth: 1, borderTopColor: "#F3F1EA" },
-  dateCol: { width: 104 },
-  dayText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
-  conditionText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: spacing.md },
+  rowBorder: { borderTopWidth: 1, borderTopColor: "#F3F1EC" },
+  dateCol: { width: 104, flexShrink: 1 },
+  dayText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
+  conditionText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
   conditionWet: { fontFamily: fonts.body.medium, color: colors.warning },
-  range: { fontFamily: fonts.body.medium, fontSize: 14, color: "#374151" },
+  range: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.text },
   rangeWet: { fontFamily: fonts.body.semiBold, color: colors.text },
-  rainBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#F3F1EA", borderRadius: 9999, paddingHorizontal: 10, paddingVertical: 4 },
-  rainBadgeWet: { backgroundColor: "#FEF3C7", borderWidth: 1, borderColor: "#FCD34D" },
-  rainText: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
+  rainBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#F6F5F1", borderRadius: 9999, paddingHorizontal: 10, paddingVertical: 4 },
+  rainBadgeWet: { backgroundColor: "#FFF1DE" },
+  rainText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.textMuted },
   rainTextWet: { fontFamily: fonts.body.semiBold, color: "#92400E" },
 });

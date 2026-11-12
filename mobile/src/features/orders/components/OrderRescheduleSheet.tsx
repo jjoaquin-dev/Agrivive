@@ -11,7 +11,9 @@ const label = (date: Date) => date.toLocaleString("en-PH", { weekday: "short", m
 
 /** The seller offers a new start time (in 30-minute steps, keeping the same length) and a reason. The buyer must accept. */
 export function OrderRescheduleSheet({ order, visible, onClose, onChanged }: { order: SellerOrder; visible: boolean; onClose: () => void; onChanged: (order: SellerOrder) => void }) {
-  const length = order.pickupStart && order.pickupEnd ? new Date(order.pickupEnd).getTime() - new Date(order.pickupStart).getTime() : HOUR;
+  // New reservations span until a deadline (many hours), which the server refuses as a pickup range. Offer a 1-hour range then.
+  const span = order.pickupStart && order.pickupEnd ? new Date(order.pickupEnd).getTime() - new Date(order.pickupStart).getTime() : HOUR;
+  const length = span > 4 * HOUR ? HOUR : span;
   const base = Math.max(Date.now() + HOUR, order.pickupStart ? new Date(order.pickupStart).getTime() : 0);
   const [start, setStart] = useState(() => Math.ceil(base / 1_800_000) * 1_800_000);
   const [reason, setReason] = useState("");

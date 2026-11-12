@@ -6,6 +6,7 @@ import { ProductForm } from "../../../../src/features/inventory/components/Produ
 import { updateSellerProduct } from "../../../../src/features/inventory/api/products";
 import type { UpdateProductInput } from "../../../../src/features/inventory/types";
 import { colors, fonts, spacing } from "../../../../src/theme";
+import { surface } from "../../../../src/theme/surface";
 
 export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -60,11 +61,11 @@ export default function EditProductScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: surface.page,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: surface.page,
     justifyContent: "center",
     alignItems: "center",
     padding: spacing.xl,

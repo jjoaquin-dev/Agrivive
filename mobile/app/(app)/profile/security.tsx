@@ -32,7 +32,7 @@ export default function SecurityScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ProfileScreenHeader title={inFlow ? "Turn On Sign-in Code" : "Sign-in Safety"} onBack={inFlow ? (tf.step === "backup" ? () => {} : tf.back) : undefined} />
+      <ProfileScreenHeader title={inFlow ? "Turn On Sign-in Code" : "Privacy and Security"} onBack={inFlow ? (tf.step === "backup" ? () => {} : tf.back) : undefined} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {tf.generalError ? <View style={styles.error}><Text style={styles.errorText}>{tf.generalError}</Text></View> : null}

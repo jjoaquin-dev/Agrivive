@@ -8,6 +8,7 @@ import { BoostIntroSheet } from "../../../src/features/marketing/components/Boos
 import { createSellerProduct } from "../../../src/features/inventory/api/products";
 import type { CreateProductInput, ProductScalingType } from "../../../src/features/inventory/types";
 import { colors } from "../../../src/theme";
+import { surface } from "../../../src/theme/surface";
 
 export default function CreateProductScreen() {
   const router = useRouter();
@@ -102,6 +103,6 @@ export default function CreateProductScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: surface.page,
   },
 });

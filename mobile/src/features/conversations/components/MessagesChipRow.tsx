@@ -2,12 +2,15 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { MessagesTabFilter } from "../hooks/useConversationFilters";
+import { surface } from "../../../theme/surface";
 
 interface MessagesChipRowProps {
   activeTab: MessagesTabFilter;
   onSelectTab: (tab: MessagesTabFilter) => void;
   unreadCount: number;
   openCount: number;
+  /** Tabs with nothing in them are left out. All and Archived always show, and so does the tab that is open. */
+  available?: Partial<Record<MessagesTabFilter, boolean>>;
 }
 
 export function MessagesChipRow({
@@ -15,8 +18,9 @@ export function MessagesChipRow({
   onSelectTab,
   unreadCount,
   openCount,
+  available = {},
 }: MessagesChipRowProps) {
-  const tabs: { key: MessagesTabFilter; label: string }[] = [
+  const allTabs: { key: MessagesTabFilter; label: string }[] = [
     { key: "all", label: "All" },
     { key: "unread", label: unreadCount > 0 ? `Unread ${unreadCount}` : "Unread" },
     { key: "produce", label: "Produce" },
@@ -24,6 +28,7 @@ export function MessagesChipRow({
     { key: "questions", label: openCount > 0 ? `Questions ${openCount}` : "Questions" },
     { key: "archived", label: "Archived" },
   ];
+  const tabs = allTabs.filter((tab) => tab.key === "all" || tab.key === "archived" || tab.key === activeTab || available[tab.key] !== false);
 
   return (
     <ScrollView
@@ -56,20 +61,19 @@ export function MessagesChipRow({
 const styles = StyleSheet.create({
   scroll: {
     flexGrow: 0,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: surface.page,
   },
   container: {
     paddingHorizontal: spacing.base,
-    paddingVertical: spacing.sm,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
     gap: spacing.sm,
   },
   chip: {
-    height: 36,
-    paddingHorizontal: spacing.md,
+    height: 38,
+    paddingHorizontal: spacing.base,
     borderRadius: radii.full,
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: surface.card,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
@@ -81,7 +85,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontFamily: fonts.body.medium,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textMuted,
   },
   chipTextActive: {

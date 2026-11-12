@@ -48,7 +48,7 @@ export function VisibilityGuideSection({ products }: { products: Product[] }) {
 }
 
 const styles = StyleSheet.create({
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginBottom: spacing.sm },
+  subtitle: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginBottom: spacing.md },
   loader: { marginVertical: spacing.base },
   error: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.error, marginTop: spacing.sm },
   empty: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, textAlign: "center", paddingVertical: spacing.xxxl },

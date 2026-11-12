@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   box: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E2DA",
+    borderColor: "#EEECE6",
     backgroundColor: "#FFFFFF",
     textAlign: "center",
     fontSize: 22,

@@ -6,7 +6,8 @@ import {
 } from "../types";
 import { BoostTimeline } from "./BoostTimeline";
 import { PlatformBadge } from "./PlatformBadge";
-import { colors, fonts, radii, spacing, shadows } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 interface Props {
   item: SellerVisibilityBoost;
@@ -78,10 +79,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
     padding: spacing.base,
     marginTop: spacing.sm,
-    ...shadows.card,
+    ...surface.shadow,
   },
   cardHeader: {
     flexDirection: "row",
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: "#F3F1EC",
   },
   priceLabel: {
     fontFamily: fonts.body.regular,
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
     borderRadius: radii.button,
     marginTop: spacing.md,
     backgroundColor: colors.surfaceMuted,

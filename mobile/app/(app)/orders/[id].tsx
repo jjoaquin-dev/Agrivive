@@ -1,14 +1,15 @@
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AlertTriangle, Camera, Clock3 } from "lucide-react-native";
+import { AlertTriangle, Camera } from "lucide-react-native";
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { CardComponent } from "../../../src/components/CardComponent";
-import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
+import { colors, fonts, spacing, touchTargets } from "../../../src/theme";
+import { surface } from "../../../src/theme/surface";
 import { useLiveSellerOrder } from "../../../src/features/orders/hooks/useLiveSellerOrder";
 import { cancelSellerOrder, fetchSellerOrder } from "../../../src/features/orders/api/seller-orders";
-import { formatClock, formatMoney, formatPickupBy, formatPlacedLong } from "../../../src/features/orders/orderFormat";
+import { formatClock, formatMoney, formatPlacedLong } from "../../../src/features/orders/orderFormat";
 import { OrderCancelSheet } from "../../../src/features/orders/components/OrderCancelSheet";
 import { OrderItemsList } from "../../../src/features/orders/components/OrderItemsList";
 import { OrderStatusBadge } from "../../../src/features/orders/components/OrderStatusBadge";
@@ -71,34 +72,21 @@ export default function SellerOrderDetailScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <Stack.Screen options={{ title: "Reservation", headerBackTitle: "Back" }} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>Reservation #{reference}</Text>
           <OrderStatusBadge status={order.status} />
         </View>
-        <Text style={styles.date}>{formatPlacedLong(order.createdAt)}</Text>
-        {lastUpdated ? (
-          <View style={styles.liveRow}>
-            <View style={styles.liveDot} />
-            <Text style={styles.updated}>Updated {formatClock(lastUpdated)}</Text>
-          </View>
-        ) : null}
+        <Text style={styles.date}>
+          {formatPlacedLong(order.createdAt)}{lastUpdated ? `  ·  Updated ${formatClock(lastUpdated)}` : ""}
+        </Text>
 
         {error ? <Text style={styles.refreshError}>{error}</Text> : null}
 
-        {canAct && order.expiresAt ? (
-          <View style={styles.banner}>
-            <Clock3 size={20} color={colors.warning} />
-            <View style={styles.bannerText}>
-              <Text style={styles.bannerTitle}>{formatPickupBy(order.expiresAt)}</Text>
-              <Text style={styles.bannerBody}>The pickup code stops working after this time.</Text>
-            </View>
-          </View>
-        ) : null}
-
         <OrderPickupSteps order={order} onChanged={(next) => { setOrder(next); setLastUpdated(new Date()); }} />
 
-        <CardComponent style={styles.card}>
+        <CardComponent style={{ ...styles.card, ...surface.cardStyle }}>
           <Text style={styles.cardTitle}>Items</Text>
           <OrderItemsList items={order.items} />
           <View style={styles.totalRow}><Text style={styles.totalLabel}>Total</Text><Text style={styles.total}>{formatMoney(order.totalAmount)}</Text></View>
@@ -106,7 +94,7 @@ export default function SellerOrderDetailScreen() {
 
         <SellerOrderCommunication orderId={order.id} />
 
-        <CardComponent style={styles.card}>
+        <CardComponent style={{ ...styles.card, ...surface.cardStyle }}>
           <Text style={styles.cardTitle}>Reference</Text>
           <Text style={styles.detail}>Buyer #{order.buyerId.slice(0, 8).toUpperCase()}</Text>
           {order.checkoutId ? <Text style={styles.detail}>Checkout #{order.checkoutId.slice(0, 8).toUpperCase()}</Text> : null}
@@ -141,31 +129,24 @@ export default function SellerOrderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: surface.page },
   content: { padding: spacing.base, paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.base, backgroundColor: colors.background },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.base, backgroundColor: surface.page },
   headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.sm },
-  title: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28, color: colors.text },
-  date: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: spacing.xs },
-  liveRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.xs, marginBottom: spacing.base },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
-  updated: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted },
+  title: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 24, lineHeight: 30, color: colors.text },
+  date: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.lg },
   refreshError: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.warning, marginBottom: spacing.base },
-  banner: { flexDirection: "row", gap: spacing.sm, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA", borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base },
-  bannerText: { flex: 1 },
-  bannerTitle: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.warning },
-  bannerBody: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  card: { marginBottom: spacing.base },
-  cardTitle: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.md, marginTop: spacing.sm },
+  card: { marginBottom: spacing.md },
+  cardTitle: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: surface.border, paddingTop: spacing.md, marginTop: spacing.xs },
   totalLabel: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
-  total: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.primary },
-  detail: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: spacing.sm },
+  total: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.primary },
+  detail: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.sm },
   errorText: { fontFamily: fonts.body.medium, color: colors.error, textAlign: "center" },
   retry: { marginTop: spacing.md },
   reportText: { color: colors.textMuted },
-  bottomBar: { backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.base, paddingTop: spacing.md },
+  bottomBar: { backgroundColor: surface.card, borderTopWidth: 1, borderTopColor: surface.border, paddingHorizontal: spacing.base, paddingTop: spacing.md },
   scanButton: { minHeight: touchTargets.min },
-  cancelButton: { marginTop: spacing.md },
+  cancelButton: { marginTop: spacing.xs },
   cancelText: { color: colors.error },
 });

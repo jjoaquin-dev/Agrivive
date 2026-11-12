@@ -45,8 +45,8 @@ export function NotificationSearchBar({ value, onChangeText, onFilterPress, acti
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
-  searchBox: { flex: 1, height: 44, backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.md + 2 },
+  searchBox: { flex: 1, height: 44, backgroundColor: colors.surface, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.md + 2 },
   input: { flex: 1, ...typography.body, color: colors.text, paddingVertical: 0 },
-  filterButton: { width: 44, height: 44, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
+  filterButton: { width: 44, height: 44, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   filterActive: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
 });

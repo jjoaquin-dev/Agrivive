@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Pressable } from "react-native";
 import { ClipboardList, TriangleAlert, PackageX, Scale, type LucideIcon } from "lucide-react-native";
 import { SkeletonBlock, SkeletonCard } from "./DashboardSkeleton";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../theme";
+import { dash } from "../dashboardTokens";
 import type { InventorySummary } from "../../inventory/types";
 
 interface DashboardMetricsProps {
@@ -46,7 +47,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       value: String(summary.activeCount),
       valueColor: colors.text,
       subtitle: "Buyers can see these",
-      pill: { bg: "#F3F1EA", fg: colors.textMuted, border: "#E5E2DA" },
+      pill: { bg: "#F6F5F1", fg: colors.textMuted, border: "#EEECE6" },
       a11y: "Selling now produce count",
     },
     {
@@ -84,7 +85,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       value: `${kiloTotal} kg`,
       valueColor: colors.primaryPressed,
       subtitle: `${sackTotal} sacks · ${pileTotal} piles`,
-      pill: { bg: "#F3F1EA", fg: colors.textMuted, border: "#E5E2DA" },
+      pill: { bg: "#F6F5F1", fg: colors.textMuted, border: "#EEECE6" },
       a11y: "Ready to sell total quantity",
     },
   ];
@@ -104,7 +105,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             );
           }
           const quiet = error || (m.quietWhenZero && m.isZero);
-          const neutralPill = { bg: "#F3F1EA", fg: colors.textMuted, border: "#E5E2DA" };
+          const neutralPill = { bg: "#F6F5F1", fg: colors.textMuted, border: "#EEECE6" };
           const pill = quiet ? neutralPill : m.pill;
           return (
           <Pressable
@@ -131,15 +132,15 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
 };
 
 const styles = StyleSheet.create({
-  section: { marginBottom: spacing.lg },
-  heading: { ...typography.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text, marginBottom: spacing.sm },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  card: { width: "48.5%", backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md, minHeight: 112, justifyContent: "space-between", ...shadows.card },
+  section: { marginBottom: spacing.xl },
+  heading: { ...typography.sectionHeading, ...dash.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text, marginBottom: spacing.md },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md },
+  card: { flexBasis: "46%", flexGrow: 1, backgroundColor: dash.card, borderRadius: radii.card, borderWidth: 1, borderColor: dash.border, padding: spacing.base, minHeight: 124, justifyContent: "space-between", ...dash.shadow },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.xs },
-  cardLabel: { ...typography.labelSmall, flex: 1, color: colors.textMuted },
+  cardLabel: { ...typography.label, flex: 1, color: colors.textMuted },
   cardValue: { ...typography.largeTitle, marginVertical: spacing.xs },
   cardSubtitle: { ...typography.labelSmall, color: colors.textMuted },
-  pill: { alignSelf: "flex-start", borderWidth: 1, borderRadius: radii.full, paddingHorizontal: spacing.sm, paddingVertical: 2 },
-  pillText: { ...typography.caption },
+  pill: { alignSelf: "flex-start", borderWidth: 0, borderRadius: radii.full, paddingHorizontal: spacing.sm, paddingVertical: 3 },
+  pillText: { ...typography.labelSmall },
   cardPressed: { transform: [{ scale: 0.98 }], opacity: 0.9 },
 });

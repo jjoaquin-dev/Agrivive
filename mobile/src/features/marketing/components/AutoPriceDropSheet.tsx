@@ -41,12 +41,12 @@ export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: spacing.md, paddingBottom: spacing.xl, maxHeight: "80%" },
-  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 3, backgroundColor: "#D1D5DB", marginBottom: spacing.md },
+  handle: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#E5E4DE", marginBottom: spacing.md },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28, color: colors.text },
   closeBtn: { width: 44, height: 44, marginRight: -spacing.sm, alignItems: "center", justifyContent: "center" },
   dismiss: { flex: 1 },
   body: { flexShrink: 1, flexGrow: 0 },
-  content: { paddingBottom: spacing.base },
-  empty: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, paddingVertical: spacing.base },
+  content: { paddingTop: spacing.sm, paddingBottom: spacing.base },
+  empty: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, paddingVertical: spacing.lg },
 });
