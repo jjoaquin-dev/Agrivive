@@ -50,14 +50,14 @@ export function BuyerFavorites() {
   const visibleProducts = products.filter((p) => savedProductIds.has(p.id));
 
   return (
-    <main className="min-h-[calc(100vh-73px)] bg-[#fdfdfd] pb-16 pt-8">
+    <main className="min-h-[calc(100vh-73px)] bg-agrivive-paper pb-16 pt-8">
       <PageContainer>
         {/* Navigation Breadcrumb / Back Link */}
         <div className="flex items-center justify-between gap-4">
           <Breadcrumbs items={[{ label: "Saved items" }]} />
 
           {visibleProducts.length > 0 ? (
-            <span className="rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-3 py-1 text-xs font-bold text-[#457D00]">
+            <span className="rounded-full border border-agrivive-primary/25 bg-agrivive-mist px-3 py-1 text-xs font-bold text-agrivive-primary">
               {visibleProducts.length} saved {visibleProducts.length === 1 ? "item" : "items"}
             </span>
           ) : null}
@@ -66,8 +66,8 @@ export function BuyerFavorites() {
         {/* Page Title & Heading */}
         <div className="mb-8 space-y-1">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-[#FFF4E5] text-[#FEA938]">
-              <Heart className="size-5 fill-[#FEA938]" />
+            <div className="flex size-9 items-center justify-center rounded-xl bg-[#FFF4E5] text-agrivive-terracotta">
+              <Heart className="size-5 fill-agrivive-terracotta" />
             </div>
             <h1 className="font-heading text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
               My Favorites
@@ -101,7 +101,7 @@ export function BuyerFavorites() {
             <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
               <Link
                 href="/marketplace"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#457D00] px-6 text-xs font-bold text-white shadow-sm transition hover:bg-[#457D00]/90 active:scale-95"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-agrivive-primary px-6 text-xs font-bold text-white shadow-sm transition hover:bg-agrivive-primary/90 active:scale-95"
               >
                 <Store className="size-4" />
                 <span>Explore Marketplace</span>

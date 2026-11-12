@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ChevronRight, Store } from "lucide-react";
 import type { ConversationLaunchContext } from "../types";
 import { formatPeso } from "@/src/lib/money";
+import { formatNumber } from "@/src/lib/format";
 
 function formatMoney(value: string | number | null | undefined) {
   if (value == null || value === "") return null;
@@ -20,18 +21,18 @@ export function ConversationContextCard({ context }: { context: ConversationLaun
   const isAvailable = qtyNumber != null && qtyNumber > 0;
   const availabilityBadge = qtyNumber != null
     ? isAvailable
-      ? `${qtyNumber.toLocaleString()} ${context.scalingType || "unit"} AVAILABLE`
+      ? `${formatNumber(qtyNumber)} ${context.scalingType || "unit"} AVAILABLE`
       : "SOLD OUT"
     : null;
 
   const cardContent = (
     <>
       <div className="flex items-center gap-3.5 min-w-0">
-        <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-[#E5E7EB] bg-white shadow-sm flex items-center justify-center">
+        <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-agrivive-border bg-white shadow-sm flex items-center justify-center">
           {context.productImageUrl ? (
             <img src={context.productImageUrl} alt={title} className="size-full object-cover" />
           ) : (
-            <Store className="size-6 text-[#16A34A]" />
+            <Store className="size-6 text-green-600" />
           )}
         </div>
         <div className="min-w-0 space-y-0.5">
@@ -43,15 +44,15 @@ export function ConversationContextCard({ context }: { context: ConversationLaun
               <span
                 className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-bold uppercase tracking-wider leading-none ${
                   isAvailable
-                    ? "bg-[#FFF4E5] text-[#EA580C]"
-                    : "bg-red-50 text-red-600"
+                    ? "bg-[#FFF4E5] text-orange-600"
+                    : "bg-red-50 text-destructive"
                 }`}
               >
                 {availabilityBadge}
               </span>
             )}
           </div>
-          <span className="block truncate text-[15px] font-bold text-neutral-900">{title}</span>
+          <span className="block truncate text-sm font-bold text-neutral-900">{title}</span>
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {formattedPrice && (
               <span className="text-neutral-500 font-medium">
@@ -60,7 +61,7 @@ export function ConversationContextCard({ context }: { context: ConversationLaun
               </span>
             )}
             <span className="text-neutral-300">•</span>
-            <span className="font-semibold text-[#16A34A]">
+            <span className="font-semibold text-green-600">
               {sellerTitle}
             </span>
           </div>
@@ -82,7 +83,7 @@ export function ConversationContextCard({ context }: { context: ConversationLaun
     return (
       <Link
         href={`/marketplace/${context.productId}`}
-        className="group mx-auto mb-4 flex w-[calc(100%-3rem)] max-w-xl items-center justify-between rounded-2xl border border-dashed border-[#D2D6DC] bg-white p-3.5 shadow-sm transition hover:border-[#16A34A]/60 cursor-pointer"
+        className="group mx-auto mb-4 flex w-[calc(100%-3rem)] max-w-xl items-center justify-between rounded-2xl border border-dashed border-[#D2D6DC] bg-white p-3.5 shadow-sm transition hover:border-green-600/60 cursor-pointer"
         aria-label={`View listing for ${title}`}
       >
         {cardContent}

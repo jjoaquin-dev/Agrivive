@@ -24,7 +24,7 @@ export function ConversationFailedBubble({ body, message, busy, onRetry }: Props
       </View>
       <View style={styles.status}>
         <Text style={styles.error} numberOfLines={2}>Not delivered. {message}</Text>
-        <Pressable onPress={onRetry} disabled={busy} accessibilityRole="button" accessibilityLabel="Try again" style={[styles.retry, busy && styles.retryBusy]}>
+        <Pressable onPress={onRetry} disabled={busy} accessibilityRole="button" accessibilityLabel="Try Again" style={[styles.retry, busy && styles.retryBusy]}>
           <RefreshCw size={14} color={colors.error} />
           <Text style={styles.retryText}>Try Again</Text>
         </Pressable>
@@ -36,11 +36,11 @@ export function ConversationFailedBubble({ body, message, busy, onRetry }: Props
 const styles = StyleSheet.create({
   wrap: { alignSelf: "flex-end", maxWidth: "88%", marginVertical: 2 },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, justifyContent: "flex-end" },
-  bubble: { flexShrink: 1, backgroundColor: colors.primary, borderRadius: 18, borderBottomRightRadius: 4, borderWidth: 1.5, borderColor: colors.error, paddingHorizontal: 14, paddingVertical: 10 },
+  bubble: { flexShrink: 1, backgroundColor: colors.primary, borderRadius: 18, borderBottomRightRadius: 4, borderWidth: 1.5, borderColor: colors.error, paddingHorizontal: 12, paddingVertical: 12 },
   body: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 21, color: colors.white },
   status: { flexDirection: "row", alignItems: "center", justifyContent: "flex-end", gap: spacing.sm, marginTop: 4 },
   error: { flexShrink: 1, fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.error, textAlign: "right" },
-  retry: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingHorizontal: spacing.sm, borderRadius: radii.sm, borderWidth: 1, borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
+  retry: { flexDirection: "row", alignItems: "center", gap: 4, minHeight: 44, paddingHorizontal: spacing.sm, borderRadius: radii.sm, borderWidth: 1, borderColor: colors.errorBorder, backgroundColor: colors.errorSurface },
   retryBusy: { opacity: 0.5 },
   retryText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.error },
 });

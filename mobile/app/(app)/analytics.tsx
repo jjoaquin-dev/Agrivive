@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { AlertCircle, ChevronRight, Info } from "lucide-react-native";
 import { useInventory } from "../../src/features/inventory/hooks/useInventory";
 import { useSellerAnalytics } from "../../src/features/analytics/hooks/useSellerAnalytics";
@@ -52,7 +52,6 @@ export default function SellerAnalyticsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         stickyHeaderIndices={[1]}
         contentContainerStyle={styles.content}
@@ -85,7 +84,7 @@ export default function SellerAnalyticsScreen() {
               <AlertCircle size={20} color={colors.error} />
               <Text style={styles.errorTitle}>Could not load your sales report</Text>
               <Text style={styles.errorText}>{error}</Text>
-              <Pressable onPress={refresh} accessibilityRole="button" accessibilityLabel="Try again" style={styles.retry}>
+              <Pressable onPress={refresh} accessibilityRole="button" accessibilityLabel="Try Again" style={styles.retry}>
                 <Text style={styles.retryText}>Try Again</Text>
               </Pressable>
             </View>
@@ -146,8 +145,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.surface },
   content: { paddingBottom: spacing.xxxl },
   body: { backgroundColor: colors.surfaceMuted, padding: spacing.base, paddingTop: spacing.md, minHeight: 600 },
-  notice: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FFEDD5", borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.md },
-  noticeText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 18, color: "#92400E" },
+  notice: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, backgroundColor: colors.orangeSurface, borderWidth: 1, borderColor: colors.orangeSurface, borderRadius: radii.input, padding: spacing.md, marginBottom: spacing.md },
+  noticeText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 18, color: colors.warningText },
   errorCard: { alignItems: "center", gap: spacing.xs },
   errorTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   errorText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center" },

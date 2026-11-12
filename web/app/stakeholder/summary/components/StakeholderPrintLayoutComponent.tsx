@@ -1,4 +1,5 @@
 import type { StakeholderSummary } from "@/src/features/stakeholder/api/summary";
+import { formatDateTime, formatNumber } from "@/src/lib/format";
 
 interface Props {
   data: StakeholderSummary;
@@ -15,7 +16,7 @@ export const StakeholderPrintLayoutComponent = ({ data }: Props) => {
           City Agriculturist&apos;s Office (CAO) &bull; City Economic Enterprises Office (CEEO)
         </p>
         <p className="mt-1 text-xs text-gray-600">
-          Snapshot: {new Date(data.generatedAt).toLocaleString()} &bull; Doc Ref: AGRIVIVE-MKT-STAT
+          Snapshot: {formatDateTime(data.generatedAt)} &bull; Doc Ref: AGRIVIVE-MKT-STAT
         </p>
       </div>
 
@@ -39,7 +40,7 @@ export const StakeholderPrintLayoutComponent = ({ data }: Props) => {
               <td className="py-1.5 font-medium text-gray-700">Rescue Fulfillment Rate:</td>
               <td className="py-1.5 font-bold text-right text-black">{data.rescueMetrics.fulfillmentRate}%</td>
               <td className="py-1.5 pl-6 font-medium text-gray-700">Total Rescued Volume:</td>
-              <td className="py-1.5 font-bold text-right text-black">{data.rescueMetrics.totalRescuedQty.toLocaleString()} units</td>
+              <td className="py-1.5 font-bold text-right text-black">{formatNumber(data.rescueMetrics.totalRescuedQty)} units</td>
             </tr>
           </tbody>
         </table>

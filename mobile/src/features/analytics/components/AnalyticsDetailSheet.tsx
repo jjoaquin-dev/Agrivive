@@ -1,7 +1,8 @@
 import React from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { X } from "lucide-react-native";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { SlideModal } from "../../../components/SlideModal";
 
 export type BreakdownRow = { label: string; value: string; strong?: boolean };
 
@@ -17,7 +18,7 @@ interface Props {
 /** The breakdown that opens when a report number or chart is pressed: the parts behind the total. */
 export function AnalyticsDetailSheet({ visible, title, subtitle, rows, children, onClose }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close breakdown" />
       <View style={styles.sheet}>
         <View style={styles.head}>
@@ -25,7 +26,7 @@ export function AnalyticsDetailSheet({ visible, title, subtitle, rows, children,
             <Text style={styles.title}>{title}</Text>
             {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
           </View>
-          <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={styles.close}><X size={22} color={colors.textMuted} /></Pressable>
+          <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={styles.close}><X size={24} color={colors.textMuted} /></Pressable>
         </View>
         <ScrollView showsVerticalScrollIndicator={false}>
           {children}
@@ -37,16 +38,16 @@ export function AnalyticsDetailSheet({ visible, title, subtitle, rows, children,
           ))}
         </ScrollView>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
+  backdrop: { flex: 1 },
   sheet: { maxHeight: "80%", backgroundColor: colors.surface, borderTopLeftRadius: radii.card, borderTopRightRadius: radii.card, padding: spacing.base },
   head: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, marginBottom: spacing.sm },
   headText: { flex: 1 },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   subtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
   close: { width: touchTargets.min, height: touchTargets.min, alignItems: "center", justifyContent: "center" },
   row: { flexDirection: "row", justifyContent: "space-between", gap: spacing.md, minHeight: 48, alignItems: "center", borderTopWidth: 1, borderTopColor: colors.border },

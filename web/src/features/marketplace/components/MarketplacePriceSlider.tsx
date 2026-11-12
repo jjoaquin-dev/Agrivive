@@ -68,7 +68,7 @@ export function MarketplacePriceSlider({
 
         {/* Active Track matching system palette green #457d00 */}
         <div
-          className="absolute h-2 rounded-full bg-[#457d00] transition-[left,width] duration-75"
+          className="absolute h-2 rounded-full bg-agrivive-primary transition-[left,width] duration-75"
           style={{
             left: `${leftPercent}%`,
             width: `${Math.max(0, rightPercent - leftPercent)}%`,
@@ -90,11 +90,11 @@ export function MarketplacePriceSlider({
           }}
           className="pointer-events-none absolute inset-0 z-20 w-full appearance-none bg-transparent 
             [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full 
-            [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#457d00]
+            [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-agrivive-primary
             [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none 
             [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform
             [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full 
-            [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#457d00]
+            [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-agrivive-primary
             [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
         />
 
@@ -113,11 +113,11 @@ export function MarketplacePriceSlider({
           }}
           className="pointer-events-none absolute inset-0 z-20 w-full appearance-none bg-transparent 
             [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:rounded-full 
-            [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#457d00]
+            [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-agrivive-primary
             [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none 
             [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform
             [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full 
-            [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#457d00]
+            [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-agrivive-primary
             [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer"
         />
       </div>
@@ -144,7 +144,7 @@ export function MarketplacePriceSlider({
             value={localMin}
             onChange={(e) => triggerChange("minPrice", e.target.value)}
             aria-label="Minimum price"
-            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-500 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
+            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-agrivive-ink placeholder:text-neutral-500 transition-colors focus:border-agrivive-primary focus:outline-none focus:ring-1 focus:ring-agrivive-primary"
           />
         </div>
         <span className="select-none text-sm font-bold text-neutral-400">-</span>
@@ -161,7 +161,7 @@ export function MarketplacePriceSlider({
             value={localMax}
             onChange={(e) => triggerChange("maxPrice", e.target.value)}
             aria-label="Maximum price"
-            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-[#14231A] placeholder:text-neutral-500 transition-colors focus:border-[#457d00] focus:outline-none focus:ring-1 focus:ring-[#457d00]"
+            className="h-10 w-full rounded-xl border border-neutral-200/70 bg-white pl-7 pr-2.5 text-xs font-semibold text-agrivive-ink placeholder:text-neutral-500 transition-colors focus:border-agrivive-primary focus:outline-none focus:ring-1 focus:ring-agrivive-primary"
           />
         </div>
       </div>

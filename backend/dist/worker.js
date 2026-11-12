@@ -30669,7 +30669,7 @@ var sellerNoticeDefs = {
   inquiry_12h_reminder: {
     title: "Buyer Is Waiting",
     plural: "Buyers Are Waiting",
-    body: () => "A buyer has waited 12 hours for your reply.",
+    body: () => "A buyer has waited 12 open hours of your stall for your reply.",
     level: "sound",
     topic: "orders",
     category: "messages",
@@ -30678,7 +30678,7 @@ var sellerNoticeDefs = {
   inquiry_24h_warning: {
     title: "Buyer Still Waiting",
     plural: "Buyers Still Waiting",
-    body: () => "A buyer has waited 24 hours for your reply.",
+    body: () => "A buyer has waited 24 open hours of your stall for your reply.",
     level: "sound",
     topic: "orders",
     category: "messages",
@@ -30860,9 +30860,135 @@ class OrderError extends Error {
   }
 }
 
+// src/utils/trust/ahp-points.ts
+var randomIndex = { 1: 0, 2: 0, 3: 0.58, 4: 0.9, 5: 1.12, 6: 1.24, 7: 1.32, 8: 1.41, 9: 1.45, 10: 1.49 };
+var maxTrustConsistencyRatio = 0.1;
+function mergeJudges(matrices) {
+  if (!matrices.length)
+    throw new Error("AHP needs at least one judge matrix");
+  const n = matrices[0].length;
+  return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => Math.pow(matrices.reduce((product, matrix) => product * matrix[i][j], 1), 1 / matrices.length)));
+}
+function ahpWeights(matrix) {
+  const n = matrix.length;
+  if (!n || matrix.some((row) => row.length !== n))
+    throw new Error("AHP matrix must be square");
+  if (!(n in randomIndex))
+    throw new Error(`AHP matrix of size ${n} has no random index`);
+  const columnSums = Array.from({ length: n }, (_, j) => matrix.reduce((sum, row) => sum + row[j], 0));
+  const weights = matrix.map((row) => row.reduce((sum, cell, j) => sum + cell / columnSums[j], 0) / n);
+  const lambdaMax = matrix.reduce((sum, row, i) => sum + row.reduce((s, cell, j) => s + cell * weights[j], 0) / weights[i], 0) / n;
+  const consistencyIndex = n > 2 ? (lambdaMax - n) / (n - 1) : 0;
+  const consistencyRatio = randomIndex[n] ? Math.max(0, consistencyIndex / randomIndex[n]) : 0;
+  return { columnSums, weights, lambdaMax, consistencyIndex, consistencyRatio };
+}
+function pairMatrix(items, answers) {
+  const matrix = items.map(() => items.map(() => 1));
+  for (const [a, b, value] of answers) {
+    const i = items.indexOf(a);
+    const j = items.indexOf(b);
+    if (i < 0 || j < 0 || i === j)
+      throw new Error(`AHP answer ${a} vs ${b} does not match the group`);
+    matrix[i][j] = value;
+    matrix[j][i] = 1 / value;
+  }
+  return matrix;
+}
+function computeTrustPoints(judgments) {
+  const check = (name, cr) => {
+    if (cr > maxTrustConsistencyRatio)
+      throw new Error(`Trust AHP for ${name} is not consistent (CR ${cr.toFixed(4)}); judges must redo the pairs`);
+  };
+  const top = ahpWeights(mergeJudges(judgments.groupJudges));
+  check("groups", top.consistencyRatio);
+  const finals = {};
+  const groups = judgments.groupOrder.map((name, index) => {
+    const group = judgments.groups[name];
+    if (!group)
+      throw new Error(`Trust AHP group ${name} has no judgments`);
+    const inner = ahpWeights(mergeJudges(group.judges));
+    check(name, inner.consistencyRatio);
+    group.items.forEach((item, i) => {
+      finals[item] = top.weights[index] * inner.weights[i];
+    });
+    return { name, weight: top.weights[index], consistencyRatio: inner.consistencyRatio, items: group.items, weights: inner.weights };
+  });
+  const smallest = Math.min(...Object.values(finals));
+  const points = Object.fromEntries(Object.entries(finals).map(([kind, weight]) => [kind, Math.max(1, Math.round(weight / smallest))]));
+  const total = Object.values(points).reduce((sum, value) => sum + value, 0);
+  return { source: judgments.source, groupConsistencyRatio: top.consistencyRatio, groups, finals, points, total };
+}
+
+// src/utils/trust/ahp-judgments.ts
+var pickup = [
+  "qr_misuse",
+  "self_order",
+  "seller_cancellation",
+  "buyer_failed_reservation",
+  "seller_decline_fault",
+  "buyer_false_photo",
+  "buyer_invalid_decline",
+  "buyer_late_cancellation"
+];
+var listing = ["misleading_product_info", "inquiry_non_response"];
+var chat = ["inappropriate_communication", "chat_personal_data", "chat_spam"];
+var review = ["buyer_fake_reports", "low_rating"];
+var groupOrder = ["pickup", "listing", "chat", "review"];
+var trustJudgments = {
+  source: "sample",
+  groupOrder,
+  groupJudges: [pairMatrix(groupOrder, [
+    ["pickup", "listing", 2],
+    ["pickup", "chat", 4],
+    ["pickup", "review", 3],
+    ["listing", "chat", 3],
+    ["listing", "review", 2],
+    ["chat", "review", 1 / 2]
+  ])],
+  groups: {
+    pickup: { items: pickup, judges: [pairMatrix(pickup, [
+      ["qr_misuse", "self_order", 1],
+      ["qr_misuse", "seller_cancellation", 3],
+      ["qr_misuse", "buyer_failed_reservation", 4],
+      ["qr_misuse", "seller_decline_fault", 4],
+      ["qr_misuse", "buyer_false_photo", 5],
+      ["qr_misuse", "buyer_invalid_decline", 6],
+      ["qr_misuse", "buyer_late_cancellation", 8],
+      ["self_order", "seller_cancellation", 3],
+      ["self_order", "buyer_failed_reservation", 4],
+      ["self_order", "seller_decline_fault", 4],
+      ["self_order", "buyer_false_photo", 5],
+      ["self_order", "buyer_invalid_decline", 6],
+      ["self_order", "buyer_late_cancellation", 8],
+      ["seller_cancellation", "buyer_failed_reservation", 2],
+      ["seller_cancellation", "seller_decline_fault", 2],
+      ["seller_cancellation", "buyer_false_photo", 3],
+      ["seller_cancellation", "buyer_invalid_decline", 4],
+      ["seller_cancellation", "buyer_late_cancellation", 6],
+      ["buyer_failed_reservation", "seller_decline_fault", 1],
+      ["buyer_failed_reservation", "buyer_false_photo", 2],
+      ["buyer_failed_reservation", "buyer_invalid_decline", 3],
+      ["buyer_failed_reservation", "buyer_late_cancellation", 5],
+      ["seller_decline_fault", "buyer_false_photo", 2],
+      ["seller_decline_fault", "buyer_invalid_decline", 3],
+      ["seller_decline_fault", "buyer_late_cancellation", 5],
+      ["buyer_false_photo", "buyer_invalid_decline", 2],
+      ["buyer_false_photo", "buyer_late_cancellation", 3],
+      ["buyer_invalid_decline", "buyer_late_cancellation", 2]
+    ])] },
+    listing: { items: listing, judges: [pairMatrix(listing, [["misleading_product_info", "inquiry_non_response", 3]])] },
+    chat: { items: chat, judges: [pairMatrix(chat, [
+      ["inappropriate_communication", "chat_personal_data", 3],
+      ["inappropriate_communication", "chat_spam", 5],
+      ["chat_personal_data", "chat_spam", 3]
+    ])] },
+    review: { items: review, judges: [pairMatrix(review, [["buyer_fake_reports", "low_rating", 2]])] }
+  }
+};
+
 // src/utils/trust/policy.ts
 var trustPolicyVersion = "monitoring-v4";
-var trustPolicyWeights = {
+var fixedTrustWeights = {
   inquiry_non_response: 1,
   seller_cancellation: 2,
   low_rating: 1,
@@ -30879,6 +31005,15 @@ var trustPolicyWeights = {
   chat_spam: 1,
   chat_personal_data: 1
 };
+var trustAhp = computeTrustPoints(trustJudgments);
+var trustWeightSource = process.env.TRUST_WEIGHT_SOURCE === "fixed" ? "fixed" : "ahp";
+var trustPolicyWeights = trustWeightSource === "fixed" ? { ...fixedTrustWeights } : Object.fromEntries(Object.keys(fixedTrustWeights).map((kind) => {
+  const points = trustAhp.points[kind];
+  if (points === undefined)
+    throw new Error(`Trust AHP has no points for ${kind}`);
+  return [kind, points];
+}));
+var pointsText = (kind) => `${trustPolicyWeights[kind]} point${trustPolicyWeights[kind] === 1 ? "" : "s"}`;
 var trustSeriousKinds = ["qr_misuse", "self_order"];
 var trustReportConfirmCount = Math.max(2, Number.isInteger(Number(process.env.TRUST_REPORT_CONFIRM_COUNT)) ? Number(process.env.TRUST_REPORT_CONFIRM_COUNT) : 2);
 function configuredInteger(name, fallback) {
@@ -30889,15 +31024,22 @@ var trustScoreWindowDays = configuredInteger("TRUST_SCORE_WINDOW_DAYS", 90);
 function trustScoreWindowStart(now = new Date) {
   return trustScoreWindowDays > 0 ? new Date(now.getTime() - trustScoreWindowDays * 86400000) : null;
 }
-var blockedThreshold = configuredInteger("TRUST_BLOCK_THRESHOLD", 12);
-var tier2Threshold = configuredInteger("TRUST_TIER2_THRESHOLD", 8);
+var trustThresholdFractions = { notice: 2 / 25, warning: 4 / 25, tier1: 6 / 25, tier2: 8 / 25, blocked: 12 / 25 };
+var totalPossible = Object.values(trustPolicyWeights).reduce((sum, value) => sum + value, 0);
+var fromTotal = (fraction) => Math.max(1, Math.round(fraction * totalPossible));
+var noticeThreshold = configuredInteger("TRUST_NOTICE_THRESHOLD", fromTotal(trustThresholdFractions.notice));
+var warningThreshold = Math.max(noticeThreshold + 1, configuredInteger("TRUST_WARNING_THRESHOLD", fromTotal(trustThresholdFractions.warning)));
+var tier1Threshold = Math.max(warningThreshold + 1, configuredInteger("TRUST_TIER1_THRESHOLD", fromTotal(trustThresholdFractions.tier1)));
+var tier2Threshold = Math.max(tier1Threshold + 1, configuredInteger("TRUST_TIER2_THRESHOLD", fromTotal(trustThresholdFractions.tier2)));
+var blockedThreshold = configuredInteger("TRUST_BLOCK_THRESHOLD", fromTotal(trustThresholdFractions.blocked));
 var trustActionPolicy = {
   enabled: process.env.TRUST_ACTIONS_ENABLED !== "false",
-  noticeThreshold: configuredInteger("TRUST_NOTICE_THRESHOLD", 2),
-  warningThreshold: configuredInteger("TRUST_WARNING_THRESHOLD", 4),
-  tier1Threshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
+  totalPossible,
+  noticeThreshold,
+  warningThreshold,
+  tier1Threshold,
   tier2Threshold,
-  restrictionThreshold: configuredInteger("TRUST_TIER1_THRESHOLD", 6),
+  restrictionThreshold: tier1Threshold,
   blockedThreshold: blockedThreshold > tier2Threshold ? blockedThreshold : tier2Threshold + 4
 };
 var sellerFaultPolicy = {
@@ -31059,21 +31201,21 @@ var isPauseOrBlock = (level) => rank[level] >= rank.pause_24h;
 
 // src/utils/trust/notice-text.ts
 var eventCopy = {
-  inquiry_non_response: { what: "A buyer's question went 48 open hours without an answer.", rule: "Unanswered buyer question after 48 open hours adds 1 point. Reminders at 12 and 24 open hours carry 0 points. The clock counts only the hours your stall is open, and it stops while Away mode is on.", avoid: "Answer buyer questions within 12 open hours, or turn on Away mode when you cannot reply." },
-  seller_cancellation: { what: "You cancelled a confirmed order.", rule: "A seller who cancels a confirmed order gets 2 points.", avoid: "Only confirm orders you can fill, and keep your stock numbers correct." },
-  low_rating: { what: "A buyer gave a low rating (1 or 2 stars) on a completed order.", rule: "A low rating counts 1 point when the buyer wrote a reason, or when it is your 2nd low rating in 30 days.", avoid: "Pack fresh produce that matches the listing and answer buyers politely." },
-  misleading_product_info: { what: "Two different people reported that your listing information was wrong.", rule: "Confirmed wrong listing information adds 2 points and counts in your fault rate.", avoid: "Keep amounts, prices and descriptions exact." },
-  inappropriate_communication: { what: "Two different people reported inappropriate conduct.", rule: "Confirmed inappropriate conduct adds 2 points.", avoid: "Keep every message and pickup respectful." },
-  seller_decline_fault: { what: "A buyer declined produce at pickup and it was confirmed as your fault.", rule: "A confirmed seller-fault decline adds 2 points and counts in your fault rate.", avoid: "Check every item before the buyer arrives." },
-  qr_misuse: { what: "QR misuse was confirmed.", rule: "Confirmed QR misuse adds 3 points and blocks the account at once.", avoid: "Only scan a QR code for the right order, at the pickup." },
-  buyer_failed_reservation: { what: "Your reservation ended and the pickup did not happen.", rule: "A missed pickup adds 2 points.", avoid: "Pick up inside your time range, or cancel early. Message the seller if something comes up." },
-  buyer_late_cancellation: { what: "You cancelled within 3 hours of your pickup time.", rule: "A late cancellation adds 1 point.", avoid: "Cancel earlier, or ask the seller to move your pickup." },
-  buyer_invalid_decline: { what: "You declined at pickup for a reason that is not allowed.", rule: "A decline without a valid reason adds 1 point, the same as a late cancellation.", avoid: "Only decline for spoiled, wrong, short or unsafe produce, and take a photo in the app." },
-  buyer_fake_reports: { what: "You sent 3 reports in 14 days and none was confirmed.", rule: "Each group of 3 reports with none confirmed in 14 days adds 1 point.", avoid: "Only report what really happened, and write what you saw." },
-  self_order: { what: "An order was made from your own stall.", rule: "An order from the seller's own account adds 3 points and blocks the account at once.", avoid: "Do not reserve produce from your own stall." },
-  chat_spam: { what: "You sent the same message 5 or more times in 10 minutes.", rule: "You cannot send messages for 10 minutes. The 2nd time in 90 days adds 1 point.", avoid: "Send a message once and wait for a reply." },
-  chat_personal_data: { what: "A chat message had a phone number or an email address, so it was hidden.", rule: "The 3rd hidden message in 90 days adds 1 point.", avoid: "Keep phone numbers and emails out of chat. Use the pickup details in the app." },
-  buyer_false_photo: { what: "The photo you sent with a decline was confirmed false or reused.", rule: "A false or reused decline photo adds 2 points.", avoid: "Take a new photo of the real produce in the app." }
+  inquiry_non_response: { what: "A buyer's question went 48 open hours without an answer.", rule: `Unanswered buyer question after 48 open hours adds ${pointsText("inquiry_non_response")}. Reminders at 12 and 24 open hours carry 0 points. The clock counts only the hours your stall is open, and it stops while Away mode is on.`, avoid: "Answer buyer questions within 12 open hours, or turn on Away mode when you cannot reply." },
+  seller_cancellation: { what: "You cancelled a confirmed order.", rule: `A seller who cancels a confirmed order gets ${pointsText("seller_cancellation")}.`, avoid: "Only confirm orders you can fill, and keep your stock numbers correct." },
+  low_rating: { what: "A buyer gave a low rating (1 or 2 stars) on a completed order.", rule: `A low rating counts ${pointsText("low_rating")} when the buyer wrote a reason, or when it is your 2nd low rating in 30 days.`, avoid: "Pack fresh produce that matches the listing and answer buyers politely." },
+  misleading_product_info: { what: "Two different people reported that your listing information was wrong.", rule: `Confirmed wrong listing information adds ${pointsText("misleading_product_info")} and counts in your fault rate.`, avoid: "Keep amounts, prices and descriptions exact." },
+  inappropriate_communication: { what: "Two different people reported inappropriate conduct.", rule: `Confirmed inappropriate conduct adds ${pointsText("inappropriate_communication")}.`, avoid: "Keep every message and pickup respectful." },
+  seller_decline_fault: { what: "A buyer declined produce at pickup and it was confirmed as your fault.", rule: `A confirmed seller-fault decline adds ${pointsText("seller_decline_fault")} and counts in your fault rate.`, avoid: "Check every item before the buyer arrives." },
+  qr_misuse: { what: "QR misuse was confirmed.", rule: `Confirmed QR misuse adds ${pointsText("qr_misuse")} and blocks the account at once.`, avoid: "Only scan a QR code for the right order, at the pickup." },
+  buyer_failed_reservation: { what: "Your reservation ended and the pickup did not happen.", rule: `A missed pickup adds ${pointsText("buyer_failed_reservation")}.`, avoid: "Pick up inside your time range, or cancel early. Message the seller if something comes up." },
+  buyer_late_cancellation: { what: "You cancelled within 3 hours of your pickup time.", rule: `A late cancellation adds ${pointsText("buyer_late_cancellation")}.`, avoid: "Cancel earlier, or ask the seller to move your pickup." },
+  buyer_invalid_decline: { what: "You declined at pickup for a reason that is not allowed.", rule: `A decline without a valid reason adds ${pointsText("buyer_invalid_decline")}.`, avoid: "Only decline for spoiled, wrong, short or unsafe produce, and take a photo in the app." },
+  buyer_fake_reports: { what: "You sent 3 reports in 14 days and none was confirmed.", rule: `Each group of 3 reports with none confirmed in 14 days adds ${pointsText("buyer_fake_reports")}.`, avoid: "Only report what really happened, and write what you saw." },
+  self_order: { what: "An order was made from your own stall.", rule: `An order from the seller's own account adds ${pointsText("self_order")} and blocks the account at once.`, avoid: "Do not reserve produce from your own stall." },
+  chat_spam: { what: "You sent the same message 5 or more times in 10 minutes.", rule: `You cannot send messages for 10 minutes. The 2nd time in 90 days adds ${pointsText("chat_spam")}.`, avoid: "Send a message once and wait for a reply." },
+  chat_personal_data: { what: "A chat message had a phone number or an email address, so it was hidden.", rule: `The 3rd hidden message in 90 days adds ${pointsText("chat_personal_data")}.`, avoid: "Keep phone numbers and emails out of chat. Use the pickup details in the app." },
+  buyer_false_photo: { what: "The photo you sent with a decline was confirmed false or reused.", rule: `A false or reused decline photo adds ${pointsText("buyer_false_photo")}.`, avoid: "Take a new photo of the real produce in the app." }
 };
 function describeEvent(input) {
   const copy = eventCopy[input.kind] ?? { what: "A trust event was recorded.", rule: "Verified events add points.", avoid: "Follow the pickup steps." };
@@ -31090,13 +31232,13 @@ function describeEvent(input) {
 `);
 }
 function describeLevelChange(level, score, role, pauseHours = 0) {
-  const rolePause = role === "buyer" ? "New reservations are off. Browsing and messages still work." : "New listings are off and Priority Boost is not available. You can still serve your orders.";
+  const rolePause = role === "buyer" ? "New reservations are off. Browsing and messages still work." : "New listings and Boost are off. You can still serve your orders.";
   const text = {
     good: "Your account is in good standing.",
     notice: `Your score is ${score}. This is a notice. Nothing is restricted.`,
     warning: role === "buyer" ? `Your score is ${score}. You will see a warning when you reserve.` : `Your score is ${score}. A warning now shows in your dashboard.`,
     pause_24h: `Your score is ${score}. ${rolePause} It lasts 24 hours.`,
-    pause_3d: `Your score is ${score}. ${rolePause} It lasts 3 days. You can ask for a review.`,
+    pause_3d: `Your score is ${score}. ${rolePause} It lasts 3 days. If you think an event is wrong, you can dispute it within 7 days.`,
     block: `Your score is ${score}. Your account is blocked. You can restore it from the Agrivive recovery screen.`
   };
   return `${text[level]}${pauseHours && level.startsWith("pause") ? "" : ""}
@@ -31297,7 +31439,8 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, tri
   if (!actionType || !moves)
     return null;
   const actionKey = `${trustPolicyVersion}:${subjectId}:${level}:${sourceEventKey ?? sourceOrderId ?? "score"}`;
-  const endsAt = pauseHours ? new Date(Date.now() + pauseHours * 3600000) : null;
+  const startsAt = new Date;
+  const endsAt = pauseHours ? new Date(startsAt.getTime() + pauseHours * 3600000) : null;
   const reason = describeLevelChange(level, standing.score, role, pauseHours);
   return db.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
@@ -31314,6 +31457,7 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, tri
       reason,
       sourceEventId: sourceEvent?.id ?? null,
       sourceOrderId: orderId,
+      startsAt,
       endsAt
     }).returning();
     if (!action)
@@ -32200,7 +32344,7 @@ async function requireFirstPostGap(tx, productId) {
 async function queueSellerVisibilityBoost(sellerId, productId, options = {}) {
   const standing = await readTrustStanding(sellerId);
   if (!standing.canBoost) {
-    throw new OrderError(409, standing.needsReview ? "Priority Boost is off because your fault rate is 15% or more." : "Priority Boost is off while your account is paused.");
+    throw new OrderError(409, standing.needsReview ? "Boost is off because your fault rate is 15% or more." : "Boost is off while your account is paused.");
   }
   return db.transaction(async (tx) => {
     await requireSellerMayList(tx, sellerId);
@@ -74530,7 +74674,7 @@ var outcomeText = {
     seller: "The decline was confirmed as your fault. It adds 2 trust points and counts in your fault rate. Take the produce back; it is not put back into stock. You can dispute this within 7 days."
   },
   buyer_invalid: {
-    buyer: "Your decline was not valid, so it counts like a late cancellation and adds 1 point. You can dispute this within 7 days.",
+    buyer: `Your decline was not valid, so it adds ${pointsText("buyer_invalid_decline")}. You can dispute this within 7 days.`,
     seller: "The decline was not valid. You get 0 points, and the produce went back into your stock so you can sell it again."
   },
   disputed: {
@@ -74538,7 +74682,7 @@ var outcomeText = {
     seller: "You disagreed with the decline. Nobody gets points. The order is closed as declined at pickup, and the produce is not put back into stock."
   },
   buyer_false_photo: {
-    buyer: "The system found that this decline photo was already used on another decline. This adds 2 points, like confirmed bad conduct. You can dispute this within 7 days.",
+    buyer: `The system found that this decline photo was already used on another decline. This adds ${pointsText("buyer_false_photo")}. You can dispute this within 7 days.`,
     seller: "The system found that the buyer's photo was already used on another decline. You get 0 points, and the produce went back into your stock."
   }
 };
@@ -74601,7 +74745,7 @@ async function autoAcceptDeclines(limit = 100) {
 async function recordNoShow(tx, input) {
   const [prior] = await tx.select({ n: sql`count(*)::int` }).from(buyer_no_shows).where(and(eq(buyer_no_shows.buyerId, input.buyerId), eq(buyer_no_shows.excused, false)));
   const sequence = Number(prior?.n ?? 0) + 1;
-  const weight = 2;
+  const weight = trustPolicyWeights.buyer_failed_reservation;
   const [row] = await tx.insert(buyer_no_shows).values({ orderId: input.orderId, buyerId: input.buyerId, markedBy: input.markedBy, sequence, weight }).onConflictDoNothing({ target: buyer_no_shows.orderId }).returning();
   if (!row)
     return null;

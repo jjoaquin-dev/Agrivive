@@ -1,3 +1,4 @@
+import { colors } from "../../theme";
 /** Colors the Profile screens share. Warm cream ground, white cards, crisp borders. */
 export const profileColors = {
   cream: "#FCFBF9",

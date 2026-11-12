@@ -25,7 +25,7 @@ export const privacyPolicy: LegalDocument = {
         "Listings: product names, photos, prices, amounts, and harvest details that sellers post.",
         "Location: the shop location a seller chooses on the map. If you allow it, your phone location is used to show nearby sellers.",
         "Device details: your phone push token, so we can send order and message alerts, plus basic technical details such as browser type and IP address for security.",
-        "Trust records: missed replies, cancellations, and low ratings that count toward the trust score.",
+        "Trust records: rule breaks such as missed pickups, late cancellations, missed replies, reports, and low ratings that count as trust points.",
       ],
     },
     {

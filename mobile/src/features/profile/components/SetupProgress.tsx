@@ -18,7 +18,7 @@ export function SetupProgress({ current }: { current: number }) {
           <React.Fragment key={label}>
             {index > 0 ? <View style={[styles.bar, n <= current && styles.barOn]} /> : null}
             <View style={[styles.item, active && styles.itemOn]}>
-              {done ? <View style={styles.tick}><Check size={13} color={colors.white} strokeWidth={3} /></View>
+              {done ? <View style={styles.tick}><Check size={14} color={colors.white} strokeWidth={3} /></View>
                 : <View style={[styles.dot, active && styles.dotOn]} />}
               <Text style={[styles.label, (done || active) && styles.labelOn]}>{label}</Text>
             </View>
@@ -31,10 +31,10 @@ export function SetupProgress({ current }: { current: number }) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", marginTop: spacing.md },
-  item: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 4, paddingVertical: 4, borderRadius: radii.full },
-  itemOn: { backgroundColor: profileColors.mint, paddingHorizontal: 10 },
-  tick: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: profileColors.border },
+  item: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4, paddingVertical: 4, borderRadius: radii.full },
+  itemOn: { backgroundColor: profileColors.mint, paddingHorizontal: 12 },
+  tick: { width: 22, height: 22, borderRadius: 12, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  dot: { width: 14, height: 14, borderRadius: 8, borderWidth: 2, borderColor: profileColors.border },
   dotOn: { borderColor: colors.primary, backgroundColor: colors.primary },
   label: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.textMuted },
   labelOn: { fontFamily: fonts.body.semiBold, color: colors.primary },

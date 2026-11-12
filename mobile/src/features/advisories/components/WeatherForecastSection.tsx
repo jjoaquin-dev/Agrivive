@@ -38,7 +38,7 @@ export const WeatherForecastSection: React.FC<WeatherForecastSectionProps> = ({ 
             </View>
             <Text style={[styles.range, wet && styles.rangeWet]}>{`${Math.round(day.temperatureMinC)}°–${Math.round(day.temperatureMaxC)}°C`}</Text>
             <View style={[styles.rainBadge, wet && styles.rainBadgeWet]}>
-              <Droplet size={12} color={wet ? "#B45309" : colors.textMuted} fill={wet ? "#B45309" : colors.textMuted} />
+              <Droplet size={12} color={wet ? colors.warningText : colors.textMuted} fill={wet ? colors.warningText : colors.textMuted} />
               <Text style={[styles.rainText, wet && styles.rainTextWet]}>{`${rain}% rain`}</Text>
             </View>
           </View>

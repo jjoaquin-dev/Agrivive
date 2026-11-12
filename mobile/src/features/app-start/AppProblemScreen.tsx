@@ -32,20 +32,20 @@ export const AppProblemScreen: React.FC<AppProblemScreenProps> = ({ problem, ema
           <View style={styles.pill}><Text style={styles.pillText}>{`Back in ${problem.backIn}`}</Text></View>
         ) : null}
         {problem.kind === "blocked" ? (
-          <ButtonComponent title="Restore My Account" onPress={onRestore} style={styles.button} />
+          <ButtonComponent title="Restore Account" onPress={onRestore} style={styles.button} />
         ) : (
           <ButtonComponent title="Try Again" onPress={onRetry} loading={retrying} style={styles.button} />
         )}
-        <AuthTextLink label="Log Out" onPress={() => setConfirmLogOut(true)} />
+        <AuthTextLink label="Sign Out" onPress={() => setConfirmLogOut(true)} />
       </View>
       {email ? <Text style={styles.footer}>{`Signed in as ${maskEmail(email)}`}</Text> : null}
       <ConfirmDialogComponent
         visible={confirmLogOut}
-        icon={<LogOut size={22} color={colors.error} />}
-        title="Log out of Agrivive?"
+        icon={<LogOut size={24} color={colors.error} />}
+        title="Sign out of Agrivive?"
         message="You will need to sign in again to manage your stall and produce."
         cancelLabel="Cancel"
-        confirmLabel="Log Out"
+        confirmLabel="Sign Out"
         onCancel={() => setConfirmLogOut(false)}
         onConfirm={() => { setConfirmLogOut(false); onLogOut(); }}
       />
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, marginTop: spacing.base, textAlign: "center" },
   body: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.sm, textAlign: "center" },
-  pill: { marginTop: spacing.base, backgroundColor: "#FEF3C7", borderRadius: 9999, paddingHorizontal: 14, paddingVertical: 6 },
-  pillText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: "#92400E" },
+  pill: { marginTop: spacing.base, backgroundColor: colors.warningSurface, borderRadius: 9999, paddingHorizontal: 12, paddingVertical: 8 },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.warningText },
   button: { alignSelf: "stretch", marginTop: spacing.lg },
   footer: { textAlign: "center", fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, paddingBottom: spacing.lg },
 });

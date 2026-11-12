@@ -114,7 +114,7 @@ export default function EmailOtpLoginScreen() {
 
   return (
     <AuthScreenShell
-      title={step === "email" ? "Sign In With Email Code" : "Check Your Email"}
+      title={step === "email" ? "Sign In with Email Code" : "Check Your Email"}
       subtitle={step === "email" ? "We'll email you a 6-digit code. No password needed." : (
         <>Sent to {maskEmail(email)} · <Text style={styles.change} onPress={goBackToEmail} accessibilityRole="button">Change</Text></>
       )}
@@ -157,6 +157,6 @@ export default function EmailOtpLoginScreen() {
 const styles = StyleSheet.create({
   change: { fontFamily: fonts.body.semiBold, color: colors.primary },
   button: { marginTop: spacing.lg },
-  footer: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: spacing.md },
+  footer: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: spacing.md },
   footerText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
 });

@@ -7,6 +7,7 @@ import { Check, ChevronRight, Phone, Store, User } from "lucide-react";
 import type { ConversationLaunchContext } from "../types";
 import type { Conversation } from "../api";
 import { ConversationStateButtons } from "./ConversationStateActions";
+import { formatPeso } from "@/src/lib/money";
 
 export function ConversationDetailsPanel({
   context,
@@ -55,11 +56,11 @@ export function ConversationDetailsPanel({
               </div>
             )}
           </div>
-          <span className="absolute bottom-0.5 right-0.5 size-4 rounded-full border-2 border-white bg-[#16A34A]" />
+          <span className="absolute bottom-0.5 right-0.5 size-4 rounded-full border-2 border-white bg-green-600" />
         </div>
 
         <h4 className="mt-3 font-heading text-lg font-bold text-neutral-900">{shopName}</h4>
-        <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[#16A34A]">
+        <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-green-600">
           <Check className="size-3.5" />
           <span>Verified vendor</span>
         </p>
@@ -106,8 +107,8 @@ export function ConversationDetailsPanel({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-neutral-400">Status</span>
-            <span className="inline-flex items-center gap-1.5 font-bold text-[#16A34A]">
-              <span className="size-2 rounded-full bg-[#16A34A]" />
+            <span className="inline-flex items-center gap-1.5 font-bold text-green-600">
+              <span className="size-2 rounded-full bg-green-600" />
               <span>Verified Stall</span>
             </span>
           </div>
@@ -125,20 +126,20 @@ export function ConversationDetailsPanel({
             </span>
             <Link
               href={`/marketplace/${context.productId}`}
-              className="text-xs font-bold text-[#16A34A] hover:underline"
+              className="text-xs font-bold text-green-600 hover:underline"
             >
               VIEW &gt;
             </Link>
           </div>
           <Link
             href={`/marketplace/${context.productId}`}
-            className="flex items-center gap-3 rounded-2xl border border-neutral-100 bg-[#F9FAFB] p-2.5 transition hover:bg-[#F3F4F6]"
+            className="flex items-center gap-3 rounded-2xl border border-neutral-100 bg-agrivive-wash p-2.5 transition hover:bg-[#F3F4F6]"
           >
             <div className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-neutral-200/80 bg-white flex items-center justify-center">
               {context.productImageUrl ? (
                 <img src={context.productImageUrl} alt="" className="size-full object-cover" />
               ) : (
-                <Store className="size-5 text-[#16A34A]" />
+                <Store className="size-5 text-green-600" />
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -148,7 +149,7 @@ export function ConversationDetailsPanel({
               <div className="flex items-center gap-1.5 text-xs text-neutral-500">
                 {context.productPrice != null && (
                   <span className="font-semibold text-neutral-700">
-                    ₱{Number(context.productPrice).toFixed(2)}
+                    {formatPeso(context.productPrice)}
                     {context.scalingType ? `/${context.scalingType}` : ""}
                   </span>
                 )}
@@ -157,7 +158,7 @@ export function ConversationDetailsPanel({
                 )}
               </div>
             </div>
-            <span className="size-2 rounded-full bg-[#16A34A] shrink-0" />
+            <span className="size-2 rounded-full bg-green-600 shrink-0" />
           </Link>
         </div>
       )}

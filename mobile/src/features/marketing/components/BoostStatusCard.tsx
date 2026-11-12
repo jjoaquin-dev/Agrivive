@@ -6,6 +6,7 @@ import {
   boostReasonLabel, boostState, boostStateLabel, formatBoostTime, type SellerProductBoostResponse,
 } from "../types";
 import { BoostTimeline } from "./BoostTimeline";
+import { formatPeso } from "../../../utils/money";
 
 interface Props {
   boost: NonNullable<SellerProductBoostResponse["boost"]>;
@@ -31,7 +32,7 @@ export function BoostStatusCard({ boost }: Props) {
       {state === "finished" ? <Text style={styles.meta}>The price reached its lowest point, so the drops stopped.</Text> : null}
       {state === "not_posted" ? <Text style={styles.error}>This boost did not post. Tap Boost to try again.</Text> : null}
       {boost.priceBefore && boost.priceAfter ? (
-        <Text style={styles.meta}>Price: ₱{Number(boost.priceBefore).toFixed(2)} → ₱{Number(boost.priceAfter).toFixed(2)}</Text>
+        <Text style={styles.meta}>Price: {formatPeso(Number(boost.priceBefore))} → {formatPeso(Number(boost.priceAfter))}</Text>
       ) : null}
       {boost.progress ? <BoostTimeline progress={boost.progress} /> : null}
       {boost.errorMessage ? <Text style={styles.error}>{boost.errorMessage}</Text> : null}

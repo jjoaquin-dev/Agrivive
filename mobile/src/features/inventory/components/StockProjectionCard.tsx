@@ -22,7 +22,7 @@ export const StockProjectionCard: React.FC<StockProjectionCardProps> = ({
       <View style={styles.row}>
         <Text style={styles.label}>Current available: <Text style={styles.strong}>{currentQty.toFixed(2)} {unitLabel}</Text></Text>
         {changeQty > 0 ? (
-          <Text style={[styles.change, { color: isAdd ? "#386600" : colors.error }]}>
+          <Text style={[styles.change, { color: isAdd ? colors.primaryPressed : colors.error }]}>
             {isAdd ? "+ Adding" : "− Taking away"} {changeQty.toFixed(2)} {unitLabel}
           </Text>
         ) : null}
@@ -40,7 +40,7 @@ export const StockProjectionCard: React.FC<StockProjectionCardProps> = ({
       ) : isAdd ? (
         <View style={styles.noteRow}>
           <CheckCircle2 size={14} color={colors.success} />
-          <Text style={[styles.note, { color: "#386600" }]}>Buyers see the new amount right away.</Text>
+          <Text style={[styles.note, { color: colors.primaryPressed }]}>Buyers see the new amount right away.</Text>
         </View>
       ) : null}
     </View>
@@ -49,16 +49,16 @@ export const StockProjectionCard: React.FC<StockProjectionCardProps> = ({
 
 const styles = StyleSheet.create({
   card: { borderRadius: radii.card - 4, borderWidth: 1, padding: spacing.md + 2, marginBottom: spacing.base },
-  cardAdd: { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0" },
+  cardAdd: { backgroundColor: colors.successSurface, borderColor: colors.successBorder },
   cardOut: { backgroundColor: colors.surfaceMuted, borderColor: colors.border },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: spacing.xs },
-  label: { fontFamily: fonts.body.regular, fontSize: 13, color: "#4B5563" },
+  label: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
   strong: { fontFamily: fonts.body.medium, color: colors.text },
   change: { fontFamily: fonts.body.medium, fontSize: 13 },
   divider: { height: 1, backgroundColor: "rgba(0,0,0,0.08)", marginVertical: spacing.sm + 2 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
   totalLabel: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
   total: { fontFamily: fonts.heading.bold, fontSize: 22 },
-  noteRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.sm },
+  noteRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: spacing.sm },
   note: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12 },
 });

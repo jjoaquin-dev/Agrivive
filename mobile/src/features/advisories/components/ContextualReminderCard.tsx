@@ -22,7 +22,7 @@ export const ContextualReminderCard: React.FC<ContextualReminderCardProps> = ({ 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <AlertTriangle size={16} color="#92400E" />
+        <AlertTriangle size={16} color={colors.warningText} />
         <Text style={styles.headerText}>Heads Up</Text>
       </View>
       <View style={styles.list}>

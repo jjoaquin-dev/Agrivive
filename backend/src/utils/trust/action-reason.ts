@@ -13,7 +13,7 @@ const restrictionReasons: Record<string, (duration: Duration) => string> = {
 };
 
 const warningReasons: Record<string, string> = {
-  buyer_failed_reservation: "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a 12-hour pause on your account.",
+  buyer_failed_reservation: "You have missed pickups on previous reservations. To help avoid food waste, please collect your orders on time to avoid a pause on your account.",
   inquiry_non_response: "Buyer questions went unanswered for too long. Please reply to buyers on time to avoid a pause on your account.",
   seller_cancellation: "You cancelled several buyer reservations. Please avoid cancelling to prevent a pause on your account.",
   low_rating: "Buyers gave low ratings on completed pickups. Please improve your service to avoid a pause on your account.",

@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Repeat2, Settings } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -15,7 +16,7 @@ interface Props {
 /** Asked once after produce is added. Only the first post is yours to start; this covers every post after it. */
 export function AutoPostPermissionSheet({ visible, busy, error, onAccept, onDecline }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onDecline} statusBarTranslucent>
+    <SlideModal visible={visible} onRequestClose={onDecline} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={busy ? undefined : onDecline} accessibilityLabel="Close" />
       <View style={styles.sheet} accessibilityViewIsModal>
         <View style={styles.handle} />
@@ -34,16 +35,16 @@ export function AutoPostPermissionSheet({ visible, busy, error, onAccept, onDecl
         <ButtonComponent title="Yes, Auto-Post" onPress={onAccept} loading={busy} style={styles.primary} />
         <ButtonComponent title="Not Now" variant="ghost" onPress={onDecline} disabled={busy} style={styles.secondary} />
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: spacing.md, paddingBottom: spacing.xl },
-  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 3, backgroundColor: "#D1D5DB", marginBottom: spacing.md },
+  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 4, backgroundColor: colors.border, marginBottom: spacing.md },
   iconWrap: { alignSelf: "center", width: 64, height: 64, borderRadius: 32, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text, textAlign: "center" },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, textAlign: "center" },
   text: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs, marginBottom: spacing.md },
   list: { gap: spacing.xs, marginBottom: spacing.md },
   item: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.text },

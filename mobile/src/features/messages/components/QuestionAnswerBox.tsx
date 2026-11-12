@@ -21,7 +21,7 @@ export function QuestionAnswerBox({ onSend, onCancel, isReplying }: QuestionAnsw
       await onSend(trimmed);
       setReplyText("");
     } catch (err: any) {
-      setError(err?.message || "Failed to send answer. Please try again.");
+      setError(err?.message || "Could not send answer. Please try again.");
     }
   };
 
@@ -73,7 +73,7 @@ export function QuestionAnswerBox({ onSend, onCancel, isReplying }: QuestionAnsw
             <ActivityIndicator size="small" color={colors.white} />
           ) : (
             <>
-              <Send size={15} color={colors.white} />
+              <Send size={16} color={colors.white} />
               <Text style={styles.sendBtnText}>Send Answer</Text>
             </>
           )}

@@ -4,3 +4,5 @@ import { BuyerNotifications } from "@/src/features/notifications/components/Buye
 export default function NotificationsPage() {
   return <><BuyerSiteHeader /><BuyerNotifications /></>;
 }
+
+export const metadata = { title: "Notifications | Agrivive" };

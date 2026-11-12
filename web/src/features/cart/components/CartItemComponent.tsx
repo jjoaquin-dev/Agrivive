@@ -26,7 +26,7 @@ export const CartItemComponent = ({
       <Link
         href={`/marketplace/${item.id}`}
         onClick={onNavigate}
-        className="relative size-[76px] sm:size-[80px] shrink-0 overflow-hidden rounded-xl bg-[#f8f6f1] transition-opacity hover:opacity-95"
+        className="relative size-[76px] sm:size-[80px] shrink-0 overflow-hidden rounded-xl bg-agrivive-background transition-opacity hover:opacity-95"
         aria-label={`View details for ${item.productName}`}
       >
         <ProductImage
@@ -42,7 +42,7 @@ export const CartItemComponent = ({
         <Link
           href={`/marketplace/${item.id}`}
           onClick={onNavigate}
-          className="block truncate font-heading text-base sm:text-lg font-bold text-[#14231A] transition-colors hover:text-[#457D00]"
+          className="block truncate font-heading text-base sm:text-lg font-bold text-agrivive-ink transition-colors hover:text-agrivive-primary"
           title={item.productName}
         >
           {item.productName}
@@ -51,7 +51,7 @@ export const CartItemComponent = ({
           1 {item.scalingType}
         </p>
         <div className="mt-1 flex items-baseline gap-1 text-xs">
-          <span className="font-heading text-sm sm:text-base font-bold text-[#225828]">
+          <span className="font-heading text-sm sm:text-base font-bold text-agrivive-forest">
             {money(Number(item.productPrice))}
           </span>
           <span className="font-body text-neutral-500 font-normal">

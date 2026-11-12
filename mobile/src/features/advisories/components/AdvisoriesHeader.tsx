@@ -13,7 +13,7 @@ interface AdvisoriesHeaderProps {
 
 function formatUpdated(timestamp?: string) {
   if (!timestamp) return "Pull down to refresh";
-  const time = new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const time = new Date(timestamp).toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   return `Updated ${time} · Pull down to refresh`;
 }
 

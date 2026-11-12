@@ -45,7 +45,7 @@ export default function InventoryScreen() {
 
   const menuItem = (label: string, Icon: typeof Archive, onPress: () => void) => (
     <Pressable onPress={() => { setMenuVisible(false); onPress(); }} style={styles.menuItem} accessibilityRole="button">
-      <Icon size={16} color="#374151" />
+      <Icon size={16} color={colors.text} />
       <Text style={styles.menuItemText}>{label}</Text>
     </Pressable>
   );
@@ -145,5 +145,5 @@ const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.25)", alignItems: "flex-end", paddingTop: 64, paddingRight: spacing.base },
   menuCard: { width: 240, maxWidth: "85%", backgroundColor: colors.surface, borderRadius: radii.card, paddingVertical: spacing.sm, borderWidth: 1, borderColor: colors.border, ...shadows.elevated },
   menuItem: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.base, minHeight: 48 },
-  menuItemText: { fontFamily: fonts.body.medium, fontSize: 14, color: "#374151" },
+  menuItemText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
 });

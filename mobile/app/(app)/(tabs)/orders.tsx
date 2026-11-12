@@ -57,7 +57,7 @@ export default function OrdersScreen() {
           accessibilityLabel="Scan pickup QR"
           style={styles.scanButton}
         >
-          <QrCode size={22} color={colors.white} />
+          <QrCode size={24} color={colors.white} />
         </Pressable>
       </View>
 
@@ -175,8 +175,8 @@ const styles = StyleSheet.create({
   filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
   filterTextSelected: { color: colors.white, fontFamily: fonts.body.semiBold },
-  errorBox: { backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base, alignItems: "center" },
-  errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
+  errorBox: { backgroundColor: colors.errorSurface, borderWidth: 1, borderColor: colors.errorBorder, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base, alignItems: "center" },
+  errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.errorSurface, alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
   errorTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.error },
   errorText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
   emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F6F5F1", alignItems: "center", justifyContent: "center", marginBottom: spacing.md },

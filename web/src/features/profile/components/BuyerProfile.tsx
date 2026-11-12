@@ -14,6 +14,7 @@ import { ProfileNotificationsCard } from "./ProfileNotificationsCard";
 import { ProfileFollowedSellers } from "./ProfileFollowedSellers";
 import { ProfileSidebar, type ProfileSection } from "./ProfileSidebar";
 import { ProfileStats } from "./ProfileStats";
+import { TrustStandingCard } from "@/src/features/trust/components/TrustStandingCard";
 
 export function BuyerProfile() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export function BuyerProfile() {
   // The "Manage notifications" link in the bell opens /profile#notifications.
   useEffect(() => {
     if (window.location.hash === "#notifications") setSection("notifications");
+    if (window.location.hash === "#trust") setSection("trust");
   }, []);
 
   useEffect(() => {
@@ -42,9 +44,9 @@ export function BuyerProfile() {
 
   if (isPending || !session?.user) {
     return (
-      <main className="min-h-[calc(100vh-72px)] bg-[#F8F6F1] py-8">
+      <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-8">
         <PageContainer>
-          <div className="h-64 animate-pulse rounded-3xl bg-neutral-100" />
+          <div className="h-64 animate-pulse rounded-2xl bg-neutral-100" />
         </PageContainer>
       </main>
     );
@@ -55,7 +57,8 @@ export function BuyerProfile() {
     .split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#F8F6F1] py-6 text-foreground sm:py-10">
+    <main className="min-h-[calc(100vh-72px)] bg-agrivive-background py-6 text-foreground sm:py-10">
+      <h1 className="sr-only">My profile</h1>
       <PageContainer>
         <Breadcrumbs items={[{ label: "Settings" }]} />
 
@@ -86,6 +89,8 @@ export function BuyerProfile() {
             )}
 
             {section === "following" && <ProfileFollowedSellers />}
+
+            {section === "trust" && <TrustStandingCard />}
 
             {section === "security" && (
               <div className="flex max-w-xl flex-col gap-6">

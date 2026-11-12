@@ -51,12 +51,12 @@ export function HomeHowItWorks() {
       <div className="relative mx-auto max-w-5xl">
         {/* Header: eyebrow, title with the Agrivive accent, one supporting line */}
         <div data-reveal className="mx-auto max-w-3xl text-center">
-          <span className="type-eyebrow text-[#E2FD56]">The Process</span>
+          <span className="type-eyebrow text-agrivive-lime">The Process</span>
           <h2 className="type-section mt-3 font-heading text-white">
             How{" "}
-            <span className="relative inline-block text-[#E2FD56]">
+            <span className="relative inline-block text-agrivive-lime">
               Agrivive
-              <svg className="absolute -bottom-1.5 left-0 w-full text-[#E2FD56] sm:-bottom-2 pointer-events-none" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <svg className="absolute -bottom-1.5 left-0 w-full text-agrivive-lime sm:-bottom-2 pointer-events-none" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M3 9C30 3 80 3 107 9" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
               </svg>
             </span>{" "}

@@ -22,5 +22,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   icon: { width: 28, height: 28, borderRadius: 14, backgroundColor: "#F6F5F1", alignItems: "center", justifyContent: "center" },
   value: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
-  text: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 6 },
+  text: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 8 },
 });

@@ -58,7 +58,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
       </div>
       <button
         type="submit"
-        className="ml-1 flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#457D00] px-4 text-xs font-bold text-white transition-colors hover:bg-[#457D00]/90 cursor-pointer"
+        className="ml-1 flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-agrivive-primary px-4 text-xs font-bold text-white transition-colors hover:bg-agrivive-primary/90 cursor-pointer"
       >
         <Search aria-hidden="true" className="size-4" />
         <span>Search</span>

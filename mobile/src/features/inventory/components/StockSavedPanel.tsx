@@ -45,8 +45,8 @@ export function StockSavedPanel({ saved, onDone }: { saved: StockSaved; onDone: 
             <Text style={styles.metaText} numberOfLines={2}>Reason: <Text style={styles.metaStrong}>{saved.reason}</Text></Text>
           </View>
           <View style={styles.metaItem}>
-            <Clock size={12} color="#9CA3AF" />
-            <Text style={[styles.metaText, { color: "#9CA3AF" }]}>Updated just now</Text>
+            <Clock size={12} color={colors.textMuted} />
+            <Text style={[styles.metaText, { color: colors.textMuted }]}>Updated just now</Text>
           </View>
         </View>
       </View>
@@ -65,25 +65,25 @@ export function StockSavedPanel({ saved, onDone }: { saved: StockSaved; onDone: 
 
 const styles = StyleSheet.create({
   wrap: { alignItems: "center", paddingHorizontal: spacing.xl, paddingTop: spacing.base, paddingBottom: spacing.xl },
-  check: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F0FDF4", borderWidth: 2, borderColor: "#BBF7D0", alignItems: "center", justifyContent: "center" },
+  check: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.successSurface, borderWidth: 2, borderColor: colors.successBorder, alignItems: "center", justifyContent: "center" },
   title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, marginTop: spacing.base },
   sub: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: 4, textAlign: "center" },
   card: { alignSelf: "stretch", backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card - 2, padding: spacing.base, marginTop: spacing.lg },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   label: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   value: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
   delta: { fontFamily: fonts.heading.bold, color: colors.primary },
-  divider: { height: 1, backgroundColor: colors.border, marginBottom: 10 },
+  divider: { height: 1, backgroundColor: colors.border, marginBottom: 12 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" },
   totalLabel: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
   total: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.primary },
   totalUnit: { fontSize: 14 },
-  meta: { marginTop: 10, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, borderStyle: "dashed", gap: 6 },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  meta: { marginTop: 12, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, borderStyle: "dashed", gap: 8 },
+  metaItem: { flexDirection: "row", alignItems: "center", gap: 8 },
   metaText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  metaStrong: { fontFamily: fonts.body.medium, color: "#374151" },
-  note: { alignSelf: "stretch", flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: spacing.base, paddingHorizontal: 4 },
-  noteIcon: { width: 24, height: 24, borderRadius: 12, backgroundColor: "#F0FDF4", alignItems: "center", justifyContent: "center" },
+  metaStrong: { fontFamily: fonts.body.medium, color: colors.text },
+  note: { alignSelf: "stretch", flexDirection: "row", alignItems: "flex-start", gap: 12, marginTop: spacing.base, paddingHorizontal: 4 },
+  noteIcon: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.successSurface, alignItems: "center", justifyContent: "center" },
   noteText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.text },
   noteStrong: { fontFamily: fonts.body.semiBold },
   done: { alignSelf: "stretch", minHeight: 52, borderRadius: radii.button, marginTop: spacing.xl },

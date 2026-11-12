@@ -10,7 +10,7 @@ import { StockQuickAmounts } from "./StockQuickAmounts";
 import { StockProjectionCard } from "./StockProjectionCard";
 import { StockReasonSelector, TAKE_AWAY_REASONS } from "./StockReasonSelector";
 import { StockFreshnessWarningModal } from "./StockFreshnessWarningModal";
-import { styles } from "./StockChangeFormStyles";
+import { styles } from "./StockChangeForm.styles";
 import { hasTwoDecimalsOrLess } from "../validation";
 import type { Product } from "../types";
 

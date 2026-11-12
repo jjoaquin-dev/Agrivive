@@ -28,10 +28,10 @@ export function ProfileFollowedSellers() {
   }
 
   return (
-    <div className="rounded-3xl border border-[#E5E2DA] bg-white p-6 shadow-[0_4px_20px_rgba(20,35,26,0.05)]">
+    <div className="rounded-2xl border border-agrivive-border bg-white p-6 shadow-[0_4px_20px_rgba(20,35,26,0.05)]">
       <h2 className="font-heading text-lg font-bold text-neutral-900">Sellers You Follow</h2>
       <p className="mt-1 text-xs text-neutral-500">You get a notice when they post, restock or lower a price.</p>
-      {error ? <p role="alert" className="mt-3 text-xs text-rose-700">{error}</p> : null}
+      {error ? <p role="alert" className="mt-3 text-xs text-destructive">{error}</p> : null}
       {sellers === null && !error ? <div className="mt-4 h-16 animate-pulse rounded-2xl bg-neutral-100" /> : null}
       {sellers?.length === 0 ? (
         <p className="mt-6 text-sm text-neutral-600">You are not following any sellers yet. Open a stall and tap Follow.</p>
@@ -39,17 +39,17 @@ export function ProfileFollowedSellers() {
         <ul className="mt-4 divide-y divide-neutral-100">
           {sellers?.map((seller) => (
             <li key={seller.sellerId} className="flex items-center gap-3 py-3">
-              <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EEF5E3] text-[#457D00]">
+              <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-agrivive-mist text-agrivive-primary">
                 {seller.image ? <img src={seller.image} alt="" className="size-full object-cover" /> : <Store className="size-5" />}
               </div>
               <Link href={`/sellers/${seller.sellerId}`} className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-neutral-900 hover:text-[#457D00]">{seller.shopName}</p>
+                <p className="truncate text-sm font-bold text-neutral-900 hover:text-agrivive-primary">{seller.shopName}</p>
                 <p className="truncate text-xs text-neutral-500">{seller.address}</p>
               </Link>
               <button
                 type="button"
                 onClick={() => void unfollow(seller.sellerId)}
-                className="inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#E5E2DA] px-4 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                className="inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-agrivive-border px-4 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
               >
                 <UserMinus className="size-3.5" aria-hidden="true" /> Unfollow
               </button>

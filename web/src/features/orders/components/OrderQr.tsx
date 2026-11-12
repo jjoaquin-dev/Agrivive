@@ -3,9 +3,11 @@
 import { QRCodeSVG } from "qrcode.react";
 import { CalendarClock, Clock, MapPin, Navigation } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
+import { formatDate, formatTime } from "@/src/lib/format";
+import { formatPeso } from "@/src/lib/money";
 
-const clock = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" }) : "");
-const date = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" }) : "");
+const clock = (iso: string | null) => (iso ? formatTime(iso, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" }) : "");
+const date = (iso: string | null) => (iso ? formatDate(iso, { weekday: "short", month: "short", day: "numeric", timeZone: "Asia/Manila" }) : "");
 
 const qrNote = {
   not_yet_valid: { label: "Not valid yet", tone: "bg-amber-50 text-amber-800", text: "Your QR starts working at the beginning of your pickup time." },
@@ -19,18 +21,18 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
   const reference = `RSV-${order.id.slice(0, 4).toUpperCase()}`;
   const open = order.status === "pending";
   const note = qrNote[order.qr.status];
-  const total = Number(order.totalAmount).toFixed(2);
+  const total = formatPeso(order.totalAmount);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#E8E8E8] bg-white shadow-sm">
-      <div className="flex items-center justify-between bg-[#457D00] px-4 py-2.5 text-white">
-        <span className="text-[12px] font-bold uppercase tracking-wider">Official pickup pass</span>
-        <span className="text-[12px] font-semibold">{reference}</span>
+    <div className="overflow-hidden rounded-2xl border border-agrivive-line bg-white shadow-sm">
+      <div className="flex items-center justify-between bg-agrivive-primary px-4 py-2.5 text-white">
+        <span className="text-xs font-bold uppercase tracking-wider">Official pickup pass</span>
+        <span className="text-xs font-semibold">{reference}</span>
       </div>
       <div className="space-y-4 p-5">
         <div className="text-center">
           <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Stall</span>
-          <h3 className="mt-0.5 text-[18px] font-bold text-[#14231A]">{stall?.shopName ?? shopName ?? "Market stall"}</h3>
+          <h3 className="mt-0.5 text-lg font-bold text-agrivive-ink">{stall?.shopName ?? shopName ?? "Market stall"}</h3>
           {buyerName ? <p className="text-xs text-neutral-500">Reserved by {buyerName}</p> : null}
         </div>
 
@@ -40,13 +42,13 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
               <QRCodeSVG value={order.qrPayload} size={256} style={{ width: "100%", height: "100%" }} level="M" marginSize={1} className={order.qr.status === "active" ? "" : "opacity-30"} />
             </div>
             <span className={`mt-3 rounded-full px-3 py-1 text-xs font-bold ${note.tone}`}>QR {note.label}</span>
-            <p className="mt-2 max-w-[260px] text-center text-[12px] leading-relaxed text-neutral-500">{note.text}</p>
-            {order.qr.validUntil ? <p className="mt-1 text-[11px] text-neutral-400">Works now until {clock(order.qr.validUntil)}, {date(order.qr.validUntil)}</p> : null}
+            <p className="mt-2 max-w-[260px] text-center text-xs leading-relaxed text-neutral-500">{note.text}</p>
+            {order.qr.validUntil ? <p className="mt-1 text-xs text-neutral-400">Works now until {clock(order.qr.validUntil)}, {date(order.qr.validUntil)}</p> : null}
           </div>
         ) : (
           <div className="rounded-xl bg-neutral-50 p-4 text-center">
-            <p className="text-[14px] font-semibold text-neutral-700">Pickup pass {order.status === "completed" ? "used" : "inactive"}</p>
-            <p className="mt-1 text-[12px] text-neutral-500">{order.status === "completed" ? "This pickup was completed. Thank you!" : "This order is closed, so its QR no longer works."}</p>
+            <p className="text-sm font-semibold text-neutral-700">Pickup pass {order.status === "completed" ? "used" : "inactive"}</p>
+            <p className="mt-1 text-xs text-neutral-500">{order.status === "completed" ? "This pickup was completed. Thank you!" : "This order is closed, so its QR no longer works."}</p>
           </div>
         )}
 
@@ -61,10 +63,10 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
         ) : null}
         {stall ? (
           <div className="space-y-1 text-sm">
-            <p className="flex items-start gap-2"><MapPin className="mt-0.5 size-4 shrink-0 text-[#457D00]" aria-hidden="true" /><span>{stall.address}</span></p>
+            <p className="flex items-start gap-2"><MapPin className="mt-0.5 size-4 shrink-0 text-agrivive-primary" aria-hidden="true" /><span>{stall.address}</span></p>
             {stall.instructions ? <p className="pl-6 text-xs text-neutral-500">{stall.instructions}</p> : null}
             {stall.directionsUrl ? (
-              <a href={stall.directionsUrl} target="_blank" rel="noreferrer" className="ml-6 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#457D00] underline-offset-2 hover:underline">
+              <a href={stall.directionsUrl} target="_blank" rel="noreferrer" className="ml-6 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-agrivive-primary underline-offset-2 hover:underline">
                 <Navigation className="size-4" aria-hidden="true" />Get directions
               </a>
             ) : null}
@@ -77,10 +79,10 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
           ))}
         </ul>
         <div className="flex items-center justify-between text-xs">
-          <span className="rounded-full bg-[#F0F7EB] px-3 py-1 font-bold capitalize text-[#244218]">{open ? order.progress.current.replace("preparing", "preparing") : order.status}</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-[#FFF9EE] px-3 py-1 font-semibold text-[#8C5300]"><Clock className="size-3.5" aria-hidden="true" />Pay ₱{total} at stall</span>
+          <span className="rounded-full bg-agrivive-mist px-3 py-1 font-bold capitalize text-agrivive-forest">{open ? order.progress.current.replace("preparing", "preparing") : order.status}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-[#FFF9EE] px-3 py-1 font-semibold text-[#8C5300]"><Clock className="size-3.5" aria-hidden="true" />Pay {total} at stall</span>
         </div>
-        <p className="rounded-xl bg-[#FFF8E6] p-3 text-[12px] font-medium leading-relaxed text-[#6B4E00]">{order.disclaimer}</p>
+        <p className="rounded-xl bg-amber-50 p-3 text-xs font-medium leading-relaxed text-amber-800">{order.disclaimer}</p>
       </div>
     </div>
   );

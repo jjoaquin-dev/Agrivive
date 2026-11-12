@@ -12,7 +12,7 @@ const labels: Record<SellerOrderStatus, string> = {
 };
 
 const tones: Record<SellerOrderStatus, { fg: string; bg: string; border: string }> = {
-  pending: { fg: colors.warning, bg: "#FFF7ED", border: "#FED7AA" },
+  pending: { fg: colors.warning, bg: colors.orangeSurface, border: colors.orangeBorder },
   completed: { fg: colors.success, bg: "rgba(22, 163, 74, 0.10)", border: "rgba(22, 163, 74, 0.25)" },
   cancelled: { fg: colors.error, bg: "#FEF2F2", border: "#FECACA" },
   expired: { fg: colors.textMuted, bg: "#F6F5F1", border: colors.border },

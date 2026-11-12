@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Download, ShieldCheck, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/src/lib/format";
 
 interface Props {
   generatedAt?: string;
@@ -33,7 +34,7 @@ export const StakeholderHeaderComponent = ({ generatedAt, onDownloadPdf }: Props
         </p>
         {generatedAt && (
           <p className="mt-1 text-xs text-muted-foreground">
-            Snapshot time: {new Date(generatedAt).toLocaleString()}
+            Snapshot time: {formatDateTime(generatedAt)}
           </p>
         )}
       </div>

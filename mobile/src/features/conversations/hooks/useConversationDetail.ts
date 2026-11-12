@@ -100,7 +100,7 @@ export function useConversationDetail(id?: string) {
     } catch (err: any) {
       if (!controller.signal.aborted) {
         setPhoto(null);
-        setUploadError(err?.message || "Failed to upload photo.");
+        setUploadError(err?.message || "Could not upload photo.");
       }
     } finally {
       if (uploadAbort.current === controller) uploadAbort.current = null;

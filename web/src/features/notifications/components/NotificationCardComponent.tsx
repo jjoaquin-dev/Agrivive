@@ -4,22 +4,12 @@ import Link from "next/link";
 import { AlertTriangle, Check, Clock, Hourglass, RefreshCw, ShoppingBasket, Tag } from "lucide-react";
 import type { BuyerNotice } from "../types";
 import { specificTitle } from "../specificTitle";
+import { formatRelativeTime } from "../relativeTime";
+import { noticeHref } from "../noticeHref";
 
 interface NotificationCardComponentProps {
   notice: BuyerNotice;
   onRead: (notice: BuyerNotice) => void;
-}
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} minutes ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "Yesterday";
-  return `${days}d ago`;
 }
 
 export const NotificationCardComponent = ({ notice, onRead }: NotificationCardComponentProps) => {
@@ -84,19 +74,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
     ? `Your reservation for '${notice.productName || "Surplus Produce"}' at ${notice.shopName || "Seller Stall"} expires in 2 hours. Present your QR pass now.`
     : "Thank you for rescuing surplus produce! Your pickup was successfully verified.";
 
-  const targetHref = isChatReply || (isInquiryReply && !notice.orderId)
-    ? "/messages"
-    : isProduce
-    ? notice.productAvailable && notice.productId
-      ? `/marketplace/${notice.productId}`
-      : notice.sellerId
-      ? `/sellers/${notice.sellerId}`
-      : "/marketplace"
-    : isTrustNotice
-    ? "/orders"
-    : notice.orderId
-    ? `/orders/${notice.orderId}`
-    : "/profile";
+  const targetHref = noticeHref(notice, isTrustNotice);
 
   return (
     <article
@@ -107,11 +85,11 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           : isWarning
           ? "border border-amber-200 border-l-[4px] border-l-amber-500 bg-[#FFFDF9] hover:bg-[#FFFBF2]"
           : isProduce && isUnread
-          ? "border border-[#E2EFE5] border-l-[4px] border-l-[#1B4D36] bg-[#F4FBF6] hover:bg-[#EDF8F0]"
+          ? "border border-[#E2EFE5] border-l-[4px] border-l-agrivive-forest bg-[#F4FBF6] hover:bg-[#EDF8F0]"
           : isCancellation && isUnread
-          ? "border border-[#FCEFE3] border-l-[4px] border-l-[#1B4D36] bg-[#FEFAF6] hover:bg-[#FDF5ED]"
+          ? "border border-[#FCEFE3] border-l-[4px] border-l-agrivive-forest bg-[#FEFAF6] hover:bg-[#FDF5ED]"
           : isUnread
-          ? "border border-neutral-200 border-l-[4px] border-l-[#1B4D36] bg-[#F9FAFB] hover:bg-neutral-50"
+          ? "border border-neutral-200 border-l-[4px] border-l-agrivive-forest bg-agrivive-wash hover:bg-neutral-50"
           : "border border-neutral-200/70 bg-white hover:border-neutral-300 shadow-sm"
       }`}
     >
@@ -119,17 +97,17 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
         <div
           className={`flex size-10 items-center justify-center rounded-full ${
             isRestriction
-              ? "bg-rose-100 text-rose-700"
+              ? "bg-rose-100 text-destructive"
               : isWarning
               ? "bg-amber-100 text-amber-700"
               : isPriceDrop
-              ? "bg-[#FEF3C7] text-[#D97706]"
+              ? "bg-[#FEF3C7] text-amber-600"
               : isRestock
               ? "bg-[#E0F2FE] text-[#0284C7]"
               : isListing || isUnread
               ? "bg-[#D1F2D9] text-[#15803D]"
               : isCancellation
-              ? "bg-[#FFEDD5] text-[#EA580C]"
+              ? "bg-[#FFEDD5] text-orange-600"
               : "bg-[#F3F4F6] text-neutral-400"
           }`}
         >
@@ -153,7 +131,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="font-heading text-[15px] font-bold text-neutral-900 group-hover:text-[#1B4D36] transition-colors leading-snug">
+          <h3 className="font-heading text-sm font-bold text-neutral-900 group-hover:text-agrivive-forest transition-colors leading-snug">
             {title}
           </h3>
           {(isUnread || isTrustNotice) && (
@@ -164,12 +142,12 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
                   : isWarning
                   ? "bg-amber-100 text-amber-800"
                   : isPriceDrop
-                  ? "bg-[#FEF3C7] text-[#B45309]"
+                  ? "bg-[#FEF3C7] text-amber-700"
                   : isRestock
                   ? "bg-[#E0F2FE] text-[#0369A1]"
                   : isCancellation
-                  ? "bg-[#FFF3E8] text-[#EA580C]"
-                  : "bg-[#E8F8ED] text-[#16A34A]"
+                  ? "bg-[#FFF3E8] text-orange-600"
+                  : "bg-[#E8F8ED] text-green-600"
               }`}
             >
               {isRestriction ? "Restriction" : isWarning ? "Advisory" : isPriceDrop ? "Price Drop" : isRestock ? "Restocked" : isCancellation ? "Expiring" : "New"}
@@ -177,7 +155,7 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
           )}
         </div>
 
-        <p className="mt-1 whitespace-pre-line text-[13px] leading-relaxed text-neutral-600">
+        <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-neutral-600">
           {description}
         </p>
 
@@ -198,8 +176,8 @@ export const NotificationCardComponent = ({ notice, onRead }: NotificationCardCo
                 : isWarning
                 ? "text-amber-700"
                 : isCancellation
-                ? "text-[#EA580C]"
-                : "text-[#1B4D36]"
+                ? "text-orange-600"
+                : "text-agrivive-forest"
             }`}
           >
             {isReply

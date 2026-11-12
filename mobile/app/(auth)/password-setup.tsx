@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.text,
     fontFamily: fonts.heading.bold,
-    fontSize: 26,
+    fontSize: 28,
     marginBottom: spacing.xs,
   },
   subtitle: {

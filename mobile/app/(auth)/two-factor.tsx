@@ -108,7 +108,7 @@ export default function TwoFactorChallengeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hintRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.sm },
+  hintRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: spacing.sm },
   hint: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   onceNote: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: -spacing.xs },
   button: { marginTop: spacing.lg },

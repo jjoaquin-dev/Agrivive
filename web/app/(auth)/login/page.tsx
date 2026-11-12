@@ -120,11 +120,11 @@ export default function LoginPage() {
             Back to sign in
           </button>
         ) : (
-          <p className="text-sm text-[#5F7367]">
+          <p className="text-sm text-agrivive-stone">
             Don&apos;t have an account?{" "}
             <Link
               href={withNextPath("/signup", nextPath)}
-              className="inline-flex items-center gap-1 font-semibold text-[#457D00] hover:text-[#FEA938] hover:underline transition-colors"
+              className="inline-flex items-center gap-1 font-semibold text-agrivive-primary hover:text-agrivive-terracotta hover:underline transition-colors"
             >
               <span>Sign up now</span>
               <UserPlus aria-hidden="true" className="size-3.5" />
@@ -178,7 +178,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={loading}
-          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#457D00] text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-[#457D00]/90 hover:shadow-lg active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-agrivive-primary text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-agrivive-primary/90 hover:shadow-lg active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
         >
           {loading ? <Spinner data-icon="inline-start" /> : <LogIn className="size-4" />}
           <span>{twoFactorRequired ? "Verify and continue" : "Sign In to Agrivive"}</span>

@@ -96,7 +96,7 @@ export default function HomeScreen() {
             <CloudOff size={20} color={colors.warning} />
           </View>
           <View style={styles.errorBody}>
-            <Text style={styles.errorTitle}>Couldn't load your stock.</Text>
+            <Text style={styles.errorTitle}>Could not load your stock.</Text>
             <Text style={styles.errorSub}>Tap to retry loading your latest inventory.</Text>
           </View>
           <Pressable

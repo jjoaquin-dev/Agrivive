@@ -122,9 +122,9 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
                 href="/orders"
                 role="menuitem"
                 onClick={() => { setProfileOpen(false); onActionComplete?.(); }}
-                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[13px] font-medium text-neutral-700 transition-colors duration-150 hover:bg-[#457D00]/10 hover:text-[#457D00] active:bg-[#457D00]/10 cursor-pointer outline-none"
+                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:bg-agrivive-primary/10 hover:text-agrivive-primary active:bg-agrivive-primary/10 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40"
               >
-                <Package aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-[#457D00]" />
+                <Package aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-agrivive-primary" />
                 <span>All Orders</span>
               </Link>
 
@@ -133,9 +133,9 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
                 role="menuitem"
                 title="View your saved favorite produce"
                 onClick={() => { setProfileOpen(false); onActionComplete?.(); }}
-                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[13px] font-medium text-neutral-700 transition-colors duration-150 hover:bg-[#FEA938]/10 hover:text-[#D97706] active:bg-[#FEA938]/10 cursor-pointer outline-none"
+                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:bg-agrivive-terracotta/10 hover:text-amber-600 active:bg-agrivive-terracotta/10 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40"
               >
-                <Heart aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-[#FEA938]" />
+                <Heart aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-agrivive-terracotta" />
                 <span>Favorites</span>
               </Link>
 
@@ -143,9 +143,9 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
                 href="/profile"
                 role="menuitem"
                 onClick={() => { setProfileOpen(false); onActionComplete?.(); }}
-                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[13px] font-medium text-neutral-700 transition-colors duration-150 hover:bg-[#457D00]/10 hover:text-[#457D00] active:bg-[#457D00]/10 cursor-pointer outline-none"
+                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:bg-agrivive-primary/10 hover:text-agrivive-primary active:bg-agrivive-primary/10 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40"
               >
-                <User aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-[#457D00]" />
+                <User aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-agrivive-primary" />
                 <span>Profile &amp; settings</span>
               </Link>
 
@@ -156,9 +156,9 @@ export function BuyerAccountMenu({ onActionComplete }: { onActionComplete?: () =
                   setProfileOpen(false);
                   setShowSignOutModal(true);
                 }}
-                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-[13px] font-medium text-neutral-700 transition-colors duration-150 hover:bg-red-50 hover:text-red-600 active:bg-red-100 cursor-pointer outline-none text-left"
+                className="group flex w-full items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:bg-red-50 hover:text-destructive active:bg-red-100 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40 text-left"
               >
-                <LogOut aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-red-600" />
+                <LogOut aria-hidden="true" className="size-4 shrink-0 text-neutral-500 transition-colors group-hover:text-destructive" />
                 <span>Sign out</span>
               </button>
             </div>

@@ -31,9 +31,9 @@ export default function SellerOrderDetailScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const loadOrder = useCallback(async () => {
+  const loadOrder = useCallback(async (quiet = false) => {
     if (!id) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     setError(null);
     try {
       setOrder(await fetchSellerOrder(id));
@@ -46,6 +46,8 @@ export default function SellerOrderDetailScreen() {
   }, [id]);
 
   useFocusEffect(useCallback(() => { void loadOrder(); }, [loadOrder]));
+  const [refreshing, setRefreshing] = useState(false);
+  const pullToRefresh = async () => { setRefreshing(true); await loadOrder(true); setRefreshing(false); };
 
   useLiveSellerOrder({ id, order, isFocused, setOrder, setLastUpdated, setError });
 

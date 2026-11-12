@@ -6,13 +6,13 @@ import { colors, fonts, spacing } from "../../../theme";
 export function ConversationReconnectBanner() {
   return (
     <View style={styles.banner} accessibilityRole="alert">
-      <ActivityIndicator size="small" color="#B45309" />
-      <Text style={styles.text}>Reconnecting… new messages may be late.</Text>
+      <ActivityIndicator size="small" color={colors.warningText} />
+      <Text style={styles.text}>Reconnecting... new messages may be late.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, backgroundColor: "#FEF3C7", borderBottomWidth: 1, borderBottomColor: "#FDE68A", paddingVertical: spacing.sm, paddingHorizontal: spacing.base },
-  text: { fontFamily: fonts.body.medium, fontSize: 13, color: "#92400E" },
+  banner: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, backgroundColor: colors.warningSurface, borderBottomWidth: 1, borderBottomColor: colors.warningBorder, paddingVertical: spacing.sm, paddingHorizontal: spacing.base },
+  text: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.warningText },
 });

@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { Product } from "../../inventory/types";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -18,7 +19,7 @@ export function AnalyticsProduceSheet({ visible, products, selectedId, onSelect,
     ...products.map((p) => ({ id: p.id, name: p.productName, unit: p.scalingType === "kilo" ? "kg" : p.scalingType })),
   ];
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close produce list" />
       <View style={styles.sheet}>
         <View style={styles.handle} />
@@ -42,12 +43,12 @@ export function AnalyticsProduceSheet({ visible, products, selectedId, onSelect,
           })}
         </ScrollView>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { flex: 1 },
   sheet: { maxHeight: "70%", backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, marginBottom: spacing.sm },

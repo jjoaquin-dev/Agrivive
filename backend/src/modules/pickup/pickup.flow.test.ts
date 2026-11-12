@@ -45,6 +45,8 @@ const { createTrustDispute } = await import("../trust/services/trust.dispute.cre
 const { processInquiryDeadlines } = await import("../../utils/trust/process-inquiries");
 const { recalculateTrustStanding } = await import("../../utils/trust/recalculate");
 const { userStatusCache } = await import("../../utils/user-status-cache");
+/** Live points (from AHP) and level cut-offs, so these tests follow the policy instead of fixed numbers. */
+const { trustPolicyWeights: W, trustActionPolicy: T } = await import("../../utils/trust/policy");
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -223,9 +225,9 @@ describe("confirmation and cancellation", () => {
     const late = await reserve(buyer, seller, 10, 11);
     await pg.update(schema.orders).set({ pickupStart: new Date(Date.now() - HOUR), pickupEnd: new Date(Date.now() + 3 * HOUR), expiresAt: new Date(Date.now() + 5 * HOUR) }).where(eq(schema.orders.id, late));
     await cancelBuyerOrder(late, buyer);
-    expect(await points(buyer)).toBe(1);
+    expect(await points(buyer)).toBe(W.buyer_late_cancellation);
   });
-  test("a seller cancelling a confirmed order gets 2 points; an unconfirmed one gets none", async () => {
+  test("a seller cancelling a confirmed order gets points; an unconfirmed one gets none", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
     const unconfirmed = await reserve(buyer, seller, 8, 9);
     await cancelSellerOrder(seller.id, unconfirmed, "Out of stock today");
@@ -233,7 +235,7 @@ describe("confirmation and cancellation", () => {
     const confirmed = await reserve(buyer, seller, 10, 11);
     await confirmSellerOrder(seller.id, confirmed);
     await cancelSellerOrder(seller.id, confirmed, "Out of stock today");
-    expect(await points(seller.id)).toBe(2);
+    expect(await points(seller.id)).toBe(W.seller_cancellation);
   });
   test("progress steps follow the backend and ready is not completed", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
@@ -316,12 +318,12 @@ describe("decline at pickup", () => {
     await confirmSellerOrder(seller.id, id); await openWindow(id);
     return { buyer, seller, id };
   }
-  test("a valid decline the seller accepts: seller +2, buyer 0, stock not restored, fault rate counts it", async () => {
+  test("a valid decline the seller accepts: seller gets points, buyer 0, stock not restored, fault rate counts it", async () => {
     const { buyer, seller, id } = await arrived();
     await createPickupDecline(buyer, id, { reason: "spoiled", photo: photo(1) });
     expect(await points(seller.id)).toBe(0);
     await respondToDecline(seller.id, id, { action: "accept" });
-    expect(await points(seller.id)).toBe(2); expect(await points(buyer)).toBe(0);
+    expect(await points(seller.id)).toBe(W.seller_decline_fault); expect(await points(buyer)).toBe(0);
     expect(await stock(seller.productId)).toBe(90);
     const order = await orderRow(id);
     expect(order.status).toBe("declined");
@@ -335,12 +337,12 @@ describe("decline at pickup", () => {
     await pg.update(schema.order_declines).set({ sellerDueAt: new Date(Date.now() - 1000) });
     expect(await autoAcceptDeclines()).toBe(1);
     expect(await autoAcceptDeclines()).toBe(0);
-    expect(await points(seller.id)).toBe(2);
+    expect(await points(seller.id)).toBe(W.seller_decline_fault);
   });
-  test("an invalid reason ends at once: buyer +1, seller 0, produce back in stock", async () => {
+  test("an invalid reason ends at once: buyer gets points, seller 0, produce back in stock", async () => {
     const { buyer, seller, id } = await arrived();
     await createPickupDecline(buyer, id, { reason: "small_size", photo: photo(3) });
-    expect(await points(buyer)).toBe(1); expect(await points(seller.id)).toBe(0);
+    expect(await points(buyer)).toBe(W.buyer_invalid_decline); expect(await points(seller.id)).toBe(0);
     expect(await stock(seller.productId)).toBe(100);
     expect((await readTrustStanding(seller.id)).fault?.upheldDeclines).toBe(0);
   });
@@ -355,13 +357,13 @@ describe("decline at pickup", () => {
     expect(await stock(seller.productId)).toBeLessThan(100);
     expect((await readTrustStanding(seller.id)).fault?.upheldDeclines).toBe(0);
   });
-  test("a photo already used on another decline is closed by the system as false or reused: buyer +2, seller 0", async () => {
+  test("a photo already used on another decline is closed by the system as false or reused: buyer gets points, seller 0", async () => {
     const one = await arrived(); const two = await arrived();
     await createPickupDecline(one.buyer, one.id, { reason: "spoiled", photo: photo(8) });
     await createPickupDecline(two.buyer, two.id, { reason: "spoiled", photo: photo(8) });
     const second = (await pg.select().from(schema.order_declines)).find((r) => r.orderId === two.id)!;
     expect(second.photoReused).toBe(true); expect(second.status).toBe("buyer_false_photo");
-    expect(await points(two.buyer)).toBe(2); expect(await points(two.seller.id)).toBe(0);
+    expect(await points(two.buyer)).toBe(W.buyer_false_photo); expect(await points(two.seller.id)).toBe(0);
     expect(await stock(two.seller.productId)).toBe(100);
   });
   test("a partial decline removes only the declined items and the order can still be scanned afterwards", async () => {
@@ -376,7 +378,7 @@ describe("decline at pickup", () => {
     expect(await stock(seller.productId)).toBe(90);
     await scanSellerOrder(seller.id, { qrPayload: await qr(id, seller.id) });
     expect((await orderRow(id)).status).toBe("completed");
-    expect(await points(seller.id)).toBe(2);
+    expect(await points(seller.id)).toBe(W.seller_decline_fault);
   });
   test("declining needs a fresh photo and only works inside the pickup time", async () => {
     const { buyer, id } = await arrived();
@@ -394,18 +396,18 @@ describe("no-show, excuse and reschedule", () => {
     await expirePendingOrders();
     return id;
   }
-  test("every no-show adds 2 points and old ones fade after 90 days", async () => {
+  test("every no-show adds the same points and old ones fade after 90 days", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
     await markOrderNoShow(seller.id, await expired(buyer, seller, 8));
-    expect(await points(buyer)).toBe(2);
+    expect(await points(buyer)).toBe(W.buyer_failed_reservation);
     const [first] = await pg.select().from(schema.buyer_no_shows);
-    expect([first!.sequence, first!.weight]).toEqual([1, 2]);
+    expect([first!.sequence, first!.weight]).toEqual([1, W.buyer_failed_reservation]);
     await markOrderNoShow(seller.id, await expired(buyer, seller, 10));
-    expect(await points(buyer)).toBe(4);
+    expect(await points(buyer)).toBe(2 * W.buyer_failed_reservation);
     await pg.update(schema.trust_events).set({ createdAt: new Date(Date.now() - 100 * DAY) });
     expect(await points(buyer)).toBe(0);
     await markOrderNoShow(seller.id, await expired(buyer, seller, 12));
-    expect(await points(buyer)).toBe(2);
+    expect(await points(buyer)).toBe(W.buyer_failed_reservation);
   });
   test("a no-show cannot be marked before the QR time is over, or twice", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
@@ -429,10 +431,10 @@ describe("no-show, excuse and reschedule", () => {
     await markOrderNoShow(seller.id, await expired(buyer, seller, 8));
     const second = await expired(buyer, seller, 10);
     await markOrderNoShow(seller.id, second);
-    expect(await points(buyer)).toBe(4);
+    expect(await points(buyer)).toBe(2 * W.buyer_failed_reservation);
     await createOrderExcuse(buyer, second, { reason: "rain" });
     await decideOrderExcuse(seller.id, second, true);
-    expect(await points(buyer)).toBe(2);
+    expect(await points(buyer)).toBe(W.buyer_failed_reservation);
     const third = await expired(buyer, seller, 12);
     expect((await fail(createOrderExcuse(buyer, third, { reason: "sick" }))).message).toContain("every 30 days");
     expect((await fail(decideOrderExcuse(seller.id, second, false))).statusCode).toBe(409);
@@ -448,7 +450,7 @@ describe("no-show, excuse and reschedule", () => {
     await markOrderNoShow(seller.id, id);
     await createOrderExcuse(buyer, id, { reason: "other", details: "My ride broke down" });
     await decideOrderExcuse(seller.id, id, false);
-    expect(await points(buyer)).toBe(4);
+    expect(await points(buyer)).toBe(2 * W.buyer_failed_reservation);
   });
   test("a new time changes nothing until the buyer accepts, then the QR window moves", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
@@ -479,25 +481,25 @@ describe("trust levels, fault gate and recalculation", () => {
   const active = async (id: string) => (await pg.select().from(schema.trust_actions).where(eq(schema.trust_actions.subjectId, id))).filter((a) => !a.revokedAt);
   test("a buyer climbs the ladder and the same level is never applied twice", async () => {
     const buyer = await addUser("buyer");
-    await addEvents(buyer, "buyer_late_cancellation", 2, 1); await evaluateTrustAction(buyer);
+    await addEvents(buyer, "buyer_late_cancellation", 1, T.noticeThreshold); await evaluateTrustAction(buyer);
     expect((await active(buyer)).map((a) => a.level)).toEqual(["notice"]);
-    await addEvents(buyer, "buyer_late_cancellation", 2, 1); await evaluateTrustAction(buyer);
+    await addEvents(buyer, "buyer_late_cancellation", 1, T.warningThreshold - T.noticeThreshold); await evaluateTrustAction(buyer);
     await evaluateTrustAction(buyer);
     expect((await active(buyer)).map((a) => a.level).sort()).toEqual(["notice", "warning"]);
-    await addEvents(buyer, "buyer_failed_reservation", 1, 2); await evaluateTrustAction(buyer);
+    await addEvents(buyer, "buyer_failed_reservation", 1, T.tier1Threshold - T.warningThreshold); await evaluateTrustAction(buyer);
     const pause = (await active(buyer)).find((a) => a.level === "pause_24h")!;
     expect(pause.endsAt!.getTime() - pause.startsAt.getTime()).toBe(24 * HOUR);
     await evaluateTrustAction(buyer);
     expect((await pg.select().from(schema.trust_actions).where(eq(schema.trust_actions.level, "pause_24h")))).toHaveLength(1);
-    await addEvents(buyer, "buyer_failed_reservation", 1, 2); await evaluateTrustAction(buyer);
+    await addEvents(buyer, "buyer_failed_reservation", 1, T.tier2Threshold - T.tier1Threshold); await evaluateTrustAction(buyer);
     expect((await active(buyer)).some((a) => a.level === "pause_3d")).toBe(true);
-    await addEvents(buyer, "buyer_failed_reservation", 2, 2); await evaluateTrustAction(buyer);
+    await addEvents(buyer, "buyer_failed_reservation", 1, T.blockedThreshold - T.tier2Threshold); await evaluateTrustAction(buyer);
     expect((await active(buyer)).some((a) => a.level === "block")).toBe(true);
     expect((await pg.select().from(schema.user).where(eq(schema.user.id, buyer)))[0]!.isActive).toBe(false);
   });
   test("a seller with a high score but a low fault rate stays at Warning and Under watch", async () => {
     const seller = (await addSeller()).id;
-    await addEvents(seller, "inquiry_non_response", 12, 1);
+    await addEvents(seller, "inquiry_non_response", 1, T.blockedThreshold);
     await evaluateTrustAction(seller);
     expect((await active(seller)).map((a) => a.level)).toEqual(["warning"]);
     expect((await readTrustStanding(seller)).underWatch).toBe(true);
@@ -506,9 +508,9 @@ describe("trust levels, fault gate and recalculation", () => {
   test("with 10 orders and a fault rate of 10% the seller is paused", async () => {
     const seller = (await addSeller()).id; const buyer = await addUser("buyer");
     for (let i = 0; i < 9; i++) await pg.insert(schema.orders).values({ buyersId: buyer, sellersId: seller, status: "completed", totalAmount: "1", completedAt: new Date() });
-    await addEvents(seller, "seller_cancellation", 1, 2);
+    await addEvents(seller, "seller_cancellation", 1, W.seller_cancellation);
     await pg.insert(schema.orders).values({ buyersId: buyer, sellersId: seller, status: "cancelled", cancelledBy: "seller", totalAmount: "1", cancelledAt: new Date() });
-    await addEvents(seller, "inquiry_non_response", 4, 1);
+    await addEvents(seller, "inquiry_non_response", 1, T.tier1Threshold - W.seller_cancellation);
     const standing = await readTrustStanding(seller);
     expect([standing.fault!.orderCount, Math.round(standing.fault!.ratePercent)]).toEqual([10, 10]);
     expect(standing.level).toBe("pause_24h");
@@ -538,7 +540,7 @@ describe("trust levels, fault gate and recalculation", () => {
   });
   test("points leave after exactly 90 days and the level comes down without a new penalty", async () => {
     const buyer = await addUser("buyer");
-    await addEvents(buyer, "buyer_failed_reservation", 3, 2);
+    await addEvents(buyer, "buyer_failed_reservation", 1, T.tier1Threshold);
     await evaluateTrustAction(buyer);
     expect((await active(buyer)).some((a) => a.level === "pause_24h")).toBe(true);
     await pg.update(schema.trust_events).set({ createdAt: new Date(Date.now() - 91 * DAY) });
@@ -566,14 +568,21 @@ describe("reports and disputes", () => {
     const id = await reserve(buyer, seller, from, from + 1);
     return id;
   }
-  test("one report is an allegation worth 0 points; two different people confirm it for +2", async () => {
+  test("one report is an allegation worth 0 points; two different people confirm it for points", async () => {
     const seller = await addSeller(); const [b1, b2] = [await addUser("buyer"), await addUser("buyer")];
     await createOrderReport(b1, await orderWith(b1, seller, 8), "buyer", "listing_inaccurate", "I asked for 2 kg and got only 1 kg of tomatoes");
     expect(await points(seller.id)).toBe(0);
     await createOrderReport(b2, await orderWith(b2, seller, 10), "buyer", "listing_inaccurate", "Weight was much lower than the listing said");
-    expect(await points(seller.id)).toBe(2);
+    expect(await points(seller.id)).toBe(W.misleading_product_info);
     const statuses = (await pg.select().from(schema.order_reports)).map((r) => r.status);
     expect(statuses).toEqual(["confirmed", "confirmed"]);
+  });
+  test("a seller cannot report a listing as inaccurate", async () => {
+    const seller = await addSeller(); const buyer = await addUser("buyer");
+    const order = await orderWith(buyer, seller, 8);
+    const error = await fail(createOrderReport(seller.id, order, "seller", "listing_inaccurate", "The buyer said my listing was wrong"));
+    expect(error.statusCode).toBe(400);
+    expect(await pg.select().from(schema.order_reports)).toHaveLength(0);
   });
   test("details need 20 characters, one report per order, and 'other' never confirms", async () => {
     const seller = await addSeller(); const b1 = await addUser("buyer");
@@ -596,21 +605,23 @@ describe("reports and disputes", () => {
       await createOrderReport(b1, await orderWith(b1, seller, 6 + round * 4), "buyer", "conduct", `Round ${round}: the seller was rude to me`);
       await createOrderReport(b2, await orderWith(b2, seller, 7 + round * 4), "buyer", "conduct", `Round ${round}: the seller shouted at me`);
     }
-    expect(await points(seller.id)).toBe(4);
+    expect(await points(seller.id)).toBe(2 * W.inappropriate_communication);
     const statuses = (await pg.select().from(schema.order_reports)).map((r) => r.status);
     expect(statuses.filter((s) => s === "pending_corroboration")).toHaveLength(2);
     await createOrderReport(b3, await orderWith(b3, seller, 18), "buyer", "conduct", "A third person saw the same rude behaviour");
-    expect(await points(seller.id)).toBe(6);
+    expect(await points(seller.id)).toBe(3 * W.inappropriate_communication);
   });
   test("a dispute within 7 days is upheld by the system when the record disagrees: event removed, levels recalculated", async () => {
     const seller = (await addSeller()).id;
-    const [event] = await pg.insert(schema.trust_events).values({ eventKey: "e1", subjectId: seller, kind: "seller_cancellation", classification: "verified", weight: 2 }).returning();
-    await pg.insert(schema.trust_events).values({ eventKey: "e2", subjectId: seller, kind: "seller_cancellation", classification: "verified", weight: 2 });
+    // Two events that together reach Warning, while one alone stays below it.
+    const half = Math.ceil(T.warningThreshold / 2);
+    const [event] = await pg.insert(schema.trust_events).values({ eventKey: "e1", subjectId: seller, kind: "seller_cancellation", classification: "verified", weight: half }).returning();
+    await pg.insert(schema.trust_events).values({ eventKey: "e2", subjectId: seller, kind: "seller_cancellation", classification: "verified", weight: half });
     await evaluateTrustAction(seller);
     expect((await readTrustStanding(seller)).level).toBe("warning");
     const dispute = await createTrustDispute(seller, event!.id, { reason: "The buyer asked me to cancel the order" });
     expect(dispute.result).toBe("upheld");
-    expect(await points(seller)).toBe(2);
+    expect(await points(seller)).toBe(half);
     expect((await pg.select().from(schema.trust_actions).where(eq(schema.trust_actions.level, "warning")))[0]!.revokedAt).not.toBeNull();
     expect((await fail(createTrustDispute(seller, event!.id, { reason: "The buyer asked me to cancel the order" }))).statusCode).toBe(409);
   });
@@ -648,7 +659,7 @@ describe("Older Away periods", () => {
     await pg.update(schema.seller_away_periods).set({ startedAt: new Date(Date.now() - 10 * HOUR), endedAt: new Date(Date.now() - 2 * HOUR) });
     await pg.update(schema.order_inquiries).set({ createdAt: new Date(Date.now() - 60 * HOUR) });
     await processInquiryDeadlines();
-    expect(await points(seller.id)).toBe(1);
+    expect(await points(seller.id)).toBe(W.inquiry_non_response);
   });
   test("a reply at 47 hours is never flagged", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller({ allDay: true });
@@ -681,11 +692,11 @@ describe("seller reply deadlines (FTM-03 to FTM-05)", () => {
     expect(await kinds()).toEqual(expect.arrayContaining(["inquiry_12h_reminder", "inquiry_24h_warning", "inquiry_24h_buyer_notice"]));
     expect(await points(seller)).toBe(0);
   });
-  test("FTM-05 after 48 hours the seller is marked non-responsive and gets 1 point, once", async () => {
+  test("FTM-05 after 48 hours the seller is marked non-responsive and gets its points, once", async () => {
     const seller = await ask(49);
-    expect(await points(seller)).toBe(1);
+    expect(await points(seller)).toBe(W.inquiry_non_response);
     await processInquiryDeadlines();
-    expect(await points(seller)).toBe(1);
+    expect(await points(seller)).toBe(W.inquiry_non_response);
     const events = await pg.select().from(schema.trust_events).where(eq(schema.trust_events.subjectId, seller));
     expect(events.map((e) => [e.kind, e.classification])).toEqual([["inquiry_non_response", "verified"]]);
   });
@@ -702,10 +713,10 @@ describe("seller reply deadlines (FTM-03 to FTM-05)", () => {
 });
 
 describe("Flagging Rules Without Admin", () => {
-  test("an order from the seller's own account is refused, adds 3 points and blocks the account at once", async () => {
+  test("an order from the seller's own account is refused, adds its points and blocks the account at once", async () => {
     const seller = await addSeller();
     expect((await fail(reserve(seller.id, seller))).statusCode).toBe(403);
-    expect(await points(seller.id)).toBe(3);
+    expect(await points(seller.id)).toBe(W.self_order);
     const [account] = await pg.select().from(schema.user).where(eq(schema.user.id, seller.id));
     expect(account!.isActive).toBe(false);
     expect(await stock(seller.productId)).toBe(100);
@@ -718,13 +729,13 @@ describe("Flagging Rules Without Admin", () => {
     expect(flags).toEqual([true, true, true, true, true, false]);
     expect([await points(buyer), await points(seller.id)]).toEqual([0, 0]);
   });
-  test("3 reports in 14 days with none confirmed add 1 point to the reporter", async () => {
+  test("3 reports in 14 days with none confirmed add points to the reporter", async () => {
     const buyer = await addUser("buyer");
     for (let i = 0; i < 3; i++) {
       const seller = await addSeller();
       const id = await reserve(buyer, seller, 8 + i, 9 + i, 1);
       await createOrderReport(buyer, id, "buyer", "pickup_problem", "The produce did not look like the photo at all.");
-      expect(await points(buyer)).toBe(i === 2 ? 1 : 0);
+      expect(await points(buyer)).toBe(i === 2 ? W.buyer_fake_reports : 0);
     }
   });
   test("review bomb: 5 low ratings from accounts under 7 days old in 24 hours are ignored, buyers get 0 points and a notice", async () => {
@@ -735,7 +746,7 @@ describe("Flagging Rules Without Admin", () => {
       const id = await reserve(buyer, seller, 8 + i, 9 + i, 1);
       await pg.update(schema.orders).set({ status: "completed", completedAt: new Date() }).where(eq(schema.orders.id, id));
       await createBuyerReview(buyer, id, { serviceRating: 1, productRating: 1, review: "Very bad produce" });
-      expect(await points(seller.id)).toBe(i < 4 ? i + 1 : 0);
+      expect(await points(seller.id)).toBe(i < 4 ? (i + 1) * W.low_rating : 0);
     }
     expect((await readSellerRating(seller.id)).count).toBe(0);
     expect((await pg.select().from(schema.order_reviews).where(sql`ignored_at is not null`)).length).toBe(5);
@@ -752,17 +763,17 @@ describe("Flagging Rules Without Admin", () => {
       await createBuyerReview(buyer, id, { serviceRating: 2, productRating: 2, review: "Not good" });
     }
     expect((await readSellerRating(seller.id)).count).toBe(5);
-    expect(await points(seller.id)).toBe(5);
+    expect(await points(seller.id)).toBe(5 * W.low_rating);
   });
-  test("chat: a phone number or email hides the message; the 3rd one in 90 days adds 1 point", async () => {
+  test("chat: a phone number or email hides the message; the 3rd one in 90 days adds points", async () => {
     const user = await addUser("buyer");
     for (let i = 1; i <= 3; i++) {
       expect((await screenChatMessage(user, i === 1 ? "call 0917 123 4567" : i === 2 ? "me@mail.com" : "+63 917 123 4567", `c${i}`)).hidden).toBe(true);
-      expect(await points(user)).toBe(i === 3 ? 1 : 0);
+      expect(await points(user)).toBe(i === 3 ? W.chat_personal_data : 0);
     }
     expect((await screenChatMessage(user, "How much for 2 kilos?", "c9")).hidden).toBe(false);
   });
-  test("chat: the same message 5 times in 10 minutes pauses sending for 10 minutes; the 2nd time in 90 days adds 1 point", async () => {
+  test("chat: the same message 5 times in 10 minutes pauses sending for 10 minutes; the 2nd time in 90 days adds points", async () => {
     const buyer = await addUser("buyer"); const seller = await addUser("seller");
     const [conversation] = await pg.insert(schema.conversations).values({ contextType: "seller", contextKey: `k${seq}`, buyerId: buyer, sellerId: seller }).returning();
     const send = (n: number) => pg.insert(schema.conversation_messages).values(Array.from({ length: n }, (_, i) => ({ conversationId: conversation!.id, senderId: buyer, clientMessageId: `m${seq++}-${i}`, body: "Hello?" })));
@@ -776,7 +787,7 @@ describe("Flagging Rules Without Admin", () => {
     expect((await screenChatMessage(buyer, "Something else", "s3")).hidden).toBe(false);
     await send(4);
     await fail(screenChatMessage(buyer, "Hello?", "s4"));
-    expect(await points(buyer)).toBe(1);
+    expect(await points(buyer)).toBe(W.chat_spam);
   });
 });
 

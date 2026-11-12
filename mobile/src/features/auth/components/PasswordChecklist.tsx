@@ -10,10 +10,10 @@ interface PasswordChecklistProps {
 }
 
 const STRENGTH = [
-  { label: "Weak password", color: "#F43F5E" },
-  { label: "Weak password", color: "#F43F5E" },
-  { label: "Fair password", color: "#F59E0B" },
-  { label: "Good password", color: "#10B981" },
+  { label: "Weak password", color: colors.error },
+  { label: "Weak password", color: colors.error },
+  { label: "Fair password", color: colors.star },
+  { label: "Good password", color: colors.success },
   { label: "Strong password", color: colors.primary },
 ];
 
@@ -47,7 +47,7 @@ export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({ password, 
 const RuleRow: React.FC<{ label: string; valid: boolean }> = ({ label, valid }) => (
   <View style={styles.ruleRow}>
     <View style={[styles.tick, valid && styles.tickValid]}>
-      <Check size={10} color={colors.white} strokeWidth={3} />
+      <Check size={12} color={colors.white} strokeWidth={3} />
     </View>
     <Text style={[styles.ruleText, valid && styles.ruleTextValid]}>{label}</Text>
   </View>

@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Camera, ChevronRight, ImageIcon } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { profileColors } from "../profileTokens";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -26,9 +27,9 @@ function Option({ icon, title, hint, onPress }: { icon: React.ReactNode; title: 
 
 export function ProfilePhotoSheet({ visible, onTake, onChoose, onClose }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <SlideModal visible={visible} onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.backdrop}>
-        <Pressable style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
+        <Pressable accessibilityRole="button" style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
         <View style={styles.sheet} accessibilityViewIsModal>
           <View style={styles.handle} />
           <Text style={styles.title}>Profile Photo</Text>
@@ -43,12 +44,12 @@ export function ProfilePhotoSheet({ visible, onTake, onChoose, onClose }: Props)
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(17,24,39,0.45)", justifyContent: "flex-end" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   dismiss: { flex: 1 },
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: radii.sheet + 8, borderTopRightRadius: radii.sheet + 8, padding: spacing.lg, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: profileColors.border, marginBottom: spacing.md },

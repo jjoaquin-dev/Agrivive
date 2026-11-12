@@ -104,15 +104,15 @@ export function BuyerOrders() {
   }, [orders, activeTab, searchQuery, sortBy]);
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-4 py-6 sm:px-6 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-agrivive-paper px-4 py-6 sm:px-6 text-foreground">
       <PageContainer className="space-y-6">
         <div>
           <Breadcrumbs items={[{ label: "Orders" }]} />
         </div>
 
         <header>
-          <h1 className="font-heading text-[28px] font-bold tracking-tight text-[#14231A] leading-tight">All Orders</h1>
-          <p className="mt-4 text-xs text-[#5F7367]">Check all orders and reservations at a single place. It&apos;s easy to manage.</p>
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-agrivive-ink leading-tight">All Orders</h1>
+          <p className="mt-4 text-xs text-agrivive-stone">Check all orders and reservations at a single place. It&apos;s easy to manage.</p>
         </header>
 
         <OrderSuccessToast
@@ -138,11 +138,11 @@ export function BuyerOrders() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="relative w-full sm:w-[340px]">
-            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#5F7367]" aria-hidden="true" />
+            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-agrivive-stone" aria-hidden="true" />
             <input
               type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by ID, produce name, status…"
-              className="h-11 min-h-11 w-full rounded-full border border-[#E8E8E8] bg-white pl-10 pr-4 text-xs sm:text-sm text-[#14231A] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
+              aria-label="Search orders" placeholder="Search by ID, produce name, status…"
+              className="h-11 min-h-11 w-full rounded-full border border-agrivive-line bg-white pl-10 pr-4 text-xs sm:text-sm text-agrivive-ink shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40"
             />
           </div>
           <OrderSortDropdown value={sortBy} onChange={setSortBy} />
@@ -150,20 +150,20 @@ export function BuyerOrders() {
 
         {loading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-40 rounded-2xl bg-white border border-[#E8E8E8]" />)}
+            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-40 rounded-2xl bg-white border border-agrivive-line" />)}
           </div>
         ) : filteredOrders.length === 0 ? (
-          <Empty className="w-full max-w-none rounded-2xl border border-[#E8E8E8] bg-white p-8 shadow-sm">
+          <Empty className="w-full max-w-none rounded-2xl border border-agrivive-line bg-white p-8 shadow-sm">
             <EmptyHeader>
               <Image src="/brand/empty-orders.webp" alt="" width={360} height={334} sizes="144px" className="h-auto w-36" />
-              <EmptyTitle className="text-base font-bold text-[#14231A]">{counts.all === 0 ? "No reservations yet" : "No orders match"}</EmptyTitle>
-              <EmptyDescription className="text-xs text-[#5F7367]">
+              <EmptyTitle className="text-base font-bold text-agrivive-ink">{counts.all === 0 ? "No reservations yet" : "No orders match"}</EmptyTitle>
+              <EmptyDescription className="text-xs text-agrivive-stone">
                 {counts.all === 0
                   ? "Reserve fresh surplus from local stalls and it will show here."
                   : searchQuery ? "Try a different search query or clear your search." : "No orders found in this category."}
               </EmptyDescription>
             </EmptyHeader>
-            <Link href="/marketplace" className="h-11 min-h-11 px-5 rounded-xl font-semibold text-xs bg-[#457D00] hover:bg-[#457D00]/90 text-white inline-flex items-center gap-2 shadow-sm transition active:scale-95">
+            <Link href="/marketplace" className="h-11 min-h-11 px-5 rounded-xl font-semibold text-xs bg-agrivive-primary hover:bg-agrivive-primary/90 text-white inline-flex items-center gap-2 shadow-sm transition active:scale-95">
               Browse marketplace
             </Link>
           </Empty>
@@ -172,7 +172,7 @@ export function BuyerOrders() {
             {filteredOrders.map((order) => <OrderCard key={order.id} order={order} onCancel={setCancellingOrder} />)}
             {nextCursor && !error && activeTab === "all" ? (
               <div className="flex justify-center pt-3">
-                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="h-11 min-h-11 rounded-xl px-6 font-semibold text-xs border border-[#E8E8E8] bg-white hover:bg-neutral-50">
+                <Button type="button" variant="outline" disabled={loadingMore} onClick={() => void load(nextCursor)} className="h-11 min-h-11 rounded-xl px-6 font-semibold text-xs border border-agrivive-line bg-white hover:bg-neutral-50">
                   {loadingMore ? "Loading orders…" : "Load more orders"}
                 </Button>
               </div>

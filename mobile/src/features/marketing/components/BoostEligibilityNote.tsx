@@ -9,7 +9,7 @@ export function BoostEligibilityNote({ canBoost, headline, message }: { canBoost
   const tone = canBoost ? colors.success : colors.warning;
   return (
     <View style={styles.row} accessibilityRole="summary">
-      <Icon size={26} color={tone} />
+      <Icon size={28} color={tone} />
       <View style={styles.copy}>
         <Text style={styles.title}>{canBoost ? "You're all set!" : headline}</Text>
         <Text style={styles.text}>{canBoost ? "You can post this product." : message}</Text>

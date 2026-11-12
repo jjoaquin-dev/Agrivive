@@ -60,15 +60,15 @@ export function HomeFeaturedProduce() {
         <div data-reveal className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2">
-              <span className="flex size-2 rounded-full bg-[#457D00] animate-pulse" />
-              <span className="type-eyebrow text-[#457D00]">Live Inventory</span>
+              <span className="flex size-2 rounded-full bg-agrivive-primary animate-pulse" />
+              <span className="type-eyebrow text-agrivive-primary">Live Inventory</span>
             </div>
             <h2 className="type-section mt-3 font-heading text-neutral-900">Freshly Rescued Today</h2>
             <p className="type-lede mt-3 text-neutral-600">Fresh produce available right now across Davao.</p>
           </div>
           <Link
             href="/marketplace"
-            className="group inline-flex min-h-11 items-center gap-1.5 self-start rounded-full text-sm font-bold text-[#457D00] hover:text-[#457D00]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 sm:self-auto"
+            className="group inline-flex min-h-11 items-center gap-1.5 self-start rounded-full text-sm font-bold text-agrivive-primary hover:text-agrivive-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary focus-visible:ring-offset-2 sm:self-auto"
           >
             See all available produce
             <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true" />
@@ -94,7 +94,7 @@ export function HomeFeaturedProduce() {
             <button
               type="button"
               onClick={() => setReloadKey((key) => key + 1)}
-              className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#457D00] px-6 text-sm font-bold text-white transition hover:bg-[#457D00]/90 active:scale-95"
+              className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-full bg-agrivive-primary px-6 text-sm font-bold text-white transition hover:bg-agrivive-primary/90 active:scale-95"
             >
               <RefreshCw className="size-4" aria-hidden="true" />
               Try Again
@@ -113,7 +113,7 @@ export function HomeFeaturedProduce() {
             </p>
             <Link
               href="/marketplace"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#457D00] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#457D00]/90"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-agrivive-primary px-5 py-2.5 text-xs font-bold text-white hover:bg-agrivive-primary/90"
             >
               Browse Marketplace <ArrowRight className="size-3.5" />
             </Link>

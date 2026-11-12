@@ -1,10 +1,11 @@
 import React from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { X } from "lucide-react-native";
 import type { Product } from "../../inventory/types";
 import { colors, fonts, spacing } from "../../../theme";
 import { AutoPriceDropSwitches } from "./AutoPriceDropSwitches";
 import { AutoPostSwitches } from "./AutoPostSwitches";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -16,15 +17,15 @@ interface Props {
 export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
   const hasAny = products.some((product) => Number(product.priceReductionAmount ?? 0) > 0 && product.minimumPrice != null);
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <Pressable style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
+        <Pressable accessibilityRole="button" style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>Boost Settings</Text>
             <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close Boost settings" style={styles.closeBtn}>
-              <X size={22} color={colors.textMuted} />
+              <X size={24} color={colors.textMuted} />
             </Pressable>
           </View>
           <ScrollView style={styles.body} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled bounces={false}>
@@ -34,12 +35,12 @@ export function AutoPriceDropSheet({ visible, products, onClose }: Props) {
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: spacing.md, paddingBottom: spacing.xl, maxHeight: "80%" },
   handle: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, backgroundColor: "#E5E4DE", marginBottom: spacing.md },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

@@ -7,16 +7,19 @@ import { colors, fonts, radii, spacing } from "../../../theme";
 import { surface } from "../../../theme/surface";
 import { answerPickupDecline, confirmSellerOrder, decideBuyerExcuse, markOrderNoShow, packSellerOrder, readySellerOrder } from "../api/seller-pickup";
 import type { SellerOrder } from "../types";
+import { UserX } from "lucide-react-native";
+import { ConfirmDialogComponent } from "../../../components/ConfirmDialogComponent";
 import { OrderRescheduleSheet } from "./OrderRescheduleSheet";
 
 const stepNames = ["Placed", "Confirmed", "Preparing", "Ready", "Completed"] as const;
 const stepKeys = ["placed", "confirmed", "preparing", "ready", "completed"] as const;
-const pickupTime = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-PH", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" }) : "");
+const pickupTime = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-US", { timeZone: "Asia/Manila", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "");
 
 /** Progress, pickup time and the seller's next step: confirm, pack, ready, answer a decline, judge an excuse, mark a no-show, offer a new time. */
 export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onChanged: (order: SellerOrder) => void }) {
   const [busy, setBusy] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [confirmNoShow, setConfirmNoShow] = useState(false);
   const current = stepKeys.indexOf(order.progress.current);
   const terminal = order.progress.terminal;
   const open = order.status === "pending";
@@ -62,7 +65,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
         <CardComponent style={{ ...styles.card, ...surface.cardStyle }}>
           <Text style={styles.title}>Confirm this order</Text>
           <Text style={styles.hint}>If you do nothing for 3 hours after it was placed, it is confirmed for you. After that the buyer cannot cancel. Scanning the buyer's QR also confirms it.</Text>
-          <ButtonComponent title="Confirm Order" onPress={() => void run(() => confirmSellerOrder(order.id))} loading={busy} style={styles.button} />
+          <ButtonComponent title="Confirm Reservation" onPress={() => void run(() => confirmSellerOrder(order.id))} loading={busy} style={styles.button} />
         </CardComponent>
       ) : null}
 
@@ -87,7 +90,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
         <CardComponent style={{ ...styles.card, ...surface.cardStyle }}>
           <Text style={styles.title}>Buyer did not come</Text>
           <Text style={styles.hint}>The pickup time and QR time are over. A missed pickup adds 2 points to the buyer. If you do nothing, the system records it after an hour.</Text>
-          <ButtonComponent title="Mark No-Show" onPress={() => Alert.alert("Mark no-show?", "Only do this if the buyer never came.", [{ text: "Not now", style: "cancel" }, { text: "Mark No-Show", style: "destructive", onPress: () => void run(() => markOrderNoShow(order.id)) }])} loading={busy} variant="destructive" style={styles.button} />
+          <ButtonComponent title="Mark No-Show" onPress={() => setConfirmNoShow(true)} loading={busy} variant="destructive" style={styles.button} />
         </CardComponent>
       ) : null}
       {order.noShow ? <Text style={styles.hint}>No-show recorded{order.noShow.excused ? " (excused)" : order.noShow.sequence === 1 ? ": first time, warning only" : `: ${order.noShow.weight} points`}.</Text> : null}
@@ -101,6 +104,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
         </CardComponent>
       ) : null}
 
+      <ConfirmDialogComponent visible={confirmNoShow} icon={<UserX size={24} color={colors.error} />} title="Mark no-show?" message="Only do this if the buyer never came." cancelLabel="Cancel" confirmLabel="Mark No-Show" loading={busy} onCancel={() => setConfirmNoShow(false)} onConfirm={() => { setConfirmNoShow(false); void run(() => markOrderNoShow(order.id)); }} />
       <OrderRescheduleSheet order={order} visible={rescheduleOpen} onClose={() => setRescheduleOpen(false)} onChanged={onChanged} />
     </View>
   );

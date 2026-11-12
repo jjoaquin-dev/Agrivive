@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { Conversation } from "../types";
-import { formatRelativeTime, getAvatarColor, getInitials } from "../utils/avatar";
+import { getAvatarColor, getInitials } from "../utils/avatar";
+import { formatRelativeTime } from "../../../utils/dates";
 import { surface } from "../../../theme/surface";
 
 interface ConversationListItemProps {

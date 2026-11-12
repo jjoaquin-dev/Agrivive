@@ -49,7 +49,7 @@ const pressedStyles: Record<ButtonVariant, ViewStyle> = {
     borderColor: colors.primary,
   },
   destructive: {
-    backgroundColor: "#9E423E",
+    backgroundColor: colors.error,
   },
   ghost: {
     backgroundColor: colors.primaryLight,

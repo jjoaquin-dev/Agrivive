@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { radii, spacing } from "../../../theme";
+import { radii, spacing, colors } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
 
 const Block = ({ width, height }: { width: number | `${number}%`; height: number }) => (

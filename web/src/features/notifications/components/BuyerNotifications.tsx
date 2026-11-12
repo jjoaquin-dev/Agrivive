@@ -31,7 +31,7 @@ export function BuyerNotifications() {
   ];
 
   return (
-    <main className="min-h-[calc(100vh-73px)] bg-[#FDFDFD] py-8 text-foreground lg:py-10">
+    <main className="min-h-[calc(100vh-73px)] bg-agrivive-paper py-8 text-foreground lg:py-10">
       <PageContainer className="max-w-4xl">
         {/* Header Section: Left Metadata + Right Floating Toasts */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
@@ -39,11 +39,11 @@ export function BuyerNotifications() {
             <Breadcrumbs items={[{ label: "Notifications" }]} />
 
             <div className="mt-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF5EA] px-3 py-1 text-xs font-semibold text-[#1B4D36]">
-                <Triangle className="size-3 fill-[#1B4D36]" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF5EA] px-3 py-1 text-xs font-semibold text-agrivive-forest">
+                <Triangle className="size-3 fill-agrivive-forest" />
                 Notifications Hub
               </span>
-              <h1 className="mt-2.5 font-heading text-3xl font-bold tracking-tight text-[#14231A] sm:text-4xl">
+              <h1 className="mt-2.5 font-heading text-3xl font-bold tracking-tight text-agrivive-ink sm:text-4xl">
                 Your Notifications
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-500">
@@ -66,7 +66,7 @@ export function BuyerNotifications() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#1B4D36] text-white shadow-sm"
+                      ? "bg-agrivive-forest text-white shadow-sm"
                       : "border border-neutral-200/80 bg-white text-neutral-600 hover:border-neutral-300 hover:text-neutral-900 shadow-sm"
                   }`}
                 >
@@ -88,7 +88,7 @@ export function BuyerNotifications() {
               size="sm"
               onClick={() => void markAllRead()}
               disabled={saving}
-              className="text-xs font-semibold text-[#1B4D36] hover:bg-[#EAF5EA]"
+              className="text-xs font-semibold text-agrivive-forest hover:bg-[#EAF5EA]"
             >
               <CheckCheck className="size-3.5 mr-1" />
               {saving ? "Saving…" : "Mark all as read"}
@@ -122,8 +122,8 @@ export function BuyerNotifications() {
 
         {/* Bottom Feature Cards Matching Photo */}
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#16A34A] shadow-sm">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-agrivive-border bg-agrivive-wash p-4.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-green-600 shadow-sm">
               <ShoppingBasket className="size-4.5" />
             </div>
             <div>
@@ -134,8 +134,8 @@ export function BuyerNotifications() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#EA580C] shadow-sm">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-agrivive-border bg-agrivive-wash p-4.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-orange-600 shadow-sm">
               <Clock className="size-4.5" />
             </div>
             <div>
@@ -146,7 +146,7 @@ export function BuyerNotifications() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3.5 rounded-2xl border border-[#F0F2F5] bg-[#F9FAFB] p-4.5">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-agrivive-border bg-agrivive-wash p-4.5">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-neutral-100 bg-white text-[#2563EB] shadow-sm">
               <Bell className="size-4.5" />
             </div>

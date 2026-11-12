@@ -52,7 +52,7 @@ export function OrderScanOverlay({ checking, problem, onBack, onScanAgain }: Ord
           </View>
           <View style={styles.status}>
             {checking ? <ActivityIndicator size="small" color={colors.white} /> : <View style={styles.dot} />}
-            <Text style={styles.statusText}>{checking ? "Checking code…" : "Looking for code…"}</Text>
+            <Text style={styles.statusText}>{checking ? "Checking code..." : "Looking for code..."}</Text>
           </View>
         </View>
       )}
@@ -63,7 +63,7 @@ export function OrderScanOverlay({ checking, problem, onBack, onScanAgain }: Ord
 const edge = { borderColor: colors.primary, position: "absolute" as const, width: CORNER, height: CORNER };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, paddingHorizontal: spacing.base, backgroundColor: "rgba(0,0,0,0.45)" },
+  overlay: { flex: 1, paddingHorizontal: spacing.base, backgroundColor: colors.overlay },
   back: { width: touchTargets.min, height: touchTargets.min, borderRadius: touchTargets.min / 2, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.4)" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: spacing.xxxl },
   instruction: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.white, textAlign: "center", marginBottom: spacing.xl },
@@ -74,10 +74,10 @@ const styles = StyleSheet.create({
   bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: radii.card },
   br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: radii.card },
   status: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.xl },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  dot: { width: 10, height: 10, borderRadius: 6, backgroundColor: colors.primary },
   statusText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.white },
   card: { width: "100%", backgroundColor: colors.surface, borderRadius: radii.card, padding: spacing.lg, alignItems: "center" },
-  iconWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center" },
+  iconWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.errorSurface, alignItems: "center", justifyContent: "center" },
   cardTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text, marginTop: spacing.md },
   cardText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
   again: { alignSelf: "stretch", marginTop: spacing.base },

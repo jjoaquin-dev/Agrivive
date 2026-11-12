@@ -23,10 +23,10 @@ export function SignInCodeCard({ isOn, loading, disabling, disablePassword, disa
   return (
     <View style={styles.card}>
       <View style={styles.head}>
-        <Shield size={22} color={colors.primary} />
+        <Shield size={24} color={colors.primary} />
         <Text style={styles.title}>Sign-in Code</Text>
         <View style={[styles.pill, isOn && styles.pillOn]}>
-          {isOn ? <ShieldCheck size={13} color={profileColors.mintText} /> : <View style={styles.dot} />}
+          {isOn ? <ShieldCheck size={14} color={profileColors.mintText} /> : <View style={styles.dot} />}
           <Text style={[styles.pillText, isOn && styles.pillTextOn]}>{isOn ? "On" : "Off"}</Text>
         </View>
       </View>
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   pill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#F6F5F1", borderRadius: radii.full, paddingHorizontal: 10, paddingVertical: 4 },
   pillOn: { backgroundColor: profileColors.mint },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.textMuted },
+  dot: { width: 6, height: 6, borderRadius: 4, backgroundColor: colors.textMuted },
   pillText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted },
   pillTextOn: { color: profileColors.mintText },
   text: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 21, color: colors.textMuted, marginTop: spacing.sm },

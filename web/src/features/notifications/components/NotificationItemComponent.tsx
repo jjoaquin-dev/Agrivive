@@ -4,22 +4,12 @@ import Link from "next/link";
 import { AlertTriangle, Bell, Clock, MessageSquare, Package, Sprout, Store, Tag } from "lucide-react";
 import type { BuyerNotice } from "../types";
 import { specificTitle } from "../specificTitle";
+import { formatDateTime } from "@/src/lib/format";
+import { formatRelativeTime } from "../relativeTime";
 
 interface NotificationItemComponentProps {
   notice: BuyerNotice;
   onSelect: (notice: BuyerNotice) => void;
-}
-
-function formatRelativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hours ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "Yesterday";
-  return `${days}d ago`;
 }
 
 function offPercent(notice: BuyerNotice): string {
@@ -28,13 +18,8 @@ function offPercent(notice: BuyerNotice): string {
   return was > now && now > 0 ? `, ${Math.round(((was - now) / was) * 100)}% off` : "";
 }
 
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+function formatNoticeTime(dateStr: string): string {
+  return formatDateTime(dateStr, { weekday: "short", hour: "numeric", minute: "2-digit", hour12: true });
 }
 
 export const NotificationItemComponent = ({ notice, onSelect }: NotificationItemComponentProps) => {
@@ -120,24 +105,24 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
               ? "bg-rose-50 text-rose-600"
               : isWarning
               ? "bg-amber-50 text-amber-600"
-              : "bg-neutral-100 text-[#457D00]"
+              : "bg-neutral-100 text-agrivive-primary"
           }`}
         >
           {isTrustNotice ? (
             <AlertTriangle className="size-5" />
           ) : isPriceDrop ? (
-            <Tag className="size-5 text-[#D97706]" />
+            <Tag className="size-5 text-amber-600" />
           ) : isProduce ? (
-            <Store className="size-5 text-[#457D00]" />
+            <Store className="size-5 text-agrivive-primary" />
           ) : isCancellation ? (
             <Package className="size-5 text-neutral-600" />
           ) : (
-            <Bell className="size-5 text-[#457D00]" />
+            <Bell className="size-5 text-agrivive-primary" />
           )}
         </div>
         <span
           className={`absolute -bottom-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full text-white shadow-sm ${
-            isRestriction ? "bg-rose-600" : isWarning ? "bg-amber-500" : "bg-[#457D00]"
+            isRestriction ? "bg-rose-600" : isWarning ? "bg-amber-500" : "bg-agrivive-primary"
           }`}
         >
           {isTrustNotice ? (
@@ -154,16 +139,16 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-xs font-semibold text-neutral-900 group-hover:text-[#457D00] transition-colors">
+          <p className="truncate text-xs font-semibold text-neutral-900 group-hover:text-agrivive-primary transition-colors">
             {title}
           </p>
           {isUnread && (
-            <span className="size-2 shrink-0 rounded-full bg-[#457D00]" aria-label="Unread notification" />
+            <span className="size-2 shrink-0 rounded-full bg-agrivive-primary" aria-label="Unread notification" />
           )}
         </div>
 
         <div className="mt-0.5 flex items-center justify-between text-xs text-neutral-400">
-          <span>{formatDateTime(notice.createdAt)}</span>
+          <span>{formatNoticeTime(notice.createdAt)}</span>
           <span className="font-medium text-neutral-500">{formatRelativeTime(notice.createdAt)}</span>
         </div>
 
@@ -179,7 +164,7 @@ export const NotificationItemComponent = ({ notice, onSelect }: NotificationItem
               onSelect(notice);
             }}
             className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-transform active:scale-95 ${
-              isRestriction ? "bg-rose-600 hover:bg-rose-700" : isWarning ? "bg-amber-600 hover:bg-amber-700" : "bg-[#457D00] hover:bg-[#457D00]/90"
+              isRestriction ? "bg-rose-600 hover:bg-rose-700" : isWarning ? "bg-amber-600 hover:bg-amber-700" : "bg-agrivive-primary hover:bg-agrivive-primary/90"
             }`}
           >
             {isChatReply || isInquiryReply ? "Read reply" : isReviewReply ? "View review" : isTrustNotice ? "View orders" : isProduce ? "View produce" : isCancellation ? "View order" : "Details"}

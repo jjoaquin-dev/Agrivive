@@ -41,7 +41,7 @@ export function ConfirmDialogComponent({ visible, icon, title, message, cancelLa
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: "rgba(17,24,39,0.55)", justifyContent: "center", padding: spacing.xl },
   card: { backgroundColor: colors.white, borderRadius: radii.sheet + 4, padding: spacing.lg },
-  iconWrap: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
+  iconWrap: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.errorSurface, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   message: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 21, color: colors.textMuted, marginTop: spacing.xs },
   row: { flexDirection: "row", gap: spacing.md, marginTop: spacing.lg },

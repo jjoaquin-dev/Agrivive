@@ -3,6 +3,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import { formatBoostTime, type BoostProgress } from "../types";
 import { BoostPostText } from "./BoostPostText";
+import { formatPeso } from "../../../utils/money";
 
 interface Props {
   progress: BoostProgress;
@@ -18,7 +19,7 @@ export function BoostTimeline({ progress, limit }: Props) {
     ...posts.map((post, index) => ({
       key: `${post.postedAt}-${index}`,
       title: post.type === "first_post" && hidden === 0 && index === 0 ? "Posted" : "Price drop posted",
-      detail: `₱${post.price.toFixed(2)} · ${formatBoostTime(post.postedAt)}`,
+      detail: `${formatPeso(post.price)} · ${formatBoostTime(post.postedAt)}`,
       url: post.postUrl,
       caption: post.caption ?? null,
       done: true,
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
   more: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginBottom: spacing.xs },
   row: { flexDirection: "row", gap: spacing.sm },
   rail: { width: 14, alignItems: "center" },
-  dot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
+  dot: { width: 10, height: 10, borderRadius: 6, marginTop: 4 },
   dotDone: { backgroundColor: colors.success },
   dotNext: { backgroundColor: colors.background, borderWidth: 2, borderColor: colors.primary },
   line: { flex: 1, width: 2, backgroundColor: colors.border, marginVertical: 2 },

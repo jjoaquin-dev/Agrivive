@@ -67,7 +67,7 @@ export function AuthShell({
         {/* Logo */}
         <Link
           href="/"
-          className="group mb-8 flex w-fit items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/30"
+          className="group mb-8 flex w-fit items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
           aria-label="Agrivive home"
         >
           <Image
@@ -82,10 +82,10 @@ export function AuthShell({
 
         {/* Title & description */}
         <div className="mb-6">
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-[#14231A] sm:text-[28px]">
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-agrivive-ink sm:text-3xl">
             {title}
           </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-[#5F7367]">
+          <p className="mt-1.5 text-sm leading-relaxed text-agrivive-stone">
             {description}
           </p>
         </div>
@@ -94,12 +94,12 @@ export function AuthShell({
         {children}
 
         <Separator className="my-6 bg-agrivive-border/70" />
-        <div className="text-center text-sm text-[#5F7367]">{footer}</div>
-        <p className="mt-4 text-center text-xs leading-relaxed text-[#5F7367]">
+        <div className="text-center text-sm text-agrivive-stone">{footer}</div>
+        <p className="mt-4 text-center text-xs leading-relaxed text-agrivive-stone">
           By continuing, you agree to our{" "}
-          <Link href="/terms" className="font-semibold text-[#457D00] hover:underline">Terms of Use</Link>
+          <Link href="/terms" className="font-semibold text-agrivive-primary hover:underline">Terms of Use</Link>
           {" "}and{" "}
-          <Link href="/privacy" className="font-semibold text-[#457D00] hover:underline">Privacy Policy</Link>.
+          <Link href="/privacy" className="font-semibold text-agrivive-primary hover:underline">Privacy Policy</Link>.
           {" "}This site is protected by reCAPTCHA and the Google{" "}
           <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>
           {" "}and{" "}
@@ -118,7 +118,7 @@ export function AuthShell({
   );
 
   return (
-    <main className="relative grid min-h-screen w-full grid-cols-1 bg-white text-[#14231A] lg:grid-cols-2">
+    <main className="relative grid min-h-screen w-full grid-cols-1 bg-white text-agrivive-ink lg:grid-cols-2">
 
       {imagePosition === "left" ? (
         <>

@@ -4,11 +4,12 @@ import { useState } from "react";
 import { Activity } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { StakeholderTrends } from "@/src/features/stakeholder/api/summary";
+import { formatDate } from "@/src/lib/format";
 
 const W = 720;
 const H = 220;
 const PAD = { left: 36, right: 8, top: 12, bottom: 24 };
-const label = (key: string) => new Date(`${key}T00:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric" });
+const label = (key: string) => formatDate(`${key}T00:00:00`, { month: "short", day: "numeric" });
 
 /** Orders placed and orders picked up for each of the last 30 days. Hover or tap a day to read it. */
 export const StakeholderTrendChartComponent = ({ daily }: { daily: StakeholderTrends["daily"] }) => {
@@ -38,7 +39,7 @@ export const StakeholderTrendChartComponent = ({ daily }: { daily: StakeholderTr
           {[0, 0.5, 1].map((t) => (
             <g key={t}>
               <line x1={PAD.left} x2={W - PAD.right} y1={y(max * t)} y2={y(max * t)} className="stroke-border" strokeDasharray="3 4" />
-              <text x={PAD.left - 6} y={y(max * t) + 4} textAnchor="end" className="fill-muted-foreground text-[10px]">{Math.round(max * t)}</text>
+              <text x={PAD.left - 6} y={y(max * t) + 4} textAnchor="end" className="fill-muted-foreground text-xs">{Math.round(max * t)}</text>
             </g>
           ))}
           <path d={line((d) => d.placed)} fill="none" className="stroke-sky-400" strokeWidth={2} strokeLinejoin="round" />
@@ -49,7 +50,7 @@ export const StakeholderTrendChartComponent = ({ daily }: { daily: StakeholderTr
               {active === i ? <><line x1={x(i)} x2={x(i)} y1={PAD.top} y2={H - PAD.bottom} className="stroke-border" /><circle cx={x(i)} cy={y(d.completed)} r={4} className="fill-primary" /><circle cx={x(i)} cy={y(d.placed)} r={4} className="fill-sky-400" /></> : null}
             </g>
           ))}
-          {[0, 14, 29].map((i) => <text key={i} x={x(i)} y={H - 6} textAnchor={i === 0 ? "start" : i === 29 ? "end" : "middle"} className="fill-muted-foreground text-[10px]">{label(daily[i].date)}</text>)}
+          {[0, 14, 29].map((i) => <text key={i} x={x(i)} y={H - 6} textAnchor={i === 0 ? "start" : i === 29 ? "end" : "middle"} className="fill-muted-foreground text-xs">{label(daily[i].date)}</text>)}
         </svg>
       </CardContent>
     </Card>

@@ -50,14 +50,14 @@ export function TotpScanQrCard({ totpURI, secretKey }: Props) {
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.lg },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.base },
   qr: { alignSelf: "center", padding: spacing.base, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, backgroundColor: colors.white },
   rule: { height: 1, backgroundColor: profileColors.border, marginVertical: spacing.base },
   manual: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.text, marginBottom: spacing.sm },
   keyBox: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.sm, backgroundColor: "#F6F5F1", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.card, padding: spacing.sm, paddingLeft: spacing.md },
   key: { flex: 1, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", fontSize: 14, fontWeight: "700", color: colors.text },
-  copy: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radii.button, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.white },
+  copy: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44, paddingHorizontal: spacing.md, borderRadius: radii.button, borderWidth: 1.5, borderColor: colors.primary, backgroundColor: colors.white },
   copyText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
   fine: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: spacing.xs },
   help: { flexDirection: "row", gap: spacing.sm, alignItems: "flex-start", backgroundColor: "#FAFAF7", borderWidth: 1, borderColor: profileColors.border, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.base },

@@ -21,7 +21,7 @@ interface WeatherHeroCardProps {
   address?: string | null;
 }
 
-export function getWeatherIcon(code?: number, size = 32, color = "#FFFFFF") {
+export function getWeatherIcon(code?: number, size = 32, color: string = colors.white) {
   if (code === undefined || code === null) return <Sun size={size} color={color} />;
   if (code === 0) return <Sun size={size} color={color} />;
   if (code === 1 || code === 2) return <CloudSun size={size} color={color} />;

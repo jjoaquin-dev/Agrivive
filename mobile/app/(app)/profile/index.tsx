@@ -53,7 +53,7 @@ export default function ProfileOverviewScreen() {
   const email = setup?.account?.email || session?.user?.email || "Not set";
   const sellerName = setup?.account?.name || session?.user?.name || "Seller";
   const shopName = profile?.shopName || "Your stall";
-  const memberSince = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString([], { month: "short", year: "numeric" }) : "today";
+  const memberSince = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", year: "numeric" }) : "today";
   const sellerId = setup?.account?.id ? `AGV-${setup.account.id.slice(0, 8).toUpperCase()}` : null;
   const isVerified = Boolean(setup?.sellerVerified || setup?.badge);
   const goEdit = () => router.push("/(app)/profile/edit");
@@ -89,8 +89,8 @@ export default function ProfileOverviewScreen() {
         {sellerId ? <Text style={styles.footer}>Seller ID {sellerId}</Text> : null}
       </ScrollView>
       <ProfilePhotoSheet visible={avatar.sheetOpen} onTake={avatar.takePhoto} onChoose={avatar.choosePhoto} onClose={avatar.closeSheet} />
-      <ConfirmDialogComponent visible={confirmLogout} icon={<LogOut size={22} color={profileColors.red} />} title="Log out of Agrivive?"
-        message="You will need to sign in again to manage your stall and produce." cancelLabel="Cancel" confirmLabel="Log Out" onCancel={() => setConfirmLogout(false)} onConfirm={() => void logOut()} />
+      <ConfirmDialogComponent visible={confirmLogout} icon={<LogOut size={24} color={profileColors.red} />} title="Sign out of Agrivive?"
+        message="You will need to sign in again to manage your stall and produce." cancelLabel="Cancel" confirmLabel="Sign Out" onCancel={() => setConfirmLogout(false)} onConfirm={() => void logOut()} />
     </SafeAreaView>
   );
 }

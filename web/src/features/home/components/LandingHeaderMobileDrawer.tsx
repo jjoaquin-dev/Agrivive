@@ -39,7 +39,7 @@ export function LandingHeaderMobileDrawer({
           placeholder="Search vegetable name..."
           className="w-full text-sm bg-transparent outline-none focus-visible:!outline-none border-none shadow-none font-body"
         />
-        <button type="submit" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#457D00] text-white" aria-label="Search">
+        <button type="submit" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-agrivive-primary text-white" aria-label="Search">
           <Search className="size-4" />
         </button>
       </form>
@@ -50,7 +50,7 @@ export function LandingHeaderMobileDrawer({
               key={link.href}
               href={link.href}
               onClick={onClose}
-              className="flex items-center min-h-[44px] px-2 text-sm font-semibold text-neutral-700 hover:text-[#457D00] rounded-xl hover:bg-neutral-50 transition-colors"
+              className="flex items-center min-h-[44px] px-2 text-sm font-semibold text-neutral-700 hover:text-agrivive-primary rounded-xl hover:bg-neutral-50 transition-colors"
             >
               {link.label}
             </Link>
@@ -59,7 +59,7 @@ export function LandingHeaderMobileDrawer({
               key={link.href}
               href={link.href}
               onClick={onClose}
-              className="flex items-center min-h-[44px] px-2 text-sm font-semibold text-neutral-700 hover:text-[#457D00] rounded-xl hover:bg-neutral-50 transition-colors"
+              className="flex items-center min-h-[44px] px-2 text-sm font-semibold text-neutral-700 hover:text-agrivive-primary rounded-xl hover:bg-neutral-50 transition-colors"
             >
               {link.label}
             </a>
@@ -71,7 +71,7 @@ export function LandingHeaderMobileDrawer({
             onClick={onClose}
             className="flex items-center gap-1.5 min-h-[44px] px-2 text-sm font-bold text-neutral-800"
           >
-            <ShoppingBag className="size-4 text-[#457D00]" />
+            <ShoppingBag className="size-4 text-agrivive-primary" />
             <span>Browse Marketplace</span>
           </Link>
           {!hasSession && (
@@ -86,7 +86,7 @@ export function LandingHeaderMobileDrawer({
               <Link
                 href="/signup"
                 onClick={onClose}
-                className="flex min-h-[44px] items-center justify-center rounded-full bg-[#E2FD56] text-sm font-black text-[#14231A]"
+                className="flex min-h-[44px] items-center justify-center rounded-full bg-agrivive-lime text-sm font-black text-agrivive-ink"
               >
                 Register
               </Link>

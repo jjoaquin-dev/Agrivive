@@ -5,20 +5,21 @@ import { ShoppingBasket } from "lucide-react";
 import type { BuyerOrderItem } from "@/src/features/marketplace/types";
 import { ProductImage } from "@/src/features/marketplace/components/ProductImage";
 import { formatPeso as money } from "@/src/lib/money";
+import { formatNumber } from "@/src/lib/format";
 
 export function OrderItemsCard({ items, status = "pending" }: { items: BuyerOrderItem[]; status?: string }) {
   const badgeLabel = status === "completed" ? "Picked up" : status === "expired" ? "Expired" : status === "cancelled" ? "Cancelled" : "Ready at stall";
 
   return (
-    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-agrivive-line bg-white p-5 shadow-sm">
       <div className="flex items-center gap-2">
-        <ShoppingBasket className="size-5 text-[#457D00]" aria-hidden="true" />
-        <h2 className="text-[18px] font-semibold text-[#14231A]">
+        <ShoppingBasket className="size-5 text-agrivive-primary" aria-hidden="true" />
+        <h2 className="text-lg font-semibold text-agrivive-ink">
           Items Ordered ({items.length})
         </h2>
       </div>
 
-      <div className="mt-4 divide-y divide-[#E8E8E8]" aria-label="Reserved products">
+      <div className="mt-4 divide-y divide-agrivive-line" aria-label="Reserved products">
         {items.map((item) => (
           <Link
             key={item.id}
@@ -27,7 +28,7 @@ export function OrderItemsCard({ items, status = "pending" }: { items: BuyerOrde
           >
             {/* Produce thumbnail & Info */}
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-[#E8E8E8] bg-[#F8F6F1]">
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-agrivive-line bg-agrivive-background">
                 <ProductImage
                   src={item.imageUrl}
                   alt={item.productName}
@@ -36,13 +37,13 @@ export function OrderItemsCard({ items, status = "pending" }: { items: BuyerOrde
               </div>
 
               <div className="min-w-0 space-y-0.5">
-                <p className="text-[14px] font-bold text-[#14231A] group-hover:text-[#457D00] transition-colors">
+                <p className="text-sm font-bold text-agrivive-ink group-hover:text-agrivive-primary transition-colors">
                   {item.productName}
                 </p>
-                <p className="text-[12px] text-neutral-500">
-                  Unit: <span className="capitalize">{item.scalingType}</span> • Qty: {Number(item.quantity).toLocaleString()}
+                <p className="text-xs text-neutral-500">
+                  Unit: <span className="capitalize">{item.scalingType}</span> • Qty: {formatNumber(Number(item.quantity))}
                 </p>
-                <p className="text-[14px] font-bold text-[#457D00]">
+                <p className="text-sm font-bold text-agrivive-primary">
                   {money(item.subtotal)}
                 </p>
               </div>
@@ -50,7 +51,7 @@ export function OrderItemsCard({ items, status = "pending" }: { items: BuyerOrde
 
             {/* Status Pill Badge */}
             <div className="shrink-0 text-right">
-              <span className="inline-flex items-center rounded-full border border-orange-200/70 bg-[#FFF7ED] px-3 py-1 text-xs font-semibold text-[#EA580C]">
+              <span className="inline-flex items-center rounded-full border border-orange-200/70 bg-[#FFF7ED] px-3 py-1 text-xs font-semibold text-orange-600">
                 {badgeLabel}
               </span>
             </div>

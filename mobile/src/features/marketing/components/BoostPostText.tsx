@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   box: { backgroundColor: colors.surfaceMuted, borderRadius: radii.input, padding: spacing.md, marginTop: spacing.xs },
   label: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted, marginBottom: spacing.xs },
   caption: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.text },
-  copyButton: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: spacing.xs },
+  copyButton: { minHeight: 44, flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", marginTop: spacing.xs },
   copyText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.primary },
   copiedText: { color: colors.success },
 });

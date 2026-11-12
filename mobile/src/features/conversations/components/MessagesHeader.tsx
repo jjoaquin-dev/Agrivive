@@ -47,7 +47,7 @@ export function MessagesHeader({
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Text style={styles.markReadText}>
-                    {isMarkingAllRead ? "Marking…" : "Mark All as Read"}
+                    {isMarkingAllRead ? "Marking..." : "Mark All as Read"}
                   </Text>
                 </Pressable>
               </>
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   dotSeparator: {
-    marginHorizontal: 6,
+    marginHorizontal: 8,
     color: colors.textMuted,
     fontSize: 13,
   },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   iconButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.surfaceMuted,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     right: 10,
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 4,
     backgroundColor: colors.primary,
   },
   searchBar: {

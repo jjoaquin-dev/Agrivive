@@ -35,13 +35,13 @@ export function TotpVerifyCard({ code, error, loading, onChange, onRescan }: Pro
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.lg },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.lg },
   tip: { flexDirection: "row", gap: spacing.sm, backgroundColor: "#F6F5F1", borderRadius: radii.card, borderWidth: 1, borderColor: profileColors.border, padding: spacing.md, marginTop: spacing.base },
   tipText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted },
   tipBold: { fontFamily: fonts.body.semiBold, color: colors.text },
   rule: { height: 1, backgroundColor: profileColors.border, marginVertical: spacing.base },
   fine: { textAlign: "center", fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted },
-  rescan: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, minHeight: 44, marginTop: spacing.xs },
+  rescan: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 44, marginTop: spacing.xs },
   rescanText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
 });

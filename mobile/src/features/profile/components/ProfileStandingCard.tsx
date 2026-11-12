@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { AlertTriangle, CheckCircle2, ChevronRight, Info } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { formatDateTime } from "../../../utils/dates";
 import type { SellerTrustAction, SellerTrustResponse } from "../../trust/types";
 import { profileColors } from "../profileTokens";
 
@@ -19,7 +20,7 @@ function activeAction(trust: SellerTrustResponse): SellerTrustAction | null {
 }
 
 function untilLabel(value: string) {
-  return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return formatDateTime(value);
 }
 
 export function ProfileStandingCard({ trust, loading, failed, isActive, onPress }: Props) {
@@ -27,8 +28,8 @@ export function ProfileStandingCard({ trust, loading, failed, isActive, onPress 
   const action = activeAction(trust);
   const limited = action?.actionType === "temporary_restriction";
   const bad = !isActive || Boolean(action);
-  const title = !isActive ? "Account Paused" : limited ? (action?.endsAt ? `Limited until ${untilLabel(action.endsAt)}` : "Account Limited") : action ? "Warning" : loading ? "Checking your record..." : failed ? "Could not load your record" : "Good Standing";
-  const line = !isActive ? "Your account is paused. Open your record to learn why." : action ? action.reason : loading ? "One moment." : failed ? "Tap to try again." : "No problems on your record.";
+  const title = !isActive ? "Account Blocked" : limited ? (action?.endsAt ? `Paused until ${untilLabel(action.endsAt)}` : "Account Paused") : action ? "Warning" : loading ? "Checking your record..." : failed ? "Could not load your record" : "Good Standing";
+  const line = !isActive ? "Your account is blocked. Open your record to learn why and how to restore it." : action ? action.reason : loading ? "One moment." : failed ? "Tap to try again." : "No problems on your record.";
   const tone = bad ? profileColors.amberText : colors.success;
 
   return (
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.base, marginBottom: spacing.base },
   cardBad: { borderColor: profileColors.amberBorder },
   row: { flexDirection: "row", alignItems: "center" },
-  icon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
+  icon: { width: 44, height: 44, borderRadius: 24, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
   text: { flex: 1 },
   title: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   line: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: 2 },
@@ -68,5 +69,5 @@ const styles = StyleSheet.create({
   pointsValue: { fontFamily: fonts.heading.bold },
   hint: { fontFamily: fonts.body.regular, color: colors.textMuted },
   notice: { flexDirection: "row", gap: spacing.sm, backgroundColor: profileColors.amber, borderRadius: radii.input, padding: spacing.md, marginTop: spacing.md },
-  noticeText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: "#92400E" },
+  noticeText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.warningText },
 });

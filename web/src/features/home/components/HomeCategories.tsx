@@ -88,7 +88,7 @@ export function HomeCategories() {
   useScrollLift(gridRef, ".category-lift");
 
   return (
-    <section id="categories" className="bg-[#FAF9F5] py-16 sm:py-24 border-y border-neutral-200/60">
+    <section id="categories" className="bg-agrivive-wash py-16 sm:py-24 border-y border-neutral-200/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Editorial split header: heading left, supporting line right on desktop */}
         <div data-reveal className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-12">

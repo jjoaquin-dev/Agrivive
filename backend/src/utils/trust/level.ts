@@ -5,7 +5,7 @@ export type TrustLevel = "good" | "notice" | "warning" | "pause_24h" | "pause_3d
 const rank: Record<TrustLevel, number> = { good: 0, notice: 1, warning: 2, pause_24h: 3, pause_3d: 4, block: 5 };
 export const levelRank = (level: string | null | undefined) => rank[(level as TrustLevel) ?? "good"] ?? 0;
 
-/** Table 3: 0-1 good standing, 2-3 notice, 4-5 warning, 6-7 pause 24 hours, 8-11 pause 3 days, 12+ block. */
+/** Table 3 ladder: good standing, notice, warning, pause 24 hours, pause 3 days, block. The cut-offs come from trustActionPolicy (fractions of the total AHP points). */
 export function levelForScore(points: number, serious = false): TrustLevel {
   if (serious || points >= trustActionPolicy.blockedThreshold) return "block";
   if (points >= trustActionPolicy.tier2Threshold) return "pause_3d";

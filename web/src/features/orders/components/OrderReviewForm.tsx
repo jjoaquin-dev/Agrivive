@@ -103,24 +103,24 @@ export function OrderReviewForm({ orderId, existing, onSaved, onDuplicate, onCan
           maxLength={2000}
           rows={3}
           placeholder="Share a few words about your pickup"
-          className="mt-1 w-full resize-y rounded-xl border border-[#E8E8E8] bg-white px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/20 focus-visible:border-[#457D00]"
+          className="mt-1 w-full resize-y rounded-xl border border-agrivive-line bg-white px-3.5 py-2.5 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/20 focus-visible:border-agrivive-primary"
         />
       </div>
       <div>
-        <label htmlFor={`review-photo-${orderId}`} className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-[#E8E8E8] bg-white px-4 text-sm font-semibold text-foreground hover:bg-muted">
+        <label htmlFor={`review-photo-${orderId}`} className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-agrivive-line bg-white px-4 text-sm font-semibold text-foreground hover:bg-muted">
           <Camera aria-hidden="true" className="size-4" />
           {shownPhoto ? "Change photo" : "Add a photo"} <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
         <input id={`review-photo-${orderId}`} type="file" accept={photoTypes.join(",")} className="sr-only" onChange={(event) => choosePhoto(event.target.files?.[0])} />
-        {shownPhoto ? <img src={shownPhoto} alt="Your review photo" className="mt-3 h-32 w-32 rounded-xl border border-[#E8E8E8] object-cover" /> : null}
+        {shownPhoto ? <img src={shownPhoto} alt="Your review photo" className="mt-3 h-32 w-32 rounded-xl border border-agrivive-line object-cover" /> : null}
         {errors.photo ? <p role="alert" className="mt-1 text-xs text-destructive">{errors.photo}</p> : null}
       </div>
       {errors.form ? <Alert variant="destructive" className="text-xs"><AlertDescription>{errors.form}</AlertDescription></Alert> : null}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={saving} className="min-h-12 h-12 rounded-xl bg-[#457D00] px-6 text-[14px] font-semibold text-white hover:bg-[#457D00]/90 active:translate-y-px">
+        <Button type="submit" disabled={saving} className="min-h-12 h-12 rounded-xl bg-agrivive-primary px-6 text-sm font-semibold text-white hover:bg-agrivive-primary/90 active:translate-y-px">
           {saving ? "Saving…" : existing ? "Save changes" : "Post review"}
         </Button>
-        {onCancel ? <Button type="button" variant="outline" onClick={onCancel} className="min-h-12 h-12 rounded-xl px-6 text-[14px]">Cancel</Button> : null}
+        {onCancel ? <Button type="button" variant="outline" onClick={onCancel} className="min-h-12 h-12 rounded-xl px-6 text-sm">Cancel</Button> : null}
       </div>
     </form>
   );

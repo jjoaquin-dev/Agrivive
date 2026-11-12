@@ -1,8 +1,9 @@
 import { AlertCircle, Check, CheckCircle2, ClipboardCheck, Clock, Info, PackageCheck, Send, Store, XCircle } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
+import { formatDate, formatTime } from "@/src/lib/format";
 
-const clock = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" }) : "");
-const day = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" }) : "");
+const clock = (iso: string | null) => (iso ? formatTime(iso, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" }) : "");
+const day = (iso: string | null) => (iso ? formatDate(iso, { month: "short", day: "numeric", timeZone: "Asia/Manila" }) : "");
 
 const stepDefs = [
   { id: "placed", label: "Placed", icon: Send },
@@ -33,12 +34,12 @@ export function OrderPickupStepper({ order, shopName }: { order: BuyerOrder; sho
     completed: completed ? "Success" : "After scan",
   };
   const banner = terminal
-    ? { tone: terminal === "declined" ? "bg-[#FFF8E6] border-[#F4DFA5] text-[#6B4E00]" : "bg-[#F9FAFB] border-[#E5E7EB] text-[#374151]", Icon: terminal === "expired" ? AlertCircle : XCircle, title: `This reservation is ${terminalCopy[terminal].label.toLowerCase()}`, text: terminalCopy[terminal].note }
+    ? { tone: terminal === "declined" ? "bg-amber-50 border-[#F4DFA5] text-amber-800" : "bg-agrivive-wash border-agrivive-border text-gray-700", Icon: terminal === "expired" ? AlertCircle : XCircle, title: `This reservation is ${terminalCopy[terminal].label.toLowerCase()}`, text: terminalCopy[terminal].note }
     : completed
       ? { tone: "bg-[#F0FDF4] border-[#DCFCE7] text-[#14532D]", Icon: CheckCircle2, title: "Order completed at the stall!", text: `Your pickup pass was verified by ${seller}. Thank you for helping reduce surplus food waste!` }
       : order.confirmedAt
-        ? { tone: "bg-[#F0F5FF] border-[#D0E2FF] text-[#1E3A8A]", Icon: Info, title: progress.current === "ready" ? "Your order is ready for pickup" : "The seller confirmed your order", text: `Come to ${seller} ${order.pickupStart ? `between ${clock(order.pickupStart)} and ${clock(order.pickupEnd)}` : "at your pickup time"} and look over your items first.` }
-        : { tone: "bg-[#F0F5FF] border-[#D0E2FF] text-[#1E3A8A]", Icon: Clock, title: "Waiting for the seller to confirm", text: "You can cancel until the seller confirms. If they do not answer in 3 hours, the order is confirmed for you." };
+        ? { tone: "bg-[#F0F5FF] border-blue-200 text-blue-900", Icon: Info, title: progress.current === "ready" ? "Your order is ready for pickup" : "The seller confirmed your order", text: `Come to ${seller} ${order.pickupStart ? `between ${clock(order.pickupStart)} and ${clock(order.pickupEnd)}` : "at your pickup time"} and look over your items first.` }
+        : { tone: "bg-[#F0F5FF] border-blue-200 text-blue-900", Icon: Clock, title: "Waiting for the seller to confirm", text: "You can cancel until the seller confirms. If they do not answer in 3 hours, the order is confirmed for you." };
   const BannerIcon = banner.Icon;
 
   return (

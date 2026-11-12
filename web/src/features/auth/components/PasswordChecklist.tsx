@@ -26,7 +26,7 @@ export function PasswordChecklist({
     { label: "Weak password", color: "bg-rose-500", textColor: "text-rose-600" },
     { label: "Fair password", color: "bg-amber-500", textColor: "text-amber-600" },
     { label: "Good password", color: "bg-emerald-500", textColor: "text-emerald-600" },
-    { label: "Strong password", color: "bg-[#457D00]", textColor: "text-[#457D00]" },
+    { label: "Strong password", color: "bg-agrivive-primary", textColor: "text-agrivive-primary" },
   ];
 
   const currentStrength = validCount > 0 ? strengthConfig[validCount - 1] : null;
@@ -39,8 +39,8 @@ export function PasswordChecklist({
       {/* 5-Segment Strength Bar */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs font-semibold">
-          <span className="text-[#5F7367]">Password strength</span>
-          <span className={currentStrength?.textColor || "text-[#5F7367]"}>
+          <span className="text-agrivive-stone">Password strength</span>
+          <span className={currentStrength?.textColor || "text-agrivive-stone"}>
             {currentStrength?.label || "Enter password"}
           </span>
         </div>

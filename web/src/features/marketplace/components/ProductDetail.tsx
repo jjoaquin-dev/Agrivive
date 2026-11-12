@@ -18,6 +18,7 @@ import { ProductImage } from "./ProductImage";
 import { ProductInfoCard } from "./ProductInfoCard";
 import { ProductReviewsSection } from "./ProductReviewsSection";
 import { ProductQuestionsSection } from "./ProductQuestionsSection";
+import { formatPeso } from "@/src/lib/money";
 
 export function ProductDetail() {
   const params = useParams<{ id: string }>();
@@ -111,9 +112,9 @@ export function ProductDetail() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#FDFDFD] px-6 py-6 text-foreground">
+      <main className="min-h-screen bg-agrivive-paper px-6 py-6 text-foreground">
         <div className="mx-auto max-w-7xl">
-          <div className="h-[540px] animate-pulse rounded-2xl border border-[#E8E8E8] bg-white" />
+          <div className="h-[540px] animate-pulse rounded-2xl border border-agrivive-line bg-white" />
         </div>
       </main>
     );
@@ -121,11 +122,11 @@ export function ProductDetail() {
 
   if (error || !product) {
     return (
-      <main className="min-h-screen bg-[#FDFDFD] px-6 py-6 text-foreground">
-        <div className="mx-auto max-w-xl rounded-2xl border border-[#E8E8E8] bg-white p-8 text-center shadow-sm">
+      <main className="min-h-screen bg-agrivive-paper px-6 py-6 text-foreground">
+        <div className="mx-auto max-w-xl rounded-2xl border border-agrivive-line bg-white p-8 text-center shadow-sm">
           <h1 className="font-heading text-2xl font-bold">We could not find that listing.</h1>
           <p className="mt-2 text-sm text-muted-foreground">{error || "It may have been removed or is no longer visible."}</p>
-          <Link href="/marketplace" className="mt-4 inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-[#457D00] px-4 text-sm font-semibold text-white hover:bg-[#457D00]/90">
+          <Link href="/marketplace" className="mt-4 inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-agrivive-primary px-4 text-sm font-semibold text-white hover:bg-agrivive-primary/90">
             <ArrowLeft className="size-4" />Back to Marketplace
           </Link>
         </div>
@@ -136,7 +137,7 @@ export function ProductDetail() {
   const soldOut = product.availability === "sold_out" || Number(product.productQty) <= 0;
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-4 py-6 sm:px-6 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-agrivive-paper px-4 py-6 sm:px-6 text-foreground">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Top Back Navigation Link */}
         <div>
@@ -146,7 +147,7 @@ export function ProductDetail() {
         {/* Main Product Section: 2:1 Responsive Layout */}
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
           {/* Left: Product Image Card (2 parts) */}
-          <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#E5E2DA] bg-white p-3.5 shadow-sm sm:p-4 lg:col-span-2">
+          <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-agrivive-border bg-white p-3.5 shadow-sm sm:p-4 lg:col-span-2">
             <div className="relative flex-1 w-full min-h-[380px] sm:min-h-[460px] lg:min-h-0 overflow-hidden rounded-2xl bg-[#FAFAF8]">
               <ProductImage
                 src={product.imageUrl}
@@ -184,7 +185,7 @@ export function ProductDetail() {
         onConfirm={executeBuyNow}
         loading={ordering}
         error={showReserveModal ? orderError : ""}
-        total={`₱${(Number(product.productPrice) * Number(quantity || 0)).toFixed(2)}`}
+        total={formatPeso(Number(product.productPrice) * Number(quantity || 0))}
         sellers={[{ sellerId: product.seller.id, shopName: product.seller.shopName, address: product.seller.detailAddress, items: [{ id: product.id, name: product.productName, imageUrl: product.imageUrl, productType: product.productType, quantity: quantity || 0, unit: product.scalingType, price: Number(product.productPrice) }] }]}
       />
     </main>

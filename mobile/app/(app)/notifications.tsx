@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack } from "expo-router";
 import { colors, fonts, spacing } from "../../src/theme";
 import { surface } from "../../src/theme/surface";
 import { useUnifiedNotifications } from "../../src/features/notifications/hooks/useUnifiedNotifications";
@@ -100,7 +99,6 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <Stack.Screen options={{ headerShown: false }} />
       <NotificationHeaderBar unreadCount={unreadCount} onMarkAllRead={markAllRead} onOpenSettings={() => setSettingsVisible(true)} />
 
       <FlatList

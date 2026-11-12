@@ -44,9 +44,11 @@ export const termsOfUse: LegalDocument = {
     },
     {
       id: "trust",
-      title: "Trust score and limits",
+      title: "Trust points and limits",
       paragraphs: [
-        "Missed replies, cancellations, and low ratings add trust points. Too many points can limit what an account can do, or pause it for a while. Limits are meant to protect buyers and fair sellers. You can use the recovery option on the sign-in page when your account is paused.",
+        "Rule breaks add trust points. These include missed pickups, cancelling late, not answering buyers in time, bad or fake listing details, rude or spammy chat, fake reports, and low ratings. Worse rule breaks add more points. Only points from the last 90 days count.",
+        "A report about a buyer or seller counts only after two different people report it. You can explain a missed pickup within 24 hours, and you can dispute a point within 7 days. A seller can fix a late cancellation or a missed reply to stop its points.",
+        "As points grow, you first get a notice, then a warning, then a short pause (24 hours, then 3 days), and last a block. A pause ends on its own. A block can be lifted with the recovery option on the sign-in page, which sends a code to your email.",
       ],
     },
     {

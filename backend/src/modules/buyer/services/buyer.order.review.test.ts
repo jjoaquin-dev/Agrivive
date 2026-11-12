@@ -20,6 +20,7 @@ mock.module(`${here}/../../../utils/s3/private-download.ts`, () => ({
 }));
 
 const { createBuyerReview } = await import("./buyer.order.review.create");
+const { trustPolicyWeights } = await import("../../../utils/trust/policy");
 const { editBuyerReview } = await import("./buyer.order.review.edit");
 const { setBuyerReviewPhoto } = await import("./buyer.order.review.photo");
 const { readSellerRating } = await import("./buyer.seller.rating");
@@ -320,7 +321,7 @@ describe("product stars and service stars stay apart", () => {
     await rate(buyer, await addOrder(buyer, seller, [product]), 5, 2, "The produce was not fresh");
     expect((await readProductRatings([product])).get(product)).toEqual({ average: "5.0", count: 1 });
     const trust = await readTrustMonitoringScore(seller);
-    expect([trust.ratingSignals, trust.weightedPoints]).toEqual([1, 1]);
+    expect([trust.ratingSignals, trust.weightedPoints]).toEqual([1, trustPolicyWeights.low_rating]);
   });
 
   test("service stars of 3 or more add no trust points; a low rating counts with a reason or as the 2nd low in 30 days", async () => {

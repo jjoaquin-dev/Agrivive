@@ -1,8 +1,8 @@
 import type { BreakdownRow } from "./components/AnalyticsDetailSheet";
 import type { SellerAnalyticsInsights, SellerAnalyticsMetrics } from "./types";
+import { formatPeso as pesoText } from "../../utils/money";
+export { pesoText };
 
-export const pesoText = (value: number | string) =>
-  `₱${Number(value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const percentText = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "–");
 

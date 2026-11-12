@@ -66,12 +66,12 @@ export function OrderHandoverItemRow({ item, current, onUpdateQuantity }: OrderH
 
       {diff > 0.001 ? (
         <View style={styles.pill}>
-          <RefreshCw size={13} color={colors.primary} />
+          <RefreshCw size={14} color={colors.primary} />
           <Text style={styles.pillText}>{formatAmount(diff, item.scalingType)} goes back to your stock</Text>
         </View>
       ) : (
         <View style={styles.pill}>
-          <Check size={13} color={colors.primary} />
+          <Check size={14} color={colors.primary} />
           <Text style={styles.pillText}>Full amount</Text>
         </View>
       )}
@@ -93,6 +93,6 @@ const styles = StyleSheet.create({
   valueCell: { minWidth: 76, height: touchTargets.min - 4, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, borderLeftWidth: 1, borderRightWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.sm },
   stepperInput: { minWidth: 20, textAlign: "right", fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text, padding: 0 },
   unit: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
-  pill: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 6, backgroundColor: colors.primaryLight, paddingVertical: 4, paddingHorizontal: spacing.sm, borderRadius: radii.full, marginTop: spacing.md },
+  pill: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 8, backgroundColor: colors.primaryLight, paddingVertical: 4, paddingHorizontal: spacing.sm, borderRadius: radii.full, marginTop: spacing.md },
   pillText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.primary },
 });

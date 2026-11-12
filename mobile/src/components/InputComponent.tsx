@@ -10,7 +10,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { AlertCircle, Eye, EyeOff } from "lucide-react-native";
-import { colors, radii, spacing, touchTargets } from "../theme";
+import { colors, fonts, radii, spacing, touchTargets } from "../theme";
 
 export interface InputComponentProps extends TextInputProps {
   label: string;
@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fonts.body.medium,
     color: colors.primary,
   },
   errorRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
     marginTop: spacing.xs,
   },
   errorText: {

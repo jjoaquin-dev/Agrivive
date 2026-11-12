@@ -8,7 +8,8 @@ import type { Product } from "../types";
 import { getProductStatus } from "../productStatus";
 import { BoostChip } from "../../marketing/components/BoostChip";
 import { hasActiveBoost } from "../../marketing/types";
-import { styles } from "./ProductCardStyles";
+import { styles } from "./ProductCard.styles";
+import { formatPeso } from "../../../utils/money";
 
 interface ProductCardProps {
   product: Product;
@@ -45,7 +46,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, onPress, on
           {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.thumbnailImage} />
           ) : (
-            <Package size={26} color={colors.primary} />
+            <Package size={28} color={colors.primary} />
           )}
         </View>
 
@@ -59,13 +60,13 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, onPress, on
           <Text style={styles.meta} numberOfLines={1}>{productCode} · {product.productType}</Text>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>₱{price.toFixed(2)} <Text style={styles.priceUnit}>/ {unitLabel}</Text></Text>
-            {wasReduced ? <Text style={styles.oldPrice}>₱{basePrice!.toFixed(2)}</Text> : null}
+            <Text style={styles.price}>{formatPeso(price)} <Text style={styles.priceUnit}>/ {unitLabel}</Text></Text>
+            {wasReduced ? <Text style={styles.oldPrice}>{formatPeso(basePrice!)}</Text> : null}
           </View>
           {reductionAmount > 0 ? (
             <View style={styles.dropChip}>
               <TrendingDown size={12} color={colors.text} />
-              <Text style={styles.dropChipText}>Drops ₱{reductionAmount.toFixed(2)} every 6 hrs after Boost</Text>
+              <Text style={styles.dropChipText}>Drops {formatPeso(reductionAmount)} every 6 hrs after Boost</Text>
             </View>
           ) : null}
           <BoostChip boost={product.boost} />
@@ -113,7 +114,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, onPress, on
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Next price drop</Text>
               <Text style={[styles.detailValue, { color: colors.primary }]}>
-                {new Date(product.nextPriceReductionAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(product.nextPriceReductionAt).toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "2-digit", minute: "2-digit" })}
               </Text>
             </View>
           ) : null}

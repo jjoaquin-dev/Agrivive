@@ -11,7 +11,7 @@ interface Props {
 }
 
 const time = (value: string) =>
-  new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  new Date(value).toLocaleString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
 function copy(rule: PriceDropRule) {
   switch (rule.state) {
@@ -31,7 +31,7 @@ export function PriceDropRuleCard({ rule, onSetUp }: Props) {
   return (
     <View style={styles.card} accessibilityRole="summary">
       <View style={styles.row}>
-        <Icon size={22} color={colors.primary} />
+        <Icon size={24} color={colors.primary} />
         <View style={styles.copy}>
           <Text style={styles.title}>{text.title}</Text>
           <Text style={styles.text}>{text.text}</Text>

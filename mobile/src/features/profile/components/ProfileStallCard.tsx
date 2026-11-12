@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   map: { borderRadius: radii.card, overflow: "hidden", borderWidth: 1, borderColor: profileColors.border, marginBottom: spacing.md },
   address: { fontFamily: fonts.body.semiBold, fontSize: 14, lineHeight: 20, color: colors.text },
   noteRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.xs },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  dot: { width: 6, height: 6, borderRadius: 4, backgroundColor: colors.primary },
   note: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   rule: { height: 1, backgroundColor: profileColors.border, marginVertical: spacing.md },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 36 },

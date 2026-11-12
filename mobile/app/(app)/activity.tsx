@@ -4,7 +4,7 @@ import { Info, History } from "lucide-react-native";
 import { fetchStockAdjustments } from "../../src/features/inventory/api/stock-adjustments";
 import type { StockAdjustment } from "../../src/features/inventory/types";
 import { ActivityItemRow } from "../../src/features/inventory/components/ActivityItemRow";
-import { activityStyles as styles } from "../../src/features/inventory/components/ActivityStyles";
+import { activityStyles as styles } from "../../src/features/inventory/components/Activity.styles";
 import { colors } from "../../src/theme";
 import { useFocusEffect } from "expo-router";
 import { logApiError } from "../../src/api/client";
@@ -74,7 +74,7 @@ export default function ActivityScreen() {
       if (itemDate === today) sectionTitle = "Today";
       else if (itemDate === yesterday) sectionTitle = "Yesterday";
       else {
-        sectionTitle = new Date(item.createdAt).toLocaleDateString(undefined, {
+        sectionTitle = new Date(item.createdAt).toLocaleDateString("en-US", { timeZone: "Asia/Manila",
           month: "short",
           day: "numeric",
           year: "numeric",

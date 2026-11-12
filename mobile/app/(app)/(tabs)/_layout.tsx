@@ -15,10 +15,10 @@ import { surface } from "../../../src/theme/surface";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const badgeStyle = {
-  backgroundColor: "#EF4444",
+  backgroundColor: colors.error,
   fontSize: 10,
   fontFamily: fonts.body.semiBold,
-  color: "#FFFFFF",
+  color: colors.white,
 };
 const badge = (n: number) => (n > 0 ? (n > 9 ? "9+" : n) : undefined);
 
@@ -42,7 +42,7 @@ export default function TabsLayout() {
           color: colors.text,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: "#636B63",
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
           borderTopColor: "#EEECE6",

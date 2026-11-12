@@ -24,6 +24,21 @@ export const colors = {
   error: "#B85450",
   white: "#FFFFFF",
   transparent: "transparent",
+  /** Rating stars and other "gold" accents. */
+  star: "#EAB308",
+  /** Dim layer behind every sheet, dialog and photo viewer. */
+  overlay: "rgba(0, 0, 0, 0.5)",
+  /** Soft status fills: a light background, its border, and the dark text that reads on it. */
+  warningSurface: "#FEF3C7",
+  warningBorder: "#FDE68A",
+  warningText: "#92400E",
+  orangeSurface: "#FFF7ED",
+  orangeBorder: "#FED7AA",
+  errorSurface: "#FEF2F2",
+  errorBorder: "#FECACA",
+  successSurface: "#F0FDF4",
+  successBorder: "#BBF7D0",
+  successSurfaceStrong: "#DCFCE7",
 } as const;
 
 export const fonts = {

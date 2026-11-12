@@ -46,8 +46,8 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
                   href={href}
                   className={`pb-1 transition-all ${
                     isActive
-                      ? (onGreen ? "border-b-2 border-white font-bold text-white" : "border-b-2 border-[#457D00] font-bold text-[#457D00]")
-                      : (onGreen ? "border-b-2 border-transparent hover:text-white" : "border-b-2 border-transparent hover:text-[#457D00]")
+                      ? (onGreen ? "border-b-2 border-white font-bold text-white" : "border-b-2 border-agrivive-primary font-bold text-agrivive-primary")
+                      : (onGreen ? "border-b-2 border-transparent hover:text-white" : "border-b-2 border-transparent hover:text-agrivive-primary")
                   }`}
                 >
                   {cat.label}
@@ -77,7 +77,7 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
                 <Link href="/login" onClick={onCloseMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl border border-neutral-200 text-sm font-semibold text-neutral-800">
                   Sign in
                 </Link>
-                <Link href="/signup" onClick={onCloseMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-[#457D00] text-sm font-semibold text-white">
+                <Link href="/signup" onClick={onCloseMenu} className="inline-flex min-h-12 flex-1 items-center justify-center rounded-xl bg-agrivive-primary text-sm font-semibold text-white">
                   Register
                 </Link>
               </div>
@@ -88,7 +88,7 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
             <Link
               href="/marketplace/overview"
               onClick={onCloseMenu}
-              className="flex min-h-11 items-center text-sm font-bold text-[#457D00] hover:underline"
+              className="flex min-h-11 items-center text-sm font-bold text-agrivive-primary hover:underline"
             >
               Public Marketplace Overview
             </Link>
@@ -104,7 +104,7 @@ export function BuyerSiteHeaderNav({ menuOpen, onCloseMenu, onGreen = false, has
                   href={href}
                   onClick={onCloseMenu}
                   className={`flex min-h-11 items-center text-sm font-semibold ${
-                    isActive ? "font-bold text-[#457D00]" : "text-neutral-700 hover:text-[#457D00]"
+                    isActive ? "font-bold text-agrivive-primary" : "text-neutral-700 hover:text-agrivive-primary"
                   }`}
                 >
                   {cat.label}

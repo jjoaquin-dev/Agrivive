@@ -45,7 +45,7 @@ export function ConversationThread({
 
   return (
     <section
-      className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-[#E9EBE2] bg-white shadow-sm"
+      className="flex h-full flex-1 flex-col overflow-hidden rounded-2xl border border-agrivive-line bg-white shadow-sm"
       aria-label={`Conversation with ${sellerName}`}
     >
       {/* Top Thread Header */}
@@ -60,7 +60,7 @@ export function ConversationThread({
             <ArrowLeft className="size-5" />
           </button>
           <div className="relative">
-            <div className="size-10 overflow-hidden rounded-full ring-2 ring-[#457D00]/20">
+            <div className="size-10 overflow-hidden rounded-full ring-2 ring-agrivive-primary/20">
               {context.sellerImage && !headerAvatarFailed ? (
                 <img
                   src={context.sellerImage}
@@ -69,16 +69,16 @@ export function ConversationThread({
                   onError={() => setHeaderAvatarFailed(true)}
                 />
               ) : (
-                <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-[#457D00]">
+                <div className="flex size-full items-center justify-center bg-agrivive-mist text-agrivive-primary">
                   <Store className="size-4" />
                 </div>
               )}
             </div>
-            <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-[#457D00]" />
+            <span className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-white bg-agrivive-primary" />
           </div>
           <div>
-            <h2 className="font-heading text-sm font-bold text-[#202E1B]">{sellerName}</h2>
-            <p className="text-xs text-[#457D00] font-medium">Active now • Verified vendor</p>
+            <h2 className="font-heading text-sm font-bold text-agrivive-forest">{sellerName}</h2>
+            <p className="text-xs text-agrivive-primary font-medium">Active now • Verified vendor</p>
           </div>
         </div>
         {existing ? <ConversationRowMenu item={existing} onChanged={onStateChanged} horizontal /> : null}
@@ -87,7 +87,7 @@ export function ConversationThread({
       {/* Date Divider Pill */}
       <div className="relative my-3 flex items-center justify-center px-6">
         <div className="absolute inset-x-6 h-px bg-[#F0F2EB]" />
-        <span className="relative z-10 rounded-full border border-[#ECEEE2] bg-[#FAF9F3] px-3 py-0.5 text-xs font-medium text-[#8A9685]">
+        <span className="relative z-10 rounded-full border border-agrivive-line bg-agrivive-wash px-3 py-0.5 text-xs font-medium text-agrivive-gray">
           Today
         </span>
       </div>
@@ -106,11 +106,11 @@ export function ConversationThread({
 
         {!thread.loading && thread.messages.length === 0 ? (
           <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
-            <span className="flex size-11 items-center justify-center rounded-2xl bg-[#EEF5E3] text-[#457D00]">
+            <span className="flex size-11 items-center justify-center rounded-2xl bg-agrivive-mist text-agrivive-primary">
               <Store className="size-5" />
             </span>
-            <h3 className="mt-3 font-heading text-sm font-bold text-[#202E1B]">Start chatting with {sellerName}</h3>
-            <p className="mt-1 max-w-xs text-xs text-[#7A8875]">
+            <h3 className="mt-3 font-heading text-sm font-bold text-agrivive-forest">Start chatting with {sellerName}</h3>
+            <p className="mt-1 max-w-xs text-xs text-agrivive-gray">
               Ask about current harvest, stall availability, or pickup hours.
             </p>
           </div>

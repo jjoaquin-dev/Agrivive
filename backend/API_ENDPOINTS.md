@@ -39,7 +39,7 @@ Google-linked accounts without a credential password must complete `POST /auth/p
 | Method | Path | Access | Route source |
 |---|---|---|---|
 | POST | `/trust/recovery/request` | Public; sends an OTP only for a blocked account and always returns a generic success response | `backend/src/modules/trust/index/trust.recovery.ts` |
-| POST | `/trust/recovery/verify` | Public; valid email OTP restores an account with an active trust action | `backend/src/modules/trust/index/trust.recovery.ts` |
+| POST | `/trust/recovery/verify` | Public; a valid email OTP restores a blocked account only. A pause cannot be lifted this way; it ends on its own | `backend/src/modules/trust/index/trust.recovery.ts` |
 
 Recovery reuses Better Auth's hashed email OTP flow with `type: "forget-password"`. It does not grant access to an account that has no active trust action, and it records the restoration in `trust_actions`. Admin users cannot restore accounts. The web screen is `web/app/(auth)/account-recovery/page.tsx`.
 
@@ -371,7 +371,7 @@ Outcomes, all decided by the system: allowed reason with a new photo and the sel
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/trust/me` | Score (90 days), level, events with `canDispute`, and for sellers the fault rate, Bayesian rating, `trustedSeller`, `underWatch`, `needsReview`, `canBoost`. |
+| GET | `/trust/me` | Score (90 days), level, `guidance` (what to do now), `nextLevel` (`label`, `atPoints`, `pointsToGo`, or null), `ladder` (every level with `fromPoints` and a plain summary), `serious`, events with `canDispute`, and for sellers the fault rate, Bayesian rating, `trustedSeller`, `underWatch`, `needsReview`, `canBoost`. |
 | POST | `/trust/events/:id/dispute` | `{ "reason" }` (10+ letters). Within 7 days of the event. The system answers at once by checking the stored order, rating, decline or question record against the rule that made the event. Response adds `result` (`upheld`, `rejected` or `unresolved`) and `because`. `upheld` removes the event and recalculates the score; `unresolved` (events from reports, no record to check) leaves the event counting. |
 | POST | `/buyer/orders/:id/report`, `/seller/orders/:id/report` | `details` needs 20+ characters. One report per order per person. Two different people on the same reason confirm it. A pair that confirmed twice in 90 days needs a third independent reporter; until then it stays an allegation at 0 points. |
 
@@ -386,3 +386,26 @@ Levels: 0-1 good standing, 2-3 notice, 4-5 warning, 6-7 pause 24 hours, 8-11 pau
 The app code does not apply migrations on startup. Apply all migrations in `backend/drizzle/` before using the backend.
 
 **Away is automatic.** There is no switch. A seller who has not used the app for 30 minutes shows as Away (`seller.away` on the product and `stall.away` on the buyer order). It changes only what buyers see: orders, pickup times, QR codes and the 3-hour auto-confirm are the same. The removed routes are `PUT /seller/stall/away` and `PUT /seller/stall/settings` (pickup capacity and pickup-within are no longer used for new orders).
+
+## Endpoints the seller mobile app calls (added so the list is complete)
+
+Checked against the route files on 2026-11-12. Every route here needs a signed-in session unless noted; seller routes need the `seller` role.
+
+| Method | Path | What it does |
+|---|---|---|
+| POST | `/auth/check-email` | Public. Tells the sign-up screen whether an email already has an account. |
+| POST | `/auth/register-role` | Adds the seller role at sign-up. |
+| GET, POST | `/conversations` | List the person's chats (`as=buyer` or `as=seller`) or start one. |
+| GET | `/conversations/unread-count`, `/conversations/:id`, `/conversations/:id/messages` | Unread number, one chat, its messages. |
+| POST | `/conversations/:id/messages`, `/read`, `/archive`, `/unarchive`, `/block`, `/unblock`, `/conversations/read-all`, `/conversations/attachment` | Send, mark read, archive, block, mark all read, upload a photo. |
+| POST, DELETE | `/notifications/devices`, `/notifications/devices/:id` | Register or remove a phone for push. |
+| GET, POST | `/seller/notifications`, `/seller/notifications/:id/read`, `/seller/notifications/read-all` | The seller's notice feed. |
+| GET | `/seller/orders`, `/seller/products`, `/seller/reviews`, `/seller/vegetable-catalog` | Reservations, listings, ratings, catalog. |
+| POST | `/seller/orders/:id/confirm`, `/pack`, `/ready`, `/no-show` | Order steps. Also `/decline/respond`, `/excuse/decide`, `/reschedule`. |
+| GET, POST | `/seller/inquiries`, `/seller/product-inquiries` and `/:id/reply` | Questions about orders and listings. |
+| POST | `/seller/reviews/:id/reply` | Answer a review. |
+| GET, POST | `/seller/products/:id/boost`, `/seller/boosts` | Start and list Boosts. |
+| GET, POST | `/seller/boost-prompts`, `/read-all`, `/:id/read`, `/:id/dismiss` | Prompts to set up a Boost. |
+| PATCH | `/seller/products/:id/auto-post`, `/seller/products/:id/price-reduction` | Turn follow-up posts and 6-hour price drops on or off. |
+| GET | `/seller/price-drops`, `/seller/price-drops/running` | Price drop history and the drops running now. |
+| GET, PUT | `/seller/stall`, `/hours`, `/settings`, `/closed-today`, `/away` | Stall hours, limits, Closed today and Away. |

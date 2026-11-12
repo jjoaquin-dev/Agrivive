@@ -1,7 +1,8 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { X } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { SlideModal } from "../../../components/SlideModal";
 
 export interface NotificationFilterState {
   unreadOnly: boolean;
@@ -27,14 +28,14 @@ export function NotificationFilterModal({ visible, filters, onApply, onClose, on
   ];
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close filter" />
       <View style={styles.sheet}>
         <View style={styles.handle} />
         <View style={styles.header}>
           <Text style={styles.title}>Filter</Text>
           <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close filter" style={styles.close}>
-            <X size={22} color={colors.textMuted} />
+            <X size={24} color={colors.textMuted} />
           </Pressable>
         </View>
 
@@ -79,14 +80,14 @@ export function NotificationFilterModal({ visible, filters, onApply, onClose, on
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
-  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 3, backgroundColor: "#D1D5DB", marginBottom: spacing.md },
+  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 4, backgroundColor: colors.border, marginBottom: spacing.md },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: spacing.xs, marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
   close: { width: 44, height: 44, marginRight: -spacing.sm, alignItems: "center", justifyContent: "center" },

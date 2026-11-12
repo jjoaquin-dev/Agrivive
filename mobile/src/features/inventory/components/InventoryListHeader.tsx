@@ -6,7 +6,7 @@ import { colors } from "../../../theme";
 import { NotificationBellButton } from "../../../components/NotificationBellButton";
 import type { InventoryFilterTab } from "../hooks/useInventory";
 import type { InventorySummary, ProductCategory } from "../types";
-import { styles } from "./InventoryListHeaderStyles";
+import { styles } from "./InventoryListHeader.styles";
 
 interface Props {
   summary: InventorySummary;
@@ -40,7 +40,7 @@ export function InventoryListHeader({
         <View style={styles.actions}>
           <NotificationBellButton unreadCount={notifications} onPress={onOpenNotifications} />
           <Pressable onPress={onOpenMenu} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="More options">
-            <MoreVertical size={20} color="#374151" />
+            <MoreVertical size={20} color={colors.text} />
           </Pressable>
         </View>
       </View>
@@ -49,7 +49,7 @@ export function InventoryListHeader({
         <Search size={18} color={colors.textMuted} />
         <TextInput
           placeholder="Search your produce..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={onSearch}
           style={styles.searchInput}
@@ -57,7 +57,7 @@ export function InventoryListHeader({
         />
         {searchQuery.length > 0 ? (
           <Pressable onPress={() => onSearch("")} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={10}>
-            <X size={16} color="#9CA3AF" />
+            <X size={16} color={colors.textMuted} />
           </Pressable>
         ) : null}
       </View>

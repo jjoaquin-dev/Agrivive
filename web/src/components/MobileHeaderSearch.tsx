@@ -34,12 +34,12 @@ export function MobileHeaderSearch({ onDone }: { onDone: () => void }) {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search vegetable name..."
+        placeholder="Search vegetable name…"
         aria-label="Search vegetables"
         enterKeyHint="search"
         className="min-w-0 flex-1 border-none bg-transparent px-2.5 text-base text-neutral-800 shadow-none outline-none placeholder:text-neutral-500 focus:outline-none focus:ring-0 focus-visible:!outline-none"
       />
-      <button type="submit" className="flex min-h-10 shrink-0 items-center rounded-full bg-[#457D00] px-5 text-sm font-bold text-white transition-colors hover:bg-[#386400] active:scale-[0.97]">
+      <button type="submit" className="flex min-h-10 shrink-0 items-center rounded-full bg-agrivive-primary px-5 text-sm font-bold text-white transition-colors hover:bg-[#386400] active:scale-[0.97]">
         Search
       </button>
     </form>

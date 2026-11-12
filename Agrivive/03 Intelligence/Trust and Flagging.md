@@ -1,7 +1,7 @@
 ---
 title: Trust and Flagging
 type: mechanism
-status: implemented to the Flagging and Trust PDF (monitoring-v4); not tested by the owner
+status: implemented (monitoring-v4 rules, AHP points since 2026-11-12); not tested by the owner
 source_pages: [4, 7, 8, 22, 23]
 ---
 
@@ -15,9 +15,9 @@ Support accountable marketplace interactions through seller verification, comple
 
 | Seller non-response period | System response |
 |---|---|
-| 12 hours | Reminder |
-| 24 hours | Warning and buyer notice |
-| 48 hours | Record non-responsive flag |
+| 12 open hours | Reminder |
+| 24 open hours | Warning and buyer notice |
+| 48 open hours | Record non-responsive flag |
 | Repeated qualifying incidents | Configured warning, temporary restriction, or blocked action after evaluation |
 
 The 12/24/48-hour inquiry clock is implemented by the scheduled job. The PDF's separate three-week inactivity warning and one-month blocking statements are not treated as implemented rules because their scope and evidence definition are not specified.
@@ -26,7 +26,13 @@ The 12/24/48-hour inquiry clock is implemented by the scheduled job. The PDF's s
 
 `violation score for user = sum(weight for violation type × recorded occurrence/value)`
 
-Configured thresholds can lead to no action, warning, temporary restriction, or blocking. Current defaults (`backend/src/utils/trust/policy.ts`, policy `monitoring-v3`): weights are 1 point for verified inquiry non-response, 1 for a 1–2-star rating, 2 for seller cancellation, 2 for misleading product information, 2 for inappropriate communication, and 3 for QR misuse (a serious violation that blocks at once). Only violations from the last 90 days count (`TRUST_SCORE_WINDOW_DAYS`).
+Since 2026-11-12 the points come from **AHP** (Saaty, 1980), following the Trust Points and AHP Guide. Details and the full table: [[2026-11-12 Trust Points from AHP]].
+
+- The 15 violations sit in four groups (pickup, listing, chat, review). Judges fill one pair matrix per group plus one for the groups (`backend/src/utils/trust/ahp-judgments.ts`); several judges merge by geometric mean.
+- Each matrix must have CR 0.10 or less, or the server refuses to start. Final weight = group weight x weight inside the group; points = round(weight / smallest weight), at least 1 (`ahp-points.ts`).
+- Level cut-offs are fractions of the total points: 2/25, 4/25, 6/25, 8/25 and 12/25 (the old ladder's shape).
+- **The judge matrices are still sample data.** Replace them with real answers before citing numbers in the paper. `TRUST_WEIGHT_SOURCE=fixed` rolls back to the old own-pick points.
+Only violations from the last 90 days count (`TRUST_SCORE_WINDOW_DAYS`).
 
 | Points | System action |
 |---|---|

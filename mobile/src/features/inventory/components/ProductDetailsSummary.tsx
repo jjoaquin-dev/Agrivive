@@ -5,7 +5,8 @@ import { colors } from "../../../theme";
 import { getProductStatus } from "../productStatus";
 import { hasActiveBoost } from "../../marketing/types";
 import type { Product } from "../types";
-import { styles } from "./ProductDetailsStyles";
+import { styles } from "./ProductDetails.styles";
+import { formatPeso } from "../../../utils/money";
 
 /** Photo, name, price and amount for one listing, grouped in two cards (Gestalt common region, Wertheimer et al.). */
 export function ProductDetailsSummary({ product }: { product: Product }) {
@@ -49,7 +50,7 @@ export function ProductDetailsSummary({ product }: { product: Product }) {
             <Text style={[styles.chipText, { color: status.color }]}>{status.label}</Text>
           </View>
           {boosted ? (
-            <View style={[styles.chip, { backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FFEDD5" }]}>
+            <View style={[styles.chip, { backgroundColor: colors.orangeSurface, borderWidth: 1, borderColor: colors.orangeSurface }]}>
               <Text style={[styles.chipText, { color: colors.terracotta }]}>⚡ Boosted</Text>
             </View>
           ) : null}
@@ -61,8 +62,8 @@ export function ProductDetailsSummary({ product }: { product: Product }) {
         </View>
 
         <View style={styles.priceRow}>
-          <Text style={styles.price}>₱{price.toFixed(2)} <Text style={styles.priceUnit}>/ {unit}</Text></Text>
-          {wasReduced ? <Text style={styles.oldPrice}>₱{basePrice!.toFixed(2)}</Text> : null}
+          <Text style={styles.price}>{formatPeso(price)} <Text style={styles.priceUnit}>/ {unit}</Text></Text>
+          {wasReduced ? <Text style={styles.oldPrice}>{formatPeso(basePrice!)}</Text> : null}
           {wasReduced ? <Text style={styles.offChip}>-{Math.round((1 - price / basePrice!) * 100)}% Off</Text> : null}
         </View>
 
@@ -70,12 +71,12 @@ export function ProductDetailsSummary({ product }: { product: Product }) {
           <View style={styles.dropBox}>
             <View style={styles.dropIcon}><Clock size={14} color={colors.primary} /></View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.dropTitle}>Drops ₱{reduction.toFixed(2)} every 6 hours after Boost</Text>
+              <Text style={styles.dropTitle}>Drops {formatPeso(reduction)} every 6 hours after Boost</Text>
               {product.minimumPrice != null ? (
-                <Text style={styles.dropSub}>Final price: ₱{Number(product.minimumPrice).toFixed(2)} / {unit}</Text>
+                <Text style={styles.dropSub}>Final price: {formatPeso(Number(product.minimumPrice))} / {unit}</Text>
               ) : null}
               {product.nextPriceReductionAt ? (
-                <Text style={styles.dropSub}>Next drop: {new Date(product.nextPriceReductionAt).toLocaleString()}</Text>
+                <Text style={styles.dropSub}>Next drop: {new Date(product.nextPriceReductionAt).toLocaleString("en-US", { timeZone: "Asia/Manila" })}</Text>
               ) : null}
             </View>
           </View>
@@ -87,7 +88,7 @@ export function ProductDetailsSummary({ product }: { product: Product }) {
               <Text style={[styles.stockValue, { color: stockColor }]}>{qty.toFixed(2)} {unit}</Text>
               <Text style={styles.stockLabel}>Available to buyers</Text>
             </View>
-            <Text style={[styles.stockPill, { color: stockColor, backgroundColor: status.kind === "selling" ? "#DCFCE7" : status.background }]}>
+            <Text style={[styles.stockPill, { color: stockColor, backgroundColor: status.kind === "selling" ? colors.successSurfaceStrong : status.background }]}>
               {Math.round(percent)}% left
             </Text>
           </View>

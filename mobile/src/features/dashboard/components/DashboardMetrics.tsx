@@ -60,7 +60,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       value: String(summary.lowStockCount),
       valueColor: colors.text,
       subtitle: "Add more soon",
-      pill: { bg: "#FFF7ED", fg: colors.warning, border: "#FED7AA" },
+      pill: { bg: colors.orangeSurface, fg: colors.warning, border: colors.orangeBorder },
       a11y: "Running low produce count",
     },
     {
@@ -73,7 +73,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       value: String(summary.outOfStockCount),
       valueColor: colors.text,
       subtitle: "Nothing left",
-      pill: { bg: "#FEF2F2", fg: colors.error, border: "#FECACA" },
+      pill: { bg: colors.errorSurface, fg: colors.error, border: colors.errorBorder },
       a11y: "Out of stock produce count",
     },
     {

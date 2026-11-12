@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ConversationBubble } from "../../../src/features/conversations/components/ConversationBubble";
 import { ConversationContextBanner } from "../../../src/features/conversations/components/ConversationContextBanner";
@@ -12,6 +12,8 @@ import { ConversationComposer } from "../../../src/features/conversations/compon
 import { ConversationDateDivider } from "../../../src/features/conversations/components/ConversationDateDivider";
 import { ConversationFailedBubble } from "../../../src/features/conversations/components/ConversationFailedBubble";
 import { ConversationPhotoViewer } from "../../../src/features/conversations/components/ConversationPhotoViewer";
+import { ShieldBan } from "lucide-react-native";
+import { ConfirmDialogComponent } from "../../../src/components/ConfirmDialogComponent";
 import { ConversationReconnectBanner } from "../../../src/features/conversations/components/ConversationReconnectBanner";
 import { useConversationDetail } from "../../../src/features/conversations/hooks/useConversationDetail";
 import { useConversationOrder } from "../../../src/features/conversations/hooks/useConversationOrder";
@@ -30,6 +32,7 @@ const closedReasons = {
 } as const;
 
 export default function ConversationDetailScreen() {
+  const [blockOpen, setBlockOpen] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const inputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
@@ -58,10 +61,12 @@ export default function ConversationDetailScreen() {
   const confirmBlock = () => {
     const run = async () => { const err = await chat.toggleBlock(); if (err) Alert.alert("Could Not Change", err); };
     if (iBlocked) { void run(); return; }
-    Alert.alert("Block this buyer?", "Neither of you can send messages in this chat until you unblock.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Block", style: "destructive", onPress: () => void run() },
-    ]);
+    setBlockOpen(true);
+  };
+  const blockNow = async () => {
+    setBlockOpen(false);
+    const err = await chat.toggleBlock();
+    if (err) Alert.alert("Could Not Change", err);
   };
   const toggleArchive = async () => {
     const err = await chat.toggleArchive();
@@ -87,10 +92,9 @@ export default function ConversationDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.muted}>Loading chat…</Text>
+          <Text style={styles.muted}>Loading chat...</Text>
         </View>
       </SafeAreaView>
     );
@@ -98,7 +102,6 @@ export default function ConversationDetailScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
-      <Stack.Screen options={{ headerShown: false }} />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ConversationHeaderBar senderName={senderName} subtitle={subtitle} avatarBg={avatarBg} initials={initials} buyerImage={conversation?.buyerImage} onReport={conversation?.orderId ? () => setReportOpen(true) : undefined} onBlock={conversation ? confirmBlock : undefined} blocked={iBlocked} onArchive={conversation ? toggleArchive : undefined} archived={Boolean(conversation?.archivedAt)} />
         {conversation ? <ConversationContextBanner conversation={conversation} order={order} product={product} onPress={openDetails} /> : null}
@@ -161,6 +164,8 @@ export default function ConversationDetailScreen() {
           onSend={chat.send}
         />
       </KeyboardAvoidingView>
+
+      <ConfirmDialogComponent visible={blockOpen} icon={<ShieldBan size={24} color={colors.error} />} title="Block this buyer?" message="Neither of you can send messages in this chat until you unblock." cancelLabel="Cancel" confirmLabel="Block" onCancel={() => setBlockOpen(false)} onConfirm={() => void blockNow()} />
 
       <ConversationPhotoViewer
         visible={viewer !== null}

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { CheckCheck, ExternalLink, ImageOff, Store } from "lucide-react";
 import type { ConversationMessage } from "../api";
+import { formatTime } from "@/src/lib/format";
 
 function formatMessageTime(value: string) {
-  return new Date(value).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" });
+  return formatTime(value, { hour: "numeric", minute: "2-digit" });
 }
 
 function parseMessageContent(text: string) {
@@ -49,7 +50,7 @@ export function ConversationMessageBubble({
                 onError={() => setAvatarFailed(true)}
               />
             ) : (
-              <div className="flex size-full items-center justify-center bg-[#EEF5E3] text-xs font-bold text-[#457D00]">
+              <div className="flex size-full items-center justify-center bg-agrivive-mist text-xs font-bold text-agrivive-primary">
                 <Store className="size-3.5" />
               </div>
             )}
@@ -78,8 +79,8 @@ export function ConversationMessageBubble({
           <div
             className={`rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm ${
               isMine
-                ? "rounded-br-xs bg-[#457D00] text-white"
-                : "rounded-bl-xs border border-[#ECEEE4] bg-white text-[#202E1B]"
+                ? "rounded-br-xs bg-agrivive-primary text-white"
+                : "rounded-bl-xs border border-[#ECEEE4] bg-white text-agrivive-forest"
             }`}
           >
             {imageUrl && (
@@ -109,9 +110,9 @@ export function ConversationMessageBubble({
         )}
       </div>
 
-      <div className={`mt-1 flex items-center gap-1 px-1 text-xs text-[#9EA899] ${isMine ? "justify-end" : "justify-start ml-9"}`}>
+      <div className={`mt-1 flex items-center gap-1 px-1 text-xs text-agrivive-gray ${isMine ? "justify-end" : "justify-start ml-9"}`}>
         <span>{formatMessageTime(item.createdAt)}</span>
-        {isMine ? <CheckCheck className="size-3 text-[#457D00]" aria-label="Delivered" /> : null}
+        {isMine ? <CheckCheck className="size-3 text-agrivive-primary" aria-label="Delivered" /> : null}
       </div>
     </div>
   );

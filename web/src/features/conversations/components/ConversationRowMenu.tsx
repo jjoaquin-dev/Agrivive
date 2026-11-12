@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MoreHorizontal, MoreVertical } from "lucide-react";
 import type { Conversation, ConversationStateAction } from "../api";
-import { conversationStateActions, runConversationStateAction } from "./ConversationStateActions";
+import { conversationStateActions, useConversationState } from "./ConversationStateActions";
 
 /** The meatball menu on each conversation row: archive and block. */
 export function ConversationRowMenu({ item, onChanged, horizontal = false }: { item: Conversation; onChanged: () => void; horizontal?: boolean }) {
@@ -20,13 +20,12 @@ export function ConversationRowMenu({ item, onChanged, horizontal = false }: { i
     return () => document.removeEventListener("pointerdown", closeOnOutside);
   }, [open]);
 
-  async function handle(action: ConversationStateAction) {
+  // On failure the list stays as it was; the next refresh shows the real state.
+  const { request, dialog } = useConversationState(item, onChanged);
+
+  function handle(action: ConversationStateAction) {
     setOpen(false);
-    try {
-      if (await runConversationStateAction(item, action)) onChanged();
-    } catch {
-      // The list stays as it was; the next refresh shows the real state.
-    }
+    request(action);
   }
 
   return (
@@ -37,12 +36,12 @@ export function ConversationRowMenu({ item, onChanged, horizontal = false }: { i
         aria-label={`More options for ${item.sellerShopName || item.sellerName}`}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex size-8 items-center justify-center rounded-full text-[#7A8875] hover:bg-[#F0F2EB] hover:text-[#202E1B] cursor-pointer"
+        className="flex size-11 items-center justify-center rounded-full text-agrivive-gray hover:bg-[#F0F2EB] hover:text-agrivive-forest cursor-pointer"
       >
         <Icon className="size-4" aria-hidden="true" />
       </button>
       {open ? (
-        <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-36 rounded-2xl border border-[#E9EBE2] bg-white p-1.5 shadow-md">
+        <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-36 rounded-2xl border border-agrivive-line bg-white p-1.5 shadow-md">
           {conversationStateActions(item).map(({ action, label, danger }) => (
             <button
               key={action}
@@ -50,7 +49,7 @@ export function ConversationRowMenu({ item, onChanged, horizontal = false }: { i
               role="menuitem"
               onClick={() => handle(action)}
               className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-xs font-semibold cursor-pointer ${
-                danger ? "text-rose-700 hover:bg-rose-600 hover:text-white" : "text-[#25431D] hover:bg-[#F6F8ED]"
+                danger ? "text-destructive hover:bg-rose-600 hover:text-white" : "text-agrivive-forest hover:bg-[#F6F8ED]"
               }`}
             >
               {label}
@@ -58,6 +57,7 @@ export function ConversationRowMenu({ item, onChanged, horizontal = false }: { i
           ))}
         </div>
       ) : null}
+      {dialog}
     </div>
   );
 }

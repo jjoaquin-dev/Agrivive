@@ -6,7 +6,7 @@ import type { SellerAnalyticsInsights } from "../types";
 import { buyerRows, moneyRows, orderRows, pesoText } from "../breakdown";
 import { AnalyticsDetailSheet, type BreakdownRow } from "./AnalyticsDetailSheet";
 
-const YELLOW = "#F5B301";
+const YELLOW = colors.star;
 const peso = pesoText;
 
 function StarBars({ stars }: { stars: number[] }) {
@@ -57,7 +57,7 @@ export function AnalyticsQuickStats({ insights }: { insights: SellerAnalyticsIns
           {stat.key === "rating" && rating ? (
             <View style={styles.ratingRow}>
               <Text style={[styles.value, styles.yellow]}>{stat.value}</Text>
-              <Star size={22} color={YELLOW} fill={YELLOW} />
+              <Star size={24} color={YELLOW} fill={YELLOW} />
             </View>
           ) : <Text style={styles.value}>{stat.value}</Text>}
           <Text style={styles.note}>{stat.note}</Text>
@@ -77,11 +77,11 @@ const styles = StyleSheet.create({
   label: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
   value: { fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28, color: colors.text, marginTop: 2 },
   note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  ratingRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   yellow: { color: YELLOW },
   pressed: { opacity: 0.7 },
   starRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 32 },
-  starLabel: { width: 40, flexDirection: "row", alignItems: "center", gap: 3 },
+  starLabel: { width: 40, flexDirection: "row", alignItems: "center", gap: 4 },
   starNum: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
   starTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: "#F6F5F1", overflow: "hidden" },
   starFill: { height: 8, borderRadius: 4, backgroundColor: YELLOW },

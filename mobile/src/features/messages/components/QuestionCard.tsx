@@ -15,9 +15,9 @@ interface QuestionCardProps {
 
 function formatAskedDate(createdAt: string, isWaiting: boolean): string {
   const d = new Date(createdAt);
-  const month = d.toLocaleDateString("en-US", { month: "short" });
+  const month = d.toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short" });
   const day = d.getDate();
-  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  const time = d.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit", hour12: true });
   const base = `Asked ${month} ${day}, ${time}`;
   if (!isWaiting) return base;
 
@@ -41,9 +41,9 @@ function formatAskedDate(createdAt: string, isWaiting: boolean): string {
 
 function formatSentDate(repliedAt: string): string {
   const d = new Date(repliedAt);
-  const month = d.toLocaleDateString("en-US", { month: "short" });
+  const month = d.toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short" });
   const day = d.getDate();
-  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  const time = d.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit", hour12: true });
   return `Sent on ${month} ${day}, ${time}`;
 }
 
@@ -136,14 +136,14 @@ const styles = StyleSheet.create({
     padding: spacing.base,
     marginBottom: spacing.md,
   },
-  openCard: { borderColor: "#FED7AA" },
+  openCard: { borderColor: colors.orangeBorder },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
-  productBadge: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1, marginRight: spacing.sm },
+  productBadge: { flexDirection: "row", alignItems: "center", gap: 8, flex: 1, marginRight: spacing.sm },
   productName: { fontFamily: fonts.heading.bold, fontSize: 13, color: colors.text, flex: 1 },
   statusBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radii.full },
-  statusAnswered: { backgroundColor: "#DCFCE7" },
+  statusAnswered: { backgroundColor: colors.successSurfaceStrong },
   statusAnsweredText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.success },
-  statusWaiting: { backgroundColor: "#FEF3C7" },
+  statusWaiting: { backgroundColor: colors.warningSurface },
   statusWaitingText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
   buyerRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   buyerText: { flex: 1 },

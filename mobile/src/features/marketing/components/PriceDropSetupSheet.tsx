@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Coins } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { InputComponent } from "../../../components/InputComponent";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { setAutoPriceDropEnabled } from "../api/visibility-boosts";
+import { formatPeso } from "../../../utils/money";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -24,8 +26,8 @@ export function PriceDropSetupSheet({ visible, productId, price, onClose, onSave
   const save = async () => {
     const drop = parseFloat(amount), floor = parseFloat(finalPrice);
     const next: typeof errors = {};
-    if (!Number.isFinite(drop) || drop <= 0 || drop >= price) next.amount = `Enter an amount above ₱0 and below ₱${price.toFixed(2)}.`;
-    if (!Number.isFinite(floor) || floor < 1 || floor > price) next.finalPrice = `Enter a final price from ₱1 up to ₱${price.toFixed(2)}.`;
+    if (!Number.isFinite(drop) || drop <= 0 || drop >= price) next.amount = `Enter an amount above ₱0 and below ${formatPeso(price)}.`;
+    if (!Number.isFinite(floor) || floor < 1 || floor > price) next.finalPrice = `Enter a final price from ₱1 up to ${formatPeso(price)}.`;
     if (next.amount || next.finalPrice) return setErrors(next);
     setBusy(true);
     setErrors({});
@@ -39,7 +41,7 @@ export function PriceDropSetupSheet({ visible, productId, price, onClose, onSave
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <SlideModal visible={visible} onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <View style={styles.sheet} accessibilityViewIsModal>
         <View style={styles.handle} />
@@ -48,18 +50,18 @@ export function PriceDropSetupSheet({ visible, productId, price, onClose, onSave
         <InputComponent label="Drop by (₱) every 6 hours" placeholder="e.g. 3" keyboardType="decimal-pad" value={amount} error={errors.amount}
           leftIcon={<Coins size={18} color={colors.textMuted} />} onChangeText={(value) => { setAmount(value); setErrors({}); }} />
         <InputComponent label="Final price (₱)" placeholder="e.g. 20" keyboardType="decimal-pad" value={finalPrice} error={errors.finalPrice}
-          hint={`Your price now is ₱${price.toFixed(2)}.`} leftIcon={<Coins size={18} color={colors.textMuted} />}
+          hint={`Your price now is ${formatPeso(price)}.`} leftIcon={<Coins size={18} color={colors.textMuted} />}
           onChangeText={(value) => { setFinalPrice(value); setErrors({}); }} />
         {errors.general ? <Text accessibilityRole="alert" style={styles.error}>{errors.general}</Text> : null}
         <ButtonComponent title="Save Price Drop" onPress={() => void save()} loading={busy} style={styles.primary} />
         <ButtonComponent title="Not Now" variant="ghost" onPress={onClose} style={styles.secondary} />
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(17,24,39,0.45)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: radii.sheet + 4, borderTopRightRadius: radii.sheet + 4, padding: spacing.lg, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.md },
   title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, textAlign: "center" },

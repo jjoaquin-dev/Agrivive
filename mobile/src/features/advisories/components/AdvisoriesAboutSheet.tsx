@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { CalendarDays, MapPin, ShieldCheck, X } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface AdvisoriesAboutSheetProps {
   visible: boolean;
@@ -16,7 +17,7 @@ const ITEMS = [
 ];
 
 export const AdvisoriesAboutSheet: React.FC<AdvisoriesAboutSheetProps> = ({ visible, onClose }) => (
-  <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+  <SlideModal visible={visible} onRequestClose={onClose}>
     <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
     <View style={styles.sheet}>
       <View style={styles.handle} />
@@ -39,11 +40,11 @@ export const AdvisoriesAboutSheet: React.FC<AdvisoriesAboutSheetProps> = ({ visi
       </View>
       <ButtonComponent title="Got It" onPress={onClose} style={styles.button} />
     </View>
-  </Modal>
+  </SlideModal>
 );
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0, 0, 0, 0.5)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, borderTopWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
   handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: "#D1D5DB", alignSelf: "center", marginBottom: spacing.md },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: "#F6F5F1" },
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   list: { gap: spacing.sm, marginTop: spacing.md },
   item: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, padding: spacing.md, borderRadius: 12, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border },
   itemIcon: { width: 28, height: 28, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  itemText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: "#374151" },
+  itemText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.text },
   itemLabel: { fontFamily: fonts.body.semiBold, color: colors.text },
   button: { marginTop: spacing.lg, borderRadius: radii.button },
 });

@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerVisibilityItem } from "../api/seller-visibility";
+import { formatPeso } from "../../../utils/money";
 
 interface VisibilityFactorsGridProps {
   item: SellerVisibilityItem;
@@ -25,7 +26,7 @@ export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
   const bars = item.normalizedCriteria;
   const factors = [
     { label: "Time Posted", weight: weights.postingAge, bar: bars?.postingAge, text: hoursText(raw?.postingAge) },
-    { label: "Price Drop", weight: weights.priceDrop, bar: bars?.priceDrop, text: raw ? `₱${raw.priceDrop.toFixed(2)}` : "—" },
+    { label: "Price Drop", weight: weights.priceDrop, bar: bars?.priceDrop, text: raw ? `${formatPeso(raw.priceDrop)}` : "—" },
     { label: "Amount left", weight: weights.stockLevel, bar: bars?.stockLevel, text: raw ? `${Number(raw.stockLevel.toFixed(2))}` : "—" },
     { label: "Reliability", weight: weights.sellerReliability, bar: bars?.sellerReliability, text: raw ? `${raw.sellerReliability.toFixed(1)} / 5` : "—" },
   ];

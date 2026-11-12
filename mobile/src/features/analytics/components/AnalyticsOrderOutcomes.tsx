@@ -51,7 +51,7 @@ export function AnalyticsOrderOutcomes({ metrics }: AnalyticsOrderOutcomesProps)
 
 const styles = StyleSheet.create({
   list: { gap: spacing.md, marginTop: spacing.md },
-  row: { gap: 6 },
+  row: { gap: 8 },
   labels: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   name: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
   value: { fontFamily: fonts.body.semiBold, fontSize: 14 },

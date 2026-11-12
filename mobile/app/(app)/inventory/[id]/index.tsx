@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, Alert, Share } from "react-native";
+import { StyleSheet, View, Text, ScrollView, Pressable, ActivityIndicator, Alert, Share, RefreshControl } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Archive, Pencil, RotateCcw, Share2, SlidersHorizontal } from "lucide-react-native";
@@ -16,7 +16,9 @@ export default function ProductDetailsScreen() {
   const router = useRouter();
   const [sharing, setSharing] = React.useState(false);
   const [archiveOpen, setArchiveOpen] = React.useState(false);
-  const { product, history, loading, loadingHistory, actionLoading, error, refresh, archive, reactivate } = useProduct(id || "");
+  const { product, history, loading, loadingHistory, actionLoading, error, refresh, refreshQuietly, archive, reactivate } = useProduct(id || "");
+  const [refreshing, setRefreshing] = React.useState(false);
+  const pullToRefresh = async () => { setRefreshing(true); await refreshQuietly(); setRefreshing(false); };
 
   if (loading) {
     return (
@@ -33,7 +35,7 @@ export default function ProductDetailsScreen() {
         <Text style={styles.errorTitle}>Product not found</Text>
         <Text style={styles.centerSub}>{error || "Could not load this product."}</Text>
         <Pressable onPress={refresh} accessibilityRole="button" accessibilityLabel="Retry loading product" style={styles.retry}>
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={styles.retryText}>Try Again</Text>
         </Pressable>
       </View>
     );
@@ -47,10 +49,10 @@ export default function ProductDetailsScreen() {
     try {
       await archive();
       setArchiveOpen(false);
-      Alert.alert("Product Archived", "This product is now in your archived list.");
+      Alert.alert("Listing Archived", "This listing is now in your archived list.");
     } catch (err: any) {
       setArchiveOpen(false);
-      Alert.alert("Error", err?.message || "Failed to archive product.");
+      Alert.alert("Error", err?.message || "Could not archive this listing.");
     }
   };
 
@@ -63,9 +65,9 @@ export default function ProductDetailsScreen() {
       return;
     }
     if (!product.isMarketable) {
-      Alert.alert("Cannot Restore", "Product must be marked marketable for reservations before restoring. Edit product to enable marketability.", [
+      Alert.alert("Cannot Restore", "This listing must be open for reservations before you restore it. Edit the listing to turn that on.", [
         { text: "Cancel", style: "cancel" },
-        { text: "Edit Product", onPress: () => router.push(`/(app)/inventory/${product.id}/edit`) },
+        { text: "Edit Listing", onPress: () => router.push(`/(app)/inventory/${product.id}/edit`) },
       ]);
       return;
     }
@@ -116,7 +118,7 @@ export default function ProductDetailsScreen() {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={pullToRefresh} colors={[colors.primary]} tintColor={colors.primary} />}>
         <ProductDetailsSummary product={product} />
         <ProductHistoryCard history={history} loading={loadingHistory} unit={unitLabel} />
 
@@ -170,7 +172,7 @@ const styles = StyleSheet.create({
   retry: { marginTop: spacing.base, minHeight: 48, paddingHorizontal: spacing.xl, borderRadius: radii.button, backgroundColor: colors.primary, justifyContent: "center" },
   retryText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.white },
   headerIcon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  dangerButton: { marginTop: spacing.base, minHeight: 48, borderRadius: radii.button - 2, backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "rgba(220,38,38,0.2)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm },
+  dangerButton: { marginTop: spacing.base, minHeight: 48, borderRadius: radii.button - 2, backgroundColor: colors.errorSurface, borderWidth: 1, borderColor: "rgba(220,38,38,0.2)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm },
   restoreButton: { backgroundColor: colors.primarySurface, borderColor: colors.primaryLight },
   dangerText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.error },
   bar: { flexDirection: "row", gap: spacing.md, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.lg },

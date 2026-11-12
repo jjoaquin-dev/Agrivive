@@ -32,5 +32,5 @@ const styles = StyleSheet.create({
   wrap: { alignItems: "center", paddingVertical: spacing.xxl, paddingHorizontal: spacing.xl },
   circle: { width: 72, height: 72, borderRadius: radii.full, backgroundColor: colors.primarySurface, alignItems: "center", justifyContent: "center", marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, textAlign: "center" },
-  text: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: "center", marginTop: 6 },
+  text: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: "center", marginTop: 8 },
 });

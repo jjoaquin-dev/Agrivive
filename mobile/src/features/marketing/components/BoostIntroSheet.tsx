@@ -1,9 +1,10 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Info, Megaphone } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { PlatformBadge } from "./PlatformBadge";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -23,11 +24,11 @@ const benefits = [
 /** Asked once after produce is added: a short bottom sheet (Hick's Law: three points to read, two actions). */
 export function BoostIntroSheet({ visible, onPreview, onClose }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <SlideModal visible={visible} onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <View style={styles.sheet} accessibilityViewIsModal>
         <View style={styles.handle} />
-        <View style={styles.iconWrap}><Megaphone size={34} color={colors.primary} /></View>
+        <View style={styles.iconWrap}><Megaphone size={32} color={colors.primary} /></View>
         <Text style={styles.title}>Post it on Facebook and Instagram?</Text>
         <Text style={styles.text}>Share your new produce on the Agrivive Facebook and Instagram pages. It is free, and you can skip it.</Text>
         {benefits.map((item, index) => (
@@ -44,12 +45,12 @@ export function BoostIntroSheet({ visible, onPreview, onClose }: Props) {
         <ButtonComponent title="Preview Post" onPress={onPreview} style={styles.primary} />
         <ButtonComponent title="Not Now" variant="ghost" onPress={onClose} style={styles.secondary} />
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(17,24,39,0.45)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: radii.sheet + 4, borderTopRightRadius: radii.sheet + 4, padding: spacing.lg, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.md },
   iconWrap: { alignSelf: "center", width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },

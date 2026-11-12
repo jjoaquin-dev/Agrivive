@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   errorText: { color: colors.error, fontFamily: fonts.body.medium, fontSize: 13 },
   success: { backgroundColor: profileColors.mint, borderWidth: 1, borderColor: colors.success, borderRadius: 10, padding: spacing.md, marginBottom: spacing.base },
   successText: { color: profileColors.mintText, fontFamily: fonts.body.medium, fontSize: 13 },
-  note: { flexDirection: "row", gap: spacing.sm, backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#BBF7D0", borderRadius: radii.sheet, padding: spacing.base },
+  note: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.successSurface, borderWidth: 1, borderColor: colors.successBorder, borderRadius: radii.sheet, padding: spacing.base },
   noteText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 21, color: colors.text },
   noteBold: { fontFamily: fonts.body.semiBold, color: colors.primary },
   bar: { paddingHorizontal: spacing.base, paddingTop: spacing.md, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: profileColors.border },

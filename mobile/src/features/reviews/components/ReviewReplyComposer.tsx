@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { colors } from "../../../theme";
-import { styles } from "./review-card.styles";
+import { styles } from "./ReviewCard.styles";
 
 interface ReviewReplyComposerProps {
   replyText: string;
@@ -34,14 +34,14 @@ export const ReviewReplyComposer: React.FC<ReviewReplyComposerProps> = ({
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <View style={styles.composerActions}>
-        <Pressable
+        <Pressable accessibilityRole="button"
           onPress={onCancel}
           style={styles.cancelBtn}
           disabled={submitting}
         >
           <Text style={styles.cancelBtnText}>Cancel</Text>
         </Pressable>
-        <Pressable
+        <Pressable accessibilityRole="button"
           onPress={onSend}
           style={[styles.sendBtn, submitting && styles.sendBtnDisabled]}
           disabled={submitting}

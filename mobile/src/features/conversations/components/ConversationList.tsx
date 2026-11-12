@@ -50,7 +50,7 @@ export function ConversationList({
           <Pressable
             onPress={onRetry}
             accessibilityRole="button"
-            accessibilityLabel="Try again"
+            accessibilityLabel="Try Again"
             style={({ pressed }) => [styles.retryBtn, pressed && styles.retryBtnPressed]}
           >
             <Text style={styles.retryBtnText}>Try Again</Text>

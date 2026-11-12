@@ -3,6 +3,7 @@
 import { Calendar, PiggyBank } from "lucide-react";
 import type { BuyerOrder } from "@/src/features/marketplace/types";
 import { formatPeso as money } from "@/src/lib/money";
+import { formatDate } from "@/src/lib/format";
 
 interface OrderSummaryHeaderProps {
   order: BuyerOrder;
@@ -11,11 +12,7 @@ interface OrderSummaryHeaderProps {
 export function OrderSummaryHeader({ order }: OrderSummaryHeaderProps) {
   const total = Number(order.totalAmount);
   const estimatedSavings = Math.round(total * 0.3);
-  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-PH", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  const formattedDate = formatDate(order.createdAt);
 
   return (
     <div className="space-y-1.5" aria-label="Order summary">
@@ -35,15 +32,15 @@ export function OrderSummaryHeader({ order }: OrderSummaryHeaderProps) {
           </span>
         </div>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-[#16A34A] shadow-sm">
-          <PiggyBank className="size-3.5 text-[#16A34A]" aria-hidden="true" />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-green-600 shadow-sm">
+          <PiggyBank className="size-3.5 text-green-600" aria-hidden="true" />
           <span>You saved {money(estimatedSavings)}</span>
         </span>
       </div>
 
       {/* Main Title and Total Amount Row */}
       <div className="flex flex-wrap items-baseline justify-between gap-3 pt-0.5">
-        <h1 className="font-heading text-2xl sm:text-[28px] font-bold tracking-tight text-[#14231A] leading-tight">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-agrivive-ink leading-tight">
           Surplus Produce Reservation
         </h1>
 
@@ -51,7 +48,7 @@ export function OrderSummaryHeader({ order }: OrderSummaryHeaderProps) {
           <span className="text-xs sm:text-sm font-medium text-neutral-400">
             Total:
           </span>
-          <span className="font-heading text-2xl sm:text-[28px] font-bold tracking-tight text-[#14231A]">
+          <span className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-agrivive-ink">
             {money(total)}
           </span>
         </div>

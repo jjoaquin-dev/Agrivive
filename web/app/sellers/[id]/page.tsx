@@ -4,3 +4,5 @@ import { SellerStorefront } from "@/src/features/marketplace/components/SellerSt
 export default function SellerStorefrontPage() {
   return <><BuyerSiteHeader /><SellerStorefront /></>;
 }
+
+export const metadata = { title: "Seller Page | Agrivive" };

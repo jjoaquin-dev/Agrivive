@@ -12,7 +12,7 @@ interface AdvisoriesWeatherDownCardProps {
 export const AdvisoriesWeatherDownCard: React.FC<AdvisoriesWeatherDownCardProps> = ({ onRetry }) => (
   <View style={styles.card}>
     <View style={styles.iconCircle}>
-      <CloudOff size={22} color={colors.warning} />
+      <CloudOff size={24} color={colors.warning} />
     </View>
     <Text style={styles.title}>Weather isn't available right now.</Text>
     <Text style={styles.body}>We couldn't connect to the weather service. Your stall listings and reservations are not affected.</Text>
@@ -22,7 +22,7 @@ export const AdvisoriesWeatherDownCard: React.FC<AdvisoriesWeatherDownCardProps>
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.card, padding: spacing.lg, alignItems: "center", marginBottom: spacing.md },
-  iconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: "#FEF3C7", alignItems: "center", justifyContent: "center" },
+  iconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.warningSurface, alignItems: "center", justifyContent: "center" },
   title: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text, marginTop: spacing.sm, textAlign: "center" },
   body: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.textMuted, marginTop: spacing.xs, textAlign: "center" },
   button: { marginTop: spacing.md, alignSelf: "stretch" },

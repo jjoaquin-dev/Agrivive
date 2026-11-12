@@ -105,9 +105,9 @@ export function OtpCodeInput({
             onPaste={handlePaste}
             onFocus={(e) => e.target.select()}
             className={cn(
-              "h-12 w-11 sm:h-14 sm:w-12 rounded-xl border border-agrivive-border/80 bg-white text-center font-mono text-xl sm:text-2xl font-bold text-[#14231A] shadow-sm transition-all",
-              "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#457D00]/20",
-              isFilled && "border-[#457D00]/40 bg-[#FBFDFB]",
+              "h-12 w-11 sm:h-14 sm:w-12 rounded-xl border border-agrivive-border/80 bg-white text-center font-mono text-xl sm:text-2xl font-bold text-agrivive-ink shadow-sm transition-all",
+              "hover:border-agrivive-primary/40 focus:border-agrivive-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-agrivive-primary/20",
+              isFilled && "border-agrivive-primary/40 bg-[#FBFDFB]",
               error && "border-destructive/80 text-destructive focus:border-destructive focus:ring-destructive/20",
               disabled && "cursor-not-allowed opacity-50",
             )}

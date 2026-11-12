@@ -29,7 +29,7 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
           </Text>
         </View>
         <View style={styles.plusWrap}>
-          <Plus size={22} color={colors.white} strokeWidth={2.4} />
+          <Plus size={24} color={colors.white} strokeWidth={2.4} />
         </View>
       </Pressable>
 
@@ -45,7 +45,7 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
           <Text style={styles.secondaryHint}>Check a buyer's pickup code.</Text>
         </View>
         <View style={styles.qrWrap}>
-          <QrCode size={22} color={colors.primary} />
+          <QrCode size={24} color={colors.primary} />
         </View>
       </Pressable>
     </View>

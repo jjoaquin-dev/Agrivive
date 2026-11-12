@@ -36,7 +36,7 @@ export interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({
-  title = "Log In with Google",
+  title = "Sign In with Google",
   showDivider = false,
 }: GoogleSignInButtonProps) {
   const router = useRouter();
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 52,
     borderRadius: radii.button,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: "#EEECE6",
     flexDirection: "row",

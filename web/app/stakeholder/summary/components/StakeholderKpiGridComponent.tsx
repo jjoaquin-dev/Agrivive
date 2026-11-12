@@ -1,6 +1,7 @@
 import { Users, ShoppingBag, CheckCircle2, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { StakeholderSummary } from "@/src/features/stakeholder/api/summary";
+import { formatNumber } from "@/src/lib/format";
 
 interface Props {
   data: StakeholderSummary;
@@ -46,7 +47,7 @@ export const StakeholderKpiGridComponent = ({ data }: Props) => {
         <CardContent>
           <div className="font-heading text-3xl font-bold text-emerald-700">{data.orders.completed ?? 0}</div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Rescued volume: <strong>{data.rescueMetrics.totalRescuedQty.toLocaleString()} units</strong>
+            Rescued volume: <strong>{formatNumber(data.rescueMetrics.totalRescuedQty)} units</strong>
           </p>
         </CardContent>
       </Card>

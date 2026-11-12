@@ -40,3 +40,19 @@ export interface SellerTrustResponse {
     allegationFlags: number;
   };
 }
+
+/** What `GET /trust/me` returns: the person's level, score, guidance, ladder and counted events. */
+export type MyTrust = {
+  score: number; level: string; levelLabel: string; windowDays: number; pausedUntil: string | null;
+  guidance: string; serious: string;
+  nextLevel: null | { label: string; atPoints: number; pointsToGo: number };
+  ladder: { level: string; label: string; fromPoints: number; summary: string }[];
+  events: { id: string; kind: string; points: number; what: string; rule: string; createdAt: string; counted: boolean; disputeStatus: string | null; canDispute: boolean; canCorrect: boolean }[];
+  seller: null | {
+    underWatch: boolean; needsReview: boolean; flags: { kind: string; detail: string | null }[];
+    fault: null | { ratePercent: number; faults: number; orders: number; minOrders: number; gatePercent: number; reviewPercent: number };
+    rating: null | { bayesian: number; reviews: number };
+    trustedSeller: boolean; canBoost: boolean; canList: boolean;
+    trustedRequirements: { minRating: number; minCompletedOrders: number; completedOrders: number };
+  };
+};

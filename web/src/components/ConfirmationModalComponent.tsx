@@ -71,7 +71,7 @@ export function ConfirmationModalComponent({
       buttonBg: "bg-[#880E16] text-white hover:bg-[#720B12]",
     },
     neutral: {
-      badgeBg: "bg-[#F1F3F5] text-[#374151]",
+      badgeBg: "bg-[#F1F3F5] text-gray-700",
       defaultIcon: <Ban className="size-5" />,
       buttonBg: "bg-[#2E3438] text-white hover:bg-[#1F2327]",
     },
@@ -108,7 +108,7 @@ export function ConfirmationModalComponent({
         <h3 id="confirm-modal-title" className="mt-3.5 font-heading text-lg font-bold text-neutral-900">
           {title}
         </h3>
-        <p id="confirm-modal-desc" className="mt-1.5 text-xs sm:text-[13px] leading-relaxed text-neutral-500">
+        <p id="confirm-modal-desc" className="mt-1.5 text-xs sm:text-sm leading-relaxed text-neutral-500">
           {description}
         </p>
 
@@ -117,7 +117,7 @@ export function ConfirmationModalComponent({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="h-11 rounded-full bg-[#F0F2F5] text-xs sm:text-sm font-semibold text-[#374151] transition-colors hover:bg-[#E4E7EB] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            className="h-11 rounded-full bg-agrivive-border text-xs sm:text-sm font-semibold text-gray-700 transition-colors hover:bg-[#E4E7EB] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {cancelLabel}
           </button>

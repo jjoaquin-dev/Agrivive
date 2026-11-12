@@ -3,13 +3,13 @@ import { db } from "../../db";
 import { conversation_messages, trust_events } from "../../db/schema";
 import { evaluateTrustAction } from "./evaluate-action";
 import { recordTrustEvent } from "./index";
-import { trustScoreWindowStart } from "./policy";
+import { trustPolicyWeights, trustScoreWindowStart } from "./policy";
 
 /** Table 3. Spam: the same message 5 or more times in 10 minutes. Personal data: a phone or email in a chat message. */
 export const SPAM_COPIES = 5;
 export const SPAM_WINDOW_MINUTES = 10;
 export const SPAM_PAUSE_MINUTES = 10;
-/** The 2nd spam in 90 days adds 1 point. The 3rd personal-data message in 90 days adds 1 point. Later ones repeat the step. */
+/** The 2nd spam in 90 days adds the chat spam points. The 3rd personal-data message in 90 days adds the personal-data points. Later ones repeat the step. */
 export const SPAM_POINT_EVERY = 2;
 export const PERSONAL_DATA_POINT_EVERY = 3;
 export const HIDDEN_MESSAGE_TEXT = "This message was hidden because it had a phone number or an email address.";
@@ -28,7 +28,7 @@ async function countEvents(userId: string, kind: string, now: Date) {
 }
 
 async function record(userId: string, kind: "chat_spam" | "chat_personal_data", every: number, key: string, now: Date, reason: string) {
-  const weight = (await countEvents(userId, kind, now) + 1) % every === 0 ? 1 : 0;
+  const weight = (await countEvents(userId, kind, now) + 1) % every === 0 ? trustPolicyWeights[kind] : 0;
   const eventKey = `${kind}:${userId}:${key}`;
   const inserted = await db.transaction((tx) => recordTrustEvent(tx, { eventKey, subjectId: userId, kind, classification: "verified", weight, reason }));
   if (inserted.length) await evaluateTrustAction(userId, null, eventKey, kind);

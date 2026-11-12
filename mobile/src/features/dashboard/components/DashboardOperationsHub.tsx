@@ -47,7 +47,7 @@ export const DashboardOperationsHub: React.FC<DashboardOperationsHubProps> = ({
       id: "advisories",
       label: "Weather & Calendar",
       icon: <CloudSun size={18} color={colors.warning} />,
-      iconBg: "#FEF3C7",
+      iconBg: colors.warningSurface,
       onPress: onAdvisories,
     },
   ];

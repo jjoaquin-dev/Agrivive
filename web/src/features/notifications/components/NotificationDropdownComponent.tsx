@@ -34,7 +34,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
     <div
       role="dialog"
       aria-label="Notifications"
-      className="absolute inset-x-3 top-full mt-2 sm:inset-x-auto sm:right-0 sm:mt-2.5 sm:w-[420px] sm:max-w-[calc(100vw-2rem)] rounded-2xl border border-[#E5E2DA] bg-white shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      className="absolute inset-x-3 top-full mt-2 sm:inset-x-auto sm:right-0 sm:mt-2.5 sm:w-[420px] sm:max-w-[calc(100vw-2rem)] rounded-2xl border border-agrivive-border bg-white shadow-md z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
     >
       {/* Top Header */}
       <div className="flex items-center justify-between px-5 pt-4 pb-3">
@@ -45,7 +45,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
           type="button"
           onClick={() => void markAllRead()}
           disabled={!unreadCount || saving}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#457D00] hover:text-[#457D00]/80 disabled:text-neutral-400 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-agrivive-primary hover:text-agrivive-primary/80 disabled:text-neutral-400 disabled:cursor-not-allowed transition-colors"
         >
           <Check className="size-3.5" />
           {saving ? "Saving…" : "Mark all as read"}
@@ -54,7 +54,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
 
       {/* Segmented Filter Pills */}
       <div className="px-4 pb-3">
-        <div className="flex items-center gap-1 overflow-x-auto rounded-full bg-[#F5F6EE] p-1 border border-[#EAECE0] no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-center gap-1 overflow-x-auto rounded-full bg-agrivive-wash p-1 border border-agrivive-line no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
@@ -64,16 +64,16 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-all ${
                   isActive
-                    ? "bg-white text-[#202E1B] shadow-sm"
-                    : "text-[#7A8875] hover:text-[#202E1B]"
+                    ? "bg-white text-agrivive-forest shadow-sm"
+                    : "text-agrivive-gray hover:text-agrivive-forest"
                 }`}
               >
                 <span>{tab.label}</span>
                 <span
                   className={`inline-flex size-[18px] shrink-0 items-center justify-center rounded-full text-xs font-bold leading-none ${
                     isActive
-                      ? "bg-[#D2E794] text-[#244218]"
-                      : "bg-[#EAECE0] text-[#7A8875]"
+                      ? "bg-[#D2E794] text-agrivive-forest"
+                      : "bg-agrivive-line text-agrivive-gray"
                   }`}
                 >
                   {tab.count}
@@ -126,7 +126,7 @@ export const NotificationDropdownComponent = ({ onClose }: NotificationDropdownC
         <Link
           href="/notifications"
           onClick={onClose}
-          className="inline-flex items-center justify-center rounded-xl bg-[#457D00] px-4 py-2 text-xs font-semibold tracking-wide text-white shadow-sm hover:bg-[#457D00]/90 active:scale-95 transition-all"
+          className="inline-flex items-center justify-center rounded-xl bg-agrivive-primary px-4 py-2 text-xs font-semibold tracking-wide text-white shadow-sm hover:bg-agrivive-primary/90 active:scale-95 transition-all"
         >
           View all notifications
         </Link>
