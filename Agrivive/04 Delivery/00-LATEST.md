@@ -15,7 +15,7 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Mobile inconsistency scan: nearly all of it is fixed (misleading trust screens and wording, colour and type tokens, shared money and date formatters, copy rules, touch targets, unused files, files over 200 lines). Left on purpose: border radius, off-scale spacing and icon sizes, which need a look on a phone. See [[2026-11-12 Mobile Inconsistency Fixes]]. Web scan fixes and the mobile sheet fix: [[2026-11-12 Web Inconsistency Fixes and Mobile Sheets]], [[2026-11-12 Web Inconsistency Fixes Part 2]].
+Mobile inconsistency scan: nearly all of it is fixed (misleading trust screens and wording, colour and type tokens, shared money and date formatters, copy rules, touch targets, unused files, files over 200 lines). Left on purpose: border radius, off-scale spacing and icon sizes, which need a look on a phone. See [[2026-11-12 Mobile Inconsistency Fixes]]. Web scan fixes and the mobile sheet fix: [[2026-11-12 Web Inconsistency Fixes and Mobile Sheets]], [[2026-11-12 Web Inconsistency Fixes Part 2]]. Slow signal: reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s: [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (capacity fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
 
 Earlier: Trust level screens: buyers get a Trust & Standing section on the web, sellers get guidance and the ladder in the app, and an email code can no longer lift a pause (blocks only). See [[2026-11-12 Trust Level Screens and Recovery Fix]].
 

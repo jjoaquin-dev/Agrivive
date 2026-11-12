@@ -72,7 +72,8 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `mobile/src/utils/dates.ts`, `mobile/src/utils/money.ts`: the only date (Asia/Manila), relative-time and peso formatters; do not format dates or pesos inline
   - `mobile/src/features/auth/hooks/`: `useLogin`, `useRegister` (screens only draw; styles live in `*.styles.ts` next to their feature)
   - `mobile/src/context/AuthContext.tsx`: Session state, setup refresh & user profile
-  - `mobile/src/api/client.ts`: Authenticated Better Auth API client
+  - `mobile/src/api/client.ts`: Authenticated Better Auth API client (reads fall back to saved answers via `readCache.ts`; `readStatus.ts` drives the weak-signal notice)
+  - `mobile/src/utils/shrinkImage.ts`: shrinks photos before every upload
 
 #### 3. Buyer Web App (`web/`)
 - **App Router Pages (`web/app/`)**:
