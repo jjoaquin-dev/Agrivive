@@ -38,11 +38,11 @@ export const ContextualReminderCard: React.FC<ContextualReminderCardProps> = ({ 
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.warningSurface, borderColor: colors.warningBorder, borderWidth: 1, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.md },
-  headerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  headerText: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.warningText },
-  list: { gap: 12, marginTop: 12 },
-  itemRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  card: { backgroundColor: "#FFFAF3", borderColor: "#FBE3C3", borderWidth: 1, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.md },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  headerText: { fontFamily: fonts.heading.bold, fontSize: 17, color: "#92400E" },
+  list: { gap: spacing.md, marginTop: spacing.md },
+  itemRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   itemIcon: { marginTop: 2 },
-  itemText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.warningText },
+  itemText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: "#78350F" },
 });

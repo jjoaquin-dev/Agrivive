@@ -1,10 +1,11 @@
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Clock } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import { formatBoostTime, type RunningPriceDrop } from "../types";
-import { formatPeso as peso } from "../../../utils/money";
+import { surface } from "../../../theme/surface";
 
+const peso = (value: number) => `₱${value.toFixed(2)}`;
 
 interface Props {
   item: RunningPriceDrop;
@@ -34,7 +35,7 @@ export function RunningPriceDropCard({ item }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginTop: spacing.sm, ...shadows.card },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.base, marginTop: spacing.sm, ...surface.shadow },
   header: { flexDirection: "row", gap: spacing.sm, alignItems: "center" },
   photo: { width: 52, height: 52, borderRadius: radii.sm + 4, backgroundColor: colors.surfaceMuted },
   placeholder: { backgroundColor: colors.primaryLight },

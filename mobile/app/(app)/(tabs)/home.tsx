@@ -16,7 +16,7 @@ import { DashboardLowStockAlerts } from "../../../src/features/dashboard/compone
 import { DashboardRecentActivity } from "../../../src/features/dashboard/components/DashboardRecentActivity";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../src/theme";
 import { logApiError } from "../../../src/api/client";
-import { styles } from "../../../src/features/dashboard/Home.styles";
+import { dash } from "../../../src/features/dashboard/dashboardTokens";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -146,3 +146,67 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: dash.page,
+  },
+  container: {
+    paddingHorizontal: spacing.base,
+    paddingBottom: spacing.xxl,
+  },
+  errorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: dash.card,
+    borderRadius: radii.card,
+    borderWidth: 1,
+    borderColor: "#FED7AA",
+    padding: spacing.md,
+    marginBottom: spacing.base,
+    ...dash.shadow,
+  },
+  errorIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFF7ED",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.sm,
+  },
+  errorBody: {
+    flex: 1,
+  },
+  errorTitle: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 14,
+    color: colors.text,
+  },
+  errorSub: {
+    fontFamily: fonts.body.regular,
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  retryButton: {
+    paddingHorizontal: spacing.md,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: radii.button,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginLeft: spacing.xs,
+  },
+  retryButtonPressed: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  retryText: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 13,
+    color: colors.text,
+  },
+});

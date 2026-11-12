@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { ArrowLeft, Info } from "lucide-react-native";
 import { colors, fonts, spacing, typography } from "../../../theme";
 import { safeBack } from "../../../utils/safeBack";
+import { surface } from "../../../theme/surface";
 
 interface AdvisoriesHeaderProps {
   generatedAt?: string;
@@ -37,10 +38,10 @@ export const AdvisoriesHeader: React.FC<AdvisoriesHeaderProps> = ({ generatedAt,
 };
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.sm, backgroundColor: colors.background },
+  container: { paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.sm, backgroundColor: surface.page },
   topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  iconButton: { width: 44, height: 44, borderRadius: 24, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  iconButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: surface.card, borderWidth: 1, borderColor: surface.border, alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.7, transform: [{ scale: 0.96 }] },
   title: { ...typography.screenTitle, flex: 1, textAlign: "center", marginHorizontal: spacing.sm, color: colors.text, letterSpacing: -0.3 },
-  caption: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
+  caption: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
 });

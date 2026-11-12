@@ -30,7 +30,7 @@ export function OrderPickupStepper({ order, shopName }: { order: BuyerOrder; sho
     placed: day(order.createdAt),
     confirmed: order.confirmedAt ? (order.confirmationMode === "auto" ? "Automatically" : "By seller") : "Seller has 3 hours",
     preparing: "Seller packing",
-    ready: order.pickupStart ? `${day(order.pickupStart)}, ${clock(order.pickupStart)}` : "At the stall",
+    ready: order.pickupEnd ? `By ${day(order.pickupEnd)}, ${clock(order.pickupEnd)}` : "At the stall",
     completed: completed ? "Success" : "After scan",
   };
   const banner = terminal
@@ -43,29 +43,29 @@ export function OrderPickupStepper({ order, shopName }: { order: BuyerOrder; sho
   const BannerIcon = banner.Icon;
 
   return (
-    <div className="rounded-2xl border border-agrivive-line bg-white p-5 shadow-sm sm:p-6" aria-label="Order progress">
-      <ol className="grid grid-cols-5 gap-1">
+    <div className="rounded-2xl border border-[#E5E2DA] bg-white p-5 shadow-sm sm:p-6" aria-label="Order progress">
+      <ol className="grid grid-cols-5 gap-x-1">
         {stepDefs.map((step, index) => {
           const done = !terminal && (completed || index < currentIndex);
           const current = !terminal && index === currentIndex && !completed;
           const Icon = step.icon;
-          const circle = done || (completed && index === currentIndex) ? "border-agrivive-primary bg-agrivive-primary text-white" : current ? "border-2 border-agrivive-primary bg-white text-agrivive-primary" : "border-2 border-agrivive-line bg-white text-neutral-400";
+          const circle = done || (completed && index === currentIndex) ? "border-[#457D00] bg-[#457D00] text-white" : current ? "border-2 border-[#457D00] bg-white text-[#457D00] ring-4 ring-[#457D00]/15" : "border-2 border-[#E5E2DA] bg-[#F8F6F1] text-neutral-400";
           return (
             <li key={step.id} className="relative flex flex-col items-center text-center" aria-current={current ? "step" : undefined}>
-              {index > 0 ? <span aria-hidden="true" className={`absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2 ${done || (completed) || (!terminal && index <= currentIndex) ? "bg-agrivive-primary" : "bg-agrivive-line"}`} /> : null}
-              <span className={`relative z-10 flex size-10 items-center justify-center rounded-full ${circle}`}><Icon className="size-4" aria-hidden="true" /></span>
-              <span className={`mt-2 text-xs leading-tight sm:text-sm ${current ? "font-bold text-agrivive-primary" : done ? "font-semibold text-agrivive-ink" : "font-semibold text-neutral-500"}`}>{step.label}</span>
-              <span className="mt-0.5 hidden text-xs text-neutral-400 sm:block">{captions[step.id]}</span>
+              {index > 0 ? <span aria-hidden="true" className={`absolute right-1/2 top-5 h-0.5 w-full -translate-y-1/2 ${done || (completed) || (!terminal && index <= currentIndex) ? "bg-[#457D00]" : "bg-[#E5E2DA]"}`} /> : null}
+              <span className={`relative z-10 flex size-10 items-center justify-center rounded-full ${circle}`}><Icon className="size-5" aria-hidden="true" /></span>
+              <span className={`mt-3 text-xs leading-tight sm:text-sm ${current ? "font-bold text-[#457D00]" : done ? "font-semibold text-[#14231A]" : "font-medium text-neutral-500"}`}>{step.label}</span>
+              <span className="mt-1 hidden text-xs leading-tight text-neutral-500 sm:block">{captions[step.id]}</span>
             </li>
           );
         })}
       </ol>
-      {terminal ? <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-destructive"><XCircle className="size-4" />{terminalCopy[terminal].label}</p> : null}
-      <div className={`mt-5 flex items-start gap-3 rounded-xl border p-4 ${banner.tone}`}>
+      {terminal ? <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700"><XCircle className="size-4" />{terminalCopy[terminal].label}</p> : null}
+      <div className={`mt-6 flex items-start gap-3 rounded-xl border p-4 ${banner.tone}`}>
         <BannerIcon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold sm:text-sm">{banner.title}</p>
-          <p className="mt-0.5 text-xs leading-relaxed sm:text-sm">{banner.text}</p>
+          <p className="text-sm font-bold">{banner.title}</p>
+          <p className="mt-1 text-sm leading-snug">{banner.text}</p>
         </div>
       </div>
     </div>

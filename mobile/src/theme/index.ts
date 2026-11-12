@@ -10,14 +10,14 @@ export const colors = {
   primarySurface: "rgba(69, 125, 0, 0.05)",
   background: "#F8F6F1",
   surface: "#FFFFFF",
-  surfaceMuted: "#F3F1EA",
+  surfaceMuted: "#F7F6F2",
   text: "#202622",
   textMuted: "#636B63",
   sage: "#96B125",
   olive: "#C6C736",
   cream: "#FCEC9A",
   terracotta: "#FEA938",
-  border: "#E5E2DA",
+  border: "#EEECE6",
   success: "#457D00",
   /** Darker than the web's orange (#FEA938) because this colour is also used for text, which needs contrast on white. */
   warning: "#D97706",
@@ -85,8 +85,10 @@ export const spacing = {
 
 export const radii = {
   sm: 6,
-  input: 10,
-  button: 14,
+  /** Big enough that a single-line field is a pill; a tall text box just gets large round corners. */
+  input: 28,
+  /** Buttons are pills. */
+  button: 9999,
   card: 16,
   sheet: 20,
   full: 9999,

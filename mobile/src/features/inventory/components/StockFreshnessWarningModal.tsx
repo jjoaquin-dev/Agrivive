@@ -42,8 +42,8 @@ export const StockFreshnessWarningModal: React.FC<StockFreshnessWarningModalProp
         </View>
         <View style={styles.divider} />
         <View style={styles.compareRow}>
-          <View style={[styles.rowIcon, { backgroundColor: colors.surfaceMuted }]}><RefreshCw size={14} color={colors.textMuted} /></View>
-          <Text style={[styles.rowText, { color: colors.textMuted }]}>
+          <View style={[styles.rowIcon, { backgroundColor: "#F6F5F1" }]}><RefreshCw size={14} color={colors.textMuted} /></View>
+          <Text style={[styles.rowText, { color: "#4B5563" }]}>
             <Text style={styles.bold}>Adding to this batch</Text> keeps the old batch date and the current price (<Text style={styles.bold}>{peso(currentPrice)}</Text>)
           </Text>
         </View>

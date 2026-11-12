@@ -5,7 +5,7 @@ import {
   Text,
   Image,
   FlatList,
-  Dimensions,
+  useWindowDimensions,
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,9 +14,8 @@ import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, spacing, radii, touchTargets } from "../../src/theme";
 import { ArrowRight } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
-import { styles } from "../../src/features/auth/Onboarding.styles";
+import { surface } from "../../src/theme/surface";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface OnboardingSlide {
   id: string;
@@ -50,6 +49,10 @@ const SLIDES: OnboardingSlide[] = [
 ];
 
 export default function OnboardingScreen() {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  // The picture takes about a third of the height (never huge on a tablet, never tiny on a small phone).
+  const heroWidth = Math.min(screenWidth - spacing.base * 2, 520);
+  const heroHeight = Math.max(200, Math.min(Math.round(screenHeight * 0.38), 420));
   const router = useRouter();
   const { completeOnboarding } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -83,7 +86,7 @@ export default function OnboardingScreen() {
 
   const handleMomentumScrollEnd = (e: any) => {
     const offsetX = e.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
+    const index = Math.round(offsetX / screenWidth);
     setCurrentIndex(index);
   };
 
@@ -120,8 +123,8 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         renderItem={({ item }) => (
-          <View style={styles.slide}>
-            <View style={styles.heroContainer}>
+          <View style={[styles.slide, { width: screenWidth }]}>
+            <View style={[styles.heroContainer, { width: heroWidth, height: heroHeight }]}>
               <Image source={item.image} style={styles.heroImage} resizeMode="cover" />
             </View>
             <View style={styles.textContainer}>
@@ -164,3 +167,113 @@ export default function OnboardingScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: surface.page,
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+    height: 56,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  logoImage: {
+    width: 120,
+    height: 35,
+  },
+  skipText: {
+    fontFamily: fonts.body.semiBold,
+    color: colors.primary,
+    fontSize: 16,
+  },
+  slide: {
+    alignItems: "center",
+  },
+  heroContainer: {
+    borderRadius: radii.card,
+    overflow: "hidden",
+    backgroundColor: colors.surfaceMuted,
+    marginTop: spacing.xs,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 0,
+  },
+  heroImage: {
+    width: "100%",
+    height: "100%",
+  },
+  textContainer: {
+    alignItems: "center",
+    maxWidth: 560,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.xl,
+  },
+  title: {
+    fontFamily: fonts.heading.bold,
+    fontSize: 28,
+    color: colors.text,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+    lineHeight: 34,
+  },
+  description: {
+    fontFamily: fonts.body.regular,
+    fontSize: 16,
+    color: colors.textMuted,
+    textAlign: "center",
+    lineHeight: 24,
+    paddingHorizontal: spacing.xs,
+  },
+  footer: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
+    alignItems: "center",
+  },
+  indicatorContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: spacing.xl,
+  },
+  indicatorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#E4E2DB",
+    marginHorizontal: 4,
+  },
+  indicatorActive: {
+    backgroundColor: colors.primary,
+    width: 24,
+    height: 8,
+    borderRadius: 4,
+  },
+  mainButton: {
+    width: "100%",
+    minHeight: 52,
+    borderRadius: radii.button,
+  },
+  loginLinkWrapper: {
+    marginTop: spacing.base,
+    paddingVertical: spacing.xs,
+    alignItems: "center",
+  },
+  loginLinkText: {
+    fontFamily: fonts.body.semiBold,
+    fontSize: 16,
+    color: colors.primary,
+    textAlign: "center",
+  },
+});

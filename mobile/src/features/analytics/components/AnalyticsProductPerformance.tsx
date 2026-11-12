@@ -90,7 +90,7 @@ export function AnalyticsProductPerformance({ products }: { products: Product[] 
 
 const styles = StyleSheet.create({
   filters: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md, marginBottom: spacing.sm },
-  filter: { minHeight: 44, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: radii.full, backgroundColor: colors.surfaceMuted },
+  filter: { minHeight: 36, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: radii.full, backgroundColor: "#F6F5F1" },
   filterActive: { backgroundColor: colors.text },
   filterText: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
   filterTextActive: { color: colors.white },

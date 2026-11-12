@@ -43,7 +43,7 @@ export function PriceDropRuleCard({ rule, onSetUp }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.primaryLight, padding: spacing.base, marginTop: spacing.base },
+  card: { backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: "#E9F0DF", padding: spacing.base, marginTop: spacing.base },
   row: { flexDirection: "row", gap: spacing.md },
   copy: { flex: 1 },
   title: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },

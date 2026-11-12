@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
   box: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
+    borderColor: "#EEECE6",
+    backgroundColor: "#FFFFFF",
     textAlign: "center",
     fontSize: 22,
     fontFamily: fonts.body.semiBold,

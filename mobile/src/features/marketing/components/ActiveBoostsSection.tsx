@@ -68,11 +68,11 @@ export function ActiveBoostsSection({ items, loading }: Props) {
 const styles = StyleSheet.create({
   sectionHeader: {
     marginTop: spacing.base,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
     fontFamily: fonts.heading.bold,
-    fontSize: 15,
+    fontSize: 17,
     color: colors.text,
   },
   loader: {
@@ -85,19 +85,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
     marginTop: spacing.xs,
   },
   emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   emptyTitle: {
     fontFamily: fonts.heading.bold,
-    fontSize: 16,
+    fontSize: 18,
     color: colors.text,
   },
   emptyText: {
     fontFamily: fonts.body.regular,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
     color: colors.textMuted,
     textAlign: "center",
     marginTop: spacing.xs,
@@ -107,15 +107,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: radii.button,
-    marginTop: spacing.base,
-    minHeight: 44,
+    marginTop: spacing.lg,
+    minHeight: 48,
   },
   emptyCtaText: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 13,
+    fontSize: 15,
     color: colors.white,
   },
   pressed: {

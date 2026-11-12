@@ -73,7 +73,7 @@ export function AnalyticsQuickStats({ insights }: { insights: SellerAnalyticsIns
 
 const styles = StyleSheet.create({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.md },
-  tile: { width: "48.5%", backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
+  tile: { flexBasis: "46%", flexGrow: 1, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md },
   label: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
   value: { fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28, color: colors.text, marginTop: 2 },
   note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   starRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 32 },
   starLabel: { width: 40, flexDirection: "row", alignItems: "center", gap: 4 },
   starNum: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
-  starTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: colors.surfaceMuted, overflow: "hidden" },
+  starTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: "#F6F5F1", overflow: "hidden" },
   starFill: { height: 8, borderRadius: 4, backgroundColor: YELLOW },
   starCount: { width: 28, textAlign: "right", fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
   reply: { width: "100%", fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },

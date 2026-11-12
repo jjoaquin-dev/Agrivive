@@ -22,7 +22,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
         eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"),
         isNull(orders.confirmedAt), gt(orders.expiresAt, now),
       ))
-      .returning({ id: orders.id, sellersId: orders.sellersId, pickupStart: orders.pickupStart });
+      .returning({ id: orders.id, sellersId: orders.sellersId, pickupEnd: orders.pickupEnd });
 
     if (!cancelled) {
       const [current] = await tx.select({ status: orders.status, expiresAt: orders.expiresAt, confirmedAt: orders.confirmedAt })
@@ -39,7 +39,7 @@ export async function cancelBuyerOrder(orderId: string, buyerId: string) {
       sellerId: cancelled.sellersId, orderId, key: `buyer-cancelled:${orderId}`,
       message: "The buyer cancelled before you confirmed. The stock and the pickup time were released.",
     });
-    if (!isLateCancellation(cancelled.pickupStart, now)) return null;
+    if (!isLateCancellation(cancelled.pickupEnd, now)) return null;
     const eventKey = `buyer-late-cancel:${orderId}`;
     await recordTrustEvent(tx, { eventKey, orderId, subjectId: buyerId, kind: "buyer_late_cancellation", classification: "verified", sourceId: orderId });
     return eventKey;

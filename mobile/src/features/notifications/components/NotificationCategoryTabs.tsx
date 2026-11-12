@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 import type { NotificationCategory } from "../types";
 
 interface Props {
@@ -45,10 +46,10 @@ export function NotificationCategoryTabs({ selected, onSelect, counts }: Props) 
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
+  container: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm, paddingBottom: spacing.xs },
   pill: { height: 40, paddingHorizontal: spacing.md + 2, borderRadius: radii.full, flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 1 },
   pillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  pillInactive: { backgroundColor: colors.surface, borderColor: colors.border },
+  pillInactive: { backgroundColor: surface.card, borderColor: surface.border },
   pillText: { fontFamily: fonts.body.medium, fontSize: 14 },
   badge: { minWidth: 18, height: 18, borderRadius: 10, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" },
   badgeText: { fontFamily: fonts.heading.bold, fontSize: 11 },

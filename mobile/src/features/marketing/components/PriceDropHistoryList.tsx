@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   heading: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text, marginTop: spacing.base },
   error: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.error, marginTop: spacing.sm },
   loader: { marginVertical: spacing.base },
-  empty: { alignItems: "center", paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, marginTop: spacing.sm },
+  empty: { alignItems: "center", paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", marginTop: spacing.sm },
   emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   emptyText: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },

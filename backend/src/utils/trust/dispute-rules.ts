@@ -22,7 +22,7 @@ export async function checkDisputeRules(tx: OrderTransaction, event: typeof trus
       return order?.status === "cancelled" && order.cancelledBy === event.subjectId && order.confirmedAt
         ? rejected("The order shows you cancelled a confirmed order.") : upheld("The order does not show a confirmed order cancelled by you.");
     case "buyer_late_cancellation":
-      return order?.cancelledAt && isLateCancellation(order.pickupStart, order.cancelledAt)
+      return order?.cancelledAt && isLateCancellation(order.pickupEnd, order.cancelledAt)
         ? rejected("The order was cancelled within 3 hours of the pickup time.") : upheld("The order was not cancelled within 3 hours of the pickup time.");
     case "buyer_failed_reservation":
       return order?.status === "expired" || order?.noShowAt ? rejected("The order shows the pickup was missed.") : upheld("The order does not show a missed pickup.");

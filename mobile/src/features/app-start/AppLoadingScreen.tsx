@@ -44,8 +44,8 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
-  logo: { width: 280, height: 81 },
-  iconLogo: { width: 288, height: 288 },
+  logo: { width: 280, maxWidth: "80%", height: 81 },
+  iconLogo: { width: 288, maxWidth: "80%", aspectRatio: 1, height: undefined },
   extra: { position: "absolute", left: 0, right: 0, top: "50%", marginTop: 90, alignItems: "center" },
   caption: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
 });

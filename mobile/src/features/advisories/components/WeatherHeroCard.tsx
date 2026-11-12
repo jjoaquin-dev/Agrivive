@@ -10,7 +10,8 @@ import {
   MapPin,
   Droplets,
 } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 interface WeatherHeroCardProps {
   temperatureC: number;
@@ -81,16 +82,16 @@ export const WeatherHeroCard: React.FC<WeatherHeroCardProps> = ({
 );
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...shadows.card },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...surface.shadow },
   locationRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  pinCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.orangeSurface, alignItems: "center", justifyContent: "center" },
+  pinCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FFF7ED", alignItems: "center", justifyContent: "center" },
   locationText: { flex: 1 },
-  shopName: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
-  address: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  mainRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
-  tempText: { fontFamily: fonts.heading.bold, fontSize: 28, color: colors.text, letterSpacing: -0.5 },
-  conditionPill: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.warningSurface, borderWidth: 1, borderColor: colors.warningBorder, borderRadius: 9999, paddingHorizontal: spacing.md, paddingVertical: 8 },
-  conditionText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
-  rainRow: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.surfaceMuted, borderRadius: 8, padding: spacing.sm, marginTop: spacing.md },
-  rainText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
+  shopName: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
+  address: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
+  mainRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.base, paddingTop: spacing.base, borderTopWidth: 1, borderTopColor: "#F3F1EC" },
+  tempText: { fontFamily: fonts.heading.bold, fontSize: 40, lineHeight: 46, color: colors.text, letterSpacing: -0.5 },
+  conditionPill: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "#FFFAF3", borderWidth: 1, borderColor: "#FBE3C3", borderRadius: 9999, paddingHorizontal: spacing.base, paddingVertical: 8 },
+  conditionText: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.text },
+  rainRow: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.surfaceMuted, borderRadius: 12, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, marginTop: spacing.base },
+  rainText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
 });

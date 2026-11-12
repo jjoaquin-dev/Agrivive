@@ -1,5 +1,6 @@
 import { Clock, MapPin } from "lucide-react";
 import { getDirectionsUrl } from "@/src/lib/maps";
+import { formatOpeningHours } from "../lib/openingHours";
 import type { MarketplaceSellerProfile } from "../types";
 import { SellerFollowButton } from "./SellerFollowButton";
 import { SellerRatingPill } from "./SellerRatingPill";
@@ -8,6 +9,7 @@ import { MessageSellerButton } from "./MessageSellerButton";
 
 export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerProfile }) {
   const directionsUrl = getDirectionsUrl(seller.latitude, seller.longitude);
+  const hoursRows = formatOpeningHours(seller.openingHours ?? []);
 
   return (
     <header className="rounded-2xl border border-agrivive-line bg-white p-6 shadow-sm flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
@@ -70,6 +72,17 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
             <p className="text-xs text-neutral-500 leading-snug">
               {seller.pickupInstructions || "Ask the seller about the best pickup time after reserving your items."}
             </p>
+            {hoursRows.length > 0 ? (
+              <dl className="pt-1.5 space-y-0.5 text-xs">
+                <dt className="font-bold text-neutral-900">Opening hours</dt>
+                {hoursRows.map((row) => (
+                  <dd key={row.days} className="flex justify-between gap-3 text-neutral-500">
+                    <span>{row.days}</span>
+                    <span className={row.time === "Closed" ? "text-neutral-400" : undefined}>{row.time}</span>
+                  </dd>
+                ))}
+              </dl>
+            ) : null}
           </div>
         </div>
       </div>

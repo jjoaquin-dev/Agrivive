@@ -19,7 +19,7 @@ export function BoostEligibilityNote({ canBoost, headline, message }: { canBoost
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.base, paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.base, paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: "#F3F1EC" },
   copy: { flex: 1 },
   title: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   text: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted },

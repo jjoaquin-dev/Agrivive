@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   head: { flexDirection: "row", justifyContent: "space-between", gap: spacing.sm },
   name: { flex: 1, fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
   money: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
-  track: { height: 8, borderRadius: 4, backgroundColor: colors.surfaceMuted, marginTop: 8, overflow: "hidden" },
+  track: { height: 8, borderRadius: 4, backgroundColor: "#F6F5F1", marginTop: 6, overflow: "hidden" },
   fill: { height: 8, borderRadius: 4, backgroundColor: colors.primary },
   qty: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 4 },
   empty: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: spacing.md },

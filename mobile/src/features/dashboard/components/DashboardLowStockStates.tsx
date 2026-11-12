@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text } from "react-native";
 import { CircleAlert } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { dash } from "../dashboardTokens";
 import { SkeletonBlock, SkeletonCard } from "./DashboardSkeleton";
 
 export const LowStockSkeleton: React.FC = () => (
@@ -38,10 +39,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: dash.card,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: dash.border,
     padding: spacing.base,
   },
   errorText: {

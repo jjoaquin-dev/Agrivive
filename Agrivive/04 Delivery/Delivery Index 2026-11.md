@@ -13,6 +13,17 @@ Previous: [[Delivery Index 2026-10]]
 
 ## 2026-11-01
 
+- [[04 Delivery/2026-11-12 Seller App Screen Size Fixes|Seller App Screen Size Fixes]]
+- [[04 Delivery/2026-11-12 Seller Forms Weather and Sign-in Cleanup|Seller Forms, Weather and Sign-in Cleanup]]
+- [[04 Delivery/2026-11-12 Seller Boost Screens Cleanup|Seller Boost Screens Cleanup]]
+- [[04 Delivery/2026-11-11 Seller Messages Screens Cleanup|Seller Messages Screens Cleanup]]
+- [[04 Delivery/2026-11-11 Seller Notifications Screen Cleanup|Seller Notifications Screen Cleanup]]
+- [[04 Delivery/2026-11-11 Seller App Pill Controls and Quiet Borders|Seller App Pill Controls and Quiet Borders]]
+- [[04 Delivery/2026-11-11 Seller Reservations Screens Cleanup|Seller Reservations Screens Cleanup]]
+- [[04 Delivery/2026-11-11 Seller Dashboard Visual Cleanup|Seller Dashboard Visual Cleanup]]
+- [[04 Delivery/2026-11-11 Seller Profile Regrouped With Quick Actions|Seller Profile Regrouped With Quick Actions]]
+- [[04 Delivery/2026-11-11 Stall Hours Cleanup and Automatic Away|Stall Hours Cleanup and Automatic Away]]
+- [[04 Delivery/2026-11-11 Reserve Confirmation Replaces Pickup Time Picker|Reserve Confirmation Replaces Pickup Time Picker]]
 - [[04 Delivery/2026-11-10 README Diagrams and CI Fix|README Alignment, Diagrams and CI Fix]]
 - [[04 Delivery/2026-11-09 Calendar Reminders Heat and Holiday Alerts|Calendar Reminders, Heat and Holiday Alerts]]
 - [[04 Delivery/2026-11-01 AHP-TOPSIS Default Policy|AHP-TOPSIS Default Policy]]

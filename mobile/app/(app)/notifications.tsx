@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, fonts, spacing } from "../../src/theme";
+import { surface } from "../../src/theme/surface";
 import { useUnifiedNotifications } from "../../src/features/notifications/hooks/useUnifiedNotifications";
 import { NotificationHeaderBar } from "../../src/features/notifications/components/NotificationHeaderBar";
 import { NotificationSummaryBanner } from "../../src/features/notifications/components/NotificationSummaryBanner";
@@ -74,19 +75,19 @@ export default function NotificationsScreen() {
 
     const result: SectionedItem[] = [];
     if (today.length > 0) {
-      result.push({ type: "header", sectionTitle: "TODAY", id: "header-today" });
+      result.push({ type: "header", sectionTitle: "Today", id: "header-today" });
       today.forEach((c, i) => {
         if (c) result.push({ type: "card", card: c, id: c.id ? `${c.id}-today-${i}` : `today-${i}` });
       });
     }
     if (yesterday.length > 0) {
-      result.push({ type: "header", sectionTitle: "YESTERDAY", id: "header-yesterday" });
+      result.push({ type: "header", sectionTitle: "Yesterday", id: "header-yesterday" });
       yesterday.forEach((c, i) => {
         if (c) result.push({ type: "card", card: c, id: c.id ? `${c.id}-yesterday-${i}` : `yesterday-${i}` });
       });
     }
     if (earlier.length > 0) {
-      result.push({ type: "header", sectionTitle: "EARLIER", id: "header-earlier" });
+      result.push({ type: "header", sectionTitle: "Earlier", id: "header-earlier" });
       earlier.forEach((c, i) => {
         if (c) result.push({ type: "card", card: c, id: c.id ? `${c.id}-earlier-${i}` : `earlier-${i}` });
       });
@@ -157,7 +158,7 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1, backgroundColor: surface.page },
   listContent: { paddingBottom: spacing.xxxl },
-  sectionHeader: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted, letterSpacing: 0.8, paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.xs, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sectionHeader: { fontFamily: fonts.heading.semiBold, fontSize: 14, color: colors.text, paddingHorizontal: spacing.base + spacing.xs, paddingTop: spacing.lg, paddingBottom: spacing.sm },
 });

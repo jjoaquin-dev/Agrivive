@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View, type DimensionValue } from "react-native";
 import { colors } from "../../../theme";
+import { dash } from "../dashboardTokens";
 
 interface SkeletonBlockProps {
   width?: DimensionValue;
@@ -38,10 +39,10 @@ export const SkeletonCard: React.FC<{ children: React.ReactNode; style?: object 
 const styles = StyleSheet.create({
   block: { backgroundColor: colors.surfaceMuted },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: dash.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: dash.border,
     padding: 16,
   },
 });

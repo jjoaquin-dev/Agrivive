@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
 import { ArrowRight, CheckCircle2 } from "lucide-react-native";
 import { colors, fonts, radii, spacing, shadows, typography } from "../../../theme";
+import { dash } from "../dashboardTokens";
 import type { Product } from "../../inventory/types";
 import { LowStockError, LowStockSkeleton } from "./DashboardLowStockStates";
 
@@ -96,16 +97,17 @@ export const DashboardLowStockAlerts: React.FC<DashboardLowStockAlertsProps> = (
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   sectionHeading: {
     ...typography.sectionHeading,
+    ...dash.sectionHeading,
     fontFamily: fonts.heading.bold,
     color: colors.text,
   },
@@ -121,14 +123,14 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   emptyCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: dash.card,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: dash.border,
     padding: spacing.base,
     alignItems: "center",
     gap: spacing.xs,
-    ...shadows.card,
+    ...dash.shadow,
   },
   emptyTitle: {
     fontFamily: fonts.body.semiBold,
@@ -146,13 +148,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.surface,
+    backgroundColor: dash.card,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: dash.border,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    ...shadows.card,
+    ...dash.shadow,
   },
   alertInfo: {
     flex: 1,

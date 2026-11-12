@@ -11,7 +11,6 @@ import { useCart } from "@/src/features/cart/CartProvider";
 import { createBuyerOrder } from "@/src/features/orders/api/orders";
 import { ReservePickupModal } from "@/src/features/reservation/components/ReservePickupModal";
 import { useReservationStatus } from "@/src/features/reservation/useReservationStatus";
-import type { PickupChoice } from "@/src/features/reservation/api/reservation";
 import { getMarketplaceProduct } from "../api/marketplace";
 import type { MarketplaceProduct } from "../types";
 import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
@@ -78,13 +77,13 @@ export function ProductDetail() {
     setShowReserveModal(true);
   }
 
-  async function executeBuyNow(pickups: PickupChoice[]) {
-    if (!product || !pickups[0]) return;
+  async function executeBuyNow() {
+    if (!product) return;
     const parsedQuantity = Number(quantity);
     setOrdering(true);
     setOrderError("");
     try {
-      const order = await createBuyerOrder(product.id, parsedQuantity, { pickupStart: pickups[0].pickupStart, pickupEnd: pickups[0].pickupEnd }, crypto.randomUUID());
+      const order = await createBuyerOrder(product.id, parsedQuantity, crypto.randomUUID());
       removeItem(product.id);
       setShowReserveModal(false);
       router.push(`/orders/${order.id}`);

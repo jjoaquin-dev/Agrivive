@@ -15,7 +15,31 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
-Mobile inconsistency scan: nearly all of it is fixed (misleading trust screens and wording, colour and type tokens, shared money and date formatters, copy rules, touch targets, unused files, files over 200 lines). Left on purpose: border radius, off-scale spacing and icon sizes, which need a look on a phone. See [[2026-11-12 Mobile Inconsistency Fixes]]. Web scan fixes and the mobile sheet fix: [[2026-11-12 Web Inconsistency Fixes and Mobile Sheets]], [[2026-11-12 Web Inconsistency Fixes Part 2]]. Slow signal: reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s: [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (capacity fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
+Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
+
+Earlier: Seller app slow-signal support (reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s): [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (pickup overlap fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
+
+Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].
+
+Earlier: Seller Boost hub screens cleaned up (website white, light borders, clearer type). See [[2026-11-12 Seller Boost Screens Cleanup]].
+
+Earlier: Seller Messages list and chat cleaned up; filter chips only show when useful. See [[2026-11-11 Seller Messages Screens Cleanup]].
+
+Earlier: Seller Notifications screen cleaned up (cards, highlighted new reservations, messages and questions) and the Show pagination is a soft pill card again. See [[2026-11-11 Seller Notifications Screen Cleanup]].
+
+Earlier: Seller app: pill buttons and text fields, pill search and dropdowns, text-only pagination, lighter borders and fills everywhere, Listings pages in the website white. See [[2026-11-11 Seller App Pill Controls and Quiet Borders]].
+
+Earlier: Seller Reservations list, detail and Report a Problem screens cleaned up (website white, one pickup card, highlighted next step). See [[2026-11-11 Seller Reservations Screens Cleanup]].
+
+Earlier: Seller dashboard (Home tab) cleaned up: website white, faint borders, one heading size and even spacing. See [[2026-11-11 Seller Dashboard Visual Cleanup]].
+
+Earlier: Seller Profile page regrouped: quick actions (close store today, reviews to reply), settings in three groups, separate solid red Log Out, whiter background and lighter borders. See [[2026-11-11 Seller Profile Regrouped With Quick Actions]].
+
+Earlier: Seller Stall Hours screen simplified (Away switch and Pickup limits removed, day circles in one row). Away is now automatic: shown to buyers after 30 minutes without using the app; orders and the 3-hour auto-confirm are unaffected. See [[2026-11-11 Stall Hours Cleanup and Automatic Away]].
+
+Earlier: Reserving no longer asks the buyer to pick a time. One confirmation shows the seller's hours, "pick it up on or before" (24 hours later for 24-hour stalls, else 30 minutes before closing), a missed-pickup warning and Cancel / Reserve. Also: seller page shows opening hours, nine category cards (Stem, Flower, Seed added) in one row, notifications null fix. Rebuild API and web; mobile not checked. See [[2026-11-11 Reserve Confirmation Replaces Pickup Time Picker]].
+
+Mobile inconsistency scan: nearly all of it is fixed (misleading trust screens and wording, colour and type tokens, shared money and date formatters, copy rules, touch targets, unused files, files over 200 lines). Left on purpose: border radius, off-scale spacing and icon sizes, which need a look on a phone. See [[2026-11-12 Mobile Inconsistency Fixes]]. Web scan fixes and the mobile sheet fix: [[2026-11-12 Web Inconsistency Fixes and Mobile Sheets]], [[2026-11-12 Web Inconsistency Fixes Part 2]].
 
 Earlier: Trust level screens: buyers get a Trust & Standing section on the web, sellers get guidance and the ladder in the app, and an email code can no longer lift a pause (blocks only). See [[2026-11-12 Trust Level Screens and Recovery Fix]].
 
@@ -54,39 +78,6 @@ Recovery restarts the inactivity clock, returns real errors, and an ended pause 
 
 Earlier: Trust and Rating module aligned with the paper: blocking by score, reply timers for all questions and chats, confirmed report violations, seller answers to product reviews, correct pause and block messages. Details in [[2026-11-02 Trust and Rating Paper Alignment]].
 
-Earlier: Restore Account screen rebuilt to match the other sign-in screens (one header, errors under the code, exactly 6 digits, success step with Continue or Sign In), and a restored seller is no longer stuck as "paused" for 30 seconds (status cache cleared on restore). Backend typecheck and builds and mobile typecheck passed; no phone check. Rebuild the API. See [[2026-11-02 Restore Account Screen Redesign]].
-
-Earlier: Weather & Holidays screen rebuilt to match Stitch F5 to F8 using only real `/seller/advisories` data and the seller profile (no sample values). Details in [[2026-11-02 Weather and Holidays Screen Redesign]].
-
-Earlier: Mobile Profile flow redesigned from the Stitch screens: Profile page, Edit Profile (with the leave-without-saving question), Sign-in Safety with the 4-step sign-in code flow, and Seller Setup. Our fields and logic are unchanged; see the note for what was left out on purpose. Mobile typecheck and Android export passed; not checked on a phone. See [[2026-11-02 Profile Flow Redesign]].
-
-Earlier: The post after adding produce is now a normal post for any listing; only Priority Boost listings (score 0.60 or higher, checked once when the first post is saved) get the 6-hour price drops. 6 hours after the post the seller is asked to set the peso drop and final price, and saving it runs the first drop. Add Produce no longer asks for the drop. New migration `20261102120000_boost_priority_price_drop_setup` is not applied anywhere yet. Backend typecheck, 33 tests, builds, drizzle check and mobile typecheck and Android export passed; no device check. Rebuild and recreate the API and worker. See [[2026-11-02 Normal First Post and Priority Price Drops]].
-
-Earlier: Fixed the Boost retry showing the old failure: a retried boost kept its old `sentAt` and old failed post logs, so the next screen said "did not post" while the list said "Posting now". Retry now clears `sentAt` and channels count only logs from the latest send. Typecheck, 33 tests and builds passed; no device check. Rebuild and recreate the API. See [[2026-11-02 Boost Retry Shows Old Failure]].
-
-Earlier: Buyer cart, orders and Messages empty states now use new green illustrations (see the dated notes from 2026-11-02). Buyer Messages empty state ("Choose a conversation") shows the new green chat-bubble illustration with its background removed (`web/public/brand/empty-chat-bubble.png`). Details: [[2026-11-02 Messages Empty State Chat Image]]. Validation: typecheck passed; seen in the browser pane at desktop width. Not checked: phone width.
-
-Priority deals row added under the marketplace hero (`GET /marketplace/products/deals`: AHP "Priority Boost" tier and at least 30% below base price). The marketplace was reordered so the products come before the seller map, and dead footer sort links and three unused components were removed. Details: [[2026-11-01 Priority Deals Row and Marketplace Reorder]]. Validation: backend typecheck and bundle passed, web typecheck and build passed. Not checked: the deals data path (backend not running) and the desktop and phone layout of the row.
-
-Previous task: Sign-in and sign-up side panel now plays the uploaded video (`web/public/brand/sign-in-video.mp4`) instead of the photo carousel, and it is shorter (80vh). Details: [[2026-10-31 Auth Video Panel]]. Follow-up: the video column was shifted right with more left padding ([[2026-10-31 Auth Video Shifted Right]]). Validation: `bun run typecheck` in `web/` passed. Not checked in a browser.
-
-Cart icon replaced everywhere in the buyer site with the supplied glyph (`CartIcon`). The empty cart shows a basket illustration, and marketplace category images are larger ([[2026-10-31 Cart Icon Category Image and Cart Illustration]]). Typecheck passed; not checked in a browser.
-
-Parkinsans now used for headers (`font-heading`), footers and the marketplace hero. Alerts, toasts and the restriction notice restyled. Cart has icon and item motion ([[2026-10-31 Parkinsans Headers Alerts and Cart Motion]]). Typecheck passed; not checked in a browser.
-
-Profile settings: search bar removed and the Profile, Security and Notifications cards share one style ([[2026-10-31 Profile Settings Consistent Cards]]). Typecheck passed; not checked in a browser.
-
-Previous task: landing hero image swapped for a muted, looping video (`web/public/brand/hero-veggies.mp4`) in `web/src/components/sections/Hero.tsx`. The old image is the poster. Details: [[2026-10-31 Hero Image Swapped for Video]].
-
-Validation: `bun run typecheck` in `web/` passed. At 1024px the video plays and sits inside the hero column. Not checked: reduced motion in the browser, and phone widths.
-
-The intro animation ([[2026-10-31 Surplus Veggies Intro Animation]]) was rejected by the user and is not used.
-
-Previous task: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]].
-
-Merged from `main`: 13 Google Stitch mobile mockups for the seller Profile flow (F1 to F12, plus F9b). Mapping and copy changes in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
-
-Earlier on `main`: Stitch frames for Messages, Boost, Notifications, Listings, Sales Report, Reservations, Auth and Home, plus the Messages flow cleanup. See the dated notes in this folder.
 
 ## Current project status
 

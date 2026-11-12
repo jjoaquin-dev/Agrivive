@@ -6,6 +6,7 @@ import { CalendarDays, CircleAlert, QrCode, RefreshCw } from "lucide-react-nativ
 import { ButtonComponent } from "../../../src/components/ButtonComponent";
 import { PaginationControl } from "../../../src/components/PaginationControl";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../src/theme";
+import { surface } from "../../../src/theme/surface";
 import { SkeletonBlock, SkeletonCard } from "../../../src/features/dashboard/components/DashboardSkeleton";
 import { OrderCard } from "../../../src/features/orders/components/OrderCard";
 import { useSellerOrders } from "../../../src/features/orders/hooks/useSellerOrders";
@@ -160,25 +161,25 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: surface.page },
   muted: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.sm },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, padding: spacing.base },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md, paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.md },
   headerText: { flex: 1 },
-  title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text },
-  subtitle: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  title: { fontFamily: fonts.heading.bold, fontSize: 28, lineHeight: 34, color: colors.text },
+  subtitle: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: 2 },
   scanButton: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing.xxxl },
   filtersScroll: { marginHorizontal: -spacing.base, marginBottom: spacing.base },
   filters: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.base },
-  filter: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.base, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  filter: { minHeight: 40, justifyContent: "center", paddingHorizontal: spacing.base, borderRadius: radii.full, borderWidth: 1, borderColor: surface.border, backgroundColor: surface.card },
   filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
+  filterText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
   filterTextSelected: { color: colors.white, fontFamily: fonts.body.semiBold },
   errorBox: { backgroundColor: colors.errorSurface, borderWidth: 1, borderColor: colors.errorBorder, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base, alignItems: "center" },
   errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.errorSurface, alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
   errorTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.error },
   errorText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.surfaceMuted, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F6F5F1", alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   skeletonCard: { gap: spacing.sm, marginBottom: spacing.md, backgroundColor: colors.surfaceMuted },
   skeletonRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   retry: { marginTop: spacing.base, alignSelf: "stretch" },

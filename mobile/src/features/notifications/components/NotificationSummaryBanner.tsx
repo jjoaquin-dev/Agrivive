@@ -26,6 +26,6 @@ export function NotificationSummaryBanner({ unreadCount, urgentCount }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
-  text: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.textMuted },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.base + spacing.xs, paddingTop: spacing.md, paddingBottom: spacing.xs },
+  text: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.textMuted },
 });

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 0,
     flexShrink: 0,
-    backgroundColor: colors.surface,
+    backgroundColor: "#FDFDFD",
   },
   container: {
     paddingHorizontal: spacing.base,
@@ -50,19 +50,19 @@ const styles = StyleSheet.create({
     minHeight: 40,
     flexShrink: 0,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: "#DDEBCB",
     borderRadius: radii.full,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.base,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.surface,
+    backgroundColor: "#F7FAF2",
   },
   chipPressed: {
     backgroundColor: colors.primaryLight,
   },
   chipText: {
     fontFamily: fonts.body.medium,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 18,
     includeFontPadding: false,
     color: colors.primaryPressed,

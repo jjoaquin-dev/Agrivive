@@ -20,6 +20,6 @@ export function AnalyticsSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  block: { backgroundColor: colors.surfaceMuted, borderRadius: radii.sm },
+  block: { backgroundColor: "#F6F5F1", borderRadius: radii.sm },
   gap: { height: spacing.md },
 });

@@ -31,7 +31,6 @@ const { respondToReschedule } = await import("./services/pickup.reschedule.respo
 const { createPickupDecline } = await import("./services/pickup.decline.create");
 const { respondToDecline } = await import("./services/pickup.decline.respond");
 const { autoAcceptDeclines } = await import("./services/pickup.decline.auto-accept");
-const { setAway } = await import("./services/pickup.stall.away.set");
 const { setClosedToday } = await import("./services/pickup.stall.closed-today.set");
 const { readStall } = await import("./services/pickup.stall.read");
 const { readPickupSlotsForBuyer } = await import("./services/pickup.slots.read");
@@ -219,13 +218,13 @@ describe("confirmation and cancellation", () => {
     await pg.update(schema.orders).set({ createdAt: new Date(Date.now() - 4 * HOUR) });
     expect(await autoConfirmOrders()).toBe(0);
   });
-  test("a cancellation within 3 hours of pickup adds 1 point; an earlier one adds none", async () => {
+  test("a cancellation within 3 hours of the pickup deadline adds 1 point; an earlier one adds none", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
     const early = await reserve(buyer, seller, 10, 11);
     await cancelBuyerOrder(early, buyer);
     expect(await points(buyer)).toBe(0);
     const late = await reserve(buyer, seller, 10, 11);
-    await pg.update(schema.orders).set({ pickupStart: new Date(Date.now() + 3 * HOUR), pickupEnd: new Date(Date.now() + 4 * HOUR), expiresAt: new Date(Date.now() + 5 * HOUR) }).where(eq(schema.orders.id, late));
+    await pg.update(schema.orders).set({ pickupStart: new Date(Date.now() - HOUR), pickupEnd: new Date(Date.now() + 3 * HOUR), expiresAt: new Date(Date.now() + 5 * HOUR) }).where(eq(schema.orders.id, late));
     await cancelBuyerOrder(late, buyer);
     expect(await points(buyer)).toBe(W.buyer_late_cancellation);
   });
@@ -318,6 +317,7 @@ describe("decline at pickup", () => {
     const buyer = await addUser("buyer"); const seller = await addSeller();
     const id = await reserve(buyer, seller, 10, 11, 10);
     await confirmSellerOrder(seller.id, id); await openWindow(id);
+    await pg.update(schema.orders).set({ readyAt: new Date() }).where(eq(schema.orders.id, id));
     return { buyer, seller, id };
   }
   test("a valid decline the seller accepts: seller gets points, buyer 0, stock not restored, fault rate counts it", async () => {
@@ -650,22 +650,7 @@ describe("reports and disputes", () => {
   });
 });
 
-describe("Away mode", () => {
-  test("Away stops the 48-hour clock, lasts at most 14 days and leaves orders alone", async () => {
-    const buyer = await addUser("buyer"); const seller = await addSeller();
-    const id = await reserve(buyer, seller);
-    const stall = await setAway(seller.id, { away: true, days: 14, reason: "Harvest" });
-    expect(stall.away.active).toBe(true);
-    expect((await orderRow(id)).status).toBe("pending");
-    expect((await fail(setAway(seller.id, { away: true }))).statusCode).toBe(409);
-    const until = stall.away.until!.getTime();
-    expect(until - Date.now()).toBeLessThanOrEqual(14 * DAY);
-    await pg.insert(schema.order_inquiries).values({ orderId: id, buyerId: buyer, sellerId: seller.id, question: "Is it fresh?", createdAt: new Date(Date.now() - 49 * HOUR) });
-    await processInquiryDeadlines();
-    expect(await points(seller.id)).toBe(0);
-    await setAway(seller.id, { away: false });
-    expect((await readStall(seller.id)).away.active).toBe(false);
-  });
+describe("Older Away periods", () => {
   test("time spent Away does not count; the remaining wait still can", async () => {
     const buyer = await addUser("buyer"); const seller = await addSeller({ allDay: true });
     const id = await reserve(buyer, seller);

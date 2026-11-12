@@ -8,6 +8,7 @@ import { calculateVisibilityScore } from "../../../utils/visibility-score";
 import { normalizeVegetableName } from "../../../utils/vegetable-identity";
 import { marketplaceSellerVisibility } from "./marketplace.visibility";
 import { PICKUP_DISCLAIMER } from "../../../utils/pickup/progress";
+import { isSellerAway } from "../../../utils/pickup/seller-presence";
 import { manilaDateKey } from "../../../utils/pickup/manila";
 import { readTrustStanding } from "../../../utils/trust/standing";
 
@@ -102,9 +103,8 @@ export async function getMarketplaceProduct(productId: string) {
       latitude: profile.latitude,
       longitude: profile.longitude,
       distanceKm: null,
-      /** Away: the seller cannot reply right now. Orders and pickup times are not changed. */
-      away: !!profile.awayUntil && profile.awayUntil > evaluatedAt,
-      awayUntil: profile.awayUntil && profile.awayUntil > evaluatedAt ? profile.awayUntil : null,
+      /** Away: the seller has not used the app for a while. Orders and pickup times are not changed. */
+      away: isSellerAway(detail.user.lastActiveAt, evaluatedAt),
       closedToday: profile.closedDate === manilaDateKey(evaluatedAt),
       trustedSeller: standing.trusted,
     },

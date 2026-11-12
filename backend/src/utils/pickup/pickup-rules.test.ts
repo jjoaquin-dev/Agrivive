@@ -107,3 +107,18 @@ describe("opening hours and pickup range rules", () => {
     expect(code(() => validatePickupRange({ start: at("2026-11-09", "11:15"), end: at("2026-11-09", "12:00") }, short, NOW))).toBe(409);
   });
 });
+
+describe("saved QR end", () => {
+  const start = at("2026-09-17", "09:00");
+  const end = at("2026-09-17", "19:30");
+  const closing = at("2026-09-17", "20:00");
+  test("QR still works between the pick-up time and closing, and stops right after closing", () => {
+    expect(qrStatus(start, end, at("2026-09-17", "19:59"), closing)).toBe("active");
+    expect(qrStatus(start, end, new Date(closing.getTime() + 60_000), closing)).toBe("expired");
+  });
+  test("24 hours: 6:01 AM the next day is expired", () => {
+    const from = at("2026-09-17", "06:00");
+    const until = at("2026-09-18", "06:00");
+    expect(qrStatus(from, until, at("2026-09-18", "06:01"), until)).toBe("expired");
+  });
+});

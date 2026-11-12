@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { ArrowLeft } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, fonts, spacing, typography } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 interface AuthScreenShellProps {
   title: string;
@@ -40,12 +41,12 @@ export const AuthScreenShell: React.FC<AuthScreenShellProps> = ({ title, subtitl
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1, backgroundColor: surface.page },
   flex: { flex: 1 },
-  content: { flexGrow: 1, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xl },
+  content: { flexGrow: 1, width: "100%", maxWidth: 520, alignSelf: "center", paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.xl },
   topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 44, marginBottom: spacing.base },
   backButton: { width: 44, height: 44, justifyContent: "center" },
-  title: { ...typography.screenTitle, color: colors.text, letterSpacing: -0.3 },
+  title: { ...typography.screenTitle, fontSize: 28, lineHeight: 34, color: colors.text, letterSpacing: -0.3 },
   subtitle: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.xs },
-  body: { marginTop: spacing.lg },
+  body: { marginTop: spacing.xl },
 });

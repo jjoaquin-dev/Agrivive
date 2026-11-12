@@ -28,7 +28,7 @@ export function OrderPickupActions({ order, onChanged }: { order: BuyerOrder; on
   const [excuseDetails, setExcuseDetails] = useState("");
 
   const proposal = order.reschedules?.find((item) => item.status === "pending");
-  const canDecline = order.status === "pending" && order.qr.status === "active" && !order.decline;
+  const canDecline = order.status === "pending" && order.progress.current === "ready" && order.qr.status === "active" && !order.decline;
   const expiredAgo = order.expiredAt ? Date.now() - new Date(order.expiredAt).getTime() : null;
   const canExplain = order.status === "expired" && !order.excuse && expiredAgo !== null && expiredAgo <= 24 * 3_600_000 && !order.decline;
 
@@ -52,10 +52,15 @@ export function OrderPickupActions({ order, onChanged }: { order: BuyerOrder; on
       ) : null}
 
       {canDecline ? (
-        <section className="rounded-2xl border border-agrivive-border bg-white p-5">
-          <h3 className="text-sm font-bold">Something wrong with the produce?</h3>
-          <p className="mt-1 text-xs text-neutral-600">Look over your items before the seller scans your QR. If there is a problem, decline here with a photo.</p>
-          <button type="button" onClick={() => setDeclineOpen(true)} className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 text-sm font-semibold text-destructive active:translate-y-px sm:w-auto sm:px-5"><ShieldAlert className="size-4" />Decline at pickup</button>
+        <section className="flex flex-col gap-4 rounded-2xl border border-[#E5E2DA] bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-700"><ShieldAlert className="size-5" aria-hidden="true" /></span>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-[#14231A]">Something wrong with the produce?</h3>
+              <p className="mt-1 text-sm leading-snug text-neutral-600">Look over your items before the seller scans your QR. If there is a problem, decline here with a photo.</p>
+            </div>
+          </div>
+          <button type="button" onClick={() => setDeclineOpen(true)} className="inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-xl border border-rose-300 bg-white px-5 text-sm font-semibold text-rose-700 hover:bg-rose-50 active:translate-y-px sm:w-auto">Decline at pickup</button>
           <PickupDeclineModal order={order} open={declineOpen} onClose={() => setDeclineOpen(false)} onDone={onChanged} />
         </section>
       ) : null}

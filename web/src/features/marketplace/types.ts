@@ -23,7 +23,6 @@ export type MarketplaceSeller = {
   distanceKm: number | null;
   /** Away: the seller cannot reply right now. Orders and pickup times stay as they are. */
   away?: boolean;
-  awayUntil?: string | null;
   closedToday?: boolean;
   trustedSeller?: boolean;
 };
@@ -53,6 +52,7 @@ export type MarketplaceSellerProfile = Pick<
   "id" | "shopName" | "detailAddress" | "pickupInstructions" | "latitude" | "longitude"
 > & {
   image: string | null;
+  openingHours?: { weekday: number; isClosed: boolean; opensMinute: number; closesMinute: number }[];
 };
 
 export type MarketplaceProduct = {

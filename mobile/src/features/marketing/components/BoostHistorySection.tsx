@@ -111,15 +111,15 @@ export function BoostHistorySection({ items, nextCursor, loading, loadingMore, e
 
 const styles = StyleSheet.create({
   filters: { gap: spacing.sm, paddingBottom: spacing.md, paddingRight: spacing.base },
-  filter: { minHeight: 40, paddingHorizontal: spacing.md, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
+  filter: { minHeight: 40, paddingHorizontal: spacing.base, borderRadius: radii.full, borderWidth: 1, borderColor: "#F3F1EC", backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
   filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  filterText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
+  filterText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
   filterTextSelected: { color: colors.white, fontFamily: fonts.body.semiBold },
   error: { fontFamily: fonts.body.medium, fontSize: 13, lineHeight: 19, color: colors.error },
   errorBox: { backgroundColor: "rgba(184, 84, 80, 0.1)", borderWidth: 1, borderColor: colors.error, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.sm },
   retry: { marginTop: spacing.sm },
   loader: { marginVertical: spacing.base },
   empty: { alignItems: "center", paddingVertical: spacing.xxxl },
-  emptyTitle: { fontFamily: fonts.heading.semiBold, fontSize: 18, color: colors.text },
+  emptyTitle: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   emptyText: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
 });

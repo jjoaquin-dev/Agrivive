@@ -25,7 +25,7 @@ function normalizeItems(items: CheckoutInput["items"]) {
 }
 
 function requestFingerprint(items: CheckoutInput["items"], pickups: CheckoutInput["pickups"]) {
-  const sortedPickups = [...pickups].sort((a, b) => a.sellerId.localeCompare(b.sellerId));
+  const sortedPickups = [...(pickups ?? [])].sort((a, b) => a.sellerId.localeCompare(b.sellerId));
   return createHash("sha256")
     .update(JSON.stringify({ items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })), pickups: sortedPickups }))
     .digest("hex");
@@ -89,12 +89,12 @@ export async function createCartCheckout(
       bySeller.set(item.sellerId, sellerItems);
     }
 
-    const pickupBySeller = new Map(body.pickups.map((pickup) => [pickup.sellerId, pickup]));
+    const pickupBySeller = new Map((body.pickups ?? []).map((pickup) => [pickup.sellerId, pickup]));
     const orderIds: string[] = [];
     for (const [sellerId, sellerItems] of [...bySeller].sort(([a], [b]) => a.localeCompare(b))) {
       const pickup = pickupBySeller.get(sellerId);
-      if (!pickup) throw new OrderError(400, "Choose a pickup time for every seller in your cart.");
-      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, parsePickup(pickup.pickupStart, pickup.pickupEnd));
+      if (body.pickups && !pickup) throw new OrderError(400, "Choose a pickup time for every seller in your cart.");
+      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, pickup ? parsePickup(pickup.pickupStart, pickup.pickupEnd) : null);
       orderIds.push(orderId);
       const summary = sellerItems.map((i) => `${i.quantity} ${i.scalingType} ${i.productName}`).join(", ");
       await enqueueOrderNotification(
