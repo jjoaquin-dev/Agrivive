@@ -31439,7 +31439,8 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, tri
   if (!actionType || !moves)
     return null;
   const actionKey = `${trustPolicyVersion}:${subjectId}:${level}:${sourceEventKey ?? sourceOrderId ?? "score"}`;
-  const endsAt = pauseHours ? new Date(Date.now() + pauseHours * 3600000) : null;
+  const startsAt = new Date;
+  const endsAt = pauseHours ? new Date(startsAt.getTime() + pauseHours * 3600000) : null;
   const reason = describeLevelChange(level, standing.score, role, pauseHours);
   return db.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
@@ -31456,6 +31457,7 @@ async function evaluateTrustAction(subjectId, sourceOrderId, sourceEventKey, tri
       reason,
       sourceEventId: sourceEvent?.id ?? null,
       sourceOrderId: orderId,
+      startsAt,
       endsAt
     }).returning();
     if (!action)
