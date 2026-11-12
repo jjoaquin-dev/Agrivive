@@ -6,7 +6,7 @@ import { colors } from "../../../theme";
 import { NotificationBellButton } from "../../../components/NotificationBellButton";
 import type { InventoryFilterTab } from "../hooks/useInventory";
 import type { InventorySummary, ProductCategory } from "../types";
-import { styles } from "./InventoryListHeaderStyles";
+import { styles } from "./InventoryListHeader.styles";
 
 interface Props {
   summary: InventorySummary;
@@ -22,11 +22,11 @@ interface Props {
 }
 
 const TABS: { id: InventoryFilterTab; label: string; fg: string; bg: string; count: (s: InventorySummary) => number }[] = [
-  { id: "all", label: "All", fg: colors.text, bg: "#F3F1EA", count: (s) => s.totalProducts },
-  { id: "selling", label: "Selling", fg: colors.text, bg: "#F3F1EA", count: (s) => Math.max(0, s.activeCount - s.outOfStockCount) },
-  { id: "low_stock", label: "Running low", fg: colors.warning, bg: "#FFF7ED", count: (s) => s.lowStockCount },
-  { id: "out_of_stock", label: "Sold out", fg: colors.error, bg: "#FEF2F2", count: (s) => s.outOfStockCount },
-  { id: "archived", label: "Archived", fg: colors.textMuted, bg: "#F3F1EA", count: (s) => s.archivedCount },
+  { id: "all", label: "All", fg: colors.text, bg: colors.surfaceMuted, count: (s) => s.totalProducts },
+  { id: "selling", label: "Selling", fg: colors.text, bg: colors.surfaceMuted, count: (s) => Math.max(0, s.activeCount - s.outOfStockCount) },
+  { id: "low_stock", label: "Running low", fg: colors.warning, bg: colors.orangeSurface, count: (s) => s.lowStockCount },
+  { id: "out_of_stock", label: "Sold out", fg: colors.error, bg: colors.errorSurface, count: (s) => s.outOfStockCount },
+  { id: "archived", label: "Archived", fg: colors.textMuted, bg: colors.surfaceMuted, count: (s) => s.archivedCount },
 ];
 
 export function InventoryListHeader({
@@ -40,7 +40,7 @@ export function InventoryListHeader({
         <View style={styles.actions}>
           <NotificationBellButton unreadCount={notifications} onPress={onOpenNotifications} />
           <Pressable onPress={onOpenMenu} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="More options">
-            <MoreVertical size={20} color="#374151" />
+            <MoreVertical size={20} color={colors.text} />
           </Pressable>
         </View>
       </View>
@@ -49,7 +49,7 @@ export function InventoryListHeader({
         <Search size={18} color={colors.textMuted} />
         <TextInput
           placeholder="Search your produce..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={onSearch}
           style={styles.searchInput}
@@ -57,7 +57,7 @@ export function InventoryListHeader({
         />
         {searchQuery.length > 0 ? (
           <Pressable onPress={() => onSearch("")} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={10}>
-            <X size={16} color="#9CA3AF" />
+            <X size={16} color={colors.textMuted} />
           </Pressable>
         ) : null}
       </View>

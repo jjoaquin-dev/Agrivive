@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
 import { dateKey, formatRange, lastDays, parseKey, type DateRange } from "../dateRange";
+import { SlideModal } from "../../../components/SlideModal";
 
-const BLUE = "#2563EB";
-const BLUE_LIGHT = "#DBEAFE";
+const BLUE = colors.primary;
+const BLUE_LIGHT = colors.surfaceMuted;
 const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 const presets = [{ days: 7, label: "Last 7 days" }, { days: 30, label: "Last 30 days" }, { days: 90, label: "Last 90 days" }];
 
@@ -39,7 +40,7 @@ export function AnalyticsDateSheet({ visible, range, onApply, onClose }: Props) 
   const picked: DateRange | null = start ? { from: start, to: end ?? start } : null;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close calendar" />
       <View style={styles.sheet}>
         <Text style={styles.title}>Choose Dates</Text>
@@ -50,9 +51,9 @@ export function AnalyticsDateSheet({ visible, range, onApply, onClose }: Props) 
           ))}
         </View>
         <View style={styles.monthRow}>
-          <Pressable onPress={() => move(-1)} accessibilityRole="button" accessibilityLabel="Earlier month" style={styles.nav}><ChevronLeft size={22} color={colors.text} /></Pressable>
+          <Pressable onPress={() => move(-1)} accessibilityRole="button" accessibilityLabel="Earlier month" style={styles.nav}><ChevronLeft size={24} color={colors.text} /></Pressable>
           <Text style={styles.month}>{first.toLocaleDateString([], { month: "long", year: "numeric" })}</Text>
-          <Pressable onPress={() => move(1)} disabled={nextDisabled} accessibilityRole="button" accessibilityLabel="Later month" style={[styles.nav, nextDisabled && styles.off]}><ChevronRight size={22} color={colors.text} /></Pressable>
+          <Pressable onPress={() => move(1)} disabled={nextDisabled} accessibilityRole="button" accessibilityLabel="Later month" style={[styles.nav, nextDisabled && styles.off]}><ChevronRight size={24} color={colors.text} /></Pressable>
         </View>
         <View style={styles.grid}>
           {weekdays.map((w, i) => <Text key={i} style={styles.weekday}>{w}</Text>)}
@@ -72,14 +73,14 @@ export function AnalyticsDateSheet({ visible, range, onApply, onClose }: Props) 
         {picked ? <Text style={styles.summary}>{formatRange(picked)}</Text> : null}
         <ButtonComponent title="Show This Period" disabled={!picked} onPress={() => { if (picked) { onApply(picked); onClose(); } }} />
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radii.card, borderTopRightRadius: radii.card, padding: spacing.base, gap: spacing.sm },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   hint: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   presets: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   preset: { minHeight: 40, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: radii.full, borderWidth: 1, borderColor: colors.border },
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   weekday: { width: "14.2857%", textAlign: "center", fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted, paddingBottom: spacing.xs },
   cell: { width: "14.2857%", height: 44, alignItems: "center", justifyContent: "center" },
   inside: { backgroundColor: BLUE_LIGHT },
-  edge: { backgroundColor: BLUE, borderRadius: 22 },
+  edge: { backgroundColor: BLUE, borderRadius: 24 },
   day: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.text },
   insideText: { color: BLUE, fontFamily: fonts.body.semiBold },
   edgeText: { color: colors.white, fontFamily: fonts.body.semiBold },

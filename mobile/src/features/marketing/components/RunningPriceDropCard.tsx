@@ -3,8 +3,8 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import { Clock } from "lucide-react-native";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme";
 import { formatBoostTime, type RunningPriceDrop } from "../types";
+import { formatPeso as peso } from "../../../utils/money";
 
-const peso = (value: number) => `₱${value.toFixed(2)}`;
 
 interface Props {
   item: RunningPriceDrop;

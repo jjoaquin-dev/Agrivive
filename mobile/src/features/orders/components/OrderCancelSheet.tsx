@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { X } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface OrderCancelSheetProps {
   visible: boolean;
@@ -20,14 +21,14 @@ export function OrderCancelSheet({ visible, saving, onClose, onConfirm }: OrderC
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>Cancel Reservation</Text>
             <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={styles.close}>
-              <X size={22} color={colors.textMuted} />
+              <X size={24} color={colors.textMuted} />
             </Pressable>
           </View>
           <Text style={styles.body}>Tell the buyer why you can't hand this over.</Text>
@@ -45,12 +46,12 @@ export function OrderCancelSheet({ visible, saving, onClose, onConfirm }: OrderC
           <ButtonComponent title="Keep Reservation" onPress={onClose} variant="ghost" textStyle={styles.keep} />
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, padding: spacing.base, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.md },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },

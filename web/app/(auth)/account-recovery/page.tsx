@@ -87,15 +87,15 @@ export default function AccountRecoveryPage() {
       footer={
         <Link
           href={withNextPath("/login", nextPath)}
-          className="inline-flex items-center gap-1.5 font-semibold text-[#457D00] underline-offset-4 hover:underline"
+          className="inline-flex items-center gap-1.5 font-semibold text-agrivive-primary underline-offset-4 hover:underline"
         >
           <ArrowLeft aria-hidden="true" size={15} />Back to sign in
         </Link>
       }
     >
       {message ? (
-        <Alert className="mb-5 border-[#457D00]/20 bg-[#F7FAF2] text-[#457D00] rounded-2xl p-4">
-          <MailCheck aria-hidden="true" className="size-4 text-[#457D00]" />
+        <Alert className="mb-5 border-agrivive-primary/20 bg-agrivive-mist text-agrivive-primary rounded-2xl p-4">
+          <MailCheck aria-hidden="true" className="size-4 text-agrivive-primary" />
           <AlertDescription className="text-sm font-medium">{message}</AlertDescription>
         </Alert>
       ) : null}
@@ -116,13 +116,13 @@ export default function AccountRecoveryPage() {
             placeholder="buyer@example.com"
             value={email}
             onChange={(event) => { setEmail(event.target.value); setError(""); }}
-            className={sent ? "bg-[#EEF2FF] border-indigo-100/90 text-[#14231A]" : ""}
+            className={sent ? "bg-[#EEF2FF] border-indigo-100/90 text-agrivive-ink" : ""}
           />
           {sent ? (
             <div className="space-y-2">
               <label
                 htmlFor="recovery-otp"
-                className="block text-xs font-semibold uppercase tracking-wider text-[#14231A]/85 text-center"
+                className="block text-xs font-semibold uppercase tracking-wider text-agrivive-ink/85 text-center"
               >
                 Recovery code
               </label>
@@ -141,7 +141,7 @@ export default function AccountRecoveryPage() {
           <Button
             type="submit"
             disabled={loading || resending}
-            className="h-12 w-full rounded-xl bg-[#457D00] font-semibold text-white shadow-sm hover:bg-[#457D00]/90 active:scale-[0.99] transition-all"
+            className="h-12 w-full rounded-xl bg-agrivive-primary font-semibold text-white shadow-sm hover:bg-agrivive-primary/90 active:scale-[0.99] transition-all"
           >
             {loading ? (
               <><Spinner data-icon="inline-start" />Restoring access…</>
@@ -158,7 +158,7 @@ export default function AccountRecoveryPage() {
               type="button"
               disabled={resending || loading || cooldown > 0}
               onClick={() => void requestCode()}
-              className="h-12 w-full rounded-xl border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-[#14231A] shadow-sm hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
+              className="h-12 w-full rounded-xl border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-agrivive-ink shadow-sm hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
             >
               <RefreshCw data-icon="inline-start" />{cooldown > 0 ? `Send again in ${cooldown}s` : "Send a new code"}
             </Button>

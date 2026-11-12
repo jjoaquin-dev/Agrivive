@@ -63,7 +63,7 @@ export function DailyAdvisoryPopup() {
           ) : null}
           {holiday && holidayDate ? (
             <View style={styles.row}>
-              <View style={[styles.icon, { backgroundColor: colors.primaryLight }]}><CalendarDays size={26} color={colors.primary} /></View>
+              <View style={[styles.icon, { backgroundColor: colors.primaryLight }]}><CalendarDays size={28} color={colors.primary} /></View>
               <View style={styles.rowText}>
                 <Text style={styles.big}>{holiday.name}</Text>
                 <Text style={styles.small}>{holidayDate.toLocaleDateString([], { month: "long", day: "numeric" })} · Next holiday</Text>
@@ -72,10 +72,10 @@ export function DailyAdvisoryPopup() {
           ) : null}
           {reminders.length ? (
             <View style={styles.heads} accessibilityRole="alert">
-              <View style={styles.headsTitle}><AlertTriangle size={16} color="#92400E" /><Text style={styles.headsTitleText}>Heads Up</Text></View>
+              <View style={styles.headsTitle}><AlertTriangle size={16} color={colors.warningText} /><Text style={styles.headsTitleText}>Heads Up</Text></View>
               {reminders.map((reminder, index) => (
                 <View key={`${reminder.kind}-${index}`} style={styles.headsRow}>
-                  {reminder.kind === "heat" ? <Thermometer size={16} color="#B45309" /> : reminder.kind === "holiday" ? <CalendarDays size={16} color="#B45309" /> : <AlertTriangle size={16} color="#B45309" />}
+                  {reminder.kind === "heat" ? <Thermometer size={16} color={colors.warningText} /> : reminder.kind === "holiday" ? <CalendarDays size={16} color={colors.warningText} /> : <AlertTriangle size={16} color={colors.warningText} />}
                   <Text style={styles.headsText}>{reminder.message}</Text>
                 </View>
               ))}
@@ -90,20 +90,20 @@ export function DailyAdvisoryPopup() {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", padding: spacing.lg },
+  backdrop: { flex: 1, backgroundColor: colors.overlay, alignItems: "center", justifyContent: "center", padding: spacing.lg },
   card: { width: "100%", maxWidth: 420, backgroundColor: colors.surface, borderRadius: radii.card, padding: spacing.lg, gap: spacing.md },
   close: { position: "absolute", top: spacing.sm, right: spacing.sm, width: touchTargets.min, height: touchTargets.min, alignItems: "center", justifyContent: "center", zIndex: 1 },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text, paddingRight: touchTargets.min },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, paddingRight: touchTargets.min },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   icon: { width: 56, height: 56, borderRadius: 28, alignItems: "center", justifyContent: "center" },
   rowText: { flex: 1 },
   big: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.text },
   small: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: 2 },
-  heads: { backgroundColor: "#FFFBEB", borderColor: "#FDE68A", borderWidth: 1, borderRadius: radii.card, padding: spacing.md, gap: spacing.sm },
-  headsTitle: { flexDirection: "row", alignItems: "center", gap: 6 },
-  headsTitleText: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: "#92400E" },
+  heads: { backgroundColor: colors.warningSurface, borderColor: colors.warningBorder, borderWidth: 1, borderRadius: radii.card, padding: spacing.md, gap: spacing.sm },
+  headsTitle: { flexDirection: "row", alignItems: "center", gap: 8 },
+  headsTitleText: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.warningText },
   headsRow: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
-  headsText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: "#78350F" },
+  headsText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.warningText },
   later: { minHeight: touchTargets.min, alignItems: "center", justifyContent: "center" },
   laterText: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.textMuted },
 });

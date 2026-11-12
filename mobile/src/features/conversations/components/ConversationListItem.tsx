@@ -1,8 +1,9 @@
+import { formatRelativeTime } from "../../../utils/dates";
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { Conversation } from "../types";
-import { formatRelativeTime, getAvatarColor, getInitials } from "../utils/avatar";
+import { getAvatarColor, getInitials } from "../utils/avatar";
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -29,10 +30,10 @@ function getWaitingInfo(lastMessageAt: string) {
 
   if (diffHours >= 24) {
     color = colors.error;
-    bg = "#FEE2E2";
+    bg = colors.errorSurface;
   } else if (diffHours >= 12) {
     color = colors.warning;
-    bg = "#FEF3C7";
+    bg = colors.warningSurface;
   }
 
   return { label, color, bg };
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   },
   productThumb: { width: 20, height: 20, borderRadius: 4, marginRight: 4 },
   tagText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.primaryPressed },
-  badgesRight: { flexDirection: "row", alignItems: "center", gap: 6 },
+  badgesRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   closedTag: { backgroundColor: colors.border, paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full },
   closedTagText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted },
   waitingPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full },
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
   },
   unreadBadgeText: { fontFamily: fonts.heading.bold, fontSize: 11, color: colors.white },
   snippetText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 4 },

@@ -22,6 +22,6 @@ export function TotpConfirmPasswordCard({ password, passwordError, onChangePassw
 
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.lg },
-  title: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.base },
 });

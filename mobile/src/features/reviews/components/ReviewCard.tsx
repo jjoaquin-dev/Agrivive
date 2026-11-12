@@ -3,7 +3,8 @@ import { Image, Pressable, Text, View } from "react-native";
 import { Check, CornerDownRight, MessageSquare, Star } from "lucide-react-native";
 import type { ReviewItem } from "../types";
 import { ReviewReplyComposer } from "./ReviewReplyComposer";
-import { styles } from "./review-card.styles";
+import { styles } from "./ReviewCard.styles";
+import { colors } from "../../../theme";
 
 interface ReviewCardProps {
   review: ReviewItem;
@@ -13,7 +14,7 @@ interface ReviewCardProps {
 const Stars: React.FC<{ value: number }> = ({ value }) => (
   <View style={styles.starRow}>
     {[1, 2, 3, 4, 5].map((s) => (
-      <Star key={s} size={14} color="#EAB308" fill={s <= value ? "#EAB308" : "transparent"} />
+      <Star key={s} size={14} color={colors.star} fill={s <= value ? colors.star : "transparent"} />
     ))}
   </View>
 );
@@ -24,7 +25,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const formattedDate = new Date(review.createdAt).toLocaleDateString(undefined, {
+  const formattedDate = new Date(review.createdAt).toLocaleDateString("en-US", { timeZone: "Asia/Manila",
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -42,7 +43,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
       setIsReplying(false);
       setReplyText("");
     } catch (err: any) {
-      setError(err?.message || "Failed to submit reply.");
+      setError(err?.message || "Could not submit reply.");
     } finally {
       setSubmitting(false);
     }
@@ -54,7 +55,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
         <View style={styles.buyerInfo}>
           <Text style={styles.buyerName}>{review.buyerName}</Text>
           <View style={styles.verifiedBadge}>
-            <Check size={10} color="#457D00" strokeWidth={3} />
+            <Check size={12} color={colors.primary} strokeWidth={3} />
             <Text style={styles.verifiedText}>Verified Buyer</Text>
           </View>
         </View>
@@ -95,7 +96,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
       {review.sellerResponse ? (
         <View style={styles.responseBox}>
           <View style={styles.responseHeader}>
-            <CornerDownRight size={14} color="#457D00" />
+            <CornerDownRight size={14} color={colors.primary} />
             <Text style={styles.responseTitle}>Your reply</Text>
           </View>
           <Text style={styles.responseText}>{review.sellerResponse}</Text>
@@ -123,7 +124,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onSubmitReply })
           accessibilityRole="button"
           accessibilityLabel="Reply to this review"
         >
-          <MessageSquare size={14} color="#457D00" />
+          <MessageSquare size={14} color={colors.primary} />
           <Text style={styles.replyBtnText}>Reply</Text>
         </Pressable>
       )}

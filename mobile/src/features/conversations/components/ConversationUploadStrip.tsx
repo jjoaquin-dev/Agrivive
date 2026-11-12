@@ -25,7 +25,7 @@ export function ConversationUploadStrip({ uri, filename, uploading, onRemove }: 
     <View style={styles.strip}>
       <Image source={{ uri }} style={styles.thumb} />
       <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={1}>{uploading ? "Uploading photo…" : "Photo ready to send"}</Text>
+        <Text style={styles.title} numberOfLines={1}>{uploading ? "Uploading photo..." : "Photo ready to send"}</Text>
         {uploading ? (
           <View style={styles.track}>
             <Animated.View style={[styles.bar, { transform: [{ translateX: slide.interpolate({ inputRange: [0, 1], outputRange: [-60, 200] }) }] }]} />
@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
   thumb: { width: 48, height: 48, borderRadius: radii.sm + 2, backgroundColor: colors.border },
   body: { flex: 1 },
   title: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
-  track: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden", marginVertical: 4 },
-  bar: { width: 60, height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  track: { height: 6, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginVertical: 4 },
+  bar: { width: 60, height: 6, borderRadius: 4, backgroundColor: colors.primary },
   file: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  close: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
+  close: { width: 44, height: 44, borderRadius: 24, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
 });

@@ -6,7 +6,8 @@ import { OrderError } from "../../../utils/order-types";
 import { forgetUserStatus } from "../../../utils/user-status-cache";
 import type { TrustRecoveryRequestBody, TrustRecoveryVerifyBody } from "../model/trust.recovery";
 
-const recoveryActionTypes = ["blocked", "temporary_restriction"] as const;
+/** Only a block can be restored with an email code. A pause ends on its own, so a code can never shorten it. */
+const recoveryActionTypes = ["blocked"] as const;
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -15,7 +16,7 @@ function normalizeEmail(email: string) {
 async function hasRecoverableAction(email: string) {
   const [candidate] = await db.select({ id: user.id, isActive: user.isActive })
     .from(user).where(eq(user.email, email)).limit(1);
-  // A paused buyer is still active, so recovery depends on the open pause or block, not on isActive.
+  // Recovery depends on an open block, not on isActive.
   if (!candidate) return false;
   const [action] = await db.select({ id: trust_actions.id }).from(trust_actions).where(and(
     eq(trust_actions.subjectId, candidate.id),

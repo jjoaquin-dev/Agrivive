@@ -13,17 +13,17 @@ export function Hero() {
     <section
       ref={heroRef}
       id="hero"
-      className="relative overflow-hidden bg-white pt-[120px] sm:pt-[168px] text-[#14231A] min-h-[92dvh] sm:min-h-dvh flex flex-col pb-10 lg:pb-0"
+      className="relative overflow-hidden bg-white pt-[120px] sm:pt-[168px] text-agrivive-ink min-h-[92dvh] sm:min-h-dvh flex flex-col pb-10 lg:pb-0"
     >
       {/* Real Content */}
       <div className="relative z-10 mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 items-center gap-8 px-4 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8">
         <div className="relative z-10 flex flex-col items-center text-center lg:items-start lg:self-center lg:pb-16 lg:text-left">
-          <h1 id="hero-title" className="type-display hero-title-line mt-0 font-heading text-[#14231A]">
+          <h1 id="hero-title" className="type-display hero-title-line mt-0 font-heading text-agrivive-ink">
             <span>
               Rescue{" "}
-              <span className="relative isolate inline-block text-[#457D00]">
+              <span className="relative isolate inline-block text-agrivive-primary">
                 Surplus
-                <svg className="absolute -bottom-1.5 left-0 -z-10 w-full text-[#E2FD56] sm:-bottom-2" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <svg className="absolute -bottom-1.5 left-0 -z-10 w-full text-agrivive-lime sm:-bottom-2" viewBox="0 0 110 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <path className="hero-underline" pathLength={1} d="M3 9C30 3 80 3 107 9" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
                 </svg>
               </span>{" "}
@@ -33,14 +33,14 @@ export function Hero() {
             <br className="hidden sm:block" /> in Davao City
           </h1>
 
-          <p id="hero-desc" className="type-lede mt-5 max-w-xl font-body text-[#4B5563] sm:mt-6 lg:text-[1.375rem]">
+          <p id="hero-desc" className="type-lede mt-5 max-w-xl font-body text-gray-600 sm:mt-6 lg:text-[1.375rem]">
             Reserve fresh surplus from verified local stalls. Pick up with a 24-hour QR code and help cut food waste.
           </p>
 
           <div id="hero-actions" className="mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:items-center sm:gap-4 lg:flex-wrap lg:justify-start">
             <Link
               href="/marketplace"
-              className="inline-flex min-h-[56px] whitespace-nowrap items-center justify-center gap-2 rounded-full bg-[#457D00] px-8 text-base font-bold text-white transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-[#386400] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              className="inline-flex min-h-[56px] whitespace-nowrap items-center justify-center gap-2 rounded-full bg-agrivive-primary px-8 text-base font-bold text-white transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-[#386400] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >
               <span>Shop Today's Harvest</span>
               <ArrowRight className="size-4" aria-hidden="true" />
@@ -49,9 +49,9 @@ export function Hero() {
             <a
               href={SELLER_APK_URL}
               download="agrivive-seller.apk"
-              className="inline-flex min-h-[56px] whitespace-nowrap items-center justify-center gap-2 rounded-full border-2 border-[#457D00] px-7 text-base font-bold text-[#457D00] transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-[#457D00]/10 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              className="inline-flex min-h-[56px] whitespace-nowrap items-center justify-center gap-2 rounded-full border-2 border-agrivive-primary px-7 text-base font-bold text-agrivive-primary transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-agrivive-primary/10 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >
-              <Smartphone className="size-4 text-[#457D00]" aria-hidden="true" />
+              <Smartphone className="size-4 text-agrivive-primary" aria-hidden="true" />
               <span>Get the Seller App</span>
             </a>
           </div>

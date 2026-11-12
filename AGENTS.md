@@ -51,7 +51,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `mobile/app/_layout.tsx`: Root auth guard, session initialization & font loader
   - `mobile/app/(auth)/_layout.tsx`: Auth navigation stack
   - `mobile/app/(app)/_layout.tsx`: Main app modal & navigation stack
-  - `mobile/app/(app)/(tabs)/_layout.tsx`: Bottom tab bar (`home`, `inventory`, `orders`, `messages`, `profile`)
+  - `mobile/app/(app)/(tabs)/_layout.tsx`: Bottom tab bar (`home`, `orders` (Reservations), `inventory` (Listings), `messages`, `marketing` (Boost)); Profile opens from Home, not a tab
 - **Screens (`mobile/app/`)**:
   - `(auth)/`: `login.tsx`, `register.tsx`, `onboarding.tsx`, `email-otp-login.tsx`, `verify-email.tsx`, `two-factor.tsx`, `account-recovery.tsx`, `password-setup.tsx`
   - `(app)/(tabs)/`: `home.tsx`, `inventory.tsx`, `orders.tsx`, `messages.tsx`, `profile.tsx`
@@ -67,8 +67,10 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `advisories/`: Components (`WeatherHeroCard.tsx`, `UpcomingHolidaysCard.tsx`, `ContextualReminderCard.tsx`), hooks
   - `dashboard/`: Components (`DashboardHeader.tsx`, operations hub cards)
 - **Shared Components & Utilities**:
-  - `mobile/src/components/`: `ButtonComponent.tsx`, `InputComponent.tsx`, `OtpInputComponent.tsx`, `PaginationControl.tsx`, `ConfirmDialogComponent.tsx`, `NotificationBellButton.tsx`
-  - `mobile/src/theme/index.ts`: Design system tokens (colors, typography scale, spacing, radii, touch targets)
+  - `mobile/src/components/`: `ButtonComponent.tsx`, `InputComponent.tsx`, `OtpInputComponent.tsx`, `PaginationControl.tsx`, `ConfirmDialogComponent.tsx`, `SlideModal.tsx` (bottom sheet: dim fades, only the sheet slides), `NotificationBellButton.tsx`
+  - `mobile/src/theme/index.ts`: Design system tokens (colors including status tints and the dim `overlay`, typography scale, spacing, radii, touch targets)
+  - `mobile/src/utils/dates.ts`, `mobile/src/utils/money.ts`: the only date (Asia/Manila), relative-time and peso formatters; do not format dates or pesos inline
+  - `mobile/src/features/auth/hooks/`: `useLogin`, `useRegister` (screens only draw; styles live in `*.styles.ts` next to their feature)
   - `mobile/src/context/AuthContext.tsx`: Session state, setup refresh & user profile
   - `mobile/src/api/client.ts`: Authenticated Better Auth API client
 
@@ -82,8 +84,8 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `terms/`, `privacy/`, `cookies/`, `download-app/`: Legal & utility pages
 - **Components & Library (`web/src/`)**:
   - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
-  - `web/src/features/`: Buyer domain logic & data hooks
-  - `web/src/lib/`: API fetch utilities & auth helpers
+  - `web/src/features/`: Buyer domain logic & data hooks (`trust/`: Trust & Standing section of `/profile`, pause notice, dispute form)
+  - `web/src/lib/`: API fetch utilities, auth helpers, `format.ts` (the only date, time and number formatters; Asia/Manila) and `money.ts` (peso)
 
 #### 4. Project Vault & History (`Agrivive/`)
 - `Agrivive/04 Delivery/00-LATEST.md`: Current sprint snapshot (read this first)

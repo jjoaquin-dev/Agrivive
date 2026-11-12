@@ -3,8 +3,8 @@ import { Image, StyleSheet, Switch, Text, View } from "react-native";
 import { setAutoPriceDropEnabled } from "../api/visibility-boosts";
 import type { Product } from "../../inventory/types";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { formatPeso as peso } from "../../../utils/money";
 
-const peso = (value: string | number) => `₱${Number(value).toFixed(2)}`;
 const hasDrops = (product: Product) => Number(product.priceReductionAmount ?? 0) > 0 && product.minimumPrice != null && product.isActive !== false;
 
 /** One switch per listing that has a drop amount and a final price. Off keeps the numbers and stops the 6-hour drops. */

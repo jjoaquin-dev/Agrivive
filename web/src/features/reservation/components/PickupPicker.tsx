@@ -5,13 +5,14 @@ import { Check } from "lucide-react";
 import { ApiError, isAbortError } from "@/src/lib/api";
 import { getPickupSlots, type PickupSlots } from "../api/reservation";
 import { PickupTimeDropdown } from "./PickupTimeDropdown";
+import { formatDate, formatTime } from "@/src/lib/format";
 
 export type PickupRange = { start: string; end: string } | null;
 
-const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" });
+const clock = (iso: string) => formatTime(iso, { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Manila" });
 const manilaDate = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 const dayLabel = (date: string, index: number) =>
-  `${index === 0 ? "Today" : "Tomorrow"} · ${new Date(`${date}T00:00:00+08:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric", timeZone: "Asia/Manila" })}`;
+  `${index === 0 ? "Today" : "Tomorrow"} · ${formatDate(`${date}T00:00:00+08:00`, { month: "short", day: "numeric", timeZone: "Asia/Manila" })}`;
 const periodOf = (iso: string) => {
   const hour = Number(new Date(iso).toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Manila" })) % 24;
   return hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
@@ -21,7 +22,7 @@ const PERIODS = ["Morning", "Afternoon", "Evening"];
 function Step({ n, title, done, children }: { n: number; title: string; done: boolean; children: ReactNode }) {
   return (
     <section className="flex gap-3">
-      <span aria-hidden className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-[#457D00] text-white" : "border border-[#E5E2DA] text-neutral-600"}`}>
+      <span aria-hidden className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-agrivive-primary text-white" : "border border-agrivive-border text-neutral-600"}`}>
         {done ? <Check className="size-3.5" /> : n}
       </span>
       <div className="min-w-0 flex-1 space-y-2">
@@ -92,7 +93,7 @@ export function PickupPicker({ sellerId, value, onChange, blocked = [] }: {
           {slots.days.map((item, index) => (
             <button key={item.date} type="button" role="tab" aria-selected={index === dayIndex}
               onClick={() => { if (index !== dayIndex) { setPicked(index); onChange(null); } }}
-              className={`min-h-12 rounded-xl border px-3 text-sm font-semibold transition active:translate-y-px ${index === dayIndex ? "border-[#457D00] bg-[#F0F7EB] text-[#244218]" : "border-[#E5E2DA] bg-white text-neutral-700"}`}>
+              className={`min-h-12 rounded-xl border px-3 text-sm font-semibold transition active:translate-y-px ${index === dayIndex ? "border-agrivive-primary bg-agrivive-mist text-agrivive-forest" : "border-agrivive-border bg-white text-neutral-700"}`}>
               {dayLabel(item.date, index)}
             </button>
           ))}
@@ -100,9 +101,9 @@ export function PickupPicker({ sellerId, value, onChange, blocked = [] }: {
         <p className="text-xs text-neutral-600">You can only book today or tomorrow, so vegetables are not held for too long.</p>
       </Step>
       {!day.open ? (
-        <p className="rounded-xl border border-[#E5E2DA] bg-[#FAFAF8] p-3 text-sm text-neutral-600">{day.reason || "This stall has no pickup times on this day."} Try the other day.</p>
+        <p className="rounded-xl border border-agrivive-border bg-[#FAFAF8] p-3 text-sm text-neutral-600">{day.reason || "This stall has no pickup times on this day."} Try the other day.</p>
       ) : fromGroups.length === 0 ? (
-        <p className="rounded-xl border border-[#E5E2DA] bg-[#FAFAF8] p-3 text-sm text-neutral-600">No free times left on this day. Try the other day.</p>
+        <p className="rounded-xl border border-agrivive-border bg-[#FAFAF8] p-3 text-sm text-neutral-600">No free times left on this day. Try the other day.</p>
       ) : (
         <>
           <Step n={2} title="Pick a time" done={startIndex >= 0}>

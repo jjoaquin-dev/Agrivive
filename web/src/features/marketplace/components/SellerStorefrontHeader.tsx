@@ -10,14 +10,14 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
   const directionsUrl = getDirectionsUrl(seller.latitude, seller.longitude);
 
   return (
-    <header className="rounded-2xl border border-[#E8E8E8] bg-white p-6 shadow-sm flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
+    <header className="rounded-2xl border border-agrivive-line bg-white p-6 shadow-sm flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-8">
       {/* Left Column: Avatar & Vendor Identity */}
       <div className="flex items-start gap-4 sm:gap-5 flex-1 min-w-0">
         <SellerProfileAvatar imageUrl={seller.image} shopName={seller.shopName} />
 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-heading text-2xl sm:text-[26px] font-bold text-neutral-900 leading-tight">
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">
               {seller.shopName}
             </h1>
             <SellerRatingPill sellerId={seller.id} />
@@ -28,7 +28,7 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
             <MessageSellerButton context="seller" id={seller.id} iconOnly />
           </div>
 
-          <p className="text-xs sm:text-[13px] leading-relaxed text-neutral-500 pt-0.5 max-w-md">
+          <p className="text-xs sm:text-sm leading-relaxed text-neutral-500 pt-0.5 max-w-md">
             Browse the fresh produce this seller has available for pickup at local markets.
           </p>
         </div>
@@ -40,11 +40,11 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
       {/* Right Column: Pickup Location & Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 pt-4 lg:pt-0 border-t border-neutral-100 lg:border-t-0 shrink-0 lg:max-w-xl">
         <div className="flex items-start gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7ED] text-[#16A34A]">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7ED] text-green-600">
             <MapPin className="size-4.5" aria-hidden="true" />
           </div>
           <div className="min-w-0 space-y-0.5">
-            <h3 className="text-[13px] font-bold text-neutral-900">Pickup location</h3>
+            <h3 className="text-sm font-bold text-neutral-900">Pickup location</h3>
             <p className="text-xs text-neutral-500 leading-snug line-clamp-2">
               {seller.detailAddress || "Bankerohan Public Market, Stall #42"}
             </p>
@@ -53,7 +53,7 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
                 href={directionsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block text-xs font-bold text-[#16A34A] hover:underline pt-0.5"
+                className="inline-block text-xs font-bold text-green-600 hover:underline pt-0.5"
               >
                 Get directions
               </a>
@@ -62,11 +62,11 @@ export function SellerStorefrontHeader({ seller }: { seller: MarketplaceSellerPr
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FFF4E5] text-[#EA580C]">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#FFF4E5] text-orange-600">
             <Clock className="size-4.5" aria-hidden="true" />
           </div>
           <div className="min-w-0 space-y-0.5">
-            <h3 className="text-[13px] font-bold text-neutral-900">Pickup details</h3>
+            <h3 className="text-sm font-bold text-neutral-900">Pickup details</h3>
             <p className="text-xs text-neutral-500 leading-snug">
               {seller.pickupInstructions || "Ask the seller about the best pickup time after reserving your items."}
             </p>

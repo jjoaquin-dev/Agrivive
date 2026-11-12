@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   next: { backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.primaryLight, padding: spacing.base, marginTop: spacing.base },
   nextTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text, marginBottom: spacing.sm },
   step: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm },
-  number: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  number: { width: 26, height: 26, borderRadius: 14, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   numberText: { fontFamily: fonts.heading.bold, fontSize: 13, color: colors.white },
   stepText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.text },
   action: { marginTop: spacing.xl, minHeight: 52 },

@@ -49,7 +49,7 @@ export function ActiveBoostsSection({ items, loading }: Props) {
 
       {!loading && active.length === 0 ? (
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}><Flame size={30} color={colors.terracotta} /></View>
+          <View style={styles.emptyIcon}><Flame size={32} color={colors.terracotta} /></View>
           <Text style={styles.emptyTitle}>No boosts running</Text>
           <Text style={styles.emptyText}>Boost a product from your Listings to share it.</Text>
           <Pressable
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   emptyCta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.md,

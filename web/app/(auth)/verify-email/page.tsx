@@ -86,7 +86,7 @@ export default function VerifyEmailPage() {
       footer={
         <Link
           href={withNextPath("/login", nextPath)}
-          className="inline-flex items-center gap-1.5 font-semibold text-[#457D00] underline-offset-4 hover:underline"
+          className="inline-flex items-center gap-1.5 font-semibold text-agrivive-primary underline-offset-4 hover:underline"
         >
           <ArrowLeft aria-hidden="true" size={15} />
           Back to sign in
@@ -95,8 +95,8 @@ export default function VerifyEmailPage() {
     >
       <form onSubmit={handleVerify} aria-busy={loading || resending}>
         {message ? (
-          <Alert className="mb-5 border-[#457D00]/20 bg-[#F7FAF2] text-[#457D00] rounded-2xl p-4">
-            <MailCheck aria-hidden="true" className="size-4 text-[#457D00]" />
+          <Alert className="mb-5 border-agrivive-primary/20 bg-agrivive-mist text-agrivive-primary rounded-2xl p-4">
+            <MailCheck aria-hidden="true" className="size-4 text-agrivive-primary" />
             <AlertDescription className="text-sm font-medium">{message}</AlertDescription>
           </Alert>
         ) : null}
@@ -115,13 +115,13 @@ export default function VerifyEmailPage() {
             icon={<Mail className="size-4" />}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="bg-[#EEF2FF] border-indigo-100/90 text-[#14231A]"
+            className="bg-[#EEF2FF] border-indigo-100/90 text-agrivive-ink"
           />
 
           <div className="space-y-2">
             <label
               htmlFor="verification-otp"
-              className="block text-xs font-semibold uppercase tracking-wider text-[#14231A]/85 text-center"
+              className="block text-xs font-semibold uppercase tracking-wider text-agrivive-ink/85 text-center"
             >
               6-digit verification code
             </label>
@@ -140,7 +140,7 @@ export default function VerifyEmailPage() {
           <Button
             type="submit"
             disabled={loading || resending}
-            className="h-12 w-full rounded-xl bg-[#457D00] font-semibold text-white shadow-sm hover:bg-[#457D00]/90 active:scale-[0.99] transition-all"
+            className="h-12 w-full rounded-xl bg-agrivive-primary font-semibold text-white shadow-sm hover:bg-agrivive-primary/90 active:scale-[0.99] transition-all"
           >
             {loading ? (
               <>
@@ -159,7 +159,7 @@ export default function VerifyEmailPage() {
             type="button"
             disabled={resending || loading || cooldown > 0}
             onClick={handleResend}
-            className="h-12 w-full rounded-xl border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-[#14231A] shadow-sm hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
+            className="h-12 w-full rounded-xl border border-agrivive-border/80 bg-[#F6F4EE] font-semibold text-agrivive-ink shadow-sm hover:bg-[#ECE8DF] active:scale-[0.99] transition-all"
           >
             {resending ? (
               <>

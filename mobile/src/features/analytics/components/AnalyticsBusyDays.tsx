@@ -16,7 +16,7 @@ export function AnalyticsBusyDays({ counts }: { counts: number[] }) {
   const total = counts.reduce((a, c) => a + c, 0);
   const rows = counts.map((count, day) => ({ label: full[day], value: `${count} pickup${count === 1 ? "" : "s"} · ${percentText(count, total)}`, strong: day === best }));
   const chartWidth = Math.max(Dimensions.get("window").width - 110, 220);
-  const data = counts.map((count, day) => ({ value: count, label: names[day], frontColor: day === best ? colors.primary : "#B7D3C3" }));
+  const data = counts.map((count, day) => ({ value: count, label: names[day], frontColor: day === best ? colors.primary : colors.border }));
 
   return (
     <AnalyticsTapCard title="Busy Days" subtitle="Pickups for each day of the week." rows={rows}>
@@ -32,7 +32,7 @@ export function AnalyticsBusyDays({ counts }: { counts: number[] }) {
             initialSpacing={6}
             roundedTop
             hideRules={false}
-            rulesColor="#F3F1EA"
+            rulesColor={colors.surfaceMuted}
             yAxisColor="transparent"
             xAxisColor={colors.border}
             yAxisTextStyle={styles.axisText}

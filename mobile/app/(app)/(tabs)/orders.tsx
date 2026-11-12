@@ -56,7 +56,7 @@ export default function OrdersScreen() {
           accessibilityLabel="Scan pickup QR"
           style={styles.scanButton}
         >
-          <QrCode size={22} color={colors.white} />
+          <QrCode size={24} color={colors.white} />
         </Pressable>
       </View>
 
@@ -170,15 +170,15 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing.xxxl },
   filtersScroll: { marginHorizontal: -spacing.base, marginBottom: spacing.base },
   filters: { flexDirection: "row", gap: spacing.sm, paddingHorizontal: spacing.base },
-  filter: { minHeight: 40, justifyContent: "center", paddingHorizontal: spacing.base, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  filter: { minHeight: 44, justifyContent: "center", paddingHorizontal: spacing.base, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   filterText: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
   filterTextSelected: { color: colors.white, fontFamily: fonts.body.semiBold },
-  errorBox: { backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base, alignItems: "center" },
-  errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
+  errorBox: { backgroundColor: colors.errorSurface, borderWidth: 1, borderColor: colors.errorBorder, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base, alignItems: "center" },
+  errorIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.errorSurface, alignItems: "center", justifyContent: "center", marginBottom: spacing.sm },
   errorTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.error },
   errorText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },
-  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: "#F3F1EA", alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
+  emptyIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.surfaceMuted, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
   skeletonCard: { gap: spacing.sm, marginBottom: spacing.md, backgroundColor: colors.surfaceMuted },
   skeletonRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   retry: { marginTop: spacing.base, alignSelf: "stretch" },

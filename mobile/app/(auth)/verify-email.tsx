@@ -113,7 +113,7 @@ export default function VerifyEmailScreen() {
         header={<AuthStepBar step={1} name="Email" />}
         topRight={
           <Pressable onPress={() => setLeaveAction("logout")} accessibilityRole="button" hitSlop={8} style={styles.logOut}>
-            <Text style={styles.logOutText}>Log out</Text>
+            <Text style={styles.logOutText}>Sign out</Text>
           </Pressable>
         }
         subtitle={<>We sent a code to <Text style={styles.email}>{maskEmail(targetEmail || "your email")}</Text> · <Text style={styles.change} onPress={() => setLeaveAction("change")} accessibilityRole="button">Change</Text></>}
@@ -131,11 +131,11 @@ export default function VerifyEmailScreen() {
       </AuthScreenShell>
       <ConfirmDialogComponent
         visible={leaveAction !== null}
-        icon={<LogOut size={22} color={colors.error} />}
-        title={leaveAction === "change" ? "Use a different email?" : "Log out of Agrivive?"}
+        icon={<LogOut size={24} color={colors.error} />}
+        title={leaveAction === "change" ? "Use a different email?" : "Sign out of Agrivive?"}
         message={leaveAction === "change" ? "We'll log you out so you can sign up with another email." : "You can sign in again any time to finish setting up."}
         cancelLabel="Cancel"
-        confirmLabel="Log Out"
+        confirmLabel="Sign Out"
         onCancel={() => setLeaveAction(null)}
         onConfirm={() => void confirmLeave()}
       />

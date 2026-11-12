@@ -12,10 +12,10 @@ export function AnalyticsOrderResults({ orders }: { orders: SellerAnalyticsInsig
   const waiting = Math.max(0, orders.placed - orders.pickedUp - orders.cancelled - orders.expired - orders.declined);
   const parts = [
     { label: "Picked up", value: orders.pickedUp, color: colors.primary },
-    { label: "Cancelled", value: orders.cancelled, color: "#EF4444" },
-    { label: "Expired", value: orders.expired, color: "#F59E0B" },
-    { label: "Declined", value: orders.declined, color: "#9CA3AF" },
-    { label: "Not finished", value: waiting, color: "#93C5FD" },
+    { label: "Cancelled", value: orders.cancelled, color: colors.error },
+    { label: "Expired", value: orders.expired, color: colors.star },
+    { label: "Declined", value: orders.declined, color: colors.textMuted },
+    { label: "Not finished", value: waiting, color: colors.border },
   ];
   return (
     <AnalyticsTapCard title="Order Results" subtitle="How the orders placed in these days ended." rows={orderRows(orders)}>
@@ -50,10 +50,10 @@ export function AnalyticsOrderResults({ orders }: { orders: SellerAnalyticsInsig
 const styles = StyleSheet.create({
   donut: { alignItems: "center", marginTop: spacing.md },
   center: { alignItems: "center" },
-  centerValue: { fontFamily: fonts.heading.bold, fontSize: 24, color: colors.text },
+  centerValue: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text },
   centerNote: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
   legend: { flexDirection: "row", flexWrap: "wrap", gap: spacing.md, marginTop: spacing.md },
-  item: { flexDirection: "row", alignItems: "center", gap: 6 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  item: { flexDirection: "row", alignItems: "center", gap: 8 },
+  dot: { width: 10, height: 10, borderRadius: 6 },
   text: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
 });

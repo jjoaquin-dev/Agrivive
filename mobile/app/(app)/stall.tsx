@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { Stack, useFocusEffect } from "expo-router";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { Minus, Plus } from "lucide-react-native";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { CardComponent } from "../../src/components/CardComponent";
@@ -19,11 +19,14 @@ export default function StallSetupScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const apply = (next: Stall) => { setStall(next); setDays(next.hours); setCapacity(next.pickupCapacity); setWithin(next.pickupWithinMinutes); };
-  const load = useCallback(async () => {
-    setLoading(true); setError(null);
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
+    setError(null);
     try { apply(await fetchStall()); } catch (err: any) { setError(err?.message || "Could not load your stall."); } finally { setLoading(false); }
   }, []);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
+  const [refreshing, setRefreshing] = useState(false);
+  const pullToRefresh = async () => { setRefreshing(true); await load(true); setRefreshing(false); };
 
   const change = (weekday: number, patch: Partial<StallDay>) => setDays((rows) => rows.map((row) => (row.weekday === weekday ? { ...row, ...patch } : row)));
 
@@ -44,8 +47,7 @@ export default function StallSetupScreen() {
   if (error || !stall) return <View style={styles.center}><Text style={styles.error}>{error}</Text><ButtonComponent title="Try Again" onPress={load} variant="secondary" /></View>;
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: "Stall Hours" }} />
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={pullToRefresh} colors={[colors.primary]} tintColor={colors.primary} />}>
       {!stall.hoursConfigured ? <Text style={styles.notice}>Buyers cannot reserve until you save your opening hours.</Text> : null}
 
       <CardComponent style={styles.card}>
@@ -60,7 +62,7 @@ export default function StallSetupScreen() {
           <View style={styles.switchText}>
             <Text style={styles.cardTitle}>Away</Text>
             <Text style={styles.hint}>Tells buyers you cannot reply. Your 48-hour reply clock stops. Orders, pickup times and QR codes do not change. Lasts up to 14 days.</Text>
-            {stall.away.active && stall.away.until ? <Text style={styles.active}>On until {new Date(stall.away.until).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}</Text> : null}
+            {stall.away.active && stall.away.until ? <Text style={styles.active}>On until {new Date(stall.away.until).toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric" })}</Text> : null}
           </View>
           <Switch value={stall.away.active} onValueChange={(on) => void toggle(() => setAwayMode(on, 14))} trackColor={{ true: colors.primary }} accessibilityLabel="Away" />
         </View>
@@ -98,7 +100,7 @@ const styles = StyleSheet.create({
   content: { padding: spacing.base, paddingBottom: spacing.xxl },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.base, backgroundColor: colors.background },
   error: { fontFamily: fonts.body.medium, color: colors.error, marginBottom: spacing.md, textAlign: "center" },
-  notice: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.warning, backgroundColor: "#FFF7ED", padding: spacing.md, borderRadius: 12, marginBottom: spacing.base },
+  notice: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.warning, backgroundColor: colors.orangeSurface, padding: spacing.md, borderRadius: 12, marginBottom: spacing.base },
   card: { marginBottom: spacing.base },
   cardTitle: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
   hint: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: 2 },

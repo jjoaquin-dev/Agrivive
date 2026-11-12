@@ -1,6 +1,8 @@
 import { Sprout } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { StakeholderTrends } from "@/src/features/stakeholder/api/summary";
+import { formatNumber } from "@/src/lib/format";
+import { formatPeso } from "@/src/lib/money";
 
 /** The produce picked up most across all stalls, with the money it brought in. */
 export const StakeholderTopProduceComponent = ({ items }: { items: StakeholderTrends["topProduce"] }) => {
@@ -18,7 +20,7 @@ export const StakeholderTopProduceComponent = ({ items }: { items: StakeholderTr
               <li key={item.name}>
                 <div className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="truncate font-semibold text-foreground">{i + 1}. {item.name}</span>
-                  <span className="shrink-0 text-muted-foreground">{item.quantity.toLocaleString("en-PH", { maximumFractionDigits: 1 })} picked up · ₱{item.pesos.toLocaleString("en-PH", { maximumFractionDigits: 0 })}</span>
+                  <span className="shrink-0 text-muted-foreground">{formatNumber(item.quantity, { maximumFractionDigits: 1 })} picked up · {formatPeso(item.pesos)}</span>
                 </div>
                 <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-border"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(3, (item.quantity / max) * 100)}%` }} /></div>
               </li>

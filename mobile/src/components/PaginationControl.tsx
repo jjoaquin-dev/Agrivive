@@ -133,8 +133,8 @@ const styles = StyleSheet.create({
   sizePill: {
     minWidth: 36,
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: radii.full,
   },
   sizePillActive: {

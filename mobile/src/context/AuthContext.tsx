@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import * as SecureStore from "expo-secure-store";
 import { authClient, setAccountClosedHandler } from "../api/client";
 import { fetchSellerSetup, SellerSetupResponse } from "../api/seller";
+import { disableNotificationDevice } from "../features/notifications/api/notification-devices";
+import { DEVICE_ID_KEY } from "../features/notifications/api/deviceKey";
 
 const ONBOARDING_KEY = "agrivive_onboarding_completed";
 
@@ -75,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // A paused or blocked account is an expected answer, so it gets a quiet log instead of a red error screen.
       if (err?.statusCode === 403) console.warn("Account is not open:", err?.message);
       else console.error("Failed to fetch seller setup", err);
-      setSetupError(err?.message || "Failed to load seller setup status");
+      setSetupError(err?.message || "Could not load seller setup status");
       setSetupErrorStatus(typeof err?.statusCode === "number" ? err.statusCode : 0);
       return null;
     } finally {
@@ -121,6 +123,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleSignOut = async () => {
+    // Turn push off for this phone first (needs the session), so the next person to sign in here gets no alerts meant for this account.
+    try {
+      const deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
+      if (deviceId) {
+        await disableNotificationDevice(deviceId);
+        await SecureStore.deleteItemAsync(DEVICE_ID_KEY);
+      }
+    } catch (err) {
+      console.warn("Could not turn off push on sign out", err);
+    }
     try {
       await authClient.signOut();
       setSetup(null);

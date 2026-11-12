@@ -68,13 +68,13 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: radii.full,
     backgroundColor: colors.surfaceMuted,
-    marginTop: 6,
+    marginTop: 8,
   },
   snippetBar: {
     width: 180,
     height: 12,
     borderRadius: radii.sm,
     backgroundColor: colors.surfaceMuted,
-    marginTop: 6,
+    marginTop: 8,
   },
 });

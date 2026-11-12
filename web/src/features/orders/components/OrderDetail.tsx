@@ -107,14 +107,14 @@ export function OrderDetail() {
   });
 
   if ((loading && !order) || (order && order.id !== id) || (order && (sessionPending || !accountId || loadedAccount.current !== accountId))) {
-    return <main className="min-h-screen bg-[#FDFDFD] p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-2xl border border-[#E8E8E8] bg-white" /></div></main>;
+    return <main className="min-h-screen bg-agrivive-paper p-6"><div className="mx-auto max-w-7xl"><Skeleton className="h-[540px] rounded-2xl border border-agrivive-line bg-white" /></div></main>;
   }
   if (error && !order) {
     return (
-      <main className="min-h-screen bg-[#FDFDFD] p-6">
+      <main className="min-h-screen bg-agrivive-paper p-6">
         <div className="mx-auto max-w-7xl">
           {isTrustAccessMessage(error) ? <TrustAccessNotice message={error} /> : <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-          <Button type="button" variant="outline" className="mt-4 min-h-[40px] rounded-xl border-[#E8E8E8]" onClick={() => void load()}>Try again</Button>
+          <Button type="button" variant="outline" className="mt-4 min-h-[40px] rounded-xl border-agrivive-line" onClick={() => void load()}>Try again</Button>
         </div>
       </main>
     );
@@ -122,7 +122,7 @@ export function OrderDetail() {
   if (!order) return null;
 
   return (
-    <main className="min-h-[calc(100vh-72px)] bg-[#FDFDFD] px-4 py-6 sm:px-6 text-foreground">
+    <main className="min-h-[calc(100vh-72px)] bg-agrivive-paper px-4 py-6 sm:px-6 text-foreground">
       <div className="mx-auto max-w-7xl">
         <Breadcrumbs items={[{ label: "Orders", href: "/orders" }, { label: "Order details" }]} />
 
@@ -158,7 +158,7 @@ export function OrderDetail() {
                 onClick={() => setShowReportModal(true)}
                 className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer sm:w-auto"
               >
-                <AlertTriangle className="size-4 text-[#FEA938]" aria-hidden="true" />
+                <AlertTriangle className="size-4 text-agrivive-terracotta" aria-hidden="true" />
                 <span>Report an issue with this order</span>
               </button>
             </div>

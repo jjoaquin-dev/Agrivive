@@ -81,7 +81,7 @@ export default function SellerReviewsScreen() {
         {reviews.length === 0 ? (
           <View style={styles.emptyCard}>
             <View style={styles.emptyIconCircle}>
-              <Star size={24} color="#D97706" />
+              <Star size={24} color={colors.warning} />
             </View>
             <Text style={styles.emptyTitle}>No reviews found</Text>
             <Text style={styles.emptySubtitle}>
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   errorBox: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: colors.errorSurface,
     borderRadius: radii.card,
     padding: spacing.base,
     marginBottom: spacing.base,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radii.full,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.warningSurface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.sm,

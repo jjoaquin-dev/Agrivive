@@ -24,7 +24,7 @@ export function MapPickerFullScreen({ visible, coordinates, locating, mapRef, on
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <View style={styles.header}>
           <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close map" style={styles.close}>
-            <X size={22} color={colors.text} />
+            <X size={24} color={colors.text} />
           </Pressable>
           <View style={styles.titleBox}>
             <Text style={styles.title}>Place Your Pin</Text>

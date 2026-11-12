@@ -28,7 +28,7 @@ export const AuthResendTimer: React.FC<AuthResendTimerProps> = ({ seconds, sendi
 );
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.sm },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: spacing.sm },
   text: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   time: { fontFamily: fonts.body.semiBold, color: colors.text },
   link: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },

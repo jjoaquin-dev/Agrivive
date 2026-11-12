@@ -58,7 +58,7 @@ export function MarketplaceFilters({ values, onChange, idPrefix, hasLocation, lo
       <FieldSet className="gap-1.5">
         <FieldLegend className="text-xs font-semibold text-foreground/80">Nearby pickup</FieldLegend>
         <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
-          <button type="button" onClick={onUseLocation} disabled={locationStatus === "loading"} className="min-h-12 whitespace-nowrap rounded-xl border border-agrivive-primary bg-white px-3 text-sm font-semibold text-agrivive-primary transition-[background-color,transform] hover:bg-agrivive-primary/5 active:translate-y-px disabled:cursor-wait disabled:opacity-60">
+          <button type="button" onClick={onUseLocation} disabled={locationStatus === "loading"} className="min-h-12 whitespace-nowrap rounded-xl border border-agrivive-primary bg-white px-3 text-sm font-semibold text-agrivive-primary transition-[background-color,transform] hover:bg-agrivive-primary/5 active:translate-y-px disabled:cursor-wait disabled:opacity-50">
             {locationStatus === "loading" ? "Finding you…" : hasLocation ? "Update location" : "Use my location"}
           </button>
           <select aria-label="Nearby radius" value={values.radiusKm} onChange={(event) => onChange("radiusKm", event.target.value)} disabled={!hasLocation} className={selectClass}>

@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { SellerVisibilityItem } from "../api/seller-visibility";
+import { formatPeso } from "../../../utils/money";
 
 interface VisibilityFactorsGridProps {
   item: SellerVisibilityItem;
@@ -25,7 +26,7 @@ export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
   const bars = item.normalizedCriteria;
   const factors = [
     { label: "Time Posted", weight: weights.postingAge, bar: bars?.postingAge, text: hoursText(raw?.postingAge) },
-    { label: "Price Drop", weight: weights.priceDrop, bar: bars?.priceDrop, text: raw ? `₱${raw.priceDrop.toFixed(2)}` : "—" },
+    { label: "Price Drop", weight: weights.priceDrop, bar: bars?.priceDrop, text: raw ? `${formatPeso(raw.priceDrop)}` : "—" },
     { label: "Amount left", weight: weights.stockLevel, bar: bars?.stockLevel, text: raw ? `${Number(raw.stockLevel.toFixed(2))}` : "—" },
     { label: "Reliability", weight: weights.sellerReliability, bar: bars?.sellerReliability, text: raw ? `${raw.sellerReliability.toFixed(1)} / 5` : "—" },
   ];
@@ -53,12 +54,12 @@ export function VisibilityFactorsGrid({ item }: VisibilityFactorsGridProps) {
 
 const styles = StyleSheet.create({
   container: { backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card, padding: spacing.md, marginTop: spacing.md, gap: spacing.sm },
-  item: { gap: 6 },
+  item: { gap: 8 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   label: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
   weight: { fontFamily: fonts.body.regular, color: colors.textMuted },
   value: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
-  track: { height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
-  fill: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  track: { height: 6, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden" },
+  fill: { height: 6, borderRadius: 4, backgroundColor: colors.primary },
   note: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm },
 });

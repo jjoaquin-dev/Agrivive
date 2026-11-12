@@ -28,7 +28,7 @@ export function ProfileScreenHeader({ title, large, onBack }: Props) {
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md, paddingHorizontal: spacing.base, paddingVertical: spacing.sm, backgroundColor: profileColors.cream },
   rowLarge: { paddingBottom: spacing.xs },
-  back: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.white, borderWidth: 1, borderColor: profileColors.border, alignItems: "center", justifyContent: "center" },
+  back: { width: 44, height: 44, borderRadius: 24, backgroundColor: colors.white, borderWidth: 1, borderColor: profileColors.border, alignItems: "center", justifyContent: "center" },
   title: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text },
   titleLarge: { fontSize: 28 },
 });

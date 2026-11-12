@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 import { colors } from "../../../theme";
 import type { StockAdjustment } from "../types";
-import { styles } from "./ProductDetailsStyles";
+import { styles } from "./ProductDetails.styles";
 
 interface Props {
   history: StockAdjustment[];
@@ -13,11 +13,11 @@ interface Props {
 
 function whenText(value: string) {
   const date = new Date(value);
-  const time = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const time = date.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(date).setHours(0, 0, 0, 0)) / 86_400_000);
   if (days === 0) return `Today ${time}`;
   if (days === 1) return `Yesterday ${time}`;
-  return `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
+  return `${date.toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric" })}, ${time}`;
 }
 
 export function ProductHistoryCard({ history, loading, unit }: Props) {
@@ -38,13 +38,13 @@ export function ProductHistoryCard({ history, loading, unit }: Props) {
           const Icon = added ? Plus : Minus;
           return (
             <View key={item.id} style={styles.historyRow}>
-              <View style={[styles.historyIcon, { backgroundColor: added ? "#DCFCE7" : "#FEF3C7" }]}>
-                <Icon size={16} color={added ? colors.primary : "#92400E"} strokeWidth={2.5} />
+              <View style={[styles.historyIcon, { backgroundColor: added ? colors.successSurfaceStrong : colors.warningSurface }]}>
+                <Icon size={16} color={added ? colors.primary : colors.warningText} strokeWidth={2.5} />
               </View>
               <View style={styles.historyBody}>
                 <View style={styles.historyLine}>
                   <Text style={styles.historyReason} numberOfLines={1}>{item.reason}</Text>
-                  <Text style={[styles.historyDelta, { color: added ? colors.primary : "#374151" }]}>
+                  <Text style={[styles.historyDelta, { color: added ? colors.primary : colors.text }]}>
                     {added ? "+" : "−"}{Math.abs(delta).toFixed(2)} {unit}
                   </Text>
                 </View>

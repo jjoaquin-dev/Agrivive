@@ -27,5 +27,5 @@ export const NotificationBellButton: React.FC<NotificationBellButtonProps> = ({ 
 const styles = StyleSheet.create({
   button: { width: touchTargets.min, height: touchTargets.min, borderRadius: radii.full, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.7, transform: [{ scale: 0.96 }] },
-  dot: { position: "absolute", top: 11, right: 12, width: 9, height: 9, borderRadius: 5, backgroundColor: colors.error, borderWidth: 1.5, borderColor: colors.surface },
+  dot: { position: "absolute", top: 11, right: 12, width: 9, height: 9, borderRadius: 6, backgroundColor: colors.error, borderWidth: 1.5, borderColor: colors.surface },
 });

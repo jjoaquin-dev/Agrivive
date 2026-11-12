@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, Download, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/src/lib/format";
 
 interface ProfileTwoFactorBackupCodesProps {
   backupCodes: string[];
@@ -28,7 +29,7 @@ export function ProfileTwoFactorBackupCodes({
     if (!backupCodes.length) return;
     const content = [
       "Agrivive Two-Factor Authentication Backup Codes",
-      "Created: " + new Date().toLocaleString(),
+      "Created: " + formatDateTime(new Date()),
       "",
       "Store these one-time recovery codes in a safe place.",
       "Each code can only be used once if you lose access to your authenticator app.",
@@ -106,7 +107,7 @@ export function ProfileTwoFactorBackupCodes({
         <Button
           type="button"
           onClick={onFinish}
-          className="h-11 w-full rounded-full bg-[#457D00] px-5 text-xs font-bold text-white hover:bg-[#457D00]/90/90"
+          className="h-11 w-full rounded-full bg-agrivive-primary px-5 text-xs font-bold text-white hover:bg-agrivive-primary/90"
         >
           <ShieldCheck className="size-4" />
           <span>I Have Saved My Backup Codes</span>

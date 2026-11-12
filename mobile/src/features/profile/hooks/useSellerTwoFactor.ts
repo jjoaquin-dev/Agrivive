@@ -46,7 +46,7 @@ export function useSellerTwoFactor() {
       setStep("scan");
       setPassword("");
     } catch (err: any) {
-      setGeneralError(err?.message || "Failed to initiate authenticator setup.");
+      setGeneralError(err?.message || "Could not initiate authenticator setup.");
     } finally { setLoading(false); }
   };
 
@@ -67,7 +67,7 @@ export function useSellerTwoFactor() {
       if (backupCodes.length > 0) setStep("backup");
       else { setStep("idle"); setSuccessMessage("Sign-in code is now on."); }
     } catch (err: any) {
-      setGeneralError(err?.message || "Failed to verify authenticator code.");
+      setGeneralError(err?.message || "Could not verify authenticator code.");
     } finally { setLoading(false); }
   };
 
@@ -92,7 +92,7 @@ export function useSellerTwoFactor() {
       setDisablePassword("");
       setSuccessMessage("Sign-in code is now off.");
     } catch (err: any) {
-      setGeneralError(err?.message || "Failed to turn off the sign-in code.");
+      setGeneralError(err?.message || "Could not turn off the sign-in code.");
     } finally { setLoading(false); }
   };
 

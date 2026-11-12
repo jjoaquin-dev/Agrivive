@@ -24,7 +24,7 @@ export function MarketplaceFooter() {
             <p className="mt-4 max-w-sm text-sm leading-6 text-emerald-50/70">
               Browse and reserve surplus produce directly from verified Davao City market stalls and local farms at fair prices before the day ends.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#FCEC9A]">
+            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-agrivive-cream">
               <MapPin className="size-3.5" />
               <span>Bankerohan, Agdao, Mintal &amp; Calinan Public Markets</span>
             </div>
@@ -32,7 +32,7 @@ export function MarketplaceFooter() {
 
           {/* Links Column 1: Produce Categories */}
           <div>
-            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">
+            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-agrivive-cream">
               Produce
             </p>
             <ul className="mt-4 space-y-2.5 text-sm text-emerald-50/80">
@@ -71,7 +71,7 @@ export function MarketplaceFooter() {
 
           {/* Links Column 2: Marketplace Navigation */}
           <div>
-            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">
+            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-agrivive-cream">
               Marketplace
             </p>
             <ul className="mt-4 space-y-2.5 text-sm text-emerald-50/80">
@@ -90,7 +90,7 @@ export function MarketplaceFooter() {
 
           {/* Links Column 3: Shopper & Vendor Resources */}
           <div>
-            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">
+            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-agrivive-cream">
               Community
             </p>
             <ul className="mt-4 space-y-2.5 text-sm text-emerald-50/80">
@@ -105,7 +105,7 @@ export function MarketplaceFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/" className="inline-flex items-center gap-1 text-[#FCEC9A] hover:underline">
+                <Link href="/" className="inline-flex items-center gap-1 text-agrivive-cream hover:underline">
                   Home Page <ArrowUpRight className="size-3.5" />
                 </Link>
               </li>
@@ -113,7 +113,7 @@ export function MarketplaceFooter() {
                 <a
                   href={SELLER_APK_URL}
                   download="agrivive-seller.apk"
-                  className="inline-flex items-center gap-1.5 font-medium text-white hover:text-[#FCEC9A]"
+                  className="inline-flex items-center gap-1.5 font-medium text-white hover:text-agrivive-cream"
                 >
                   Download Seller App <ArrowDownToLine className="size-3.5" />
                 </a>

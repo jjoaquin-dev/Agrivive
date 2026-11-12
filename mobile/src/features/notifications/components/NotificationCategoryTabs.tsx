@@ -50,6 +50,6 @@ const styles = StyleSheet.create({
   pillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   pillInactive: { backgroundColor: colors.surface, borderColor: colors.border },
   pillText: { fontFamily: fonts.body.medium, fontSize: 14 },
-  badge: { minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" },
+  badge: { minWidth: 18, height: 18, borderRadius: 10, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" },
   badgeText: { fontFamily: fonts.heading.bold, fontSize: 11 },
 });

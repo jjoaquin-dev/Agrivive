@@ -71,14 +71,14 @@ export function ActiveFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
-      <span className="mr-1 text-xs font-bold text-[#457D00]">Active filters:</span>
+      <span className="mr-1 text-xs font-bold text-agrivive-primary">Active filters:</span>
       {chips.map((chip) => (
         <button
           key={chip.id}
           type="button"
           onClick={chip.onRemove}
           aria-label={`Remove filter ${chip.label}`}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white px-2.5 text-xs font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50 hover:border-neutral-300 active:scale-95"
+          className="inline-flex h-11 items-center gap-1.5 rounded-full border border-neutral-200/80 bg-white px-2.5 text-xs font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50 hover:border-neutral-300 active:scale-95"
         >
           <span>{chip.label}</span>
           <X aria-hidden="true" className="size-3 text-neutral-400 hover:text-neutral-700" />
@@ -89,7 +89,7 @@ export function ActiveFilters({
         variant="ghost"
         size="sm"
         onClick={onClearAll}
-        className="h-8 px-2 text-xs font-semibold text-[#457D00] hover:bg-[#457D00]/10 hover:text-[#457D00]"
+        className="h-11 px-2 text-xs font-semibold text-agrivive-primary hover:bg-agrivive-primary/10 hover:text-agrivive-primary"
       >
         Clear all
       </Button>

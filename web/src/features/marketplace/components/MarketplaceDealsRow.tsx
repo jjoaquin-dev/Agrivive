@@ -35,11 +35,11 @@ export function MarketplaceDealsRow() {
   return (
     <section aria-labelledby="top-deals-heading">
       <div className="mb-4">
-        <p className="type-eyebrow text-[#457D00]">Top deals</p>
-        <h2 id="top-deals-heading" className="mt-1 font-heading text-2xl font-bold tracking-tight text-[#14231A]">
+        <p className="type-eyebrow text-agrivive-primary">Top deals</p>
+        <h2 id="top-deals-heading" className="mt-1 font-heading text-2xl font-bold tracking-tight text-agrivive-ink">
           Lowest prices on top-ranked produce
         </h2>
-        <p className="mt-0.5 text-xs text-[#5F7367]">
+        <p className="mt-0.5 text-xs text-agrivive-stone">
           Priced 30% or more below normal, ranked by freshness, stock, seller reliability and past listings.
         </p>
       </div>

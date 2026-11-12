@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { colors, fonts } from "../../../theme";
 
 export type Platform = "facebook" | "instagram";
 
@@ -26,7 +27,7 @@ export function PlatformBadge({ platform, size = 32 }: { platform: Platform; siz
 
 const styles = StyleSheet.create({
   base: { alignItems: "center", justifyContent: "center" },
-  f: { color: "#FFFFFF", fontWeight: "800", marginTop: 2 },
-  ring: { borderWidth: 2, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
-  lens: { borderWidth: 2, borderColor: "#FFFFFF" },
+  f: { color: colors.white, fontFamily: fonts.heading.bold, marginTop: 2 },
+  ring: { borderWidth: 2, borderColor: colors.white, alignItems: "center", justifyContent: "center" },
+  lens: { borderWidth: 2, borderColor: colors.white },
 });

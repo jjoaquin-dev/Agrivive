@@ -65,7 +65,7 @@ export function ProductCardMedia({
             Sold out
           </Badge>
         ) : isReduced ? (
-          <span className="inline-flex h-[28px] items-center rounded-full bg-[#FEA938] px-3 text-xs font-bold text-neutral-950 shadow-sm">
+          <span className="inline-flex h-[28px] items-center rounded-full bg-agrivive-terracotta px-3 text-xs font-bold text-neutral-950 shadow-sm">
             {discountPct}% OFF
           </span>
         ) : null}
@@ -85,10 +85,10 @@ export function ProductCardMedia({
           }
           aria-pressed={isSaved}
           aria-busy={saving}
-          className={`flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm transition active:scale-95 disabled:cursor-wait disabled:opacity-70 ${
+          className={`flex size-10 items-center justify-center rounded-full border border-black/5 bg-white shadow-sm transition active:scale-95 disabled:cursor-wait disabled:opacity-50 ${
             isSaved
-              ? "text-[#FEA938]"
-              : "text-[#14231A] hover:bg-neutral-50"
+              ? "text-agrivive-terracotta"
+              : "text-agrivive-ink hover:bg-neutral-50"
           }`}
         >
           {saving ? (
@@ -96,7 +96,7 @@ export function ProductCardMedia({
           ) : (
             <Heart
               className={`size-5 ${
-                isSaved ? "fill-[#FEA938] text-[#FEA938]" : "fill-transparent text-[#14231A]"
+                isSaved ? "fill-agrivive-terracotta text-agrivive-terracotta" : "fill-transparent text-agrivive-ink"
               }`}
               aria-hidden="true"
             />

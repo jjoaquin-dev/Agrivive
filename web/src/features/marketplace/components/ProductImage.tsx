@@ -33,7 +33,7 @@ export function ProductImage({ src, alt, category, className = "size-full object
   if (!src || failed) {
     return (
       <div className={`flex size-full items-center justify-center bg-[#F4F7EE] p-3 text-center ${className}`}>
-        <span className="flex max-w-[10rem] flex-col items-center gap-1.5 text-xs font-semibold text-[#8A9685]">
+        <span className="flex max-w-[10rem] flex-col items-center gap-1.5 text-xs font-semibold text-agrivive-gray">
           <ImageOff aria-hidden="true" size={18} />
           {category}
         </span>

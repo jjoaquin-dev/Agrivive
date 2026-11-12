@@ -5,6 +5,7 @@ import { Package } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
 import type { Product } from "../../inventory/types";
+import { formatPeso } from "../../../utils/money";
 
 type Filter = "all" | "low" | "out";
 
@@ -48,7 +49,7 @@ export function AnalyticsProductPerformance({ products }: { products: Product[] 
           const low = !out && qty <= 10;
           const unit = p.scalingType === "kilo" ? "kg" : p.scalingType;
           const dropped = p.basePrice != null && Number(p.basePrice) > Number(p.productPrice);
-          const tone = out ? { fg: colors.error, bg: "#FEF2F2", label: "Sold Out" } : low ? { fg: colors.warning, bg: "#FFF7ED", label: "10 or Less" } : { fg: colors.primary, bg: "#F0FDF4", label: "In Stock" };
+          const tone = out ? { fg: colors.error, bg: colors.errorSurface, label: "Sold Out" } : low ? { fg: colors.warning, bg: colors.orangeSurface, label: "10 or Less" } : { fg: colors.primary, bg: colors.successSurface, label: "In Stock" };
           const imageUrl = p.displayImageUrl || p.imagUrl;
           return (
             <View key={p.id} style={[styles.item, index > 0 && styles.itemDivider]}>
@@ -63,8 +64,8 @@ export function AnalyticsProductPerformance({ products }: { products: Product[] 
                 <View style={styles.meta}>
                   <Text style={[styles.metaText, out && { color: colors.error }]}>{qty} {unit} left</Text>
                   <Text style={styles.metaText}>•</Text>
-                  <Text style={styles.price}>₱{p.productPrice}/{unit}</Text>
-                  {dropped ? <Text style={styles.oldPrice}>₱{p.basePrice}</Text> : null}
+                  <Text style={styles.price}>{formatPeso(p.productPrice)}/{unit}</Text>
+                  {dropped ? <Text style={styles.oldPrice}>{formatPeso(p.basePrice)}</Text> : null}
                 </View>
               </View>
               <View style={styles.end}>
@@ -89,7 +90,7 @@ export function AnalyticsProductPerformance({ products }: { products: Product[] 
 
 const styles = StyleSheet.create({
   filters: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md, marginBottom: spacing.sm },
-  filter: { minHeight: 36, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: radii.full, backgroundColor: "#F3F1EA" },
+  filter: { minHeight: 44, paddingHorizontal: spacing.md, justifyContent: "center", borderRadius: radii.full, backgroundColor: colors.surfaceMuted },
   filterActive: { backgroundColor: colors.text },
   filterText: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted },
   filterTextActive: { color: colors.white },
@@ -98,16 +99,16 @@ const styles = StyleSheet.create({
   photo: { width: 40, height: 40, borderRadius: radii.input, overflow: "hidden", backgroundColor: colors.primarySurface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
   photoImage: { width: "100%", height: "100%" },
   body: { flex: 1, minWidth: 0 },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   name: { flexShrink: 1, fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text },
-  dropBadge: { fontFamily: fonts.body.semiBold, fontSize: 10, color: colors.success, backgroundColor: "#DCFCE7", paddingHorizontal: 6, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
-  meta: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
+  dropBadge: { fontFamily: fonts.body.semiBold, fontSize: 10, color: colors.success, backgroundColor: colors.successSurfaceStrong, paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
+  meta: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
   metaText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
   price: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.text },
   oldPrice: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted, textDecorationLine: "line-through" },
-  end: { alignItems: "flex-end", gap: 6 },
-  status: { fontFamily: fonts.body.semiBold, fontSize: 11, paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full, overflow: "hidden" },
-  boost: { minHeight: 32, minWidth: 44, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.terracotta, alignItems: "center", justifyContent: "center" },
+  end: { alignItems: "flex-end", gap: 8 },
+  status: { fontFamily: fonts.body.semiBold, fontSize: 11, paddingHorizontal: 8, paddingVertical: 4, borderRadius: radii.full, overflow: "hidden" },
+  boost: { minHeight: 44, minWidth: 44, paddingHorizontal: 12, borderRadius: 8, backgroundColor: colors.terracotta, alignItems: "center", justifyContent: "center" },
   boostText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.white },
   empty: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, paddingVertical: spacing.md, textAlign: "center" },
   link: { minHeight: 44, alignItems: "center", justifyContent: "center", borderTopWidth: 1, borderTopColor: colors.border, marginTop: spacing.xs },

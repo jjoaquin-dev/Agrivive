@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { TrendingDown } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { formatPeso as peso } from "../../../utils/money";
 
 interface Props {
   price: string;
@@ -9,7 +10,6 @@ interface Props {
   finalPrice: string;
 }
 
-const peso = (value: number) => `₱${value.toFixed(2)}`;
 
 /** Shows the next prices and the final price, so the seller sees where the drops stop (Recognition over Recall). */
 export function PriceDropPreview({ price, dropAmount, finalPrice }: Props) {
@@ -29,7 +29,7 @@ export function PriceDropPreview({ price, dropAmount, finalPrice }: Props) {
       <View style={styles.row}>
         <TrendingDown size={16} color={colors.primary} />
         <Text style={styles.steps}>
-          {steps.map(peso).join(" → ")}{steps[steps.length - 1] > floor ? " → …" : ""}
+          {steps.map(peso).join(" → ")}{steps[steps.length - 1] > floor ? " → ..." : ""}
         </Text>
       </View>
       <Text style={styles.final}>Final price: {peso(floor)}</Text>

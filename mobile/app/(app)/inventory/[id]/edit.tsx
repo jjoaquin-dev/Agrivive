@@ -19,7 +19,7 @@ export default function EditProductScreen() {
     try {
       await updateSellerProduct(id, data as UpdateProductInput);
       await refresh();
-      Alert.alert("Product Updated", "Your changes have been saved.", [
+      Alert.alert("Listing Updated", "Your changes have been saved.", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } finally {

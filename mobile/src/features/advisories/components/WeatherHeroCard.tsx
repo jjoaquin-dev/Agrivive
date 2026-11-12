@@ -20,7 +20,7 @@ interface WeatherHeroCardProps {
   address?: string | null;
 }
 
-export function getWeatherIcon(code?: number, size = 32, color = "#FFFFFF") {
+export function getWeatherIcon(code?: number, size = 32, color: string = colors.white) {
   if (code === undefined || code === null) return <Sun size={size} color={color} />;
   if (code === 0) return <Sun size={size} color={color} />;
   if (code === 1 || code === 2) return <CloudSun size={size} color={color} />;
@@ -83,14 +83,14 @@ export const WeatherHeroCard: React.FC<WeatherHeroCardProps> = ({
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginBottom: spacing.md, ...shadows.card },
   locationRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  pinCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF7ED", alignItems: "center", justifyContent: "center" },
+  pinCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: colors.orangeSurface, alignItems: "center", justifyContent: "center" },
   locationText: { flex: 1 },
   shopName: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
   address: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  mainRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#F3F1EA" },
-  tempText: { fontFamily: fonts.heading.bold, fontSize: 32, color: colors.text, letterSpacing: -0.5 },
-  conditionPill: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "#FFFBEB", borderWidth: 1, borderColor: "#FDE68A", borderRadius: 9999, paddingHorizontal: spacing.md, paddingVertical: 6 },
-  conditionText: { fontFamily: fonts.body.medium, fontSize: 14, color: "#374151" },
-  rainRow: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.surfaceMuted, borderRadius: 8, padding: spacing.sm, marginTop: spacing.md },
+  mainRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
+  tempText: { fontFamily: fonts.heading.bold, fontSize: 28, color: colors.text, letterSpacing: -0.5 },
+  conditionPill: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.warningSurface, borderWidth: 1, borderColor: colors.warningBorder, borderRadius: 9999, paddingHorizontal: spacing.md, paddingVertical: 8 },
+  conditionText: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
+  rainRow: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.surfaceMuted, borderRadius: 8, padding: spacing.sm, marginTop: spacing.md },
   rainText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
 });

@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Camera, ChevronRight, ImageIcon } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { profileColors } from "../profileTokens";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -26,9 +27,9 @@ function Option({ icon, title, hint, onPress }: { icon: React.ReactNode; title: 
 
 export function ProfilePhotoSheet({ visible, onTake, onChoose, onClose }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <SlideModal visible={visible} onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.backdrop}>
-        <Pressable style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
+        <Pressable accessibilityRole="button" style={styles.dismiss} onPress={onClose} accessibilityLabel="Close" />
         <View style={styles.sheet} accessibilityViewIsModal>
           <View style={styles.handle} />
           <Text style={styles.title}>Profile Photo</Text>
@@ -43,12 +44,12 @@ export function ProfilePhotoSheet({ visible, onTake, onChoose, onClose }: Props)
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(17,24,39,0.45)", justifyContent: "flex-end" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   dismiss: { flex: 1 },
   sheet: { backgroundColor: colors.white, borderTopLeftRadius: radii.sheet + 8, borderTopRightRadius: radii.sheet + 8, padding: spacing.lg, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, backgroundColor: profileColors.border, marginBottom: spacing.md },
@@ -57,11 +58,11 @@ const styles = StyleSheet.create({
   list: { borderTopWidth: 1, borderBottomWidth: 1, borderColor: profileColors.border },
   divider: { height: 1, backgroundColor: profileColors.border },
   option: { flexDirection: "row", alignItems: "center", minHeight: 64, paddingVertical: spacing.sm },
-  pressed: { backgroundColor: "#F3F1EA" },
-  optionIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
+  pressed: { backgroundColor: colors.surfaceMuted },
+  optionIcon: { width: 44, height: 44, borderRadius: 24, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginRight: spacing.md },
   optionText: { flex: 1 },
   optionTitle: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
   optionHint: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
-  cancel: { minHeight: 52, borderRadius: radii.button, backgroundColor: "#F3F1EA", alignItems: "center", justifyContent: "center", marginTop: spacing.md },
+  cancel: { minHeight: 52, borderRadius: radii.button, backgroundColor: colors.surfaceMuted, alignItems: "center", justifyContent: "center", marginTop: spacing.md },
   cancelText: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.textMuted },
 });

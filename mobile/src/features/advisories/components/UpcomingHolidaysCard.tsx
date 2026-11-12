@@ -73,6 +73,6 @@ const styles = StyleSheet.create({
   name: { flex: 1, fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
   away: { fontFamily: fonts.heading.bold, fontSize: 12, color: colors.primary },
   localName: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  tip: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: "#F3F1EA" },
+  tip: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.surfaceMuted },
   tipText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
 });

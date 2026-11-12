@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { ButtonComponent } from "../../src/components/ButtonComponent";
 import { useAuth } from "../../src/context/AuthContext";
 import { useSellerAdvisories } from "../../src/features/advisories/hooks/useSellerAdvisories";
@@ -24,7 +24,6 @@ export default function SellerAdvisoriesScreen() {
   if (loading && !refreshing) {
     return (
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.muted}>Loading weather and holidays...</Text>
@@ -39,7 +38,6 @@ export default function SellerAdvisoriesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <Stack.Screen options={{ headerShown: false }} />
       <AdvisoriesHeader generatedAt={advisories?.generatedAt} onOpenInfo={() => setShowAbout(true)} />
 
       <ScrollView

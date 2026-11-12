@@ -70,7 +70,7 @@ export default function CreateProductScreen() {
       const res = await createSellerProduct(data as CreateProductInput);
       const product = res.products;
       if (!data.isMarketable) {
-        Alert.alert("Product Listed", `"${product.productName}" has been added to your inventory.`, [
+        Alert.alert("Listing Added", `"${product.productName}" has been added to your listings.`, [
           { text: "OK", onPress: () => openProduct(product.id) },
         ], { cancelable: false });
         return;
@@ -78,7 +78,7 @@ export default function CreateProductScreen() {
       setPermissionError("");
       setPermissionFor({ id: product.id });
     } catch (err: any) {
-      Alert.alert("Error", err?.message || "Failed to add product to inventory.");
+      Alert.alert("Error", err?.message || "Could not add this listing.");
     } finally {
       setLoading(false);
     }

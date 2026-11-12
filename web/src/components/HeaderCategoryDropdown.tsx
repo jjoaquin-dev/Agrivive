@@ -60,7 +60,7 @@ export function HeaderCategoryDropdown({
         <span className="whitespace-nowrap">{selectedCategory}</span>
         <ChevronDown
           className={`size-3.5 shrink-0 text-neutral-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#457D00]" : ""
+            isOpen ? "rotate-180 text-agrivive-primary" : ""
           }`}
         />
       </button>
@@ -82,10 +82,10 @@ export function HeaderCategoryDropdown({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => handleSelect(cat)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-[13px] transition-colors duration-150 cursor-pointer outline-none ${
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150 cursor-pointer outline-none ${
                     isSelected
-                      ? "bg-[#457D00]/10 text-[#457D00] font-bold"
-                      : "text-neutral-700 font-medium hover:bg-[#457D00]/10 hover:text-[#457D00] active:bg-[#457D00]/10"
+                      ? "bg-agrivive-primary/10 text-agrivive-primary font-bold"
+                      : "text-neutral-700 font-medium hover:bg-agrivive-primary/10 hover:text-agrivive-primary active:bg-agrivive-primary/10"
                   }`}
                 >
                   {cat}

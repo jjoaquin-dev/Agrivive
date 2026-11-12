@@ -26,7 +26,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
   const remaining = num(metrics.remainingQuantity);
 
   const bars = useMemo(() => [
-    { value: posted, label: "Posted", frontColor: "#D1D5DB" },
+    { value: posted, label: "Posted", frontColor: colors.border },
     { value: completed, label: "Picked Up", frontColor: colors.primary },
     { value: reserved, label: "Waiting", frontColor: colors.sage },
     { value: cancelled, label: "Cancelled", frontColor: colors.error },
@@ -50,7 +50,7 @@ export function AnalyticsMovementChart({ metrics, unit }: AnalyticsMovementChart
           roundedTop
           roundedBottom={false}
           hideRules={false}
-          rulesColor="#F3F1EA"
+          rulesColor={colors.surfaceMuted}
           yAxisColor="transparent"
           xAxisColor={colors.border}
           yAxisTextStyle={styles.axisText}
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   topLabel: { fontFamily: fonts.body.semiBold, fontSize: 10, color: colors.text },
   left: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
   leftCopy: { flex: 1 },
-  leftTitle: { fontFamily: fonts.body.medium, fontSize: 13, color: "#374151" },
+  leftTitle: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
   leftSub: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
   leftValue: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
 });

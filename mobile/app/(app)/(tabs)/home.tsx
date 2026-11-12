@@ -16,6 +16,7 @@ import { DashboardLowStockAlerts } from "../../../src/features/dashboard/compone
 import { DashboardRecentActivity } from "../../../src/features/dashboard/components/DashboardRecentActivity";
 import { colors, fonts, radii, shadows, spacing, typography } from "../../../src/theme";
 import { logApiError } from "../../../src/api/client";
+import { styles } from "../../../src/features/dashboard/Home.styles";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -95,7 +96,7 @@ export default function HomeScreen() {
             <CloudOff size={20} color={colors.warning} />
           </View>
           <View style={styles.errorBody}>
-            <Text style={styles.errorTitle}>Couldn't load your stock.</Text>
+            <Text style={styles.errorTitle}>Could not load your stock.</Text>
             <Text style={styles.errorSub}>Tap to retry loading your latest inventory.</Text>
           </View>
           <Pressable
@@ -145,67 +146,3 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  container: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing.xxl,
-  },
-  errorCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: "#FED7AA",
-    padding: spacing.md,
-    marginBottom: spacing.base,
-    ...shadows.card,
-  },
-  errorIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFF7ED",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.sm,
-  },
-  errorBody: {
-    flex: 1,
-  },
-  errorTitle: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 14,
-    color: colors.text,
-  },
-  errorSub: {
-    fontFamily: fonts.body.regular,
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  retryButton: {
-    paddingHorizontal: spacing.md,
-    height: 36,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: radii.button,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginLeft: spacing.xs,
-  },
-  retryButtonPressed: {
-    backgroundColor: colors.surfaceMuted,
-  },
-  retryText: {
-    fontFamily: fonts.body.semiBold,
-    fontSize: 13,
-    color: colors.text,
-  },
-});

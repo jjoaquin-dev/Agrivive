@@ -2,9 +2,12 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../context/AuthContext";
+import * as SecureStore from "expo-secure-store";
 import { registerNotificationDevice } from "../api/notification-devices";
+import { DEVICE_ID_KEY } from "../api/deviceKey";
 import { getNotificationsModule, isPushNotificationSupported } from "../utils/notificationsModule";
 import { emitPushReceived } from "./pushEvents";
+import { colors } from "../../../theme";
 
 export function NotificationRegistration() {
   const router = useRouter();
@@ -33,20 +36,20 @@ export function NotificationRegistration() {
             name: "Agrivive Alerts",
             importance: Notifications.AndroidImportance.HIGH,
             vibrationPattern: [0, 250, 250, 250],
-            lightColor: "#386600",
+            lightColor: colors.primaryPressed,
             sound: "default",
           });
           await Notifications.setNotificationChannelAsync("orders", {
             name: "Orders and Messages",
             importance: Notifications.AndroidImportance.HIGH,
             vibrationPattern: [0, 250, 250, 250],
-            lightColor: "#386600",
+            lightColor: colors.primaryPressed,
             sound: "default",
           });
           await Notifications.setNotificationChannelAsync("updates", {
             name: "Updates",
             importance: Notifications.AndroidImportance.LOW,
-            lightColor: "#386600",
+            lightColor: colors.primaryPressed,
           });
         }
 
@@ -96,11 +99,12 @@ export function NotificationRegistration() {
         const token = await Notifications.getDevicePushTokenAsync();
         if (cancelled || !token.data) return;
 
-        await registerNotificationDevice({
+        const device = await registerNotificationDevice({
           platform: "android",
           pushToken: String(token.data),
           notificationsEnabled: true,
         });
+        await SecureStore.setItemAsync(DEVICE_ID_KEY, device.id);
       } catch (error) {
         console.warn("[Push] Remote device registration skipped:", error);
       }

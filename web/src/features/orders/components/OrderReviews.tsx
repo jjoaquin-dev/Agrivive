@@ -11,6 +11,7 @@ import { ApiError, isAbortError } from "@/src/lib/api";
 import type { BuyerOrder, BuyerOrderReview } from "@/src/features/marketplace/types";
 import { getBuyerOrderReview } from "../api/orders";
 import { OrderReviewForm } from "./OrderReviewForm";
+import { formatDate } from "@/src/lib/format";
 
 const dateFormat = { month: "short", day: "numeric", year: "numeric" } as const;
 
@@ -30,10 +31,10 @@ function SavedReview({ review, onEdit }: { review: BuyerOrderReview; onEdit: () 
             <div className="mt-1"><RatingStars rating={review.serviceRating} /></div>
           </div>
           <p className="text-sm leading-6 text-muted-foreground">{review.review ?? "No comment added."}</p>
-          {review.photoUrl ? <img src={review.photoUrl} alt="Your review photo" className="h-32 w-32 rounded-xl border border-[#E8E8E8] object-cover" /> : null}
+          {review.photoUrl ? <img src={review.photoUrl} alt="Your review photo" className="h-32 w-32 rounded-xl border border-agrivive-line object-cover" /> : null}
           {review.sellerResponse ? (
-            <div className="rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3 text-sm">
-              <p className="font-semibold text-[#457D00]">Seller response</p>
+            <div className="rounded-xl border border-agrivive-line bg-[#FAFAFA] p-3 text-sm">
+              <p className="font-semibold text-agrivive-primary">Seller response</p>
               <p className="mt-1 text-muted-foreground">{review.sellerResponse}</p>
             </div>
           ) : null}
@@ -42,7 +43,7 @@ function SavedReview({ review, onEdit }: { review: BuyerOrderReview; onEdit: () 
       {canEdit ? (
         <div>
           <Button type="button" variant="outline" onClick={onEdit} className="min-h-12 rounded-xl px-5">Change my review</Button>
-          <p className="mt-2 text-xs text-muted-foreground">You can change it until {new Date(review.editableUntil).toLocaleDateString("en-PH", dateFormat)}.</p>
+          <p className="mt-2 text-xs text-muted-foreground">You can change it until {formatDate(review.editableUntil, dateFormat)}.</p>
         </div>
       ) : <p className="text-xs text-muted-foreground">This review can no longer be changed.</p>}
     </div>
@@ -87,8 +88,8 @@ export function OrderReviews({ order }: { order: BuyerOrder }) {
         <h2 id="order-reviews-heading" className="font-heading text-xl font-bold">Rate your pickup</h2>
         <p className="mt-1 text-sm text-muted-foreground">One quick review for the produce and the seller.</p>
       </div>
-      <Card className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm">
-        <CardHeader className="p-0 pb-3"><CardTitle className="text-[18px] font-semibold text-foreground">{review && !editing ? "Your review" : review ? "Change your review" : "Your review"}</CardTitle></CardHeader>
+      <Card className="rounded-2xl border border-agrivive-line bg-white p-5 shadow-sm">
+        <CardHeader className="p-0 pb-3"><CardTitle className="text-lg font-semibold text-foreground">{review && !editing ? "Your review" : review ? "Change your review" : "Your review"}</CardTitle></CardHeader>
         <CardContent className="p-0">
           {notice ? <Alert className="mb-4 text-sm"><AlertDescription>{notice}</AlertDescription></Alert> : null}
           {review && !editing ? (

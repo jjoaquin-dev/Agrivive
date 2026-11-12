@@ -15,12 +15,12 @@ interface DashboardRecentActivityProps {
 const formatAdjustmentDate = (dateIso: string): string => {
   const d = new Date(dateIso);
   const now = new Date();
-  const timeStr = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const timeStr = d.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   if (d.toDateString() === now.toDateString()) return `Today, ${timeStr}`;
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
   if (d.toDateString() === yesterday.toDateString()) return `Yesterday, ${timeStr}`;
-  const dateFormatted = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+  const dateFormatted = d.toLocaleDateString("en-US", { timeZone: "Asia/Manila", weekday: "short", month: "short", day: "numeric" });
   return `${dateFormatted}, ${timeStr}`;
 };
 
@@ -69,7 +69,7 @@ export const DashboardRecentActivity: React.FC<DashboardRecentActivityProps> = (
       ) : error ? (
         <View style={styles.emptyCard}>
           <History size={24} color={colors.textMuted} />
-          <Text style={styles.emptySub}>Unable to load recent activity.</Text>
+          <Text style={styles.emptySub}>Could not load recent activity.</Text>
         </View>
       ) : activity.length === 0 ? (
         <View style={styles.emptyCard}>
@@ -89,14 +89,14 @@ export const DashboardRecentActivity: React.FC<DashboardRecentActivityProps> = (
 
             return (
               <View key={act.id} style={styles.activityRow}>
-                <View style={[styles.iconWrap, { backgroundColor: isPositive ? colors.primaryLight : "#FEF3C7" }]}>
+                <View style={[styles.iconWrap, { backgroundColor: isPositive ? colors.primaryLight : colors.warningSurface }]}>
                   {isPositive ? <Plus size={18} color={tone} /> : <Minus size={18} color={tone} />}
                 </View>
                 <View style={styles.activityBody}>
                   <View style={styles.titleLine}>
                     <Text style={styles.activityProduct} numberOfLines={1}>{act.productName}</Text>
-                    <View style={[styles.reasonPill, { backgroundColor: isPositive ? colors.primaryLight : "#FEF3C7" }]}>
-                      <Text style={[styles.reasonText, { color: isPositive ? colors.primaryPressed : "#92400E" }]} numberOfLines={1}>{act.reason}</Text>
+                    <View style={[styles.reasonPill, { backgroundColor: isPositive ? colors.primaryLight : colors.warningSurface }]}>
+                      <Text style={[styles.reasonText, { color: isPositive ? colors.primaryPressed : colors.warningText }]} numberOfLines={1}>{act.reason}</Text>
                     </View>
                   </View>
                   <Text style={styles.activityMeta}>

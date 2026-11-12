@@ -24,13 +24,13 @@ export function HomeWhySurplusBenefitCard({ tag, headline, description, imageSrc
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <div className="grid size-14 place-items-center rounded-2xl bg-[#E2FD56]/15 text-[#E2FD56]">{icon}</div>
+            <div className="grid size-14 place-items-center rounded-2xl bg-agrivive-lime/15 text-agrivive-lime">{icon}</div>
           </div>
         )}
       </div>
 
       <div className="flex flex-1 flex-col p-4 pt-5">
-        <span className="type-eyebrow text-[#E2FD56]">{tag}</span>
+        <span className="type-eyebrow text-agrivive-lime">{tag}</span>
         <h3 className="type-card mt-2 font-heading text-white">{headline}</h3>
         <p className="mt-2 text-sm leading-relaxed text-white/70">{description}</p>
       </div>

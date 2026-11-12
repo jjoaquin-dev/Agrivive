@@ -13,7 +13,7 @@ export const ActivityItemRow: React.FC<Props> = ({ item, isLast }) => {
   const deltaNum = parseFloat(item.delta);
   const isPositive = deltaNum >= 0;
   const unit = item.scalingType === "kilo" ? "kg" : item.scalingType;
-  const timeStr = new Date(item.createdAt).toLocaleTimeString([], {
+  const timeStr = new Date(item.createdAt).toLocaleTimeString("en-US", { timeZone: "Asia/Manila",
     hour: "2-digit",
     minute: "2-digit",
   });

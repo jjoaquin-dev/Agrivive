@@ -21,11 +21,11 @@ export default function SignUpPage() {
       formMaxWidth="max-w-[560px]"
       imagePosition="left"
       footer={
-        <p className="text-sm text-[#5F7367]">
+        <p className="text-sm text-agrivive-stone">
           Already have an account?{" "}
           <Link
             href={withNextPath("/login", nextPath)}
-            className="inline-flex items-center gap-1 font-semibold text-[#457D00] hover:text-[#FEA938] hover:underline transition-colors"
+            className="inline-flex items-center gap-1 font-semibold text-agrivive-primary hover:text-agrivive-terracotta hover:underline transition-colors"
           >
             <span>Sign in</span>
             <LogIn aria-hidden="true" className="size-3.5" />

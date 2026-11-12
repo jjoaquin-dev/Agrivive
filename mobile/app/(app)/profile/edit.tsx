@@ -75,7 +75,7 @@ export default function ProfileEditScreen() {
       allowLeave.current = true;
       router.back();
     } catch (err: any) {
-      setErrors({ general: err?.message || "Failed to update profile. Please verify all fields." });
+      setErrors({ general: err?.message || "Could not update profile. Please verify all fields." });
     } finally { setLoading(false); }
   };
 
@@ -111,7 +111,7 @@ export default function ProfileEditScreen() {
         </View>
       </KeyboardAvoidingView>
       <ProfilePhotoSheet visible={avatar.sheetOpen} onTake={avatar.takePhoto} onChoose={avatar.choosePhoto} onClose={avatar.closeSheet} />
-      <ConfirmDialogComponent visible={Boolean(leaveAction)} icon={<AlertTriangle size={22} color={profileColors.red} />} title="Leave without saving?"
+      <ConfirmDialogComponent visible={Boolean(leaveAction)} icon={<AlertTriangle size={24} color={profileColors.red} />} title="Leave without saving?"
         message="You have changes that haven't been saved. If you leave now, they will be lost." cancelLabel="Keep Editing" confirmLabel="Leave" onCancel={() => setLeaveAction(null)} onConfirm={leave} />
     </SafeAreaView>
   );
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: profileColors.cream },
   flex: { flex: 1 },
   content: { paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.xl },
-  section: { fontFamily: fonts.heading.bold, fontSize: 20, color: colors.text, marginBottom: spacing.md },
+  section: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, marginBottom: spacing.md },
   sectionGap: { marginTop: spacing.lg },
   fieldLabel: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text, marginBottom: spacing.xs },
   hint: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.base },

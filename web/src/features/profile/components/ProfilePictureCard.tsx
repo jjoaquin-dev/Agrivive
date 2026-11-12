@@ -87,7 +87,7 @@ export function ProfilePictureCard({
             onError={() => setFailedUrl(imageUrl)}
           />
         ) : (
-          <div className="flex size-full items-center justify-center font-heading text-3xl font-bold text-[#457D00]">
+          <div className="flex size-full items-center justify-center font-heading text-3xl font-bold text-agrivive-primary">
             {initials}
           </div>
         )}
@@ -107,7 +107,7 @@ export function ProfilePictureCard({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="h-11 w-full max-w-[200px] rounded-full text-xs font-bold bg-[#457D00] hover:bg-[#14231A] text-white shadow-sm transition active:translate-y-px flex items-center justify-center gap-2 cursor-pointer"
+          className="h-11 w-full max-w-[200px] rounded-full text-xs font-bold bg-agrivive-primary hover:bg-agrivive-ink text-white shadow-sm transition active:translate-y-px flex items-center justify-center gap-2 cursor-pointer"
         >
           {uploading ? (
             <><Spinner data-icon="inline-start" />Uploading…</>
@@ -120,7 +120,7 @@ export function ProfilePictureCard({
           <button
             type="button"
             onClick={() => onAvatarUploaded(null)}
-            className="py-1 text-xs font-semibold text-red-600 hover:underline cursor-pointer"
+            className="py-1 text-xs font-semibold text-destructive hover:underline cursor-pointer"
           >
             Remove photo
           </button>
@@ -133,7 +133,7 @@ export function ProfilePictureCard({
         </Alert>
       ) : null}
       {success ? (
-        <p className="mt-3 text-xs font-semibold text-[#16A34A]">Photo updated successfully!</p>
+        <p className="mt-3 text-xs font-semibold text-green-600">Photo updated successfully!</p>
       ) : null}
     </Card>
   );

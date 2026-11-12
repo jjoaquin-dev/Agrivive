@@ -22,16 +22,16 @@ export function AuthInput({
       <div className="flex items-center justify-between">
         <label
           htmlFor={id}
-          className="text-xs font-semibold uppercase tracking-wider text-[#14231A]/85 transition-colors group-focus-within:text-[#457D00]"
+          className="text-xs font-semibold uppercase tracking-wider text-agrivive-ink/85 transition-colors group-focus-within:text-agrivive-primary"
         >
           {label}
         </label>
-        {hint && <span className="text-xs text-[#5F7367]">{hint}</span>}
+        {hint && <span className="text-xs text-agrivive-stone">{hint}</span>}
       </div>
       <div className="relative">
         {icon && (
           <div
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5F7367] transition-colors group-focus-within:text-[#457D00]"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-agrivive-stone transition-colors group-focus-within:text-agrivive-primary"
             aria-hidden="true"
           >
             {icon}
@@ -42,8 +42,8 @@ export function AuthInput({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
           className={cn(
-            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white text-sm font-medium text-[#14231A] shadow-sm transition-all placeholder:text-[#5F7367]",
-            "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40 focus-visible:ring-offset-0",
+            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white text-sm font-medium text-agrivive-ink shadow-sm transition-all placeholder:text-agrivive-stone",
+            "hover:border-agrivive-primary/40 focus:border-agrivive-primary focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40 focus-visible:ring-offset-0",
             icon ? "pl-11 pr-5" : "px-5",
             error && "border-destructive/80 focus:border-destructive focus-visible:ring-destructive/40",
             className,

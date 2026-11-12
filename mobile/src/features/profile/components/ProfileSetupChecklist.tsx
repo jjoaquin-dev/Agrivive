@@ -29,7 +29,7 @@ export function ProfileSetupChecklist({ steps, onContinue }: Props) {
         const next = index === nextIndex;
         return (
           <View key={step.title} style={[styles.step, next && styles.stepNext, step.done && styles.stepDone]}>
-            {step.done ? <View style={styles.tick}><Check size={14} color={colors.white} strokeWidth={3} /></View> : next ? <CircleDot size={22} color={colors.primary} /> : <Circle size={22} color={colors.border} />}
+            {step.done ? <View style={styles.tick}><Check size={14} color={colors.white} strokeWidth={3} /></View> : next ? <CircleDot size={24} color={colors.primary} /> : <Circle size={24} color={colors.border} />}
             <View style={styles.stepText}>
               <Text style={[styles.stepTitle, !step.done && !next && styles.stepMuted]}>{step.title}</Text>
               {next ? <Text style={styles.stepHint}>Next step • {step.hint}</Text> : null}
@@ -50,18 +50,18 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1.5, borderColor: profileColors.amberBorder, padding: spacing.base, marginBottom: spacing.base },
   head: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   title: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },
-  count: { backgroundColor: profileColors.amber, borderRadius: radii.full, paddingHorizontal: 10, paddingVertical: 4 },
+  count: { backgroundColor: profileColors.amber, borderRadius: radii.full, paddingHorizontal: 12, paddingVertical: 4 },
   countText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: profileColors.amberText },
   sub: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.md },
   step: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 56, borderRadius: radii.button, borderWidth: 1, borderColor: profileColors.border, paddingHorizontal: spacing.md, marginBottom: spacing.sm },
   stepNext: { borderColor: colors.primary, backgroundColor: colors.primarySurface },
-  stepDone: { backgroundColor: "#FAFAF7" },
-  tick: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
+  stepDone: { backgroundColor: colors.background },
+  tick: { width: 22, height: 22, borderRadius: 12, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   stepText: { flex: 1 },
   stepTitle: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
   stepMuted: { color: colors.textMuted },
   stepHint: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.primary, marginTop: 2 },
-  done: { fontFamily: fonts.body.semiBold, fontSize: 12, color: profileColors.mintText, backgroundColor: profileColors.mint, borderRadius: radii.sm, paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
+  done: { fontFamily: fonts.body.semiBold, fontSize: 12, color: profileColors.mintText, backgroundColor: profileColors.mint, borderRadius: radii.sm, paddingHorizontal: 8, paddingVertical: 4, overflow: "hidden" },
   later: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
   cta: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, minHeight: 52, borderRadius: radii.button, backgroundColor: colors.primary, marginTop: spacing.xs },
   ctaText: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.white },

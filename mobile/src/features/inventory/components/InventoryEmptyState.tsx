@@ -77,8 +77,8 @@ export function InventoryEmptyState({ loading, error, searchQuery, filterTab, on
 const styles = StyleSheet.create({
   center: { alignItems: "center", paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
   iconCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primarySurface, alignItems: "center", justifyContent: "center", marginBottom: spacing.base },
-  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, textAlign: "center", marginBottom: 6 },
+  title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, textAlign: "center", marginBottom: 8 },
   sub: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: "center", marginBottom: spacing.lg },
-  button: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 48, backgroundColor: colors.primary, borderRadius: radii.button, paddingHorizontal: spacing.xl, justifyContent: "center" },
+  button: { flexDirection: "row", alignItems: "center", gap: 8, minHeight: 48, backgroundColor: colors.primary, borderRadius: radii.button, paddingHorizontal: spacing.xl, justifyContent: "center" },
   buttonText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.white },
 });

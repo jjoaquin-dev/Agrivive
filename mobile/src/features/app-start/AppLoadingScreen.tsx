@@ -35,7 +35,7 @@ export const AppLoadingScreen: React.FC<AppLoadingScreenProps> = ({ onRetry }) =
         accessibilityLabel="Agrivive"
       />
       <View style={styles.extra}>
-        {showCaption ? <Text style={styles.caption}>Getting your stall ready…</Text> : null}
+        {showCaption ? <Text style={styles.caption}>Getting your stall ready...</Text> : null}
         {showRetry ? <AuthTextLink label="Taking too long? Try Again" onPress={onRetry} /> : null}
       </View>
     </View>

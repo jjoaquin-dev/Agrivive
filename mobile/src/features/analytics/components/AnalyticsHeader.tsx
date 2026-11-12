@@ -35,6 +35,6 @@ const styles = StyleSheet.create({
   titles: { flex: 1 },
   title: { fontFamily: fonts.heading.bold, fontSize: 22, lineHeight: 28, color: colors.text },
   subtitle: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted },
-  tips: { flexDirection: "row", alignItems: "center", gap: 6, height: 44, paddingHorizontal: 10, borderRadius: radii.input + 2, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  tips: { flexDirection: "row", alignItems: "center", gap: 8, height: 44, paddingHorizontal: 12, borderRadius: radii.input + 2, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   tipsText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.text },
 });

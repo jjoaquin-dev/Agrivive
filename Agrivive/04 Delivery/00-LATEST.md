@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-11 PST
+last_updated: 2026-11-12 PST
 status: active
 ---
 
@@ -11,17 +11,21 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-11 PST
+2026-11-12 PST
 
 ## Latest completed task
 
-Stall hours drive seller penalties: reply timers count open hours only, buyers get a 30-minute closing reminder, and the mobile hours editor is alarm-style (time once, pick weekdays, Open 24 hours). See [[2026-11-11 Stall Hours Reply Clock and Closing Reminder]]. Rebuild the APK and deploy the API and worker.
+Mobile inconsistency scan: nearly all of it is fixed (misleading trust screens and wording, colour and type tokens, shared money and date formatters, copy rules, touch targets, unused files, files over 200 lines). Left on purpose: border radius, off-scale spacing and icon sizes, which need a look on a phone. See [[2026-11-12 Mobile Inconsistency Fixes]]. Web scan fixes and the mobile sheet fix: [[2026-11-12 Web Inconsistency Fixes and Mobile Sheets]], [[2026-11-12 Web Inconsistency Fixes Part 2]].
+
+Earlier: Trust level screens: buyers get a Trust & Standing section on the web, sellers get guidance and the ladder in the app, and an email code can no longer lift a pause (blocks only). See [[2026-11-12 Trust Level Screens and Recovery Fix]].
+
+Earlier: Report screens (web and mobile) now match the trust rules: 20-character minimum, no review team, hints on which reasons count; a seller can no longer report "Listing inaccurate". See [[2026-11-12 Report Screens Match Trust Rules]].
+
+Earlier: Trust points now come from AHP (group pair matrices, CR 0.10 or less, points = weight / smallest weight); level cut-offs are fractions of the total. Judge matrices are still **sample data**. `TRUST_WEIGHT_SOURCE=fixed` rolls back. See [[2026-11-12 Trust Points from AHP]].
+
+Earlier: Stall hours drive seller penalties: reply timers count open hours only, buyers get a 30-minute closing reminder, and the mobile hours editor is alarm-style (time once, pick weekdays, Open 24 hours). See [[2026-11-11 Stall Hours Reply Clock and Closing Reminder]]. Rebuild the APK and deploy the API and worker.
 
 Earlier: README aligned with the current system (Supabase, 47 tables, one review per order, reservation pickup, no Priority Boost, no admin trust decisions), architecture and database diagrams added under `Agrivive/docs/`, CI workflows fixed and bun pinned to 1.4.4 (not pushed yet), and two stale Supabase objects dropped. See [[2026-11-10 README Diagrams and CI Fix]].
-
-Earlier: Schema cleanup and chat rules: dropped `product_reviews`, `priority_score`, `priority_tier` and `price_reduction_percent` (migration `20261109140000_drop_unused_columns`); web chats show only buyer chats and mobile only seller chats (`as=buyer|seller`); sellers can block, unblock and archive; one account can buy and sell (migration `20261109150000_sellers_can_buy`). Migrations not applied anywhere yet; back up first, apply, then deploy the rebuilt API. See [[2026-11-09 Schema Cleanup Chat Sides and Dual Roles]].
-
-Earlier: Seller reminders: the daily popup now lists reminders, a holiday alert fires one day before a public holiday, and a heat alert fires at 35 °C. Rebuild API and the seller APK. See [[2026-11-09 Calendar Reminders Heat and Holiday Alerts]].
 
 Beta testing: 10-case buyer and 10-case seller Pass/Fail sheet added, see [[2026-11-10 UAT Beta Test Cases]]. Not run by testers yet.
 
@@ -30,10 +34,6 @@ Earlier: Prof feedback (Jara items): freshness window set to 6 hours everywhere;
 Newest: trust rules now follow `Flagging Rules Without Admin 2.pdf` (missed pickup always +2, decline dispute gives no points, own-account order blocks, order flood, fake reports, review bomb, chat spam and personal data): see [[2026-11-09 Flagging Rules Without Admin]]. Migration `20261109120000_trust_rules_without_admin` is not applied anywhere. Earlier: Reservation, QR pickup and the full Flagging and Trust PDF mechanism built: stall hours, Closed today and Away, Today/Tomorrow pickup ranges with no overlapping pickups, 3-hour auto-confirm, QR valid to slot end + 15 minutes, decline at pickup, no-show, excuse, reschedule, PDF trust levels, seller fault rate, Trusted Seller, reports, and system-decided disputes. The Admin role was then removed from the trust mechanism: see [[2026-11-08 Remove Admin Role from Trust]]. Migration `20261108140000_pickup_trust_pdf` is not applied anywhere; rebuild API and worker. Tests pass file by file; not checked on a phone or browser. See [[2026-11-08 Reservation QR Pickup and PDF Trust Mechanism]]. Test plan for the older trust code: [[2026-11-08 Trust System Test Case Documents]].
 
 Publication-quality 18-page Technical Specification PDF generated (`Agrivive/docs/AHP-TOPSIS and n8n Boost Engine Technical Specification.pdf`) via Python ReportLab script (`scripts/generate_ahp_n8n_spec_pdf.py`). Follows the strict pipeline -> description -> step-by-step calculation pattern. Embeds two high-resolution 300-DPI visual diagrams (`Agrivive/docs/ahp_topsis_ipo_pipeline.png` and `Agrivive/docs/n8n_seller_flow_pipeline.png`), 28 detailed calculation tables, rigorous mathematical formulations using Google Carlito TrueType typesetting (`⁺`, `⁻`, `₱`, `∑`, `√`, `λ`, `²`), and authoritative academic research references (MCDM literature, perishability economics, automation architecture, and the 2026 Bartiquien, Jara & Marundan Capstone manuscript). Covers the AHP-TOPSIS Visibility Engine (Tables 1-13: raw produce matrix, 4x4 Saaty matrix, column sums, normalized matrix, criteria weights, consistency validation with CR = 0.0038, TOPSIS vector normalization, weighted matrix, ideal solutions, Euclidean separation distances, relative closeness, and the 6-hour lock rotation rule) and the n8n Marketing Boost Engine (Tables 14-28: 12-node registry, webhook payload, conditional routing, context retrieval, Groq prompt engineering, JSON formatting fallback, Facebook post persistence, dynamic 6h price drops with floor validation, flash-sale posts, and fault tolerance matrix). See [[2026-11-08 AHP-TOPSIS and n8n Technical Specification PDF]].
-
-Earlier: Authoritative Codebase Architecture Map and Zero-Guessing Policy established across `AGENTS.md`, `.claude/CLAUDE.md`, and root symlink `CLAUDE.md`. Replaced stale descriptions with complete module boundaries for `backend/` (all 11 modules and utils), `mobile/` (Expo Router tree & feature components), and `web/` (Next.js 15 App Router pages & libraries). Implemented mandatory map update rule on file creation to eliminate AI path guessing. See [[2026-11-08 Codebase Architecture Map and Zero-Guessing Policy]].
-
-Earlier: Zero Orphan Notes Policy enforced across `AGENTS.md` and `.claude/CLAUDE.md`: every newly created or edited Markdown (`.md`) file in the Obsidian vault must have both incoming links from its category index/hub and outgoing breadcrumbs back to the graph. All 8 existing unlinked docs were integrated, achieving 0 orphan files across the entire vault. See [[2026-11-08 No Floating Vault Notes Rule]].
 
 Earlier: One review per completed order, one screen: produce stars, seller stars, one optional comment, one optional photo, editable for 15 days. Seller trust rating = average of service stars; product stars never touch trust or ranking. Per-item review routes removed; `order_reviews` gained `product_rating`, `photo_key`, `updated_at`. Apply the migration, rebuild API, web and the seller APK. 95 backend tests pass (in-memory Postgres). See [[2026-11-08 One Review Per Order]].
 

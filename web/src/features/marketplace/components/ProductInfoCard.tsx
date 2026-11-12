@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Compass, MapPin, ShoppingBasket, ShoppingCart } from "lucide-react";
+import { Check, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { isTrustAccessMessage } from "@/src/lib/api";
-import { getDirectionsUrl } from "@/src/lib/maps";
 import { TrustAccessNotice } from "@/src/features/trust/components/TrustAccessNotice";
 import type { MarketplaceProduct } from "../types";
 import { MessageSellerButton } from "./MessageSellerButton";
+import { ProductPickupBox } from "./ProductPickupBox";
 import { ProductListingActions } from "./ProductListingActions";
 import { formatPeso as money } from "@/src/lib/money";
+import { formatNumber } from "@/src/lib/format";
 
 interface ProductInfoCardProps {
   product: MarketplaceProduct;
@@ -42,67 +43,62 @@ export function ProductInfoCard({
   const previousPrice = product.basePrice == null ? null : Number(product.basePrice);
   const currentPrice = Number(product.productPrice);
   const stock = Number(product.productQty);
-  const stockText = stock.toLocaleString();
+  const stockText = formatNumber(stock);
   // Five or fewer left reads as a warning so buyers know to hurry.
   const lowStock = !soldOut && stock <= 5;
   const isReduced = previousPrice !== null && previousPrice > currentPrice;
-  const directionsUrl = getDirectionsUrl(
-    product.seller.latitude,
-    product.seller.longitude,
-    product.seller.detailAddress,
-  );
 
   return (
-    <div className="flex h-full flex-col justify-between space-y-5 rounded-2xl border border-[#E5E2DA] bg-white p-6 shadow-sm lg:col-span-1">
+    <div className="flex h-full flex-col justify-between space-y-5 rounded-2xl border border-agrivive-border bg-white p-6 shadow-sm lg:col-span-1">
       <div className="space-y-5">
         {/* Category & Title */}
         <div className="space-y-2">
           <div className="flex items-start justify-between gap-3">
-            <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#D5E7C4] bg-[#F0F7EB] px-2.5 py-0.5 text-xs font-semibold text-[#457D00]">
-              <ShoppingBasket className="size-3 text-[#457D00]" />
+            <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-agrivive-primary/25 bg-agrivive-mist px-2.5 py-0.5 text-xs font-semibold text-agrivive-primary">
+              <ShoppingBasket className="size-3 text-agrivive-primary" />
               {product.productType}
             </span>
             <ProductListingActions productId={product.id} productName={product.productName} />
           </div>
-          <h1 className="font-heading text-[26px] font-bold leading-tight text-[#14231A]">
+          <h1 className="font-heading text-3xl font-bold leading-tight text-agrivive-ink">
             {product.productName}
           </h1>
 
           {/* Pricing & Stock */}
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-[#EAECE0] pb-4 pt-1">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-agrivive-line pb-4 pt-1">
             <div className="flex items-baseline gap-1.5">
-              <span className="font-heading text-[24px] font-bold text-[#457D00]">
+              <span className="font-heading text-2xl font-bold text-agrivive-primary">
                 {money(currentPrice)}
               </span>
               {isReduced ? (
-                <del className="text-[12px] text-muted-foreground">
+                <del className="text-xs text-muted-foreground">
                   {money(previousPrice!)}
                 </del>
               ) : null}
-              <span className="text-[12px] text-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 /{product.scalingType}
               </span>
             </div>
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold tabular-nums ${
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums ${
               soldOut
-                ? "border border-red-200 bg-red-50 text-red-700"
+                ? "border border-red-200 bg-red-50 text-destructive"
                 : lowStock
                   ? "border border-amber-200 bg-amber-50 text-amber-800"
-                  : "border border-[#D5E7C4] bg-[#F0F7EB] text-[#457D00]"
+                  : "border border-agrivive-primary/25 bg-agrivive-mist text-agrivive-primary"
             }`}>
-              {!soldOut && !lowStock && <Check className="size-3.5 text-[#457D00]" />}
+              {!soldOut && !lowStock && <Check className="size-3.5 text-agrivive-primary" />}
               {soldOut ? "Sold out" : `${lowStock ? "Only " : ""}${stockText} ${product.scalingType} ${lowStock ? "left" : "available"}`}
             </span>
           </div>
         </div>
 
         {/* Seller Info */}
-        <div className="space-y-3 text-[14px]">
+        <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <span className="text-[12px] text-muted-foreground">Seller</span>
+              <span className="text-xs text-muted-foreground">Seller</span>
               <p>
-                <Link href={`/sellers/${product.seller.id}`} className="font-bold text-[#457D00] hover:underline">
+                <Link href={`/sellers/${product.seller.id}`} className="font-bold text-agrivive-primary hover:underline">
                   {product.seller.shopName}
                 </Link>
               </p>
@@ -111,53 +107,22 @@ export function ProductInfoCard({
           </div>
         </div>
 
-        {/* Pickup Location Box */}
-        <div className="space-y-1.5 rounded-2xl border border-[#EAECE0] bg-[#FAF9F5] p-4 text-[14px]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[12px] font-semibold text-foreground">Pickup details</span>
-            {directionsUrl ? (
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#457D00] hover:text-[#457D00]/80 hover:underline"
-              >
-                <Compass className="size-3.5 shrink-0" aria-hidden="true" />
-                <span>Get Direction</span>
-              </a>
-            ) : null}
-          </div>
-          <p className="flex items-start gap-1.5 text-foreground">
-            <MapPin className="mt-0.5 size-4 shrink-0 text-[#457D00]" />
-            <span>{product.seller.detailAddress}</span>
-          </p>
-          <p className="text-[12px] text-muted-foreground leading-relaxed">
-            {product.seller.pickupInstructions || "Ask the seller for the best pickup time after reserving."}
-          </p>
-        </div>
-
-        {product.seller.away || product.seller.closedToday || product.seller.trustedSeller ? (
-          <div className="flex flex-wrap gap-2 text-[12px] font-semibold">
-            {product.seller.trustedSeller ? <span className="rounded-full bg-[#E5F3D4] px-3 py-1 text-[#244218]">Trusted Seller</span> : null}
-            {product.seller.away ? <span className="rounded-full bg-[#FFF3D6] px-3 py-1 text-[#6B4E00]">Away: replies may be slow. Pickups are not changed.</span> : null}
-            {product.seller.closedToday ? <span className="rounded-full bg-neutral-100 px-3 py-1 text-neutral-700">Closed today. Choose tomorrow.</span> : null}
-          </div>
-        ) : null}
+        <ProductPickupBox seller={product.seller} />
 
         {/* Error or Cart Notice */}
         {orderError ? isTrustAccessMessage(orderError)
           ? <TrustAccessNotice message={orderError} />
           : <Alert variant="destructive" className="rounded-xl"><AlertDescription>{orderError}</AlertDescription></Alert>
           : null}
-        {cartMessage ? <Alert className="rounded-xl border-[#CDE5BA] bg-[#F0F7EB] text-[#244218]"><AlertDescription>{cartMessage}</AlertDescription></Alert> : null}
+        {cartMessage ? <Alert className="rounded-xl border-[#CDE5BA] bg-agrivive-mist text-agrivive-forest"><AlertDescription>{cartMessage}</AlertDescription></Alert> : null}
 
         {/* Quantity Input */}
         <div className="space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">
-            <label htmlFor="reservation-quantity" className="text-[12px] font-semibold text-foreground">
+            <label htmlFor="reservation-quantity" className="text-xs font-semibold text-foreground">
               Quantity to reserve
             </label>
-            {!soldOut ? <span className="text-[12px] text-muted-foreground">Max {stockText} {product.scalingType}</span> : null}
+            {!soldOut ? <span className="text-xs text-muted-foreground">Max {stockText} {product.scalingType}</span> : null}
           </div>
           <input
             id="reservation-quantity"
@@ -169,7 +134,7 @@ export function ProductInfoCard({
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
             disabled={soldOut || ordering}
-            className="h-12 min-h-12 w-full rounded-full border border-[#EAECE0] bg-white px-4 text-base text-foreground outline-none transition focus:border-[#457D00] focus:ring-2 focus:ring-[#457D00]/20 disabled:opacity-60"
+            className="h-12 min-h-12 w-full rounded-full border border-agrivive-line bg-white px-4 text-base text-foreground outline-none transition focus:border-agrivive-primary focus:ring-2 focus:ring-agrivive-primary/20 disabled:opacity-50"
           />
         </div>
       </div>
@@ -182,7 +147,7 @@ export function ProductInfoCard({
             variant="outline"
             onClick={onAddToCart}
             disabled={soldOut || ordering}
-            className="h-12 min-h-12 rounded-xl border border-[#D5DAC6] bg-[#F9F8F1] text-[14px] font-semibold text-neutral-800 hover:bg-[#F3F2EA]"
+            className="h-12 min-h-12 rounded-xl border border-[#D5DAC6] bg-[#F9F8F1] text-sm font-semibold text-neutral-800 hover:bg-[#F3F2EA]"
           >
             <ShoppingCart className="size-4" />Add to cart
           </Button>
@@ -190,7 +155,7 @@ export function ProductInfoCard({
             type="button"
             onClick={onBuyNow}
             disabled={soldOut || ordering || Boolean(reserveBlockedReason)}
-            className="h-12 min-h-12 rounded-xl bg-[#457D00] text-[14px] font-semibold text-white shadow-sm hover:bg-[#457D00]/90 active:translate-y-px"
+            className="h-12 min-h-12 rounded-xl bg-agrivive-primary text-sm font-semibold text-white shadow-sm hover:bg-agrivive-primary/90 active:translate-y-px"
           >
             {ordering ? "Reserving…" : "Reserve for pickup"}
           </Button>
@@ -202,10 +167,10 @@ export function ProductInfoCard({
         ) : reserveWarning ? (
           <Alert className="rounded-xl border-amber-300 bg-amber-50 text-amber-900"><AlertDescription>{reserveWarning}</AlertDescription></Alert>
         ) : null}
-        <p className="text-[12px] font-semibold leading-relaxed text-neutral-800">
+        <p className="text-xs font-semibold leading-relaxed text-neutral-800">
           Agrivive does not check produce quality. Please look over your items when you pick up.
         </p>
-        <p className="text-[12px] leading-relaxed text-muted-foreground">
+        <p className="text-xs leading-relaxed text-muted-foreground">
           Payment happens directly at pickup. You pick a time today or tomorrow.
         </p>
       </div>

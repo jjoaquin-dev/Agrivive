@@ -36,7 +36,7 @@ export interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({
-  title = "Log In with Google",
+  title = "Sign In with Google",
   showDivider = false,
 }: GoogleSignInButtonProps) {
   const router = useRouter();
@@ -141,9 +141,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 52,
     borderRadius: radii.button,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "#E5E2DA",
+    borderColor: colors.border,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   pillPressed: {
-    backgroundColor: "#F3F1EA",
+    backgroundColor: colors.surfaceMuted,
     transform: [{ scale: 0.985 }],
   },
   pillDisabled: {
@@ -163,8 +163,7 @@ const styles = StyleSheet.create({
   pillText: {
     fontFamily: fonts.body.semiBold,
     fontSize: 15,
-    color: "#374151",
-    fontWeight: "600",
+    color: colors.text,
   },
   dividerRow: {
     flexDirection: "row",

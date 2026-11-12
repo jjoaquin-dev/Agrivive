@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Minus, Plus } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
 import { offerNewPickupTime } from "../api/seller-pickup";
 import type { SellerOrder } from "../types";
+import { SlideModal } from "../../../components/SlideModal";
 
 const HOUR = 3_600_000;
 const label = (date: Date) => date.toLocaleString("en-PH", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" });
@@ -27,7 +28,7 @@ export function OrderRescheduleSheet({ order, visible, onClose, onChanged }: { o
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
           <Text style={styles.title}>Offer a new pickup time</Text>
@@ -43,12 +44,12 @@ export function OrderRescheduleSheet({ order, visible, onClose, onChanged }: { o
           <ButtonComponent title="Cancel" onPress={onClose} variant="ghost" />
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, padding: spacing.base, paddingBottom: spacing.xl },
   title: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },
   hint: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginVertical: spacing.sm },

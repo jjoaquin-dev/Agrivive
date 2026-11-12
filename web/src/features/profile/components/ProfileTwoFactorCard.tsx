@@ -150,7 +150,7 @@ export function ProfileTwoFactorCard({
                   setSuccessMessage("");
                   setView("wizard");
                 }}
-                className="h-11 rounded-full bg-[#457D00] px-5 text-xs font-bold text-white hover:bg-[#457D00]/90/90"
+                className="h-11 rounded-full bg-agrivive-primary px-5 text-xs font-bold text-white hover:bg-agrivive-primary/90"
               >
                 <Shield className="size-4" />
                 <span>Enable Two-Factor Authentication</span>

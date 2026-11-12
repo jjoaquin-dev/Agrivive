@@ -24,8 +24,8 @@ export async function queueSellerVisibilityBoost(sellerId: string, productId: st
   const standing = await readTrustStanding(sellerId);
   if (!standing.canBoost) {
     throw new OrderError(409, standing.needsReview
-      ? "Priority Boost is off because your fault rate is 15% or more."
-      : "Priority Boost is off while your account is paused.");
+      ? "Boost is off because your fault rate is 15% or more."
+      : "Boost is off while your account is paused.");
   }
   return db.transaction(async (tx) => {
     await requireSellerMayList(tx, sellerId);

@@ -7,6 +7,7 @@ import type { Product } from "../../inventory/types";
 import { VisibilityFactorsGrid } from "./VisibilityFactorsGrid";
 import { BoostChip } from "./BoostChip";
 import { hasActiveBoost } from "../types";
+import { formatPeso as peso } from "../../../utils/money";
 
 interface VisibilityBreakdownCardProps {
   item: SellerVisibilityItem;
@@ -15,7 +16,6 @@ interface VisibilityBreakdownCardProps {
   onBoost: () => void;
 }
 
-const peso = (value: number) => `₱${Number.isInteger(value) ? value : value.toFixed(2)}`;
 
 function placement(item: SellerVisibilityItem) {
   if (item.score === null || !item.rank) return { label: "Not shown yet", line: item.reason || "Add stock and keep the listing on so buyers can see it.", tone: "warn" as const };
@@ -24,8 +24,8 @@ function placement(item: SellerVisibilityItem) {
 
 const tones = {
   good: { bg: "rgba(22, 163, 74, 0.10)", fg: colors.success },
-  warn: { bg: "#FFF7ED", fg: colors.warning },
-  quiet: { bg: "#F3F1EA", fg: colors.textMuted },
+  warn: { bg: colors.orangeSurface, fg: colors.warning },
+  quiet: { bg: colors.surfaceMuted, fg: colors.textMuted },
 };
 
 export function VisibilityBreakdownCard({ item, productName, product, onBoost }: VisibilityBreakdownCardProps) {
@@ -105,10 +105,10 @@ const styles = StyleSheet.create({
   line: { fontFamily: fonts.body.regular, fontSize: 14, lineHeight: 20, color: colors.text, marginTop: spacing.sm },
   lineQuiet: { color: colors.textMuted },
   scoreRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm },
-  segments: { flex: 1, height: 6, borderRadius: 3, backgroundColor: colors.border, overflow: "hidden" },
-  segmentOn: { height: 6, borderRadius: 3, backgroundColor: colors.primary },
+  segments: { flex: 1, height: 6, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden" },
+  segmentOn: { height: 6, borderRadius: 4, backgroundColor: colors.primary },
   scoreText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  dropChip: { alignSelf: "flex-start", backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA", borderRadius: radii.full, paddingHorizontal: spacing.sm, paddingVertical: 4, marginTop: spacing.sm },
+  dropChip: { alignSelf: "flex-start", backgroundColor: colors.orangeSurface, borderWidth: 1, borderColor: colors.orangeBorder, borderRadius: radii.full, paddingHorizontal: spacing.sm, paddingVertical: 4, marginTop: spacing.sm },
   dropText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.warning },
   actionRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
   whyButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, minHeight: 48, borderRadius: radii.button, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },

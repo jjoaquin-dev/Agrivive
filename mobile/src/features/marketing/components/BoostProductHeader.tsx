@@ -2,6 +2,7 @@ import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Package } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { formatPeso } from "../../../utils/money";
 
 interface Props {
   name: string;
@@ -20,7 +21,7 @@ export function BoostProductHeader({ name, imageUrl, price, unit }: Props) {
       </View>
       <View style={styles.copy}>
         <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <Text style={styles.price}>₱{price.toFixed(2)}{unitLabel ? ` / ${unitLabel}` : ""} now</Text>
+        <Text style={styles.price}>{formatPeso(price)}{unitLabel ? ` / ${unitLabel}` : ""} now</Text>
       </View>
     </View>
   );

@@ -9,3 +9,5 @@ export default function MarketplacePage() {
     </>
   );
 }
+
+export const metadata = { title: "Marketplace | Agrivive" };

@@ -10,6 +10,7 @@ import { ApiError, isAbortError } from "@/src/lib/api";
 import { getProductReviews } from "../api/marketplace";
 import type { ProductReviewsResponse } from "../types";
 import { ReviewSummaryCard } from "./ReviewSummaryCard";
+import { formatDate } from "@/src/lib/format";
 
 export function ProductReviewsSection({ productId }: { productId: string }) {
   const [data, setData] = useState<ProductReviewsResponse | null>(null);
@@ -39,22 +40,22 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
     <section id="product-reviews" aria-labelledby="product-reviews-heading" className="space-y-4 scroll-mt-24">
       <div className="flex items-center gap-2">
         <Star aria-hidden="true" className="size-5 fill-amber-400 text-amber-400" />
-        <h2 id="product-reviews-heading" className="font-heading text-[18px] font-semibold text-[#14231A]">
+        <h2 id="product-reviews-heading" className="font-heading text-lg font-semibold text-agrivive-ink">
           Product ratings and comments
         </h2>
       </div>
 
-      <p className="text-[12px] text-muted-foreground">Buyers rate the produce from their order page after pickup. One rating covers every item in that order.</p>
+      <p className="text-xs text-muted-foreground">Buyers rate the produce from their order page after pickup. One rating covers every item in that order.</p>
 
       {loading ? (
         <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)]" aria-label="Loading product reviews">
-          <Skeleton className="h-44 rounded-2xl border border-[#E8E8E8] bg-white" />
-          <Skeleton className="h-44 rounded-2xl border border-[#E8E8E8] bg-white" />
+          <Skeleton className="h-44 rounded-2xl border border-agrivive-line bg-white" />
+          <Skeleton className="h-44 rounded-2xl border border-agrivive-line bg-white" />
         </div>
       ) : error ? (
         <Alert variant="destructive" className="rounded-xl">
           <AlertDescription>{error}</AlertDescription>
-          <Button type="button" variant="outline" className="mt-3 rounded-xl border-[#E8E8E8]" onClick={() => void load()}>
+          <Button type="button" variant="outline" className="mt-3 rounded-xl border-agrivive-line" onClick={() => void load()}>
             Try again
           </Button>
         </Alert>
@@ -63,24 +64,24 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
           <ReviewSummaryCard average={data.average} count={data.count} breakdown={data.breakdown} singular="rating" />
           <div className="space-y-4">
             {data.reviews.map((review) => (
-              <div key={review.id} className="rounded-2xl border border-[#E8E8E8] bg-white p-4 shadow-sm">
+              <div key={review.id} className="rounded-2xl border border-agrivive-line bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-semibold text-foreground">{review.buyerName}</span>
-                    <span className="rounded-full border border-[#CDE5BA] bg-[#F0F7EB] px-2 py-0.5 text-xs font-semibold text-[#457D00]">
+                    <span className="text-sm font-semibold text-foreground">{review.buyerName}</span>
+                    <span className="rounded-full border border-[#CDE5BA] bg-agrivive-mist px-2 py-0.5 text-xs font-semibold text-agrivive-primary">
                       Verified purchase
                     </span>
                   </div>
-                  <time className="text-[12px] text-muted-foreground" dateTime={review.createdAt}>
-                    {new Date(review.createdAt).toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" })}
+                  <time className="text-xs text-muted-foreground" dateTime={review.createdAt}>
+                    {formatDate(review.createdAt, { month: "short", day: "numeric", year: "numeric" })}
                   </time>
                 </div>
                 <div className="mt-2"><RatingStars rating={review.rating} /></div>
-                {review.review ? <p className="mt-2 text-[14px] leading-relaxed text-foreground/90">{review.review}</p> : null}
-                {review.photoUrl ? <img src={review.photoUrl} alt={`Photo from ${review.buyerName}`} loading="lazy" className="mt-3 h-28 w-28 rounded-xl border border-[#E8E8E8] object-cover" /> : null}
+                {review.review ? <p className="mt-2 text-sm leading-relaxed text-foreground/90">{review.review}</p> : null}
+                {review.photoUrl ? <img src={review.photoUrl} alt={`Photo from ${review.buyerName}`} loading="lazy" className="mt-3 h-28 w-28 rounded-xl border border-agrivive-line object-cover" /> : null}
                 {review.sellerResponse ? (
-                  <div className="mt-3 rounded-xl border border-[#E8E8E8] bg-[#FAFAFA] p-3 text-[12px]">
-                    <div className="font-semibold text-[#457D00]">Seller response</div>
+                  <div className="mt-3 rounded-xl border border-agrivive-line bg-[#FAFAFA] p-3 text-xs">
+                    <div className="font-semibold text-agrivive-primary">Seller response</div>
                     <p className="mt-1 leading-relaxed text-muted-foreground">{review.sellerResponse}</p>
                   </div>
                 ) : null}
@@ -89,12 +90,12 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#E8E8E8] bg-white p-6 text-center shadow-sm">
-          <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-[#F0F7EB] text-[#457D00]">
+        <div className="rounded-2xl border border-agrivive-line bg-white p-6 text-center shadow-sm">
+          <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-agrivive-mist text-agrivive-primary">
             <MessageSquare className="size-5" />
           </div>
-          <p className="mt-3 text-[14px] font-semibold text-[#14231A]">No product ratings yet</p>
-          <p className="mt-1 text-[12px] text-muted-foreground">Buyers can rate the produce after pickup is complete.</p>
+          <p className="mt-3 text-sm font-semibold text-agrivive-ink">No product ratings yet</p>
+          <p className="mt-1 text-xs text-muted-foreground">Buyers can rate the produce after pickup is complete.</p>
         </div>
       )}
     </section>

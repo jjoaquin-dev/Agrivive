@@ -79,6 +79,6 @@ const styles = StyleSheet.create({
   textColumn: { flex: 1 },
   title: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
   detail: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
-  pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radii.full, maxWidth: 130 },
+  pill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: radii.full, maxWidth: 130 },
   pillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
 });

@@ -6,6 +6,7 @@ import { formatRange, unitWord } from "../format";
 import { movementRows } from "../breakdown";
 import { AnalyticsDetailSheet } from "./AnalyticsDetailSheet";
 import type { AnalyticsUnit, SellerAnalyticsMetrics } from "../types";
+import { formatPeso as peso } from "../../../utils/money";
 
 interface AnalyticsMetricsGridProps {
   metrics: SellerAnalyticsMetrics;
@@ -15,8 +16,6 @@ interface AnalyticsMetricsGridProps {
   changeNotComputable: boolean;
 }
 
-const peso = (value: string | number) =>
-  `₱${Number(value || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /** The two headline cards: what sold, and how much of what was posted sold. */
 export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroughNotComputable, changeNotComputable }: AnalyticsMetricsGridProps) {
@@ -35,7 +34,7 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
         <Text style={styles.big}>{metrics.completedQuantity} {word}</Text>
         <Text style={styles.earned}>{peso(metrics.completedSalesTotal)} earned from pickups</Text>
         {change !== null ? (
-          <View style={[styles.trend, { backgroundColor: up ? "#DCFCE7" : down ? "#FEF2F2" : "#F3F1EA" }]}>
+          <View style={[styles.trend, { backgroundColor: up ? colors.successSurfaceStrong : down ? colors.errorSurface : colors.surfaceMuted }]}>
             <Text style={[styles.trendText, { color: up ? colors.success : down ? colors.error : colors.textMuted }]}>
               {up ? "▲" : down ? "▼" : "–"} {Math.abs(change).toFixed(1)}%{" "}
               <Text style={styles.trendNote}>vs {formatRange(previousPeriod.from, previousPeriod.to)}</Text>
@@ -65,11 +64,11 @@ const styles = StyleSheet.create({
   earned: { fontFamily: fonts.body.medium, fontSize: 15, lineHeight: 22, color: colors.text, marginTop: 4 },
   trend: { alignSelf: "flex-start", borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 4, marginTop: spacing.sm },
   trendText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
-  trendNote: { fontFamily: fonts.body.medium, color: "#386600" },
+  trendNote: { fontFamily: fonts.body.medium, color: colors.primaryPressed },
   rateRow: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm },
   rate: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.primary },
   rateNote: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.text },
   track: { height: 8, borderRadius: 4, backgroundColor: colors.border, overflow: "hidden", marginTop: spacing.sm },
   fill: { height: "100%", borderRadius: 4, backgroundColor: colors.primary },
-  caption: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted, marginTop: 6 },
+  caption: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.textMuted, marginTop: 8 },
 });

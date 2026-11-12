@@ -4,8 +4,8 @@ import { ArrowRight, ExternalLink } from "lucide-react-native";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme";
 import { formatBoostTime, type PriceDropHistoryItem } from "../types";
 import { PlatformBadge } from "./PlatformBadge";
+import { formatPeso as peso } from "../../../utils/money";
 
-const peso = (value: number) => `₱${value.toFixed(2)}`;
 
 /** One lower-price post: the product, the old and new price, the words posted and when (Common Region, Gestalt). */
 export function PriceDropHistoryCard({ item }: { item: PriceDropHistoryItem }) {
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   placeholder: { backgroundColor: colors.primaryLight },
   title: { flex: 1 },
   product: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
-  platformRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
+  platformRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
   meta: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
   priceRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md },
   old: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, textDecorationLine: "line-through" },

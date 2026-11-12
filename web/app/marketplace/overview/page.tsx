@@ -52,7 +52,7 @@ export default function MarketplaceOverviewPage() {
         <LandingHeader />
       </div>
 
-      <main className="min-h-screen bg-[#F8F6F1] pb-8 pt-24 text-neutral-900 md:pt-44 lg:pb-12 print:bg-white print:p-0">
+      <main className="min-h-screen bg-agrivive-background pb-8 pt-24 text-neutral-900 md:pt-44 lg:pb-12 print:bg-white print:p-0">
         <PageContainer>
           {loading && !data ? (
             <div className="space-y-6">
@@ -69,15 +69,15 @@ export default function MarketplaceOverviewPage() {
             </div>
           ) : error && !data ? (
             <div className="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
-              <AlertCircle className="mx-auto size-8 text-red-600" />
-              <p className="mt-2 text-sm font-semibold text-red-700">{error}</p>
+              <AlertCircle className="mx-auto size-8 text-destructive" />
+              <p className="mt-2 text-sm font-semibold text-destructive">{error}</p>
               <button
                 type="button"
                 onClick={() => {
                   setError(null);
                   setRetryKey((key) => key + 1);
                 }}
-                className="mt-4 rounded-xl bg-[#457D00] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#457D00]/90"
+                className="mt-4 rounded-xl bg-agrivive-primary px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-agrivive-primary/90"
               >
                 Retry
               </button>

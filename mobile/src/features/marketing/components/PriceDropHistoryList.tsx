@@ -37,7 +37,7 @@ export function PriceDropHistoryList({ refreshSignal }: { refreshSignal: number 
       {loading ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}
       {!loading && items.length === 0 && !error ? (
         <View style={styles.empty}>
-          <View style={styles.emptyIcon}><TrendingDown size={30} color={colors.primary} /></View>
+          <View style={styles.emptyIcon}><TrendingDown size={32} color={colors.primary} /></View>
           <Text style={styles.emptyTitle}>No price drops yet</Text>
           <Text style={styles.emptyText}>When a price goes down and is posted on Facebook, it shows here.</Text>
         </View>

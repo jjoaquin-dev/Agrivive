@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Award, BarChart3, ShoppingBag, Sparkles } from "lucide-react";
 import type { TopProduceItem } from "../api/overview";
+import { formatNumber } from "@/src/lib/format";
+import { formatPeso } from "@/src/lib/money";
 
 interface Props {
   items: TopProduceItem[];
@@ -39,7 +41,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
           </p>
         </div>
         <div className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-600">
-          <Award className="size-3.5 text-[#457D00]" />
+          <Award className="size-3.5 text-agrivive-primary" />
           <span>Top Volume Leaders</span>
         </div>
       </div>
@@ -62,7 +64,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                 onMouseLeave={() => setHoveredId(null)}
                 className={`group relative rounded-xl border p-3 transition-all ${
                   isHovered
-                    ? "border-[#457D00] bg-lime-50/30 shadow-sm"
+                    ? "border-agrivive-primary bg-lime-50/30 shadow-sm"
                     : "border-neutral-100 bg-neutral-50/40 hover:bg-white hover:border-neutral-200"
                 }`}
               >
@@ -75,7 +77,7 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                     >
                       {rank}
                     </span>
-                    <span className="truncate font-bold text-neutral-900 group-hover:text-[#457D00] transition-colors">
+                    <span className="truncate font-bold text-neutral-900 group-hover:text-agrivive-primary transition-colors">
                       {item.name}
                     </span>
                     <span className="hidden sm:inline-block rounded-lg bg-neutral-200/60 px-2 py-0.5 text-xs font-medium text-neutral-600">
@@ -86,10 +88,10 @@ export const MarketplaceTopProduceChartComponent = ({ items, range }: Props) => 
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
                       <span className="font-heading text-sm font-black text-neutral-900">
-                        {item.totalQuantity.toLocaleString()} {item.unit}
+                        {formatNumber(item.totalQuantity)} {item.unit}
                       </span>
                       <span className="block text-xs text-neutral-500">
-                        {item.orderCount} orders · ₱{item.totalValue.toLocaleString()}
+                        {item.orderCount} orders · {formatPeso(item.totalValue)}
                       </span>
                     </div>
                   </div>

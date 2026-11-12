@@ -52,7 +52,7 @@ export function QuantityStepper({ value, max, label, onChange, onRemove, disable
     onChange(clampQuantity(roundQuantity(value - QUANTITY_STEP), max));
   }
 
-  const button = `flex shrink-0 items-center justify-center rounded-full text-neutral-700 transition active:scale-90 hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-30 cursor-pointer ${buttonClassName}`;
+  const button = `flex shrink-0 items-center justify-center rounded-full text-neutral-700 transition active:scale-90 hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-50 cursor-pointer ${buttonClassName}`;
 
   return (
     <div role="group" aria-label={label} className={`inline-flex items-center justify-between ${className}`}>
@@ -69,7 +69,7 @@ export function QuantityStepper({ value, max, label, onChange, onRemove, disable
         onBlur={commit}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } }}
         onClick={(e) => e.stopPropagation()}
-        className="w-11 min-w-0 bg-transparent text-center text-base font-semibold tabular-nums text-neutral-900 outline-none focus:underline"
+        className="w-11 min-w-0 bg-transparent text-center text-base font-semibold tabular-nums text-neutral-900 outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40 focus:underline"
       />
       <button type="button" disabled={disabled || atMax} onClick={() => onChange(clampQuantity(roundQuantity(value + QUANTITY_STEP), max))} aria-label={`Increase ${label}`} className={button}>
         <Plus className="size-3.5" aria-hidden="true" />

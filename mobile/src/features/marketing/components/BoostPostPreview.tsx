@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Globe, MoreHorizontal } from "lucide-react-native";
 import { colors, fonts, radii, shadows, spacing } from "../../../theme";
 import { PlatformBadge, platformName, type Platform } from "./PlatformBadge";
+import { formatPeso } from "../../../utils/money";
 
 interface Props {
   name: string;
@@ -58,7 +59,7 @@ export function BoostPostPreview({ name, imageUrl, price, quantity, unit }: Prop
         {imageUrl ? <Image source={{ uri: imageUrl }} style={[styles.photo, platform === "instagram" && styles.square]} /> : <View style={[styles.photo, styles.square]} />}
         <View style={styles.body}>
           {stock ? <Text style={styles.stock}>{stock}</Text> : null}
-          <Text style={styles.price}>₱{price.toFixed(2)}</Text>
+          <Text style={styles.price}>{formatPeso(price)}</Text>
           <Text style={styles.note}>
             {platform === "facebook" ? "We write a short message and add a link to your product page." : "We write a short caption and add your product page address."}
           </Text>

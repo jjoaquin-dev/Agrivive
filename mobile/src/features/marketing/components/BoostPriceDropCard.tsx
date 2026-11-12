@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Tag } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { formatPeso } from "../../../utils/money";
 
 interface Props {
   dropAmount: number;
@@ -11,11 +12,11 @@ interface Props {
 /** The price drop rule, read from the product's own settings. */
 export function BoostPriceDropCard({ dropAmount, lowestPrice }: Props) {
   const text = dropAmount > 0 && lowestPrice
-      ? `If your produce has not sold 6 hours after it posts, the price drops by ₱${dropAmount.toFixed(2)}. This repeats every 6 hours until your final price of ₱${lowestPrice.toFixed(2)}. It never goes lower.`
+      ? `If your produce has not sold 6 hours after it posts, the price drops by ${formatPeso(dropAmount)}. This repeats every 6 hours until your final price of ${formatPeso(lowestPrice)}. It never goes lower.`
       : "6 hours after it posts, we ask you how much to drop the price. If you skip it, your price stays the same.";
   return (
     <View style={styles.card}>
-      <Tag size={22} color={colors.primary} />
+      <Tag size={24} color={colors.primary} />
       <View style={styles.copy}>
         <Text style={styles.title}>Price drop</Text>
         <Text style={styles.text}>{text}</Text>

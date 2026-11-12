@@ -76,7 +76,7 @@ export function BoostHistorySection({ items, nextCursor, loading, loadingMore, e
       {error ? (
         <View style={styles.errorBox}>
           <Text style={styles.error}>{error}</Text>
-          <ButtonComponent title="Try again" onPress={onRetry} variant="secondary" style={styles.retry} />
+          <ButtonComponent title="Try Again" onPress={onRetry} variant="secondary" style={styles.retry} />
         </View>
       ) : null}
       {loading && items.length === 0 ? <ActivityIndicator color={colors.primary} style={styles.loader} /> : null}

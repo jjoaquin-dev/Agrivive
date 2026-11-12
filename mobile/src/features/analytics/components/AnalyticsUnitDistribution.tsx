@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 10,
     flexDirection: "row",
-    borderRadius: 5,
+    borderRadius: 6,
     overflow: "hidden",
     backgroundColor: colors.surfaceMuted,
     marginVertical: spacing.md,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   unitInfo: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  colorSquare: { width: 12, height: 12, borderRadius: 3 },
+  colorSquare: { width: 12, height: 12, borderRadius: 4 },
   unitName: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.text },
   unitValues: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   unitAmount: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },

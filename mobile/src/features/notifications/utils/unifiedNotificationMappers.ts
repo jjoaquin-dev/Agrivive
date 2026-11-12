@@ -1,8 +1,10 @@
+import { formatRelativeTime } from "../../../utils/dates";
 import { type useRouter } from "expo-router";
 import { markSellerBoostPromptRead } from "../../marketing/api/visibility-boosts";
 import type { SellerBoostPrompt, SellerNotification, UnifiedNotificationItem } from "../types";
 import type { Conversation } from "../../conversations/types";
 import { mapSellerNotice } from "./sellerNoticeMapper";
+import { formatPeso } from "../../../utils/money";
 
 type RouterInstance = ReturnType<typeof useRouter>;
 
@@ -10,19 +12,6 @@ function parseDate(raw?: string | null): Date {
   if (!raw) return new Date();
   const d = new Date(raw);
   return isNaN(d.getTime()) ? new Date() : d;
-}
-
-export function formatRelativeTime(date: Date): string {
-  if (!date || isNaN(date.getTime())) return "Recently";
-  const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
-  if (diffMin < 1) return "Just now";
-  if (diffMin < 60) return `${diffMin} min ago`;
-  const diffHours = Math.floor(diffMin / 60);
-  return diffHours < 24
-    ? `${diffHours} hr${diffHours > 1 ? "s" : ""} ago`
-    : Math.floor(diffHours / 24) === 1
-    ? "Yesterday"
-    : date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export function mapUnifiedNotificationItems(input: {
@@ -66,7 +55,7 @@ export function mapUnifiedNotificationItems(input: {
       list.push({
         id: `boost:${boost.id}`, category: "listings", kind: "boost_prompt", title: "Price Lowered",
         subtitle: boost.priceBefore && boost.priceAfter
-          ? `${boost.productName} went from ₱${Number(boost.priceBefore).toFixed(2)} to ₱${Number(boost.priceAfter).toFixed(2)}. It was posted on the Agrivive page.`
+          ? `${boost.productName} went from ${formatPeso(Number(boost.priceBefore))} to ${formatPeso(Number(boost.priceAfter))}. It was posted on the Agrivive page.`
           : `${boost.productName} has a new price. It was posted on the Agrivive page.`,
         timestamp: formatRelativeTime(date), rawDate: date, read: isRead, urgent: false, iconType: "megaphone",
         primaryAction: {

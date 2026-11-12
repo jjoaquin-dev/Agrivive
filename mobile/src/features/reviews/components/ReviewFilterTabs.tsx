@@ -109,9 +109,9 @@ const styles = StyleSheet.create({
   },
   mainTabs: {
     flexDirection: "row",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: radii.button,
-    padding: 3,
+    padding: 4,
   },
   tab: {
     flex: 1,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: touchTargets.min - 8,
     borderRadius: radii.button - 2,
-    gap: 6,
+    gap: 8,
   },
   tabActive: {
     backgroundColor: colors.surface,
@@ -139,13 +139,13 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   badge: {
-    backgroundColor: "#F59E0B",
+    backgroundColor: colors.star,
     borderRadius: radii.full,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 1,
   },
   badgeActive: {
-    backgroundColor: "#D97706",
+    backgroundColor: colors.warning,
   },
   badgeText: {
     fontFamily: fonts.body.semiBold,
@@ -168,8 +168,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   starPillActive: {
-    backgroundColor: "#457D00",
-    borderColor: "#457D00",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   starPillText: {
     fontFamily: fonts.body.medium,
