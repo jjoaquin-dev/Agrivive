@@ -2,14 +2,14 @@ import React from "react";
 import { Pressable, Text } from "react-native";
 import { Redirect, Stack } from "expo-router";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors, fonts } from "../../src/theme";
+import { colors, fonts, touchTargets, typography } from "../../src/theme";
 import { OfflineBanner } from "../../src/components/OfflineBanner";
 import { DailyAdvisoryPopup } from "../../src/features/advisories/components/DailyAdvisoryPopup";
 
 function CancelButton({ onPress }: { onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Cancel" hitSlop={8} style={{ minHeight: 44, justifyContent: "center" }}>
-      <Text style={{ fontFamily: fonts.body.medium, fontSize: 15, color: colors.textMuted }}>Cancel</Text>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel="Cancel" hitSlop={8} style={{ minHeight: touchTargets.min, justifyContent: "center" }}>
+      <Text style={{ ...typography.bodyLarge, fontFamily: fonts.body.medium, color: colors.textMuted }}>Cancel</Text>
     </Pressable>
   );
 }
@@ -78,26 +78,27 @@ export default function AppLayout() {
       />
 
       {/* Hierarchical Detail Pages */}
-      <Stack.Screen name="inventory/[id]/index" options={{ title: "Product Details" }} />
+      <Stack.Screen name="inventory/[id]/index" options={{ title: "Listing Details" }} />
       <Stack.Screen
         name="inventory/[id]/edit"
         options={({ navigation }) => ({
-          title: "Edit Product",
+          title: "Edit Listing",
           headerTitleAlign: "center",
           headerBackVisible: false,
           headerLeft: () => <CancelButton onPress={navigation.goBack} />,
         })}
       />
       <Stack.Screen name="orders/[id]" options={{ title: "Reservation" }} />
-      <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
-      <Stack.Screen name="conversations/[id]" options={{ title: "Conversation" }} />
+      <Stack.Screen name="notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="conversations/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="activity" options={{ title: "Change History" }} />
-      <Stack.Screen name="analytics" options={{ title: "Sales Report", headerShown: false }} />
+      <Stack.Screen name="analytics" options={{ headerShown: false }} />
       <Stack.Screen name="marketing/index" options={{ title: "Boost" }} />
       <Stack.Screen name="marketing/[productId]" options={{ title: "Preview Boost" }} />
       <Stack.Screen name="marketing/started" options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="advisories" options={{ title: "Advisories" }} />
+      <Stack.Screen name="advisories" options={{ headerShown: false }} />
       <Stack.Screen name="trust" options={{ title: "Trust History" }} />
+      <Stack.Screen name="stall" options={{ title: "Stall Hours" }} />
       <Stack.Screen name="reviews" options={{ title: "Ratings & Reviews" }} />
       <Stack.Screen name="profile/index" options={{ title: "Seller Profile" }} />
       <Stack.Screen name="profile/setup" options={{ headerShown: false }} />

@@ -13,7 +13,7 @@ export function StockProductBanner({ product }: { product: Product }) {
   return (
     <View style={styles.banner}>
       <View style={styles.photo}>
-        {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} /> : <Package size={22} color={colors.primary} />}
+        {imageUrl ? <Image source={{ uri: imageUrl }} style={styles.image} /> : <Package size={24} color={colors.primary} />}
       </View>
       <View style={styles.body}>
         <View style={styles.nameRow}>
@@ -29,7 +29,7 @@ export function StockProductBanner({ product }: { product: Product }) {
 }
 
 const styles = StyleSheet.create({
-  banner: { flexDirection: "row", alignItems: "center", gap: spacing.md, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card - 4, padding: 10, marginHorizontal: spacing.base, marginTop: spacing.sm, marginBottom: spacing.base },
+  banner: { flexDirection: "row", alignItems: "center", gap: spacing.md, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, borderRadius: radii.card - 4, padding: 12, marginHorizontal: spacing.base, marginTop: spacing.sm, marginBottom: spacing.base },
   photo: { width: 44, height: 44, borderRadius: 8, overflow: "hidden", backgroundColor: colors.primarySurface, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border },
   image: { width: "100%", height: "100%" },
   body: { flex: 1, minWidth: 0 },
@@ -38,5 +38,5 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.full },
   badgeText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
   sub: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
-  subStrong: { fontFamily: fonts.body.medium, color: "#374151" },
+  subStrong: { fontFamily: fonts.body.medium, color: colors.text },
 });

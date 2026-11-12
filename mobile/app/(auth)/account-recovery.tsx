@@ -124,8 +124,8 @@ export default function AccountRecoveryScreen() {
   return (
     <AuthScreenShell
       title={step === "email" ? "Restore Your Account" : "Check Your Email"}
-      subtitle={step === "email" ? "For accounts that were blocked or paused. We'll email you a 6-digit code to prove it's you." : (
-        <>If this account is blocked or paused, we sent a code to {maskEmail(email)} · <Text style={styles.change} onPress={backToEmail} accessibilityRole="button">Change</Text></>
+      subtitle={step === "email" ? "For accounts that were blocked. A pause ends by itself, so wait for it to finish. We'll email you a 6-digit code to prove it's you." : (
+        <>If this account is blocked, we sent a code to {maskEmail(email)} · <Text style={styles.change} onPress={backToEmail} accessibilityRole="button">Change</Text></>
       )}
       onBack={step === "code" ? backToEmail : leave}
     >
@@ -158,7 +158,7 @@ export default function AccountRecoveryScreen() {
         </>
       )}
       {signedIn ? (
-        <AuthTextLink label="Log out instead" onPress={() => void logOut()} disabled={loading} />
+        <AuthTextLink label="Sign out instead" onPress={() => void logOut()} disabled={loading} />
       ) : (
         <AuthTextLink label="Back to sign in" onPress={() => router.replace("/(auth)/login")} />
       )}

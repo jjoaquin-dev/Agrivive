@@ -46,17 +46,17 @@ export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials
 
       {onArchive ? (
         <Pressable onPress={onArchive} accessibilityRole="button" accessibilityLabel={archived ? "Move out of Archived" : "Archive this chat"} style={styles.iconButton}>
-          <Archive size={22} color={archived ? colors.primary : colors.textMuted} />
+          <Archive size={24} color={archived ? colors.primary : colors.textMuted} />
         </Pressable>
       ) : null}
       {onBlock ? (
         <Pressable onPress={onBlock} accessibilityRole="button" accessibilityLabel={blocked ? "Unblock this buyer" : "Block this buyer"} style={styles.iconButton}>
-          <ShieldBan size={22} color={blocked ? colors.error : colors.textMuted} />
+          <ShieldBan size={24} color={blocked ? colors.error : colors.textMuted} />
         </Pressable>
       ) : null}
       {onInfo ? (
         <Pressable onPress={onInfo} accessibilityRole="button" accessibilityLabel="Open details" style={styles.iconButton}>
-          <Info size={22} color={colors.textMuted} />
+          <Info size={24} color={colors.textMuted} />
         </Pressable>
       ) : null}
     </View>
@@ -66,8 +66,8 @@ export function ConversationHeaderBar({ senderName, subtitle, avatarBg, initials
 const styles = StyleSheet.create({
   navBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.surface },
   iconButton: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  avatarBox: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  avatarImage: { width: 44, height: 44, borderRadius: 22 },
+  avatarBox: { width: 44, height: 44, borderRadius: 24, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  avatarImage: { width: 44, height: 44, borderRadius: 24 },
   initialsText: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.white },
   headerInfo: { flex: 1, marginLeft: spacing.md },
   senderTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text },

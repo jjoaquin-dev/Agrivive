@@ -12,7 +12,7 @@ interface AdvisoriesHeaderProps {
 
 function formatUpdated(timestamp?: string) {
   if (!timestamp) return "Pull down to refresh";
-  const time = new Date(timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const time = new Date(timestamp).toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   return `Updated ${time} · Pull down to refresh`;
 }
 
@@ -39,7 +39,7 @@ export const AdvisoriesHeader: React.FC<AdvisoriesHeaderProps> = ({ generatedAt,
 const styles = StyleSheet.create({
   container: { paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.sm, backgroundColor: colors.background },
   topRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  iconButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
+  iconButton: { width: 44, height: 44, borderRadius: 24, backgroundColor: colors.surfaceMuted, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
   pressed: { opacity: 0.7, transform: [{ scale: 0.96 }] },
   title: { ...typography.screenTitle, flex: 1, textAlign: "center", marginHorizontal: spacing.sm, color: colors.text, letterSpacing: -0.3 },
   caption: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, textAlign: "center", marginTop: spacing.xs },

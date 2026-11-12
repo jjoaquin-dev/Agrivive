@@ -11,8 +11,8 @@ const ICONS = {
 } as const;
 
 function tone(item: UnifiedNotificationItem) {
-  if (item.urgent) return { fg: colors.warning, bg: "#FFF7ED" };
-  if (item.iconType === "cross") return { fg: colors.error, bg: "#FEF2F2" };
+  if (item.urgent) return { fg: colors.warning, bg: colors.orangeSurface };
+  if (item.iconType === "cross") return { fg: colors.error, bg: colors.errorSurface };
   return { fg: colors.primary, bg: colors.primaryLight };
 }
 

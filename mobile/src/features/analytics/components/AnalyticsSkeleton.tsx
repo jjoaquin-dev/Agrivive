@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { radii, spacing } from "../../../theme";
+import { radii, spacing, colors } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
 
 const Block = ({ width, height }: { width: number | `${number}%`; height: number }) => (
@@ -20,6 +20,6 @@ export function AnalyticsSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  block: { backgroundColor: "#F3F1EA", borderRadius: radii.sm },
+  block: { backgroundColor: colors.surfaceMuted, borderRadius: radii.sm },
   gap: { height: spacing.md },
 });

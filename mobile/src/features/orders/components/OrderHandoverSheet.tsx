@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AlertCircle, X } from "lucide-react-native";
 import { ButtonComponent } from "../../../components/ButtonComponent";
 import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
@@ -7,6 +7,7 @@ import { formatMoney } from "../orderFormat";
 import type { ScanOrderItemAdjustment } from "../api/seller-orders";
 import type { SellerOrder } from "../types";
 import { OrderHandoverItemRow } from "./OrderHandoverItemRow";
+import { SlideModal } from "../../../components/SlideModal";
 
 export interface OrderHandoverSheetProps {
   visible: boolean;
@@ -60,7 +61,7 @@ export function OrderHandoverSheet({
   const changed = Math.abs(newTotal - Number(order.totalAmount)) > 0.001;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
           <View style={styles.header}>
@@ -69,7 +70,7 @@ export function OrderHandoverSheet({
               <Text style={styles.headerSubtitle}>Reservation #{order.id.slice(0, 8).toUpperCase()}</Text>
             </View>
             <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" style={styles.closeBtn}>
-              <X size={22} color={colors.textMuted} />
+              <X size={24} color={colors.textMuted} />
             </Pressable>
           </View>
 
@@ -112,12 +113,12 @@ export function OrderHandoverSheet({
           </View>
         </View>
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, maxHeight: "90%", padding: spacing.base },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.md },
   headerTitle: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
@@ -133,7 +134,7 @@ const styles = StyleSheet.create({
   struck: { textDecorationLine: "line-through" },
   summaryMainLabel: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.text },
   summaryNewValue: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.primary },
-  errorBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", padding: spacing.sm, borderRadius: radii.sm, marginBottom: spacing.sm },
+  errorBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.errorSurface, borderWidth: 1, borderColor: colors.errorBorder, padding: spacing.sm, borderRadius: radii.sm, marginBottom: spacing.sm },
   errorText: { flex: 1, fontFamily: fonts.body.medium, fontSize: 12, color: colors.error },
   actions: { paddingTop: spacing.xs, gap: spacing.xs },
   scanAgain: { color: colors.textMuted },

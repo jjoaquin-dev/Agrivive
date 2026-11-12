@@ -90,7 +90,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               placeholder="e.g. Maria"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-[#457D00] focus:outline-none focus:ring-2 focus:ring-[#457D00]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-agrivive-primary focus:outline-none focus:ring-2 focus:ring-agrivive-primary/15"
             />
           </Field>
           <Field>
@@ -103,7 +103,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               placeholder="e.g. Santos"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-[#457D00] focus:outline-none focus:ring-2 focus:ring-[#457D00]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white px-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-agrivive-primary focus:outline-none focus:ring-2 focus:ring-agrivive-primary/15"
             />
           </Field>
         </div>
@@ -114,8 +114,8 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
             <FieldLabel htmlFor="email" className="text-xs font-semibold text-neutral-700">
               E-mail
             </FieldLabel>
-            <span className="flex items-center gap-1 text-xs font-semibold text-[#16A34A]">
-              <CheckCircle2 className="size-3 text-[#16A34A]" />
+            <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
+              <CheckCircle2 className="size-3 text-green-600" />
               Verified
             </span>
           </div>
@@ -144,7 +144,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+63 9XX XXX XXXX"
-              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-[#457D00] focus:outline-none focus:ring-2 focus:ring-[#457D00]/15"
+              className="h-11 w-full rounded-full border border-neutral-200 bg-white pl-11 pr-5 text-sm text-neutral-900 placeholder:text-neutral-500 shadow-sm transition-colors focus:border-agrivive-primary focus:outline-none focus:ring-2 focus:ring-agrivive-primary/15"
             />
           </div>
         </Field>
@@ -168,7 +168,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
         ) : null}
 
         {success ? (
-          <p className="text-xs font-semibold text-[#16A34A]">
+          <p className="text-xs font-semibold text-green-600">
             Account information saved successfully!
           </p>
         ) : null}
@@ -177,7 +177,7 @@ export function ProfileBasicInfoCard({ user }: ProfileBasicInfoCardProps) {
           <Button
             type="submit"
             disabled={loading}
-            className="h-11 rounded-full px-7 font-bold bg-[#457D00] hover:bg-[#14231A] text-white shadow-sm transition active:translate-y-px text-xs flex items-center gap-2 cursor-pointer"
+            className="h-11 rounded-full px-7 font-bold bg-agrivive-primary hover:bg-agrivive-ink text-white shadow-sm transition active:translate-y-px text-xs flex items-center gap-2 cursor-pointer"
           >
             {loading ? <Spinner data-icon="inline-start" /> : null}
             Save changes

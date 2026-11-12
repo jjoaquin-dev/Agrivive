@@ -50,7 +50,7 @@ export function ConversationBubble({ item, isMine, senderName = "Buyer", buyerIm
           <Pressable onPress={() => onOpenPhoto?.(imageUrl, item)} accessibilityRole="button" accessibilityLabel="View full photo" style={styles.imageWrapper}>
             <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
             <View style={styles.expand}>
-              <Maximize2 size={11} color={colors.white} />
+              <Maximize2 size={12} color={colors.white} />
               <Text style={styles.expandText}>Tap to expand</Text>
             </View>
           </Pressable>
@@ -69,11 +69,11 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "flex-end", marginVertical: 2, maxWidth: "88%" },
   rowMine: { alignSelf: "flex-end" },
   rowTheirs: { alignSelf: "flex-start" },
-  avatarSlot: { width: 32, marginRight: 6, alignItems: "center" },
+  avatarSlot: { width: 32, marginRight: 8, alignItems: "center" },
   avatarBox: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   avatarImg: { width: 28, height: 28 },
   avatarText: { fontFamily: fonts.heading.bold, fontSize: 11, color: colors.white },
-  bubble: { flexShrink: 1, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6, borderRadius: 18 },
+  bubble: { flexShrink: 1, paddingHorizontal: 12, paddingTop: 12, paddingBottom: 8, borderRadius: 18 },
   mine: { backgroundColor: colors.primary, borderBottomRightRadius: 4 },
   theirs: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderBottomLeftRadius: 4 },
   body: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 21 },
@@ -82,8 +82,8 @@ const styles = StyleSheet.create({
   meta: { flexDirection: "row", alignItems: "center", alignSelf: "flex-end", gap: 4, marginTop: 2 },
   time: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted },
   timeMine: { color: "rgba(255,255,255,0.85)" },
-  imageWrapper: { marginBottom: 6, borderRadius: radii.button, overflow: "hidden" },
+  imageWrapper: { marginBottom: 8, borderRadius: radii.button, overflow: "hidden" },
   image: { width: 220, height: 160, backgroundColor: colors.surfaceMuted },
-  expand: { position: "absolute", bottom: 8, right: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: radii.full },
+  expand: { position: "absolute", bottom: 8, right: 8, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: radii.full },
   expandText: { color: colors.white, fontSize: 11, fontFamily: fonts.body.medium },
 });

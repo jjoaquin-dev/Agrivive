@@ -1,8 +1,7 @@
 import type { OrderScalingType } from "./types";
+import { formatPeso as formatMoney } from "../../utils/money";
+export { formatMoney };
 
-export function formatMoney(value: string): string {
-  return `₱${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 export function formatQuantity(value: string | null): string {
   const n = Number(value);
@@ -19,25 +18,25 @@ export function formatUnit(scalingType: OrderScalingType | null, quantity: strin
 
 export function formatPlaced(value: string): string {
   const d = new Date(value);
-  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const date = d.toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric" });
+  const time = d.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   return `Placed ${date}, ${time}`;
 }
 
 export function formatPickupBy(value: string): string {
   const d = new Date(value);
   const now = new Date();
-  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const time = d.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   const tomorrow = new Date(now);
   tomorrow.setDate(now.getDate() + 1);
   if (d.toDateString() === now.toDateString()) return `Pick up by ${time} today`;
   if (d.toDateString() === tomorrow.toDateString()) return `Pick up by ${time} tomorrow`;
-  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const date = d.toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric" });
   return `Pick up by ${time}, ${date}`;
 }
 
 export function formatPlacedLong(value: string): string {
-  const stamp = new Date(value).toLocaleString("en-US", {
+  const stamp = new Date(value).toLocaleString("en-US", { timeZone: "Asia/Manila",
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -48,7 +47,7 @@ export function formatPlacedLong(value: string): string {
 }
 
 export function formatClock(value: Date): string {
-  return value.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return value.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
 }
 
 export function formatNumber(value: number): string {

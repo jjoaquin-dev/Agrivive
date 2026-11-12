@@ -1,17 +1,13 @@
 import type { MarketplaceOverviewResponse } from "../api/overview";
+import { formatDateTime, formatNumber } from "@/src/lib/format";
+import { formatPeso } from "@/src/lib/money";
 
 interface Props {
   data: MarketplaceOverviewResponse;
 }
 
 export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
-  const formattedDate = new Date(data.generatedAt).toLocaleDateString("en-PH", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedDate = formatDateTime(data.generatedAt, { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="hidden print:block p-8 font-body text-neutral-900 bg-white">
@@ -37,7 +33,7 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="border border-neutral-300 p-3 rounded-lg">
           <p className="text-xs font-bold uppercase text-neutral-500">Total Food Rescued</p>
-          <p className="text-xl font-black mt-1">{data.kpis.totalRescuedQty.toLocaleString()} kg</p>
+          <p className="text-xl font-black mt-1">{formatNumber(data.kpis.totalRescuedQty)} kg</p>
         </div>
         <div className="border border-neutral-300 p-3 rounded-lg">
           <p className="text-xs font-bold uppercase text-neutral-500">Active Surplus Listings</p>
@@ -73,7 +69,7 @@ export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
                 <td className="p-2 border-r border-neutral-200 text-neutral-600">{item.category}</td>
                 <td className="p-2 border-r border-neutral-200 text-right font-bold">{item.totalQuantity} {item.unit}</td>
                 <td className="p-2 border-r border-neutral-200 text-right">{item.orderCount}</td>
-                <td className="p-2 text-right font-bold">₱{item.totalValue.toLocaleString()}</td>
+                <td className="p-2 text-right font-bold">{formatPeso(item.totalValue)}</td>
               </tr>
             ))}
           </tbody>

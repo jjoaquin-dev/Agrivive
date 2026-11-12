@@ -26,7 +26,7 @@ export function PasswordSecurityCard() {
   return (
     <View style={styles.card}>
       <View style={styles.head}>
-        <Lock size={22} color={colors.primary} />
+        <Lock size={24} color={colors.primary} />
         <Text style={styles.title}>Password</Text>
         {pill ? (
           <View style={[styles.pill, !isSet && styles.pillWarn]}>
@@ -51,9 +51,9 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.base, gap: spacing.md, marginBottom: spacing.base },
   head: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   title: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
-  pill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: profileColors.mint, borderRadius: radii.full, paddingHorizontal: 10, paddingVertical: 4 },
+  pill: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: profileColors.mint, borderRadius: radii.full, paddingHorizontal: 12, paddingVertical: 4 },
   pillWarn: { backgroundColor: profileColors.amber },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: profileColors.mintText },
+  dot: { width: 6, height: 6, borderRadius: 4, backgroundColor: profileColors.mintText },
   dotWarn: { backgroundColor: profileColors.amberText },
   pillText: { fontFamily: fonts.body.semiBold, fontSize: 12, color: profileColors.mintText },
   pillTextWarn: { color: profileColors.amberText },

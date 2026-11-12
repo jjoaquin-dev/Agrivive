@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
-import { fonts } from "../theme";
+import { fonts, colors } from "../theme";
 import { getAvatarColor, getInitials } from "../features/conversations/utils/avatar";
 
 interface AvatarComponentProps {
@@ -27,5 +27,5 @@ export const AvatarComponent: React.FC<AvatarComponentProps> = ({ name, imageUrl
 
 const styles = StyleSheet.create({
   box: { alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  initials: { fontFamily: fonts.heading.bold, color: "#FFFFFF" },
+  initials: { fontFamily: fonts.heading.bold, color: colors.white },
 });

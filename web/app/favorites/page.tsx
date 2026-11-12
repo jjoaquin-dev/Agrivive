@@ -6,9 +6,11 @@ export default function FavoritesPage() {
   return (
     <>
       <BuyerSiteHeader />
-      <Suspense fallback={<main className="min-h-[calc(100vh-73px)] bg-[#fdfdfd] py-10" />}>
+      <Suspense fallback={<main className="min-h-[calc(100vh-73px)] bg-agrivive-paper py-10" />}>
         <BuyerFavorites />
       </Suspense>
     </>
   );
 }
+
+export const metadata = { title: "Favorites | Agrivive" };

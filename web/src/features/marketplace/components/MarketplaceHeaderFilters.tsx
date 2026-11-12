@@ -6,9 +6,9 @@ import { useMarketplaceFilterParams } from "../hooks/useMarketplaceFilterParams"
 import { DistanceFilterPanel, PriceFilterPanel } from "./MarketplaceFilterPanels";
 
 // Text dropdowns, styled like the category dropdown beside them.
-const triggerBase = "inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap border-l border-neutral-200 pl-2.5 pr-1 text-xs font-semibold transition-colors cursor-pointer";
+const triggerBase = "inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap border-l border-neutral-200 pl-2.5 pr-1 text-xs font-semibold transition-colors cursor-pointer";
 const triggerIdle = "text-neutral-600 hover:text-neutral-900";
-const triggerActive = "text-[#14231A] font-bold";
+const triggerActive = "text-agrivive-ink font-bold";
 
 // Price and distance dropdowns in the navbar search, beside the category. Filters are read from and written to the URL.
 export function MarketplaceHeaderFilters({ variant = "inline" }: { variant?: "inline" | "pill" }) {

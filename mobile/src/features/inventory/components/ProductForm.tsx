@@ -10,7 +10,7 @@ import {
 import { validateCreateProduct, validateUpdateProduct, type ProductFormErrors } from "../validation";
 import { ProductFormIdentity } from "./ProductFormIdentity";
 import { ProductFormOperations } from "./ProductFormOperations";
-import { styles } from "./ProductFormStyles";
+import { styles } from "./ProductForm.styles";
 
 interface ProductFormProps {
   mode: "create" | "edit";
@@ -56,7 +56,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       if (!result.isValid) return setErrors(result.errors);
       try { await onSubmit(payload); }
       catch (err: any) {
-        setErrors({ general: err?.message || "Failed to create product. Please try again." });
+        setErrors({ general: err?.message || "Could not create product. Please try again." });
       }
       return;
     }
@@ -78,7 +78,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!result.isValid) return setErrors(result.errors);
     try { await onSubmit(payload); }
     catch (err: any) {
-      setErrors({ general: err?.message || "Failed to save product. Please try again." });
+      setErrors({ general: err?.message || "Could not save product. Please try again." });
     }
   };
 

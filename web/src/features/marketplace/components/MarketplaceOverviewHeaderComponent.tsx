@@ -2,6 +2,7 @@
 
 import { Calendar, Download, Info, Printer, Sparkles } from "lucide-react";
 import type { MarketplaceOverviewRange } from "../api/overview";
+import { formatDateTime } from "@/src/lib/format";
 
 interface Props {
   range: MarketplaceOverviewRange;
@@ -18,13 +19,7 @@ export const MarketplaceOverviewHeaderComponent = ({
   isSampleData,
   onPrintReport,
 }: Props) => {
-  const formattedDate = new Date(generatedAt).toLocaleDateString("en-PH", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const formattedDate = formatDateTime(generatedAt, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
   return (
     <div className="space-y-4">
@@ -62,7 +57,7 @@ export const MarketplaceOverviewHeaderComponent = ({
                   onClick={() => onRangeChange(tab.id)}
                   className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
                     active
-                      ? "bg-white text-[#457D00] shadow-sm"
+                      ? "bg-white text-agrivive-primary shadow-sm"
                       : "text-neutral-600 hover:text-neutral-900"
                   }`}
                 >
@@ -78,7 +73,7 @@ export const MarketplaceOverviewHeaderComponent = ({
             onClick={onPrintReport}
             className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-300 bg-white px-3.5 py-2 text-xs font-bold text-neutral-700 shadow-sm transition hover:bg-neutral-50 active:scale-95 print:hidden"
           >
-            <Printer className="size-3.5 text-[#457D00]" />
+            <Printer className="size-3.5 text-agrivive-primary" />
             <span>Save Plan Report</span>
           </button>
         </div>

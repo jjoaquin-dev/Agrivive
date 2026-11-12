@@ -45,11 +45,11 @@ export function MarketingSectionTabs({ value, activeCount = 0, onChange }: Props
 
 const styles = StyleSheet.create({
   container: { flexDirection: "row", marginTop: spacing.base, marginBottom: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
-  tab: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderBottomWidth: 3, borderBottomColor: colors.transparent, marginBottom: -1 },
+  tab: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 3, borderBottomColor: colors.transparent, marginBottom: -1 },
   tabSelected: { borderBottomColor: colors.primary },
   text: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.textMuted },
   textSelected: { color: colors.text, fontFamily: fonts.body.semiBold },
-  badge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: radii.full, backgroundColor: colors.border },
+  badge: { paddingHorizontal: 8, paddingVertical: 1, borderRadius: radii.full, backgroundColor: colors.border },
   badgeSelected: { backgroundColor: colors.primary },
   badgeText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.textMuted },
   badgeTextSelected: { color: colors.white },

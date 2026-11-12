@@ -28,7 +28,7 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
           </Text>
         </View>
         <View style={styles.plusWrap}>
-          <Plus size={22} color={colors.white} strokeWidth={2.4} />
+          <Plus size={24} color={colors.white} strokeWidth={2.4} />
         </View>
       </Pressable>
 
@@ -44,7 +44,7 @@ export const DashboardTwinActions: React.FC<DashboardTwinActionsProps> = ({
           <Text style={styles.secondaryHint}>Check a buyer's pickup code.</Text>
         </View>
         <View style={styles.qrWrap}>
-          <QrCode size={22} color={colors.primary} />
+          <QrCode size={24} color={colors.primary} />
         </View>
       </Pressable>
     </View>
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   primarySubtitle: { ...typography.labelSmall, color: "rgba(255, 255, 255, 0.88)", marginTop: 2 },
   secondaryTitle: { ...typography.sectionHeading, fontFamily: fonts.heading.bold, color: colors.text },
   secondaryHint: { ...typography.labelSmall, color: colors.textMuted, marginTop: 2 },
-  plusWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255, 255, 255, 0.2)", alignItems: "center", justifyContent: "center" },
-  qrWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
+  plusWrap: { width: 44, height: 44, borderRadius: 24, backgroundColor: "rgba(255, 255, 255, 0.2)", alignItems: "center", justifyContent: "center" },
+  qrWrap: { width: 44, height: 44, borderRadius: 24, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
   cardPressed: { transform: [{ scale: 0.99 }], opacity: 0.92 },
 });

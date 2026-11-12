@@ -15,7 +15,7 @@ export function OrderScanPermission({ onAllow, onDismiss }: OrderScanPermissionP
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: Math.max(insets.bottom, spacing.base) }]}>
       <Pressable onPress={onDismiss} accessibilityRole="button" accessibilityLabel="Go back" style={styles.back}>
-        <ChevronLeft size={26} color={colors.text} />
+        <ChevronLeft size={28} color={colors.text} />
       </Pressable>
       <View style={styles.body}>
         <View style={styles.iconWrap}><Camera size={36} color={colors.primary} /></View>

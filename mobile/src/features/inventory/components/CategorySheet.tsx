@@ -1,8 +1,9 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Check } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { PRODUCT_CATEGORIES, type ProductCategory } from "../types";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -14,7 +15,7 @@ interface Props {
 /** Bottom sheet that groups the nine categories behind one control (Hick-Hyman Law: fewer choices on screen). */
 export function CategorySheet({ visible, selected, onSelect, onClose }: Props) {
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close category list" />
       <View style={styles.sheet}>
         <View style={styles.handle} />
@@ -35,16 +36,16 @@ export function CategorySheet({ visible, selected, onSelect, onClose }: Props) {
           );
         })}
       </View>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
+  backdrop: { flex: 1 },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl },
   handle: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, marginBottom: spacing.sm },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48, borderBottomWidth: 1, borderBottomColor: "#F3F1EA" },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 48, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
   rowText: { fontFamily: fonts.body.regular, fontSize: 15, color: colors.text },
   rowTextSelected: { fontFamily: fonts.body.semiBold, color: colors.primary },
 });

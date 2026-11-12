@@ -38,7 +38,7 @@ export function SellerMapModal({ isOpen, onClose, ...mapProps }: SellerMapModalP
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5" role="dialog" aria-modal="true" aria-label="Seller location">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
@@ -52,14 +52,14 @@ export function SellerMapModal({ isOpen, onClose, ...mapProps }: SellerMapModalP
         <div className="flex items-center justify-between border-b border-neutral-200/80 px-5 py-3.5 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div>
-              <p className="type-eyebrow text-[#457D00]">
+              <p className="type-eyebrow text-agrivive-primary">
                 Explore Local Stalls
               </p>
-              <h2 className="font-heading text-lg sm:text-xl font-bold text-[#14231A]">
+              <h2 className="font-heading text-lg sm:text-xl font-bold text-agrivive-ink">
                 Find a seller nearby
               </h2>
             </div>
-            <span className="hidden sm:inline-flex rounded-full border border-[#457D00]/20 bg-[#EDF2EB] px-2.5 py-0.5 text-xs font-semibold text-[#457D00]">
+            <span className="hidden sm:inline-flex rounded-full border border-agrivive-primary/20 bg-agrivive-mist px-2.5 py-0.5 text-xs font-semibold text-agrivive-primary">
               {mapProps.sellers.length} {mapProps.sellers.length === 1 ? "seller" : "sellers"}
             </span>
           </div>
@@ -67,7 +67,7 @@ export function SellerMapModal({ isOpen, onClose, ...mapProps }: SellerMapModalP
           <button
             type="button"
             onClick={onClose}
-            className="flex size-9 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition"
+            className="flex size-11 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition"
             aria-label="Close modal"
           >
             <X className="size-5" />
@@ -75,7 +75,7 @@ export function SellerMapModal({ isOpen, onClose, ...mapProps }: SellerMapModalP
         </div>
 
         {/* Modal Map View */}
-        <div className="relative flex-1 w-full bg-[#fdfdfd] overflow-hidden">
+        <div className="relative flex-1 w-full bg-agrivive-paper overflow-hidden">
           <InteractiveSellerMap
             {...mapProps}
             hideHeader

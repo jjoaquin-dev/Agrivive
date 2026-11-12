@@ -7,8 +7,8 @@ import { listBuyerOrders } from "@/src/features/orders/api/orders";
 type Counts = { completed: number; pending: number; cancelled: number; expired: number };
 
 const CARDS: { key: keyof Counts; label: string; note: string; tone: string }[] = [
-  { key: "completed", label: "Completed Orders", note: "Picked up", tone: "text-[#16A34A]" },
-  { key: "pending", label: "Current Reservations", note: "Waiting for pickup", tone: "text-[#457D00]" },
+  { key: "completed", label: "Completed Orders", note: "Picked up", tone: "text-green-600" },
+  { key: "pending", label: "Current Reservations", note: "Waiting for pickup", tone: "text-agrivive-primary" },
   { key: "cancelled", label: "Cancelled", note: "Reservations cancelled", tone: "text-amber-600" },
   { key: "expired", label: "Expired", note: "Not picked up in time", tone: "text-rose-600" },
 ];
@@ -42,20 +42,20 @@ export function ProfileStats() {
     <section aria-labelledby="order-summary-heading">
       <div className="flex items-baseline justify-between">
         <h2 id="order-summary-heading" className="font-heading text-lg font-bold text-neutral-900">Your Orders</h2>
-        <Link href="/orders" className="text-xs font-semibold text-[#457D00] hover:underline">View all</Link>
+        <Link href="/orders" className="text-xs font-semibold text-agrivive-primary hover:underline">View all</Link>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
         {CARDS.map((card) => (
-          <div key={card.key} className="rounded-2xl border border-[#E5E2DA] bg-white p-4 shadow-[0_4px_20px_rgba(20,35,26,0.05)]">
+          <div key={card.key} className="rounded-2xl border border-agrivive-border bg-white p-4 shadow-[0_4px_20px_rgba(20,35,26,0.05)]">
             <p className="text-xs font-medium text-neutral-600">{card.label}</p>
             <p className={`mt-1.5 font-heading text-3xl font-bold tabular-nums ${card.tone}`}>
-              {counts ? counts[card.key] : failed ? "–" : <span className="inline-block h-8 w-10 animate-pulse rounded bg-neutral-100" />}
+              {counts ? counts[card.key] : failed ? "–" : <span className="inline-block h-8 w-10 animate-pulse rounded-lg bg-neutral-100" />}
             </p>
             <p className="mt-1 text-xs text-neutral-500">{card.note}</p>
           </div>
         ))}
       </div>
-      {failed ? <p role="alert" className="mt-2 text-xs text-rose-700">Could not load your order counts. Try again later.</p> : null}
+      {failed ? <p role="alert" className="mt-2 text-xs text-destructive">Could not load your order counts. Try again later.</p> : null}
     </section>
   );
 }

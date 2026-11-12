@@ -25,15 +25,15 @@ export function PasswordInput({
       <div className="flex items-center justify-between">
         <label
           htmlFor={id}
-          className="text-xs font-semibold uppercase tracking-wider text-[#14231A]/85 transition-colors group-focus-within:text-[#457D00]"
+          className="text-xs font-semibold uppercase tracking-wider text-agrivive-ink/85 transition-colors group-focus-within:text-agrivive-primary"
         >
           {label}
         </label>
-        {hint && <span className="text-xs text-[#5F7367]">{hint}</span>}
+        {hint && <span className="text-xs text-agrivive-stone">{hint}</span>}
       </div>
       <div className="relative">
         <div
-          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5F7367] transition-colors group-focus-within:text-[#457D00]"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-agrivive-stone transition-colors group-focus-within:text-agrivive-primary"
           aria-hidden="true"
         >
           <Lock className="size-4" />
@@ -45,8 +45,8 @@ export function PasswordInput({
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
           className={cn(
-            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white pl-11 pr-14 text-sm font-medium text-[#14231A] shadow-sm transition-all placeholder:text-[#5F7367]",
-            "hover:border-[#457D00]/40 focus:border-[#457D00] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40 focus-visible:ring-offset-0",
+            "h-12 w-full rounded-full border border-agrivive-border/80 bg-white pl-11 pr-14 text-sm font-medium text-agrivive-ink shadow-sm transition-all placeholder:text-agrivive-stone",
+            "hover:border-agrivive-primary/40 focus:border-agrivive-primary focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40 focus-visible:ring-offset-0",
             "[&::-ms-reveal]:hidden [&::-ms-clear]:hidden",
             error && "border-destructive/80 focus:border-destructive focus-visible:ring-destructive/40",
             className,
@@ -56,7 +56,7 @@ export function PasswordInput({
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Hide password" : "Show password"}
-          className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-[#5F7367] hover:bg-[#F7FAF2] hover:text-[#457D00] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00]/40"
+          className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-agrivive-stone hover:bg-agrivive-mist hover:text-agrivive-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40"
         >
           {visible ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
         </button>

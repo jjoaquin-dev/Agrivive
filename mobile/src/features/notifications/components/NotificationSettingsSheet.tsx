@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { X } from "lucide-react-native";
 import { colors, fonts, spacing } from "../../../theme";
 import {
@@ -7,6 +7,7 @@ import {
   updateSellerNotificationSettings,
 } from "../api/seller-notification-settings";
 import type { SellerNotificationSettings } from "../types";
+import { SlideModal } from "../../../components/SlideModal";
 
 interface Props {
   visible: boolean;
@@ -45,9 +46,9 @@ export function NotificationSettingsSheet({ visible, onClose }: Props) {
   }, [settings]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SlideModal visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(event) => event.stopPropagation()}>
+        <Pressable accessibilityRole="button" style={styles.sheet} onPress={(event) => event.stopPropagation()}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>Phone Alerts</Text>
@@ -57,7 +58,7 @@ export function NotificationSettingsSheet({ visible, onClose }: Props) {
               accessibilityLabel="Close phone alert settings"
               style={styles.closeBtn}
             >
-              <X size={22} color={colors.textMuted} />
+              <X size={24} color={colors.textMuted} />
             </Pressable>
           </View>
           <Text style={styles.caption}>Your list always shows everything. These only change phone alerts.</Text>
@@ -81,14 +82,14 @@ export function NotificationSettingsSheet({ visible, onClose }: Props) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </Pressable>
       </Pressable>
-    </Modal>
+    </SlideModal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  backdrop: { flex: 1, justifyContent: "flex-end" },
   sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: spacing.md, paddingBottom: spacing.xl },
-  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 3, backgroundColor: "#D1D5DB", marginBottom: spacing.md },
+  handle: { alignSelf: "center", width: 40, height: 6, borderRadius: 4, backgroundColor: colors.border, marginBottom: spacing.md },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontFamily: fonts.heading.semiBold, fontSize: 17, color: colors.text },
   closeBtn: { width: 44, height: 44, marginRight: -spacing.sm, alignItems: "center", justifyContent: "center" },

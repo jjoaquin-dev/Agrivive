@@ -11,11 +11,11 @@ export function ProfileNotificationsCard() {
       </div>
       <div className="mt-5 space-y-3">
         <label className="flex items-center gap-3 text-sm text-neutral-900">
-          <input type="checkbox" defaultChecked className="size-4 accent-[#457D00]" />
+          <input type="checkbox" defaultChecked className="size-4 accent-agrivive-primary" />
           <span>SMS alert when my reservation is ready for pickup</span>
         </label>
         <label className="flex items-center gap-3 text-sm text-neutral-900">
-          <input type="checkbox" defaultChecked className="size-4 accent-[#457D00]" />
+          <input type="checkbox" defaultChecked className="size-4 accent-agrivive-primary" />
           <span>Email notifications for surplus discount alerts (30%+ off)</span>
         </label>
       </div>

@@ -66,7 +66,7 @@ export function SellerFollowButton({ sellerId }: { sellerId: string }) {
         aria-pressed={following}
         className={following
           ? "min-h-11 h-11 px-4 gap-1.5 rounded-xl border border-neutral-200 bg-neutral-100 text-neutral-800 text-xs font-semibold shadow-sm hover:bg-neutral-200 cursor-pointer"
-          : "min-h-11 h-11 px-4 gap-1.5 rounded-xl bg-[#16A34A] hover:bg-[#137A38] text-white text-xs font-semibold shadow-sm cursor-pointer"
+          : "min-h-11 h-11 px-4 gap-1.5 rounded-xl bg-green-600 hover:bg-[#137A38] text-white text-xs font-semibold shadow-sm cursor-pointer"
         }
       >
         {following ? <Check className="size-3.5" aria-hidden="true" /> : <BellPlus className="size-3.5" aria-hidden="true" />}

@@ -19,10 +19,10 @@ export function HomeFooter() {
               height={215}
               className="h-10 w-auto"
             />
-            <p className="mt-5 max-w-sm text-[15px] leading-7 text-emerald-50/75">
+            <p className="mt-5 max-w-sm text-sm leading-7 text-emerald-50/75">
               Connecting local Davao City market vendors and smallholder farms with conscious buyers to reduce surplus waste and celebrate fresh harvest.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-[#FCEC9A]">
+            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-agrivive-cream">
               <MapPin className="size-3.5" />
               <span>Davao City Farms &amp; Public Market Stalls</span>
             </div>
@@ -30,41 +30,41 @@ export function HomeFooter() {
 
           {/* Links Column 1: Produce Categories */}
           <div>
-            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">Categories</p>
-            <ul className="mt-5 space-y-3 text-[15px] text-emerald-50/80">
-              <li><Link href="/marketplace?productType=Leafy+Greens" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Leafy Greens</Link></li>
-              <li><Link href="/marketplace?productType=Fruit+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Fruit Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Root+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Root Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Pod+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Pod Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Tuber+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Tuber Vegetables</Link></li>
-              <li><Link href="/marketplace?productType=Bulb+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Bulb Vegetables</Link></li>
+            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-agrivive-cream">Categories</p>
+            <ul className="mt-5 space-y-3 text-sm text-emerald-50/80">
+              <li><Link href="/marketplace?productType=Leafy+Greens" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Leafy Greens</Link></li>
+              <li><Link href="/marketplace?productType=Fruit+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Fruit Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Root+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Root Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Pod+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Pod Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Tuber+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Tuber Vegetables</Link></li>
+              <li><Link href="/marketplace?productType=Bulb+Vegetables" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Bulb Vegetables</Link></li>
             </ul>
           </div>
 
           {/* Links Column 2: Sections (Matching Navbar) */}
           <div>
-            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">Explore</p>
-            <ul className="mt-5 space-y-3 text-[15px] text-emerald-50/80">
-              <li><a href="#categories" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Categories</a></li>
-              <li><a href="#live-inventory" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Live Surplus</a></li>
-              <li><a href="#how-it-works" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">How It Works</a></li>
-              <li><a href="#why-agrivive" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Why Surplus?</a></li>
-              <li><a href="#faq" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">FAQ</a></li>
+            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-agrivive-cream">Explore</p>
+            <ul className="mt-5 space-y-3 text-sm text-emerald-50/80">
+              <li><a href="#categories" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Categories</a></li>
+              <li><a href="#live-inventory" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Live Surplus</a></li>
+              <li><a href="#how-it-works" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">How It Works</a></li>
+              <li><a href="#why-agrivive" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Why Surplus?</a></li>
+              <li><a href="#faq" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">FAQ</a></li>
             </ul>
           </div>
 
           {/* Links Column 3: Access */}
           <div>
-            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-[#FCEC9A]">Get Started</p>
-            <ul className="mt-5 space-y-3 text-[15px] text-emerald-50/80">
-              <li><Link href="/login" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Sign In</Link></li>
-              <li><Link href="/signup" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FCEC9A]">Create Account</Link></li>
-              <li><Link href="/marketplace" className="inline-flex items-center gap-1 text-[#FCEC9A] hover:underline">Market Map <ArrowUpRight className="size-3.5" /></Link></li>
+            <p className="font-heading text-xs font-bold uppercase tracking-[0.18em] text-agrivive-cream">Get Started</p>
+            <ul className="mt-5 space-y-3 text-sm text-emerald-50/80">
+              <li><Link href="/login" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Sign In</Link></li>
+              <li><Link href="/signup" className="rounded-lg transition-colors duration-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-cream">Create Account</Link></li>
+              <li><Link href="/marketplace" className="inline-flex items-center gap-1 text-agrivive-cream hover:underline">Market Map <ArrowUpRight className="size-3.5" /></Link></li>
               <li>
                 <a
                   href={SELLER_APK_URL}
                   download="agrivive-seller.apk"
-                  className="inline-flex items-center gap-1.5 font-medium text-white hover:text-[#FCEC9A]"
+                  className="inline-flex items-center gap-1.5 font-medium text-white hover:text-agrivive-cream"
                 >
                   Download Seller App (APK) <ArrowDownToLine className="size-3.5" />
                 </a>

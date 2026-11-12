@@ -36,7 +36,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
   return (
     <form
       onSubmit={handleSearchSubmit}
-      className={`hidden min-w-0 md:flex flex-1 items-center rounded-full border p-1 pl-4 transition-all focus-within:border-[#457D00] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#457D00]/20 ${
+      className={`hidden min-w-0 md:flex flex-1 items-center rounded-full border p-1 pl-4 transition-all focus-within:border-agrivive-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-agrivive-primary/20 ${
         onGreen ? "max-w-4xl border-white bg-white" : "max-w-xl border-neutral-300 bg-neutral-50/70"
       }`}
     >
@@ -44,7 +44,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search vegetable name..."
+        aria-label="Search vegetable name" placeholder="Search vegetable name…"
         className="min-w-[120px] w-full bg-transparent text-sm text-neutral-800 placeholder:text-neutral-500 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 border-none shadow-none"
       />
       <HeaderCategoryDropdown
@@ -58,7 +58,7 @@ export function BuyerHeaderSearch({ onGreen }: { onGreen: boolean }) {
       </div>
       <button
         type="submit"
-        className="ml-1 flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[#457D00] px-4 text-xs font-bold text-white transition-colors hover:bg-[#457D00]/90 cursor-pointer"
+        className="ml-1 flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-agrivive-primary px-4 text-xs font-bold text-white transition-colors hover:bg-agrivive-primary/90 cursor-pointer"
       >
         <Search aria-hidden="true" className="size-4" />
         <span>Search</span>

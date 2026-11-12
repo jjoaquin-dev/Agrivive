@@ -10,10 +10,10 @@ interface PasswordChecklistProps {
 }
 
 const STRENGTH = [
-  { label: "Weak password", color: "#F43F5E" },
-  { label: "Weak password", color: "#F43F5E" },
-  { label: "Fair password", color: "#F59E0B" },
-  { label: "Good password", color: "#10B981" },
+  { label: "Weak password", color: colors.error },
+  { label: "Weak password", color: colors.error },
+  { label: "Fair password", color: colors.star },
+  { label: "Good password", color: colors.success },
   { label: "Strong password", color: colors.primary },
 ];
 
@@ -47,7 +47,7 @@ export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({ password, 
 const RuleRow: React.FC<{ label: string; valid: boolean }> = ({ label, valid }) => (
   <View style={styles.ruleRow}>
     <View style={[styles.tick, valid && styles.tickValid]}>
-      <Check size={10} color={colors.white} strokeWidth={3} />
+      <Check size={12} color={colors.white} strokeWidth={3} />
     </View>
     <Text style={[styles.ruleText, valid && styles.ruleTextValid]}>{label}</Text>
   </View>
@@ -58,12 +58,12 @@ const styles = StyleSheet.create({
   strengthRow: { flexDirection: "row", justifyContent: "space-between" },
   strengthTitle: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted },
   strengthLabel: { fontFamily: fonts.body.semiBold, fontSize: 12, color: colors.textMuted },
-  bars: { flexDirection: "row", gap: 6 },
-  bar: { flex: 1, height: 6, borderRadius: 3, backgroundColor: "#E5E2DA" },
-  rules: { gap: 6, marginTop: 2 },
-  ruleRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  tick: { width: 16, height: 16, borderRadius: 8, backgroundColor: "#D1D5DB", alignItems: "center", justifyContent: "center" },
-  tickValid: { backgroundColor: "#059669" },
+  bars: { flexDirection: "row", gap: 8 },
+  bar: { flex: 1, height: 6, borderRadius: 4, backgroundColor: colors.border },
+  rules: { gap: 8, marginTop: 2 },
+  ruleRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  tick: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
+  tickValid: { backgroundColor: colors.success },
   ruleText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
-  ruleTextValid: { fontFamily: fonts.body.semiBold, color: "#047857" },
+  ruleTextValid: { fontFamily: fonts.body.semiBold, color: colors.success },
 });

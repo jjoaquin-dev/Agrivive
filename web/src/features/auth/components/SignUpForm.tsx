@@ -16,6 +16,7 @@ import { withNextPath } from "@/src/lib/navigation";
 import { authClient } from "@/src/lib/auth-client";
 import { recaptchaHeaders } from "@/src/lib/recaptcha";
 import { SignUpTermsCheckbox } from "./SignUpTermsCheckbox";
+import { signUpEmailMessage } from "../emailNotice";
 
 export function SignUpForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
@@ -39,19 +40,9 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
     const check = await checkEmailPreflight(cleanEmail);
     if (!check) return;
 
-    if (check.roleCount >= 2) {
-      setErrors((p) => ({ ...p, email: "This email has both Buyer and Seller profiles. Please sign in." }));
-      setAccountNotice(null);
-    } else if (check.hasTargetRole) {
-      setErrors((p) => ({ ...p, email: "An account with this email is already a Buyer. Please sign in." }));
-      setAccountNotice(null);
-    } else if (check.exists && check.canUseEmail) {
-      setErrors((p) => ({ ...p, email: undefined }));
-      setAccountNotice("Existing Seller account found. Enter password to link Buyer profile.");
-    } else {
-      setErrors((p) => ({ ...p, email: undefined }));
-      setAccountNotice(null);
-    }
+    const message = signUpEmailMessage(check);
+    setErrors((p) => ({ ...p, email: message.error }));
+    setAccountNotice(message.notice);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -183,7 +174,7 @@ export function SignUpForm({ nextPath }: { nextPath: string }) {
         <Button
           type="submit"
           disabled={loading}
-          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#457D00] text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-[#457D00]/90 hover:shadow-lg active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-agrivive-primary text-sm font-semibold text-white shadow-md transition-all duration-150 hover:bg-agrivive-primary/90 hover:shadow-lg active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-agrivive-primary/30"
         >
           {loading ? (
             <>

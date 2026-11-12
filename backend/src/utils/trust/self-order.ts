@@ -4,9 +4,10 @@ import { sellers_product } from "../../db/schema";
 import { OrderError } from "../order-types";
 import { evaluateTrustAction } from "./evaluate-action";
 import { recordTrustEvent } from "./index";
+import { pointsText } from "./policy";
 
 /**
- * Table 2: an order from the seller's own account adds 3 points and blocks the account at once.
+ * Table 2: an order from the seller's own account adds its AHP points and blocks the account at once.
  * The order itself is refused. The event is saved before the error, so the refusal cannot undo it.
  */
 export async function blockSelfOrder(buyerId: string, productIds: string[]) {
@@ -18,5 +19,5 @@ export async function blockSelfOrder(buyerId: string, productIds: string[]) {
     await recordTrustEvent(tx, { eventKey, subjectId: buyerId, kind: "self_order", classification: "verified", sourceId: own[0]!.id, reason: "The buyer account is the seller account" });
   });
   await evaluateTrustAction(buyerId, null, eventKey, "self_order");
-  throw new OrderError(403, "You cannot reserve items from your own stall. This adds 3 points and blocks your account.");
+  throw new OrderError(403, `You cannot reserve items from your own stall. This adds ${pointsText("self_order")} and blocks your account.`);
 }

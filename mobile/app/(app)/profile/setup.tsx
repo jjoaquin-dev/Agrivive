@@ -95,7 +95,7 @@ export default function ProfileSetupScreen() {
       console.error("Seller profile setup failed", err);
       setErrors({
         general:
-          err?.message || "Failed to save profile. Please check all fields and try again.",
+          err?.message || "Could not save profile. Please check all fields and try again.",
       });
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     } finally {
@@ -111,7 +111,7 @@ export default function ProfileSetupScreen() {
         <View style={styles.topRow}>
           {router.canGoBack() ? (
             <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back" style={styles.back}>
-              <ChevronLeft size={22} color={colors.text} />
+              <ChevronLeft size={24} color={colors.text} />
             </Pressable>
           ) : <View style={styles.back} />}
           <Text style={styles.topTitle}>Agrivive Seller Setup</Text>

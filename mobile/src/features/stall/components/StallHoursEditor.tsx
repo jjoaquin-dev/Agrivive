@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   chip: { minHeight: touchTargets.min, minWidth: touchTargets.min, paddingHorizontal: spacing.sm, borderRadius: touchTargets.min / 2, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text },
-  chipTextOn: { color: "#FFFFFF" },
+  chipTextOn: { color: colors.white },
   add: { flexDirection: "row", alignItems: "center", gap: spacing.xs, minHeight: touchTargets.min, marginTop: spacing.sm },
   addText: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.primary },
   dayHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },

@@ -11,7 +11,7 @@ export type StartProblem =
 export function classifyStartProblem(status: number, message: string | null): StartProblem {
   if (status === 0 || status === 408) return { kind: "offline" };
   if (status === 403) {
-    const reason = message || "Your account is paused. Please restore your account to continue.";
+    const reason = message || "Your account is blocked. Please restore your account to continue.";
     const backIn = /come back in (.+?)\.?$/i.exec(reason)?.[1] ?? null;
     return /restore your account/i.test(reason) || !backIn ? { kind: "blocked", reason } : { kind: "paused", reason, backIn };
   }

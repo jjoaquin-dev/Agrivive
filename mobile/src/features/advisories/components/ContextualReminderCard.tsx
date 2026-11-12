@@ -22,7 +22,7 @@ export const ContextualReminderCard: React.FC<ContextualReminderCardProps> = ({ 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <AlertTriangle size={16} color="#92400E" />
+        <AlertTriangle size={16} color={colors.warningText} />
         <Text style={styles.headerText}>Heads Up</Text>
       </View>
       <View style={styles.list}>
@@ -38,11 +38,11 @@ export const ContextualReminderCard: React.FC<ContextualReminderCardProps> = ({ 
 };
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: "#FFFBEB", borderColor: "#FDE68A", borderWidth: 1, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.md },
-  headerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  headerText: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: "#92400E" },
-  list: { gap: 10, marginTop: 10 },
-  itemRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  card: { backgroundColor: colors.warningSurface, borderColor: colors.warningBorder, borderWidth: 1, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.md },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  headerText: { fontFamily: fonts.heading.semiBold, fontSize: 15, color: colors.warningText },
+  list: { gap: 12, marginTop: 12 },
+  itemRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   itemIcon: { marginTop: 2 },
-  itemText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: "#78350F" },
+  itemText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.warningText },
 });

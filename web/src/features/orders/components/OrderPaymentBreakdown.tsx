@@ -9,20 +9,20 @@ export function OrderPaymentBreakdown({ order }: { order: BuyerOrder }) {
   const estimatedSavings = Math.round(total * 0.3);
 
   return (
-    <div className="rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm space-y-4">
-      <h2 className="text-[17px] font-bold text-[#14231A]">
+    <div className="rounded-2xl border border-agrivive-line bg-white p-5 shadow-sm space-y-4">
+      <h2 className="text-lg font-bold text-agrivive-ink">
         Payment details
       </h2>
 
-      <div className="space-y-2.5 text-[14px]">
+      <div className="space-y-2.5 text-sm">
         {order.items.map((item) => (
           <div key={item.id} className="flex justify-between text-neutral-600">
             <span>{item.productName}</span>
-            <span className="font-medium text-[#14231A]">{money(item.subtotal)}</span>
+            <span className="font-medium text-agrivive-ink">{money(item.subtotal)}</span>
           </div>
         ))}
 
-        <div className="flex justify-between font-semibold text-[#457D00]">
+        <div className="flex justify-between font-semibold text-agrivive-primary">
           <span>Surplus savings</span>
           <span>- {money(estimatedSavings)}</span>
         </div>
@@ -33,17 +33,17 @@ export function OrderPaymentBreakdown({ order }: { order: BuyerOrder }) {
         </div>
       </div>
 
-      <div className="border-t border-[#E8E8E8] pt-3 flex items-baseline justify-between">
-        <span className="text-[16px] font-bold text-[#14231A]">Total</span>
-        <span className="font-heading text-[24px] font-bold text-[#457D00]">
+      <div className="border-t border-agrivive-line pt-3 flex items-baseline justify-between">
+        <span className="text-base font-bold text-agrivive-ink">Total</span>
+        <span className="font-heading text-2xl font-bold text-agrivive-primary">
           {money(total)}
         </span>
       </div>
 
       {/* Food Waste Reduction Callout */}
       <div className="rounded-xl border border-[#D5EAC3] bg-[#F7FAF4] p-3 flex items-start gap-2.5">
-        <CheckCircle2 className="size-4 shrink-0 text-[#457D00] mt-0.5" />
-        <div className="text-[12px] leading-relaxed text-[#2D4E00]">
+        <CheckCircle2 className="size-4 shrink-0 text-agrivive-primary mt-0.5" />
+        <div className="text-xs leading-relaxed text-[#2D4E00]">
           <p className="font-medium">You&apos;re helping reduce food waste!</p>
           <p className="text-neutral-600">Thank you for choosing surplus products.</p>
         </div>

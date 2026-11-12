@@ -25,8 +25,8 @@ export const RatingSummaryCard: React.FC<RatingSummaryCardProps> = ({ summary })
               <Star
                 key={star}
                 size={16}
-                color="#EAB308"
-                fill={star <= Math.round(avgNumber) ? "#EAB308" : "transparent"}
+                color={colors.star}
+                fill={star <= Math.round(avgNumber) ? colors.star : "transparent"}
               />
             ))}
           </View>
@@ -54,7 +54,7 @@ export const RatingSummaryCard: React.FC<RatingSummaryCardProps> = ({ summary })
 
       {summary.unansweredCount > 0 ? (
         <View style={styles.unansweredNotice}>
-          <MessageSquare size={14} color="#D97706" />
+          <MessageSquare size={14} color={colors.warning} />
           <Text style={styles.unansweredText}>
             {summary.unansweredCount === 1
               ? "1 review is waiting for your reply"
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontFamily: fonts.heading.bold,
-    fontSize: 34,
+    fontSize: 28,
     color: colors.text,
     lineHeight: 40,
   },
@@ -123,13 +123,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: radii.full,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: colors.surfaceMuted,
     overflow: "hidden",
   },
   barFill: {
     height: "100%",
     borderRadius: radii.full,
-    backgroundColor: "#EAB308",
+    backgroundColor: colors.star,
   },
   barCount: {
     fontFamily: fonts.body.regular,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: "#FEF3C7",
+    backgroundColor: colors.warningSurface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.input,
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   unansweredText: {
     fontFamily: fonts.body.semiBold,
     fontSize: 12,
-    color: "#B45309",
+    color: colors.warningText,
     flex: 1,
   },
 });

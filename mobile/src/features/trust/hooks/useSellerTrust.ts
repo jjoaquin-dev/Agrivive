@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
-import { fetchSellerTrust, requestTrustCorrection } from "../api/seller-trust";
+import { fetchSellerTrust } from "../api/seller-trust";
 import type { SellerTrustResponse } from "../types";
 import { ApiError } from "../../../api/client";
 
@@ -31,10 +31,5 @@ export function useSellerTrust() {
     void load();
   }, [load]));
 
-  const requestCorrection = useCallback(async (eventId: string, reason: string) => {
-    await requestTrustCorrection(eventId, reason);
-    await load(true);
-  }, [load]);
-
-  return { trust, loading, refreshing, error, refresh: () => load(true), requestCorrection };
+  return { trust, loading, refreshing, error, refresh: () => load(true) };
 }

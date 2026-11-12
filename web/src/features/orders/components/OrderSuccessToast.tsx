@@ -29,7 +29,7 @@ export function OrderSuccessToast({
     <aside
       role="status"
       aria-live="polite"
-      className="fixed inset-x-4 top-[calc(env(safe-area-inset-top)+5rem)] z-50 sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm animate-in fade-in slide-in-from-top-3 duration-200"
+      className="fixed inset-x-4 top-[calc(env(safe-area-inset-top)+5rem)] z-[110] sm:inset-x-auto sm:right-6 sm:w-full sm:max-w-sm animate-in fade-in slide-in-from-top-3 duration-200"
     >
       <Alert variant="success" className="relative flex items-start gap-3 overflow-hidden py-3.5 pl-3.5 pr-12 shadow-md backdrop-blur-md">
         <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">

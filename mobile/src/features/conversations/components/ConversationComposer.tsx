@@ -2,7 +2,7 @@ import React from "react";
 import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 import { ImagePlus, Send } from "lucide-react-native";
 import { colors } from "../../../theme";
-import { styles } from "./ConversationComposerStyles";
+import { styles } from "./ConversationComposer.styles";
 import { ConversationClosedBar } from "./ConversationClosedBar";
 import { ConversationUploadStrip } from "./ConversationUploadStrip";
 
@@ -36,7 +36,7 @@ export function ConversationComposer({
 
       <View style={styles.row}>
         <Pressable onPress={onPickImage} disabled={uploading || sending} accessibilityRole="button" accessibilityLabel="Add photo" style={[styles.actionBtn, (uploading || sending) && styles.disabled]}>
-          <ImagePlus size={22} color={colors.primary} />
+          <ImagePlus size={24} color={colors.primary} />
         </Pressable>
 
         <TextInput

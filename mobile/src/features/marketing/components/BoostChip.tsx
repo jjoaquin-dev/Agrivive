@@ -6,10 +6,10 @@ import type { ProductBoostChip } from "../types";
 
 function nextDropText(value: string) {
   const date = new Date(value);
-  const time = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const time = date.toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" });
   return date.toDateString() === new Date().toDateString()
     ? time
-    : `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
+    : `${date.toLocaleDateString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric" })}, ${time}`;
 }
 
 /** Small status chips for a listing: Boosted with the next drop time, or a post that failed. */

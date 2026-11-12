@@ -6,16 +6,19 @@ import { CardComponent } from "../../../components/CardComponent";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import { answerPickupDecline, confirmSellerOrder, decideBuyerExcuse, markOrderNoShow, packSellerOrder, readySellerOrder } from "../api/seller-pickup";
 import type { SellerOrder } from "../types";
+import { UserX } from "lucide-react-native";
+import { ConfirmDialogComponent } from "../../../components/ConfirmDialogComponent";
 import { OrderRescheduleSheet } from "./OrderRescheduleSheet";
 
 const stepNames = ["Placed", "Confirmed", "Preparing", "Ready", "Completed"] as const;
 const stepKeys = ["placed", "confirmed", "preparing", "ready", "completed"] as const;
-const pickupTime = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-PH", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" }) : "");
+const pickupTime = (iso: string | null) => (iso ? new Date(iso).toLocaleString("en-US", { timeZone: "Asia/Manila", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "");
 
 /** Progress, pickup time and the seller's next step: confirm, pack, ready, answer a decline, judge an excuse, mark a no-show, offer a new time. */
 export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onChanged: (order: SellerOrder) => void }) {
   const [busy, setBusy] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [confirmNoShow, setConfirmNoShow] = useState(false);
   const current = stepKeys.indexOf(order.progress.current);
   const terminal = order.progress.terminal;
   const open = order.status === "pending";
@@ -41,7 +44,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
     <View>
       <CardComponent style={styles.card}>
         <Text style={styles.title}>Pickup time</Text>
-        <Text style={styles.time}>{order.pickupStart ? `${pickupTime(order.pickupStart)} to ${new Date(order.pickupEnd!).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" })}` : "Set by the buyer"}</Text>
+        <Text style={styles.time}>{order.pickupStart ? `${pickupTime(order.pickupStart)} to ${new Date(order.pickupEnd!).toLocaleTimeString("en-US", { timeZone: "Asia/Manila", hour: "numeric", minute: "2-digit" })}` : "Set by the buyer"}</Text>
         {open ? <Text style={styles.hint}>QR {order.qr.status === "expired" ? "has expired" : "is active now"}. It works any time, even before the pickup time, until 15 minutes after it ends.</Text> : null}
         <View style={styles.steps} accessibilityLabel="Order progress">
           {stepNames.map((name, index) => {
@@ -56,7 +59,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
         <CardComponent style={styles.card}>
           <Text style={styles.title}>Confirm this order</Text>
           <Text style={styles.hint}>If you do nothing for 3 hours after it was placed, it is confirmed for you. After that the buyer cannot cancel. Scanning the buyer's QR also confirms it.</Text>
-          <ButtonComponent title="Confirm Order" onPress={() => void run(() => confirmSellerOrder(order.id))} loading={busy} style={styles.button} />
+          <ButtonComponent title="Confirm Reservation" onPress={() => void run(() => confirmSellerOrder(order.id))} loading={busy} style={styles.button} />
         </CardComponent>
       ) : null}
 
@@ -86,7 +89,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
         <CardComponent style={styles.card}>
           <Text style={styles.title}>Buyer did not come</Text>
           <Text style={styles.hint}>The pickup time and QR time are over. A missed pickup adds 2 points to the buyer. If you do nothing, the system records it after an hour.</Text>
-          <ButtonComponent title="Mark No-Show" onPress={() => Alert.alert("Mark no-show?", "Only do this if the buyer never came.", [{ text: "Not now", style: "cancel" }, { text: "Mark No-Show", style: "destructive", onPress: () => void run(() => markOrderNoShow(order.id)) }])} loading={busy} variant="destructive" style={styles.button} />
+          <ButtonComponent title="Mark No-Show" onPress={() => setConfirmNoShow(true)} loading={busy} variant="destructive" style={styles.button} />
         </CardComponent>
       ) : null}
       {order.noShow ? <Text style={styles.hint}>No-show recorded{order.noShow.excused ? " (excused)" : order.noShow.sequence === 1 ? ": first time, warning only" : `: ${order.noShow.weight} points`}.</Text> : null}
@@ -100,6 +103,7 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
         </CardComponent>
       ) : null}
 
+      <ConfirmDialogComponent visible={confirmNoShow} icon={<UserX size={24} color={colors.error} />} title="Mark no-show?" message="Only do this if the buyer never came." cancelLabel="Cancel" confirmLabel="Mark No-Show" loading={busy} onCancel={() => setConfirmNoShow(false)} onConfirm={() => { setConfirmNoShow(false); void run(() => markOrderNoShow(order.id)); }} />
       <OrderRescheduleSheet order={order} visible={rescheduleOpen} onClose={() => setRescheduleOpen(false)} onChanged={onChanged} />
     </View>
   );
@@ -107,13 +111,13 @@ export function OrderPickupSteps({ order, onChanged }: { order: SellerOrder; onC
 
 const styles = StyleSheet.create({
   card: { marginBottom: spacing.base },
-  alertCard: { marginBottom: spacing.base, borderColor: "#FED7AA", borderWidth: 1, backgroundColor: "#FFF7ED" },
+  alertCard: { marginBottom: spacing.base, borderColor: colors.orangeBorder, borderWidth: 1, backgroundColor: colors.orangeSurface },
   title: { fontFamily: fonts.heading.semiBold, fontSize: 16, color: colors.text },
   time: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.primary, marginTop: spacing.xs },
   hint: { fontFamily: fonts.body.regular, fontSize: 12, lineHeight: 17, color: colors.textMuted, marginTop: spacing.xs },
   steps: { flexDirection: "row", justifyContent: "space-between", marginTop: spacing.md },
   step: { alignItems: "center", flex: 1, gap: 4 },
-  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.border },
+  dot: { width: 14, height: 14, borderRadius: 8, backgroundColor: colors.border },
   dotDone: { backgroundColor: colors.primary },
   stepText: { fontFamily: fonts.body.regular, fontSize: 10, color: colors.textMuted },
   stepDone: { fontFamily: fonts.body.semiBold, color: colors.text },

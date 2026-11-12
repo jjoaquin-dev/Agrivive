@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Activity, LineChart, TrendingUp } from "lucide-react";
 import type { ActivityTrendPoint } from "../api/overview";
+import { formatNumber } from "@/src/lib/format";
 
 interface Props {
   trends: ActivityTrendPoint[];
@@ -58,12 +59,12 @@ export const MarketplaceActivityTrendComponent = ({ trends, range }: Props) => {
         </div>
         {activePoint ? (
           <div className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
-            <span>{activePoint.label}: {activePoint.quantity.toLocaleString()} kg</span>
+            <span>{activePoint.label}: {formatNumber(activePoint.quantity)} kg</span>
             <span className="text-neutral-400">({activePoint.orderCount} orders)</span>
           </div>
         ) : (
           <div className="inline-flex items-center gap-1.5 text-xs text-neutral-500">
-            <Activity className="size-3.5 text-[#457D00]" />
+            <Activity className="size-3.5 text-agrivive-primary" />
             <span>Hover points for breakdown</span>
           </div>
         )}

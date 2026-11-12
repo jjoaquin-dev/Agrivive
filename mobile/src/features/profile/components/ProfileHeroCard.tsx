@@ -38,7 +38,7 @@ export function ProfileHeroCard({ shopName, sellerName, avatarUrl, isVerified, m
           <Text style={styles.shop} numberOfLines={2}>{shopName}</Text>
           <Text style={styles.owner} numberOfLines={1}>{sellerName}</Text>
           <View style={[styles.pill, isVerified ? styles.pillOk : styles.pillWarn]}>
-            {isVerified ? <ShieldCheck size={13} color={profileColors.mintText} /> : <AlertCircle size={13} color={profileColors.amberText} />}
+            {isVerified ? <ShieldCheck size={14} color={profileColors.mintText} /> : <AlertCircle size={14} color={profileColors.amberText} />}
             <Text style={[styles.pillText, { color: isVerified ? profileColors.mintText : profileColors.amberText }]}>{isVerified ? "Verified Seller" : "Not Verified Yet"}</Text>
           </View>
           {uploadingAvatar ? <Text style={styles.uploading}>Uploading photo...</Text> : null}
@@ -58,12 +58,12 @@ const styles = StyleSheet.create({
   avatarWrap: { marginRight: spacing.md },
   avatar: { width: 76, height: 76, borderRadius: 38 },
   avatarFallback: { backgroundColor: colors.terracotta, alignItems: "center", justifyContent: "center" },
-  initials: { fontFamily: fonts.heading.bold, fontSize: 26, color: colors.white },
+  initials: { fontFamily: fonts.heading.bold, fontSize: 28, color: colors.white },
   cameraBadge: { position: "absolute", right: -2, bottom: -2, width: 28, height: 28, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: profileColors.border, alignItems: "center", justifyContent: "center" },
   text: { flex: 1 },
   shop: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   owner: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: 2 },
-  pill: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 5, borderRadius: radii.full, paddingHorizontal: 10, paddingVertical: 4, marginTop: spacing.xs },
+  pill: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 4, borderRadius: radii.full, paddingHorizontal: 12, paddingVertical: 4, marginTop: spacing.xs },
   pillOk: { backgroundColor: profileColors.mint },
   pillWarn: { backgroundColor: profileColors.amber },
   pillText: { fontFamily: fonts.body.semiBold, fontSize: 12 },

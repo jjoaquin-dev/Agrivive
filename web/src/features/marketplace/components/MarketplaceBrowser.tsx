@@ -14,7 +14,7 @@ import { MarketplaceFooter } from "./MarketplaceFooter";
 
 function BrowserFallback() {
   return (
-    <main className="min-h-screen bg-[#fdfdfd] py-8">
+    <main className="min-h-screen bg-agrivive-paper py-8">
       <PageContainer>
         <Skeleton className="h-36 w-full rounded-2xl" />
         <Skeleton className="mt-6 h-36 w-full rounded-2xl" />
@@ -75,7 +75,7 @@ function MarketplaceBrowserContent() {
   }, []);
 
   return (
-    <div className="flex min-h-[calc(100vh-68px)] flex-col bg-[#fdfdfd]">
+    <div className="flex min-h-[calc(100vh-68px)] flex-col bg-agrivive-paper">
       <main className="flex-1 py-6 text-foreground lg:py-8">
         <PageContainer className="space-y-8 lg:space-y-10">
           {/* 1. Hero */}
@@ -94,13 +94,13 @@ function MarketplaceBrowserContent() {
           {/* 5. Results */}
           <section>
             <div className="mb-4">
-              <p className="type-eyebrow text-[#457D00]">
+              <p className="type-eyebrow text-agrivive-primary">
                 Today&apos;s selection
               </p>
-              <h2 className="mt-1 font-heading text-2xl font-bold tracking-tight text-[#14231A]">
+              <h2 className="mt-1 font-heading text-2xl font-bold tracking-tight text-agrivive-ink">
                 Surplus produce near you
               </h2>
-              <p className="mt-0.5 text-xs text-[#5F7367]">
+              <p className="mt-0.5 text-xs text-agrivive-stone">
                 {products.length} {products.length === 1 ? "listing" : "listings"} available
               </p>
             </div>

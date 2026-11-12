@@ -1,8 +1,9 @@
 import { Banknote, UserPlus, Flag, PackageCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { StakeholderSummary } from "@/src/features/stakeholder/api/summary";
+import { formatPeso } from "@/src/lib/money";
 
-const peso = (n: number) => `₱${n.toLocaleString("en-PH", { maximumFractionDigits: 0 })}`;
+const peso = (n: number) => formatPeso(Math.round(n));
 
 export const StakeholderHighlightsComponent = ({ data }: { data: StakeholderSummary }) => {
   const last7 = data.trends.daily.slice(-7);

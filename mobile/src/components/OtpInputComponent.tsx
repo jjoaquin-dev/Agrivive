@@ -7,7 +7,7 @@ import {
   Text,
 } from "react-native";
 import { AlertCircle } from "lucide-react-native";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 
 export interface OtpInputComponentProps {
   length?: number;
@@ -136,25 +136,25 @@ const styles = StyleSheet.create({
   box: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E2DA",
-    backgroundColor: "#FFFFFF",
+    borderColor: colors.border,
+    backgroundColor: colors.white,
     textAlign: "center",
     fontSize: 22,
-    fontWeight: "700",
-    color: "#202622",
+    fontFamily: fonts.body.semiBold,
+    color: colors.text,
     padding: 0,
   },
   containerFill: { alignItems: "stretch", marginVertical: 0 },
-  boxRowFill: { justifyContent: "flex-start", gap: 10 },
+  boxRowFill: { justifyContent: "flex-start", gap: 12 },
   boxFill: { flex: 1, height: 56 },
-  errorRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  errorRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   errorRowFill: { justifyContent: "flex-start", marginTop: 8 },
-  errorTextFill: { marginTop: 0, flex: 1, textAlign: "left", fontWeight: "400", fontSize: 13 },
+  errorTextFill: { marginTop: 0, flex: 1, textAlign: "left", fontFamily: fonts.body.regular, fontSize: 13 },
   boxFilled: {
-    borderColor: "#202622",
+    borderColor: colors.text,
   },
   boxFocused: {
-    borderColor: "#457D00",
+    borderColor: colors.primary,
     borderWidth: 1.5,
   },
   boxError: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: colors.error,
     fontSize: 13,
-    fontWeight: "600",
+    fontFamily: fonts.body.semiBold,
     textAlign: "center",
   },
 });

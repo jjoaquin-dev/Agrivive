@@ -42,18 +42,18 @@ export function HomeFarmerFaq() {
           {/* Left Column: Side Header & Contact Action */}
           <div data-reveal className="lg:col-span-5 flex flex-col justify-between lg:sticky lg:top-32 lg:self-start">
             <div>
-              <span className="type-eyebrow text-[#457D00]">
+              <span className="type-eyebrow text-agrivive-primary">
                 Frequently Asked Questions
               </span>
               <h2 className="type-section mt-3 font-heading text-neutral-900">
                 FAQ about{" "}
-                <span className="relative isolate inline-block text-[#457D00]">
+                <span className="relative isolate inline-block text-agrivive-primary">
                   Agrivive
                   <svg
                     viewBox="0 0 110 12"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="absolute -bottom-1.5 left-0 -z-10 w-full text-[#E2FD56] sm:-bottom-2 pointer-events-none"
+                    className="absolute -bottom-1.5 left-0 -z-10 w-full text-agrivive-lime sm:-bottom-2 pointer-events-none"
                     aria-hidden="true"
                   >
                     <path
@@ -73,7 +73,7 @@ export function HomeFarmerFaq() {
                 <button
                   type="button"
                   onClick={() => setIsSocialModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-5 py-2.5 font-heading text-xs sm:text-sm font-bold text-neutral-800 shadow-sm hover:border-[#457D00] hover:text-[#457D00] hover:bg-neutral-50/80 transition-all duration-200 cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-5 py-2.5 font-heading text-xs sm:text-sm font-bold text-neutral-800 shadow-sm hover:border-agrivive-primary hover:text-agrivive-primary hover:bg-neutral-50/80 transition-all duration-200 cursor-pointer"
                 >
                   Contact us <ArrowUpRight className="size-4" />
                 </button>
@@ -91,15 +91,15 @@ export function HomeFarmerFaq() {
                     type="button"
                     id={`faq-q-${idx}`}
                     onClick={() => toggleFaq(idx)}
-                    className="group flex min-h-12 w-full cursor-pointer items-center justify-between gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#457D00] focus-visible:ring-offset-2"
+                    className="group flex min-h-12 w-full cursor-pointer items-center justify-between gap-4 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary focus-visible:ring-offset-2"
                     aria-expanded={isOpen}
                     aria-controls={`faq-a-${idx}`}
                   >
                     <span
-                      className={`font-heading text-[17px] sm:text-xl font-bold leading-snug transition-colors ${
+                      className={`font-heading text-lg sm:text-xl font-bold leading-snug transition-colors ${
                         isOpen
-                          ? "text-[#457D00]"
-                          : "text-neutral-900 group-hover:text-[#457D00]"
+                          ? "text-agrivive-primary"
+                          : "text-neutral-900 group-hover:text-agrivive-primary"
                       }`}
                     >
                       {faq.q}

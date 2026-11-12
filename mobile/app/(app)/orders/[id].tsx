@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AlertTriangle, Camera, Clock3 } from "lucide-react-native";
@@ -30,9 +30,9 @@ export default function SellerOrderDetailScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const loadOrder = useCallback(async () => {
+  const loadOrder = useCallback(async (quiet = false) => {
     if (!id) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     setError(null);
     try {
       setOrder(await fetchSellerOrder(id));
@@ -45,6 +45,8 @@ export default function SellerOrderDetailScreen() {
   }, [id]);
 
   useFocusEffect(useCallback(() => { void loadOrder(); }, [loadOrder]));
+  const [refreshing, setRefreshing] = useState(false);
+  const pullToRefresh = async () => { setRefreshing(true); await loadOrder(true); setRefreshing(false); };
 
   useLiveSellerOrder({ id, order, isFocused, setOrder, setLastUpdated, setError });
 
@@ -71,7 +73,7 @@ export default function SellerOrderDetailScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={pullToRefresh} colors={[colors.primary]} tintColor={colors.primary} />}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>Reservation #{reference}</Text>
           <OrderStatusBadge status={order.status} />
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
   updated: { fontFamily: fonts.body.regular, fontSize: 11, color: colors.textMuted },
   refreshError: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.warning, marginBottom: spacing.base },
-  banner: { flexDirection: "row", gap: spacing.sm, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA", borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base },
+  banner: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.orangeSurface, borderWidth: 1, borderColor: colors.orangeBorder, borderRadius: radii.card, padding: spacing.base, marginBottom: spacing.base },
   bannerText: { flex: 1 },
   bannerTitle: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.warning },
   bannerBody: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },

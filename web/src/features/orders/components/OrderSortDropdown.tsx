@@ -46,13 +46,13 @@ export function OrderSortDropdown({ value, onChange }: OrderSortDropdownProps) {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex h-11 min-h-11 items-center gap-2 rounded-full border border-[#E8E8E8] bg-white px-4 text-xs font-semibold text-[#14231A] shadow-sm transition hover:bg-neutral-50 cursor-pointer select-none outline-none"
+        className="inline-flex h-11 min-h-11 items-center gap-2 rounded-full border border-agrivive-line bg-white px-4 text-xs font-semibold text-agrivive-ink shadow-sm transition hover:bg-neutral-50 cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary/40"
       >
-        <span className="text-[#5F7367] font-normal">Sort By:</span>
-        <span className="font-semibold text-[#14231A]">{SORT_LABELS[value]}</span>
+        <span className="text-agrivive-stone font-normal">Sort By:</span>
+        <span className="font-semibold text-agrivive-ink">{SORT_LABELS[value]}</span>
         <ChevronDown
-          className={`size-3.5 shrink-0 text-[#5F7367] transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#457D00]" : ""
+          className={`size-3.5 shrink-0 text-agrivive-stone transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-agrivive-primary" : ""
           }`}
         />
       </button>
@@ -61,7 +61,7 @@ export function OrderSortDropdown({ value, onChange }: OrderSortDropdownProps) {
         <div
           role="listbox"
           tabIndex={-1}
-          className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-[#E8E8E8] bg-white p-2 shadow-md z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-2 w-48 overflow-hidden rounded-2xl border border-agrivive-line bg-white p-2 shadow-md z-50 animate-in fade-in-0 zoom-in-95 duration-150"
         >
           <div className="flex flex-col gap-0.5">
             {options.map((opt) => {
@@ -76,10 +76,10 @@ export function OrderSortDropdown({ value, onChange }: OrderSortDropdownProps) {
                     onChange(opt);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-[13px] transition-colors duration-150 cursor-pointer outline-none ${
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150 cursor-pointer outline-none ${
                     isSelected
-                      ? "bg-[#457D00]/10 text-[#457D00] font-bold"
-                      : "text-neutral-700 font-medium hover:bg-[#457D00]/10 hover:text-[#457D00] active:bg-[#457D00]/10"
+                      ? "bg-agrivive-primary/10 text-agrivive-primary font-bold"
+                      : "text-neutral-700 font-medium hover:bg-agrivive-primary/10 hover:text-agrivive-primary active:bg-agrivive-primary/10"
                   }`}
                 >
                   {SORT_LABELS[opt]}

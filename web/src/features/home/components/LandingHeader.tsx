@@ -58,14 +58,14 @@ export function LandingHeader() {
   };
 
   const pillSurface = `rounded-full border bg-white/95 backdrop-blur-md transition-[box-shadow,border-color] duration-300 ${
-    scrolled ? "header-scrolled border-[#457D00]/25" : "border-neutral-200/80 shadow-sm"
+    scrolled ? "header-scrolled border-agrivive-primary/25" : "border-neutral-200/80 shadow-sm"
   }`;
 
   return (
     <header id="nav-pill" className="pointer-events-none fixed inset-x-0 top-3 z-40 px-3 sm:px-6 lg:px-8">
       {/* Page scroll progress */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[3px] bg-[#457D00]/10">
-        <div className="h-full origin-left bg-[#457D00]" style={{ transform: `scaleX(${progress})` }} />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 h-[3px] bg-agrivive-primary/10">
+        <div className="h-full origin-left bg-agrivive-primary" style={{ transform: `scaleX(${progress})` }} />
       </div>
 
       {/* Floating pill: logo, section links and actions */}
@@ -97,7 +97,7 @@ export function LandingHeader() {
               <circle fill="#ffffff" stroke="#457D00" cx="144" cy="138" r="9.5" strokeWidth="6" />
             </svg>
           </div>
-          <span className="font-heading text-[22px] font-semibold tracking-[-0.035em] text-[#457D00] leading-none">Agrivive</span>
+          <span className="font-heading text-2xl font-semibold tracking-[-0.035em] text-agrivive-primary leading-none">Agrivive</span>
         </Link>
 
         {/* Section links live inside the main pill */}
@@ -109,20 +109,20 @@ export function LandingHeader() {
         <div id="header-actions" className="flex items-center gap-3">
           <Link
             href="/marketplace"
-            className="hidden sm:inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-neutral-700 hover:text-[#457D00] transition-colors"
+            className="hidden sm:inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-neutral-700 hover:text-agrivive-primary transition-colors"
           >
-            <ShoppingBag className="size-4 text-[#457D00]" />
+            <ShoppingBag className="size-4 text-agrivive-primary" />
             <span>Marketplace</span>
           </Link>
 
           {!hasSession && (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="inline-flex min-h-11 items-center whitespace-nowrap px-3 text-sm font-bold text-neutral-700 hover:text-[#457D00] transition-colors">
+              <Link href="/login" className="inline-flex min-h-11 items-center whitespace-nowrap px-3 text-sm font-bold text-neutral-700 hover:text-agrivive-primary transition-colors">
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="inline-flex min-h-11 items-center rounded-full bg-[#E2FD56] px-4 text-sm font-black text-[#14231A] shadow-sm transition-all hover:bg-[#E2FD56]/90 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
+                className="inline-flex min-h-11 items-center rounded-full bg-agrivive-lime px-4 text-sm font-black text-agrivive-ink shadow-sm transition-all hover:bg-agrivive-lime/90 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0"
               >
                 Register
               </Link>

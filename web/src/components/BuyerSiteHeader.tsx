@@ -48,7 +48,7 @@ export function BuyerSiteHeader() {
   return (
     <header data-tone={onGreen ? "green" : "light"} className="sticky top-0 z-40 border-b border-neutral-200/80 bg-white/95 backdrop-blur shadow-sm">
       {/* Top Main Bar */}
-      <div className={`border-b py-2.5 ${onGreen ? "border-[#457D00] bg-[#457D00]" : "border-neutral-100"}`}>
+      <div className={`border-b py-2.5 ${onGreen ? "border-agrivive-primary bg-agrivive-primary" : "border-neutral-100"}`}>
         <PageContainer className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="group -ml-3 flex shrink-0 items-center gap-1.5" aria-label="Agrivive home">
@@ -72,7 +72,7 @@ export function BuyerSiteHeader() {
             {/* Messages & Notifications (left side of profile avatar) */}
             <Link
               href="/messages"
-              className="buyer-header-icon group relative flex size-9 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100 hover:text-[#457D00]"
+              className="buyer-header-icon group relative flex size-11 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100 hover:text-agrivive-primary"
               aria-label="Messages"
             >
               <MessageCircle className="icon-shake-on-hover size-5" />
@@ -84,7 +84,7 @@ export function BuyerSiteHeader() {
               <button
                 type="button"
                 onClick={() => setNotificationsOpen((prev) => !prev)}
-                className="buyer-header-icon group relative flex size-9 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100 hover:text-[#457D00]"
+                className="buyer-header-icon group relative flex size-11 items-center justify-center rounded-full text-neutral-700 transition hover:bg-neutral-100 hover:text-agrivive-primary"
                 aria-label="Toggle notifications modal"
                 aria-expanded={notificationsOpen}
                 aria-haspopup="dialog"
@@ -114,10 +114,10 @@ export function BuyerSiteHeader() {
                 setMenuOpen(false);
               }}
             >
-              <ShoppingCart aria-hidden="true" className="cart-wiggle-on-hover size-4 text-[#457D00]" />
+              <ShoppingCart aria-hidden="true" className="cart-wiggle-on-hover size-4 text-agrivive-primary" />
               <span className="hidden sm:inline">Cart</span>
               {cartReady && itemCount > 0 ? (
-                <span key={itemCount} className="cart-count-bump inline-flex size-5 items-center justify-center rounded-full bg-[#457D00] text-xs font-bold text-white">
+                <span key={itemCount} className="cart-count-bump inline-flex size-5 items-center justify-center rounded-full bg-agrivive-primary text-xs font-bold text-white">
                   {itemCount}
                 </span>
               ) : null}

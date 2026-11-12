@@ -17,16 +17,16 @@ export function useProduct(productId: string) {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadProduct = useCallback(async () => {
+  const loadProduct = useCallback(async (quiet = false) => {
     if (!productId) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     setError(null);
     try {
       const data = await fetchSellerProduct(productId);
       setProduct(data);
     } catch (err: any) {
       logApiError("Failed to load product", err);
-      setError(err?.message || "Failed to load product details.");
+      setError(err?.message || "Could not load product details.");
     } finally {
       setLoading(false);
     }
@@ -94,7 +94,8 @@ export function useProduct(productId: string) {
     loadingHistory,
     actionLoading,
     error,
-    refresh: loadProduct,
+    refresh: () => loadProduct(),
+    refreshQuietly: async () => { await Promise.all([loadProduct(true), loadHistory()]); },
     adjustStock,
     archive,
     reactivate,

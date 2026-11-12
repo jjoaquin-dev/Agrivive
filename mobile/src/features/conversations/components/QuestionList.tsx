@@ -4,7 +4,7 @@ import { MessageSquare } from "lucide-react-native";
 import { colors } from "../../../theme";
 import type { SellerMessageFilter, SellerProductInquiryItem } from "../../messages/types";
 import { QuestionCard } from "../../messages/components/QuestionCard";
-import { styles } from "./QuestionListStyles";
+import { styles } from "./QuestionList.styles";
 
 interface QuestionListProps {
   inquiries: SellerProductInquiryItem[];
@@ -87,7 +87,7 @@ export function QuestionList({
           <Pressable
             onPress={onRetry}
             accessibilityRole="button"
-            accessibilityLabel="Try again"
+            accessibilityLabel="Try Again"
             style={({ pressed }) => [styles.retryBtn, pressed && styles.retryBtnPressed]}
           >
             <Text style={styles.retryBtnText}>Try Again</Text>

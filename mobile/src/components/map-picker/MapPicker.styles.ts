@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { colors, radii, spacing } from "../../theme";
+import { colors, fonts, radii, spacing } from "../../theme";
 
 const styles = StyleSheet.create({
   container: {
@@ -45,12 +45,12 @@ const styles = StyleSheet.create({
   coordsLabel: {
     fontSize: 11,
     color: colors.textMuted,
-    fontWeight: "500",
+    fontFamily: fonts.body.medium,
   },
   coordsValue: {
     fontSize: 13,
     color: colors.text,
-    fontWeight: "600",
+    fontFamily: fonts.body.semiBold,
   },
   locButton: {
     minHeight: 36,

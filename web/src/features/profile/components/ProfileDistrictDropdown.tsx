@@ -55,13 +55,13 @@ export function ProfileDistrictDropdown({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className="relative flex h-11 w-full items-center justify-between rounded-full border border-neutral-200 bg-white pl-11 pr-4 text-xs font-semibold text-neutral-900 shadow-sm transition-colors hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#457D00]/15 cursor-pointer"
+        className="relative flex h-11 w-full items-center justify-between rounded-full border border-neutral-200 bg-white pl-11 pr-4 text-xs font-semibold text-neutral-900 shadow-sm transition-colors hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-agrivive-primary/15 cursor-pointer"
       >
         <MapPin className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
         <span className="truncate">{selectedDistrict}</span>
         <ChevronDown
           className={`size-3.5 shrink-0 text-neutral-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-[#457D00]" : ""
+            isOpen ? "rotate-180 text-agrivive-primary" : ""
           }`}
         />
       </button>
@@ -83,14 +83,14 @@ export function ProfileDistrictDropdown({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => handleSelect(d)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-[13px] transition-colors duration-150 cursor-pointer outline-none flex items-center justify-between ${
+                  className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm transition-colors duration-150 cursor-pointer outline-none flex items-center justify-between ${
                     isSelected
-                      ? "bg-[#457D00]/10 text-[#457D00] font-bold"
-                      : "text-neutral-700 font-medium hover:bg-[#457D00]/10 hover:text-[#457D00] active:bg-[#457D00]/10"
+                      ? "bg-agrivive-primary/10 text-agrivive-primary font-bold"
+                      : "text-neutral-700 font-medium hover:bg-agrivive-primary/10 hover:text-agrivive-primary active:bg-agrivive-primary/10"
                   }`}
                 >
                   <span className="truncate">{d}</span>
-                  {isSelected && <Check className="size-3.5 shrink-0 text-[#457D00]" />}
+                  {isSelected && <Check className="size-3.5 shrink-0 text-agrivive-primary" />}
                 </button>
               );
             })}

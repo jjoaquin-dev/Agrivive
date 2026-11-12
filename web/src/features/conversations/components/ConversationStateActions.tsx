@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Archive, ArchiveRestore, Ban, Undo2 } from "lucide-react";
+import { ConfirmationModalComponent } from "@/src/components/ConfirmationModalComponent";
 import { setConversationState, type Conversation, type ConversationStateAction } from "../api";
 
 type StateAction = { action: ConversationStateAction; label: string; danger?: boolean };
@@ -18,24 +19,49 @@ export function conversationStateActions(item: Conversation): StateAction[] {
   ];
 }
 
-/** Runs one state change. Asks first before blocking. */
-export async function runConversationStateAction(item: Conversation, action: ConversationStateAction) {
-  if (action === "block" && !window.confirm("Block this seller? You will not get or send messages in this chat.")) return false;
-  await setConversationState(item.id, action);
-  return true;
+/** Runs archive, unarchive and unblock at once. Blocking asks first in a confirmation dialog. */
+export function useConversationState(item: Conversation, onDone: () => void, onFail?: () => void) {
+  const [confirming, setConfirming] = useState(false);
+
+  async function run(action: ConversationStateAction) {
+    try {
+      await setConversationState(item.id, action);
+      onDone();
+    } catch {
+      onFail?.();
+    }
+  }
+
+  const request = (action: ConversationStateAction) => {
+    if (action === "block") setConfirming(true);
+    else void run(action);
+  };
+
+  const dialog = (
+    <ConfirmationModalComponent
+      open={confirming}
+      onClose={() => setConfirming(false)}
+      onConfirm={async () => { setConfirming(false); await run("block"); }}
+      title="Block this seller?"
+      description="You will not get or send messages in this chat."
+      confirmLabel="Block"
+      cancelLabel="Keep chat"
+      variant="destructive"
+    />
+  );
+
+  return { request, dialog };
 }
 
 /** Archive and block buttons for the thread header and seller info panel. */
 export function ConversationStateButtons({ conversation, onChanged }: { conversation: Conversation; onChanged: () => void }) {
   const [error, setError] = useState("");
 
-  async function handle(action: ConversationStateAction) {
+  const { request, dialog } = useConversationState(conversation, onChanged, () => setError("Could not update this chat. Try again."));
+
+  function handle(action: ConversationStateAction) {
     setError("");
-    try {
-      if (await runConversationStateAction(conversation, action)) onChanged();
-    } catch {
-      setError("Could not update this chat. Try again.");
-    }
+    request(action);
   }
 
   return (
@@ -48,7 +74,7 @@ export function ConversationStateButtons({ conversation, onChanged }: { conversa
             type="button"
             onClick={() => handle(action)}
             className={`flex w-full items-center justify-center gap-2 rounded-xl border bg-white py-2.5 text-xs font-bold shadow-sm transition-colors cursor-pointer ${
-              danger ? "border-rose-200 text-rose-700 hover:bg-rose-600 hover:text-white" : "border-neutral-200 text-neutral-900 hover:bg-neutral-50"
+              danger ? "border-rose-200 text-destructive hover:bg-rose-600 hover:text-white" : "border-neutral-200 text-neutral-900 hover:bg-neutral-50"
             }`}
           >
             <Icon className="size-3.5" aria-hidden="true" />
@@ -56,7 +82,8 @@ export function ConversationStateButtons({ conversation, onChanged }: { conversa
           </button>
         );
       })}
-      {error ? <p className="w-full text-xs text-rose-700">{error}</p> : null}
+      {error ? <p className="w-full text-xs text-destructive" role="alert">{error}</p> : null}
+      {dialog}
     </div>
   );
 }

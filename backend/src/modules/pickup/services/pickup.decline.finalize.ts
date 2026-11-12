@@ -3,6 +3,7 @@ import { order_declines, order_status_history, ordered_items, orders, sellers_pr
 import type { OrderTransaction } from "../../../utils/order-types";
 import { notifyBuyer, notifySeller } from "../../../utils/pickup/notify";
 import { recordTrustEvent } from "../../../utils/trust";
+import { pointsText } from "../../../utils/trust/policy";
 
 export type DeclineOutcome = "seller_fault" | "buyer_invalid" | "buyer_false_photo" | "disputed";
 type Decline = typeof order_declines.$inferSelect;
@@ -20,7 +21,7 @@ const outcomeText: Record<DeclineOutcome, { buyer: string; seller: string }> = {
     seller: "The decline was confirmed as your fault. It adds 2 trust points and counts in your fault rate. Take the produce back; it is not put back into stock. You can dispute this within 7 days.",
   },
   buyer_invalid: {
-    buyer: "Your decline was not valid, so it counts like a late cancellation and adds 1 point. You can dispute this within 7 days.",
+    buyer: `Your decline was not valid, so it adds ${pointsText("buyer_invalid_decline")}. You can dispute this within 7 days.`,
     seller: "The decline was not valid. You get 0 points, and the produce went back into your stock so you can sell it again.",
   },
   disputed: {
@@ -28,7 +29,7 @@ const outcomeText: Record<DeclineOutcome, { buyer: string; seller: string }> = {
     seller: "You disagreed with the decline. Nobody gets points. The order is closed as declined at pickup, and the produce is not put back into stock.",
   },
   buyer_false_photo: {
-    buyer: "The system found that this decline photo was already used on another decline. This adds 2 points, like confirmed bad conduct. You can dispute this within 7 days.",
+    buyer: `The system found that this decline photo was already used on another decline. This adds ${pointsText("buyer_false_photo")}. You can dispute this within 7 days.`,
     seller: "The system found that the buyer's photo was already used on another decline. You get 0 points, and the produce went back into your stock.",
   },
 };

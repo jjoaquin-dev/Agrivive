@@ -140,7 +140,7 @@ export function boostReasonLabel(reason: SellerBoostReason) {
 }
 
 export function formatBoostTime(value: string) {
-  return new Date(value).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return new Date(value).toLocaleString("en-US", { timeZone: "Asia/Manila", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 /** The code shown on listing cards, so two listings with the same name can be told apart. */

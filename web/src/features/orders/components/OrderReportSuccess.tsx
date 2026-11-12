@@ -16,7 +16,7 @@ export function OrderReportSuccess({ evidence, onClose }: OrderReportSuccessProp
         <CheckCircle2 className="size-6 text-emerald-600" /> Report Filed Successfully
       </div>
       <p className="text-sm text-muted-foreground">
-        Your report and evidence have been recorded as an allegation for platform monitoring. A report alone does not add trust points; only verified signals are scored.
+        Your report is saved. It adds no points by itself. If a second person reports the same thing about the same seller, it is confirmed and the seller gets trust points.
       </p>
       {evidence.length > 0 && (
         <div className="rounded-xl border border-border/70 bg-agrivive-background/60 p-3 space-y-2">

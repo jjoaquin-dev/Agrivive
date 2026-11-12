@@ -15,12 +15,12 @@ export function NotificationSearchBar({ value, onChangeText, onFilterPress, acti
   return (
     <View style={styles.row}>
       <View style={styles.searchBox}>
-        <Search size={16} color="#9CA3AF" />
+        <Search size={16} color={colors.textMuted} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder="Search notifications"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textMuted}
           style={styles.input}
           autoCapitalize="none"
           returnKeyType="search"

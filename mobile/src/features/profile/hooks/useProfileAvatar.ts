@@ -16,7 +16,7 @@ export function useProfileAvatar() {
       await uploadSellerAvatar(uri);
       await refreshSetup();
     } catch (err: any) {
-      Alert.alert("Upload Failed", err?.message || "Failed to upload photo.");
+      Alert.alert("Upload Failed", err?.message || "Could not upload photo.");
     } finally {
       setUploading(false);
     }

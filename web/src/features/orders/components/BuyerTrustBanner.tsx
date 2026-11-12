@@ -33,7 +33,7 @@ export function BuyerTrustBanner({ trustRestriction, trustWarning }: Props) {
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <h2 className="font-heading text-sm font-bold text-neutral-900 sm:text-[15px]">
+              <h2 className="font-heading text-sm font-bold text-neutral-900 sm:text-sm">
                 {isCancellation ? "Cancellation Advisory" : "Account Notice"}
               </h2>
               <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
@@ -51,7 +51,7 @@ export function BuyerTrustBanner({ trustRestriction, trustWarning }: Props) {
             ) : null}
           </div>
 
-          <p className="mt-2 text-xs leading-relaxed text-neutral-600 sm:text-[13px]">
+          <p className="mt-2 text-xs leading-relaxed text-neutral-600 sm:text-sm">
             {trustWarning}
           </p>
         </div>

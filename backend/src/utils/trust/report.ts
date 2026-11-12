@@ -17,6 +17,8 @@ export const REPORT_MIN_DETAILS = 20;
  */
 export async function createOrderReport(reporterId: string, orderId: string, side: OrderSide,
   reason: string, details: string) {
+  // A listing belongs to the seller, so only a buyer can say it was wrong. Otherwise a seller could mark a buyer for the seller's own listing.
+  if (side === "seller" && reason === "listing_inaccurate") throw new OrderError(400, "Only a buyer can report a listing as inaccurate.");
   if (details.trim().length < REPORT_MIN_DETAILS) throw new OrderError(400, `Please write at least ${REPORT_MIN_DETAILS} characters about what happened.`);
   const { report, confirmed, fakeKey } = await db.transaction(async (tx) => {
     await requireActiveUser(tx, reporterId, side);

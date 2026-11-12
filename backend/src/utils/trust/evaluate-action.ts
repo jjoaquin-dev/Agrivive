@@ -59,7 +59,8 @@ export async function evaluateTrustAction(subjectId: string, sourceOrderId?: str
   if (!actionType || !moves) return null;
 
   const actionKey = `${trustPolicyVersion}:${subjectId}:${level}:${sourceEventKey ?? sourceOrderId ?? "score"}`;
-  const endsAt = pauseHours ? new Date(Date.now() + pauseHours * 3_600_000) : null;
+  const startsAt = new Date();
+  const endsAt = pauseHours ? new Date(startsAt.getTime() + pauseHours * 3_600_000) : null;
   const reason = describeLevelChange(level, standing.score, role, pauseHours);
   return db.transaction(async (tx) => {
     const [existing] = await tx.select({ id: trust_actions.id }).from(trust_actions).where(eq(trust_actions.actionKey, actionKey)).limit(1);
@@ -69,7 +70,7 @@ export async function evaluateTrustAction(subjectId: string, sourceOrderId?: str
     )).orderBy(desc(trust_events.createdAt)).limit(1);
     const [action] = await tx.insert(trust_actions).values({
       actionKey, subjectId, actionType, level, weightedPoints: standing.score, policyVersion: trustPolicyVersion,
-      reason, sourceEventId: sourceEvent?.id ?? null, sourceOrderId: orderId, endsAt,
+      reason, sourceEventId: sourceEvent?.id ?? null, sourceOrderId: orderId, startsAt, endsAt,
     }).returning();
     if (!action) return null;
     if (level === "block") await tx.update(user).set({ isActive: false }).where(eq(user.id, subjectId));

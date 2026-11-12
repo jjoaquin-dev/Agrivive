@@ -6,7 +6,7 @@ export function fetchSellerTrust() {
 }
 
 export function requestTrustCorrection(eventId: string, reason: string) {
-  return apiFetch(`/seller/trust/events/${eventId}/correction`, {
+  return apiFetch<{ outcome: "confirmed" | "invalidated" }>(`/seller/trust/events/${eventId}/correction`, {
     method: "POST",
     body: JSON.stringify({ reason }),
   });

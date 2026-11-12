@@ -25,20 +25,20 @@ export function SellerProfileAvatar({ imageUrl, shopName }: SellerProfileAvatarP
         <img
           src={imageUrl}
           alt={`${shopName} seller profile`}
-          className="size-24 sm:size-28 shrink-0 rounded-2xl object-cover border border-[#E8E8E8] shadow-sm"
+          className="size-24 sm:size-28 shrink-0 rounded-2xl object-cover border border-agrivive-line shadow-sm"
           onError={() => setImageFailed(true)}
         />
       ) : (
         <div
           aria-label={`${shopName} seller profile`}
-          className="flex size-24 sm:size-28 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-neutral-100 font-heading font-bold text-[#16A34A] border border-[#E8E8E8]"
+          className="flex size-24 sm:size-28 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-neutral-100 font-heading font-bold text-green-600 border border-agrivive-line"
         >
-          <Store aria-hidden="true" className="size-7 text-[#16A34A]" />
+          <Store aria-hidden="true" className="size-7 text-green-600" />
           <span className="text-sm font-bold">{initials}</span>
         </div>
       )}
       <span
-        className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-[#16A34A] text-white ring-2 ring-white shadow-sm"
+        className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-green-600 text-white ring-2 ring-white shadow-sm"
         aria-hidden="true"
       >
         <Check className="size-3.5" />

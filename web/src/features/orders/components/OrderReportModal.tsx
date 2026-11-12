@@ -1,5 +1,6 @@
 "use client";
 
+import { useEscapeKey } from "../../../hooks/useEscapeKey";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { AlertTriangle, Paperclip, UploadCloud, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,20 +13,13 @@ import {
   type ReportReason,
 } from "../api/reports";
 import { OrderReportSuccess } from "./OrderReportSuccess";
+import { REPORT_MIN_DETAILS, REPORT_REASONS, reportCountsHint } from "../reportReasons";
 
 interface OrderReportModalProps {
   orderId: string;
   isOpen: boolean;
   onClose: () => void;
 }
-
-const REASONS: { value: ReportReason; label: string; description: string }[] = [
-  { value: "pickup_problem", label: "Pickup Problem", description: "Seller was absent or produce unavailable." },
-  { value: "listing_inaccurate", label: "Listing Inaccurate", description: "Produce quality or quantity differed from description." },
-  { value: "qr_misuse", label: "QR Code Misuse", description: "Someone used or shared a pickup QR code the wrong way." },
-  { value: "conduct", label: "Seller Conduct", description: "Unprofessional or inappropriate behavior." },
-  { value: "other", label: "Other Issue", description: "Any other problem with this transaction." },
-];
 
 export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalProps) {
   const [reason, setReason] = useState<ReportReason>("pickup_problem");
@@ -36,6 +30,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
   const [error, setError] = useState("");
   const [submittedEvidence, setSubmittedEvidence] = useState<OrderReportEvidence[] | null>(null);
 
+  useEscapeKey(isOpen && !submitting, onClose);
   if (!isOpen) return null;
 
   function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
@@ -62,8 +57,8 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (details.trim().length < 5) {
-      setError("Please provide at least 5 characters explaining what happened.");
+    if (details.trim().length < REPORT_MIN_DETAILS) {
+      setError(`Please write at least ${REPORT_MIN_DETAILS} characters about what happened.`);
       return;
     }
     setSubmitting(true);
@@ -87,9 +82,9 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" role="dialog" aria-modal="true" aria-label="Report a problem">
       <div data-lenis-prevent className="relative w-full max-w-lg rounded-2xl border border-border/80 bg-card p-6 shadow-md max-h-[90vh] overflow-y-auto">
-        <button
+        <button type="button"
           onClick={onClose}
           disabled={submitting}
           className="absolute right-4 top-4 flex min-h-11 min-w-11 size-11 items-center justify-center rounded-xl p-1 text-muted-foreground hover:bg-muted"
@@ -106,13 +101,13 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
               <AlertTriangle className="size-5 text-amber-600" /> Report an Order Issue
             </div>
             <p className="text-xs text-muted-foreground">
-              Reports are recorded to protect platform trust. Explain what happened below.
+              A report alone adds no points. You can report each order once. Only report what really happened: 3 reports in 14 days with none confirmed adds points to you.
             </p>
 
             <div className="space-y-2">
               <label className="text-xs font-semibold">Reason for report</label>
               <div className="grid grid-cols-1 gap-2">
-                {REASONS.map((r) => (
+                {REPORT_REASONS.map((r) => (
                   <label
                     key={r.value}
                     className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer text-xs transition-colors ${
@@ -134,6 +129,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
                   </label>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground">{reportCountsHint(REPORT_REASONS.find((r) => r.value === reason)?.counts ?? false)}</p>
             </div>
 
             <div className="space-y-1.5">
@@ -142,12 +138,12 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
                 id="report-details"
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                placeholder="Describe the issue in detail (pickup time, communication, discrepancy)..."
+                placeholder="Describe the issue in detail (pickup time, communication, discrepancy)…"
                 maxLength={2000}
                 rows={3}
                 className="w-full rounded-xl border border-input bg-background p-2.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
               />
-              <p className="text-xs text-muted-foreground text-right">{details.length}/2000</p>
+              <p className="text-xs text-muted-foreground text-right">{details.length}/2000 · at least {REPORT_MIN_DETAILS} characters</p>
             </div>
 
             <div className="space-y-2">
@@ -187,7 +183,7 @@ export function OrderReportModal({ orderId, isOpen, onClose }: OrderReportModalP
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose} disabled={submitting} className="min-h-12 rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={submitting || details.trim().length < 5} className="min-h-12 rounded-xl font-semibold active:translate-y-px">
+              <Button type="submit" disabled={submitting || details.trim().length < REPORT_MIN_DETAILS} className="min-h-12 rounded-xl font-semibold active:translate-y-px">
                 {submitting ? "Submitting…" : "Submit Report"}
               </Button>
             </div>

@@ -5,7 +5,7 @@ import { Heart, Share2 } from "lucide-react";
 import { useBuyerWishlist } from "@/src/features/wishlist/WishlistProvider";
 
 const iconButton =
-  "flex size-11 items-center justify-center rounded-full border border-[#E5E2DA] bg-white text-neutral-700 transition hover:border-[#457D00]/40 hover:text-[#457D00] active:scale-95 cursor-pointer disabled:opacity-50";
+  "flex size-11 items-center justify-center rounded-full border border-agrivive-border bg-white text-neutral-700 transition hover:border-agrivive-primary/40 hover:text-agrivive-primary active:scale-95 cursor-pointer disabled:opacity-50";
 
 export function ProductListingActions({ productId, productName }: { productId: string; productName: string }) {
   const { savedProductIds, toggleProduct, pendingProductIds } = useBuyerWishlist();
@@ -51,7 +51,7 @@ export function ProductListingActions({ productId, productName }: { productId: s
         disabled={isPending}
         aria-pressed={isSaved}
         aria-label={isSaved ? "Remove from saved items" : "Save listing"}
-        className={`${iconButton} ${isSaved ? "border-red-200 bg-red-50 text-red-600" : ""}`}
+        className={`${iconButton} ${isSaved ? "border-red-200 bg-red-50 text-destructive" : ""}`}
       >
         <Heart className={`size-4 ${isSaved ? "fill-red-500" : "fill-transparent"}`} />
       </button>

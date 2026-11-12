@@ -4,14 +4,22 @@ import { blockedMessage, pausedMessage } from "./access";
 import { reportViolationKinds } from "./confirm-report";
 import { levelActionType, levelForScore, levelPauseHours, levelRank } from "./level";
 import { describeEvent } from "./notice-text";
-import { trustActionPolicy, trustPolicyWeights, trustScoreWindowDays, trustScoreWindowStart, trustSeriousKinds } from "./policy";
+import { trustActionPolicy, trustAhp, trustPolicyWeights, trustScoreWindowDays, trustScoreWindowStart, trustSeriousKinds } from "./policy";
 
-describe("trust levels (Table 3 of the PDF)", () => {
-  const bands: [number, string][] = [[0, "good"], [1, "good"], [2, "notice"], [3, "notice"], [4, "warning"], [5, "warning"],
-    [6, "pause_24h"], [7, "pause_24h"], [8, "pause_3d"], [9, "pause_3d"], [10, "pause_3d"], [11, "pause_3d"], [12, "block"], [13, "block"], [40, "block"]];
-  for (const [points, level] of bands) {
-    test(`${points} points is ${level}`, () => expect(levelForScore(points)).toBe(level as never));
+describe("trust levels (Table 3 ladder, cut-offs from the policy)", () => {
+  // Each cut-off from the policy: one point below stays on the lower level, the cut-off itself moves up.
+  const steps: [number, string, string][] = [
+    [trustActionPolicy.noticeThreshold, "good", "notice"], [trustActionPolicy.warningThreshold, "notice", "warning"],
+    [trustActionPolicy.tier1Threshold, "warning", "pause_24h"], [trustActionPolicy.tier2Threshold, "pause_24h", "pause_3d"],
+    [trustActionPolicy.blockedThreshold, "pause_3d", "block"],
+  ];
+  for (const [cut, below, at] of steps) {
+    test(`${cut - 1} points is ${below}, ${cut} points is ${at}`, () => {
+      expect(levelForScore(cut - 1)).toBe(below as never);
+      expect(levelForScore(cut)).toBe(at as never);
+    });
   }
+  test("0 points is good standing", () => expect(levelForScore(0)).toBe("good"));
   test("one serious violation blocks at any score", () => expect(levelForScore(0, true)).toBe("block"));
   test("pauses last 24 hours and 3 days, nothing else lasts", () => {
     expect(levelPauseHours("pause_24h")).toBe(24);
@@ -32,11 +40,16 @@ describe("trust levels (Table 3 of the PDF)", () => {
 });
 
 describe("event weights (Tables 1 and 2)", () => {
-  test("every weight matches the PDF", () => {
-    expect(trustPolicyWeights).toMatchObject({
-      inquiry_non_response: 1, seller_cancellation: 2, low_rating: 1, misleading_product_info: 2, inappropriate_communication: 2,
-      seller_decline_fault: 2, qr_misuse: 3, buyer_failed_reservation: 2, buyer_late_cancellation: 1, buyer_invalid_decline: 1, buyer_false_photo: 2,
-    });
+  test("every weight comes from the AHP judgments", () => {
+    expect(trustPolicyWeights).toEqual(trustAhp.points as typeof trustPolicyWeights);
+  });
+  test("thresholds are fractions of the total possible score and climb in order", () => {
+    const p = trustActionPolicy;
+    expect(p.totalPossible).toBe(Object.values(trustPolicyWeights).reduce((a, b) => a + b, 0));
+    expect(p.noticeThreshold).toBeLessThan(p.warningThreshold);
+    expect(p.warningThreshold).toBeLessThan(p.tier1Threshold);
+    expect(p.tier1Threshold).toBeLessThan(p.tier2Threshold);
+    expect(p.tier2Threshold).toBeLessThan(p.blockedThreshold);
   });
   test("QR misuse and an order from your own stall are the serious kinds", () => expect(trustSeriousKinds).toEqual(["qr_misuse", "self_order"]));
   test("only reasons that match a violation type can be confirmed by reports", () => {

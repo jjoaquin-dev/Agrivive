@@ -50,7 +50,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.avatarImage} accessibilityIgnoresInvertColors /> : <Text style={styles.avatarText}>{initials}</Text>}
         {isVerified ? (
           <View style={styles.verifiedBadge}>
-            <Check size={10} color={colors.white} strokeWidth={3} />
+            <Check size={12} color={colors.white} strokeWidth={3} />
           </View>
         ) : null}
       </Pressable>

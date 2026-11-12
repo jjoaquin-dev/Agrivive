@@ -1,5 +1,6 @@
 import { CheckCircle2, PackageCheck, Store, TrendingUp } from "lucide-react";
 import type { MarketplaceOverviewResponse } from "../api/overview";
+import { formatNumber } from "@/src/lib/format";
 
 interface Props {
   kpis: MarketplaceOverviewResponse["kpis"];
@@ -12,7 +13,7 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
   const cards = [
     {
       title: "Total Food Rescued",
-      value: `${kpis.totalRescuedQty.toLocaleString()} kg`,
+      value: `${formatNumber(kpis.totalRescuedQty)} kg`,
       description: `Surplus agricultural produce rescued in the ${rangeLabel}`,
       icon: PackageCheck,
       badge: "Verified Pickups",
@@ -20,11 +21,11 @@ export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
     },
     {
       title: "Active Surplus Listings",
-      value: kpis.activeListings.toLocaleString(),
+      value: formatNumber(kpis.activeListings),
       description: "Direct-from-stall surplus batches currently live",
       icon: Store,
       badge: "Available Now",
-      highlightColor: "text-[#457D00] bg-lime-50 border-lime-200",
+      highlightColor: "text-agrivive-primary bg-lime-50 border-lime-200",
     },
     {
       title: "Pickup Fulfillment Rate",

@@ -13,7 +13,7 @@ function Row({ platform, channel }: { platform: Platform; channel: BoostChannel 
   const tone = done ? colors.success : failed ? colors.error : colors.textMuted;
   return (
     <View style={styles.row}>
-      <PlatformBadge platform={platform} size={30} />
+      <PlatformBadge platform={platform} size={32} />
       <Text style={styles.name}>{platformName[platform]}</Text>
       <View style={styles.status}>
         {done ? <CheckCircle2 size={18} color={tone} /> : failed ? <XCircle size={18} color={tone} /> : <ActivityIndicator size="small" color={colors.primary} />}
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 56 },
   divider: { height: 1, backgroundColor: colors.border },
   name: { flex: 1, fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },
-  status: { flexDirection: "row", alignItems: "center", gap: 6 },
+  status: { flexDirection: "row", alignItems: "center", gap: 8 },
   statusText: { fontFamily: fonts.body.medium, fontSize: 13 },
   link: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.primary },
 });

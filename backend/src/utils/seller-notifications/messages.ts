@@ -151,12 +151,12 @@ export const sellerNoticeDefs = {
   },
   inquiry_12h_reminder: {
     title: "Buyer Is Waiting", plural: "Buyers Are Waiting",
-    body: () => "A buyer has waited 12 hours for your reply.",
+    body: () => "A buyer has waited 12 open hours of your stall for your reply.",
     level: "sound", topic: "orders", category: "messages", target: "order",
   },
   inquiry_24h_warning: {
     title: "Buyer Still Waiting", plural: "Buyers Still Waiting",
-    body: () => "A buyer has waited 24 hours for your reply.",
+    body: () => "A buyer has waited 24 open hours of your stall for your reply.",
     level: "sound", topic: "orders", category: "messages", target: "order",
   },
   order_update: {

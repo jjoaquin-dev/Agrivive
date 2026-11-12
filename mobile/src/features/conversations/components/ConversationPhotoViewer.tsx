@@ -37,7 +37,7 @@ export function ConversationPhotoViewer({ visible, imageUrl, senderName, avatarB
             <Share2 size={20} color={colors.white} />
           </Pressable>
           <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Close photo" style={styles.round}>
-            <X size={22} color={colors.white} />
+            <X size={24} color={colors.white} />
           </Pressable>
         </View>
 
@@ -66,13 +66,13 @@ export function ConversationPhotoViewer({ visible, imageUrl, senderName, avatarB
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#000000" },
   top: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
-  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  avatar: { width: 44, height: 44, borderRadius: 24, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   avatarImg: { width: 44, height: 44 },
   avatarText: { fontFamily: fonts.heading.bold, fontSize: 14, color: colors.white },
   who: { flex: 1 },
   name: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.white },
-  sent: { fontFamily: fonts.body.regular, fontSize: 13, color: "#9CA3AF", marginTop: 1 },
-  round: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.14)", alignItems: "center", justifyContent: "center" },
+  sent: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 1 },
+  round: { width: 44, height: 44, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.14)", alignItems: "center", justifyContent: "center" },
   stage: { flex: 1, justifyContent: "center" },
   image: { width: "100%", height: "100%" },
   bottom: { paddingHorizontal: spacing.base, paddingBottom: spacing.base, gap: spacing.md },
@@ -82,5 +82,5 @@ const styles = StyleSheet.create({
   back: { minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, backgroundColor: colors.primary, borderRadius: radii.full },
   pressed: { opacity: 0.85 },
   backText: { fontFamily: fonts.body.semiBold, fontSize: 16, color: colors.white },
-  foot: { fontFamily: fonts.body.regular, fontSize: 13, color: "#9CA3AF", textAlign: "center" },
+  foot: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center" },
 });

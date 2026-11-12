@@ -13,10 +13,10 @@ import { colors, fonts } from "../../../src/theme";
 import { refreshAlerts, useAlertCounts, useAlertRefresh } from "../../../src/features/alerts/alertStore";
 
 const badgeStyle = {
-  backgroundColor: "#EF4444",
+  backgroundColor: colors.error,
   fontSize: 10,
   fontFamily: fonts.body.semiBold,
-  color: "#FFFFFF",
+  color: colors.white,
 };
 const badge = (n: number) => (n > 0 ? (n > 9 ? "9+" : n) : undefined);
 
@@ -39,10 +39,10 @@ export default function TabsLayout() {
           color: colors.text,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: "#636B63",
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E2DA",
+          backgroundColor: colors.white,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: Platform.OS === "ios" ? 84 : 64,
           paddingBottom: Platform.OS === "ios" ? 22 : 8,

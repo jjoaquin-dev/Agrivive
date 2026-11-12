@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    height: 36,
+    minHeight: 44,
     paddingHorizontal: spacing.md,
     borderRadius: radii.full,
     backgroundColor: colors.surfaceMuted,

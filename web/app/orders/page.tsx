@@ -3,5 +3,7 @@ import { BuyerSiteHeader } from "@/src/components/BuyerSiteHeader";
 import { BuyerOrders } from "@/src/features/orders/components/BuyerOrders";
 
 export default function OrdersPage() {
-  return <><BuyerSiteHeader /><Suspense fallback={<main className="min-h-[calc(100vh-73px)] bg-[#fdfdfd] py-10" />}><BuyerOrders /></Suspense></>;
+  return <><BuyerSiteHeader /><Suspense fallback={<main className="min-h-[calc(100vh-73px)] bg-agrivive-paper py-10" />}><BuyerOrders /></Suspense></>;
 }
+
+export const metadata = { title: "My Orders | Agrivive" };

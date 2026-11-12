@@ -35,7 +35,7 @@ export function AnalyticsDailySales({ days }: { days: SellerAnalyticsInsights["d
   const barWidth = Math.max(4, Math.min(30, Math.floor((chartWidth - 8 - bars.length * gap) / bars.length)));
   const data = bars.map((bar, i) => ({
     value: bar.sales,
-    frontColor: bar.sales === 0 ? "#E5E2DA" : picked === i || (picked === null && bar === best) ? colors.primary : "#7FB596",
+    frontColor: bar.sales === 0 ? colors.border : picked === i || (picked === null && bar === best) ? colors.primary : colors.sage,
     label: i === 0 || i === bars.length - 1 || i === Math.floor(bars.length / 2) ? dayText(bar.from) : "",
     labelWidth: 48,
     onPress: () => setPicked(picked === i ? null : i),
@@ -58,7 +58,7 @@ export function AnalyticsDailySales({ days }: { days: SellerAnalyticsInsights["d
           initialSpacing={4}
           roundedTop
           hideRules={false}
-          rulesColor="#F3F1EA"
+          rulesColor={colors.surfaceMuted}
           yAxisColor="transparent"
           xAxisColor={colors.border}
           yAxisTextStyle={styles.axisText}
