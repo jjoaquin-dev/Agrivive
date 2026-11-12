@@ -1,5 +1,5 @@
 import React from "react";
-import { Platform } from "react-native";
+import { ColorValue, Text, useWindowDimensions } from "react-native";
 import { Tabs } from "expo-router";
 import {
   Home,
@@ -22,9 +22,31 @@ const badgeStyle = {
 };
 const badge = (n: number) => (n > 0 ? (n > 9 ? "9+" : n) : undefined);
 
+/** Tab names grow with the phone's text size, but only up to a point so five tabs still fit on one row. */
+const LABEL_SCALE_CAP = 1.3;
+const LABEL_SIZE = 11;
+
+function TabLabel({ color, children }: { color: ColorValue; children: string }) {
+  return (
+    <Text
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.8}
+      maxFontSizeMultiplier={LABEL_SCALE_CAP}
+      style={{ color, fontFamily: fonts.body.medium, fontSize: LABEL_SIZE, textAlign: "center" }}
+    >
+      {children}
+    </Text>
+  );
+}
+
 export default function TabsLayout() {
   const { messages: unreadCount, orders: newOrders } = useAlertCounts();
+  // Keep the bar clear of the phone's gesture line or Back/Home/Recent buttons.
   const bottomPad = Math.max(useSafeAreaInsets().bottom, 8);
+  // Make the bar taller when text is large, so the icon and name are never cut off.
+  const labelScale = Math.min(useWindowDimensions().fontScale, LABEL_SCALE_CAP);
+  const barHeight = 8 + 26 + 4 + Math.ceil(LABEL_SIZE * 1.4 * labelScale) + 8 + bottomPad;
   useAlertRefresh();
 
   return (
@@ -47,14 +69,11 @@ export default function TabsLayout() {
           backgroundColor: "#FFFFFF",
           borderTopColor: "#EEECE6",
           borderTopWidth: 1,
-          height: 56 + bottomPad,
+          height: barHeight,
           paddingBottom: bottomPad,
           paddingTop: 8,
         },
-        tabBarLabelStyle: {
-          fontFamily: fonts.body.medium,
-          fontSize: 11,
-        },
+        tabBarLabel: ({ color, children }) => <TabLabel color={color}>{children}</TabLabel>,
       }}
     >
       {/* 1. Home */}

@@ -17,6 +17,12 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
 
+Earlier: Boost notes, API doc and code comments aligned to the current rule (best rank not boosted in 6 hours, no 0.60 cutoff): [[2026-11-12 Boost Docs Aligned]].
+
+Earlier: Seller app tab bar and bottom screens fixed for largest phone text and 3-button navigation: [[2026-11-12 Large Text and Nav Buttons]].
+
+Earlier: Seller app slow-signal support (reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s): [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (pickup overlap fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
+
 Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].
 
 Earlier: Seller Boost hub screens cleaned up (website white, light borders, clearer type). See [[2026-11-12 Seller Boost Screens Cleanup]].
@@ -76,39 +82,6 @@ Recovery restarts the inactivity clock, returns real errors, and an ended pause 
 
 Earlier: Trust and Rating module aligned with the paper: blocking by score, reply timers for all questions and chats, confirmed report violations, seller answers to product reviews, correct pause and block messages. Details in [[2026-11-02 Trust and Rating Paper Alignment]].
 
-Earlier: Restore Account screen rebuilt to match the other sign-in screens (one header, errors under the code, exactly 6 digits, success step with Continue or Sign In), and a restored seller is no longer stuck as "paused" for 30 seconds (status cache cleared on restore). Backend typecheck and builds and mobile typecheck passed; no phone check. Rebuild the API. See [[2026-11-02 Restore Account Screen Redesign]].
-
-Earlier: Weather & Holidays screen rebuilt to match Stitch F5 to F8 using only real `/seller/advisories` data and the seller profile (no sample values). Details in [[2026-11-02 Weather and Holidays Screen Redesign]].
-
-Earlier: Mobile Profile flow redesigned from the Stitch screens: Profile page, Edit Profile (with the leave-without-saving question), Sign-in Safety with the 4-step sign-in code flow, and Seller Setup. Our fields and logic are unchanged; see the note for what was left out on purpose. Mobile typecheck and Android export passed; not checked on a phone. See [[2026-11-02 Profile Flow Redesign]].
-
-Earlier: The post after adding produce is now a normal post for any listing; only Priority Boost listings (score 0.60 or higher, checked once when the first post is saved) get the 6-hour price drops. 6 hours after the post the seller is asked to set the peso drop and final price, and saving it runs the first drop. Add Produce no longer asks for the drop. New migration `20261102120000_boost_priority_price_drop_setup` is not applied anywhere yet. Backend typecheck, 33 tests, builds, drizzle check and mobile typecheck and Android export passed; no device check. Rebuild and recreate the API and worker. See [[2026-11-02 Normal First Post and Priority Price Drops]].
-
-Earlier: Fixed the Boost retry showing the old failure: a retried boost kept its old `sentAt` and old failed post logs, so the next screen said "did not post" while the list said "Posting now". Retry now clears `sentAt` and channels count only logs from the latest send. Typecheck, 33 tests and builds passed; no device check. Rebuild and recreate the API. See [[2026-11-02 Boost Retry Shows Old Failure]].
-
-Earlier: Buyer cart, orders and Messages empty states now use new green illustrations (see the dated notes from 2026-11-02). Buyer Messages empty state ("Choose a conversation") shows the new green chat-bubble illustration with its background removed (`web/public/brand/empty-chat-bubble.png`). Details: [[2026-11-02 Messages Empty State Chat Image]]. Validation: typecheck passed; seen in the browser pane at desktop width. Not checked: phone width.
-
-Priority deals row added under the marketplace hero (`GET /marketplace/products/deals`: AHP "Priority Boost" tier and at least 30% below base price). The marketplace was reordered so the products come before the seller map, and dead footer sort links and three unused components were removed. Details: [[2026-11-01 Priority Deals Row and Marketplace Reorder]]. Validation: backend typecheck and bundle passed, web typecheck and build passed. Not checked: the deals data path (backend not running) and the desktop and phone layout of the row.
-
-Previous task: Sign-in and sign-up side panel now plays the uploaded video (`web/public/brand/sign-in-video.mp4`) instead of the photo carousel, and it is shorter (80vh). Details: [[2026-10-31 Auth Video Panel]]. Follow-up: the video column was shifted right with more left padding ([[2026-10-31 Auth Video Shifted Right]]). Validation: `bun run typecheck` in `web/` passed. Not checked in a browser.
-
-Cart icon replaced everywhere in the buyer site with the supplied glyph (`CartIcon`). The empty cart shows a basket illustration, and marketplace category images are larger ([[2026-10-31 Cart Icon Category Image and Cart Illustration]]). Typecheck passed; not checked in a browser.
-
-Parkinsans now used for headers (`font-heading`), footers and the marketplace hero. Alerts, toasts and the restriction notice restyled. Cart has icon and item motion ([[2026-10-31 Parkinsans Headers Alerts and Cart Motion]]). Typecheck passed; not checked in a browser.
-
-Profile settings: search bar removed and the Profile, Security and Notifications cards share one style ([[2026-10-31 Profile Settings Consistent Cards]]). Typecheck passed; not checked in a browser.
-
-Previous task: landing hero image swapped for a muted, looping video (`web/public/brand/hero-veggies.mp4`) in `web/src/components/sections/Hero.tsx`. The old image is the poster. Details: [[2026-10-31 Hero Image Swapped for Video]].
-
-Validation: `bun run typecheck` in `web/` passed. At 1024px the video plays and sits inside the hero column. Not checked: reduced motion in the browser, and phone widths.
-
-The intro animation ([[2026-10-31 Surplus Veggies Intro Animation]]) was rejected by the user and is not used.
-
-Previous task: [[2026-10-30 Hero Basket Green Redesign]] and [[2026-10-30 Hero Headline One Line and Floating Labels]].
-
-Merged from `main`: 13 Google Stitch mobile mockups for the seller Profile flow (F1 to F12, plus F9b). Mapping and copy changes in [[2026-11-01 Stitch Seller Profile Redesign Frames]].
-
-Earlier on `main`: Stitch frames for Messages, Boost, Notifications, Listings, Sales Report, Reservations, Auth and Home, plus the Messages flow cleanup. See the dated notes in this folder.
 
 ## Current project status
 

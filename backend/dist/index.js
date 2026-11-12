@@ -77040,7 +77040,6 @@ __export(exports_schema, {
   order_status_history: () => order_status_history,
   ordered_items: () => ordered_items,
   orders: () => orders,
-  product_condition_enum: () => product_condition_enum,
   product_inquiries: () => product_inquiries,
   product_stock_adjustments: () => product_stock_adjustments,
   product_type_enum: () => product_type_enum,
@@ -117621,7 +117620,6 @@ var sellers_profile = pgTable("sellers_profile", {
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
   pickupInstructions: text("pickup_instructions"),
-  pickupCapacity: integer2("pickup_capacity").default(3).notNull(),
   pickupWithinMinutes: integer2("pickup_within_minutes").default(120).notNull(),
   closedDate: text("closed_date"),
   awayStartedAt: timestamp("away_started_at", { withTimezone: true }),
@@ -117660,11 +117658,6 @@ var vegetable_review_status_enum = pgEnum2("vegetable_review_status", [
   "draft",
   "approved",
   "inactive"
-]);
-var product_condition_enum = pgEnum2("product_condition", [
-  "good",
-  "fair",
-  "needs_inspection"
 ]);
 var scaling_type_enum = pgEnum2("scaling_type", [
   "sack",
@@ -117710,7 +117703,6 @@ var sellers_product = pgTable("sellers_product", {
   }),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }),
-  condition: product_condition_enum().default("needs_inspection").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   isMarketable: boolean4("is_marketable").default(false).notNull(),
   isActive: boolean4("is_active").default(true).notNull(),
@@ -121287,7 +121279,7 @@ var auth = betterAuth({
 
 // src/utils/user-activity/index.ts
 var touchCache = new Map;
-var THROTTLE_MS = 60 * 60 * 1000;
+var THROTTLE_MS = 5 * 60 * 1000;
 async function touchUserActivity(userId) {
   const now = Date.now();
   const lastTouch = touchCache.get(userId);
@@ -127226,8 +127218,7 @@ var sellerProductUpdate = t.Object({
   priceReductionAmount: t.Optional(t.Number({ minimum: 0, maximum: 99999999.99 })),
   minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99999999.99 }))),
   isMarketable: t.Optional(t.Boolean()),
-  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 }))),
-  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
+  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 })))
 }, { minProperties: 1, additionalProperties: false });
 var sellerProductRestock = t.Object({ quantity: t.Number({ minimum: 0.01, maximum: 99999999 }) });
 var sellerProductListQuery = t.Object({
@@ -127259,8 +127250,7 @@ var sellerProductCreate = t.Object({
   }),
   scalingType: sellerProductScalingType,
   isMarketable: t.Boolean(),
-  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 }))),
-  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
+  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 })))
 });
 
 // src/utils/order-amount/index.ts
@@ -137804,7 +137794,6 @@ async function createSellerProduct(userId, body) {
       priceReductionPeriodsApplied: 0,
       productQty: body.productQty.toString(),
       lowStockThreshold: body.lowStockThreshold?.toString() ?? null,
-      condition: body.condition ?? "needs_inspection",
       originalQty: body.productQty.toString(),
       publishedAt: now,
       isMarketable: body.isMarketable,
@@ -179624,17 +179613,18 @@ var LATE_CANCEL_HOURS = 3;
 function qrWindow(pickupStart, pickupEnd) {
   return { validFrom: pickupStart, validUntil: new Date(pickupEnd.getTime() + QR_GRACE_MINUTES * MINUTE_MS) };
 }
-function qrStatus(pickupStart, pickupEnd, now = new Date) {
+function qrStatus(pickupStart, pickupEnd, now = new Date, expiresAt) {
   if (!pickupStart || !pickupEnd)
     return "active";
-  if (now.getTime() > qrWindow(pickupStart, pickupEnd).validUntil.getTime())
+  const until = expiresAt ?? qrWindow(pickupStart, pickupEnd).validUntil;
+  if (now.getTime() > until.getTime())
     return "expired";
   return "active";
 }
-function isLateCancellation(pickupStart, now = new Date) {
-  if (!pickupStart)
+function isLateCancellation(pickupEnd, now = new Date) {
+  if (!pickupEnd)
     return false;
-  return pickupStart.getTime() - now.getTime() <= LATE_CANCEL_HOURS * 3600000;
+  return pickupEnd.getTime() - now.getTime() <= LATE_CANCEL_HOURS * 3600000;
 }
 
 // src/utils/pickup/progress.ts
@@ -179648,18 +179638,24 @@ function orderProgress(order) {
 }
 function pickupFields(order, now = new Date) {
   const open = order.status === "pending";
-  const status = open ? qrStatus(order.pickupStart, order.pickupEnd, now) : null;
+  const status = open ? qrStatus(order.pickupStart, order.pickupEnd, now, order.expiresAt) : null;
   const window2 = order.pickupStart && order.pickupEnd ? qrWindow(order.pickupStart, order.pickupEnd) : null;
   const canCancel = open && !order.confirmedAt && !!order.expiresAt && order.expiresAt > now;
   return {
     pickupStart: order.pickupStart,
     pickupEnd: order.pickupEnd,
     progress: orderProgress(order),
-    qr: { status: open ? status : "expired", validFrom: null, validUntil: window2?.validUntil ?? null },
+    qr: { status: open ? status : "expired", validFrom: null, validUntil: order.expiresAt ?? window2?.validUntil ?? null },
     canCancel,
     cancelBlockedReason: open && order.confirmedAt ? CANCEL_BLOCKED_MESSAGE : null,
     disclaimer: PICKUP_DISCLAIMER
   };
+}
+
+// src/utils/pickup/seller-presence.ts
+var AWAY_AFTER_MINUTES = 30;
+function isSellerAway(lastActiveAt, now = new Date) {
+  return !lastActiveAt || now.getTime() - lastActiveAt.getTime() > AWAY_AFTER_MINUTES * 60000;
 }
 
 // src/utils/pickup/order-extras.ts
@@ -179671,8 +179667,8 @@ async function readOrderDetailExtras(row, side) {
     longitude: sellers_profile.longitude,
     instructions: sellers_profile.pickupInstructions,
     phone: sellers_profile.phoneNumber,
-    awayUntil: sellers_profile.awayUntil
-  }).from(sellers_profile).where(eq(sellers_profile.userId, row.sellersId)).limit(1);
+    lastActiveAt: user.lastActiveAt
+  }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(eq(sellers_profile.userId, row.sellersId)).limit(1);
   const [buyer] = side === "seller" ? await db2.select({ name: user.name }).from(user).where(eq(user.id, row.buyersId)).limit(1) : [];
   const [decline] = await db2.select().from(order_declines).where(eq(order_declines.orderId, row.id)).limit(1);
   const [excuse] = await db2.select().from(order_excuses).where(eq(order_excuses.orderId, row.id)).limit(1);
@@ -179689,7 +179685,7 @@ async function readOrderDetailExtras(row, side) {
       instructions: stall.instructions,
       phone: stall.phone,
       directionsUrl: directions,
-      away: !!stall.awayUntil && stall.awayUntil > new Date
+      away: isSellerAway(stall.lastActiveAt)
     } : null,
     buyerName: buyer?.name ?? null,
     decline: decline ? {
@@ -180101,7 +180097,7 @@ async function completeScan(sellerId, orderId, body) {
     if (current.status !== "pending") {
       throw new ScanError("expired", 409, "Order is no longer pending");
     }
-    const window2 = qrStatus(current.pickupStart, current.pickupEnd, now);
+    const window2 = qrStatus(current.pickupStart, current.pickupEnd, now, current.expiresAt);
     if (window2 === "expired" || current.expiresAt && current.expiresAt <= now) {
       throw new ScanError("expired", 410, "This QR has expired and cannot be used. The buyer must place a new order.");
     }
@@ -180573,7 +180569,6 @@ async function updateSellerProduct(sellerId, productId, body) {
         priceReductionPeriodsApplied: 0
       } : {},
       ...body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold?.toString() ?? null } : {},
-      ...body.condition !== undefined ? { condition: body.condition } : {},
       ...body.isMarketable !== undefined ? { isMarketable: body.isMarketable } : {},
       ...initializingLegacy ? {
         originalQty: current.productQty,
@@ -184363,8 +184358,8 @@ var orderModel = t.Object({
     minimum: 0.01,
     maximum: 99999999
   }),
-  pickupStart: t.String({ format: "date-time" }),
-  pickupEnd: t.String({ format: "date-time" })
+  pickupStart: t.Optional(t.String({ format: "date-time" })),
+  pickupEnd: t.Optional(t.String({ format: "date-time" }))
 });
 
 // src/modules/buyer/services/buyer.order.create.ts
@@ -184390,6 +184385,7 @@ function getBuyerOrder(orderId, buyerId) {
 
 // src/utils/pickup/rules.ts
 var PICKUP_STEP_MINUTES = 15;
+var PICKUP_CAPACITY = 3;
 var CLOSING_BUFFER_MINUTES = 30;
 var rangesOverlap = (a, b) => a.start.getTime() < b.end.getTime() && b.start.getTime() < a.end.getTime();
 var is24Hours = (day) => day.opensMinute === 0 && day.closesMinute === 1440;
@@ -184452,7 +184448,7 @@ async function readStallRules(reader, sellerId) {
     hours: hours.map((row) => ({ weekday: row.weekday, isClosed: row.isClosed, opensMinute: row.opensMinute, closesMinute: row.closesMinute })),
     closedDate: profile.closedDate,
     pickupWithinMinutes: profile.pickupWithinMinutes,
-    capacity: profile.pickupCapacity,
+    capacity: PICKUP_CAPACITY,
     shopName: profile.shopName
   };
 }
@@ -184507,7 +184503,7 @@ async function readPickupSlots(reader, sellerId, buyerId, now = new Date) {
     }
     days.push({ date: dateKey, open: true, reason: "", opensMinute: window2.opensMinute, latestEndMinute: window2.latestEndMinute, cells });
   }
-  return { shopName: rules.shopName, stepMinutes: PICKUP_STEP_MINUTES, maxRangeMinutes: rules.pickupWithinMinutes, capacity: rules.capacity, days };
+  return { shopName: rules.shopName, stepMinutes: PICKUP_STEP_MINUTES, maxRangeMinutes: rules.pickupWithinMinutes, days };
 }
 
 // src/utils/trust/order-flood.ts
@@ -184522,15 +184518,43 @@ async function flagOrderFlood(tx, orderId, buyerId, sellerId, now = new Date) {
   return flooded;
 }
 
+// src/utils/pickup/reservation-deadline.ts
+var DAY_MINUTES = 24 * 60;
+function reservationDeadline(rules, now) {
+  const today = manilaParts(now);
+  const todayRow = rules.hours.find((row) => row.weekday === today.weekday);
+  const openAllDay = !rules.hours.length || todayRow && !todayRow.isClosed && is24Hours(todayRow) && rules.closedDate !== today.dateKey;
+  if (openAllDay) {
+    const end = new Date(now.getTime() + DAY_MINUTES * MINUTE_MS);
+    return { end, qrUntil: end, is24Hours: true, opensMinute: 0, closesMinute: DAY_MINUTES };
+  }
+  for (let offset = 0;offset < 8; offset += 1) {
+    const dateKey = addDaysKey(today.dateKey, offset);
+    const row = rules.hours.find((item) => item.weekday === new Date(`${dateKey}T00:00:00Z`).getUTCDay());
+    if (!row || row.isClosed || rules.closedDate === dateKey)
+      continue;
+    const lastMinute = is24Hours(row) ? DAY_MINUTES : row.closesMinute - CLOSING_BUFFER_MINUTES;
+    if (offset === 0 && today.minute >= lastMinute)
+      continue;
+    const end = manilaInstant(dateKey, lastMinute);
+    return { end, qrUntil: is24Hours(row) ? end : manilaInstant(dateKey, row.closesMinute), is24Hours: is24Hours(row), opensMinute: row.opensMinute, closesMinute: row.closesMinute };
+  }
+  throw new OrderError(409, "This stall has no open days right now. Please try again later.");
+}
+
 // src/modules/buyer/services/buyer.order.persist.ts
+var expiresAtFor = (pickup, deadline) => deadline ? deadline.qrUntil : qrWindow(pickup.start, pickup.end).validUntil;
 function parsePickup(start, end) {
   return { start: new Date(start), end: new Date(end) };
 }
-async function createSellerOrder(tx, checkoutId, buyerId, sellerId, items, pickup) {
+async function createSellerOrder(tx, checkoutId, buyerId, sellerId, items, chosen) {
   if (!items.length || items.some((item) => item.sellerId !== sellerId)) {
     throw new Error("Seller order requires items from exactly one seller");
   }
-  const rules = await assertPickupAvailable(tx, { buyerId, sellerId, range: { start: pickup.start, end: pickup.end } });
+  const now = new Date;
+  const rules = chosen ? await assertPickupAvailable(tx, { buyerId, sellerId, range: { start: chosen.start, end: chosen.end } }) : await readStallRules(tx, sellerId);
+  const deadline = chosen ? null : reservationDeadline(rules, now);
+  const pickup = chosen ?? { start: now, end: deadline.end };
   const [order] = await tx.insert(orders).values({
     checkoutId,
     buyersId: buyerId,
@@ -184538,7 +184562,7 @@ async function createSellerOrder(tx, checkoutId, buyerId, sellerId, items, picku
     totalAmount: sumAmounts(items.map((item) => item.subtotal)),
     pickupStart: pickup.start,
     pickupEnd: pickup.end,
-    expiresAt: qrWindow(pickup.start, pickup.end).validUntil
+    expiresAt: deadline ? deadline.qrUntil : qrWindow(pickup.start, pickup.end).validUntil
   }).returning({ id: orders.id });
   await flagOrderFlood(tx, order.id, buyerId, sellerId);
   await tx.insert(ordered_items).values(items.map((item) => ({
@@ -184551,12 +184575,12 @@ async function createSellerOrder(tx, checkoutId, buyerId, sellerId, items, picku
     subtotal: item.subtotal
   })));
   await tx.insert(order_status_history).values({ orderId: order.id, status: "placed", actorId: buyerId });
-  const when = `${manilaDateKey(pickup.start)} ${formatManilaTime(pickup.start)} to ${formatManilaTime(pickup.end)}`;
+  const when = chosen ? `${manilaDateKey(pickup.start)} ${formatManilaTime(pickup.start)} to ${formatManilaTime(pickup.end)}` : `pickup on or before ${manilaDateKey(pickup.end)} ${formatManilaTime(pickup.end)}`;
   await notifyBuyer(tx, {
     buyerId,
     orderId: order.id,
     key: `order-placed:${order.id}`,
-    message: `Your reservation at ${rules.shopName} is placed for ${when}. The seller has 3 hours to confirm. You can cancel until it is confirmed. Your pickup QR works from the start of your time until 15 minutes after the end.`
+    message: `Your reservation at ${rules.shopName} is placed: ${when}. The seller has 3 hours to confirm. You can cancel until it is confirmed. Your pickup QR works until ${formatManilaTime(expiresAtFor(pickup, deadline))}. Missing the pickup can add points against your account.`
   });
   return order.id;
 }
@@ -184643,7 +184667,7 @@ async function createDirectOrder(buyerId, body, rawKey) {
       idempotencyKey,
       requestFingerprint: fingerprint
     }).returning({ id: checkouts.id });
-    const orderId = await createSellerOrder(tx, checkout.id, buyerId, item.sellerId, [item], parsePickup(body.pickupStart, body.pickupEnd));
+    const orderId = await createSellerOrder(tx, checkout.id, buyerId, item.sellerId, [item], body.pickupStart && body.pickupEnd ? parsePickup(body.pickupStart, body.pickupEnd) : null);
     await enqueueOrderNotification(tx, item.sellerId, orderId, `RSV-${orderId.slice(0, 4).toUpperCase()} \xB7 ${item.quantity} ${item.scalingType} ${item.productName}`);
     return { orderId, replayed: false };
   });
@@ -184725,7 +184749,7 @@ var CANCEL_AFTER_CONFIRM_MESSAGE = "This order has already been confirmed by the
 async function cancelBuyerOrder(orderId, buyerId) {
   const late = await db2.transaction(async (tx) => {
     const now = new Date;
-    const [cancelled] = await tx.update(orders).set({ status: "cancelled", cancelledBy: "buyer", cancelledAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"), isNull2(orders.confirmedAt), gt(orders.expiresAt, now))).returning({ id: orders.id, sellersId: orders.sellersId, pickupStart: orders.pickupStart });
+    const [cancelled] = await tx.update(orders).set({ status: "cancelled", cancelledBy: "buyer", cancelledAt: now, updatedAt: now }).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId), eq(orders.status, "pending"), isNull2(orders.confirmedAt), gt(orders.expiresAt, now))).returning({ id: orders.id, sellersId: orders.sellersId, pickupEnd: orders.pickupEnd });
     if (!cancelled) {
       const [current] = await tx.select({ status: orders.status, expiresAt: orders.expiresAt, confirmedAt: orders.confirmedAt }).from(orders).where(and(eq(orders.id, orderId), eq(orders.buyersId, buyerId))).limit(1);
       if (!current)
@@ -184744,7 +184768,7 @@ async function cancelBuyerOrder(orderId, buyerId) {
       key: `buyer-cancelled:${orderId}`,
       message: "The buyer cancelled before you confirmed. The stock and the pickup time were released."
     });
-    if (!isLateCancellation(cancelled.pickupStart, now))
+    if (!isLateCancellation(cancelled.pickupEnd, now))
       return null;
     const eventKey = `buyer-late-cancel:${orderId}`;
     await recordTrustEvent(tx, { eventKey, orderId, subjectId: buyerId, kind: "buyer_late_cancellation", classification: "verified", sourceId: orderId });
@@ -185359,7 +185383,7 @@ var pickupModel = t.Object({
 });
 var checkoutModel = t.Object({
   items: t.Array(checkoutItemModel, { minItems: 1, maxItems: 50 }),
-  pickups: t.Array(pickupModel, { minItems: 1, maxItems: 20 })
+  pickups: t.Optional(t.Array(pickupModel, { minItems: 1, maxItems: 20 }))
 });
 
 // src/modules/buyer/services/buyer.checkout.create.ts
@@ -185376,7 +185400,7 @@ function normalizeItems(items) {
   return normalized;
 }
 function requestFingerprint2(items, pickups) {
-  const sortedPickups = [...pickups].sort((a, b) => a.sellerId.localeCompare(b.sellerId));
+  const sortedPickups = [...pickups ?? []].sort((a, b) => a.sellerId.localeCompare(b.sellerId));
   return createHash6("sha256").update(JSON.stringify({ items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })), pickups: sortedPickups })).digest("hex");
 }
 async function createCartCheckout(buyerId, body, rawKey) {
@@ -185417,13 +185441,13 @@ async function createCartCheckout(buyerId, body, rawKey) {
       sellerItems.push(item);
       bySeller.set(item.sellerId, sellerItems);
     }
-    const pickupBySeller = new Map(body.pickups.map((pickup) => [pickup.sellerId, pickup]));
+    const pickupBySeller = new Map((body.pickups ?? []).map((pickup) => [pickup.sellerId, pickup]));
     const orderIds = [];
     for (const [sellerId, sellerItems] of [...bySeller].sort(([a], [b]) => a.localeCompare(b))) {
       const pickup = pickupBySeller.get(sellerId);
-      if (!pickup)
+      if (body.pickups && !pickup)
         throw new OrderError(400, "Choose a pickup time for every seller in your cart.");
-      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, parsePickup(pickup.pickupStart, pickup.pickupEnd));
+      const orderId = await createSellerOrder(tx, checkout.id, buyerId, sellerId, sellerItems, pickup ? parsePickup(pickup.pickupStart, pickup.pickupEnd) : null);
       orderIds.push(orderId);
       const summary = sellerItems.map((i) => `${i.quantity} ${i.scalingType} ${i.productName}`).join(", ");
       await enqueueOrderNotification(tx, sellerId, orderId, `RSV-${orderId.slice(0, 4).toUpperCase()} \xB7 ${summary}`);
@@ -185650,7 +185674,6 @@ async function listBuyerWishlist(buyerId) {
     productQty: sellers_product.productQty,
     scalingType: sellers_product.scalingType,
     productType: sellers_product.productType,
-    condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt,
     sellerId: sellers_profile.userId,
     sellerName: user.name,
@@ -185669,7 +185692,6 @@ async function listBuyerWishlist(buyerId) {
     productQty: row.productQty,
     scalingType: row.scalingType,
     productType: row.productType,
-    condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     averageRating: null,
     reviewCount: 0,
@@ -186058,8 +186080,10 @@ async function createPickupDecline(buyerId, orderId, body) {
     throw new OrderError(404, "Order not found");
   if (orderRow.status !== "pending")
     throw new OrderError(409, "This order is no longer open for pickup.");
-  if (qrStatus(orderRow.pickupStart, orderRow.pickupEnd) !== "active" || orderRow.pickupStart && orderRow.pickupStart > new Date)
+  if (qrStatus(orderRow.pickupStart, orderRow.pickupEnd, new Date, orderRow.expiresAt) !== "active" || orderRow.pickupStart && orderRow.pickupStart > new Date)
     throw new OrderError(409, "You can decline only during your pickup time.");
+  if (!orderRow.readyAt)
+    throw new OrderError(409, "You can decline once the seller marks your order ready for pickup.");
   const { key, hash } = await storeDeclinePhoto(orderId, body.photo, "buyer", body.capturedAt);
   const result = await db2.transaction(async (tx) => {
     const [order] = await tx.select().from(orders).where(eq(orders.id, orderId)).for("update").limit(1);
@@ -186186,6 +186210,21 @@ async function readPickupSlotsForBuyer(buyerId, sellerId) {
   return readPickupSlots(db2, sellerId, buyerId);
 }
 
+// src/modules/pickup/services/pickup.terms.read.ts
+async function readReservationTerms(sellerId, now = new Date) {
+  const rules = await readStallRules(db2, sellerId);
+  const deadline = reservationDeadline(rules, now);
+  return {
+    shopName: rules.shopName,
+    is24Hours: deadline.is24Hours,
+    opensMinute: deadline.opensMinute,
+    closesMinute: deadline.closesMinute,
+    closingBufferMinutes: deadline.is24Hours ? 0 : CLOSING_BUFFER_MINUTES,
+    pickupBy: deadline.end.toISOString(),
+    qrUntil: deadline.qrUntil.toISOString()
+  };
+}
+
 // src/modules/pickup/index/pickup.buyer.order.ts
 var params2 = t.Object({ id: t.String({ format: "uuid" }) });
 var pickupBuyerOrderRoute = new Elysia({ prefix: "/buyer" }).use(sessionAuth).get("/reservation-status", async ({ session, status }) => {
@@ -186199,6 +186238,12 @@ var pickupBuyerOrderRoute = new Elysia({ prefix: "/buyer" }).use(sessionAuth).ge
     return await readPickupSlotsForBuyer(session.userId, params.id);
   } catch (error) {
     return routeError(status, error, "Could not load pickup times");
+  }
+}, { role: ["buyer"], params: t.Object({ id: t.String({ minLength: 1 }) }) }).get("/sellers/:id/reservation-terms", async ({ params, status }) => {
+  try {
+    return await readReservationTerms(params.id);
+  } catch (error) {
+    return routeError(status, error, "Could not load the pickup terms");
   }
 }, { role: ["buyer"], params: t.Object({ id: t.String({ minLength: 1 }) }) }).post("/orders/:id/decline", async ({ session, params, body, status }) => {
   try {
@@ -186494,16 +186539,7 @@ var day = t.Object({
   closesMinute: t.Integer({ minimum: 1, maximum: 1440 })
 });
 var stallHoursBody = t.Object({ days: t.Array(day, { minItems: 7, maxItems: 7 }) });
-var stallSettingsBody = t.Object({
-  pickupCapacity: t.Integer({ minimum: 1, maximum: 50 }),
-  pickupWithinMinutes: t.Integer({ minimum: 15, maximum: 480 })
-});
 var stallClosedBody = t.Object({ closed: t.Boolean() });
-var stallAwayBody = t.Object({
-  away: t.Boolean(),
-  days: t.Optional(t.Integer({ minimum: 1, maximum: 14 })),
-  reason: t.Optional(t.String({ maxLength: 200 }))
-});
 
 // src/modules/pickup/services/pickup.stall.read.ts
 async function readStall(sellerId, now = new Date) {
@@ -186511,7 +186547,6 @@ async function readStall(sellerId, now = new Date) {
   if (!profile)
     throw new OrderError(404, "Seller stall not found");
   const hours = await db2.select().from(seller_opening_hours).where(eq(seller_opening_hours.sellerId, sellerId));
-  const away = !!profile.awayUntil && profile.awayUntil > now;
   return {
     shopName: profile.shopName,
     hours: [0, 1, 2, 3, 4, 5, 6].map((weekday) => {
@@ -186519,38 +186554,8 @@ async function readStall(sellerId, now = new Date) {
       return { weekday, isClosed: row?.isClosed ?? true, opensMinute: row?.opensMinute ?? 480, closesMinute: row?.closesMinute ?? 1200, configured: !!row };
     }),
     hoursConfigured: hours.length > 0,
-    closedToday: profile.closedDate === manilaDateKey(now),
-    pickupCapacity: profile.pickupCapacity,
-    pickupWithinMinutes: profile.pickupWithinMinutes,
-    away: { active: away, startedAt: away ? profile.awayStartedAt : null, until: away ? profile.awayUntil : null, reason: away ? profile.awayReason : null }
+    closedToday: profile.closedDate === manilaDateKey(now)
   };
-}
-
-// src/modules/pickup/services/pickup.stall.away.set.ts
-var MAX_AWAY_DAYS = 14;
-async function setAway(sellerId, body) {
-  const now = new Date;
-  await db2.transaction(async (tx) => {
-    const [profile] = await tx.select().from(sellers_profile).where(eq(sellers_profile.userId, sellerId)).for("update").limit(1);
-    if (!profile)
-      throw new OrderError(404, "Seller stall not found");
-    const active = !!profile.awayUntil && profile.awayUntil > now;
-    if (body.away) {
-      if (active)
-        throw new OrderError(409, "Away mode is already on.");
-      const days = Math.min(body.days ?? MAX_AWAY_DAYS, MAX_AWAY_DAYS);
-      await tx.update(sellers_profile).set({
-        awayStartedAt: now,
-        awayUntil: new Date(now.getTime() + days * 86400000),
-        awayReason: body.reason?.trim() || null
-      }).where(eq(sellers_profile.userId, sellerId));
-      await tx.insert(seller_away_periods).values({ sellerId, startedAt: now, reason: body.reason?.trim() || null });
-    } else {
-      await tx.update(sellers_profile).set({ awayStartedAt: null, awayUntil: null, awayReason: null }).where(eq(sellers_profile.userId, sellerId));
-      await tx.update(seller_away_periods).set({ endedAt: now }).where(and(eq(seller_away_periods.sellerId, sellerId), isNull2(seller_away_periods.endedAt)));
-    }
-  });
-  return readStall(sellerId);
 }
 
 // src/modules/pickup/services/pickup.stall.closed-today.set.ts
@@ -186583,12 +186588,6 @@ async function saveStallHours(sellerId, body) {
   return readStall(sellerId);
 }
 
-// src/modules/pickup/services/pickup.stall.settings.save.ts
-async function saveStallSettings(sellerId, body) {
-  await db2.update(sellers_profile).set({ pickupCapacity: body.pickupCapacity, pickupWithinMinutes: body.pickupWithinMinutes }).where(eq(sellers_profile.userId, sellerId));
-  return readStall(sellerId);
-}
-
 // src/modules/pickup/index/pickup.stall.ts
 var pickupStallRoute = new Elysia({ prefix: "/seller/stall" }).use(sessionAuth).get("/", async ({ session, status }) => {
   try {
@@ -186602,25 +186601,13 @@ var pickupStallRoute = new Elysia({ prefix: "/seller/stall" }).use(sessionAuth).
   } catch (error) {
     return routeError(status, error, "Could not save your hours");
   }
-}, { role: ["seller"], body: stallHoursBody }).put("/settings", async ({ session, body, status }) => {
-  try {
-    return await saveStallSettings(session.userId, body);
-  } catch (error) {
-    return routeError(status, error, "Could not save your pickup settings");
-  }
-}, { role: ["seller"], body: stallSettingsBody }).put("/closed-today", async ({ session, body, status }) => {
+}, { role: ["seller"], body: stallHoursBody }).put("/closed-today", async ({ session, body, status }) => {
   try {
     return await setClosedToday(session.userId, body.closed);
   } catch (error) {
     return routeError(status, error, "Could not change Closed today");
   }
-}, { role: ["seller"], body: stallClosedBody }).put("/away", async ({ session, body, status }) => {
-  try {
-    return await setAway(session.userId, body);
-  } catch (error) {
-    return routeError(status, error, "Could not change Away mode");
-  }
-}, { role: ["seller"], body: stallAwayBody });
+}, { role: ["seller"], body: stallClosedBody });
 
 // src/modules/pickup/index.ts
 var pickupRoute = new Elysia({ name: "pickup" }).use(pickupStallRoute).use(pickupSellerOrderRoute).use(pickupBuyerOrderRoute);
@@ -187073,7 +187060,6 @@ function serializeProduct(row, imageUrl, distanceKm, rating, policyVersion, calc
     productQty: row.productQty,
     scalingType: row.scalingType,
     productType: row.productType,
-    condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     visibilityScore: visibilityScore === null ? null : Number(visibilityScore.toFixed(4)),
     visibilityPolicyVersion: policyVersion,
@@ -187144,7 +187130,6 @@ async function listMarketplaceProducts(query) {
     originalQty: sellers_product.originalQty,
     scalingType: sellers_product.scalingType,
     productType: sellers_product.productType,
-    condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt,
     visibilityScore,
     sellerReliability: useAHP ? sql3`coalesce((
@@ -187198,7 +187183,6 @@ async function listMarketplaceDeals(limit) {
     productQty: sellers_product.productQty,
     scalingType: sellers_product.scalingType,
     productType: sellers_product.productType,
-    condition: sellers_product.condition,
     sellerId: sellers_profile.userId,
     sellerName: user.name,
     shopName: sellers_profile.shopName,
@@ -187314,7 +187298,6 @@ async function getMarketplaceProduct(productId) {
     productQty: productRow.productQty,
     scalingType: productRow.scalingType,
     productType: productRow.productType,
-    condition: productRow.condition,
     visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
     visibilityEvaluatedAt: evaluatedAt.toISOString(),
     availability: Number(productRow.productQty ?? 0) > 0 ? "available" : "sold_out",
@@ -187328,8 +187311,7 @@ async function getMarketplaceProduct(productId) {
       latitude: profile.latitude,
       longitude: profile.longitude,
       distanceKm: null,
-      away: !!profile.awayUntil && profile.awayUntil > evaluatedAt,
-      awayUntil: profile.awayUntil && profile.awayUntil > evaluatedAt ? profile.awayUntil : null,
+      away: isSellerAway(detail.user.lastActiveAt, evaluatedAt),
       closedToday: profile.closedDate === manilaDateKey(evaluatedAt),
       trustedSeller: standing.trusted
     }
@@ -187350,8 +187332,15 @@ async function getMarketplaceSeller(sellerId) {
   }).from(sellers_profile).innerJoin(user, eq(user.id, sellers_profile.userId)).where(and(eq(sellers_profile.userId, sellerId), marketplaceSellerVisibility(), eq(sellers_profile.isCurrent, true), eq(user.isActive, true), eq(user.emailVerified, true), sellerRole2, sql3`length(btrim(${sellers_profile.shopName})) > 0`, sql3`length(btrim(${sellers_profile.detailAddress})) > 0`, sql3`length(btrim(coalesce(${sellers_profile.phoneNumber}, ''))) >= 7`, isNotNull(sellers_profile.latitude), isNotNull(sellers_profile.longitude))).limit(1);
   if (!seller)
     throw new OrderError(404, "Seller storefront not found");
+  const openingHours = await db2.select({
+    weekday: seller_opening_hours.weekday,
+    isClosed: seller_opening_hours.isClosed,
+    opensMinute: seller_opening_hours.opensMinute,
+    closesMinute: seller_opening_hours.closesMinute
+  }).from(seller_opening_hours).where(eq(seller_opening_hours.sellerId, sellerId));
   return {
     ...seller,
+    openingHours,
     image: await getAvatarDisplayUrl(seller.image)
   };
 }
@@ -189071,7 +189060,7 @@ async function checkDisputeRules(tx, event) {
     case "seller_cancellation":
       return order?.status === "cancelled" && order.cancelledBy === event.subjectId && order.confirmedAt ? rejected("The order shows you cancelled a confirmed order.") : upheld("The order does not show a confirmed order cancelled by you.");
     case "buyer_late_cancellation":
-      return order?.cancelledAt && isLateCancellation(order.pickupStart, order.cancelledAt) ? rejected("The order was cancelled within 3 hours of the pickup time.") : upheld("The order was not cancelled within 3 hours of the pickup time.");
+      return order?.cancelledAt && isLateCancellation(order.pickupEnd, order.cancelledAt) ? rejected("The order was cancelled within 3 hours of the pickup time.") : upheld("The order was not cancelled within 3 hours of the pickup time.");
     case "buyer_failed_reservation":
       return order?.status === "expired" || order?.noShowAt ? rejected("The order shows the pickup was missed.") : upheld("The order does not show a missed pickup.");
     case "low_rating": {

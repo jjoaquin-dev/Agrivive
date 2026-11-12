@@ -25,7 +25,6 @@ export const sellerProductUpdate = t.Object({
   minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99_999_999.99 }))),
   isMarketable: t.Optional(t.Boolean()),
   lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99_999_999.99 }))),
-  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"])),
 }, { minProperties: 1, additionalProperties: false });
 export const sellerProductRestock = t.Object({ quantity: t.Number({ minimum: .01, maximum: 99_999_999 }) });
 export const sellerProductListQuery = t.Object({

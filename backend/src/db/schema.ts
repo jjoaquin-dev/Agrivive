@@ -136,7 +136,6 @@ export const sellers_profile = pgTable("sellers_profile", {
   phoneNumber: text("phone_number"),
   pickupInstructions: text("pickup_instructions"),
   /** How many pickups may overlap at the same time at this stall. */
-  pickupCapacity: integer("pickup_capacity").default(3).notNull(),
   /** Longest pickup range a buyer may choose, in minutes ("Pick up within"). */
   pickupWithinMinutes: integer("pickup_within_minutes").default(120).notNull(),
   /** Manila date (YYYY-MM-DD) the stall is closed for. The weekly hours stay untouched. */
@@ -183,11 +182,6 @@ export const vegetable_review_status_enum = pgEnum("vegetable_review_status", [
   "draft",
   "approved",
   "inactive",
-]);
-export const product_condition_enum = pgEnum("product_condition", [
-  "good",
-  "fair",
-  "needs_inspection",
 ]);
 export const scaling_type_enum = pgEnum("scaling_type", [
   "sack",
@@ -243,7 +237,6 @@ export const sellers_product = pgTable("sellers_product", {
   }),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }),
-  condition: product_condition_enum().default("needs_inspection").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   isMarketable: boolean("is_marketable").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),

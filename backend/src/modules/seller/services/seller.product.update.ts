@@ -66,7 +66,6 @@ export async function updateSellerProduct(sellerId: string, productId: string, b
         priceReductionPeriodsApplied: 0,
       } : {}),
       ...(body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold?.toString() ?? null } : {}),
-      ...(body.condition !== undefined ? { condition: body.condition } : {}),
       ...(body.isMarketable !== undefined ? { isMarketable: body.isMarketable } : {}),
       ...(initializingLegacy ? {
         originalQty: current.productQty,

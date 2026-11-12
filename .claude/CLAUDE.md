@@ -73,7 +73,7 @@ There is no test runner in any package. Endpoints are verified manually by the o
 
 **Errors.** Services throw typed errors (e.g. `OrderError` in `utils/order-types`) carrying a `statusCode`; route handlers catch them and return `status(error.statusCode, { message })`, falling back to a logged 500.
 
-**Shared logic lives in `src/utils/<name>/index.ts`**, not in modules. Beyond the order utilities named in `AGENTS.md`, this is where the ranking and trust domain logic sits: `ahp-topsis`, `visibility-score`, `visibility-ranking`, `promotion-eligibility` (the `visibility-ahptopsis-v1` policy: Priority Boost needs TOPSIS closeness >= 0.60), `trust` (weighted points for non-response, cancellation and low ratings; actions gated by `TRUST_ACTIONS_ENABLED`), plus `s3*`, `email`, `push-notifications`, `social-publishing`, and `price-reduction`. Check here before writing new cross-module code.
+**Shared logic lives in `src/utils/<name>/index.ts`**, not in modules. Beyond the order utilities named in `AGENTS.md`, this is where the ranking and trust domain logic sits: `ahp-topsis`, `visibility-score`, `visibility-ranking` (picks the next boost from the `visibility-ahptopsis-v1` ranking: best rank not boosted in the last 6 hours, no minimum score), `trust` (weighted points for non-response, cancellation and low ratings; actions gated by `TRUST_ACTIONS_ENABLED`), plus `s3*`, `email`, `push-notifications`, `social-publishing`, and `price-reduction`. Check here before writing new cross-module code.
 
 **Database.** Schema is `src/db/schema.ts` (+ `relations.ts`); migrations in `backend/drizzle/` are timestamp-ordered folders, some hand-written SQL without a snapshot. Commit generated migrations with schema changes. The app never applies migrations itself.
 

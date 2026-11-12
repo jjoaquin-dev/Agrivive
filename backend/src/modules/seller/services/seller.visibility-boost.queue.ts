@@ -20,7 +20,7 @@ async function requireFirstPostGap(tx: Parameters<typeof getFirstPostCooldownEnd
  * are the follow-up rule's job.
  */
 export async function queueSellerVisibilityBoost(sellerId: string, productId: string, options: { nextRound?: boolean } = {}) {
-  // A seller whose fault rate is 15% or more ("High fault rate"), or who is paused, cannot use Priority Boost.
+  // A seller whose fault rate is 15% or more ("High fault rate"), or who is paused, cannot use Boost.
   const standing = await readTrustStanding(sellerId);
   if (!standing.canBoost) {
     throw new OrderError(409, standing.needsReview

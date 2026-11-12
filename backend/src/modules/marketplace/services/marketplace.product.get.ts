@@ -90,7 +90,6 @@ export async function getMarketplaceProduct(productId: string) {
     productQty: productRow.productQty,
     scalingType: productRow.scalingType,
     productType: productRow.productType,
-    condition: productRow.condition,
     visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
     visibilityEvaluatedAt: evaluatedAt.toISOString(),
     availability: Number(productRow.productQty ?? 0) > 0 ? "available" : "sold_out",

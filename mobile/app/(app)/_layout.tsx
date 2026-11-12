@@ -1,6 +1,7 @@
 import React from "react";
 import { Pressable, Text } from "react-native";
 import { Redirect, Stack } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
 import { colors, fonts, touchTargets, typography } from "../../src/theme";
 import { OfflineBanner } from "../../src/components/OfflineBanner";
@@ -17,6 +18,8 @@ function CancelButton({ onPress }: { onPress: () => void }) {
 
 export default function AppLayout() {
   const { session, setup, setupError, isSessionPending, loadingSetup } = useAuth();
+  // Screens without their own bottom bar stop above the phone's Back/Home buttons or gesture line.
+  const clearOfNavBar = { contentStyle: { backgroundColor: surface.page, paddingBottom: useSafeAreaInsets().bottom } };
 
   if (!isSessionPending && !loadingSetup && session?.user && setup?.profileComplete && setup.passwordSetupRequired) {
     return <Redirect href="/(auth)/password-setup" />;
@@ -80,29 +83,30 @@ export default function AppLayout() {
       />
 
       {/* Hierarchical Detail Pages */}
-      <Stack.Screen name="inventory/[id]/index" options={{ title: "Listing Details" }} />
+      <Stack.Screen name="inventory/[id]/index" options={{ title: "Listing Details", ...clearOfNavBar }} />
       <Stack.Screen
         name="inventory/[id]/edit"
         options={({ navigation }) => ({
           title: "Edit Listing",
+          ...clearOfNavBar,
           headerTitleAlign: "center",
           headerBackVisible: false,
           headerLeft: () => <CancelButton onPress={navigation.goBack} />,
         })}
       />
       <Stack.Screen name="orders/[id]" options={{ title: "Reservation" }} />
-      <Stack.Screen name="notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="notifications" options={{ headerShown: false, ...clearOfNavBar }} />
       <Stack.Screen name="conversations/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="activity" options={{ title: "Change History" }} />
+      <Stack.Screen name="activity" options={{ title: "Change History", ...clearOfNavBar }} />
       <Stack.Screen name="analytics" options={{ headerShown: false }} />
-      <Stack.Screen name="marketing/index" options={{ title: "Boost" }} />
-      <Stack.Screen name="marketing/[productId]" options={{ title: "Preview Boost" }} />
-      <Stack.Screen name="marketing/started" options={{ headerShown: false, gestureEnabled: false }} />
-      <Stack.Screen name="advisories" options={{ headerShown: false }} />
+      <Stack.Screen name="marketing/index" options={{ title: "Boost", ...clearOfNavBar }} />
+      <Stack.Screen name="marketing/[productId]" options={{ title: "Preview Boost", ...clearOfNavBar }} />
+      <Stack.Screen name="marketing/started" options={{ headerShown: false, gestureEnabled: false, ...clearOfNavBar }} />
+      <Stack.Screen name="advisories" options={{ headerShown: false, ...clearOfNavBar }} />
       <Stack.Screen name="trust" options={{ title: "Trust History" }} />
-      <Stack.Screen name="stall" options={{ title: "Stall Hours" }} />
+      <Stack.Screen name="stall" options={{ title: "Stall Hours", ...clearOfNavBar }} />
       <Stack.Screen name="reviews" options={{ title: "Ratings & Reviews" }} />
-      <Stack.Screen name="profile/index" options={{ title: "Seller Profile" }} />
+      <Stack.Screen name="profile/index" options={{ title: "Seller Profile", ...clearOfNavBar }} />
       <Stack.Screen name="profile/setup" options={{ headerShown: false }} />
       <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
       <Stack.Screen name="profile/security" options={{ headerShown: false }} />

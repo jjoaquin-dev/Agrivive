@@ -64,7 +64,6 @@ export type MarketplaceProduct = {
   productQty: string | number;
   scalingType: MarketplaceUnit;
   productType: MarketplaceProductType;
-  condition: string | null;
   availability: "available" | "sold_out";
   visibilityScore?: number | null;
   averageRating: string | null;
