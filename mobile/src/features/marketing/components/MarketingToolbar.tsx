@@ -26,9 +26,9 @@ export function MarketingToolbar({ guideOpen, onSettings, onGuide }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.base },
-  button: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: colors.surface, borderRadius: radii.button, borderWidth: 1, borderColor: colors.border },
-  selected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+  row: { flexDirection: "row", gap: spacing.md, marginTop: spacing.md },
+  button: { flex: 1, minHeight: 46, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, paddingHorizontal: spacing.sm, backgroundColor: colors.surface, borderRadius: radii.button, borderWidth: 1, borderColor: "#F3F1EC" },
+  selected: { backgroundColor: "#F7FAF2", borderColor: "#DDEBCB" },
   pressed: { opacity: 0.8 },
-  text: { fontFamily: fonts.body.semiBold, fontSize: 13, color: colors.text, flexShrink: 1 },
+  text: { fontFamily: fonts.body.semiBold, fontSize: 14, color: colors.text, flexShrink: 1 },
 });

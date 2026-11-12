@@ -11,8 +11,8 @@ const date = (iso: string | null) => (iso ? formatDate(iso, { weekday: "short", 
 
 const qrNote = {
   not_yet_valid: { label: "Not valid yet", tone: "bg-amber-50 text-amber-800", text: "Your QR starts working at the beginning of your pickup time." },
-  active: { label: "Active", tone: "bg-green-50 text-green-800", text: "Show this to the vendor. You can use it any time before your pickup time ends. They will scan it to complete your pickup." },
-  expired: { label: "Expired", tone: "bg-rose-50 text-destructive", text: "This QR cannot be used or extended. Place a new order to get a new QR." },
+  active: { label: "Active", tone: "bg-green-50 text-green-800", text: "Show this to the vendor. You can use it until the time shown below. They will scan it to complete your pickup." },
+  expired: { label: "Expired", tone: "bg-rose-50 text-rose-700", text: "This QR cannot be used or extended. Place a new order to get a new QR." },
 } as const;
 
 /** The reservation pass: QR, order number, stall, address and directions, items, pickup time, status and the quality notice. */
@@ -52,11 +52,14 @@ export function OrderQr({ order, buyerName, shopName }: { order: BuyerOrder; buy
           </div>
         )}
 
-        {order.pickupStart ? (
-          <p className="flex items-start gap-2 text-sm font-semibold text-agrivive-ink">
-            <CalendarClock className="mt-0.5 size-4 shrink-0 text-agrivive-primary" aria-hidden="true" />
-            <span>{date(order.pickupStart)}, {clock(order.pickupStart)} to {clock(order.pickupEnd)}</span>
+        {order.pickupEnd ? (
+          <p className="flex items-start gap-2 text-sm font-semibold text-[#14231A]">
+            <CalendarClock className="mt-0.5 size-4 shrink-0 text-[#457D00]" aria-hidden="true" />
+            <span>Pick up on or before {date(order.pickupEnd)}, {clock(order.pickupEnd)}</span>
           </p>
+        ) : null}
+        {order.qr.validUntil && order.qr.validUntil !== order.pickupEnd ? (
+          <p className="pl-6 text-xs text-neutral-500">Your QR works until {date(order.qr.validUntil)}, {clock(order.qr.validUntil)}.</p>
         ) : null}
         {stall ? (
           <div className="space-y-1 text-sm">

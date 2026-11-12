@@ -66,12 +66,12 @@ export function ConversationReservationCard({ order, orderId }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginVertical: spacing.md, overflow: "hidden" },
+  card: { borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginVertical: spacing.md, overflow: "hidden", shadowColor: "#000000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 0 },
   header: { flexDirection: "row", alignItems: "center", gap: spacing.sm, padding: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.border },
   icon: { width: 32, height: 32, borderRadius: radii.sm + 2, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" },
-  headerTitle: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
-  pill: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: radii.full },
-  pillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
+  headerTitle: { flex: 1, fontFamily: fonts.heading.bold, fontSize: 14, color: colors.text },
+  pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: radii.full },
+  pillText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
   body: { padding: spacing.md, gap: spacing.sm },
   itemRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: spacing.sm },
   itemName: { flex: 1, fontFamily: fonts.body.regular, fontSize: 14, color: colors.text },
@@ -80,10 +80,10 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm },
   totalLabel: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted },
   totalValue: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.primary },
-  ends: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.warningSurface, borderWidth: 1, borderColor: colors.warningBorder, borderRadius: radii.sm + 2, padding: spacing.sm },
-  endsText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, color: colors.warningText },
+  ends: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "#FFFAF3", borderWidth: 1, borderColor: "#FBE3C3", borderRadius: radii.card, padding: spacing.md },
+  endsText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, color: "#92400E" },
   endsStrong: { fontFamily: fonts.body.semiBold },
-  viewBtn: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, borderRadius: radii.button, borderWidth: 1.5, borderColor: colors.primary, marginTop: spacing.xs },
-  pressed: { backgroundColor: colors.primaryLight },
-  viewText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.primary },
+  viewBtn: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: spacing.sm, borderRadius: radii.button, backgroundColor: colors.primary, marginTop: spacing.xs },
+  pressed: { backgroundColor: colors.primaryPressed },
+  viewText: { fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.white },
 });

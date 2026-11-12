@@ -13,6 +13,7 @@ import {
 import { AuthProvider } from "../src/context/AuthContext";
 import { colors, fonts } from "../src/theme";
 import { NotificationRegistration } from "../src/features/notifications/push/NotificationRegistration";
+import { surface } from "../src/theme/surface";
 
 // Keep splash screen visible while loading fonts
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -40,7 +41,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerStyle: {
-              backgroundColor: colors.background,
+              backgroundColor: surface.page,
             },
             headerTintColor: colors.primary,
             headerTitleStyle: {
@@ -50,7 +51,7 @@ export default function RootLayout() {
             },
             headerShadowVisible: false,
             contentStyle: {
-              backgroundColor: colors.background,
+              backgroundColor: surface.page,
             },
           }}
         >

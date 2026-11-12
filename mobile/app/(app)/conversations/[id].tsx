@@ -21,6 +21,8 @@ import { useConversationProduct } from "../../../src/features/conversations/hook
 import { colors, fonts, spacing } from "../../../src/theme";
 import { getAvatarColor, getInitials } from "../../../src/features/conversations/utils/avatar";
 import { formatDay, formatDayAndClock, orderRef, peso, unitShort } from "../../../src/features/conversations/utils/chatFormat";
+import { surface } from "../../../src/theme/surface";
+import { SellerOrderReportModal } from "../../../src/features/orders/components/SellerOrderReportModal";
 
 const closedReasons = {
   completed: "The order has been completed. You cannot send more messages.",
@@ -36,6 +38,7 @@ export default function ConversationDetailScreen() {
   const inputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
   const listRef = useRef<FlatList | null>(null);
   const [viewer, setViewer] = useState<{ url: string; sentAt: string } | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const chat = useConversationDetail(id);
   const { conversation, messages, loading, failed } = chat;
@@ -100,7 +103,7 @@ export default function ConversationDetailScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ConversationHeaderBar senderName={senderName} subtitle={subtitle} avatarBg={avatarBg} initials={initials} buyerImage={conversation?.buyerImage} onInfo={openDetails} onBlock={conversation ? confirmBlock : undefined} blocked={iBlocked} onArchive={conversation ? toggleArchive : undefined} archived={Boolean(conversation?.archivedAt)} />
+        <ConversationHeaderBar senderName={senderName} subtitle={subtitle} avatarBg={avatarBg} initials={initials} buyerImage={conversation?.buyerImage} onReport={conversation?.orderId ? () => setReportOpen(true) : undefined} onBlock={conversation ? confirmBlock : undefined} blocked={iBlocked} onArchive={conversation ? toggleArchive : undefined} archived={Boolean(conversation?.archivedAt)} />
         {conversation ? <ConversationContextBanner conversation={conversation} order={order} product={product} onPress={openDetails} /> : null}
         {chat.paused ? <ConversationReconnectBanner /> : null}
 
@@ -176,16 +179,17 @@ export default function ConversationDetailScreen() {
         listingLine={listingLine}
         onClose={() => setViewer(null)}
       />
+      {conversation?.orderId ? <SellerOrderReportModal orderId={conversation.orderId} visible={reportOpen} onClose={() => setReportOpen(false)} /> : null}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.surface },
+  safe: { flex: 1, backgroundColor: surface.page },
   flex: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  thread: { backgroundColor: colors.surfaceMuted },
+  thread: { backgroundColor: surface.page },
   messages: { padding: spacing.base, flexGrow: 1 },
-  uploadError: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.error, paddingHorizontal: spacing.base, paddingTop: spacing.xs, backgroundColor: colors.surface },
+  uploadError: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.error, paddingHorizontal: spacing.base, paddingTop: spacing.xs, backgroundColor: surface.page },
   muted: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, textAlign: "center", marginTop: spacing.md },
 });

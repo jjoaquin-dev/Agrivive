@@ -32,6 +32,31 @@ export const categories = [
     hoverBorder: "hover:border-[#F8D8B0]",
   },
   {
+    name: "Bulb Vegetables",
+    href: "/marketplace?productType=Bulb+Vegetables",
+    image: "/categories/bulb-vegetables.png",
+    alt: "Fresh bulb vegetables including onions, garlic, and scallions",
+    topGradient: "from-[#FEF4DC]/90 via-[#FFF9EC]/40 to-transparent",
+    hoverBorder: "hover:border-[#F6DCB2]",
+  },
+  {
+    name: "Stem Vegetables",
+    href: "/marketplace?productType=Stem+Vegetables",
+    image: "/categories/stem-vegetables.png",
+    alt: "Stem vegetables including celery, leek, and asparagus",
+    topGradient: "from-[#EAF7E1]/90 via-[#F4FBEF]/40 to-transparent",
+    hoverBorder: "hover:border-[#CFECC0]",
+  },
+  {
+    name: "Flower Vegetables",
+    href: "/marketplace?productType=Flower+Vegetables",
+    image: "/categories/flower-vegetables.png",
+    imageScale: "scale-[0.8]",
+    alt: "Flower vegetables including cauliflower and broccoli",
+    topGradient: "from-[#FCE9F1]/90 via-[#FEF4F8]/40 to-transparent",
+    hoverBorder: "hover:border-[#F3C9DC]",
+  },
+  {
     name: "Pod Vegetables",
     href: "/marketplace?productType=Pod+Vegetables",
     image: "/categories/pod-vegetables.png",
@@ -49,10 +74,10 @@ export const categories = [
     hoverBorder: "hover:border-[#DDCFF5]",
   },
   {
-    name: "Bulb Vegetables",
-    href: "/marketplace?productType=Bulb+Vegetables",
-    image: "/categories/bulb-vegetables.png",
-    alt: "Fresh bulb vegetables including onions, garlic, and scallions",
+    name: "Seed Vegetables",
+    href: "/marketplace?productType=Seed+Vegetables",
+    image: "/categories/seed-vegetables.png",
+    alt: "Seed vegetables including sweet corn",
     topGradient: "from-[#FEF4DC]/90 via-[#FFF9EC]/40 to-transparent",
     hoverBorder: "hover:border-[#F6DCB2]",
   },
@@ -74,7 +99,7 @@ export function HomeCategories() {
         </div>
 
         {/* 2 / 3 / 6 columns: every category stays visible, no sideways scrolling on phones */}
-        <ul ref={gridRef} className="mt-10 grid grid-cols-2 gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+        <ul ref={gridRef} className="mt-10 grid grid-cols-2 gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4 lg:grid-cols-9 lg:gap-2">
           {categories.map((cat) => (
             <li key={cat.name} data-reveal="pop">
               {/* Three layers, no clashes: li = reveal, this wrapper = scroll lift, Link = hover lift */}

@@ -6,8 +6,8 @@ import {
 } from "../types";
 import { BoostTimeline } from "./BoostTimeline";
 import { PlatformBadge } from "./PlatformBadge";
-import { colors, fonts, radii, spacing, shadows } from "../../../theme";
-import { formatPeso } from "../../../utils/money";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 interface Props {
   item: SellerVisibilityBoost;
@@ -49,12 +49,12 @@ export function BoostHistoryCard({ item, onOpen }: Props) {
       <View style={styles.priceRow}>
         <View>
           <Text style={styles.priceLabel}>Price now</Text>
-          <Text style={styles.priceValue}>{item.currentPrice != null ? formatPeso(item.currentPrice) : "—"}</Text>
+          <Text style={styles.priceValue}>₱{item.currentPrice?.toFixed(2) ?? "—"}</Text>
         </View>
         {item.lowestPrice != null ? (
           <View style={styles.priceDivider}>
             <Text style={styles.priceLabel}>Lowest price</Text>
-            <Text style={styles.floorValue}>{formatPeso(item.lowestPrice)}</Text>
+            <Text style={styles.floorValue}>₱{item.lowestPrice.toFixed(2)}</Text>
           </View>
         ) : null}
       </View>
@@ -71,18 +71,18 @@ export function BoostHistoryCard({ item, onOpen }: Props) {
 }
 
 const styles = StyleSheet.create({
-  cardBad: { borderColor: colors.errorBorder },
-  errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.errorSurface, borderWidth: 1, borderColor: colors.errorBorder, borderRadius: radii.input, padding: spacing.sm, marginTop: spacing.sm },
-  actionBad: { backgroundColor: colors.errorSurface, borderColor: colors.errorBorder },
+  cardBad: { borderColor: "#FECACA" },
+  errorRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", borderRadius: radii.input, padding: spacing.sm, marginTop: spacing.sm },
+  actionBad: { backgroundColor: "#FEF2F2", borderColor: "#FECACA" },
   actionTextBad: { color: colors.error },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
     padding: spacing.base,
     marginTop: spacing.sm,
-    ...shadows.card,
+    ...surface.shadow,
   },
   cardHeader: {
     flexDirection: "row",
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: "#F3F1EC",
   },
   priceLabel: {
     fontFamily: fonts.body.regular,
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
     borderRadius: radii.button,
     marginTop: spacing.md,
     backgroundColor: colors.surfaceMuted,

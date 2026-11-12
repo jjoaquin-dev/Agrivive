@@ -1,9 +1,10 @@
-import { formatRelativeTime } from "../../../utils/dates";
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
 import type { Conversation } from "../types";
 import { getAvatarColor, getInitials } from "../utils/avatar";
+import { formatRelativeTime } from "../../../utils/dates";
+import { surface } from "../../../theme/surface";
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -30,10 +31,10 @@ function getWaitingInfo(lastMessageAt: string) {
 
   if (diffHours >= 24) {
     color = colors.error;
-    bg = colors.errorSurface;
+    bg = "#FEE2E2";
   } else if (diffHours >= 12) {
     color = colors.warning;
-    bg = colors.warningSurface;
+    bg = "#FEF3C7";
   }
 
   return { label, color, bg };
@@ -61,7 +62,7 @@ export function ConversationListItem({ conversation, onPress, onLongPress }: Con
       onLongPress={onLongPress}
       accessibilityRole="button"
       accessibilityLabel={`${buyerName}, ${tagLabel}${hasUnread ? `, ${conversation.unreadCount} unread` : ""}`}
-      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.container, hasUnread && styles.containerUnread, pressed && styles.pressed]}
     >
       <View style={[styles.avatarBox, { backgroundColor: avatarBg }]}>
         {conversation.buyerImage && !imgError ? (
@@ -127,16 +128,21 @@ export function ConversationListItem({ conversation, onPress, onLongPress }: Con
 }
 
 const styles = StyleSheet.create({
+  // Each chat is a white card; one with unread messages is tinted so the seller sees it first.
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.base,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    padding: spacing.base,
+    marginHorizontal: spacing.base,
+    marginBottom: spacing.sm,
+    backgroundColor: surface.card,
+    borderWidth: 1,
+    borderColor: surface.border,
+    borderRadius: radii.card,
+    ...surface.shadow,
   },
-  pressed: { backgroundColor: colors.surfaceMuted },
+  containerUnread: { backgroundColor: "#F7FAF2", borderColor: "#DDEBCB" },
+  pressed: { backgroundColor: "#FAF9F6" },
   avatarBox: {
     width: 48,
     height: 48,
@@ -151,7 +157,7 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   nameText: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text, flex: 1, marginRight: spacing.sm },
-  timeText: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
+  timeText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted },
   timeTextUnread: { color: colors.primary, fontFamily: fonts.body.semiBold },
   middleRow: {
     flexDirection: "row",
@@ -169,12 +175,12 @@ const styles = StyleSheet.create({
     maxWidth: "65%",
   },
   productThumb: { width: 20, height: 20, borderRadius: 4, marginRight: 4 },
-  tagText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.primaryPressed },
-  badgesRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  closedTag: { backgroundColor: colors.border, paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full },
+  tagText: { fontFamily: fonts.body.medium, fontSize: 12, color: colors.primaryPressed },
+  badgesRight: { flexDirection: "row", alignItems: "center", gap: 6 },
+  closedTag: { backgroundColor: "#F1F0EB", paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full },
   closedTagText: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted },
   waitingPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full },
-  waitingPillText: { fontFamily: fonts.body.semiBold, fontSize: 11 },
+  waitingPillText: { fontFamily: fonts.body.semiBold, fontSize: 12 },
   unreadBadge: {
     minWidth: 20,
     height: 20,
@@ -182,9 +188,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   unreadBadgeText: { fontFamily: fonts.heading.bold, fontSize: 11, color: colors.white },
-  snippetText: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 4 },
+  snippetText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: 6 },
   snippetTextUnread: { fontFamily: fonts.body.medium, color: colors.text },
 });

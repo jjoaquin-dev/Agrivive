@@ -41,7 +41,7 @@ export function BoostChannelList({ channels }: { channels: BoostChannels | null 
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.white, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.base },
+  card: { backgroundColor: colors.white, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", paddingHorizontal: spacing.base },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: 56 },
   divider: { height: 1, backgroundColor: colors.border },
   name: { flex: 1, fontFamily: fonts.body.semiBold, fontSize: 15, color: colors.text },

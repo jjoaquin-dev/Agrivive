@@ -14,7 +14,6 @@ import { useCart } from "../CartProvider";
 import { createCartCheckout } from "../api/cart";
 import { getMarketplaceProduct } from "@/src/features/marketplace/api/marketplace";
 import { ReservePickupModal, type ReserveSeller } from "@/src/features/reservation/components/ReservePickupModal";
-import type { PickupChoice } from "@/src/features/reservation/api/reservation";
 import { getBuyerProfile } from "@/src/features/profile/api/profile";
 import { CartSellerHeaderComponent } from "./CartSellerHeaderComponent";
 import { CartItemComponent } from "./CartItemComponent";
@@ -68,14 +67,14 @@ export function CartDrawer() {
 
   if (pathname === "/") return null;
 
-  async function handleCheckout(pickups: PickupChoice[]) {
+  async function handleCheckout(sellerIds: string[]) {
     if (!items.length || checkingOut) return;
     setCheckingOut(true);
     setCheckoutError("");
-    const chosen = new Set(pickups.map((pickup) => pickup.sellerId));
+    const chosen = new Set(sellerIds);
     const reserved = items.filter((item) => chosen.has(item.seller.id));
     try {
-      const result = await createCartCheckout(reserved.map((item) => ({ productId: item.id, quantity: item.quantity })), pickups, crypto.randomUUID());
+      const result = await createCartCheckout(reserved.map((item) => ({ productId: item.id, quantity: item.quantity })), crypto.randomUUID());
       if (reserved.length === items.length) clear(); else reserved.forEach((item) => removeItem(item.id));
       setShowReserveModal(false);
       setDrawerOpen(false);

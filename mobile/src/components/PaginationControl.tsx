@@ -99,13 +99,9 @@ export function PaginationControl({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     marginBottom: spacing.base,
+    paddingHorizontal: spacing.xs,
   },
   sizeRow: {
     flexDirection: "row",
@@ -115,26 +111,34 @@ const styles = StyleSheet.create({
   sizeSelector: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   sizeLabel: {
     fontFamily: fonts.body.regular,
     fontSize: 13,
     color: colors.textMuted,
   },
+  // A pill card with an outline and shadow so faint they only separate it from the page.
   pillGroup: {
     flexDirection: "row",
-    backgroundColor: colors.background,
+    alignItems: "center",
+    backgroundColor: colors.white,
     borderRadius: radii.full,
-    padding: 2,
+    padding: 3,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.025,
+    shadowRadius: 5,
+    elevation: 0,
   },
   sizePill: {
-    minWidth: 36,
+    minWidth: 40,
+    minHeight: 34,
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    justifyContent: "center",
+    paddingHorizontal: spacing.sm,
     borderRadius: radii.full,
   },
   sizePillActive: {
@@ -142,7 +146,7 @@ const styles = StyleSheet.create({
   },
   sizePillText: {
     fontFamily: fonts.body.medium,
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textMuted,
   },
   sizePillTextActive: {
@@ -151,38 +155,29 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontFamily: fonts.body.regular,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
   },
   stepperRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    marginTop: spacing.xs,
   },
   navButton: {
     minHeight: touchTargets.min,
-    minWidth: 104,
+    minWidth: 96,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radii.input,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
   },
   buttonDisabled: {
-    opacity: 0.45,
-    borderColor: colors.border,
+    opacity: 0.4,
   },
   navText: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.primary,
   },
   textDisabled: {
@@ -191,7 +186,7 @@ const styles = StyleSheet.create({
   pageInfo: {
     fontFamily: fonts.body.regular,
     fontSize: 13,
-    color: colors.text,
+    color: colors.textMuted,
   },
   pageBold: {
     fontFamily: fonts.body.semiBold,

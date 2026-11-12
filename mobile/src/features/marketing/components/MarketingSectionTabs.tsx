@@ -44,12 +44,12 @@ export function MarketingSectionTabs({ value, activeCount = 0, onChange }: Props
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: "row", marginTop: spacing.base, marginBottom: spacing.base, borderBottomWidth: 1, borderBottomColor: colors.border },
-  tab: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderBottomWidth: 3, borderBottomColor: colors.transparent, marginBottom: -1 },
+  container: { flexDirection: "row", marginTop: spacing.lg, marginBottom: spacing.lg, borderBottomWidth: 1, borderBottomColor: "#F3F1EC" },
+  tab: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderBottomWidth: 3, borderBottomColor: colors.transparent, marginBottom: -1 },
   tabSelected: { borderBottomColor: colors.primary },
-  text: { fontFamily: fonts.body.medium, fontSize: 14, color: colors.textMuted },
+  text: { fontFamily: fonts.body.medium, fontSize: 15, color: colors.textMuted },
   textSelected: { color: colors.text, fontFamily: fonts.body.semiBold },
-  badge: { paddingHorizontal: 8, paddingVertical: 1, borderRadius: radii.full, backgroundColor: colors.border },
+  badge: { minWidth: 20, height: 20, paddingHorizontal: 6, alignItems: "center", justifyContent: "center", borderRadius: radii.full, backgroundColor: "#F1F0EB" },
   badgeSelected: { backgroundColor: colors.primary },
   badgeText: { fontFamily: fonts.body.semiBold, fontSize: 11, color: colors.textMuted },
   badgeTextSelected: { color: colors.white },

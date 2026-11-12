@@ -53,8 +53,8 @@ const styles = StyleSheet.create({
   handle: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, marginBottom: spacing.base },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text, marginBottom: spacing.sm },
   list: { flexGrow: 0 },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 48, borderBottomWidth: 1, borderBottomColor: colors.surfaceMuted },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 48, borderBottomWidth: 1, borderBottomColor: "#F6F5F1" },
   name: { flex: 1, fontFamily: fonts.body.regular, fontSize: 15, color: colors.text },
   nameActive: { fontFamily: fonts.body.semiBold, color: colors.primary },
-  unit: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted, backgroundColor: colors.surfaceMuted, paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
+  unit: { fontFamily: fonts.body.medium, fontSize: 11, color: colors.textMuted, backgroundColor: "#F6F5F1", paddingHorizontal: 8, paddingVertical: 2, borderRadius: radii.full, overflow: "hidden" },
 });

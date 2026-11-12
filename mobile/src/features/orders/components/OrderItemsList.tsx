@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, fonts, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 import type { SellerOrderItem } from "../types";
 
 import { formatMoney, formatQuantity, formatUnit } from "../orderFormat";
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: surface.border,
   },
   info: {
     flex: 1,
@@ -39,18 +40,18 @@ const styles = StyleSheet.create({
   },
   name: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text,
   },
   quantity: {
     fontFamily: fonts.body.regular,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
     marginTop: 2,
   },
   subtotal: {
     fontFamily: fonts.body.semiBold,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text,
   },
 });

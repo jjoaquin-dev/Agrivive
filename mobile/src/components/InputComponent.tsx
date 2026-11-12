@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
-    fontSize: 14,
-    fontFamily: fonts.body.semiBold,
+    fontSize: 15,
+    fontWeight: "600",
     color: colors.text,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   inputWrapper: {
     minHeight: touchTargets.min,

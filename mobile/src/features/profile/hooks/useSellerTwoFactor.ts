@@ -5,7 +5,7 @@ import { useAuth } from "../../../context/AuthContext";
 
 export type TwoFactorStep = "idle" | "password" | "scan" | "verify" | "backup";
 
-/** Everything the Sign-in Safety screen needs to turn the sign-in code on or off. */
+/** Everything the Privacy and Security screen needs to turn the sign-in code on or off. */
 export function useSellerTwoFactor() {
   const { setup, refreshSetup } = useAuth();
   const [step, setStep] = useState<TwoFactorStep>("idle");

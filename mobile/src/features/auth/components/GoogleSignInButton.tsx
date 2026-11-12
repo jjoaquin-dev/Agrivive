@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.button,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#EEECE6",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   pillPressed: {
-    backgroundColor: colors.surfaceMuted,
+    backgroundColor: "#F6F5F1",
     transform: [{ scale: 0.985 }],
   },
   pillDisabled: {
@@ -163,7 +163,8 @@ const styles = StyleSheet.create({
   pillText: {
     fontFamily: fonts.body.semiBold,
     fontSize: 15,
-    color: colors.text,
+    color: "#202622",
+    fontWeight: "600",
   },
   dividerRow: {
     flexDirection: "row",

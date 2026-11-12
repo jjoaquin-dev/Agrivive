@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.white, borderRadius: radii.sheet, borderWidth: 1, borderColor: profileColors.border, padding: spacing.lg },
   title: { fontFamily: fonts.heading.bold, fontSize: 18, color: colors.text },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.lg },
-  tip: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.surfaceMuted, borderRadius: radii.button, borderWidth: 1, borderColor: profileColors.border, padding: spacing.md, marginTop: spacing.base },
+  tip: { flexDirection: "row", gap: spacing.sm, backgroundColor: "#F6F5F1", borderRadius: radii.card, borderWidth: 1, borderColor: profileColors.border, padding: spacing.md, marginTop: spacing.base },
   tipText: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 19, color: colors.textMuted },
   tipBold: { fontFamily: fonts.body.semiBold, color: colors.text },
   rule: { height: 1, backgroundColor: profileColors.border, marginVertical: spacing.base },

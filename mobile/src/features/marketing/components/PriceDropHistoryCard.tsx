@@ -1,11 +1,12 @@
 import React from "react";
 import { Image, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { ArrowRight, ExternalLink } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import { formatBoostTime, type PriceDropHistoryItem } from "../types";
 import { PlatformBadge } from "./PlatformBadge";
-import { formatPeso as peso } from "../../../utils/money";
+import { surface } from "../../../theme/surface";
 
+const peso = (value: number) => `₱${value.toFixed(2)}`;
 
 /** One lower-price post: the product, the old and new price, the words posted and when (Common Region, Gestalt). */
 export function PriceDropHistoryCard({ item }: { item: PriceDropHistoryItem }) {
@@ -39,13 +40,13 @@ export function PriceDropHistoryCard({ item }: { item: PriceDropHistoryItem }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.base, marginTop: spacing.sm, ...shadows.card },
+  card: { backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.base, marginTop: spacing.sm, ...surface.shadow },
   header: { flexDirection: "row", gap: spacing.sm, alignItems: "center" },
   photo: { width: 52, height: 52, borderRadius: radii.sm + 4, backgroundColor: colors.surfaceMuted },
   placeholder: { backgroundColor: colors.primaryLight },
   title: { flex: 1 },
   product: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.text },
-  platformRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
+  platformRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
   meta: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted },
   priceRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md },
   old: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, textDecorationLine: "line-through" },

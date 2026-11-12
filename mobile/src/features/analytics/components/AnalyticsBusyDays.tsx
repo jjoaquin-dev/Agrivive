@@ -1,5 +1,5 @@
 import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { colors, fonts, spacing } from "../../../theme";
 import { cardStyles } from "../analyticsCard";
@@ -15,8 +15,9 @@ export function AnalyticsBusyDays({ counts }: { counts: number[] }) {
   const best = max > 0 ? counts.indexOf(max) : -1;
   const total = counts.reduce((a, c) => a + c, 0);
   const rows = counts.map((count, day) => ({ label: full[day], value: `${count} pickup${count === 1 ? "" : "s"} · ${percentText(count, total)}`, strong: day === best }));
-  const chartWidth = Math.max(Dimensions.get("window").width - 110, 220);
-  const data = counts.map((count, day) => ({ value: count, label: names[day], frontColor: day === best ? colors.primary : colors.border }));
+  const { width: windowWidth } = useWindowDimensions();
+  const chartWidth = Math.max(windowWidth - 110, 220);
+  const data = counts.map((count, day) => ({ value: count, label: names[day], frontColor: day === best ? colors.primary : "#B7D3C3" }));
 
   return (
     <AnalyticsTapCard title="Busy Days" subtitle="Pickups for each day of the week." rows={rows}>
@@ -32,7 +33,7 @@ export function AnalyticsBusyDays({ counts }: { counts: number[] }) {
             initialSpacing={6}
             roundedTop
             hideRules={false}
-            rulesColor={colors.surfaceMuted}
+            rulesColor="#F6F5F1"
             yAxisColor="transparent"
             xAxisColor={colors.border}
             yAxisTextStyle={styles.axisText}

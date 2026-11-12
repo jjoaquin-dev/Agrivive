@@ -1,6 +1,6 @@
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { sellers_profile, user } from "../../../db/schema";
+import { seller_opening_hours, sellers_profile, user } from "../../../db/schema";
 import { OrderError } from "../../../utils/order-types";
 import { getAvatarDisplayUrl } from "../../../utils/s3-avatar";
 import { marketplaceSellerVisibility } from "./marketplace.visibility";
@@ -35,8 +35,15 @@ export async function getMarketplaceSeller(sellerId: string) {
     .limit(1);
 
   if (!seller) throw new OrderError(404, "Seller storefront not found");
+  const openingHours = await db.select({
+    weekday: seller_opening_hours.weekday,
+    isClosed: seller_opening_hours.isClosed,
+    opensMinute: seller_opening_hours.opensMinute,
+    closesMinute: seller_opening_hours.closesMinute,
+  }).from(seller_opening_hours).where(eq(seller_opening_hours.sellerId, sellerId));
   return {
     ...seller,
+    openingHours,
     image: await getAvatarDisplayUrl(seller.image),
   };
 }

@@ -12,7 +12,7 @@ import { createSellerOrder, parsePickup } from "./buyer.order.persist";
 import { reserveOrderItem } from "./buyer.order.reserve";
 import { enqueueOrderNotification } from "../../notifications/services/notifications.outbox.enqueue-order";
 
-function requestFingerprint(productId: string, quantity: number, pickupStart: string, pickupEnd: string) {
+function requestFingerprint(productId: string, quantity: number, pickupStart?: string, pickupEnd?: string) {
   return createHash("sha256")
     .update(`${productId.toLowerCase()}:${quantity}:${pickupStart}:${pickupEnd}`)
     .digest("hex");
@@ -81,7 +81,7 @@ export async function createDirectOrder(
       buyerId,
       item.sellerId,
       [item],
-      parsePickup(body.pickupStart, body.pickupEnd),
+      body.pickupStart && body.pickupEnd ? parsePickup(body.pickupStart, body.pickupEnd) : null,
     );
     await enqueueOrderNotification(
       tx,

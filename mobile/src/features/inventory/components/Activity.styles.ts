@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 export const activityStyles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  screen: { flex: 1, backgroundColor: surface.page },
   listContent: { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.xxxl },
   header: { marginBottom: spacing.base },
   noticeBanner: {

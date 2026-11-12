@@ -9,6 +9,13 @@
       "port": 3001
     },
     {
+      "name": "mobile",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "start:lan"],
+      "cwd": "mobile",
+      "port": 8081
+    },
+    {
       "name": "backend",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev"],

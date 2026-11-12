@@ -6,6 +6,7 @@ import { StockChangeForm, type StockActionType } from "../../../../src/features/
 import { StockProductBanner } from "../../../../src/features/inventory/components/StockProductBanner";
 import { StockSavedPanel, type StockSaved } from "../../../../src/features/inventory/components/StockSavedPanel";
 import { colors, fonts, spacing } from "../../../../src/theme";
+import { surface } from "../../../../src/theme/surface";
 
 export default function ProductStockScreen() {
   const { id, type } = useLocalSearchParams<{ id: string; type?: string }>();
@@ -67,8 +68,8 @@ export default function ProductStockScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  centerContainer: { flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center", padding: spacing.xl },
+  screen: { flex: 1, backgroundColor: surface.page },
+  centerContainer: { flex: 1, backgroundColor: surface.page, justifyContent: "center", alignItems: "center", padding: spacing.xl },
   loadingText: { fontFamily: fonts.body.regular, fontSize: 14, color: colors.textMuted, marginTop: spacing.sm },
   errorText: { fontFamily: fonts.heading.bold, fontSize: 16, color: colors.error },
 });

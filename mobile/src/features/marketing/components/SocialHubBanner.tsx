@@ -1,8 +1,9 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Flame } from "lucide-react-native";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
+import { colors, fonts, radii, spacing } from "../../../theme";
 import { PlatformBadge } from "./PlatformBadge";
+import { surface } from "../../../theme/surface";
 
 /** Says where a boost goes, in the same words on every tab of the Boost hub. */
 export function SocialHubBanner() {
@@ -28,18 +29,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radii.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#F3F1EC",
     padding: spacing.base,
-    ...shadows.card,
+    ...surface.shadow,
   },
   iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: radii.card,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primaryLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  text: { flex: 1, fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 20, color: colors.textMuted },
-  badges: { flexDirection: "row", alignItems: "center", gap: 8 },
+  text: { flex: 1, fontFamily: fonts.body.medium, fontSize: 14, lineHeight: 20, color: colors.text },
+  badges: { flexDirection: "row", alignItems: "center", gap: 6 },
 });

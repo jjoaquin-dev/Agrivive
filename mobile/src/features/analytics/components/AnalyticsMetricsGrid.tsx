@@ -34,7 +34,7 @@ export function AnalyticsMetricsGrid({ metrics, unit, previousPeriod, sellThroug
         <Text style={styles.big}>{metrics.completedQuantity} {word}</Text>
         <Text style={styles.earned}>{peso(metrics.completedSalesTotal)} earned from pickups</Text>
         {change !== null ? (
-          <View style={[styles.trend, { backgroundColor: up ? colors.successSurfaceStrong : down ? colors.errorSurface : colors.surfaceMuted }]}>
+          <View style={[styles.trend, { backgroundColor: up ? "#DCFCE7" : down ? "#FEF2F2" : "#F6F5F1" }]}>
             <Text style={[styles.trendText, { color: up ? colors.success : down ? colors.error : colors.textMuted }]}>
               {up ? "▲" : down ? "▼" : "–"} {Math.abs(change).toFixed(1)}%{" "}
               <Text style={styles.trendNote}>vs {formatRange(previousPeriod.from, previousPeriod.to)}</Text>

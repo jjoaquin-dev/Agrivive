@@ -3,12 +3,12 @@ import { colors, fonts, radii, spacing, touchTargets, typography } from "../../.
 
 export const styles = StyleSheet.create({
   topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.md },
-  title: { ...typography.screenTitle, color: colors.text },
+  title: { ...typography.screenTitle, fontSize: 28, lineHeight: 34, color: colors.text },
   actions: { flexDirection: "row", alignItems: "center" },
   iconButton: { width: 44, height: 44, borderRadius: radii.full, alignItems: "center", justifyContent: "center" },
-  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1.5, borderColor: colors.border, paddingHorizontal: spacing.md, height: touchTargets.min, marginBottom: spacing.sm + 2 },
+  searchBar: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.base, height: touchTargets.min, marginBottom: spacing.sm + 2 },
   searchInput: { flex: 1, ...typography.body, color: colors.text, marginLeft: spacing.sm },
-  categoryButton: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.surface, borderRadius: radii.input, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, height: 44, marginBottom: spacing.md },
+  categoryButton: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.surface, borderRadius: radii.full, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.base, height: 44, marginBottom: spacing.md },
   categoryLabel: { ...typography.body, fontFamily: fonts.body.medium, color: colors.textMuted },
   categoryValue: { fontFamily: fonts.body.semiBold, color: colors.text },
   chipScroll: { marginHorizontal: -spacing.base, marginBottom: spacing.base },

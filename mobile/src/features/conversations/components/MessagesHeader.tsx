@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ArrowUpDown, Search, X } from "lucide-react-native";
 import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
 interface MessagesHeaderProps {
   unreadCount: number;
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
     paddingTop: spacing.xs,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: surface.page,
   },
   topRow: {
     flexDirection: "row",
@@ -118,7 +119,8 @@ const styles = StyleSheet.create({
   titleColumn: { flex: 1 },
   title: {
     fontFamily: fonts.heading.bold,
-    fontSize: 22,
+    fontSize: 28,
+    lineHeight: 34,
     color: colors.text,
   },
   subtitleRow: {
@@ -173,7 +175,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.input,
+    borderRadius: radii.full,
     paddingHorizontal: spacing.md,
     height: 44,
     marginTop: spacing.sm,

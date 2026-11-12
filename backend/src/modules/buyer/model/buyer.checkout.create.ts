@@ -16,8 +16,8 @@ const pickupModel = t.Object({
 
 export const checkoutModel = t.Object({
   items: t.Array(checkoutItemModel, { minItems: 1, maxItems: 50 }),
-  /** One pickup range for each seller in the cart. */
-  pickups: t.Array(pickupModel, { minItems: 1, maxItems: 20 }),
+  /** Optional. Without it each order must be picked up before the stall's deadline. */
+  pickups: t.Optional(t.Array(pickupModel, { minItems: 1, maxItems: 20 })),
 });
 
 export type CheckoutInput = typeof checkoutModel.static;

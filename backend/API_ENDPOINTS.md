@@ -328,23 +328,22 @@ All times are Asia/Manila. Buyers can pick up **today or tomorrow** only. Pickup
 
 | Method | Path | Body | Notes |
 |---|---|---|---|
-| GET | `/seller/stall` | none | Weekly hours, `closedToday`, `away`, `pickupCapacity`, `pickupWithinMinutes`. |
+| GET | `/seller/stall` | none | Weekly hours and `closedToday`. |
 | PUT | `/seller/stall/hours` | `{ "days": [{ "weekday": 0-6, "isClosed": false, "opensMinute": 480, "closesMinute": 1200 }] }` | Exactly 7 days. Minutes after midnight. Open days need 1 hour or more. Buyers cannot reserve until hours are saved. |
-| PUT | `/seller/stall/settings` | `{ "pickupCapacity": 3, "pickupWithinMinutes": 120 }` | Capacity = pickups that may overlap. Range = longest range a buyer can pick. |
 | PUT | `/seller/stall/closed-today` | `{ "closed": true }` | Hides today's times only. Weekly hours stay. |
-| PUT | `/seller/stall/away` | `{ "away": true, "days": 14, "reason": "Harvest" }` | At most 14 days. Stops the 48-hour reply clock. Orders, pickup times and QR codes do not change. |
 
 ### Reserving (buyer)
 
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/buyer/reservation-status` | `{ canReserve, reason, level, warning }`. Paused or blocked buyers get `canReserve: false` with the reason. |
-| GET | `/buyer/sellers/:sellerId/pickup-slots` | Today and tomorrow in 15-minute cells with `available`, `full`, `busy`. |
-| POST | `/buyer/orders` | Header `Idempotency-Key`. Body `{ "productId", "quantity", "pickupStart": "2026-11-09T02:00:00Z", "pickupEnd": "2026-11-09T03:00:00Z" }`. 409 for overlap with another of the buyer's open orders (any seller), full capacity, closed, outside hours, last 30 minutes before closing. 403 for paused or blocked buyers. |
-| POST | `/buyer/checkouts` | Same, with `items` and `pickups: [{ "sellerId", "pickupStart", "pickupEnd" }]` (one per seller). |
+| GET | `/buyer/sellers/:sellerId/reservation-terms` | What the buyer sees before reserving: `{ shopName, is24Hours, opensMinute, closesMinute, closingBufferMinutes, pickupBy, qrUntil }`. `qrUntil` is when the QR stops: the same as `pickupBy` for a 24-hour stall, closing time for set hours (the seller may still hand over in the last 30 minutes). `pickupBy` is the advised pick-up time: 24 hours after reserving for a stall open 24 hours (or with no hours saved); otherwise 30 minutes before closing today, or on the next open day when today is over or closed. 409 when the stall has no open day in the next 8 days. |
+| GET | `/buyer/sellers/:sellerId/pickup-slots` | (Older time picker, no longer used by the website.) Today and tomorrow in 15-minute cells with `available`, `full`, `busy`. |
+| POST | `/buyer/orders` | Header `Idempotency-Key`. Body `{ "productId", "quantity" }`. The buyer no longer picks a time: `pickupStart` is the reservation time and `pickupEnd` is the `pickupBy` deadline from `reservation-terms`. Optional `"pickupStart"` and `"pickupEnd"` (older clients) are still checked: 409 for overlap with another of the buyer's open orders (any seller), full capacity, closed, outside hours, last 30 minutes before closing. 403 for paused or blocked buyers. |
+| POST | `/buyer/checkouts` | Same, with `items`. Optional `pickups: [{ "sellerId", "pickupStart", "pickupEnd" }]` (one per seller) for older clients. |
 | POST | `/buyer/orders/:id/cancel` | Only before the seller (or the 3-hour rule) confirms. After that: 409 "This order has already been confirmed by the seller. Buyer cancellation is no longer available." Within 3 hours of pickup adds 1 trust point. |
 
-Order responses now include `pickupStart`, `pickupEnd`, `confirmedAt`, `confirmationMode` (`manual` or `auto`), `packedAt`, `readyAt`, `progress` (`placed, confirmed, preparing, ready, completed` plus `terminal`), `qr` (`status`: `not_yet_valid | active | expired`, `validFrom`, `validUntil`), `canCancel`, `cancelBlockedReason`, `disclaimer`, and on the detail route `stall` (address, directions link, away), `decline`, `excuse`, `noShow`, `reschedules`, `history`. The QR works from `pickupStart` until `pickupEnd` + 15 minutes.
+Order responses now include `pickupStart`, `pickupEnd`, `confirmedAt`, `confirmationMode` (`manual` or `auto`), `packedAt`, `readyAt`, `progress` (`placed, confirmed, preparing, ready, completed` plus `terminal`), `qr` (`status`: `not_yet_valid | active | expired`, `validFrom`, `validUntil`), `canCancel`, `cancelBlockedReason`, `disclaimer`, and on the detail route `stall` (address, directions link, away), `decline`, `excuse`, `noShow`, `reschedules`, `history`. The QR works until `qr.validUntil` (saved as `expiresAt`): 24 hours after reserving for a 24-hour stall, closing time for set hours, or `pickupEnd` + 15 minutes for orders made with a chosen range. A late cancellation (1 point) is one made within 3 hours of `pickupEnd`.
 
 ### Seller order steps
 
@@ -380,11 +379,13 @@ Levels: 0-1 good standing, 2-3 notice, 4-5 warning, 6-7 pause 24 hours, 8-11 pau
 
 ### Scheduled jobs (worker, every 60 seconds)
 
-3-hour auto-confirmation, order expiry (QR + 15 minutes), unmarked no-shows after 1 hour, 24-hour decline auto-accept, ended Away periods, level recalculation when points fade, 12/24/48-hour reply timers (paused while Away), notices. Each step is one conditional database update, so running twice does nothing twice.
+3-hour auto-confirmation, order expiry (QR + 15 minutes), unmarked no-shows after 1 hour, 24-hour decline auto-accept, level recalculation when points fade, 12/24/48-hour reply timers (run only while the stall is open), notices. Each step is one conditional database update, so running twice does nothing twice.
 
 ## Database migration
 
 The app code does not apply migrations on startup. Apply all migrations in `backend/drizzle/` before using the backend.
+
+**Away is automatic.** There is no switch. A seller who has not used the app for 30 minutes shows as Away (`seller.away` on the product and `stall.away` on the buyer order). It changes only what buyers see: orders, pickup times, QR codes and the 3-hour auto-confirm are the same. The removed routes are `PUT /seller/stall/away` and `PUT /seller/stall/settings` (pickup capacity and pickup-within are no longer used for new orders).
 
 ## Endpoints the seller mobile app calls (added so the list is complete)
 

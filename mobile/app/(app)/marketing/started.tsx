@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.heading.bold, fontSize: 22, color: colors.text, textAlign: "center", marginTop: spacing.lg },
   text: { fontFamily: fonts.body.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted, textAlign: "center", marginTop: spacing.sm, marginBottom: spacing.lg },
   warn: { fontFamily: fonts.body.medium, fontSize: 13, color: colors.warning, marginTop: spacing.sm },
-  next: { backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.primaryLight, padding: spacing.base, marginTop: spacing.base },
+  next: { backgroundColor: colors.primarySurface, borderRadius: radii.card, borderWidth: 1, borderColor: "#E9F0DF", padding: spacing.base, marginTop: spacing.base },
   nextTitle: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text, marginBottom: spacing.sm },
   step: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm },
   number: { width: 26, height: 26, borderRadius: 14, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },

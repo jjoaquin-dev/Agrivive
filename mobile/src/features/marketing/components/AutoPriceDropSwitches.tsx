@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Image, StyleSheet, Switch, Text, View } from "react-native";
 import { setAutoPriceDropEnabled } from "../api/visibility-boosts";
 import type { Product } from "../../inventory/types";
-import { colors, fonts, radii, shadows, spacing } from "../../../theme";
-import { formatPeso as peso } from "../../../utils/money";
+import { colors, fonts, radii, spacing } from "../../../theme";
+import { surface } from "../../../theme/surface";
 
+const peso = (value: string | number) => `₱${Number(value).toFixed(2)}`;
 const hasDrops = (product: Product) => Number(product.priceReductionAmount ?? 0) > 0 && product.minimumPrice != null && product.isActive !== false;
 
 /** One switch per listing that has a drop amount and a final price. Off keeps the numbers and stops the 6-hour drops. */
@@ -58,14 +59,14 @@ export function AutoPriceDropSwitches({ products }: { products: Product[] }) {
 }
 
 const styles = StyleSheet.create({
-  heading: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text, marginTop: spacing.xs },
-  caption: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  heading: { fontFamily: fonts.heading.bold, fontSize: 17, color: colors.text, marginTop: spacing.base },
+  caption: { fontFamily: fonts.body.regular, fontSize: 13, lineHeight: 18, color: colors.textMuted, marginTop: 2 },
   error: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.error, marginTop: spacing.sm },
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: colors.border, padding: spacing.md, marginTop: spacing.sm, minHeight: 72, ...shadows.card },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, backgroundColor: colors.surface, borderRadius: radii.card, borderWidth: 1, borderColor: "#F3F1EC", padding: spacing.md, marginTop: spacing.sm, minHeight: 72, ...surface.shadow },
   photo: { width: 44, height: 44, borderRadius: radii.sm + 2, backgroundColor: colors.surfaceMuted },
   placeholder: { backgroundColor: colors.primaryLight },
   body: { flex: 1 },
-  name: { fontFamily: fonts.heading.bold, fontSize: 14, color: colors.text },
-  meta: { fontFamily: fonts.body.regular, fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  state: { fontFamily: fonts.body.semiBold, fontSize: 12, marginTop: 2 },
+  name: { fontFamily: fonts.heading.bold, fontSize: 15, color: colors.text },
+  meta: { fontFamily: fonts.body.regular, fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  state: { fontFamily: fonts.body.semiBold, fontSize: 13, marginTop: 2 },
 });

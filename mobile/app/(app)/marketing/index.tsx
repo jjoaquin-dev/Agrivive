@@ -14,6 +14,7 @@ import { VisibilityGuideSection } from "../../../src/features/marketing/componen
 import { useBoostHistory } from "../../../src/features/marketing/hooks/useBoostHistory";
 import { boostState } from "../../../src/features/marketing/types";
 import { colors, spacing } from "../../../src/theme";
+import { surface } from "../../../src/theme/surface";
 
 const activeStates = ["posting", "running", "not_posted", "failed"];
 
@@ -83,6 +84,6 @@ export default function MarketingScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.base, paddingBottom: spacing.xxxl },
+  safe: { flex: 1, backgroundColor: surface.page },
+  content: { paddingHorizontal: spacing.base, paddingTop: spacing.md, paddingBottom: spacing.xxxl },
 });

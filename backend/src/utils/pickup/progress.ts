@@ -22,14 +22,14 @@ export function orderProgress(order: OrderTimes) {
 
 export function pickupFields(order: OrderTimes, now = new Date()) {
   const open = order.status === "pending";
-  const status: QrStatus | null = open ? qrStatus(order.pickupStart, order.pickupEnd, now) : null;
+  const status: QrStatus | null = open ? qrStatus(order.pickupStart, order.pickupEnd, now, order.expiresAt) : null;
   const window = order.pickupStart && order.pickupEnd ? qrWindow(order.pickupStart, order.pickupEnd) : null;
   const canCancel = open && !order.confirmedAt && !!order.expiresAt && order.expiresAt > now;
   return {
     pickupStart: order.pickupStart,
     pickupEnd: order.pickupEnd,
     progress: orderProgress(order),
-    qr: { status: open ? status : "expired" as QrStatus, validFrom: null, validUntil: window?.validUntil ?? null },
+    qr: { status: open ? status : "expired" as QrStatus, validFrom: null, validUntil: order.expiresAt ?? window?.validUntil ?? null },
     canCancel,
     cancelBlockedReason: open && order.confirmedAt ? CANCEL_BLOCKED_MESSAGE : null,
     disclaimer: PICKUP_DISCLAIMER,
