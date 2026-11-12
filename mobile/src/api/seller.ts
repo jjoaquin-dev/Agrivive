@@ -1,5 +1,6 @@
 import { File } from "expo-file-system";
-import { apiFetch, authClient } from "./client";
+import { shrinkImage } from "../utils/shrinkImage";
+import { apiFetch, authClient, UPLOAD_TIMEOUT_MS } from "./client";
 
 export interface SellerProfile {
   id: string;
@@ -106,10 +107,10 @@ export async function uploadSellerAvatar(
   imageUri: string,
 ): Promise<{ success: boolean; imageUrl: string }> {
   const formData = new FormData();
-  formData.append("file", new File(imageUri));
+  formData.append("file", new File(await shrinkImage(imageUri)));
 
   return apiFetch<{ success: boolean; imageUrl: string }>("/seller/profile/avatar", {
     method: "POST",
     body: formData,
-  });
+  }, UPLOAD_TIMEOUT_MS);
 }

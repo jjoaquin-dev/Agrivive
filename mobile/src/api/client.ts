@@ -4,6 +4,8 @@ import { emailOTPClient, twoFactorClient } from "better-auth/client/plugins";
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { saveRead, loadRead } from "./readCache";
+import { setShowingSaved } from "./readStatus";
 
 export function getApiBaseUrl(): string {
   // When using tunnel mode or a remote HTTPS API, prefer the configured API URL
@@ -55,6 +57,8 @@ export class ApiError extends Error {
 
 // Slow mobile data needs more than 10 seconds, so reads wait 20.
 const API_TIMEOUT_MS = 20_000;
+/** Photos are sent after shrinking, but weak signal can still be slow, so uploads wait a full minute. */
+export const UPLOAD_TIMEOUT_MS = 60_000;
 const OFFLINE_MESSAGE = "We could not reach Agrivive. Check your internet connection and try again.";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -150,15 +154,32 @@ async function apiFetchOnce<T>(
   }
 }
 
-/** Reads are tried twice when the connection drops, because weak signal often works on the second try. Writes are never repeated. */
+/**
+ * Reads are tried twice when the connection drops, because weak signal often works on the second try.
+ * If both fail, the last saved answer is shown instead of an error. Writes are never repeated.
+ */
 export async function apiFetch<T = any>(path: string, options: RequestInit = {}, timeoutMs = API_TIMEOUT_MS): Promise<T> {
   const isRead = !options.method || options.method.toUpperCase() === "GET";
+  const keep = (data: T) => {
+    if (isRead) {
+      setShowingSaved(null);
+      void saveRead(path, data);
+    }
+    return data;
+  };
   try {
-    return await apiFetchOnce<T>(path, options, timeoutMs);
+    return keep(await apiFetchOnce<T>(path, options, timeoutMs));
   } catch (error) {
     const connectionFailed = error instanceof ApiError && (error.statusCode === 408 || error.statusCode === 0);
     if (!isRead || !connectionFailed || options.signal?.aborted) throw error;
     await wait(800);
-    return apiFetchOnce<T>(path, options, timeoutMs);
+    try {
+      return keep(await apiFetchOnce<T>(path, options, timeoutMs));
+    } catch (second) {
+      const saved = second instanceof ApiError && (second.statusCode === 408 || second.statusCode === 0) ? await loadRead<T>(path) : null;
+      if (!saved) throw second;
+      setShowingSaved(saved.savedAt);
+      return saved.data;
+    }
   }
 }
