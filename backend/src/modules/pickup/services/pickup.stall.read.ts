@@ -18,7 +18,6 @@ export async function readStall(sellerId: string, now = new Date()) {
     }),
     hoursConfigured: hours.length > 0,
     closedToday: profile.closedDate === manilaDateKey(now),
-    pickupCapacity: profile.pickupCapacity,
     pickupWithinMinutes: profile.pickupWithinMinutes,
     away: { active: away, startedAt: away ? profile.awayStartedAt : null, until: away ? profile.awayUntil : null, reason: away ? profile.awayReason : null },
   };

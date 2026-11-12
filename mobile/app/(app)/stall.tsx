@@ -12,13 +12,12 @@ import { StallHoursEditor } from "../../src/features/stall/components/StallHours
 export default function StallSetupScreen() {
   const [stall, setStall] = useState<Stall | null>(null);
   const [days, setDays] = useState<StallDay[]>([]);
-  const [capacity, setCapacity] = useState(3);
   const [within, setWithin] = useState(120);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apply = (next: Stall) => { setStall(next); setDays(next.hours); setCapacity(next.pickupCapacity); setWithin(next.pickupWithinMinutes); };
+  const apply = (next: Stall) => { setStall(next); setDays(next.hours); setWithin(next.pickupWithinMinutes); };
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
     setError(null);
@@ -34,7 +33,7 @@ export default function StallSetupScreen() {
     setSaving(true);
     try {
       await saveStallHours(days.map(({ configured: _configured, ...row }) => row));
-      apply(await saveStallSettings({ pickupCapacity: capacity, pickupWithinMinutes: within }));
+      apply(await saveStallSettings({ pickupWithinMinutes: within }));
       Alert.alert("Saved", "Your pickup hours are saved.");
     } catch (err: any) { Alert.alert("Could Not Save", err?.message || "Please try again."); } finally { setSaving(false); }
   };
@@ -75,12 +74,6 @@ export default function StallSetupScreen() {
 
       <CardComponent style={styles.card}>
         <Text style={styles.cardTitle}>Pickup limits</Text>
-        <Text style={styles.label}>Buyers at the same time</Text>
-        <View style={styles.limitRow}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Fewer buyers" onPress={() => setCapacity((c) => Math.max(1, c - 1))} style={styles.stepButton}><Minus size={16} color={colors.primary} /></Pressable>
-          <Text style={styles.stepValue}>{capacity}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="More buyers" onPress={() => setCapacity((c) => Math.min(50, c + 1))} style={styles.stepButton}><Plus size={16} color={colors.primary} /></Pressable>
-        </View>
         <Text style={styles.label}>Pick up within (longest range a buyer can choose)</Text>
         <View style={styles.limitRow}>
           <Pressable accessibilityRole="button" accessibilityLabel="Shorter range" onPress={() => setWithin((w) => Math.max(15, w - 15))} style={styles.stepButton}><Minus size={16} color={colors.primary} /></Pressable>

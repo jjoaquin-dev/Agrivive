@@ -5,7 +5,7 @@ import type { StallSettingsBody } from "../model/pickup.stall";
 import { readStall } from "./pickup.stall.read";
 
 export async function saveStallSettings(sellerId: string, body: StallSettingsBody) {
-  await db.update(sellers_profile).set({ pickupCapacity: body.pickupCapacity, pickupWithinMinutes: body.pickupWithinMinutes })
+  await db.update(sellers_profile).set({ pickupWithinMinutes: body.pickupWithinMinutes })
     .where(eq(sellers_profile.userId, sellerId));
   return readStall(sellerId);
 }

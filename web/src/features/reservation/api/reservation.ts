@@ -13,7 +13,7 @@ export type ReservationStatus = {
 
 export type PickupCell = { start: string; end: string; available: boolean; full: boolean; busy: boolean };
 export type PickupDay = { date: string; open: boolean; reason: string; cells: PickupCell[] };
-export type PickupSlots = { shopName: string; stepMinutes: number; maxRangeMinutes: number; capacity: number; days: PickupDay[] };
+export type PickupSlots = { shopName: string; stepMinutes: number; maxRangeMinutes: number; days: PickupDay[] };
 export type PickupChoice = { sellerId: string; pickupStart: string; pickupEnd: string };
 
 export function getReservationStatus(signal?: AbortSignal) {

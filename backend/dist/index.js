@@ -77040,7 +77040,6 @@ __export(exports_schema, {
   order_status_history: () => order_status_history,
   ordered_items: () => ordered_items,
   orders: () => orders,
-  product_condition_enum: () => product_condition_enum,
   product_inquiries: () => product_inquiries,
   product_stock_adjustments: () => product_stock_adjustments,
   product_type_enum: () => product_type_enum,
@@ -117621,7 +117620,6 @@ var sellers_profile = pgTable("sellers_profile", {
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
   pickupInstructions: text("pickup_instructions"),
-  pickupCapacity: integer2("pickup_capacity").default(3).notNull(),
   pickupWithinMinutes: integer2("pickup_within_minutes").default(120).notNull(),
   closedDate: text("closed_date"),
   awayStartedAt: timestamp("away_started_at", { withTimezone: true }),
@@ -117660,11 +117658,6 @@ var vegetable_review_status_enum = pgEnum2("vegetable_review_status", [
   "draft",
   "approved",
   "inactive"
-]);
-var product_condition_enum = pgEnum2("product_condition", [
-  "good",
-  "fair",
-  "needs_inspection"
 ]);
 var scaling_type_enum = pgEnum2("scaling_type", [
   "sack",
@@ -117710,7 +117703,6 @@ var sellers_product = pgTable("sellers_product", {
   }),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }),
-  condition: product_condition_enum().default("needs_inspection").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   isMarketable: boolean4("is_marketable").default(false).notNull(),
   isActive: boolean4("is_active").default(true).notNull(),
@@ -127226,8 +127218,7 @@ var sellerProductUpdate = t.Object({
   priceReductionAmount: t.Optional(t.Number({ minimum: 0, maximum: 99999999.99 })),
   minimumPrice: t.Optional(t.Nullable(t.Number({ minimum: 1, maximum: 99999999.99 }))),
   isMarketable: t.Optional(t.Boolean()),
-  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 }))),
-  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
+  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 })))
 }, { minProperties: 1, additionalProperties: false });
 var sellerProductRestock = t.Object({ quantity: t.Number({ minimum: 0.01, maximum: 99999999 }) });
 var sellerProductListQuery = t.Object({
@@ -127259,8 +127250,7 @@ var sellerProductCreate = t.Object({
   }),
   scalingType: sellerProductScalingType,
   isMarketable: t.Boolean(),
-  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 }))),
-  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"]))
+  lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99999999.99 })))
 });
 
 // src/utils/order-amount/index.ts
@@ -137804,7 +137794,6 @@ async function createSellerProduct(userId, body) {
       priceReductionPeriodsApplied: 0,
       productQty: body.productQty.toString(),
       lowStockThreshold: body.lowStockThreshold?.toString() ?? null,
-      condition: body.condition ?? "needs_inspection",
       originalQty: body.productQty.toString(),
       publishedAt: now,
       isMarketable: body.isMarketable,
@@ -180573,7 +180562,6 @@ async function updateSellerProduct(sellerId, productId, body) {
         priceReductionPeriodsApplied: 0
       } : {},
       ...body.lowStockThreshold !== undefined ? { lowStockThreshold: body.lowStockThreshold?.toString() ?? null } : {},
-      ...body.condition !== undefined ? { condition: body.condition } : {},
       ...body.isMarketable !== undefined ? { isMarketable: body.isMarketable } : {},
       ...initializingLegacy ? {
         originalQty: current.productQty,
@@ -184390,6 +184378,7 @@ function getBuyerOrder(orderId, buyerId) {
 
 // src/utils/pickup/rules.ts
 var PICKUP_STEP_MINUTES = 15;
+var PICKUP_CAPACITY = 3;
 var CLOSING_BUFFER_MINUTES = 30;
 var rangesOverlap = (a, b) => a.start.getTime() < b.end.getTime() && b.start.getTime() < a.end.getTime();
 var is24Hours = (day) => day.opensMinute === 0 && day.closesMinute === 1440;
@@ -184452,7 +184441,7 @@ async function readStallRules(reader, sellerId) {
     hours: hours.map((row) => ({ weekday: row.weekday, isClosed: row.isClosed, opensMinute: row.opensMinute, closesMinute: row.closesMinute })),
     closedDate: profile.closedDate,
     pickupWithinMinutes: profile.pickupWithinMinutes,
-    capacity: profile.pickupCapacity,
+    capacity: PICKUP_CAPACITY,
     shopName: profile.shopName
   };
 }
@@ -184507,7 +184496,7 @@ async function readPickupSlots(reader, sellerId, buyerId, now = new Date) {
     }
     days.push({ date: dateKey, open: true, reason: "", opensMinute: window2.opensMinute, latestEndMinute: window2.latestEndMinute, cells });
   }
-  return { shopName: rules.shopName, stepMinutes: PICKUP_STEP_MINUTES, maxRangeMinutes: rules.pickupWithinMinutes, capacity: rules.capacity, days };
+  return { shopName: rules.shopName, stepMinutes: PICKUP_STEP_MINUTES, maxRangeMinutes: rules.pickupWithinMinutes, days };
 }
 
 // src/utils/trust/order-flood.ts
@@ -185650,7 +185639,6 @@ async function listBuyerWishlist(buyerId) {
     productQty: sellers_product.productQty,
     scalingType: sellers_product.scalingType,
     productType: sellers_product.productType,
-    condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt,
     sellerId: sellers_profile.userId,
     sellerName: user.name,
@@ -185669,7 +185657,6 @@ async function listBuyerWishlist(buyerId) {
     productQty: row.productQty,
     scalingType: row.scalingType,
     productType: row.productType,
-    condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     averageRating: null,
     reviewCount: 0,
@@ -186495,7 +186482,6 @@ var day = t.Object({
 });
 var stallHoursBody = t.Object({ days: t.Array(day, { minItems: 7, maxItems: 7 }) });
 var stallSettingsBody = t.Object({
-  pickupCapacity: t.Integer({ minimum: 1, maximum: 50 }),
   pickupWithinMinutes: t.Integer({ minimum: 15, maximum: 480 })
 });
 var stallClosedBody = t.Object({ closed: t.Boolean() });
@@ -186520,7 +186506,6 @@ async function readStall(sellerId, now = new Date) {
     }),
     hoursConfigured: hours.length > 0,
     closedToday: profile.closedDate === manilaDateKey(now),
-    pickupCapacity: profile.pickupCapacity,
     pickupWithinMinutes: profile.pickupWithinMinutes,
     away: { active: away, startedAt: away ? profile.awayStartedAt : null, until: away ? profile.awayUntil : null, reason: away ? profile.awayReason : null }
   };
@@ -186585,7 +186570,7 @@ async function saveStallHours(sellerId, body) {
 
 // src/modules/pickup/services/pickup.stall.settings.save.ts
 async function saveStallSettings(sellerId, body) {
-  await db2.update(sellers_profile).set({ pickupCapacity: body.pickupCapacity, pickupWithinMinutes: body.pickupWithinMinutes }).where(eq(sellers_profile.userId, sellerId));
+  await db2.update(sellers_profile).set({ pickupWithinMinutes: body.pickupWithinMinutes }).where(eq(sellers_profile.userId, sellerId));
   return readStall(sellerId);
 }
 
@@ -187073,7 +187058,6 @@ function serializeProduct(row, imageUrl, distanceKm, rating, policyVersion, calc
     productQty: row.productQty,
     scalingType: row.scalingType,
     productType: row.productType,
-    condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     visibilityScore: visibilityScore === null ? null : Number(visibilityScore.toFixed(4)),
     visibilityPolicyVersion: policyVersion,
@@ -187144,7 +187128,6 @@ async function listMarketplaceProducts(query) {
     originalQty: sellers_product.originalQty,
     scalingType: sellers_product.scalingType,
     productType: sellers_product.productType,
-    condition: sellers_product.condition,
     publishedAt: sellers_product.publishedAt,
     visibilityScore,
     sellerReliability: useAHP ? sql3`coalesce((
@@ -187198,7 +187181,6 @@ async function listMarketplaceDeals(limit) {
     productQty: sellers_product.productQty,
     scalingType: sellers_product.scalingType,
     productType: sellers_product.productType,
-    condition: sellers_product.condition,
     sellerId: sellers_profile.userId,
     sellerName: user.name,
     shopName: sellers_profile.shopName,
@@ -187314,7 +187296,6 @@ async function getMarketplaceProduct(productId) {
     productQty: productRow.productQty,
     scalingType: productRow.scalingType,
     productType: productRow.productType,
-    condition: productRow.condition,
     visibilityScore: visibility ? Number(visibility.score.toFixed(4)) : null,
     visibilityEvaluatedAt: evaluatedAt.toISOString(),
     availability: Number(productRow.productQty ?? 0) > 0 ? "available" : "sold_out",

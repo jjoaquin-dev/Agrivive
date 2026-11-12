@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { pushSchema } from "drizzle-kit/api-postgres";
 import { and, eq, sql } from "drizzle-orm";
 import * as schema from "../../db/schema";
+import { PICKUP_CAPACITY } from "../../utils/pickup/rules";
 
 process.env.ORDER_QR_SECRET = "test-secret-test-secret-test-secret-1234";
 const pg = drizzle({ client: new PGlite() });
@@ -69,9 +70,9 @@ async function addUser(role: "buyer" | "seller") {
   return id;
 }
 /** `allDay` is a 24-hour stall, so waiting time equals clock time. */
-async function addSeller(opts: { capacity?: number; allDay?: boolean } = {}) {
+async function addSeller(opts: { allDay?: boolean } = {}) {
   const id = await addUser("seller");
-  await pg.insert(schema.sellers_profile).values({ userId: id, shopName: `Stall ${id}`, detailAddress: "Market Rd", phoneNumber: "09171234567", latitude: 14.6, longitude: 121, pickupCapacity: opts.capacity ?? 3 });
+  await pg.insert(schema.sellers_profile).values({ userId: id, shopName: `Stall ${id}`, detailAddress: "Market Rd", phoneNumber: "09171234567", latitude: 14.6, longitude: 121 });
   await pg.insert(schema.seller_opening_hours).values([0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ sellerId: id, weekday, isClosed: false, opensMinute: opts.allDay ? 0 : 6 * 60, closesMinute: opts.allDay ? 1440 : 20 * 60 })));
   const [product] = await pg.insert(schema.sellers_product).values({ userId: id, productName: "Tomato", productType: "Leafy Greens", scalingType: "kilo", productPrice: "20", productQty: "100", originalQty: "100", isMarketable: true, publishedAt: new Date() }).returning();
   return { id, productId: product!.id };
@@ -129,9 +130,9 @@ describe("reservation rules", () => {
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
   });
   test("seller capacity is respected", async () => {
-    const seller = await addSeller({ capacity: 1 });
-    const [b1, b2] = [await addUser("buyer"), await addUser("buyer")];
-    await reserve(b1, seller, 10, 11);
+    const seller = await addSeller();
+    const b2 = await addUser("buyer");
+    for (let i = 0; i < PICKUP_CAPACITY; i++) await reserve(await addUser("buyer"), seller, 10, 11);
     expect((await fail(reserve(b2, seller, 10, 11))).message).toContain("fully booked");
     await reserve(b2, seller, 11, 12);
   });
@@ -149,8 +150,8 @@ describe("reservation rules", () => {
     expect((await setClosedToday(seller.id, false)).closedToday).toBe(false);
   });
   test("the calendar lists today and tomorrow and marks a taken time", async () => {
-    const buyer = await addUser("buyer"); const seller = await addSeller({ capacity: 1 });
-    await reserve(await addUser("buyer"), seller, 10, 11);
+    const buyer = await addUser("buyer"); const seller = await addSeller();
+    for (let i = 0; i < PICKUP_CAPACITY; i++) await reserve(await addUser("buyer"), seller, 10, 11);
     const slots = await readPickupSlotsForBuyer(buyer, seller.id);
     expect(slots.days).toHaveLength(2);
     const cell = slots.days[1]!.cells!.find((c) => c.start === tomorrow(10).toISOString());
@@ -738,7 +739,7 @@ describe("Flagging Rules Without Admin", () => {
     expect(await stock(seller.productId)).toBe(100);
   });
   test("more than 5 orders in 7 days from one buyer: extra orders add 0 points and leave the counts", async () => {
-    const buyer = await addUser("buyer"); const seller = await addSeller({ capacity: 10 });
+    const buyer = await addUser("buyer"); const seller = await addSeller();
     const ids: string[] = [];
     for (let hour = 8; hour <= 13; hour++) ids.push(await reserve(buyer, seller, hour, hour + 1, 1));
     const flags = await Promise.all(ids.map(async (id) => (await orderRow(id)).countsForRanking));
@@ -755,7 +756,7 @@ describe("Flagging Rules Without Admin", () => {
     }
   });
   test("review bomb: 5 low ratings from accounts under 7 days old in 24 hours are ignored, buyers get 0 points and a notice", async () => {
-    const seller = await addSeller({ capacity: 10 });
+    const seller = await addSeller();
     const buyers: string[] = [];
     for (let i = 0; i < 5; i++) {
       const buyer = await addUser("buyer"); buyers.push(buyer);
@@ -770,7 +771,7 @@ describe("Flagging Rules Without Admin", () => {
     expect((await pg.select().from(schema.trust_notices)).filter((n) => n.noticeKey.startsWith("review-bomb:"))).toHaveLength(5);
   });
   test("review bomb: older accounts are never ignored", async () => {
-    const seller = await addSeller({ capacity: 10 });
+    const seller = await addSeller();
     for (let i = 0; i < 5; i++) {
       const buyer = await addUser("buyer");
       await pg.update(schema.user).set({ createdAt: new Date(Date.now() - 30 * DAY) }).where(eq(schema.user.id, buyer));

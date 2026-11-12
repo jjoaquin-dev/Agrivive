@@ -9,7 +9,6 @@ const day = t.Object({
 
 export const stallHoursBody = t.Object({ days: t.Array(day, { minItems: 7, maxItems: 7 }) });
 export const stallSettingsBody = t.Object({
-  pickupCapacity: t.Integer({ minimum: 1, maximum: 50 }),
   pickupWithinMinutes: t.Integer({ minimum: 15, maximum: 480 }),
 });
 export const stallClosedBody = t.Object({ closed: t.Boolean() });

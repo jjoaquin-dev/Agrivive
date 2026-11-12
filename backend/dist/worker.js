@@ -29781,7 +29781,6 @@ var sellers_profile = pgTable("sellers_profile", {
   longitude: doublePrecision("longitude"),
   phoneNumber: text("phone_number"),
   pickupInstructions: text("pickup_instructions"),
-  pickupCapacity: integer("pickup_capacity").default(3).notNull(),
   pickupWithinMinutes: integer("pickup_within_minutes").default(120).notNull(),
   closedDate: text("closed_date"),
   awayStartedAt: timestamp("away_started_at", { withTimezone: true }),
@@ -29820,11 +29819,6 @@ var vegetable_review_status_enum = pgEnum2("vegetable_review_status", [
   "draft",
   "approved",
   "inactive"
-]);
-var product_condition_enum = pgEnum2("product_condition", [
-  "good",
-  "fair",
-  "needs_inspection"
 ]);
 var scaling_type_enum = pgEnum2("scaling_type", [
   "sack",
@@ -29870,7 +29864,6 @@ var sellers_product = pgTable("sellers_product", {
   }),
   originalQty: decimal("original_qty", { precision: 10, scale: 2 }),
   lowStockThreshold: decimal("low_stock_threshold", { precision: 10, scale: 2 }),
-  condition: product_condition_enum().default("needs_inspection").notNull(),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   isMarketable: boolean("is_marketable").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),

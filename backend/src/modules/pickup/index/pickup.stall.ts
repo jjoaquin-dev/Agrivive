@@ -8,7 +8,7 @@ import { saveStallHours } from "../services/pickup.stall.hours.save";
 import { readStall } from "../services/pickup.stall.read";
 import { saveStallSettings } from "../services/pickup.stall.settings.save";
 
-/** The seller's stall setup: opening hours, Closed today, Away, pickup capacity and range limit. */
+/** The seller's stall setup: opening hours, Closed today, Away and the pickup range limit. */
 export const pickupStallRoute = new Elysia({ prefix: "/seller/stall" }).use(sessionAuth)
   .get("/", async ({ session, status }) => {
     try { return await readStall(session.userId); } catch (error) { return routeError(status, error, "Could not load your stall"); }

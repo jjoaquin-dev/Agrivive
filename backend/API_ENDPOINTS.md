@@ -328,9 +328,9 @@ All times are Asia/Manila. Buyers can pick up **today or tomorrow** only. Pickup
 
 | Method | Path | Body | Notes |
 |---|---|---|---|
-| GET | `/seller/stall` | none | Weekly hours, `closedToday`, `away`, `pickupCapacity`, `pickupWithinMinutes`. |
+| GET | `/seller/stall` | none | Weekly hours, `closedToday`, `away`, `pickupWithinMinutes`. |
 | PUT | `/seller/stall/hours` | `{ "days": [{ "weekday": 0-6, "isClosed": false, "opensMinute": 480, "closesMinute": 1200 }] }` | Exactly 7 days. Minutes after midnight. Open days need 1 hour or more. Buyers cannot reserve until hours are saved. |
-| PUT | `/seller/stall/settings` | `{ "pickupCapacity": 3, "pickupWithinMinutes": 120 }` | Capacity = pickups that may overlap. Range = longest range a buyer can pick. |
+| PUT | `/seller/stall/settings` | `{ "pickupWithinMinutes": 120 }` | Range = longest range a buyer can pick. Pickups that may overlap are fixed at 3 for every stall. |
 | PUT | `/seller/stall/closed-today` | `{ "closed": true }` | Hides today's times only. Weekly hours stay. |
 | PUT | `/seller/stall/away` | `{ "away": true, "days": 14, "reason": "Harvest" }` | At most 14 days. Stops the 48-hour reply clock. Orders, pickup times and QR codes do not change. |
 
