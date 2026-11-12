@@ -57,11 +57,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
       <View style={styles.identity}>
         <Text style={styles.greetingText}>{getGreeting()}</Text>
-        <Text style={styles.sellerName} numberOfLines={1}>{sellerName}</Text>
+        <Text style={styles.sellerName} numberOfLines={2}>{sellerName}</Text>
         {shopName ? (
           <View style={styles.locationRow}>
             <Store size={14} color={colors.primary} />
-            <Text style={styles.locationText} numberOfLines={1}>{shopName}</Text>
+            <Text style={styles.locationText} numberOfLines={2}>{shopName}</Text>
           </View>
         ) : null}
       </View>

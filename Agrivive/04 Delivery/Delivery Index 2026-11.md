@@ -13,6 +13,8 @@ Previous: [[Delivery Index 2026-10]]
 
 ## 2026-11-01
 
+- [[04 Delivery/2026-11-12 Boost Docs Aligned|Boost Docs Aligned]]
+- [[04 Delivery/2026-11-12 Large Text and Nav Buttons|Large Text and Nav Buttons]]
 - [[04 Delivery/2026-11-12 Seller App Screen Size Fixes|Seller App Screen Size Fixes]]
 - [[04 Delivery/2026-11-12 Seller Forms Weather and Sign-in Cleanup|Seller Forms, Weather and Sign-in Cleanup]]
 - [[04 Delivery/2026-11-12 Seller Boost Screens Cleanup|Seller Boost Screens Cleanup]]

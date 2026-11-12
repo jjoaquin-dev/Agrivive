@@ -17,6 +17,10 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
 
+Earlier: Boost notes, API doc and code comments aligned to the current rule (best rank not boosted in 6 hours, no 0.60 cutoff): [[2026-11-12 Boost Docs Aligned]].
+
+Earlier: Seller app tab bar and bottom screens fixed for largest phone text and 3-button navigation: [[2026-11-12 Large Text and Nav Buttons]].
+
 Earlier: Seller app slow-signal support (reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s): [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (pickup overlap fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
 
 Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].

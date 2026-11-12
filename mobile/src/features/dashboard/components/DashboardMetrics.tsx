@@ -116,7 +116,7 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
           >
             <View style={styles.cardTop}>
-              <Text style={styles.cardLabel} numberOfLines={1}>{m.label}</Text>
+              <Text style={styles.cardLabel} numberOfLines={2}>{m.label}</Text>
               <m.Icon size={18} color={error ? colors.textMuted : m.iconColor} />
             </View>
             <Text style={[styles.cardValue, { color: error ? colors.textMuted : m.valueColor }]} numberOfLines={1} adjustsFontSizeToFit>{error ? "—" : m.value}</Text>
