@@ -4,12 +4,12 @@ const endpoint = "https://api.groq.com/openai/v1/chat/completions";
  * One short chat answer from Groq, or null. It never throws: no key, a slow reply, a rate limit or any error all give null,
  * so callers can fall back to their own text.
  */
-export async function askGroq(input: { system: string; user: string; model?: string; maxTokens?: number }): Promise<string | null> {
+export async function askGroq(input: { system: string; user: string; model?: string; maxTokens?: number; timeoutMs?: number }): Promise<string | null> {
   const key = process.env.GROQ_API_KEY?.trim();
   if (!key || key.startsWith("replace-with")) return null;
   // The same model the promotion captions already use in n8n.
   const model = input.model || process.env.GROQ_SUMMARY_MODEL?.trim() || "openai/gpt-oss-20b";
-  const timeoutMs = Number(process.env.GROQ_TIMEOUT_MS) || 4000;
+  const timeoutMs = input.timeoutMs ?? (Number(process.env.GROQ_TIMEOUT_MS) || 4000);
   try {
     const response = await fetch(endpoint, {
       method: "POST",

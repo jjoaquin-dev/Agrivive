@@ -88,3 +88,4 @@ console.log(`The consistency ratio ${math.format(consistency_ratio,{
     notation: 'fixed',
     precision:4
 }),"can be used for TOPSIS weighing")
+

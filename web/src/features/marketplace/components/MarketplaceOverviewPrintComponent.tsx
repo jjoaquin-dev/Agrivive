@@ -1,100 +1,82 @@
-import type { MarketplaceOverviewResponse } from "../api/overview";
+import type { ExplanationKey, MarketplaceOverviewExplanations, MarketplaceOverviewResponse } from "../api/overview";
+import { unitWord } from "../api/overview";
 import { formatDateTime, formatNumber } from "@/src/lib/format";
 import { formatPeso } from "@/src/lib/money";
 
 interface Props {
   data: MarketplaceOverviewResponse;
+  explanations: MarketplaceOverviewExplanations | null;
+  images: Partial<Record<ExplanationKey, string>>;
 }
 
-export const MarketplaceOverviewPrintComponent = ({ data }: Props) => {
-  const formattedDate = formatDateTime(data.generatedAt, { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const cell = "border border-neutral-300 px-1.5 py-0.5";
+const day = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
+
+const Table = ({ head, rows }: { head: string[]; rows: (string | number)[][] }) => (
+  <table className="mt-2 w-full border-collapse text-left text-[10px] leading-tight">
+    <thead className="bg-neutral-100 font-bold"><tr>{head.map((h, i) => <th key={h} className={`${cell} ${i > 1 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
+    <tbody>{rows.map((row, r) => <tr key={r} className="break-inside-avoid">{row.map((value, i) => <td key={i} className={`${cell} ${i > 1 ? "text-right" : ""}`}>{value}</td>)}</tr>)}</tbody>
+  </table>
+);
+
+/** The page that is printed or saved as a PDF: every chart as a picture, its explanation, and the table behind it. */
+export const MarketplaceOverviewPrintComponent = ({ data, explanations, images }: Props) => {
+  const amounts = data.kpis.quantityByUnit.map((item) => `${formatNumber(item.quantity)} ${unitWord(item.unit, item.quantity)}`).join(" · ") || "None yet";
+  const bucket = data.bucket === "day" ? "Day" : data.bucket === "week" ? "Week" : "Month";
+
+  const produce = data.topProduce;
+  const byPrice = [...produce].sort((a, b) => b.averagePrice - a.averagePrice);
+  const bought = data.categoryDemand.filter((c) => c.orderCount > 0);
+  const listed = data.categoryDemand.filter((c) => c.activeListings > 0);
+  let running = 0;
+  const sections: { key: ExplanationKey; title: string; table: ReturnType<typeof Table> }[] = [
+    { key: "trend", title: "Pickups Over Time", table: <Table head={[bucket, "Dates", "Orders picked up", "Total so far"]} rows={data.activityTrends.map((p) => [p.label, p.detail, p.orderCount, (running += p.orderCount)])} /> },
+    { key: "weekday", title: "Pickups by Day of the Week", table: <Table head={["Day", "Orders picked up"]} rows={data.weekdayDemand.map((d) => [d.label, d.orderCount])} /> },
+    { key: "produce", title: "Most Bought Produce", table: <Table head={["#", "Produce", "Orders", "Amount picked up", "Average price per unit"]} rows={produce.map((i) => [i.id, `${i.name} (${i.category})`, i.orderCount, `${formatNumber(i.quantity)} ${unitWord(i.unit, i.quantity)}`, `${formatPeso(i.averagePrice)} per ${i.unit}`])} /> },
+    { key: "price", title: "Average Price Paid", table: <Table head={["Produce", "Unit", "Average price per unit"]} rows={byPrice.map((i) => [i.name, i.unit, formatPeso(i.averagePrice)])} /> },
+    { key: "compare", title: "Orders Compared With Price", table: <Table head={["Produce", "Unit", "Orders (x)", "Average price per unit (y)"]} rows={produce.map((i) => [i.name, i.unit, i.orderCount, formatPeso(i.averagePrice)])} /> },
+    { key: "bought", title: "Share of Pickups, by Kind", table: <Table head={["Kind of vegetable", "Orders picked up", "Share"]} rows={bought.map((c) => [c.category, c.orderCount, `${c.orderShare}%`])} /> },
+    { key: "listed", title: "Share of Open Listings, by Kind", table: <Table head={["Kind of vegetable", "Listings open now", "Share"]} rows={listed.map((c) => [c.category, c.activeListings, `${c.listingShare}%`])} /> },
+    { key: "demand", title: "Bought vs Listed, by Kind of Vegetable", table: <Table head={["Kind", "Orders picked up", "Share of pickups", "Listings open now", "Share of listings"]} rows={data.categoryDemand.map((c) => [c.category, c.orderCount, `${c.orderShare}%`, c.activeListings, `${c.listingShare}%`])} /> },
+  ];
 
   return (
-    <div className="hidden print:block p-8 font-body text-neutral-900 bg-white">
-      {/* Official Header */}
-      <div className="border-b-2 border-neutral-900 pb-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-black uppercase tracking-tight text-neutral-900">
-              Agrivive Marketplace Overview & Planning Report
-            </h1>
-            <p className="text-xs text-neutral-600 mt-1">
-              Public Agricultural Food Rescue, Market Trends & Supply Analytics - Davao City Network
-            </p>
+    <div className="hidden bg-white font-body text-neutral-900 print:block">
+      <style>{"@media print { @page { size: A4; margin: 12mm; } }"}</style>
+      <div className="mb-3 border-b-2 border-neutral-900 pb-2">
+        <h1 className="text-xl font-black">Agrivive Public Marketplace Overview</h1>
+        <p className="mt-1 text-xs text-neutral-600">Totals of produce bought and listed. Descriptive only: no predictions, no seller or buyer details.</p>
+        <p className="mt-1 text-xs font-semibold text-neutral-700">Dates: {day(data.from)} to {day(data.to)} · Generated: {formatDateTime(data.generatedAt, { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+      </div>
+
+      <div className="mb-4 grid grid-cols-4 gap-2">
+        {[
+          ["Completed pickups", formatNumber(data.kpis.completedPickups)],
+          ["Amount picked up", amounts],
+          ["Pickup rate", data.kpis.pickupRate === null ? "No data yet" : `${data.kpis.pickupRate}%`],
+          ["Listed right now", formatNumber(data.kpis.activeListings)],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded border border-neutral-300 p-2">
+            <p className="text-[11px] font-bold text-neutral-500">{label}</p>
+            <p className="mt-0.5 text-base font-black">{value}</p>
           </div>
-          <div className="text-right text-xs text-neutral-600">
-            <p className="font-bold">Generated: {formattedDate}</p>
-            <p className="capitalize">Reporting Scope: {data.range}ly Aggregate</p>
+        ))}
+      </div>
+
+      {sections.map((section) => (
+        <section key={section.key} className="mb-4">
+          <div className="break-inside-avoid">
+            <h2 className="break-after-avoid border-b border-neutral-300 pb-0.5 text-[13px] font-bold">{section.title}</h2>
+            {images[section.key] ? <img src={images[section.key]} alt={section.title} className="mx-auto mt-1.5 max-h-[7.5cm] w-auto max-w-full object-contain" /> : null}
+            <p className="mt-1.5 text-[11px] leading-snug">{explanations?.[section.key] ?? ""}</p>
           </div>
-        </div>
-      </div>
+          {section.table}
+        </section>
+      ))}
 
-      {/* KPI Summary Grid */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="border border-neutral-300 p-3 rounded-lg">
-          <p className="text-xs font-bold uppercase text-neutral-500">Total Food Rescued</p>
-          <p className="text-xl font-black mt-1">{formatNumber(data.kpis.totalRescuedQty)} kg</p>
-        </div>
-        <div className="border border-neutral-300 p-3 rounded-lg">
-          <p className="text-xs font-bold uppercase text-neutral-500">Active Surplus Listings</p>
-          <p className="text-xl font-black mt-1">{data.kpis.activeListings}</p>
-        </div>
-        <div className="border border-neutral-300 p-3 rounded-lg">
-          <p className="text-xs font-bold uppercase text-neutral-500">Pickup Fulfillment Rate</p>
-          <p className="text-xl font-black mt-1">{data.kpis.fulfillmentRate}%</p>
-        </div>
-      </div>
-
-      {/* Top 10 Produce Table */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider mb-2 border-b border-neutral-200 pb-1">
-          Top 10 Most Purchased Produce Items ({data.range})
-        </h2>
-        <table className="w-full text-left text-xs border border-neutral-200">
-          <thead className="bg-neutral-100 font-bold border-b border-neutral-200">
-            <tr>
-              <th className="p-2 border-r border-neutral-200">Rank</th>
-              <th className="p-2 border-r border-neutral-200">Produce Name</th>
-              <th className="p-2 border-r border-neutral-200">Category</th>
-              <th className="p-2 border-r border-neutral-200 text-right">Volume Rescued</th>
-              <th className="p-2 border-r border-neutral-200 text-right">Orders</th>
-              <th className="p-2 text-right">Estimated Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.topProduce.map((item, idx) => (
-              <tr key={item.id} className="border-b border-neutral-200 even:bg-neutral-50/50">
-                <td className="p-2 border-r border-neutral-200 font-bold">#{idx + 1}</td>
-                <td className="p-2 border-r border-neutral-200 font-semibold">{item.name}</td>
-                <td className="p-2 border-r border-neutral-200 text-neutral-600">{item.category}</td>
-                <td className="p-2 border-r border-neutral-200 text-right font-bold">{item.totalQuantity} {item.unit}</td>
-                <td className="p-2 border-r border-neutral-200 text-right">{item.orderCount}</td>
-                <td className="p-2 text-right font-bold">{formatPeso(item.totalValue)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Surplus Crop Distribution */}
-      <div className="mb-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider mb-2 border-b border-neutral-200 pb-1">
-          Surplus Crop Distribution
-        </h2>
-        <div className="grid grid-cols-2 gap-1.5">
-          {data.categoryBreakdown.map((c) => (
-            <div key={c.category} className="border border-neutral-200 p-2 rounded-lg flex justify-between text-xs">
-              <span className="font-bold">{c.category}</span>
-              <span>{c.activeCount} active listings ({c.percentage}%)</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Document Footer */}
-      <div className="border-t border-neutral-400 pt-3 text-xs text-neutral-500 flex justify-between">
-        <span>Agrivive Open Agricultural Intelligence Platform</span>
-        <span>Verified Public Overview Record</span>
+      <div className="flex justify-between border-t border-neutral-400 pt-2 text-[11px] text-neutral-500">
+        <span>Agrivive · Davao City</span>
+        <span>Public marketplace overview</span>
       </div>
     </div>
   );

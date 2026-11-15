@@ -182804,7 +182804,7 @@ async function askGroq(input) {
   if (!key || key.startsWith("replace-with"))
     return null;
   const model = input.model || process.env.GROQ_SUMMARY_MODEL?.trim() || "openai/gpt-oss-20b";
-  const timeoutMs = Number(process.env.GROQ_TIMEOUT_MS) || 4000;
+  const timeoutMs = input.timeoutMs ?? (Number(process.env.GROQ_TIMEOUT_MS) || 4000);
   try {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -186612,239 +186612,308 @@ var pickupStallRoute = new Elysia({ prefix: "/seller/stall" }).use(sessionAuth).
 // src/modules/pickup/index.ts
 var pickupRoute = new Elysia({ name: "pickup" }).use(pickupStallRoute).use(pickupSellerOrderRoute).use(pickupBuyerOrderRoute);
 
+// src/modules/marketplace/services/marketplace.overview.demand.ts
+var share = (part, total) => total > 0 ? Math.round(part / total * 100) : 0;
+async function readCategoryDemand(period) {
+  const category = sql3`coalesce(${vegetable_catalog.category}::text, ${sellers_product.productType}::text, 'Other')`;
+  const [bought, listed] = await Promise.all([
+    db2.select({ category, count: sql3`count(distinct ${orders.id})::int` }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).leftJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(orders.status, "completed"), isNotNull(orders.completedAt), gte(orders.completedAt, period.since), lte(orders.completedAt, period.until))).groupBy(category),
+    db2.select({ category, count: sql3`count(*)::int` }).from(sellers_product).leftJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), sql3`${sellers_product.productQty} > 0`)).groupBy(category)
+  ]);
+  const boughtBy = new Map(bought.map((row) => [row.category, Number(row.count)]));
+  const listedBy = new Map(listed.map((row) => [row.category, Number(row.count)]));
+  const orderTotal = [...boughtBy.values()].reduce((sum, value) => sum + value, 0);
+  const listingTotal = [...listedBy.values()].reduce((sum, value) => sum + value, 0);
+  return [...new Set([...boughtBy.keys(), ...listedBy.keys()])].map((name) => ({
+    category: name,
+    orderCount: boughtBy.get(name) ?? 0,
+    orderShare: share(boughtBy.get(name) ?? 0, orderTotal),
+    activeListings: listedBy.get(name) ?? 0,
+    listingShare: share(listedBy.get(name) ?? 0, listingTotal)
+  })).sort((a, b) => b.orderCount - a.orderCount || b.activeListings - a.activeListings || a.category.localeCompare(b.category));
+}
+
+// src/modules/marketplace/services/marketplace.overview.period.ts
+var dayMs = 86400000;
+var manilaOffsetMs2 = 8 * 3600000;
+var datePattern = /^\d{4}-\d{2}-\d{2}$/;
+var maxDays = 366;
+var toMs = (day) => Date.parse(`${day}T00:00:00Z`);
+var toDay = (ms) => new Date(ms).toISOString().slice(0, 10);
+var isRealDay = (value) => Boolean(value && datePattern.test(value) && toDay(toMs(value)) === value);
+function resolveOverviewPeriod(query, now = new Date) {
+  const today = toDay(now.getTime() + manilaOffsetMs2);
+  let to = isRealDay(query.to) && query.to < today ? query.to : today;
+  let from = isRealDay(query.from) ? query.from : toDay(toMs(to) - 27 * dayMs);
+  if (from > to)
+    [from, to] = [to, from];
+  if (toMs(to) - toMs(from) > (maxDays - 1) * dayMs)
+    from = toDay(toMs(to) - (maxDays - 1) * dayMs);
+  const days = Math.round((toMs(to) - toMs(from)) / dayMs) + 1;
+  return {
+    from,
+    to,
+    since: new Date(`${from}T00:00:00+08:00`),
+    until: new Date(`${to}T23:59:59.999+08:00`),
+    days,
+    bucket: days <= 31 ? "day" : days <= 98 ? "week" : "month"
+  };
+}
+
+// src/modules/marketplace/services/marketplace.overview.produce.ts
+var unitName = (value) => value === "sack" ? "sack" : value === "pile" ? "pile" : "kg";
+async function readTopProduce(period) {
+  const name = sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`;
+  const unit = sql3`coalesce(${ordered_items.scalingType}, ${sellers_product.scalingType})::text`;
+  const rows = await db2.select({
+    name,
+    unit,
+    category: sql3`max(coalesce(${vegetable_catalog.category}::text, ${sellers_product.productType}::text))`,
+    quantity: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
+    orderCount: sql3`count(distinct ${orders.id})::int`,
+    amount: sql3`coalesce(sum(${ordered_items.subtotal}), 0)::float`
+  }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).leftJoin(vegetable_catalog, eq(sellers_product.vegetableCatalogId, vegetable_catalog.id)).where(and(eq(orders.status, "completed"), isNotNull(orders.completedAt), gte(orders.completedAt, period.since), lte(orders.completedAt, period.until), isNotNull(name))).groupBy(name, unit);
+  const items = rows.map((row) => {
+    const quantity = Number(row.quantity);
+    return {
+      id: "",
+      name: row.name.trim(),
+      category: row.category ?? "Other",
+      unit: unitName(row.unit),
+      quantity: Math.round(quantity * 100) / 100,
+      orderCount: Number(row.orderCount),
+      averagePrice: quantity > 0 ? Math.round(Number(row.amount) / quantity * 100) / 100 : 0
+    };
+  }).filter((item) => item.name).sort((a, b) => b.orderCount - a.orderCount || b.quantity - a.quantity || a.name.localeCompare(b.name));
+  const quantityByUnit = new Map;
+  for (const item of items)
+    quantityByUnit.set(item.unit, (quantityByUnit.get(item.unit) ?? 0) + item.quantity);
+  const totals = [...quantityByUnit].map(([unit, quantity]) => ({ unit, quantity: Math.round(quantity * 100) / 100 }));
+  return {
+    topProduce: items.slice(0, 10).map((item, index) => ({ ...item, id: String(index + 1) })),
+    produceTypesBought: new Set(items.map((item) => item.name.toLowerCase())).size,
+    quantityByUnit: totals
+  };
+}
+
 // src/modules/marketplace/services/marketplace.overview.trends.ts
-async function calculateRealTrends(range) {
-  const now = new Date;
-  if (range === "week") {
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var dayMs2 = 86400000;
+var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+var dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var ms = (day) => Date.parse(`${day}T00:00:00Z`);
+var shortDay = (value) => `${monthNames[new Date(value).getUTCMonth()]} ${new Date(value).getUTCDate()}`;
+async function calculateRealTrends(period) {
+  const day = sql3`to_char(${orders.completedAt} at time zone 'Asia/Manila', 'YYYY-MM-DD')`;
+  const rows = await db2.select({ day, count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.status, "completed"), isNotNull(orders.completedAt), gte(orders.completedAt, period.since), lte(orders.completedAt, period.until))).groupBy(day);
+  const perDay = new Map(rows.map((row) => [row.day, Number(row.count)]));
+  const days = Array.from({ length: period.days }, (_, index) => ms(period.from) + index * dayMs2);
+  const total = (slice) => slice.reduce((sum, value) => sum + (perDay.get(new Date(value).toISOString().slice(0, 10)) ?? 0), 0);
+  if (period.bucket === "day") {
+    return days.map((value) => ({ label: shortDay(value), detail: `${dayNames[new Date(value).getUTCDay()]}, ${shortDay(value)}`, orderCount: total([value]) }));
+  }
+  if (period.bucket === "week") {
     const points = [];
-    for (let i = 6;i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-      const res = await db2.select({
-        qty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-        orders: sql3`count(distinct ${orders.id})::int`
-      }).from(orders).leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, startOfDay), sql3`${orders.createdAt} <= ${endOfDay}`));
-      points.push({
-        label: dayNames[d.getDay()],
-        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        quantity: Math.round(Number(res[0]?.qty ?? 0)),
-        orderCount: Number(res[0]?.orders ?? 0)
-      });
+    for (let start = 0;start < days.length; start += 7) {
+      const slice = days.slice(start, start + 7);
+      const first = shortDay(slice[0]);
+      const last = shortDay(slice[slice.length - 1]);
+      const sameMonth = new Date(slice[0]).getUTCMonth() === new Date(slice[slice.length - 1]).getUTCMonth();
+      const end = sameMonth ? String(new Date(slice[slice.length - 1]).getUTCDate()) : last;
+      points.push({ label: slice.length === 1 ? first : `${first}\u2013${end}`, detail: `${first} to ${last}`, orderCount: total(slice) });
     }
     return points;
   }
-  if (range === "year") {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const points = [];
-    for (let m = 11;m >= 0; m--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-      const res = await db2.select({
-        qty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-        orders: sql3`count(distinct ${orders.id})::int`
-      }).from(orders).leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, start), sql3`${orders.createdAt} <= ${end}`));
-      points.push({
-        label: monthNames[d.getMonth()],
-        date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-        quantity: Math.round(Number(res[0]?.qty ?? 0)),
-        orderCount: Number(res[0]?.orders ?? 0)
-      });
-    }
-    return points;
-  }
-  const points = [];
-  for (let w = 3;w >= 0; w--) {
-    const start = new Date(now.getTime() - (w + 1) * 7 * 24 * 60 * 60 * 1000);
-    const end = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000);
-    const res = await db2.select({
-      qty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-      orders: sql3`count(distinct ${orders.id})::int`
-    }).from(orders).leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, start), sql3`${orders.createdAt} < ${end}`));
-    points.push({
-      label: `Week ${4 - w}`,
-      date: `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
-      quantity: Math.round(Number(res[0]?.qty ?? 0)),
-      orderCount: Number(res[0]?.orders ?? 0)
-    });
-  }
-  return points;
+  const months = [...new Set(days.map((value) => new Date(value).toISOString().slice(0, 7)))];
+  return months.map((month) => {
+    const year = month.slice(0, 4);
+    const name = monthNames[Number(month.slice(5)) - 1];
+    return { label: `${name} ${year}`, detail: `${name} ${year}`, orderCount: total(days.filter((value) => new Date(value).toISOString().startsWith(month))) };
+  });
+}
+
+// src/modules/marketplace/services/marketplace.overview.weekday.ts
+var weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+async function readWeekdayDemand(period) {
+  const isoDay = sql3`extract(isodow from ${orders.completedAt} at time zone 'Asia/Manila')::int`;
+  const rows = await db2.select({ isoDay, count: sql3`count(*)::int` }).from(orders).where(and(eq(orders.status, "completed"), isNotNull(orders.completedAt), gte(orders.completedAt, period.since), lte(orders.completedAt, period.until))).groupBy(isoDay);
+  const byDay = new Map(rows.map((row) => [Number(row.isoDay), Number(row.count)]));
+  return weekdays.map((label, index) => ({ label, orderCount: byDay.get(index + 1) ?? 0 }));
 }
 
 // src/modules/marketplace/services/marketplace.overview.ts
-async function readMarketplaceOverview(range = "month") {
-  const days = range === "week" ? 7 : range === "year" ? 365 : 30;
-  const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const [users, listings, orderRows, cropRows, rescueRows, dbTopRows, stalls, buyerSummary, activityTrends] = await Promise.all([
+async function readMarketplaceOverview(query = {}) {
+  const period = resolveOverviewPeriod(query);
+  const [produce, trends, categoryDemand, weekdayDemand, listings, ended] = await Promise.all([
+    readTopProduce(period),
+    calculateRealTrends(period),
+    readCategoryDemand(period),
+    readWeekdayDemand(period),
+    db2.select({ active: sql3`count(*)::int` }).from(sellers_product).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true), sql3`${sellers_product.productQty} > 0`)),
     db2.select({
-      sellers: sql3`count(*) filter (where 'seller'::"role" = any(${user.role}))::int`,
-      buyers: sql3`count(*) filter (where 'buyer'::"role" = any(${user.role}))::int`
-    }).from(user),
-    db2.select({
-      total: sql3`count(*)::int`,
-      active: sql3`count(*) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`
-    }).from(sellers_product),
-    db2.select({ status: orders.status, count: sql3`count(*)::int` }).from(orders).groupBy(orders.status),
-    db2.select({
-      category: sellers_product.productType,
-      activeCount: sql3`count(*)::int`
-    }).from(sellers_product).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).groupBy(sellers_product.productType),
-    db2.select({
-      totalRescuedQty: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-      totalOrders: sql3`count(distinct ${orders.id})::int`
-    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))),
-    db2.select({
-      name: sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`,
-      category: sellers_product.productType,
-      totalQuantity: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-      orderCount: sql3`count(distinct ${orders.id})::int`,
-      totalValue: sql3`coalesce(sum(${ordered_items.subtotal}), 0)::float`
-    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).where(and(eq(orders.status, "completed"), gte(orders.createdAt, sinceDate))).groupBy(sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`, sellers_product.productType).orderBy(sql3`sum(${ordered_items.quantity}) desc`).limit(10),
-    db2.select({
-      id: sellers_profile.id,
-      shopName: sellers_profile.shopName,
-      detailAddress: sellers_profile.detailAddress,
-      activeListings: sql3`count(distinct ${sellers_product.id}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})::int`,
-      totalStockKg: sql3`coalesce(sum(${sellers_product.productQty}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable}), 0)::float`
-    }).from(sellers_profile).leftJoin(sellers_product, eq(sellers_profile.userId, sellers_product.userId)).where(eq(sellers_profile.isCurrent, true)).groupBy(sellers_profile.id, sellers_profile.shopName, sellers_profile.detailAddress).orderBy(desc(sql3`count(distinct ${sellers_product.id}) filter (where ${sellers_product.isActive} and ${sellers_product.isMarketable})`)).limit(6),
-    db2.select({
-      totalBuyersWhoOrdered: sql3`count(distinct ${orders.buyersId})::int`,
-      completedPickups: sql3`count(*) filter (where ${orders.status} = 'completed')::int`,
-      activeOrders: sql3`count(*) filter (where ${orders.status} = 'pending')::int`
-    }).from(orders),
-    calculateRealTrends(range)
+      completed: sql3`count(*) filter (where ${orders.status} = 'completed')::int`,
+      notCompleted: sql3`count(*) filter (where ${orders.status} in ('cancelled', 'expired', 'declined'))::int`
+    }).from(orders).where(and(gte(orders.createdAt, period.since), lte(orders.createdAt, period.until), isNotNull(orders.createdAt)))
   ]);
-  const orderMap = Object.fromEntries(orderRows.map((r) => [r.status, Number(r.count)]));
-  const completed = orderMap.completed ?? 0;
-  const expired = orderMap.expired ?? 0;
-  const cancelled = orderMap.cancelled ?? 0;
-  const totalDecided = completed + expired + cancelled;
-  const fulfillmentRate = totalDecided > 0 ? Math.round(completed / totalDecided * 100) : 100;
-  const totalCrops = cropRows.reduce((acc, r) => acc + Number(r.activeCount), 0);
-  const categoryBreakdown = cropRows.map((r) => ({
-    category: String(r.category),
-    activeCount: Number(r.activeCount),
-    percentage: totalCrops > 0 ? Math.round(Number(r.activeCount) / totalCrops * 100) : 0
-  }));
-  const topProduce = dbTopRows.map((row, idx) => ({
-    id: String(idx + 1),
-    name: row.name?.trim() || "Produce item",
-    category: row.category || "Fresh Produce",
-    totalQuantity: Math.round(Number(row.totalQuantity)),
-    unit: "kg",
-    orderCount: Number(row.orderCount),
-    totalValue: Math.round(Number(row.totalValue))
-  }));
-  const existingNames = new Set(topProduce.map((p) => p.name.toLowerCase()));
-  if (topProduce.length < 10) {
-    const allTimeCompleted = await db2.select({
-      name: sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`,
-      category: sellers_product.productType,
-      totalQuantity: sql3`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-      orderCount: sql3`count(distinct ${orders.id})::int`,
-      totalValue: sql3`coalesce(sum(${ordered_items.subtotal}), 0)::float`
-    }).from(ordered_items).innerJoin(orders, eq(ordered_items.ordersId, orders.id)).leftJoin(sellers_product, eq(ordered_items.productId, sellers_product.id)).where(eq(orders.status, "completed")).groupBy(sql3`coalesce(${ordered_items.productName}, ${sellers_product.productName})`, sellers_product.productType).orderBy(sql3`sum(${ordered_items.quantity}) desc`);
-    for (const item of allTimeCompleted) {
-      if (topProduce.length >= 10)
-        break;
-      const cleanName = item.name?.trim() || "Fresh Produce";
-      if (!existingNames.has(cleanName.toLowerCase())) {
-        existingNames.add(cleanName.toLowerCase());
-        topProduce.push({
-          id: String(topProduce.length + 1),
-          name: cleanName,
-          category: item.category || "Fresh Produce",
-          totalQuantity: Math.round(Number(item.totalQuantity)),
-          unit: "kg",
-          orderCount: Number(item.orderCount),
-          totalValue: Math.round(Number(item.totalValue))
-        });
-      }
-    }
-  }
-  if (topProduce.length < 10) {
-    const activeListings = await db2.select({
-      name: sellers_product.productName,
-      category: sellers_product.productType,
-      qty: sellers_product.productQty,
-      price: sellers_product.productPrice
-    }).from(sellers_product).where(and(eq(sellers_product.isActive, true), eq(sellers_product.isMarketable, true))).orderBy(desc(sellers_product.productQty));
-    for (const p of activeListings) {
-      if (topProduce.length >= 10)
-        break;
-      const cleanName = p.name?.trim() || "Market Produce";
-      if (!existingNames.has(cleanName.toLowerCase())) {
-        existingNames.add(cleanName.toLowerCase());
-        const qty = Math.round(Number(p.qty ?? 0));
-        const price = Number(p.price ?? 0);
-        topProduce.push({
-          id: String(topProduce.length + 1),
-          name: cleanName,
-          category: p.category || "Fresh Produce",
-          totalQuantity: qty,
-          unit: "kg",
-          orderCount: 1,
-          totalValue: Math.round(qty * price)
-        });
-      }
-    }
-  }
-  const finalTopProduce = topProduce.slice(0, 10).map((item, idx) => ({
-    ...item,
-    id: String(idx + 1)
-  }));
-  const registeredBuyers = Number(users[0]?.buyers ?? 0);
-  const registeredSellers = Number(users[0]?.sellers ?? 0);
+  const completed = Number(ended[0]?.completed ?? 0);
+  const decided = completed + Number(ended[0]?.notCompleted ?? 0);
   return {
     generatedAt: new Date().toISOString(),
-    range,
+    from: period.from,
+    to: period.to,
+    bucket: period.bucket,
     isSampleData: false,
     kpis: {
-      totalRescuedQty: Math.round(Number(rescueRows[0]?.totalRescuedQty ?? 0)),
+      completedPickups: weekdayDemand.reduce((sum, day) => sum + day.orderCount, 0),
+      produceTypesBought: produce.produceTypesBought,
       activeListings: Number(listings[0]?.active ?? 0),
-      totalOrders: Number(rescueRows[0]?.totalOrders ?? 0),
-      fulfillmentRate,
-      activeSellers: registeredSellers,
-      activeBuyers: registeredBuyers
+      pickupRate: decided > 0 ? Math.round(completed / decided * 100) : null,
+      quantityByUnit: produce.quantityByUnit
     },
-    topProduce: finalTopProduce,
-    activityTrends,
-    categoryBreakdown,
-    sellerStalls: stalls.map((s) => ({
-      id: s.id,
-      shopName: s.shopName,
-      detailAddress: s.detailAddress,
-      activeListings: Number(s.activeListings ?? 0),
-      totalStockKg: Math.round(Number(s.totalStockKg ?? 0))
-    })),
-    buyerSummary: {
-      registeredBuyers,
-      activeBuyersWithOrders: Number(buyerSummary[0]?.totalBuyersWhoOrdered ?? 0),
-      completedPickups: Number(buyerSummary[0]?.completedPickups ?? 0),
-      pendingPickups: Number(buyerSummary[0]?.activeOrders ?? 0)
-    }
+    topProduce: produce.topProduce,
+    activityTrends: trends,
+    categoryDemand,
+    weekdayDemand
   };
 }
 
 // src/modules/marketplace/model/marketplace.overview.ts
 var marketplaceOverviewQuerySchema = t.Object({
-  range: t.Optional(t.Union([t.Literal("week"), t.Literal("month"), t.Literal("year")]))
+  from: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+  to: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" }))
 });
+var explanationKeys = ["trend", "weekday", "produce", "price", "compare", "bought", "listed", "demand"];
+
+// src/modules/marketplace/services/marketplace.overview.facts.ts
+var unit = (name, quantity) => name === "kg" || quantity === 1 ? name : `${name}s`;
+function buildOverviewFacts(overview) {
+  const { activityTrends: trend, topProduce, categoryDemand, weekdayDemand, kpis } = overview;
+  const busiest = [...trend].sort((a, b) => b.orderCount - a.orderCount)[0];
+  const empty = trend.filter((point) => point.orderCount === 0).length;
+  const busyDay = [...weekdayDemand].sort((a, b) => b.orderCount - a.orderCount)[0];
+  const weekdayTotal = weekdayDemand.reduce((sum, day) => sum + day.orderCount, 0);
+  const none = "Nothing was recorded for these days.";
+  return {
+    trend: [
+      `Days covered: ${overview.from} to ${overview.to}. Each bar is one ${overview.bucket}.`,
+      `Completed pickups in total: ${kpis.completedPickups}.`,
+      busiest && busiest.orderCount > 0 ? `Highest bar: ${busiest.detail} with ${busiest.orderCount} pickups.` : "No bar has a pickup.",
+      `Bars with no pickups: ${empty} of ${trend.length}.`,
+      `Bars: ${trend.map((point) => `${point.detail} ${point.orderCount}`).join("; ")}.`
+    ].join(`
+`),
+    weekday: weekdayTotal > 0 ? `${weekdayDemand.map((day) => `${day.label} ${day.orderCount}`).join("; ")}. Busiest day: ${busyDay.label} with ${busyDay.orderCount}.` : "No completed pickups in these days.",
+    produce: topProduce.length ? topProduce.map((item) => `${item.id}. ${item.name} (${item.category}): ${item.orderCount} orders, ${item.quantity} ${unit(item.unit, item.quantity)}.`).join(`
+`) : none,
+    price: topProduce.length ? [...topProduce].sort((a, b) => b.averagePrice - a.averagePrice).map((item) => `${item.name} (${item.unit}): average ${item.averagePrice} pesos per ${item.unit}.`).join(`
+`) : none,
+    compare: topProduce.length ? topProduce.map((item) => `${item.name} (${item.unit}): ${item.orderCount} orders, average ${item.averagePrice} pesos per ${item.unit}.`).join(`
+`) : none,
+    bought: categoryDemand.some((item) => item.orderCount > 0) ? categoryDemand.filter((item) => item.orderCount > 0).map((item) => `${item.category}: ${item.orderShare}% of pickups (${item.orderCount} orders).`).join(`
+`) : none,
+    listed: categoryDemand.some((item) => item.activeListings > 0) ? categoryDemand.filter((item) => item.activeListings > 0).map((item) => `${item.category}: ${item.listingShare}% of open listings (${item.activeListings} listings).`).join(`
+`) : none,
+    demand: categoryDemand.length ? categoryDemand.map((item) => `${item.category}: ${item.orderShare}% of pickups (${item.orderCount} orders), ${item.listingShare}% of open listings (${item.activeListings} listings).`).join(`
+`) : none
+  };
+}
+
+// src/modules/marketplace/services/marketplace.overview.template.ts
+var unit2 = (name, quantity) => name === "kg" || quantity === 1 ? name : `${name}s`;
+var plural = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+function buildTemplateExplanations(overview) {
+  const { activityTrends: trend, topProduce, categoryDemand, weekdayDemand, kpis } = overview;
+  const busiest = [...trend].sort((a, b) => b.orderCount - a.orderCount)[0];
+  const busyDay = [...weekdayDemand].sort((a, b) => b.orderCount - a.orderCount)[0];
+  const lead = topProduce[0];
+  const priciest = [...topProduce].sort((a, b) => b.averagePrice - a.averagePrice)[0];
+  const cheapest = [...topProduce].sort((a, b) => a.averagePrice - b.averagePrice)[0];
+  const topBought = [...categoryDemand].sort((a, b) => b.orderShare - a.orderShare)[0];
+  const topListed = [...categoryDemand].sort((a, b) => b.listingShare - a.listingShare)[0];
+  const noPickups = "No orders were picked up in these days.";
+  return {
+    trend: kpis.completedPickups === 0 ? noPickups : `Agrivive recorded ${plural(kpis.completedPickups, "order")} picked up in these days. The highest bar is ${busiest.detail}, with ${plural(busiest.orderCount, "pickup")}.`,
+    weekday: busyDay && busyDay.orderCount > 0 ? `Most Agrivive pickups happened on ${busyDay.label}, with ${plural(busyDay.orderCount, "order")}.` : noPickups,
+    produce: !lead ? noPickups : `On Agrivive, ${lead.name} was picked up most, in ${plural(lead.orderCount, "order")} (${lead.quantity} ${unit2(lead.unit, lead.quantity)}).`,
+    price: !priciest || !cheapest ? noPickups : `${priciest.name} had the highest average price, ${priciest.averagePrice} pesos per ${priciest.unit}. ${cheapest.name} had the lowest, ${cheapest.averagePrice} pesos per ${cheapest.unit}.`,
+    compare: !lead ? noPickups : `Each dot is one produce. ${lead.name} was bought in the most orders (${lead.orderCount}), at an average of ${lead.averagePrice} pesos per ${lead.unit}.`,
+    bought: !topBought || topBought.orderCount === 0 ? noPickups : `${topBought.category} made up the biggest share of pickups, ${topBought.orderShare}% (${plural(topBought.orderCount, "order")}).`,
+    listed: !topListed || topListed.activeListings === 0 ? "No listings are open right now." : `${topListed.category} makes up the biggest share of the listings open now, ${topListed.listingShare}% (${plural(topListed.activeListings, "listing")}).`,
+    demand: !topBought || topBought.orderCount === 0 ? "Nothing was bought in these days, so there is no share to compare with the open listings." : `${topBought.category} made up ${topBought.orderShare}% of pickups and ${topBought.listingShare}% of the listings open now.`
+  };
+}
+
+// src/modules/marketplace/services/marketplace.overview.explain.ts
+var cache8 = new Map;
+var MAX_ENTRIES2 = 100;
+var KEEP_MS2 = 30 * 60000;
+var RETRY_MS2 = 60000;
+var labels = { trend: "TREND", weekday: "WEEKDAY", produce: "PRODUCE", price: "PRICE", compare: "COMPARE", bought: "BOUGHT", listed: "LISTED", demand: "KIND" };
+var forbidden = /\b(will|would|expect|expected|likely|should|could|predict|forecast|recommend|suggest|advise|going to|soon|trend continues|plan to|farmers? (?:can|may))\b/i;
+var system2 = [
+  "You write the short summary shown under each of eight charts on the public overview page of Agrivive, a vegetable marketplace in Davao City. The readers are farmers and the public.",
+  "Write about what Agrivive recorded: name Agrivive or the platform as the source, and speak of orders picked up on Agrivive and listings open on Agrivive. Use a neutral, professional tone, as in an official report.",
+  "Use only the facts you are given. Do not add advice, guesses, reasons, forecasts or any number that is not in the facts.",
+  "Only say what already happened. Never say what will happen, what to plant, or what to do. Never name a person, shop or place.",
+  "For each chart write 2 short sentences in plain, simple words. Name at most the three biggest items, and copy each item's number exactly as given. Never mention an item that has zero or is not listed. No lists, no markdown, no emojis.",
+  "Say kg for kilos and pesos for money.",
+  "Answer with exactly eight lines, each starting with its label and a colon: TREND:, WEEKDAY:, PRODUCE:, PRICE:, COMPARE:, BOUGHT:, LISTED:, KIND:."
+].join(" ");
+function parse11(text, facts) {
+  const written = {};
+  for (const key of explanationKeys) {
+    const match = new RegExp(`${labels[key]}\\s*:\\s*(.+)`, "i").exec(text);
+    const line = match?.[1]?.replace(/[*_#`]/g, "").replace(/\s+/g, " ").trim();
+    if (line && line.length >= 20 && line.length <= 400 && !forbidden.test(line) && summaryUsesOnlyFacts(line, facts[key]))
+      written[key] = line;
+  }
+  return written;
+}
+async function readOverviewExplanations(query) {
+  const overview = await readMarketplaceOverview(query);
+  const facts = buildOverviewFacts(overview);
+  const template = buildTemplateExplanations(overview);
+  const cacheKey = explanationKeys.map((key) => facts[key]).join(`
+--
+`);
+  const now = Date.now();
+  let entry = cache8.get(cacheKey);
+  if (!entry || entry.expiresAt <= now) {
+    const answer = await askGroq({
+      system: system2,
+      user: explanationKeys.map((key) => `${labels[key]} facts:
+${facts[key]}`).join(`
+
+`),
+      maxTokens: 2400,
+      timeoutMs: 15000
+    });
+    const written = answer ? parse11(answer, facts) : null;
+    entry = { written, expiresAt: now + (written && Object.keys(written).length ? KEEP_MS2 : RETRY_MS2) };
+    if (cache8.size >= MAX_ENTRIES2)
+      cache8.delete(cache8.keys().next().value);
+    cache8.set(cacheKey, entry);
+  }
+  const lines = Object.fromEntries(explanationKeys.map((key) => [key, entry.written?.[key] ?? template[key]]));
+  const allAi = explanationKeys.every((key) => Boolean(entry.written?.[key]));
+  return { source: allAi ? "ai" : "template", ...lines };
+}
 
 // src/modules/marketplace/index/marketplace.overview.ts
 var marketplaceOverviewRoute = new Elysia().get("/overview", async ({ query, status }) => {
   try {
-    const range = query.range || "month";
-    return await readMarketplaceOverview(range);
+    return await readMarketplaceOverview(query);
   } catch (error) {
     console.error("Failed to read marketplace overview:", error);
     return status(500, { message: "Failed to read marketplace overview" });
   }
-}, {
-  query: marketplaceOverviewQuerySchema
-});
+}, { query: marketplaceOverviewQuerySchema }).get("/overview/explanations", async ({ query, status }) => {
+  try {
+    return await readOverviewExplanations(query);
+  } catch (error) {
+    console.error("Failed to write overview explanations:", error);
+    return status(500, { message: "Failed to write overview explanations" });
+  }
+}, { query: marketplaceOverviewQuerySchema });
 
 // src/modules/marketplace/model/marketplace.products.deals.ts
 var marketplaceDealsQuery = t.Object({
