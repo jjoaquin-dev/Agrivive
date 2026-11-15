@@ -16,12 +16,12 @@ export const MarketplaceOverviewKpiComponent = ({ kpis }: Props) => {
   ];
 
   return (
-    <dl className="grid gap-px overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200 sm:grid-cols-2 lg:grid-cols-4">
+    <dl className="grid gap-px overflow-hidden rounded-xl border border-agrivive-border bg-neutral-200 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map(({ title, value, note }) => (
         <div key={title} className="bg-white p-5">
-          <dt className="text-xs font-semibold text-neutral-500">{title}</dt>
-          <dd className="mt-2 text-2xl font-bold text-neutral-900">{value}</dd>
-          <p className="mt-1 text-xs leading-relaxed text-neutral-600">{note}</p>
+          <dt className="text-xs font-semibold text-agrivive-muted">{title}</dt>
+          <dd className="mt-2 font-heading text-2xl font-bold text-agrivive-ink">{value}</dd>
+          <p className="mt-1 text-xs leading-relaxed text-agrivive-muted">{note}</p>
         </div>
       ))}
     </dl>

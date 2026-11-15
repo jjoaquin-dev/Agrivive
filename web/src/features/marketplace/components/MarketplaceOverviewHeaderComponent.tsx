@@ -21,8 +21,8 @@ export const MarketplaceOverviewHeaderComponent = ({ from, to, onDatesChange, ge
     <div className="space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">Public Marketplace Overview</h1>
-          <p className="mt-1 max-w-2xl text-sm text-neutral-600">
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-agrivive-ink sm:text-3xl">Public Marketplace Overview</h1>
+          <p className="mt-1 max-w-2xl text-sm text-agrivive-muted">
             Totals of the produce bought and listed on Agrivive. The figures describe what has already happened, and no seller or buyer is identified.
           </p>
         </div>
@@ -41,8 +41,8 @@ export const MarketplaceOverviewHeaderComponent = ({ from, to, onDatesChange, ge
         </div>
       </div>
 
-      <p className="border-y border-neutral-200/80 py-2 text-xs text-neutral-500">
-        Data as of <span className="font-semibold text-neutral-700">{formattedDate}</span>
+      <p className="border-y border-agrivive-border py-2 text-xs text-agrivive-muted">
+        Data as of <span className="font-semibold text-agrivive-text">{formattedDate}</span>
         {isSampleData ? <span className="ml-2 font-semibold text-amber-800">Sample data</span> : null}
       </p>
     </div>

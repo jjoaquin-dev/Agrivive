@@ -6,6 +6,7 @@ import { unitWord, type TopProduceItem } from "../api/overview";
 import { formatNumber } from "@/src/lib/format";
 import { formatPeso } from "@/src/lib/money";
 import { CHART_COLORS, barOptions } from "../lib/chartSetup";
+import { useCompactChart } from "../lib/useCompactChart";
 import { OverviewChartCard, td, th, type Explanation } from "./OverviewChartCard";
 
 interface Props {
@@ -14,11 +15,13 @@ interface Props {
   chartRef?: (chart: ChartJS | null) => void;
 }
 
-export const OverviewProduceChart = ({ items, explanation, chartRef }: Props) => (
+export const OverviewProduceChart = ({ items, explanation, chartRef }: Props) => {
+  const compact = useCompactChart();
+  return (
   <OverviewChartCard
     title="Most Bought Produce"
     description="The produce picked up most often in the chosen dates, ranked by number of orders. The unit is in brackets."
-    height={items.length > 6 ? "h-[28rem]" : "h-80"}
+    height={items.length > 6 ? "h-[30rem]" : "h-80"}
     explanation={explanation}
     guide={[
       { term: "Across the bottom (x)", text: "How many orders were picked up. A longer bar means the produce was bought in more orders." },
@@ -29,9 +32,9 @@ export const OverviewProduceChart = ({ items, explanation, chartRef }: Props) =>
         ref={(instance) => chartRef?.(instance as ChartJS | null)}
         data={{ labels: items.map((item) => `${item.name} (${item.unit})`), datasets: [{ label: "Orders", data: items.map((item) => item.orderCount), backgroundColor: CHART_COLORS.green, borderRadius: 4, maxBarThickness: 28 }] }}
         options={{
-          ...barOptions({ horizontal: true, value: { title: "Orders that were picked up", whole: true }, category: { title: "Produce (unit)" } }),
+          ...barOptions({ compact, horizontal: true, value: { title: "Orders that were picked up", whole: true }, category: { title: "Produce (unit)" } }),
           plugins: {
-            ...barOptions({ value: { title: "" }, category: { title: "" } }).plugins,
+            ...barOptions({ compact, horizontal: true, value: { title: "" }, category: { title: "" } }).plugins,
             tooltip: {
               callbacks: {
                 label: (item) => {
@@ -60,4 +63,5 @@ export const OverviewProduceChart = ({ items, explanation, chartRef }: Props) =>
       </table>
     }
   />
-);
+  );
+};

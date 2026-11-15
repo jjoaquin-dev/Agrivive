@@ -29,7 +29,7 @@ import type { Explanation } from "@/src/features/marketplace/components/Overview
 // Two charts per row; a last chart on its own row fills the full width. `single` puts every chart on its own row.
 const Section = ({ title, single, children }: { title: string; single?: boolean; children: React.ReactNode }) => (
   <section className="space-y-4">
-    <h2 className="border-b border-neutral-200 pb-2 text-lg font-bold text-neutral-900 sm:text-xl">{title}</h2>
+    <h2 className="border-b border-agrivive-border pb-2 font-heading text-lg font-bold text-agrivive-ink sm:text-xl">{title}</h2>
     <div className={`grid items-start gap-6 ${single ? "" : "lg:grid-cols-2 [&>*:last-child:nth-child(odd)]:lg:col-span-2"}`}>{children}</div>
   </section>
 );
@@ -86,7 +86,7 @@ export default function MarketplaceOverviewPage() {
         <LandingHeader />
       </div>
 
-      <main className="min-h-screen bg-agrivive-background pb-8 pt-24 text-neutral-900 md:pt-44 lg:pb-12 print:min-h-0 print:bg-white print:p-0">
+      <main className="min-h-screen bg-agrivive-background pb-8 pt-24 text-agrivive-ink md:pt-44 lg:pb-12 print:min-h-0 print:bg-white print:p-0">
         <PageContainer>
           {loading && !data ? (
             <div className="space-y-6">
@@ -122,7 +122,7 @@ export default function MarketplaceOverviewPage() {
                 />
                 <MarketplaceOverviewKpiComponent kpis={data.kpis} />
                 {data.kpis.completedPickups === 0 ? (
-                  <p className="rounded-lg border border-neutral-200 bg-white p-4 text-sm text-neutral-800">
+                  <p className="rounded-lg border border-agrivive-border bg-white p-4 text-sm text-agrivive-text">
                     No orders were picked up from {data.from} to {data.to}, so the charts below are empty.{" "}
                     <button type="button" className="font-bold text-agrivive-primary underline underline-offset-2" onClick={() => { const end = new Date(); const start = new Date(); start.setDate(end.getDate() - 364); const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; setDates({ from: iso(start), to: iso(end) }); }}>
                       Show the last 12 months

@@ -5,6 +5,7 @@ import type { Chart as ChartJS } from "chart.js";
 import type { TopProduceItem } from "../api/overview";
 import { formatPeso } from "@/src/lib/money";
 import { CHART_COLORS } from "../lib/chartSetup";
+import { useCompactChart } from "../lib/useCompactChart";
 import { OverviewChartCard, td, th, type Explanation } from "./OverviewChartCard";
 
 interface Props {
@@ -13,9 +14,11 @@ interface Props {
   chartRef?: (chart: ChartJS | null) => void;
 }
 
-const bold = { weight: "bold" as const, size: 13 };
 
-export const OverviewCompareChart = ({ items, explanation, chartRef }: Props) => (
+export const OverviewCompareChart = ({ items, explanation, chartRef }: Props) => {
+  const compact = useCompactChart();
+  const bold = { weight: "bold" as const, size: compact ? 11 : 13 };
+  return (
   <OverviewChartCard
     title="Orders Compared With Price"
     description="Each dot is one produce: how often it was bought, and what buyers paid for it on average."
@@ -24,7 +27,7 @@ export const OverviewCompareChart = ({ items, explanation, chartRef }: Props) =>
     guide={[
       { term: "Across the bottom (x)", text: "How many orders were picked up. Dots farther right were bought in more orders." },
       { term: "Up the left side (y)", text: "The average pesos paid for one unit. Dots higher up cost more per unit." },
-      { term: "Each dot", text: "One produce, named beside it. Hover or tap a dot for its numbers. Kilos, sacks and piles are different sizes." },
+      { term: "Each dot", text: compact ? "One produce. Tap a dot to see its name and numbers. Kilos, sacks and piles are different sizes." : "One produce, named beside it. Hover or tap a dot for its numbers. Kilos, sacks and piles are different sizes." },
     ]}
     chart={
       <Scatter
@@ -33,14 +36,14 @@ export const OverviewCompareChart = ({ items, explanation, chartRef }: Props) =>
         options={{
           responsive: true,
           maintainAspectRatio: false,
-          layout: { padding: { top: 24, right: 24 } },
+          layout: { padding: { top: 24, right: compact ? 12 : 24 } },
           scales: {
-            x: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Orders picked up (more to the right)", font: bold, color: "#111827" } },
-            y: { beginAtZero: true, title: { display: true, text: "Average price per unit in pesos (₱, higher is up)", font: bold, color: "#111827" } },
+            x: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: "Orders picked up (more to the right)", font: bold, color: "#14231A" } },
+            y: { beginAtZero: true, title: { display: true, text: "Average price per unit in pesos (₱, higher is up)", font: bold, color: "#14231A" } },
           },
           plugins: {
             legend: { display: false },
-            datalabels: { display: true, align: "top", anchor: "end", color: "#111827", font: { size: 11, weight: "bold" }, formatter: (_v: unknown, ctx: { dataIndex: number }) => items[ctx.dataIndex]?.name ?? "" },
+            datalabels: { display: !compact, align: "top", anchor: "end", color: "#14231A", font: { size: 11, weight: "bold" }, formatter: (_v: unknown, ctx: { dataIndex: number }) => items[ctx.dataIndex]?.name ?? "" },
             tooltip: { callbacks: { label: (item) => { const row = items[item.dataIndex]!; return [`${row.name} (${row.unit})`, `${row.orderCount} ${row.orderCount === 1 ? "order" : "orders"}`, `${formatPeso(row.averagePrice)} per ${row.unit}`]; } } },
           },
         }}
@@ -53,4 +56,5 @@ export const OverviewCompareChart = ({ items, explanation, chartRef }: Props) =>
       </table>
     }
   />
-);
+  );
+};

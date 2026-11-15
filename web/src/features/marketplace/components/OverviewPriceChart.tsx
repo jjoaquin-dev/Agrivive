@@ -5,6 +5,7 @@ import type { Chart as ChartJS } from "chart.js";
 import type { TopProduceItem } from "../api/overview";
 import { formatPeso } from "@/src/lib/money";
 import { CHART_COLORS, barOptions } from "../lib/chartSetup";
+import { useCompactChart } from "../lib/useCompactChart";
 import { OverviewChartCard, td, th, type Explanation } from "./OverviewChartCard";
 
 interface Props {
@@ -14,8 +15,9 @@ interface Props {
 }
 
 export const OverviewPriceChart = ({ items, explanation, chartRef }: Props) => {
+  const compact = useCompactChart();
   const sorted = [...items].sort((a, b) => b.averagePrice - a.averagePrice);
-  const base = barOptions({ horizontal: true, value: { title: "Average pesos paid for one unit (₱)" }, category: { title: "Produce (unit)" } });
+  const base = barOptions({ compact, horizontal: true, value: { title: "Average pesos paid for one unit (₱)" }, category: { title: "Produce (unit)" } });
 
   return (
     <OverviewChartCard

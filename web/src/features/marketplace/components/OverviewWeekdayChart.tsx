@@ -4,6 +4,7 @@ import { Radar } from "react-chartjs-2";
 import type { Chart as ChartJS } from "chart.js";
 import type { WeekdayDemandItem } from "../api/overview";
 import { CHART_COLORS } from "../lib/chartSetup";
+import { useCompactChart } from "../lib/useCompactChart";
 import { OverviewChartCard, td, th, type Explanation } from "./OverviewChartCard";
 
 interface Props {
@@ -12,11 +13,13 @@ interface Props {
   chartRef?: (chart: ChartJS | null) => void;
 }
 
-export const OverviewWeekdayChart = ({ days, explanation, chartRef }: Props) => (
+export const OverviewWeekdayChart = ({ days, explanation, chartRef }: Props) => {
+  const compact = useCompactChart();
+  return (
   <OverviewChartCard
     title="Pickups by Day of the Week"
     description="How many orders were picked up on each weekday, added up over the chosen dates."
-    height="h-80"
+    height={compact ? "h-72" : "h-80"}
     explanation={explanation}
     guide={[
       { term: "Each corner", text: "One day of the week, Monday to Sunday." },
@@ -30,7 +33,7 @@ export const OverviewWeekdayChart = ({ days, explanation, chartRef }: Props) => 
         options={{
           responsive: true,
           maintainAspectRatio: false,
-          scales: { r: { beginAtZero: true, ticks: { precision: 0, backdropColor: "transparent", color: "#4B5563" }, pointLabels: { font: { size: 13, weight: "bold" }, color: "#111827" } } },
+          scales: { r: { beginAtZero: true, ticks: { precision: 0, backdropColor: "transparent", color: "#636B63" }, pointLabels: { font: { size: compact ? 12 : 13, weight: "bold" }, color: "#14231A" } } },
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: (item) => `${item.parsed.r} ${item.parsed.r === 1 ? "order" : "orders"} picked up` } } },
         }}
       />
@@ -42,4 +45,5 @@ export const OverviewWeekdayChart = ({ days, explanation, chartRef }: Props) => 
       </table>
     }
   />
-);
+  );
+};
