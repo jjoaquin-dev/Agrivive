@@ -4,6 +4,7 @@ import { Bar } from "react-chartjs-2";
 import type { Chart as ChartJS } from "chart.js";
 import type { CategoryDemandItem } from "../api/overview";
 import { CHART_COLORS, barOptions } from "../lib/chartSetup";
+import { useCompactChart } from "../lib/useCompactChart";
 import { OverviewChartCard, td, th, type Explanation } from "./OverviewChartCard";
 
 interface Props {
@@ -12,7 +13,9 @@ interface Props {
   chartRef?: (chart: ChartJS | null) => void;
 }
 
-export const OverviewDemandChart = ({ categories, explanation, chartRef }: Props) => (
+export const OverviewDemandChart = ({ categories, explanation, chartRef }: Props) => {
+  const compact = useCompactChart();
+  return (
   <OverviewChartCard
     title="Bought vs Listed, by Kind of Vegetable"
     description="For each kind: its share of all pickups in the chosen dates, next to its share of all listings open right now."
@@ -35,9 +38,9 @@ export const OverviewDemandChart = ({ categories, explanation, chartRef }: Props
           ],
         }}
         options={{
-          ...barOptions({ horizontal: true, legend: true, unit: "%", value: { title: "Share of the total (%)", max: 100 }, category: { title: "Kind of vegetable" } }),
+          ...barOptions({ compact, horizontal: true, legend: true, unit: "%", value: { title: "Share of the total (%)", max: 100 }, category: { title: "Kind of vegetable" } }),
           plugins: {
-            ...barOptions({ horizontal: true, legend: true, unit: "%", value: { title: "" }, category: { title: "" } }).plugins,
+            ...barOptions({ compact, horizontal: true, legend: true, unit: "%", value: { title: "" }, category: { title: "" } }).plugins,
             tooltip: {
               callbacks: {
                 label: (item) => {
@@ -61,4 +64,5 @@ export const OverviewDemandChart = ({ categories, explanation, chartRef }: Props
       </table>
     }
   />
-);
+  );
+};

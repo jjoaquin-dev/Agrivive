@@ -9,12 +9,12 @@ interface Props {
   images: Partial<Record<ExplanationKey, string>>;
 }
 
-const cell = "border border-neutral-300 px-1.5 py-0.5";
+const cell = "border border-agrivive-border px-1.5 py-0.5";
 const day = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
 
 const Table = ({ head, rows }: { head: string[]; rows: (string | number)[][] }) => (
-  <table className="mt-2 w-full border-collapse text-left text-[10px] leading-tight">
-    <thead className="bg-neutral-100 font-bold"><tr>{head.map((h, i) => <th key={h} className={`${cell} ${i > 1 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
+  <table className="mt-2 w-full border-collapse text-left text-xs leading-snug">
+    <thead className="bg-agrivive-background text-agrivive-ink"><tr>{head.map((h, i) => <th key={h} className={`${cell} font-semibold ${i > 1 ? "text-right" : ""}`}>{h}</th>)}</tr></thead>
     <tbody>{rows.map((row, r) => <tr key={r} className="break-inside-avoid">{row.map((value, i) => <td key={i} className={`${cell} ${i > 1 ? "text-right" : ""}`}>{value}</td>)}</tr>)}</tbody>
   </table>
 );
@@ -41,12 +41,12 @@ export const MarketplaceOverviewPrintComponent = ({ data, explanations, images }
   ];
 
   return (
-    <div className="hidden bg-white font-body text-neutral-900 print:block">
+    <div className="hidden bg-white font-body text-agrivive-text print:block">
       <style>{"@media print { @page { size: A4; margin: 12mm; } }"}</style>
-      <div className="mb-3 border-b-2 border-neutral-900 pb-2">
-        <h1 className="text-xl font-black">Agrivive Public Marketplace Overview</h1>
-        <p className="mt-1 text-xs text-neutral-600">Totals of produce bought and listed. Descriptive only: no predictions, no seller or buyer details.</p>
-        <p className="mt-1 text-xs font-semibold text-neutral-700">Dates: {day(data.from)} to {day(data.to)} · Generated: {formatDateTime(data.generatedAt, { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+      <div className="mb-3 border-b-2 border-agrivive-ink pb-2">
+        <h1 className="font-heading text-2xl font-bold tracking-tight text-agrivive-ink">Agrivive Public Marketplace Overview</h1>
+        <p className="mt-1 text-sm text-agrivive-muted">Totals of produce bought and listed. Descriptive only: no predictions, no seller or buyer details.</p>
+        <p className="mt-1 text-sm font-semibold text-agrivive-text">Dates: {day(data.from)} to {day(data.to)} · Generated: {formatDateTime(data.generatedAt, { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
       </div>
 
       <div className="mb-4 grid grid-cols-4 gap-2">
@@ -56,9 +56,9 @@ export const MarketplaceOverviewPrintComponent = ({ data, explanations, images }
           ["Pickup rate", data.kpis.pickupRate === null ? "No data yet" : `${data.kpis.pickupRate}%`],
           ["Listed right now", formatNumber(data.kpis.activeListings)],
         ].map(([label, value]) => (
-          <div key={label} className="rounded border border-neutral-300 p-2">
-            <p className="text-[11px] font-bold text-neutral-500">{label}</p>
-            <p className="mt-0.5 text-base font-black">{value}</p>
+          <div key={label} className="rounded border border-agrivive-border p-2">
+            <p className="text-xs text-agrivive-muted">{label}</p>
+            <p className="mt-0.5 font-heading text-lg font-bold text-agrivive-ink">{value}</p>
           </div>
         ))}
       </div>
@@ -66,15 +66,15 @@ export const MarketplaceOverviewPrintComponent = ({ data, explanations, images }
       {sections.map((section) => (
         <section key={section.key} className="mb-4">
           <div className="break-inside-avoid">
-            <h2 className="break-after-avoid border-b border-neutral-300 pb-0.5 text-[13px] font-bold">{section.title}</h2>
+            <h2 className="break-after-avoid border-b border-agrivive-border pb-1 font-heading text-lg font-bold text-agrivive-ink">{section.title}</h2>
             {images[section.key] ? <img src={images[section.key]} alt={section.title} className="mx-auto mt-1.5 max-h-[7.5cm] w-auto max-w-full object-contain" /> : null}
-            <p className="mt-1.5 text-[11px] leading-snug">{explanations?.[section.key] ?? ""}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-agrivive-text">{explanations?.[section.key] ?? ""}</p>
           </div>
           {section.table}
         </section>
       ))}
 
-      <div className="flex justify-between border-t border-neutral-400 pt-2 text-[11px] text-neutral-500">
+      <div className="flex justify-between border-t border-agrivive-border pt-2 text-xs text-agrivive-muted">
         <span>Agrivive · Davao City</span>
         <span>Public marketplace overview</span>
       </div>

@@ -4,6 +4,7 @@ import { Doughnut, Pie } from "react-chartjs-2";
 import type { Chart as ChartJS, ChartOptions } from "chart.js";
 import type { CategoryDemandItem } from "../api/overview";
 import { KIND_COLORS } from "../lib/chartSetup";
+import { useCompactChart } from "../lib/useCompactChart";
 import { OverviewChartCard, td, th, type Explanation } from "./OverviewChartCard";
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export const OverviewShareChart = ({ mode, categories, allKinds, explanation, chartRef }: Props) => {
+  const compact = useCompactChart();
   const bought = mode === "bought";
   const rows = categories.filter((c) => (bought ? c.orderCount : c.activeListings) > 0);
   const count = (c: CategoryDemandItem) => (bought ? c.orderCount : c.activeListings);
@@ -30,7 +32,7 @@ export const OverviewShareChart = ({ mode, categories, allKinds, explanation, ch
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 10, font: { size: 12 } } },
+      legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, font: { size: compact ? 11 : 12 } } },
       datalabels: { display: (ctx) => (ctx.dataset.data[ctx.dataIndex] as number) / total >= 0.06, color: "#fff", font: { weight: "bold", size: 12 }, formatter: (value: number) => `${Math.round((value / total) * 100)}%` },
       tooltip: { callbacks: { label: (item) => `${item.label}: ${item.parsed} ${item.parsed === 1 ? noun : `${noun}s`} (${Math.round((Number(item.parsed) / total) * 100)}%)` } },
     },
@@ -48,7 +50,7 @@ export const OverviewShareChart = ({ mode, categories, allKinds, explanation, ch
         { term: "Colours", text: "The same kind has the same colour in every chart on this page. The names are listed under the chart." },
       ]}
       chart={rows.length === 0
-        ? <div className="flex h-full items-center justify-center text-sm text-neutral-500">{bought ? "No orders were picked up in these dates." : "No listings are open right now."}</div>
+        ? <div className="flex h-full items-center justify-center text-sm text-agrivive-muted">{bought ? "No orders were picked up in these dates." : "No listings are open right now."}</div>
         : bought
           ? <Doughnut ref={(instance) => chartRef?.(instance as ChartJS | null)} data={data} options={options} />
           : <Pie ref={(instance) => chartRef?.(instance as ChartJS | null)} data={data} options={options} />}

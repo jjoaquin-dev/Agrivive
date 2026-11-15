@@ -61,17 +61,17 @@ export const OverviewDateRange = ({ from, to, onApply }: Props) => {
         onClick={() => (open ? setOpen(false) : openPanel())}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-3.5 text-sm font-semibold text-neutral-800 transition hover:bg-neutral-50 sm:w-auto"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-agrivive-border bg-white px-3.5 text-sm font-semibold text-agrivive-text transition hover:bg-neutral-50 sm:w-auto"
       >
         <CalendarDays className="size-4 text-agrivive-primary" />
         <span>{label(from)} – {label(to)}</span>
       </button>
 
       {open ? (
-        <div role="dialog" aria-label="Choose dates" className="fixed inset-x-3 bottom-3 z-50 max-h-[85vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-4 shadow-xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:mt-2 sm:w-[44rem]">
+        <div role="dialog" aria-label="Choose dates" className="fixed inset-x-3 bottom-3 z-50 max-h-[85vh] overflow-y-auto rounded-2xl border border-agrivive-border bg-white p-4 shadow-xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:mt-2 sm:w-[44rem]">
           <div className="mb-3 flex flex-wrap gap-2">
             {PRESETS.map((preset) => (
-              <button key={preset.name} type="button" onClick={() => apply(daysAgo(preset.days), new Date())} className="min-h-9 rounded-full border border-neutral-200 px-3 text-xs font-semibold text-neutral-700 transition hover:bg-lime-50">
+              <button key={preset.name} type="button" onClick={() => apply(daysAgo(preset.days), new Date())} className="min-h-9 rounded-full border border-agrivive-border px-3 text-xs font-semibold text-agrivive-text transition hover:bg-lime-50">
                 {preset.name}
               </button>
             ))}
@@ -79,7 +79,7 @@ export const OverviewDateRange = ({ from, to, onApply }: Props) => {
 
           <div
             className="overflow-x-auto"
-            style={{ "--rdp-accent-color": "#457D00", "--rdp-accent-background-color": "#E3F0CC", "--rdp-range_middle-background-color": "#E3F0CC", "--rdp-today-color": "#2F5A00" } as React.CSSProperties}
+            style={{ "--rdp-accent-color": "#457D00", "--rdp-accent-background-color": "#E3F0CC", "--rdp-range_middle-background-color": "#E3F0CC", "--rdp-today-color": "#2F5A00", "--rdp-day-width": "40px", "--rdp-day-height": "40px" } as React.CSSProperties}
           >
             <DayPicker
               mode="range"
@@ -97,9 +97,9 @@ export const OverviewDateRange = ({ from, to, onApply }: Props) => {
           </div>
 
           <div className="mt-3 flex flex-col gap-3 border-t border-neutral-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-xs font-semibold text-neutral-600" aria-live="polite">{note}</span>
+            <span className="text-xs font-semibold text-agrivive-muted" aria-live="polite">{note}</span>
             <div className="grid grid-cols-2 gap-2 sm:flex">
-              <button type="button" onClick={() => setOpen(false)} className="min-h-11 rounded-xl border border-neutral-200 px-4 text-xs font-bold text-neutral-700 hover:bg-neutral-50">Cancel</button>
+              <button type="button" onClick={() => setOpen(false)} className="min-h-11 rounded-xl border border-agrivive-border px-4 text-xs font-bold text-agrivive-text hover:bg-neutral-50">Cancel</button>
               <button type="button" disabled={!ready} onClick={() => range?.from && range.to && apply(range.from, range.to)} className="min-h-11 rounded-xl bg-agrivive-primary px-4 text-xs font-bold text-white transition hover:bg-agrivive-primary/90 disabled:opacity-40">
                 Show these dates
               </button>
