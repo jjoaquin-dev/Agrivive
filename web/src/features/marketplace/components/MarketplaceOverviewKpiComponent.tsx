@@ -1,75 +1,29 @@
-import { CheckCircle2, PackageCheck, Store, TrendingUp } from "lucide-react";
 import type { MarketplaceOverviewResponse } from "../api/overview";
+import { unitWord } from "../api/overview";
 import { formatNumber } from "@/src/lib/format";
 
 interface Props {
   kpis: MarketplaceOverviewResponse["kpis"];
-  range: string;
 }
 
-export const MarketplaceOverviewKpiComponent = ({ kpis, range }: Props) => {
-  const rangeLabel = range === "year" ? "past year" : range === "week" ? "past 7 days" : "past 30 days";
-
+export const MarketplaceOverviewKpiComponent = ({ kpis }: Props) => {
+  const amounts = kpis.quantityByUnit.map((item) => `${formatNumber(item.quantity)} ${unitWord(item.unit, item.quantity)}`);
   const cards = [
-    {
-      title: "Total Food Rescued",
-      value: `${formatNumber(kpis.totalRescuedQty)} kg`,
-      description: `Surplus agricultural produce rescued in the ${rangeLabel}`,
-      icon: PackageCheck,
-      badge: "Verified Pickups",
-      highlightColor: "text-emerald-700 bg-emerald-50 border-emerald-200",
-    },
-    {
-      title: "Active Surplus Listings",
-      value: formatNumber(kpis.activeListings),
-      description: "Direct-from-stall surplus batches currently live",
-      icon: Store,
-      badge: "Available Now",
-      highlightColor: "text-agrivive-primary bg-lime-50 border-lime-200",
-    },
-    {
-      title: "Pickup Fulfillment Rate",
-      value: `${kpis.fulfillmentRate}%`,
-      description: `${kpis.totalOrders} total completed market pickups verified`,
-      icon: CheckCircle2,
-      badge: "Reliable Stalls",
-      highlightColor: "text-teal-700 bg-teal-50 border-teal-200",
-    },
+    { title: "Orders picked up", value: formatNumber(kpis.completedPickups), note: "In the chosen dates" },
+    { title: "Amount picked up", value: amounts.length ? amounts.join(" · ") : "None yet", note: `${kpis.produceTypesBought} kinds of produce. Kilos, sacks and piles are counted apart` },
+    { title: "Pickup rate", value: kpis.pickupRate === null ? "No data yet" : `${kpis.pickupRate}%`, note: "Reservations picked up, out of all that ended in the chosen dates" },
+    { title: "Listed right now", value: formatNumber(kpis.activeListings), note: "Listings buyers can reserve today" },
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map((card) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={card.title}
-            className="flex flex-col justify-between rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-sm transition hover:shadow-md"
-          >
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-neutral-500">{card.title}</span>
-                <div className={`rounded-xl border p-2 ${card.highlightColor}`}>
-                  <Icon className="size-4" />
-                </div>
-              </div>
-              <div className="mt-3 text-2xl font-black text-neutral-900 lg:text-3xl">
-                {card.value}
-              </div>
-              <p className="mt-1 text-xs text-neutral-600 leading-relaxed">
-                {card.description}
-              </p>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
-              <span className="font-semibold text-neutral-700">{card.badge}</span>
-              <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                <TrendingUp className="size-3" /> Live Database
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <dl className="grid gap-px overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200 sm:grid-cols-2 lg:grid-cols-4">
+      {cards.map(({ title, value, note }) => (
+        <div key={title} className="bg-white p-5">
+          <dt className="text-xs font-semibold text-neutral-500">{title}</dt>
+          <dd className="mt-2 text-2xl font-bold text-neutral-900">{value}</dd>
+          <p className="mt-1 text-xs leading-relaxed text-neutral-600">{note}</p>
+        </div>
+      ))}
+    </dl>
   );
 };

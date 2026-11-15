@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-12 PST
+last_updated: 2026-11-15 PST
 status: active
 ---
 
@@ -11,11 +11,15 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-12 PST
+2026-11-15 PST
 
 ## Latest completed task
 
-Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
+Public overview now has eight Chart.js charts (mixed, radar, bar, scatter, doughnut, pie), a how-to-read box under every chart, eight Groq explanations, a fixed header, and a PDF with all of them. See [[2026-11-15 Overview Eight Charts and Chart Guides]].
+
+Earlier overview work (Chart.js and calendar filter, descriptive totals without seller details): [[2026-11-15 Overview Chart.js Calendar and Groq Explanations]], [[2026-11-15 Public Overview Descriptive Totals]].
+
+Earlier: Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
 
 Earlier: Boost notes, API doc and code comments aligned to the current rule (best rank not boosted in 6 hours, no 0.60 cutoff): [[2026-11-12 Boost Docs Aligned]].
 

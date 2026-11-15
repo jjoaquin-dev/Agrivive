@@ -43,6 +43,12 @@ export default function SellerOrderScanScreen() {
       return;
     }
 
+    // Opened from one reservation: only that reservation's code may be scanned.
+    if (orderId && targetOrderId !== orderId) {
+      setScanError({ title: "Wrong Code", message: "This code is for a different reservation. Scan the code for the one you opened." });
+      return;
+    }
+
     try {
       setLoadingOrder(true);
       const order = await fetchSellerOrder(targetOrderId);

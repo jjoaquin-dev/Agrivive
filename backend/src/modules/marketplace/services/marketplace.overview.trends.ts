@@ -1,105 +1,48 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, isNotNull, lte, sql } from "drizzle-orm";
 import { db } from "../../../db";
-import { ordered_items, orders } from "../../../db/schema";
-import type { ActivityTrendPoint, MarketplaceOverviewRange } from "../model/marketplace.overview";
+import { orders } from "../../../db/schema";
+import type { ActivityTrendPoint } from "../model/marketplace.overview";
+import type { OverviewPeriod } from "./marketplace.overview.period";
 
-export async function calculateRealTrends(range: MarketplaceOverviewRange): Promise<ActivityTrendPoint[]> {
-  const now = new Date();
+const dayMs = 86_400_000;
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  if (range === "week") {
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const ms = (day: string) => Date.parse(`${day}T00:00:00Z`);
+const shortDay = (value: number) => `${monthNames[new Date(value).getUTCMonth()]} ${new Date(value).getUTCDate()}`;
+
+/**
+ * Completed pickups over the chosen days, counted on Asia/Manila calendar days.
+ * One bar per day, per 7-day block or per month depending on the span. Empty buckets stay, so a chart never skips a step.
+ */
+export async function calculateRealTrends(period: OverviewPeriod): Promise<ActivityTrendPoint[]> {
+  const day = sql<string>`to_char(${orders.completedAt} at time zone 'Asia/Manila', 'YYYY-MM-DD')`;
+  const rows = await db.select({ day, count: sql<number>`count(*)::int` }).from(orders)
+    .where(and(eq(orders.status, "completed"), isNotNull(orders.completedAt), gte(orders.completedAt, period.since), lte(orders.completedAt, period.until)))
+    .groupBy(day);
+  const perDay = new Map(rows.map((row) => [row.day, Number(row.count)]));
+  const days = Array.from({ length: period.days }, (_, index) => ms(period.from) + index * dayMs);
+  const total = (slice: number[]) => slice.reduce((sum, value) => sum + (perDay.get(new Date(value).toISOString().slice(0, 10)) ?? 0), 0);
+
+  if (period.bucket === "day") {
+    return days.map((value) => ({ label: shortDay(value), detail: `${dayNames[new Date(value).getUTCDay()]}, ${shortDay(value)}`, orderCount: total([value]) }));
+  }
+  if (period.bucket === "week") {
     const points: ActivityTrendPoint[] = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const startOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const endOfDay = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-
-      const res = await db
-        .select({
-          qty: sql<number>`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-          orders: sql<number>`count(distinct ${orders.id})::int`,
-        })
-        .from(orders)
-        .leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId))
-        .where(
-          and(
-            eq(orders.status, "completed"),
-            gte(orders.createdAt, startOfDay),
-            sql`${orders.createdAt} <= ${endOfDay}`
-          )
-        );
-
-      points.push({
-        label: dayNames[d.getDay()],
-        date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        quantity: Math.round(Number(res[0]?.qty ?? 0)),
-        orderCount: Number(res[0]?.orders ?? 0),
-      });
+    for (let start = 0; start < days.length; start += 7) {
+      const slice = days.slice(start, start + 7);
+      const first = shortDay(slice[0]!);
+      const last = shortDay(slice[slice.length - 1]!);
+      const sameMonth = new Date(slice[0]!).getUTCMonth() === new Date(slice[slice.length - 1]!).getUTCMonth();
+      const end = sameMonth ? String(new Date(slice[slice.length - 1]!).getUTCDate()) : last;
+      points.push({ label: slice.length === 1 ? first : `${first}–${end}`, detail: `${first} to ${last}`, orderCount: total(slice) });
     }
     return points;
   }
-
-  if (range === "year") {
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const points: ActivityTrendPoint[] = [];
-
-    for (let m = 11; m >= 0; m--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
-
-      const res = await db
-        .select({
-          qty: sql<number>`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-          orders: sql<number>`count(distinct ${orders.id})::int`,
-        })
-        .from(orders)
-        .leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId))
-        .where(
-          and(
-            eq(orders.status, "completed"),
-            gte(orders.createdAt, start),
-            sql`${orders.createdAt} <= ${end}`
-          )
-        );
-
-      points.push({
-        label: monthNames[d.getMonth()],
-        date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-        quantity: Math.round(Number(res[0]?.qty ?? 0)),
-        orderCount: Number(res[0]?.orders ?? 0),
-      });
-    }
-    return points;
-  }
-
-  const points: ActivityTrendPoint[] = [];
-  for (let w = 3; w >= 0; w--) {
-    const start = new Date(now.getTime() - (w + 1) * 7 * 24 * 60 * 60 * 1000);
-    const end = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000);
-
-    const res = await db
-      .select({
-        qty: sql<number>`coalesce(sum(${ordered_items.quantity}), 0)::float`,
-        orders: sql<number>`count(distinct ${orders.id})::int`,
-      })
-      .from(orders)
-      .leftJoin(ordered_items, eq(orders.id, ordered_items.ordersId))
-      .where(
-        and(
-          eq(orders.status, "completed"),
-          gte(orders.createdAt, start),
-          sql`${orders.createdAt} < ${end}`
-        )
-      );
-
-    points.push({
-      label: `Week ${4 - w}`,
-      date: `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
-      quantity: Math.round(Number(res[0]?.qty ?? 0)),
-      orderCount: Number(res[0]?.orders ?? 0),
-    });
-  }
-  return points;
+  const months = [...new Set(days.map((value) => new Date(value).toISOString().slice(0, 7)))];
+  return months.map((month) => {
+    const year = month.slice(0, 4);
+    const name = monthNames[Number(month.slice(5)) - 1]!;
+    return { label: `${name} ${year}`, detail: `${name} ${year}`, orderCount: total(days.filter((value) => new Date(value).toISOString().startsWith(month))) };
+  });
 }

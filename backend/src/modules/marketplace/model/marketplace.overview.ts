@@ -1,64 +1,76 @@
 import { t } from "elysia";
 
+/** Days are written YYYY-MM-DD on the Asia/Manila calendar. Both are optional; the service fills in sensible ones. */
 export const marketplaceOverviewQuerySchema = t.Object({
-  range: t.Optional(t.Union([t.Literal("week"), t.Literal("month"), t.Literal("year")])),
+  from: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
+  to: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })),
 });
 
-export type MarketplaceOverviewRange = "week" | "month" | "year";
+/** What one chart bar stands for. */
+export type OverviewBucket = "day" | "week" | "month";
+
+/** How a quantity is counted: kilo, sack or pile. Different units are never added together. */
+export type OverviewUnit = "kg" | "sack" | "pile";
+
+export interface UnitQuantity {
+  unit: OverviewUnit;
+  quantity: number;
+}
 
 export interface TopProduceItem {
   id: string;
   name: string;
   category: string;
-  totalQuantity: number;
-  unit: string;
+  unit: OverviewUnit;
+  quantity: number;
   orderCount: number;
-  totalValue: number;
+  /** Average pesos paid for one unit, from completed pickups. */
+  averagePrice: number;
 }
 
 export interface ActivityTrendPoint {
   label: string;
-  date: string;
-  quantity: number;
+  detail: string;
   orderCount: number;
 }
 
-export interface CategoryDistributionItem {
+export interface CategoryDemandItem {
   category: string;
-  activeCount: number;
-  percentage: number;
-}
-
-export interface StallOverviewItem {
-  id: string;
-  shopName: string;
-  detailAddress: string;
+  /** Completed pickups in the range that included this category. */
+  orderCount: number;
+  orderShare: number;
+  /** Listings live right now in this category. */
   activeListings: number;
-  totalStockKg: number;
+  listingShare: number;
 }
 
-export interface BuyerCommunitySummary {
-  registeredBuyers: number;
-  activeBuyersWithOrders: number;
-  completedPickups: number;
-  pendingPickups: number;
+export interface WeekdayDemandItem {
+  label: string;
+  orderCount: number;
 }
 
+/** Totals only. Nothing here names or locates a seller, a stall or a buyer. */
 export interface MarketplaceOverviewResponse {
   generatedAt: string;
-  range: MarketplaceOverviewRange;
+  from: string;
+  to: string;
+  bucket: OverviewBucket;
   isSampleData: boolean;
   kpis: {
-    totalRescuedQty: number;
+    completedPickups: number;
+    produceTypesBought: number;
     activeListings: number;
-    totalOrders: number;
-    fulfillmentRate: number;
-    activeSellers: number;
-    activeBuyers: number;
+    /** Completed pickups out of all reservations that ended in the range. Null when none ended. */
+    pickupRate: number | null;
+    quantityByUnit: UnitQuantity[];
   };
   topProduce: TopProduceItem[];
   activityTrends: ActivityTrendPoint[];
-  categoryBreakdown: CategoryDistributionItem[];
-  sellerStalls: StallOverviewItem[];
-  buyerSummary: BuyerCommunitySummary;
+  categoryDemand: CategoryDemandItem[];
+  weekdayDemand: WeekdayDemandItem[];
 }
+
+/** Plain-word explanations, one per chart, written from the totals above. */
+export const explanationKeys = ["trend", "weekday", "produce", "price", "compare", "bought", "listed", "demand"] as const;
+export type ExplanationKey = (typeof explanationKeys)[number];
+export type MarketplaceOverviewExplanations = { source: "ai" | "template" } & Record<ExplanationKey, string>;
