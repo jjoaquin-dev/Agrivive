@@ -7,7 +7,9 @@ export type LiveEvent =
   | { type: "order.changed"; orderId: string }
   | { type: "product.changed"; productId: string }
   | { type: "notice.created"; kind: string | null }
-  | { type: "message.created"; conversationId: string };
+  | { type: "message.created"; conversationId: string }
+  | { type: "conversation.updated"; conversationId: string }
+  | { type: "marketplace.changed" };
 
 type Listener = {
   handler: (event: LiveEvent) => void;
@@ -15,6 +17,8 @@ type Listener = {
   needsUser: boolean;
   /** A product to watch for stock and price changes. */
   productId?: string;
+  /** Hears when any listing is added or changes (for the marketplace list). */
+  feed?: boolean;
 };
 
 const firstDelayMs = 1_000;
@@ -46,13 +50,15 @@ function setConnected(next: boolean) {
   connectionWatchers.forEach((watch) => watch(next));
 }
 
-function send(command: { type: "watch" | "unwatch"; productId: string }) {
+function send(command: { type: "watch" | "unwatch"; productId: string } | { type: "watch-feed" | "unwatch-feed" }) {
   if (socket?.readyState === WebSocket.OPEN && connected) socket.send(JSON.stringify(command));
 }
 
 function watchedProducts() {
   return new Set([...listeners].map((item) => item.productId).filter((id): id is string => Boolean(id)));
 }
+
+const wantsFeed = () => [...listeners].some((item) => item.feed);
 
 function scheduleReconnect() {
   if (retryTimer || listeners.size === 0) return;
@@ -76,6 +82,7 @@ function connect() {
       signedIn = Boolean(event.signedIn);
       setConnected(true);
       watchedProducts().forEach((productId) => send({ type: "watch", productId }));
+      if (wantsFeed()) send({ type: "watch-feed" });
       maybeReopenForUser();
       return;
     }
@@ -124,7 +131,9 @@ if (typeof document !== "undefined") {
 export function subscribeLive(listener: Listener) {
   if (idleTimer) clearTimeout(idleTimer);
   idleTimer = undefined;
+  const hadFeed = wantsFeed();
   listeners.add(listener);
+  if (listener.feed && !hadFeed) send({ type: "watch-feed" });
   if (listener.productId && !watchedProductsExcept(listener).has(listener.productId)) {
     send({ type: "watch", productId: listener.productId });
   }
@@ -132,6 +141,7 @@ export function subscribeLive(listener: Listener) {
   maybeReopenForUser();
   return () => {
     listeners.delete(listener);
+    if (listener.feed && !wantsFeed()) send({ type: "unwatch-feed" });
     if (listener.productId && !watchedProducts().has(listener.productId)) {
       send({ type: "unwatch", productId: listener.productId });
     }
@@ -149,8 +159,8 @@ function watchedProductsExcept(skip: Listener) {
 }
 
 /** True while the live socket is open, so polling can slow down to a fallback pace. */
-export function isLiveConnected() {
-  return connected;
+export function isLiveConnected(needsUser = false) {
+  return connected && (!needsUser || signedIn);
 }
 
 export function onLiveConnection(watch: (connected: boolean) => void) {

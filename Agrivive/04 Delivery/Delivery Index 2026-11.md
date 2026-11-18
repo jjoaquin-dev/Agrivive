@@ -13,6 +13,9 @@ Previous: [[Delivery Index 2026-10]]
 
 ## 2026-11-01
 
+- [[04 Delivery/2026-11-18 Instant Push Delivery|Instant Push Delivery]]
+- [[04 Delivery/2026-11-18 Live Updates Marketplace and Chat State|Live Updates Marketplace and Chat State]]
+- [[04 Delivery/2026-11-18 Seller Role Cache Fix|Seller Role Cache Fix]]
 - [[04 Delivery/2026-11-18 Firebase File Out of Git|Firebase File Out of Git]]
 - [[04 Delivery/2026-11-18 Live Updates Over WebSocket|Live Updates Over WebSocket]]
 - [[04 Delivery/2026-11-18 Handover Amount Can Go Up or Down|Handover Amount Can Go Up or Down]]

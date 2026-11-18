@@ -1,7 +1,8 @@
 "use client";
 
 import { Breadcrumbs } from "@/src/components/Breadcrumbs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLiveEvent } from "@/src/lib/useLiveEvent";
 import Link from "next/link";
 import Image from "next/image";
 import { Heart, Sparkles, Store } from "lucide-react";
@@ -46,6 +47,12 @@ export function BuyerFavorites() {
       active = false;
     };
   }, [session?.user, sessionPending]);
+
+  // Stock, price or availability of a saved item changed: refresh the list quietly.
+  const refreshQuietly = useCallback(() => {
+    listBuyerWishlist().then((res) => setProducts(res.products ?? [])).catch(() => {});
+  }, []);
+  useLiveEvent(refreshQuietly, { enabled: Boolean(session?.user) && !loading, feed: true, match: (event) => event.type === "marketplace.changed" });
 
   const visibleProducts = products.filter((p) => savedProductIds.has(p.id));
 

@@ -4,6 +4,7 @@ import { user } from "../../../db/schema";
 import { auth } from "..";
 import { OrderError } from "../../../utils/order-types";
 import { readAuthPasswordStatus } from "./auth.password-status";
+import { forgetUserStatus } from "../../../utils/user-status-cache";
 
 export async function registerOrExpandRole(
   headers: Headers,
@@ -128,6 +129,9 @@ export async function registerOrExpandRole(
       updatedAt: new Date(),
     })
     .where(eq(user.id, existing.id));
+
+  // The cached roles are out of date now; the next request must read the new one.
+  forgetUserStatus(existing.id);
 
   const updatedRoles = [...currentRoles, targetRole];
 

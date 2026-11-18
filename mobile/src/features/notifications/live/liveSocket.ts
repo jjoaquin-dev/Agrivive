@@ -11,7 +11,9 @@ type LiveEvent =
   | { type: "order.changed"; orderId: string }
   | { type: "product.changed"; productId: string }
   | { type: "notice.created"; kind: string | null }
-  | { type: "message.created"; conversationId: string };
+  | { type: "message.created"; conversationId: string }
+  | { type: "conversation.updated"; conversationId: string }
+  | { type: "marketplace.changed" };
 
 const firstDelayMs = 1_000;
 const maxDelayMs = 30_000;
@@ -52,7 +54,11 @@ function handle(event: LiveEvent) {
       if (event.kind && /chat|inquiry|message|question/.test(event.kind)) signal("seller_message");
       return;
     case "message.created":
+    case "conversation.updated":
+      // A new message, or a chat archived, unarchived, blocked or read (maybe on another phone): reload the lists.
       signal("seller_message", event.conversationId);
+      return;
+    case "marketplace.changed":
       return;
   }
 }

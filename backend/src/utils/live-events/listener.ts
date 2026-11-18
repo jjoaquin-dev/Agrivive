@@ -37,6 +37,7 @@ export function startLiveListener() {
       await client.connect();
       await client.query(`LISTEN ${channel}`);
       retryMs = firstRetryMs;
+      console.log("[Live] Listening for database changes");
     } catch (error) {
       retry(error);
     }
