@@ -19,7 +19,7 @@
     "@elysia/cors": "^1.4.2",
     "@elysia/openapi": "^1.4.16",
     "better-auth": "1.7.25",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.10",
     "drizzle-orm": "^1.0.0-rc.4",
     "firebase-admin": "^14.5.0",
     "mathjs": "^15.2.0",
