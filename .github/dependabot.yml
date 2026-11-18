@@ -18,6 +18,10 @@ updates:
     directory: "/backend"
     schedule: { interval: "weekly", day: "monday" }
     open-pull-requests-limit: 5
+    # drizzle-orm rc.5 changed what raw db.execute() returns (rows and rowCount are gone). Move it by hand with the code change.
+    ignore:
+      - dependency-name: "drizzle-orm"
+      - dependency-name: "drizzle-kit"
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
