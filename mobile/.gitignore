@@ -41,3 +41,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase client config. Kept out of git; EAS gets it as a file secret (GOOGLE_SERVICES_JSON).
+/google-services.json
