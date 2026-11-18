@@ -83,7 +83,12 @@ export function useBuyerOrders() {
     cache.current = result.orders;
     setOrders(result.orders);
     setNextCursor(result.nextCursor);
-  }, { enabled: Boolean(userId) && !loading && !loadingMore && owner === userId, intervalMs: 20_000, runImmediately: false });
+  }, {
+    enabled: Boolean(userId) && !loading && !loadingMore && owner === userId,
+    intervalMs: 20_000,
+    runImmediately: false,
+    live: { needsUser: true, match: (event) => event.type === "order.changed" },
+  });
 
   const updateOrder = useCallback((updated: BuyerOrder) => {
     cache.current = cache.current.map((o) => (o.id === updated.id ? updated : o));

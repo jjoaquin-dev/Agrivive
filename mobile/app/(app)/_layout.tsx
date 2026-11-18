@@ -7,6 +7,7 @@ import { colors, fonts, touchTargets, typography } from "../../src/theme";
 import { OfflineBanner } from "../../src/components/OfflineBanner";
 import { DailyAdvisoryPopup } from "../../src/features/advisories/components/DailyAdvisoryPopup";
 import { surface } from "../../src/theme/surface";
+import { useLiveSocket } from "../../src/features/notifications/live/useLiveSocket";
 
 function CancelButton({ onPress }: { onPress: () => void }) {
   return (
@@ -20,6 +21,8 @@ export default function AppLayout() {
   const { session, setup, setupError, isSessionPending, loadingSetup } = useAuth();
   // Screens without their own bottom bar stop above the phone's Back/Home buttons or gesture line.
   const clearOfNavBar = { contentStyle: { backgroundColor: surface.page, paddingBottom: useSafeAreaInsets().bottom } };
+  // Live updates (new reservations, order changes, notices, messages, stock) while signed in and on screen.
+  useLiveSocket(Boolean(session?.user));
 
   if (!isSessionPending && !loadingSetup && session?.user && setup?.profileComplete && setup.passwordSetupRequired) {
     return <Redirect href="/(auth)/password-setup" />;

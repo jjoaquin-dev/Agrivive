@@ -93,6 +93,7 @@ export function OrderDetail() {
     enabled: Boolean(order?.status === "pending" && !loading),
     intervalMs: 15_000,
     runImmediately: false,
+    live: { needsUser: true, match: (event) => event.type === "order.changed" && event.orderId === id },
     onError: (reason) => {
       if (isAbortError(reason)) return;
       if (reason instanceof ApiError && [401, 403].includes(reason.status)) {
