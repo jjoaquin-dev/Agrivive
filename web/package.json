@@ -8,17 +8,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "better-auth": "1.7.25",
     "chart.js": "^4.6.1",
     "chartjs-plugin-datalabels": "^2.2.0",
     "class-variance-authority": "^0.7.1",
-    "cn": "^0.4.0",
-    "gsap": "^3.15.0",
+    "cn": "^0.5.2",
+    "gsap": "^3.15.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "lenis": "^1.3.27",
-    "lucide-react": "^1.48.0",
+    "lucide-react": "^1.73.0",
     "next": "15.5.29",
     "qrcode.react": "^4.2.0",
     "react": "19.1.10",
@@ -33,8 +33,8 @@
     "@types/leaflet.markercluster": "^1.5.6",
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
-    "autoprefixer": "10.4.20",
-    "postcss": "8.5.23",
+    "autoprefixer": "10.6.2",
+    "postcss": "8.5.33",
     "tailwindcss": "3.4.17",
     "typescript": "5.7.2"
   }
