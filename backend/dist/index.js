@@ -120986,6 +120986,7 @@ async function registerOrExpandRole(headers, input) {
     role: sql3`array_append(coalesce(${user.role}, ARRAY[]::"role"[]), ${targetRole}::"role")`,
     updatedAt: new Date
   }).where(eq(user.id, existing.id));
+  forgetUserStatus(existing.id);
   const updatedRoles = [...currentRoles, targetRole];
   return {
     isNewAccount: false,
@@ -137071,8 +137072,8 @@ function inNightHours(now = new Date) {
 
 // src/utils/seller-notifications/enqueue.ts
 var windowMs = () => {
-  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 60);
-  return Math.max(10, Math.min(seconds, 600)) * 1000;
+  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 2);
+  return Math.max(1, Math.min(seconds, 600)) * 1000;
 };
 async function readSellerAlertSettings(tx, sellerId) {
   const [row] = await tx.select().from(seller_notification_settings).where(eq(seller_notification_settings.sellerId, sellerId)).limit(1);
@@ -137273,7 +137274,7 @@ async function createSellerProfile(userId, body) {
   if (!shopName || !detailAddress || !phoneNumber) {
     throw new OrderError(400, "Shop name, address, and phone number are required");
   }
-  return db2.transaction(async (tx) => {
+  const profile = await db2.transaction(async (tx) => {
     await requireVerifiedSeller(tx, userId, false);
     await tx.execute(sql3`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     const [existing] = await tx.select({ id: sellers_profile.id }).from(sellers_profile).where(and(eq(sellers_profile.userId, userId), eq(sellers_profile.isCurrent, true))).limit(1);
@@ -137296,6 +137297,8 @@ async function createSellerProfile(userId, body) {
     }).where(and(eq(user.id, userId), sql3`NOT ('seller'::"role" = ANY(coalesce(${user.role}, ARRAY[]::"role"[])))`));
     return postSellerProfile;
   });
+  forgetUserStatus(userId);
+  return profile;
 }
 
 // src/modules/seller/index/seller.profile.create.ts
@@ -182694,8 +182697,8 @@ function publishConversationMessage(conversationId, message) {
 
 // src/modules/notifications/services/notifications.outbox.enqueue-conversation.ts
 var aggregationWindowMs = () => {
-  const seconds = Number(process.env.PUSH_MESSAGE_WINDOW_SECONDS ?? 60);
-  return Math.max(10, Math.min(seconds, 3600)) * 1000;
+  const seconds = Number(process.env.PUSH_MESSAGE_WINDOW_SECONDS ?? 2);
+  return Math.max(1, Math.min(seconds, 3600)) * 1000;
 };
 async function enqueueConversationNotification(tx, recipientUserId, conversationId, type, createdAt) {
   const windowMs = aggregationWindowMs();
@@ -188522,6 +188525,7 @@ var maxProductWatches = 20;
 var uuidPattern2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var userSockets = new Map;
 var productSockets = new Map;
+var feedSockets = new Set;
 var socketState = new WeakMap;
 function join3(map, key, socket) {
   let set = map.get(key);
@@ -188536,7 +188540,7 @@ function leave(map, key, socket) {
     map.delete(key);
 }
 function addLiveSocket(socket, userId) {
-  socketState.set(socket, { userId, products: new Set });
+  socketState.set(socket, { userId, products: new Set, feed: false });
   if (userId)
     join3(userSockets, userId, socket);
 }
@@ -188548,6 +188552,7 @@ function removeLiveSocket(socket) {
     leave(userSockets, state.userId, socket);
   for (const productId of state.products)
     leave(productSockets, productId, socket);
+  feedSockets.delete(socket);
   socketState.delete(socket);
 }
 function handleLiveCommand(socket, raw) {
@@ -188563,6 +188568,16 @@ function handleLiveCommand(socket, raw) {
     }
   }
   const { type, productId } = command ?? {};
+  if (type === "watch-feed") {
+    state.feed = true;
+    feedSockets.add(socket);
+    return;
+  }
+  if (type === "unwatch-feed") {
+    state.feed = false;
+    feedSockets.delete(socket);
+    return;
+  }
   if (typeof productId !== "string" || !uuidPattern2.test(productId))
     return;
   if (type === "watch" && !state.products.has(productId) && state.products.size < maxProductWatches) {
@@ -188584,7 +188599,16 @@ function sendTo(sockets, payload, sent) {
     } catch {}
   }
 }
+var outboxHandler = null;
+function setOutboxHandler(handler) {
+  outboxHandler = handler;
+}
 function dispatchLiveNotice(notice) {
+  if (notice.k === "outbox") {
+    if (Number.isFinite(notice.t))
+      outboxHandler?.(notice.t);
+    return;
+  }
   const sent = new Set;
   if (notice.k === "order") {
     const payload = JSON.stringify({ type: "order.changed", orderId: notice.id });
@@ -188594,8 +188618,11 @@ function dispatchLiveNotice(notice) {
     const payload = JSON.stringify({ type: "product.changed", productId: notice.id });
     sendTo(productSockets.get(notice.id), payload, sent);
     sendTo(userSockets.get(notice.s), payload, sent);
+    sendTo(feedSockets, JSON.stringify({ type: "marketplace.changed" }), new Set);
   } else if (notice.k === "notice") {
     sendTo(userSockets.get(notice.u), JSON.stringify({ type: "notice.created", kind: notice.kind ?? null }), sent);
+  } else if (notice.k === "convo") {
+    sendTo(userSockets.get(notice.u), JSON.stringify({ type: "conversation.updated", conversationId: notice.id }), sent);
   } else if (notice.k === "message") {
     const payload = JSON.stringify({ type: "message.created", conversationId: notice.id });
     sendTo(userSockets.get(notice.b), payload, sent);
@@ -189350,6 +189377,7 @@ function startLiveListener() {
       await client.connect();
       await client.query(`LISTEN ${channel}`);
       retryMs = firstRetryMs;
+      console.log("[Live] Listening for database changes");
     } catch (error) {
       retry(error);
     }
@@ -189358,6 +189386,28 @@ function startLiveListener() {
   return () => {
     stopped = true;
   };
+}
+
+// src/jobs/nudge-push-delivery.ts
+var lateMs = 150;
+var timer;
+var dueAt = Number.POSITIVE_INFINITY;
+function nudgePushDelivery(dueAtMs) {
+  const target = Math.max(dueAtMs, Date.now()) + lateMs;
+  if (timer && dueAt <= target)
+    return;
+  if (timer)
+    clearTimeout(timer);
+  dueAt = target;
+  timer = setTimeout(async () => {
+    timer = undefined;
+    dueAt = Number.POSITIVE_INFINITY;
+    try {
+      await deliverPushNotifications();
+    } catch (error) {
+      console.error("[Push] Nudged delivery error:", error);
+    }
+  }, Math.max(0, target - Date.now()));
 }
 
 // src/index.ts
@@ -189376,6 +189426,7 @@ var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors(
     return status(503, { status: "not_ready" });
   }
 }).use(validationPlugin).listen(3000);
+setOutboxHandler(nudgePushDelivery);
 startLiveListener();
 setInterval(async () => {
   try {

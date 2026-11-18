@@ -10,6 +10,8 @@ export type LiveTrigger = {
   needsUser?: boolean;
   /** Watch this product's stock and price. */
   productId?: string;
+  /** Hear when any listing is added or changes (the marketplace list). */
+  feed?: boolean;
 };
 
 type PollingOptions = {
@@ -41,6 +43,7 @@ export function usePolling(
   const hasLive = Boolean(live);
   const liveProductId = live?.productId;
   const liveNeedsUser = Boolean(live?.needsUser);
+  const liveFeed = Boolean(live?.feed);
 
   useEffect(() => {
     if (!enabled) return;
@@ -54,7 +57,7 @@ export function usePolling(
     const schedule = () => {
       if (!active) return;
       if (timer) clearTimeout(timer);
-      const wait = hasLive && isLiveConnected() ? Math.max(delay, liveFallbackMs) : delay;
+      const wait = hasLive && isLiveConnected(liveNeedsUser) ? Math.max(delay, liveFallbackMs) : delay;
       timer = setTimeout(() => void run(), wait);
     };
 
@@ -107,6 +110,7 @@ export function usePolling(
       ? subscribeLive({
         needsUser: liveNeedsUser,
         productId: liveProductId,
+        feed: liveFeed,
         handler: (event) => { if (liveRef.current?.match(event)) wake(); },
       })
       : undefined;
@@ -124,5 +128,5 @@ export function usePolling(
       stopLive?.();
       stopConnection?.();
     };
-  }, [enabled, intervalMs, maxIntervalMs, runImmediately, hasLive, liveProductId, liveNeedsUser]);
+  }, [enabled, intervalMs, maxIntervalMs, runImmediately, hasLive, liveProductId, liveNeedsUser, liveFeed]);
 }

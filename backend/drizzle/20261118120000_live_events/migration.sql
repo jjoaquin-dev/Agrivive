@@ -20,6 +20,11 @@ BEGIN
   RETURN NULL;
 END $$;
 --> statement-breakpoint
+DROP TRIGGER IF EXISTS sellers_product_live_insert ON "sellers_product";
+--> statement-breakpoint
+CREATE TRIGGER sellers_product_live_insert AFTER INSERT ON "sellers_product"
+  FOR EACH ROW EXECUTE FUNCTION agrivive_live_product();
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS sellers_product_live_event ON "sellers_product";
 --> statement-breakpoint
 CREATE TRIGGER sellers_product_live_event AFTER UPDATE ON "sellers_product"
@@ -81,3 +86,29 @@ DROP TRIGGER IF EXISTS conversation_messages_live_event ON "conversation_message
 --> statement-breakpoint
 CREATE TRIGGER conversation_messages_live_event AFTER INSERT ON "conversation_messages"
   FOR EACH ROW EXECUTE FUNCTION agrivive_live_message();
+--> statement-breakpoint
+
+-- Archive, unarchive, block and read state of one person's side of a chat.
+CREATE OR REPLACE FUNCTION agrivive_live_participant() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM pg_notify('agrivive_live', json_build_object('k', 'convo', 'id', NEW.conversation_id, 'u', NEW.user_id)::text);
+  RETURN NULL;
+END $$;
+--> statement-breakpoint
+DROP TRIGGER IF EXISTS conversation_participants_live_event ON "conversation_participants";
+--> statement-breakpoint
+CREATE TRIGGER conversation_participants_live_event AFTER INSERT OR UPDATE ON "conversation_participants"
+  FOR EACH ROW EXECUTE FUNCTION agrivive_live_participant();
+--> statement-breakpoint
+
+-- A queued phone alert: tells the API when it becomes due, so it sends the push right then instead of on its next 30 s check.
+CREATE OR REPLACE FUNCTION agrivive_live_outbox() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM pg_notify('agrivive_live', json_build_object('k', 'outbox', 't', (extract(epoch FROM NEW.available_at) * 1000)::bigint)::text);
+  RETURN NULL;
+END $$;
+--> statement-breakpoint
+DROP TRIGGER IF EXISTS notification_outbox_live_event ON "notification_outbox";
+--> statement-breakpoint
+CREATE TRIGGER notification_outbox_live_event AFTER INSERT ON "notification_outbox"
+  FOR EACH ROW EXECUTE FUNCTION agrivive_live_outbox();

@@ -1,7 +1,8 @@
 "use client";
 
 import { Breadcrumbs } from "@/src/components/Breadcrumbs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLiveEvent } from "@/src/lib/useLiveEvent";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Store } from "lucide-react";
@@ -85,6 +86,24 @@ export function SellerStorefront() {
       loadMoreController.current = null;
     };
   }, [sellerId, retryKey]);
+
+  // A listing was added, sold out, or its price or stock changed: refresh this page quietly.
+  // Skipped after "load more", so the list the buyer scrolled through is not cut back to the first page.
+  const productsShown = useRef(0);
+  productsShown.current = products.length;
+  const refreshQuietly = useCallback(() => {
+    if (!sellerId || productsShown.current > 12) return;
+    const query = new URLSearchParams({ sellerId, limit: "12" });
+    Promise.all([getMarketplaceSeller(sellerId), listMarketplaceProducts(query)])
+      .then(([sellerResult, listingResult]) => {
+        if (productsShown.current > 12) return;
+        setSeller(sellerResult);
+        setProducts(listingResult.products);
+        setNextCursor(listingResult.nextCursor);
+      })
+      .catch(() => {});
+  }, [sellerId]);
+  useLiveEvent(refreshQuietly, { enabled: Boolean(seller) && !loading, feed: true, match: (event) => event.type === "marketplace.changed" });
 
   async function loadMore() {
     if (!sellerId || !nextCursor || loadingMore) return;

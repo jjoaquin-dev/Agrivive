@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLiveEvent } from "@/src/lib/useLiveEvent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { listMarketplaceDeals } from "../api/marketplace";
 import type { MarketplaceProduct } from "../types";
@@ -19,6 +20,14 @@ export function MarketplaceDealsRow() {
       });
     return () => controller.abort();
   }, []);
+
+  // A listing was added or its price or stock changed: refresh the row quietly (keep what is shown if it fails).
+  const refreshDeals = useCallback(() => {
+    listMarketplaceDeals()
+      .then((response) => setDeals(response.products))
+      .catch(() => {});
+  }, []);
+  useLiveEvent(refreshDeals, { enabled: deals !== null, feed: true, match: (event) => event.type === "marketplace.changed" });
 
   if (deals === null) {
     return (

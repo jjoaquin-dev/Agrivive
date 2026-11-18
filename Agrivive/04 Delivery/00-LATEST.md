@@ -15,6 +15,12 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
+Push notifications are sent when due (2 s merge window, no waiting for the 30 s timer); re-run the live_events migration: [[2026-11-18 Instant Push Delivery]].
+
+**Live updates need the database migration applied** (dev had no triggers, so nothing was instant); marketplace list and chat archive now live too: [[2026-11-18 Live Updates Marketplace and Chat State]].
+
+Seller setup 403 fixed: the 30-second role cache is cleared when an account gains the seller role: [[2026-11-18 Seller Role Cache Fix]].
+
 Firebase client file moves out of git via an EAS file secret (`app.config.js`); finish the owner steps: [[2026-11-18 Firebase File Out of Git]].
 
 Live updates: `/ws/live` WebSocket fed by database triggers (orders, stock and price, notices, messages); web and the seller app refresh at once and poll only as a 60 s fallback. Apply migration `20261118120000_live_events`: [[2026-11-18 Live Updates Over WebSocket]].
@@ -29,24 +35,14 @@ Earlier: Public overview now has eight Chart.js charts (mixed, radar, bar, scatt
 
 Earlier overview work (Chart.js and calendar filter, descriptive totals without seller details): [[2026-11-15 Overview Chart.js Calendar and Groq Explanations]], [[2026-11-15 Public Overview Descriptive Totals]].
 
-Earlier: Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
 Earlier: Boost notes, API doc and code comments aligned to the current rule (best rank not boosted in 6 hours, no 0.60 cutoff): [[2026-11-12 Boost Docs Aligned]].
-
 Earlier: Seller app tab bar and bottom screens fixed for largest phone text and 3-button navigation: [[2026-11-12 Large Text and Nav Buttons]].
 
 Earlier: Seller app slow-signal support (reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s): [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (pickup overlap fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
 
 Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].
 
-Earlier: Seller app: pill buttons and text fields, pill search and dropdowns, text-only pagination, lighter borders and fills everywhere, Listings pages in the website white. See [[2026-11-11 Seller App Pill Controls and Quiet Borders]].
-
-Earlier: Seller Reservations list, detail and Report a Problem screens cleaned up (website white, one pickup card, highlighted next step). See [[2026-11-11 Seller Reservations Screens Cleanup]].
-
 Earlier: Seller Profile page regrouped: quick actions (close store today, reviews to reply), settings in three groups, separate solid red Log Out, whiter background and lighter borders. See [[2026-11-11 Seller Profile Regrouped With Quick Actions]].
-
-Earlier: Seller Stall Hours screen simplified (Away switch and Pickup limits removed, day circles in one row). Away is now automatic: shown to buyers after 30 minutes without using the app; orders and the 3-hour auto-confirm are unaffected. See [[2026-11-11 Stall Hours Cleanup and Automatic Away]].
-
-Earlier: Reserving no longer asks the buyer to pick a time. One confirmation shows the seller's hours, "pick it up on or before" (24 hours later for 24-hour stalls, else 30 minutes before closing), a missed-pickup warning and Cancel / Reserve. Also: seller page shows opening hours, nine category cards (Stem, Flower, Seed added) in one row, notifications null fix. Rebuild API and web; mobile not checked. See [[2026-11-11 Reserve Confirmation Replaces Pickup Time Picker]].
 
 Mobile inconsistency scan: nearly all of it is fixed (misleading trust screens and wording, colour and type tokens, shared money and date formatters, copy rules, touch targets, unused files, files over 200 lines). Left on purpose: border radius, off-scale spacing and icon sizes, which need a look on a phone. See [[2026-11-12 Mobile Inconsistency Fixes]]. Web scan fixes and the mobile sheet fix: [[2026-11-12 Web Inconsistency Fixes and Mobile Sheets]], [[2026-11-12 Web Inconsistency Fixes Part 2]].
 

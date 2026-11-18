@@ -30757,8 +30757,8 @@ function inNightHours(now = new Date) {
 
 // src/utils/seller-notifications/enqueue.ts
 var windowMs = () => {
-  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 60);
-  return Math.max(10, Math.min(seconds, 600)) * 1000;
+  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 2);
+  return Math.max(1, Math.min(seconds, 600)) * 1000;
 };
 async function readSellerAlertSettings(tx, sellerId) {
   const [row] = await tx.select().from(seller_notification_settings).where(eq(seller_notification_settings.sellerId, sellerId)).limit(1);

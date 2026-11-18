@@ -6,9 +6,10 @@ import { inNightHours } from "./night";
 
 export type SellerAlertChannel = "orders" | "updates";
 
+/** Alerts of the same kind inside one window become one push ("3 new reservations"). Short, so the first one is not held back. */
 const windowMs = () => {
-  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 60);
-  return Math.max(10, Math.min(seconds, 600)) * 1000;
+  const seconds = Number(process.env.PUSH_SELLER_ALERT_WINDOW_SECONDS ?? 2);
+  return Math.max(1, Math.min(seconds, 600)) * 1000;
 };
 
 export async function readSellerAlertSettings(tx: OrderTransaction, sellerId: string) {

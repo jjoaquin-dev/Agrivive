@@ -28,7 +28,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `seller-notifications/`: Server-side push notification payloads & triggers
   - `trust/`: Trust scores, flags, and account recovery
   - `visibility-ranking/`: Ranking policy selection (`ahp-topsis` vs `visibility-v4`)
-  - `live-events/`: Live updates hub for `/ws/live` (`index.ts` channels and dispatch, `listener.ts` Postgres `LISTEN agrivive_live`, `socket-user.ts` optional sign-in)
+  - `live-events/`: Live updates hub for `/ws/live` (`index.ts` channels and dispatch, `listener.ts` Postgres `LISTEN agrivive_live`, `socket-user.ts` optional sign-in; a queued phone alert also wakes `backend/src/jobs/nudge-push-delivery.ts` so its push is sent when due)
 - **Feature Modules** (`backend/src/modules/<module>/`):
   Each module follows the strict 3-folder layout:
   - `index/<feature>.ts`: Elysia route instances & header validation
@@ -87,7 +87,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
 - **Components & Library (`web/src/`)**:
   - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
   - `web/src/features/`: Buyer domain logic & data hooks (`trust/`: Trust & Standing section of `/profile`, pause notice, dispute form)
-  - `web/src/lib/`: API fetch utilities, auth helpers, `format.ts` (the only date, time and number formatters; Asia/Manila) and `money.ts` (peso); `liveEvents.ts` (shared `/ws/live` socket) and `usePolling.ts` (`live` option: reload on events, 60 s fallback)
+  - `web/src/lib/`: API fetch utilities, auth helpers, `format.ts` (the only date, time and number formatters; Asia/Manila) and `money.ts` (peso); `liveEvents.ts` (shared `/ws/live` socket), `useLiveEvent.ts` (reload a list on a live event) and `usePolling.ts` (`live` option: reload on events, 60 s fallback)
 
 #### 4. Project Vault & History (`Agrivive/`)
 - `Agrivive/04 Delivery/00-LATEST.md`: Current sprint snapshot (read this first)

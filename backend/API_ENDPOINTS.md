@@ -148,13 +148,16 @@ Buyer and seller chat. All routes need a signed-in buyer or seller (cookie or be
 
 - Sign-in is optional (cookie or bearer token, like `/ws/conversations`). A signed-in buyer or seller hears their own changes; a visitor can only watch products.
 - On open the server sends `{ "type": "live.connected", "signedIn": true }`.
-- The client may send `{ "type": "watch", "productId": "<uuid>" }` and `{ "type": "unwatch", "productId": "<uuid>" }` (at most 20 products per socket).
+- The client may send `{ "type": "watch", "productId": "<uuid>" }` and `{ "type": "unwatch", "productId": "<uuid>" }` (at most 20 products per socket), and `{ "type": "watch-feed" }` / `{ "type": "unwatch-feed" }` to hear about any listing change (the marketplace list).
 - Events (ids only; reload through the REST routes, which still check access):
   - `{ "type": "order.changed", "orderId" }`: to the buyer and the seller of a reservation that was created or changed in any way.
   - `{ "type": "product.changed", "productId" }`: to watchers of the product and to its seller, when stock, price, active or marketable changes.
   - `{ "type": "notice.created", "kind" }`: a new seller notification, trust notice or follower listing notice for this user.
   - `{ "type": "message.created", "conversationId" }`: a new chat message, to both people in the chat.
-- Source of the events: database triggers (migration `20261118120000_live_events`) call `pg_notify('agrivive_live', …)` inside the same transaction, so changes made by the worker reach sockets too, and a rolled-back change sends nothing. The API keeps one extra database connection listening (`utils/live-events/listener.ts`).
+  - `{ "type": "conversation.updated", "conversationId" }`: one person's side of a chat changed (archive, unarchive, block, read), to that person only.
+  - `{ "type": "marketplace.changed" }`: a listing was added, or its stock, price, active or marketable state changed, to sockets that sent `watch-feed`.
+- Source of the events: database triggers (migration `20261118120000_live_events`, on `orders`, `sellers_product` insert and update, `seller_notifications`, `trust_notices`, `buyer_listing_notices`, `conversation_messages` and `conversation_participants`) call `pg_notify('agrivive_live', …)` inside the same transaction, so changes made by the worker reach sockets too, and a rolled-back change sends nothing. The API keeps one extra database connection listening (`utils/live-events/listener.ts`).
+- A queued phone alert (`notification_outbox` insert) also sends a database message with its due time. The API then runs the push delivery at that moment (`jobs/nudge-push-delivery.ts`) instead of waiting for the 30 s check. Merge windows are `PUSH_SELLER_ALERT_WINDOW_SECONDS` and `PUSH_MESSAGE_WINDOW_SECONDS` (default 2 s).
 - Web and the seller app keep a slow fallback poll (60 s) while the socket is open, and their old poll pace when it is not.
 
 ## Seller
