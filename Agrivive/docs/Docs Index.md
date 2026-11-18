@@ -30,6 +30,7 @@ Home: [[00 Home]] · Delivery: [[Delivery Index]]
 
 - [[docs/AHP-TOPSIS and n8n Boost Engine Technical Specification.pdf]]
 - [[docs/Agrivive Business Model Options.pdf]]
+- [[docs/Agrivive System Explained.pdf]] (plain-words guide to every technical part, with a panel Q&A section)
 - [[docs/Trust Points and AHP Guide.pdf]] (caveman-style guide: violations, points, trust levels, formulas, AHP method and 5 sample calculations; sample data only; made by `scripts/generate_trust_ahp_guide_pdf.py`)
 - [[docs/ahp_topsis_ipo_pipeline.png]]
 - [[docs/n8n_seller_flow_pipeline.png]]

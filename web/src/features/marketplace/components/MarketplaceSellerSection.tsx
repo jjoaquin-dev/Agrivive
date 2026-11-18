@@ -109,20 +109,20 @@ export function MarketplaceSellerSection(props: MarketplaceSellerSectionProps) {
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {/* Seller Photo Avatar with Fallback Initials */}
-                      <div className="relative size-[44px] shrink-0 overflow-hidden rounded-full ring-2 ring-neutral-200/80 transition-transform duration-200 group-hover:scale-105 group-hover:ring-agrivive-primary/40">
+                      <div className="relative isolate size-[44px] shrink-0 overflow-hidden rounded-full ring-2 ring-neutral-200/80 transition-transform duration-200 group-hover:scale-105 group-hover:ring-agrivive-primary/40">
+                        <div className="absolute inset-0 flex items-center justify-center bg-agrivive-mist font-heading text-sm font-bold text-agrivive-primary">
+                          {seller.initials}
+                        </div>
                         {seller.avatar ? (
                           <img
                             src={seller.avatar}
-                            alt={`${seller.name} avatar`}
-                            className="h-full w-full object-cover"
+                            alt=""
+                            className="absolute inset-0 h-full w-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = "none";
                             }}
                           />
                         ) : null}
-                        <div className="absolute inset-0 -z-10 flex items-center justify-center bg-agrivive-mist font-heading text-xs font-bold text-agrivive-primary">
-                          {seller.initials}
-                        </div>
                       </div>
 
                       <div className="min-w-0 flex-1">

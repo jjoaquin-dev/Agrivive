@@ -1,7 +1,7 @@
 ---
 title: Agrivive Latest Snapshot
 type: snapshot
-last_updated: 2026-11-15 PST
+last_updated: 2026-11-18 PST
 status: active
 ---
 
@@ -11,16 +11,17 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Last updated
 
-2026-11-15 PST
+2026-11-18 PST
 
 ## Latest completed task
 
-Public overview now has eight Chart.js charts (mixed, radar, bar, scatter, doughnut, pie), a how-to-read box under every chart, eight Groq explanations, a fixed header, and a PDF with all of them. See [[2026-11-15 Overview Eight Charts and Chart Guides]].
+SECURITY: the VPS web server was attacked through an old Next.js/React (RCE). Upgraded to Next 15.5.29 and React 19.1.10, and the web container no longer sees secret env values. The owner must redeploy and **rotate every secret**. See [[2026-11-18 Web Break-in Fix]].
+
+Earlier: Public overview now has eight Chart.js charts (mixed, radar, bar, scatter, doughnut, pie), a how-to-read box under every chart, eight Groq explanations, a fixed header, and a PDF with all of them. See [[2026-11-15 Overview Eight Charts and Chart Guides]].
 
 Earlier overview work (Chart.js and calendar filter, descriptive totals without seller details): [[2026-11-15 Overview Chart.js Calendar and Groq Explanations]], [[2026-11-15 Public Overview Descriptive Totals]].
 
 Earlier: Seller app screen size fixes (live window sizes, centered forms on wide screens, safe tab bar, flexible two-per-row cards). See [[2026-11-12 Seller App Screen Size Fixes]].
-
 Earlier: Boost notes, API doc and code comments aligned to the current rule (best rank not boosted in 6 hours, no 0.60 cutoff): [[2026-11-12 Boost Docs Aligned]].
 
 Earlier: Seller app tab bar and bottom screens fixed for largest phone text and 3-button navigation: [[2026-11-12 Large Text and Nav Buttons]].
