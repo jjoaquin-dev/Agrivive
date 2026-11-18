@@ -5,6 +5,9 @@ import { colors, fonts, radii, spacing, touchTargets } from "../../../theme";
 import { formatAmount, formatMoney, formatNumber, formatUnit } from "../orderFormat";
 import type { SellerOrderItem } from "../types";
 
+/** The most one item can be given. The server also checks the stock that is left. */
+export const MAX_GIVEN = 9999;
+
 export interface OrderHandoverItemRowProps {
   item: SellerOrderItem;
   current: number;
@@ -16,7 +19,7 @@ export function OrderHandoverItemRow({ item, current, onUpdateQuantity }: OrderH
   const unitPrice = Number(item.unitPrice ?? 0);
   const diff = reserved - current;
   const step = item.scalingType === "kilo" ? 0.5 : 1;
-  const canAdd = current < reserved - 0.001;
+  const canAdd = current < MAX_GIVEN;
   const canSubtract = current > 0.001;
   const perUnit = item.scalingType === "kilo" ? "kg" : item.scalingType || "kg";
 
@@ -34,7 +37,7 @@ export function OrderHandoverItemRow({ item, current, onUpdateQuantity }: OrderH
         <Text style={styles.stepperLabel}>Amount given</Text>
         <View style={styles.stepperControl}>
           <Pressable
-            onPress={() => onUpdateQuantity(item.id, current - step, reserved)}
+            onPress={() => onUpdateQuantity(item.id, current - step, MAX_GIVEN)}
             disabled={!canSubtract}
             style={[styles.stepBtn, !canSubtract && styles.stepDisabled]}
             accessibilityRole="button"
@@ -46,14 +49,14 @@ export function OrderHandoverItemRow({ item, current, onUpdateQuantity }: OrderH
             <TextInput
               keyboardType="decimal-pad"
               value={formatNumber(current)}
-              onChangeText={(txt) => onUpdateQuantity(item.id, parseFloat(txt) || 0, reserved)}
+              onChangeText={(txt) => onUpdateQuantity(item.id, parseFloat(txt) || 0, MAX_GIVEN)}
               style={styles.stepperInput}
               accessibilityLabel="Amount given"
             />
             <Text style={styles.unit}>{formatUnit(item.scalingType, String(current))}</Text>
           </View>
           <Pressable
-            onPress={() => onUpdateQuantity(item.id, current + step, reserved)}
+            onPress={() => onUpdateQuantity(item.id, current + step, MAX_GIVEN)}
             disabled={!canAdd}
             style={[styles.stepBtn, !canAdd && styles.stepDisabled]}
             accessibilityRole="button"
@@ -68,6 +71,11 @@ export function OrderHandoverItemRow({ item, current, onUpdateQuantity }: OrderH
         <View style={styles.pill}>
           <RefreshCw size={14} color={colors.primary} />
           <Text style={styles.pillText}>{formatAmount(diff, item.scalingType)} goes back to your stock</Text>
+        </View>
+      ) : diff < -0.001 ? (
+        <View style={styles.pill}>
+          <Plus size={14} color={colors.primary} />
+          <Text style={styles.pillText}>{formatAmount(-diff, item.scalingType)} more comes out of your stock</Text>
         </View>
       ) : (
         <View style={styles.pill}>

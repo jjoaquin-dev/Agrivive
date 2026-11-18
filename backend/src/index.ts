@@ -26,6 +26,7 @@ import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { deliverPushNotifications } from "./jobs/deliver-push-notifications";
 import { sendSellerListingNotices } from "./jobs/send-seller-listing-notices";
+import { startLiveListener } from "./utils/live-events/listener";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -84,6 +85,9 @@ const app = new Elysia()
   //plugins
   .use(validationPlugin)
   .listen(3000);
+
+// Live events: listen for database changes and pass them to open /ws/live sockets (API process only).
+startLiveListener();
 
 // Process and deliver queued push notifications and seller notices every 30 seconds
 setInterval(async () => {

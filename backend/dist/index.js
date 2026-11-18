@@ -179451,6 +179451,37 @@ function notifySeller(tx, input) {
   });
 }
 
+// src/modules/seller/services/seller.scan-order.items.ts
+async function applyHandoverAmounts(tx, items, adjustments, now) {
+  const given = new Map(adjustments.map((row) => [row.itemId, row.dispensedQuantity]));
+  let total = 0;
+  let totalGiven = 0;
+  for (const item of items) {
+    const reserved = Number(item.quantity ?? 0);
+    const unitPrice = Number(item.unitPrice ?? 0);
+    const dispensed = given.has(item.id) ? given.get(item.id) : reserved;
+    if (dispensed < 0)
+      throw new OrderError(400, "Dispensed amount cannot be negative");
+    const subtotal = Number((dispensed * unitPrice).toFixed(2));
+    total += subtotal;
+    totalGiven += dispensed;
+    const change = dispensed - reserved;
+    if (Math.abs(change) <= 0.0001)
+      continue;
+    if (change < 0) {
+      await tx.update(sellers_product).set({ productQty: sql3`${sellers_product.productQty} + ${(-change).toFixed(2)}` }).where(eq(sellers_product.id, item.productId));
+    } else {
+      const [taken] = await tx.update(sellers_product).set({ productQty: sql3`${sellers_product.productQty} - ${change.toFixed(2)}` }).where(and(eq(sellers_product.id, item.productId), gte(sellers_product.productQty, change.toFixed(2)))).returning({ id: sellers_product.id });
+      if (!taken) {
+        const [product] = await tx.select({ left: sellers_product.productQty }).from(sellers_product).where(eq(sellers_product.id, item.productId)).limit(1);
+        throw new OrderError(409, `Not enough stock left to give more. Only ${Number(product?.left ?? 0)} more is available.`);
+      }
+    }
+    await tx.update(ordered_items).set({ quantity: dispensed.toFixed(2), subtotal: subtotal.toFixed(2), updatedAt: now }).where(eq(ordered_items.id, item.id));
+  }
+  return { total: Number(total.toFixed(2)), totalGiven };
+}
+
 // src/modules/seller/services/seller.scan-order.ts
 class ScanError extends OrderError {
   result;
@@ -179521,41 +179552,11 @@ async function completeScan(sellerId, orderId, body) {
     }
     let finalTotalAmount = Number(current.totalAmount);
     if (body.items && body.items.length > 0) {
-      const adjustmentMap = new Map;
-      for (const adj of body.items) {
-        adjustmentMap.set(adj.itemId, adj.dispensedQuantity);
-      }
-      let newTotal = 0;
-      let totalDispensed = 0;
-      for (const item of existingItems) {
-        const reservedQty = Number(item.quantity ?? 0);
-        const unitPrice = Number(item.unitPrice ?? 0);
-        const dispensedQty = adjustmentMap.has(item.id) ? adjustmentMap.get(item.id) : reservedQty;
-        if (dispensedQty < 0) {
-          throw new OrderError(400, "Dispensed amount cannot be negative");
-        }
-        if (dispensedQty > reservedQty + 0.0001) {
-          throw new OrderError(400, `Dispensed amount cannot be greater than reserved amount (${reservedQty})`);
-        }
-        totalDispensed += dispensedQty;
-        const newSubtotal = Number((dispensedQty * unitPrice).toFixed(2));
-        newTotal += newSubtotal;
-        const diff = reservedQty - dispensedQty;
-        if (diff > 0.0001) {
-          await tx.update(sellers_product).set({
-            productQty: sql3`${sellers_product.productQty} + ${diff.toFixed(2)}`
-          }).where(eq(sellers_product.id, item.productId));
-          await tx.update(ordered_items).set({
-            quantity: dispensedQty.toFixed(2),
-            subtotal: newSubtotal.toFixed(2),
-            updatedAt: now
-          }).where(eq(ordered_items.id, item.id));
-        }
-      }
-      if (totalDispensed <= 0) {
+      const handover = await applyHandoverAmounts(tx, existingItems, body.items, now);
+      if (handover.totalGiven <= 0) {
         throw new OrderError(400, "Cannot complete handover with 0 amount. Please cancel the order instead.");
       }
-      finalTotalAmount = Number(newTotal.toFixed(2));
+      finalTotalAmount = handover.total;
     }
     const [completed] = await tx.update(orders).set({
       status: "completed",
@@ -188413,11 +188414,11 @@ var conversationRoutes = new Elysia().use(sessionAuth).post("/conversations", as
       return status(403);
   },
   open(ws) {
-    subscribeConversation(ws, ws.data.query.conversationId);
+    subscribeConversation(ws.raw, ws.data.query.conversationId);
     ws.send(JSON.stringify({ type: "conversation.connected", conversationId: ws.data.query.conversationId }));
   },
   close(ws) {
-    unsubscribeConversation(ws);
+    unsubscribeConversation(ws.raw);
   }
 });
 
@@ -188516,8 +188517,128 @@ var notificationDevicesRoute = new Elysia().use(sessionAuth).post("/notification
   params: notificationDeviceParams
 });
 
+// src/utils/live-events/index.ts
+var maxProductWatches = 20;
+var uuidPattern2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+var userSockets = new Map;
+var productSockets = new Map;
+var socketState = new WeakMap;
+function join3(map, key, socket) {
+  let set = map.get(key);
+  if (!set)
+    map.set(key, set = new Set);
+  set.add(socket);
+}
+function leave(map, key, socket) {
+  const set = map.get(key);
+  set?.delete(socket);
+  if (set?.size === 0)
+    map.delete(key);
+}
+function addLiveSocket(socket, userId) {
+  socketState.set(socket, { userId, products: new Set });
+  if (userId)
+    join3(userSockets, userId, socket);
+}
+function removeLiveSocket(socket) {
+  const state = socketState.get(socket);
+  if (!state)
+    return;
+  if (state.userId)
+    leave(userSockets, state.userId, socket);
+  for (const productId of state.products)
+    leave(productSockets, productId, socket);
+  socketState.delete(socket);
+}
+function handleLiveCommand(socket, raw) {
+  const state = socketState.get(socket);
+  if (!state)
+    return;
+  let command = raw;
+  if (typeof raw === "string") {
+    try {
+      command = JSON.parse(raw);
+    } catch {
+      return;
+    }
+  }
+  const { type, productId } = command ?? {};
+  if (typeof productId !== "string" || !uuidPattern2.test(productId))
+    return;
+  if (type === "watch" && !state.products.has(productId) && state.products.size < maxProductWatches) {
+    state.products.add(productId);
+    join3(productSockets, productId, socket);
+  } else if (type === "unwatch" && state.products.delete(productId)) {
+    leave(productSockets, productId, socket);
+  }
+}
+function sendTo(sockets, payload, sent) {
+  if (!sockets)
+    return;
+  for (const socket of sockets) {
+    if (sent.has(socket))
+      continue;
+    sent.add(socket);
+    try {
+      socket.send(payload);
+    } catch {}
+  }
+}
+function dispatchLiveNotice(notice) {
+  const sent = new Set;
+  if (notice.k === "order") {
+    const payload = JSON.stringify({ type: "order.changed", orderId: notice.id });
+    sendTo(userSockets.get(notice.b), payload, sent);
+    sendTo(userSockets.get(notice.s), payload, sent);
+  } else if (notice.k === "product") {
+    const payload = JSON.stringify({ type: "product.changed", productId: notice.id });
+    sendTo(productSockets.get(notice.id), payload, sent);
+    sendTo(userSockets.get(notice.s), payload, sent);
+  } else if (notice.k === "notice") {
+    sendTo(userSockets.get(notice.u), JSON.stringify({ type: "notice.created", kind: notice.kind ?? null }), sent);
+  } else if (notice.k === "message") {
+    const payload = JSON.stringify({ type: "message.created", conversationId: notice.id });
+    sendTo(userSockets.get(notice.b), payload, sent);
+    sendTo(userSockets.get(notice.s), payload, sent);
+  }
+}
+
+// src/utils/live-events/socket-user.ts
+async function readLiveSocketUserId(headers) {
+  try {
+    const authSession = await auth.api.getSession({ headers });
+    if (!authSession)
+      return null;
+    const [account] = await db2.select({ id: user.id, isActive: user.isActive, roles: user.role }).from(user).where(eq(user.id, authSession.user.id)).limit(1);
+    if (!account?.isActive || !account.roles?.some((role) => role === "buyer" || role === "seller"))
+      return null;
+    return account.id;
+  } catch {
+    return null;
+  }
+}
+
+// src/modules/notifications/index/notifications.live.ts
+var closedEarly = new WeakSet;
+var notificationsLiveRoute = new Elysia().ws("/ws/live", {
+  async open(ws) {
+    const userId = await readLiveSocketUserId(ws.data.request.headers);
+    if (closedEarly.has(ws.raw))
+      return;
+    addLiveSocket(ws.raw, userId);
+    ws.send(JSON.stringify({ type: "live.connected", signedIn: Boolean(userId) }));
+  },
+  message(ws, message) {
+    handleLiveCommand(ws.raw, message);
+  },
+  close(ws) {
+    closedEarly.add(ws.raw);
+    removeLiveSocket(ws.raw);
+  }
+});
+
 // src/modules/notifications/index.ts
-var notificationsRoute = new Elysia({ name: "notifications" }).use(notificationDevicesRoute);
+var notificationsRoute = new Elysia({ name: "notifications" }).use(notificationDevicesRoute).use(notificationsLiveRoute);
 
 // src/modules/trust/model/trust.case.ts
 var disputeBody = t.Object({ reason: t.String({ minLength: 10, maxLength: 1000 }) });
@@ -189192,6 +189313,53 @@ async function deliverPushNotifications() {
   return { claimed: jobs.length, delivered, failed };
 }
 
+// src/utils/live-events/listener.ts
+var channel = "agrivive_live";
+var firstRetryMs = 1000;
+var maxRetryMs = 30000;
+function startLiveListener() {
+  let retryMs = firstRetryMs;
+  let stopped = false;
+  const connect = async () => {
+    if (stopped)
+      return;
+    const client = new Client({ connectionString: process.env.DATABASE_URL, keepAlive: true });
+    let failed = false;
+    const retry = (error) => {
+      if (failed)
+        return;
+      failed = true;
+      console.error("[Live] Listener lost its database connection:", error);
+      client.removeAllListeners();
+      client.end().catch(() => {});
+      setTimeout(() => void connect(), retryMs);
+      retryMs = Math.min(retryMs * 2, maxRetryMs);
+    };
+    client.on("error", retry);
+    client.on("end", () => retry(new Error("connection ended")));
+    client.on("notification", (message) => {
+      if (message.channel !== channel || !message.payload)
+        return;
+      try {
+        dispatchLiveNotice(JSON.parse(message.payload));
+      } catch (error) {
+        console.error("[Live] Bad live message:", error);
+      }
+    });
+    try {
+      await client.connect();
+      await client.query(`LISTEN ${channel}`);
+      retryMs = firstRetryMs;
+    } catch (error) {
+      retry(error);
+    }
+  };
+  connect();
+  return () => {
+    stopped = true;
+  };
+}
+
 // src/index.ts
 process.env.NODE_ENV = "development";
 var isDev = true;
@@ -189208,6 +189376,7 @@ var app = new Elysia().use(securityHeadersPlugin).use(rateLimitPlugin).use(cors(
     return status(503, { status: "not_ready" });
   }
 }).use(validationPlugin).listen(3000);
+startLiveListener();
 setInterval(async () => {
   try {
     await sendSellerListingNotices();

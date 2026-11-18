@@ -64,6 +64,7 @@ export function ProductDetail() {
     intervalMs: 15_000,
     runImmediately: false,
     shouldStop: (reason) => reason instanceof ApiError && reason.status === 404,
+    live: { productId, match: (event) => event.type === "product.changed" && event.productId === productId },
   });
 
   function promptBuyNow() {

@@ -76,7 +76,7 @@ export function OrderHandoverSheet({
 
           <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
             <Text style={styles.sectionNotice}>
-              Weigh the vegetables. If the buyer takes less, lower the amount. The rest goes back to your stock.
+              Weigh the vegetables. If the buyer takes less, lower the amount and the rest goes back to your stock. If the buyer takes more, raise it, as long as you still have stock.
             </Text>
 
             {order.items.map((item) => (
