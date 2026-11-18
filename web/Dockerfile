@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.2 AS build
+FROM oven/bun:1.4.4 AS build
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 
 RUN bun run build
 
-FROM oven/bun:1.4.2-slim
+FROM oven/bun:1.4.4-slim
 
 WORKDIR /app
 
