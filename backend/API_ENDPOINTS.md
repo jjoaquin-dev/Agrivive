@@ -142,6 +142,21 @@ Buyer and seller chat. All routes need a signed-in buyer or seller (cookie or be
 
 `/conversations/unread-count` is registered before `/conversations/:id`, so it is never read as an id.
 
+## Live updates (WebSocket)
+
+`GET /ws/live` (WebSocket). Source: `backend/src/modules/notifications/index/notifications.live.ts`, hub in `backend/src/utils/live-events/`.
+
+- Sign-in is optional (cookie or bearer token, like `/ws/conversations`). A signed-in buyer or seller hears their own changes; a visitor can only watch products.
+- On open the server sends `{ "type": "live.connected", "signedIn": true }`.
+- The client may send `{ "type": "watch", "productId": "<uuid>" }` and `{ "type": "unwatch", "productId": "<uuid>" }` (at most 20 products per socket).
+- Events (ids only; reload through the REST routes, which still check access):
+  - `{ "type": "order.changed", "orderId" }`: to the buyer and the seller of a reservation that was created or changed in any way.
+  - `{ "type": "product.changed", "productId" }`: to watchers of the product and to its seller, when stock, price, active or marketable changes.
+  - `{ "type": "notice.created", "kind" }`: a new seller notification, trust notice or follower listing notice for this user.
+  - `{ "type": "message.created", "conversationId" }`: a new chat message, to both people in the chat.
+- Source of the events: database triggers (migration `20261118120000_live_events`) call `pg_notify('agrivive_live', …)` inside the same transaction, so changes made by the worker reach sockets too, and a rolled-back change sends nothing. The API keeps one extra database connection listening (`utils/live-events/listener.ts`).
+- Web and the seller app keep a slow fallback poll (60 s) while the socket is open, and their old poll pace when it is not.
+
 ## Seller
 
 Seller routes require a signed-in seller; most listing and order routes also require active, verified seller status.
@@ -353,7 +368,7 @@ Order responses now include `pickupStart`, `pickupEnd`, `confirmedAt`, `confirma
 |---|---|---|
 | POST | `/seller/orders/:id/confirm` | Manual confirmation. The worker confirms by itself 3 hours after the order was placed. |
 | POST | `/seller/orders/:id/pack` / `/ready` | After confirmation. "Ready" does not complete the order. |
-| POST | `/seller/orders/scan` | Completes only with a valid QR inside its window, once. Every try is saved in `order_qr_scans`. |
+| POST | `/seller/orders/scan` | Completes only with a valid QR inside its window, once. Every try is saved in `order_qr_scans`. Optional `items: [{ itemId, dispensedQuantity }]` sets what was really handed over: less than reserved returns the rest to stock; more than reserved takes the extra from stock (409 `Not enough stock left…` if the listing has less). The order total is recalculated. |
 | POST | `/seller/orders/:id/no-show` | Only after the pickup time and QR time are over. First no-show = warning, 0 points; later = 2 points. The worker records it after 1 hour if the seller does not. |
 | POST | `/seller/orders/:id/reschedule` | `{ pickupStart, pickupEnd, reason }`. Nothing changes until the buyer accepts. |
 | POST | `/buyer/orders/:id/reschedule/respond` | `{ "accept": true }`. Accepting moves the pickup and QR window. |

@@ -15,6 +15,10 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
+Live updates: `/ws/live` WebSocket fed by database triggers (orders, stock and price, notices, messages); web and the seller app refresh at once and poll only as a 60 s fallback. Apply migration `20261118120000_live_events`: [[2026-11-18 Live Updates Over WebSocket]].
+
+Handover amount after a QR scan can now go up or down (extra comes out of stock), and the seller setup Save and Continue explains what is wrong: [[2026-11-18 Handover Amount Can Go Up or Down]].
+
 Auto-updates added (Dependabot weekly, Monday audit) and a critical `better-auth` login hole fixed by upgrading to 1.7.25 in all apps; test login after deploy and rebuild the APK: [[2026-11-18 Auto Updates and Login Library Fix]].
 
 SECURITY: the VPS web server was attacked through an old Next.js/React (RCE). Upgraded to Next 15.5.29 and React 19.1.10, and the web container no longer sees secret env values. The owner must redeploy and **rotate every secret**. See [[2026-11-18 Web Break-in Fix]].
@@ -31,8 +35,6 @@ Earlier: Seller app tab bar and bottom screens fixed for largest phone text and 
 Earlier: Seller app slow-signal support (reads fall back to the last saved answer, photos shrink before upload, uploads wait 60s): [[2026-11-12 Slow Signal Support]]. Listing `condition` and stall `pickup_capacity` columns dropped (pickup overlap fixed at 3); migration not yet applied: [[2026-11-12 Drop Condition and Pickup Capacity]].
 
 Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].
-
-Earlier: Seller Boost hub screens cleaned up (website white, light borders, clearer type). See [[2026-11-12 Seller Boost Screens Cleanup]].
 
 Earlier: Seller app: pill buttons and text fields, pill search and dropdowns, text-only pagination, lighter borders and fills everywhere, Listings pages in the website white. See [[2026-11-11 Seller App Pill Controls and Quiet Borders]].
 

@@ -77,7 +77,8 @@ export default function SellerOrderScanScreen() {
         return {
           id: item.id,
           label: `${item.productName || "Produce"} given: ${formatAmount(given, item.scalingType)}`,
-          returned: back > 0.001 ? `${formatAmount(back, item.scalingType)} returned to stock` : null,
+          returned: back > 0.001 ? `${formatAmount(back, item.scalingType)} returned to stock`
+            : back < -0.001 ? `${formatAmount(-back, item.scalingType)} more taken from stock` : null,
         };
       });
       setDone({ id: completed.id, total: formatMoney(completed.totalAmount), reference: completed.id.slice(0, 8).toUpperCase(), lines });

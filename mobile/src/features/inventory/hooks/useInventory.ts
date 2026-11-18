@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useIsFocused } from "expo-router";
+import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
 import { fetchSellerProducts } from "../api/products";
 import type { InventorySummary, Product, ProductCategory, ProductScalingType } from "../types";
 import { logApiError } from "../../../api/client";
@@ -52,6 +53,13 @@ export function useInventory() {
       void loadProducts(true);
     }, []),
   );
+
+  // Stock or price changed (a reservation, a pickup, a price drop): reload the first page at once.
+  // Skipped after "load more", so the list the seller scrolled through is not cut back to 20.
+  const isFocused = useIsFocused();
+  useRefreshOnSignal(() => { if (products.length <= 20) void loadProducts(true); }, {
+    pushTypes: ["seller_stock"], enabled: isFocused, onForeground: false,
+  });
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
