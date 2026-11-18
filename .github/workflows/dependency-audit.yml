@@ -1,0 +1,29 @@
+name: Dependency audit
+
+# Checks every package against the known-vulnerability list. Runs each Monday and on demand,
+# so a newly announced hole (like the Next.js and React one) shows up as a failed run.
+on:
+  schedule:
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, backend, mobile]
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun audit --audit-level=critical

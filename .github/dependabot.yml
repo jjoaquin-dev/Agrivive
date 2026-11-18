@@ -1,0 +1,44 @@
+# Opens pull requests for new package versions. Security fixes arrive as soon as GitHub publishes them
+# (turn on "Dependabot security updates" in the repo settings). Nothing merges by itself: you review and merge.
+version: 2
+updates:
+  - package-ecosystem: "bun"
+    directory: "/web"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 5
+    groups:
+      # Next and React must move together.
+      next-and-react:
+        patterns: ["next", "react", "react-dom", "eslint-config-next"]
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+        exclude-patterns: ["next", "react", "react-dom", "eslint-config-next"]
+
+  - package-ecosystem: "bun"
+    directory: "/backend"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "bun"
+    directory: "/mobile"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 3
+    # Expo, React Native and React are pinned together by the Expo SDK. Move them with an SDK upgrade, not here.
+    ignore:
+      - dependency-name: "expo*"
+      - dependency-name: "react"
+      - dependency-name: "react-native*"
+    groups:
+      minor-and-patch:
+        update-types: ["patch"]
+
+  - package-ecosystem: "docker"
+    directories: ["/web", "/backend"]
+    schedule: { interval: "weekly", day: "monday" }
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "monthly" }

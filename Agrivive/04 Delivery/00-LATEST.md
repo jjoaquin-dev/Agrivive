@@ -15,6 +15,8 @@ Replace this file after each completed task. Older detail belongs in the dated d
 
 ## Latest completed task
 
+Auto-updates added (Dependabot weekly, Monday audit) and a critical `better-auth` login hole fixed by upgrading to 1.7.25 in all apps; test login after deploy and rebuild the APK: [[2026-11-18 Auto Updates and Login Library Fix]].
+
 SECURITY: the VPS web server was attacked through an old Next.js/React (RCE). Upgraded to Next 15.5.29 and React 19.1.10, and the web container no longer sees secret env values. The owner must redeploy and **rotate every secret**. See [[2026-11-18 Web Break-in Fix]].
 
 Earlier: Public overview now has eight Chart.js charts (mixed, radar, bar, scatter, doughnut, pie), a how-to-read box under every chart, eight Groq explanations, a fixed header, and a PDF with all of them. See [[2026-11-15 Overview Eight Charts and Chart Guides]].
@@ -31,10 +33,6 @@ Earlier: Seller app slow-signal support (reads fall back to the last saved answe
 Earlier: Seller Add Produce form, Weather and Holidays, and the sign-in, sign-up and onboarding screens cleaned up. See [[2026-11-12 Seller Forms Weather and Sign-in Cleanup]].
 
 Earlier: Seller Boost hub screens cleaned up (website white, light borders, clearer type). See [[2026-11-12 Seller Boost Screens Cleanup]].
-
-Earlier: Seller Messages list and chat cleaned up; filter chips only show when useful. See [[2026-11-11 Seller Messages Screens Cleanup]].
-
-Earlier: Seller Notifications screen cleaned up (cards, highlighted new reservations, messages and questions) and the Show pagination is a soft pill card again. See [[2026-11-11 Seller Notifications Screen Cleanup]].
 
 Earlier: Seller app: pill buttons and text fields, pill search and dropdowns, text-only pagination, lighter borders and fills everywhere, Listings pages in the website white. See [[2026-11-11 Seller App Pill Controls and Quiet Borders]].
 

@@ -13,6 +13,7 @@ Previous: [[Delivery Index 2026-10]]
 
 ## 2026-11-01
 
+- [[04 Delivery/2026-11-18 Auto Updates and Login Library Fix|Auto Updates and Login Library Fix]]
 - [[04 Delivery/2026-11-18 Web Break-in Fix|Web Break-in Fix]]
 - [[04 Delivery/2026-11-15 Overview Eight Charts and Chart Guides|Overview Eight Charts and Chart Guides]]
 - [[04 Delivery/2026-11-15 Overview Chart.js Calendar and Groq Explanations|Overview Chart.js Calendar and Groq Explanations]]
