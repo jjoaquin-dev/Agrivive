@@ -2,6 +2,8 @@ import { OrderError } from "../order-types";
 import { MINUTE_MS, addDaysKey, bookableDateKeys, manilaDateKey, manilaParts } from "./manila";
 
 export const PICKUP_STEP_MINUTES = 15;
+/** How many pickups may overlap at one stall. The same for every seller. */
+export const PICKUP_CAPACITY = 3;
 /** The last 30 minutes before closing cannot be booked. */
 export const CLOSING_BUFFER_MINUTES = 30;
 

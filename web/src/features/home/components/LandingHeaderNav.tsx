@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 export type LandingSectionLink = { label: string; href: string; isRoute?: boolean; group?: "page" | "section" };
 
 const baseClass =
-  "relative inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-2 transition-[background-color,color,transform] duration-200 hover:bg-agrivive-primary/8 hover:text-agrivive-primary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary 2xl:px-3.5";
+  "relative inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-2 transition-[background-color,color,transform] duration-200 hover:bg-agrivive-primary/8 hover:text-agrivive-primary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-agrivive-primary";
 const activeClass = "bg-agrivive-primary/12 text-agrivive-primary shadow-md";
 
 export function LandingHeaderNav({ links }: { links: LandingSectionLink[] }) {

@@ -55,7 +55,6 @@ export async function createSellerProduct(userId: string, body: SellerProductCre
         priceReductionPeriodsApplied: 0,
         productQty: body.productQty.toString(),
         lowStockThreshold: body.lowStockThreshold?.toString() ?? null,
-        condition: body.condition ?? "needs_inspection",
         originalQty: body.productQty.toString(),
         publishedAt: now,
         isMarketable: body.isMarketable,

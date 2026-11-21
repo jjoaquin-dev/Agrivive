@@ -21,6 +21,7 @@ export default function ProfileSetupScreen() {
   const insets = useSafeAreaInsets();
   const { session, refreshSetup } = useAuth();
   const scrollViewRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+  const hoursY = useRef(0);
 
   const [personName, setPersonName] = useState(
     session?.user?.name && session.user.name !== "Seller"
@@ -43,8 +44,12 @@ export default function ProfileSetupScreen() {
   const validate = () => {
     const newErrors = validateSellerSetup({ personName, phoneNumber, shopName, detailAddress, coordinates, hours });
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    const messages = Object.values(newErrors).filter(Boolean) as string[];
+    if (messages.length > 0) {
+      // Go to the first problem: the stall hours are at the bottom, so do not jump to the top when only they need fixing.
+      const onlyHours = Object.keys(newErrors).length === 1 && Boolean(newErrors.hours);
+      scrollViewRef.current?.scrollTo({ y: onlyHours ? hoursY.current : 0, animated: true });
+      Alert.alert("Check Your Stall", messages[0]);
       return false;
     }
     return true;
@@ -68,8 +73,9 @@ export default function ProfileSetupScreen() {
       // The stall exists now. If the hours do not save, the seller can set them later in Stall Hours.
       try {
         await saveStallHours(hours);
-      } catch {
-        Alert.alert("Hours Not Saved", "Your stall is ready, but your opening hours did not save. Set them in Stall Hours before buyers reserve.");
+      } catch (hoursError: any) {
+        const reason = typeof hoursError?.message === "string" && hoursError.message ? ` (${hoursError.message})` : "";
+        Alert.alert("Hours Not Saved", `Your stall is ready, but your opening hours did not save${reason}. Set them in Stall Hours before buyers reserve.`);
       }
 
       const setup = await refreshSetup();
@@ -148,8 +154,10 @@ export default function ProfileSetupScreen() {
           </View>
           <InputComponent label="Phone Number" placeholder="09123456789" keyboardType="phone-pad" value={phoneNumber} error={errors.phoneNumber}
             hint="Buyers contact you about reservations" onChangeText={(text) => { setPhoneNumber(text); clear("phoneNumber"); }} />
-          <StallHoursSetupSection days={hours} error={errors.hours}
-            onChange={(weekday, patch) => { setHours((rows) => rows.map((row) => (row.weekday === weekday ? { ...row, ...patch } : row))); clear("hours"); }} />
+          <View onLayout={(event) => { hoursY.current = event.nativeEvent.layout.y; }}>
+            <StallHoursSetupSection days={hours} error={errors.hours}
+              onChange={(weekday, patch) => { setHours((rows) => rows.map((row) => (row.weekday === weekday ? { ...row, ...patch } : row))); clear("hours"); }} />
+          </View>
         </ScrollView>
         <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           <ButtonComponent title="Save and Continue" icon={<ArrowRight size={18} color={colors.white} />} onPress={handleSaveProfile} loading={loading} />

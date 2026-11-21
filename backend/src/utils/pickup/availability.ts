@@ -3,7 +3,7 @@ import type { db } from "../../db";
 import { orders, seller_opening_hours, sellers_profile } from "../../db/schema";
 import { OrderError, type OrderTransaction } from "../order-types";
 import { MINUTE_MS, addDaysKey, bookableDateKeys, manilaInstant } from "./manila";
-import { PICKUP_STEP_MINUTES, dayWindow, rangeCells, rangesOverlap, validatePickupRange, type Range, type StallRules } from "./rules";
+import { PICKUP_CAPACITY, PICKUP_STEP_MINUTES, dayWindow, rangeCells, rangesOverlap, validatePickupRange, type Range, type StallRules } from "./rules";
 
 type Reader = Pick<typeof db, "select">;
 
@@ -16,7 +16,7 @@ export async function readStallRules(reader: Reader, sellerId: string): Promise<
     hours: hours.map((row) => ({ weekday: row.weekday, isClosed: row.isClosed, opensMinute: row.opensMinute, closesMinute: row.closesMinute })),
     closedDate: profile.closedDate,
     pickupWithinMinutes: profile.pickupWithinMinutes,
-    capacity: profile.pickupCapacity,
+    capacity: PICKUP_CAPACITY,
     shopName: profile.shopName,
   };
 }
@@ -94,7 +94,7 @@ export async function readPickupSlots(reader: Reader, sellerId: string, buyerId:
     }
     days.push({ date: dateKey, open: true, reason: "", opensMinute: window.opensMinute, latestEndMinute: window.latestEndMinute, cells });
   }
-  return { shopName: rules.shopName, stepMinutes: PICKUP_STEP_MINUTES, maxRangeMinutes: rules.pickupWithinMinutes, capacity: rules.capacity, days };
+  return { shopName: rules.shopName, stepMinutes: PICKUP_STEP_MINUTES, maxRangeMinutes: rules.pickupWithinMinutes, days };
 }
 
 export { addDaysKey };

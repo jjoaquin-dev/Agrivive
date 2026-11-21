@@ -2,6 +2,7 @@
 
 import { Breadcrumbs } from "@/src/components/Breadcrumbs";
 import { useCallback, useEffect, useState } from "react";
+import { useLiveEvent } from "@/src/lib/useLiveEvent";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -49,6 +50,18 @@ export function BuyerConversations() {
       if (!signal?.aborted) setLoading(false);
     }
   }, [router]);
+
+  // Archive, unarchive, block, a new message or a read on another device: refresh the list quietly.
+  const reloadQuietly = useCallback(() => {
+    Promise.all([listConversations(), listConversations(undefined, true)])
+      .then(([active, archived]) => setItems([...active, ...archived]))
+      .catch(() => {});
+  }, []);
+  useLiveEvent(reloadQuietly, {
+    enabled: Boolean(session?.user) && !loading,
+    needsUser: true,
+    match: (event) => event.type === "conversation.updated" || event.type === "message.created",
+  });
 
   useEffect(() => {
     if (sessionPending) return;

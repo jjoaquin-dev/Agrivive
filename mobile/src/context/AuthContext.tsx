@@ -3,6 +3,8 @@ import * as SecureStore from "expo-secure-store";
 import { authClient, setAccountClosedHandler } from "../api/client";
 import { fetchSellerSetup, SellerSetupResponse } from "../api/seller";
 import { disableNotificationDevice } from "../features/notifications/api/notification-devices";
+import { clearReads } from "../api/readCache";
+import { setShowingSaved } from "../api/readStatus";
 import { DEVICE_ID_KEY } from "../features/notifications/api/deviceKey";
 
 const ONBOARDING_KEY = "agrivive_onboarding_completed";
@@ -135,6 +137,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     try {
       await authClient.signOut();
+      clearReads();
+      setShowingSaved(null);
       setSetup(null);
     } catch (err) {
       console.error("Sign out error", err);

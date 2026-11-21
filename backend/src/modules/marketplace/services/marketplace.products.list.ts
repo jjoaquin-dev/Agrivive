@@ -80,7 +80,6 @@ export function serializeProduct(row: any, imageUrl: string | null, distanceKm: 
     productQty: row.productQty,
     scalingType: row.scalingType,
     productType: row.productType,
-    condition: row.condition,
     availability: Number(row.productQty ?? 0) > 0 ? "available" : "sold_out",
     visibilityScore: visibilityScore === null ? null : Number(visibilityScore.toFixed(4)),
     visibilityPolicyVersion: policyVersion,
@@ -136,7 +135,7 @@ export async function listMarketplaceProducts(query: MarketplaceProductsQuery) {
     id: sellers_product.id, productName: sellers_product.productName, imagUrl: sellers_product.imagUrl,
     productPrice: sellers_product.productPrice, basePrice: sellers_product.basePrice,
     productQty: sellers_product.productQty, originalQty: sellers_product.originalQty, scalingType: sellers_product.scalingType,
-    productType: sellers_product.productType, condition: sellers_product.condition,
+    productType: sellers_product.productType,
     publishedAt: sellers_product.publishedAt, visibilityScore,
     // The seller's trust rating: the average of the service stars. Product stars are not part of it.
     sellerReliability: useAHP ? sql<number>`coalesce((

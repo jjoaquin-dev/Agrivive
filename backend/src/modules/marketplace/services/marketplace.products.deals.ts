@@ -27,7 +27,7 @@ export async function listMarketplaceDeals(limit: number) {
     id: sellers_product.id, productName: sellers_product.productName, imagUrl: sellers_product.imagUrl,
     productPrice: sellers_product.productPrice, basePrice: sellers_product.basePrice,
     productQty: sellers_product.productQty, scalingType: sellers_product.scalingType,
-    productType: sellers_product.productType, condition: sellers_product.condition,
+    productType: sellers_product.productType,
     sellerId: sellers_profile.userId, sellerName: user.name, shopName: sellers_profile.shopName,
     detailAddress: sellers_profile.detailAddress, pickupInstructions: sellers_profile.pickupInstructions,
     latitude: sellers_profile.latitude, longitude: sellers_profile.longitude,

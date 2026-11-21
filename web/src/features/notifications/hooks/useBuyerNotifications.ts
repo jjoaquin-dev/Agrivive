@@ -54,7 +54,12 @@ export function useBuyerNotifications() {
   usePolling(async (signal) => {
     const result = await listBuyerNotices(signal);
     if (!signal.aborted) setNotices(result);
-  }, { enabled: Boolean(session?.user) && !loading, intervalMs: 20_000, runImmediately: false });
+  }, {
+    enabled: Boolean(session?.user) && !loading,
+    intervalMs: 20_000,
+    runImmediately: false,
+    live: { needsUser: true, match: (event) => event.type === "notice.created" },
+  });
 
   const unreadCount = useMemo(
     () => notices.filter((n) => !n.readAt).length,

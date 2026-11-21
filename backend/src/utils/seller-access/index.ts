@@ -27,7 +27,7 @@ export async function requireVerifiedSeller(
   }
 }
 
-/** A paused seller keeps serving orders but cannot add listings or use Priority Boost. Blocked sellers cannot sign in at all. */
+/** A paused seller keeps serving orders but cannot add listings or use Boost. Blocked sellers cannot sign in at all. */
 export async function requireSellerMayList(tx: OrderTransaction, sellerId: string) {
   await requireVerifiedSeller(tx, sellerId);
   await requireNoActiveTrustRestriction(tx, sellerId);

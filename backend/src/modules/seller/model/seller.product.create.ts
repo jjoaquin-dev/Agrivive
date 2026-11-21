@@ -25,7 +25,6 @@ export const sellerProductCreate = t.Object({
   scalingType: sellerProductScalingType,
   isMarketable: t.Boolean(),
   lowStockThreshold: t.Optional(t.Nullable(t.Number({ minimum: 0, maximum: 99_999_999.99 }))),
-  condition: t.Optional(t.UnionEnum(["good", "fair", "needs_inspection"])),
 });
 
 export type SellerProductCreate = typeof sellerProductCreate.static;

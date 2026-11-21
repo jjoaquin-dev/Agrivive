@@ -11,14 +11,14 @@ const faqItems = [
   },
   {
     q: "How do buyers reserve surplus produce?",
-    a: "Buyers can browse available surplus listings, review quantities and item conditions, and place reservations for local pickup using a straightforward QR-based system supported by map directions.",
+    a: "Buyers can browse available surplus listings, review quantities, and place reservations for local pickup using a straightforward QR-based system supported by map directions.",
   },
   {
     q: "How can sellers list surplus items?",
     a: "Suppliers and retail vendors can quickly post remaining surplus stock near or at buying prices to help recover capital, prevent spoilage, and connect directly with interested local buyers.",
   },
   {
-    q: "How do buyers verify product condition and seller details?",
+    q: "How do buyers verify produce and seller details?",
     a: "Listings include recent photographs of the produce and seller information, allowing buyers to check item quality and details before traveling to the pickup location.",
   },
   {

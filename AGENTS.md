@@ -28,6 +28,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `seller-notifications/`: Server-side push notification payloads & triggers
   - `trust/`: Trust scores, flags, and account recovery
   - `visibility-ranking/`: Ranking policy selection (`ahp-topsis` vs `visibility-v4`)
+  - `live-events/`: Live updates hub for `/ws/live` (`index.ts` channels and dispatch, `listener.ts` Postgres `LISTEN agrivive_live`, `socket-user.ts` optional sign-in; a queued phone alert also wakes `backend/src/jobs/nudge-push-delivery.ts` so its push is sent when due)
 - **Feature Modules** (`backend/src/modules/<module>/`):
   Each module follows the strict 3-folder layout:
   - `index/<feature>.ts`: Elysia route instances & header validation
@@ -40,7 +41,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `conversations/`: In-app buyer-seller chat & WebSocket realtime messaging
   - `integrations/`: Protected n8n webhook callbacks & social marketing automation
   - `marketplace/`: Public produce feed, stall geolocation, and ranking policies
-  - `notifications/`: Notification dispatch and category queries
+  - `notifications/`: Notification dispatch and category queries; `index/notifications.live.ts` is the `/ws/live` WebSocket (order, product, notice and message events)
   - `pickup/`: QR verification and order handover
   - `seller/`: Seller scanning (`seller.scan-order.ts`), handover, and stall management
   - `stakeholder/`: City agriculturist / market admin analytics & reports
@@ -59,7 +60,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
 - **Feature Modules (`mobile/src/features/<feature>/`)**:
   - `orders/`: Components (`OrderCard.tsx`, `OrderHandoverSheet.tsx`, `OrderItemsList.tsx`, `OrderStatusBadge.tsx`), types, formatters
   - `inventory/`: Components (`ProductCard.tsx`, `StockAdjustModal.tsx`), catalog hooks, types
-  - `notifications/`: Components (`NotificationTimelineCard.tsx`, `NotificationSettingsSheet.tsx`, `NotificationCategoryTabs.tsx`), hooks, mappers
+  - `notifications/`: Components (`NotificationTimelineCard.tsx`, `NotificationSettingsSheet.tsx`, `NotificationCategoryTabs.tsx`), hooks, mappers; `live/` (`liveSocket.ts`, `useLiveSocket.ts`): the `/ws/live` socket, turned into the same in-app signals a push sends
   - `profile/`: Components (`ProfileHeroCard.tsx`, `SignInCodeCard.tsx`, `TotpStepper.tsx`, `ProfileSetupChecklist.tsx`), hooks, tokens
   - `auth/`: Components (`PasswordForm.tsx`, `GoogleSignInButton.tsx`), API endpoints
   - `trust/`: API (`recovery.ts`) and moderation cards
@@ -72,7 +73,8 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `mobile/src/utils/dates.ts`, `mobile/src/utils/money.ts`: the only date (Asia/Manila), relative-time and peso formatters; do not format dates or pesos inline
   - `mobile/src/features/auth/hooks/`: `useLogin`, `useRegister` (screens only draw; styles live in `*.styles.ts` next to their feature)
   - `mobile/src/context/AuthContext.tsx`: Session state, setup refresh & user profile
-  - `mobile/src/api/client.ts`: Authenticated Better Auth API client
+  - `mobile/src/api/client.ts`: Authenticated Better Auth API client (reads fall back to saved answers via `readCache.ts`; `readStatus.ts` drives the weak-signal notice)
+  - `mobile/src/utils/shrinkImage.ts`: shrinks photos before every upload
 
 #### 3. Buyer Web App (`web/`)
 - **App Router Pages (`web/app/`)**:
@@ -85,7 +87,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
 - **Components & Library (`web/src/`)**:
   - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
   - `web/src/features/`: Buyer domain logic & data hooks (`trust/`: Trust & Standing section of `/profile`, pause notice, dispute form)
-  - `web/src/lib/`: API fetch utilities, auth helpers, `format.ts` (the only date, time and number formatters; Asia/Manila) and `money.ts` (peso)
+  - `web/src/lib/`: API fetch utilities, auth helpers, `format.ts` (the only date, time and number formatters; Asia/Manila) and `money.ts` (peso); `liveEvents.ts` (shared `/ws/live` socket), `useLiveEvent.ts` (reload a list on a live event) and `usePolling.ts` (`live` option: reload on events, 60 s fallback)
 
 #### 4. Project Vault & History (`Agrivive/`)
 - `Agrivive/04 Delivery/00-LATEST.md`: Current sprint snapshot (read this first)

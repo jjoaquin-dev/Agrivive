@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { AppState } from "react-native";
 import { fetchSellerOrder } from "../api/seller-orders";
 import { useRefreshOnSignal } from "../../../hooks/useRefreshOnSignal";
+import { isLiveConnected } from "../../notifications/live/liveSocket";
 import type { SellerOrder } from "../types";
 
 /**
- * Keeps an open order fresh: polls while it is pending (10 s, backing off to 60 s, paused in
- * the background) and refreshes at once when a push names this order.
+ * Keeps an open order fresh: refreshes at once when a push or a live event names this order, and polls
+ * while it is pending as a fallback (10 s without the live socket, 60 s with it; backs off; paused in the background).
  */
 export function useLiveSellerOrder(input: {
   id?: string;
@@ -34,8 +35,9 @@ export function useLiveSellerOrder(input: {
     let delay = 10_000;
     let controller: AbortController | undefined;
 
+    // The live socket refreshes at once when this order changes; while it is open, polling is only a 60 s safety net.
     const schedule = () => {
-      if (active) timer = setTimeout(() => void refresh(), delay);
+      if (active) timer = setTimeout(() => void refresh(), isLiveConnected() ? Math.max(delay, 60_000) : delay);
     };
 
     const refresh = async () => {

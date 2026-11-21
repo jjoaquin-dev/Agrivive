@@ -24,7 +24,7 @@ export async function requireCanReserve(tx: OrderTransaction, buyerId: string) {
   await requireNoActiveTrustRestriction(tx, buyerId);
 }
 
-/** A paused seller keeps serving existing orders, but cannot add new listings or use Priority Boost. */
+/** A paused seller keeps serving existing orders, but cannot add new listings or use Boost. */
 export async function requireCanList(tx: OrderTransaction, sellerId: string) {
   await requireActiveUser(tx, sellerId, "seller");
   await requireNoActiveTrustRestriction(tx, sellerId);

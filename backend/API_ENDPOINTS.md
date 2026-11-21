@@ -52,6 +52,8 @@ Recovery reuses Better Auth's hashed email OTP flow with `type: "forget-password
 | GET | `/marketplace/products/:id/reviews` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/:id` | `backend/src/modules/marketplace/index/marketplace.products.ts` |
 | GET | `/marketplace/sellers/map` | `backend/src/modules/marketplace/index/marketplace.sellers.map.ts` |
+| GET | `/marketplace/overview?from=YYYY-MM-DD&to=YYYY-MM-DD` | `backend/src/modules/marketplace/index/marketplace.overview.ts`. Public, totals only, both days included (Asia/Manila; default last 28 days, at most 366). Returns `from`, `to`, `bucket` (day, week or month), `kpis`, `topProduce` (per unit), `activityTrends`, `categoryDemand`, `weekdayDemand`. No seller, shop or buyer details. |
+| GET | `/marketplace/overview/explanations?from=&to=` | Same file. One plain-word explanation per chart (`trend`, `weekday`, `produce`, `price`, `compare`, `bought`, `listed`, `demand`) and `source` (`ai` when Groq wrote all eight, else `template`). Groq sees only the totals; a line with a new number or forward-looking words is replaced by a fixed sentence. Saved 30 minutes per set of totals. |
 
 `GET /marketplace/products` accepts search and filter fields plus `limit` and `cursor`. It returns a page ranked by visibility score, score tier, newest publication, then product ID. The cursor contains the evaluation time to keep score-based pages in the same order. The marketplace uses the AHP–TOPSIS ranking by default, including when `VISIBILITY_POLICY` is unset. Setting `VISIBILITY_POLICY=visibility-v4` rolls back to the legacy Weighted Surplus Visibility behavior. Regardless of the marketplace feature flag, the seller promotion and Priority Boost eligibility path uses the paper-aligned AHP–TOPSIS policy with the four Figure 5 criteria and `Ci* >= 0.60` threshold.
 
@@ -139,6 +141,24 @@ Buyer and seller chat. All routes need a signed-in buyer or seller (cookie or be
 `GET /conversations/unread-count`, `GET /conversations/:id` and `POST /conversations/read-all` also take `as=buyer|seller`. `POST /conversations/:id/archive`, `/unarchive`, `/block` and `/unblock` work for buyers and sellers; only the person who blocked can unblock.
 
 `/conversations/unread-count` is registered before `/conversations/:id`, so it is never read as an id.
+
+## Live updates (WebSocket)
+
+`GET /ws/live` (WebSocket). Source: `backend/src/modules/notifications/index/notifications.live.ts`, hub in `backend/src/utils/live-events/`.
+
+- Sign-in is optional (cookie or bearer token, like `/ws/conversations`). A signed-in buyer or seller hears their own changes; a visitor can only watch products.
+- On open the server sends `{ "type": "live.connected", "signedIn": true }`.
+- The client may send `{ "type": "watch", "productId": "<uuid>" }` and `{ "type": "unwatch", "productId": "<uuid>" }` (at most 20 products per socket), and `{ "type": "watch-feed" }` / `{ "type": "unwatch-feed" }` to hear about any listing change (the marketplace list).
+- Events (ids only; reload through the REST routes, which still check access):
+  - `{ "type": "order.changed", "orderId" }`: to the buyer and the seller of a reservation that was created or changed in any way.
+  - `{ "type": "product.changed", "productId" }`: to watchers of the product and to its seller, when stock, price, active or marketable changes.
+  - `{ "type": "notice.created", "kind" }`: a new seller notification, trust notice or follower listing notice for this user.
+  - `{ "type": "message.created", "conversationId" }`: a new chat message, to both people in the chat.
+  - `{ "type": "conversation.updated", "conversationId" }`: one person's side of a chat changed (archive, unarchive, block, read), to that person only.
+  - `{ "type": "marketplace.changed" }`: a listing was added, or its stock, price, active or marketable state changed, to sockets that sent `watch-feed`.
+- Source of the events: database triggers (migration `20261118120000_live_events`, on `orders`, `sellers_product` insert and update, `seller_notifications`, `trust_notices`, `buyer_listing_notices`, `conversation_messages` and `conversation_participants`) call `pg_notify('agrivive_live', …)` inside the same transaction, so changes made by the worker reach sockets too, and a rolled-back change sends nothing. The API keeps one extra database connection listening (`utils/live-events/listener.ts`).
+- A queued phone alert (`notification_outbox` insert) also sends a database message with its due time. The API then runs the push delivery at that moment (`jobs/nudge-push-delivery.ts`) instead of waiting for the 30 s check. Merge windows are `PUSH_SELLER_ALERT_WINDOW_SECONDS` and `PUSH_MESSAGE_WINDOW_SECONDS` (default 2 s).
+- Web and the seller app keep a slow fallback poll (60 s) while the socket is open, and their old poll pace when it is not.
 
 ## Seller
 
@@ -240,7 +260,7 @@ The 6-hour wait is kept in our database (`seller_visibility_boosts.follow_up_due
 
 **Old "boost again" prompts.** Apply `backend/drizzle/20261101180000_dismiss_boost_prompts`: it marks every leftover `prompt` boost as `dismissed`. Until it runs, those rows are shown as skipped (never "Needs your choice") and listing chips no longer return `priceDropPrompt`. `POST /seller/products/:id/boost` on a listing that is already boosted now returns `409` ("This listing is already boosted. Lower the price from the Price Drops tab.") instead of answering as if a new boost started.
 
-**First post is normal; Priority Boost decides the 6-hour price drops.** `POST /seller/products/:id/boost` is open to any listing (the seller is asked "Post it on Facebook and Instagram?" after adding produce). It no longer returns the Priority Boost `409`; the other `409`s stay (not available, no photo, 3-hour first-post gap, already boosted). A boost already started for the cycle (for example a failed one) can be retried. When the first Facebook post is saved, the backend runs the AHP–TOPSIS check once (`checkPriorityBoostGate`, score 0.60 or higher) and uses the result for the 6-hour rule (the score and tier are not stored). Only a Priority Boost listing gets the 6-hour rule: with a drop amount and final price already set, `follow_up_due_at` = first post + 6 hours; without them, `price_drop_setup_at` = first post + 6 hours, and the worker sends the seller a **Set Your Price Drop** notice (`price_drop_setup`, once per boost, `price_drop_setup_notified_at`). Any other tier keeps the normal post and nothing more. `GET /seller/products/:id/boost` returns `eligibility.canBoost` (room and no wait; headline `"Ready to Post"` or `"Posted"`) and `priceDropRule`: `null` until the first post is out, then `{ "state": "waiting_6h" | "set_up_now" | "on" | "not_priority" | "ended" | "off", "score": 0.0-1.0 | null, "tier": string | null, "setupAt": ISO | null, "nextDropAt": ISO | null }`. Boosts saved before this change have no tier and keep their old behavior. Apply `backend/drizzle/20261102120000_boost_priority_price_drop_setup` before testing.
+**First post is normal; auto-post decides the 6-hour price drops.** `POST /seller/products/:id/boost` is open to any listing (the seller is asked "Post it on Facebook and Instagram?" after adding produce). The `409`s are: not available, no photo, 3-hour first-post gap, already boosted, and a paused or high-fault-rate seller. A boost already started for the cycle (for example a failed one) can be retried. There is no minimum AHP–TOPSIS score. When the first Facebook post is saved and the listing has auto-post on, the backend schedules the 6-hour rule: with a drop amount and final price already set, `follow_up_due_at` = first post + 6 hours; without them, `price_drop_setup_at` = first post + 6 hours, and the worker sends the seller a **Set Your Price Drop** notice (`price_drop_setup`, once per boost, `price_drop_setup_notified_at`). Without auto-post the listing keeps the normal post and nothing more. `GET /seller/products/:id/boost` returns `eligibility.canBoost` (room and no wait; headline `"Ready to Post"` or `"Posted"`) and `priceDropRule`: `null` until the first post is out, then `{ "state": "waiting_6h" | "set_up_now" | "on" | "ended" | "off", "setupAt": ISO | null, "nextDropAt": ISO | null }`. Apply `backend/drizzle/20261102120000_boost_priority_price_drop_setup` before testing.
 
 **Original stock on Add More.** `POST /seller/products/:id/stock-adjustments` with a positive `delta` on a running listing now raises the current listing cycle's original stock together with the product's, so the Boost "Amount left" and seller analytics match the Listings screen. Apply `backend/drizzle/20261101190000_sync_cycle_original_qty` to repair older listings: it copies the larger product original stock to the current cycle and touches no other rows.
 
@@ -351,7 +371,7 @@ Order responses now include `pickupStart`, `pickupEnd`, `confirmedAt`, `confirma
 |---|---|---|
 | POST | `/seller/orders/:id/confirm` | Manual confirmation. The worker confirms by itself 3 hours after the order was placed. |
 | POST | `/seller/orders/:id/pack` / `/ready` | After confirmation. "Ready" does not complete the order. |
-| POST | `/seller/orders/scan` | Completes only with a valid QR inside its window, once. Every try is saved in `order_qr_scans`. |
+| POST | `/seller/orders/scan` | Completes only with a valid QR inside its window, once. Every try is saved in `order_qr_scans`. Optional `items: [{ itemId, dispensedQuantity }]` sets what was really handed over: less than reserved returns the rest to stock; more than reserved takes the extra from stock (409 `Not enough stock left…` if the listing has less). The order total is recalculated. |
 | POST | `/seller/orders/:id/no-show` | Only after the pickup time and QR time are over. First no-show = warning, 0 points; later = 2 points. The worker records it after 1 hour if the seller does not. |
 | POST | `/seller/orders/:id/reschedule` | `{ pickupStart, pickupEnd, reason }`. Nothing changes until the buyer accepts. |
 | POST | `/buyer/orders/:id/reschedule/respond` | `{ "accept": true }`. Accepting moves the pickup and QR window. |

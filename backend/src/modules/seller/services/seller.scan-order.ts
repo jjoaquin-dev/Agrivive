@@ -1,6 +1,6 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../../../db";
-import { order_declines, order_qr_scans, order_status_history, ordered_items, orders, sellers_product } from "../../../db/schema";
+import { order_declines, order_qr_scans, order_status_history, ordered_items, orders } from "../../../db/schema";
 import type { ScanOrderInput } from "../model/seller.scan-order";
 import { requireActiveUser } from "../../../utils/order-access";
 import { requireSellerScanAccess } from "../../../utils/seller-access";
@@ -10,6 +10,7 @@ import { OrderError } from "../../../utils/order-types";
 import { createSellerNotification } from "../../../utils/seller-notifications";
 import { notifyBuyer } from "../../../utils/pickup/notify";
 import { qrStatus } from "../../../utils/pickup/qr-window";
+import { applyHandoverAmounts } from "./seller.scan-order.items";
 
 /** A rejected scan, with the word we keep in the scan history. */
 class ScanError extends OrderError {
@@ -93,62 +94,11 @@ async function completeScan(sellerId: string, orderId: string, body: ScanOrderIn
     let finalTotalAmount = Number(current.totalAmount);
 
     if (body.items && body.items.length > 0) {
-      const adjustmentMap = new Map<string, number>();
-      for (const adj of body.items) {
-        adjustmentMap.set(adj.itemId, adj.dispensedQuantity);
-      }
-
-      let newTotal = 0;
-      let totalDispensed = 0;
-
-      for (const item of existingItems) {
-        const reservedQty = Number(item.quantity ?? 0);
-        const unitPrice = Number(item.unitPrice ?? 0);
-        const dispensedQty = adjustmentMap.has(item.id)
-          ? adjustmentMap.get(item.id)!
-          : reservedQty;
-
-        if (dispensedQty < 0) {
-          throw new OrderError(400, "Dispensed amount cannot be negative");
-        }
-        if (dispensedQty > reservedQty + 0.0001) {
-          throw new OrderError(
-            400,
-            `Dispensed amount cannot be greater than reserved amount (${reservedQty})`,
-          );
-        }
-
-        totalDispensed += dispensedQty;
-        const newSubtotal = Number((dispensedQty * unitPrice).toFixed(2));
-        newTotal += newSubtotal;
-
-        const diff = reservedQty - dispensedQty;
-        if (diff > 0.0001) {
-          // Restore uncollected portion to seller product inventory
-          await tx
-            .update(sellers_product)
-            .set({
-              productQty: sql`${sellers_product.productQty} + ${diff.toFixed(2)}`,
-            })
-            .where(eq(sellers_product.id, item.productId));
-
-          // Update ordered_item with dispensed quantity and recalculated subtotal
-          await tx
-            .update(ordered_items)
-            .set({
-              quantity: dispensedQty.toFixed(2),
-              subtotal: newSubtotal.toFixed(2),
-              updatedAt: now,
-            })
-            .where(eq(ordered_items.id, item.id));
-        }
-      }
-
-      if (totalDispensed <= 0) {
+      const handover = await applyHandoverAmounts(tx, existingItems, body.items, now);
+      if (handover.totalGiven <= 0) {
         throw new OrderError(400, "Cannot complete handover with 0 amount. Please cancel the order instead.");
       }
-
-      finalTotalAmount = Number(newTotal.toFixed(2));
+      finalTotalAmount = handover.total;
     }
 
     const [completed] = await tx

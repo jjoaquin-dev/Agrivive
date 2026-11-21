@@ -51,7 +51,7 @@ export function BuyerSiteHeader() {
       <div className={`border-b py-2.5 ${onGreen ? "border-agrivive-primary bg-agrivive-primary" : "border-neutral-100"}`}>
         <PageContainer className="flex items-center justify-between gap-4">
           {/* Brand Logo */}
-          <Link href="/" className="group -ml-3 flex shrink-0 items-center gap-1.5" aria-label="Agrivive home">
+          <Link href="/marketplace" className="group -ml-3 flex shrink-0 items-center gap-1.5" aria-label="Agrivive marketplace">
             <Image
               src={onGreen ? "/brand/agrivive-logo-full-white.png" : "/brand/agrivive-logo-full-new-transparent.png"}
               alt="Agrivive"

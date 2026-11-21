@@ -1,5 +1,6 @@
 import { File } from "expo-file-system";
-import { apiFetch, authClient, getApiBaseUrl } from "../../../api/client";
+import { shrinkImage } from "../../../utils/shrinkImage";
+import { apiFetch, authClient, getApiBaseUrl, UPLOAD_TIMEOUT_MS } from "../../../api/client";
 import type { Conversation, ConversationContext, ConversationCreateResult, ConversationMessage } from "../types";
 
 export interface FetchConversationsParams {
@@ -77,13 +78,13 @@ export function markAllConversationsRead() {
 
 export async function uploadConversationAttachment(imageUri: string, signal?: AbortSignal): Promise<{ url: string; filename: string }> {
   const formData = new FormData();
-  formData.append("file", new File(imageUri));
+  formData.append("file", new File(await shrinkImage(imageUri)));
 
   return apiFetch<{ url: string; filename: string }>("/conversations/attachment", {
     method: "POST",
     body: formData,
     signal,
-  });
+  }, UPLOAD_TIMEOUT_MS);
 }
 
 export async function openConversationSocket(

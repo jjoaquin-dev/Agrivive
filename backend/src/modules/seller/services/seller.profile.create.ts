@@ -4,6 +4,7 @@ import { sellers_profile, user } from "../../../db/schema";
 import type { SellerProfileCreate } from "../model/seller.profile.create";
 import { requireVerifiedSeller } from "../../../utils/seller-access";
 import { OrderError } from "../../../utils/order-types";
+import { forgetUserStatus } from "../../../utils/user-status-cache";
 
 export async function createSellerProfile(userId: string, body: SellerProfileCreate) {
   const shopName = body.shopName.trim();
@@ -12,7 +13,7 @@ export async function createSellerProfile(userId: string, body: SellerProfileCre
   if (!shopName || !detailAddress || !phoneNumber) {
     throw new OrderError(400, "Shop name, address, and phone number are required");
   }
-  return db.transaction(async (tx) => {
+  const profile = await db.transaction(async (tx) => {
     await requireVerifiedSeller(tx, userId, false);
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${userId}), 3)`);
     const [existing] = await tx.select({ id: sellers_profile.id }).from(sellers_profile)
@@ -47,4 +48,8 @@ export async function createSellerProfile(userId: string, body: SellerProfileCre
       );
     return postSellerProfile;
   });
+  // The account just gained the seller role. Without this, seller-only routes (such as saving the stall hours
+  // right after setup) still saw the old roles from the 30-second status cache and answered 403.
+  forgetUserStatus(userId);
+  return profile;
 }

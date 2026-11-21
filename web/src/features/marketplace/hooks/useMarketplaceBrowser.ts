@@ -105,7 +105,12 @@ export function useMarketplaceBrowser() {
     if (signal.aborted || extraPagesLoaded.current) return;
     setProducts(result.products);
     setNextCursor(result.nextCursor);
-  }, { enabled: resultKey === searchKey && !loading && !error, intervalMs: 30_000, runImmediately: false });
+  }, {
+    enabled: resultKey === searchKey && !loading && !error,
+    intervalMs: 30_000,
+    runImmediately: false,
+    live: { feed: true, match: (event) => event.type === "marketplace.changed" },
+  });
 
   function handleRemoveSearch() {
     setSearchInput("");

@@ -88,10 +88,11 @@ export const conversationRoutes = new Elysia().use(sessionAuth)
       if (!(await canAccessConversation(userId, query.conversationId))) return status(403);
     },
     open(ws) {
-      subscribeConversation(ws, ws.data.query.conversationId);
+      // Elysia makes a new wrapper for every event; the Bun socket (`ws.raw`) stays the same, so close can find it.
+      subscribeConversation(ws.raw, ws.data.query.conversationId);
       ws.send(JSON.stringify({ type: "conversation.connected", conversationId: ws.data.query.conversationId }));
     },
     close(ws) {
-      unsubscribeConversation(ws);
+      unsubscribeConversation(ws.raw);
     },
   });

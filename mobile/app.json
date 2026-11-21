@@ -66,11 +66,15 @@
       "expo-notifications"
     ],
     "extra": {
-      "router": {},
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
       "eas": {
-        "projectId": "3e64477e-cda0-4d9b-8f02-174adda7da11"
+        "projectId": "72ecbc0b-cd45-4e5d-adfa-bae9545a5900"
       }
     },
-    "owner": "joaquin_jara"
+    "owner": "j.joaquin.dev"
   }
 }
