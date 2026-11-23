@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.2 AS build
+FROM oven/bun:1.4.5 AS build
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN bun build src/index.ts --outdir dist --target bun
 RUN bun build src/worker.ts --outdir dist --target bun
 
-FROM oven/bun:1.4.2-slim
+FROM oven/bun:1.4.5-slim
 
 WORKDIR /app
 
