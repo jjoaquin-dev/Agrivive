@@ -6,8 +6,8 @@
 
 This repository is a monorepo containing three core applications, shared deployment orchestration, and an Obsidian project vault:
 1. `backend/`: Bun + Elysia + Drizzle (PostgreSQL) + Better Auth API.
-2. `mobile/`: Expo SDK 57 / React Native seller-facing app (Expo Router).
-3. `web/`: Next.js 15 App Router buyer marketplace (Tailwind CSS, Base UI, Leaflet).
+2. `mobile/`: Expo SDK 58 / React Native seller-facing app (Expo Router).
+3. `web/`: Next.js 16 (Turbopack) App Router buyer marketplace (Tailwind CSS, Base UI, Leaflet).
 4. `Agrivive/`: Persistent Obsidian development knowledge vault.
 5. `n8n/workflows/`: Automated marketing and social notification workflows.
 
@@ -35,7 +35,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `model/<feature>.ts`: Request body validation schemas & DTO types
   - `services/<feature>.ts`: Business logic & DB transactions (**strictly 1 exported function per file**)
   *Active modules*:
-  - `admin/`: Read-only system metrics (`/admin/performance`); no trust or penalty decisions
+  - `admin/`: Leftover read-only metrics (`/admin/performance`), not part of the current system (no admin role in use)
   - `auth/`: User authentication, session refresh, email verification, password management
   - `buyer/`: Buyer reservation creation, cancellation, and order queries
   - `conversations/`: In-app buyer-seller chat & WebSocket realtime messaging
@@ -44,7 +44,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `notifications/`: Notification dispatch and category queries; `index/notifications.live.ts` is the `/ws/live` WebSocket (order, product, notice and message events)
   - `pickup/`: QR verification and order handover
   - `seller/`: Seller scanning (`seller.scan-order.ts`), handover, and stall management
-  - `stakeholder/`: City agriculturist / market admin analytics & reports
+  - `stakeholder/`: Leftover analytics code, not part of the current system (no stakeholder role in use)
   - `trust/`: Trust recovery (`trust.recovery.ts`), seller standing, and moderation actions
 
 #### 2. Seller Mobile App (`mobile/`)
@@ -82,7 +82,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `marketplace/`: Product feed, filter bars, search, and produce detail views
   - `orders/`: Buyer order list, order details, and digital pickup pass
   - `(auth)/`: Web login, register, and verification
-  - `admin/`, `cart/`, `messages/`, `notifications/`, `profile/`, `sellers/`, `stakeholder/`: Role-specific buyer pages
+  - `cart/`, `messages/`, `notifications/`, `profile/`, `sellers/`: Buyer pages (`admin/` and `stakeholder/` are leftovers, not in the current system)
   - `terms/`, `privacy/`, `cookies/`, `download-app/`: Legal & utility pages
 - **Components & Library (`web/src/`)**:
   - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
@@ -220,7 +220,7 @@ All web and mobile interfaces in Agrivive must adhere to the following laws, sta
 - **Gestalt Principles** *(Max Wertheimer, Kurt Koffka, Wolfgang Köhler)*:
   - **Law of Proximity**: Related items must be physically close. Form labels sit directly above inputs; per-field errors sit directly below their affected field.
   - **Law of Common Region**: Content within a bounded surface (card, panel, pass) is perceived as a group. Use cards to enclose stall information, pickup passes, and product listings.
-  - **Law of Similarity**: Elements with the same function must share visual attributes (e.g., all primary action buttons use Forest Green `#1F4D3A` with rounded corners).
+  - **Law of Similarity**: Elements with the same function must share visual attributes (e.g., all primary action buttons use Agrivive Green `#457D00` with rounded corners).
   - **Law of Uniform Connectedness**: Connected elements (steppers, timeline dots) are perceived as related stages in a single journey.
   - **Figure-Ground Principle**: Foreground cards (`#FFFFFF`) must clearly lift off the Warm Cream background (`#F8F6F1`) using crisp 1px borders (`#E5E2DA`) and soft tinted shadows.
   - **Law of Prägnanz (Simplicity)**: Users perceive ambiguous images as simple and complete. Layouts must remain clean, uncluttered, and scannable.
