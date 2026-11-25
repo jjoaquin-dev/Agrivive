@@ -6,8 +6,8 @@
 
 This repository is a monorepo containing three core applications, shared deployment orchestration, and an Obsidian project vault:
 1. `backend/`: Bun + Elysia + Drizzle (PostgreSQL) + Better Auth API.
-2. `mobile/`: Expo SDK 57 / React Native seller-facing app (Expo Router).
-3. `web/`: Next.js 15 App Router buyer marketplace (Tailwind CSS, Base UI, Leaflet).
+2. `mobile/`: Expo SDK 58 / React Native seller-facing app (Expo Router).
+3. `web/`: Next.js 16 (Turbopack) App Router buyer marketplace (Tailwind CSS, Base UI, Leaflet).
 4. `Agrivive/`: Persistent Obsidian development knowledge vault.
 5. `n8n/workflows/`: Automated marketing and social notification workflows.
 
@@ -19,7 +19,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
 - **Server Entry**: `backend/src/index.ts`
 - **Database & Schema**: `backend/src/db/schema.ts` and `backend/src/db/index.ts` (Migrations in `backend/drizzle/`)
 - **Auth Configuration**: `backend/src/modules/auth/index.ts` (Better Auth plugins: bearer, emailOTP, twoFactor, expo)
-- **Shared Plugins**: `backend/src/plugins/` (`sessionAuth.ts`, etc.)
+- **Shared Plugins**: `backend/src/plugins/` (`rate-limit.plugin.ts`, `security-headers.plugin.ts`, `validation.plugin.ts`). The `sessionAuth` macro lives in `backend/src/modules/auth/services/auth.session.ts`, not in plugins
 - **Shared Utilities**: `backend/src/utils/`
   - `ahp-topsis/`: Multi-criteria vegetable visibility ranking algorithm
   - `email/`: Mailtrap & Resend transactional email delivery
@@ -28,6 +28,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `seller-notifications/`: Server-side push notification payloads & triggers
   - `trust/`: Trust scores, flags, and account recovery
   - `visibility-ranking/`: Ranking policy selection (`ahp-topsis` vs `visibility-v4`)
+  - Also here: `visibility-score`, `boost-cooldown`, `price-reduction`, `push-notifications`, `advisory-alerts`, `groq`, `recaptcha`, `s3*`, `product-*`, `review-*`, `seller-*`, `user-*`, `vegetable-*`
   - `live-events/`: Live updates hub for `/ws/live` (`index.ts` channels and dispatch, `listener.ts` Postgres `LISTEN agrivive_live`, `socket-user.ts` optional sign-in; a queued phone alert also wakes `backend/src/jobs/nudge-push-delivery.ts` so its push is sent when due)
 - **Feature Modules** (`backend/src/modules/<module>/`):
   Each module follows the strict 3-folder layout:
@@ -35,7 +36,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `model/<feature>.ts`: Request body validation schemas & DTO types
   - `services/<feature>.ts`: Business logic & DB transactions (**strictly 1 exported function per file**)
   *Active modules*:
-  - `admin/`: Read-only system metrics (`/admin/performance`); no trust or penalty decisions
+  - `admin/`: Leftover read-only metrics (`/admin/performance`), not part of the current system (no admin role in use)
   - `auth/`: User authentication, session refresh, email verification, password management
   - `buyer/`: Buyer reservation creation, cancellation, and order queries
   - `conversations/`: In-app buyer-seller chat & WebSocket realtime messaging
@@ -44,7 +45,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `notifications/`: Notification dispatch and category queries; `index/notifications.live.ts` is the `/ws/live` WebSocket (order, product, notice and message events)
   - `pickup/`: QR verification and order handover
   - `seller/`: Seller scanning (`seller.scan-order.ts`), handover, and stall management
-  - `stakeholder/`: City agriculturist / market admin analytics & reports
+  - `stakeholder/`: Leftover analytics code, not part of the current system (no stakeholder role in use)
   - `trust/`: Trust recovery (`trust.recovery.ts`), seller standing, and moderation actions
 
 #### 2. Seller Mobile App (`mobile/`)
@@ -54,9 +55,9 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `mobile/app/(app)/_layout.tsx`: Main app modal & navigation stack
   - `mobile/app/(app)/(tabs)/_layout.tsx`: Bottom tab bar (`home`, `orders` (Reservations), `inventory` (Listings), `messages`, `marketing` (Boost)); Profile opens from Home, not a tab
 - **Screens (`mobile/app/`)**:
-  - `(auth)/`: `login.tsx`, `register.tsx`, `onboarding.tsx`, `email-otp-login.tsx`, `verify-email.tsx`, `two-factor.tsx`, `account-recovery.tsx`, `password-setup.tsx`
-  - `(app)/(tabs)/`: `home.tsx`, `inventory.tsx`, `orders.tsx`, `messages.tsx`, `profile.tsx`
-  - `(app)/`: `orders/[id].tsx`, `orders/scan.tsx`, `activity.tsx`, `advisories.tsx`, `notifications.tsx`, `profile/edit.tsx`, `profile/security.tsx`, `profile/setup.tsx`
+  - `(auth)/`: `login.tsx`, `register.tsx`, `onboarding.tsx`, `email-otp-login.tsx`, `verify-email.tsx`, `two-factor.tsx`, `account-recovery.tsx`, `forgot-password.tsx`, `password-setup.tsx`
+  - `(app)/(tabs)/`: `home.tsx`, `orders.tsx`, `inventory.tsx`, `messages.tsx`, `marketing.tsx` (no profile tab)
+  - `(app)/`: `orders/[id].tsx`, `orders/scan.tsx`, `inventory/create.tsx`, `inventory/[id]/{index,edit,stock}.tsx`, `marketing/{index,started,[productId]}.tsx`, `conversations/[id].tsx`, `profile/{index,edit,security,setup}.tsx`, `activity.tsx`, `advisories.tsx`, `analytics.tsx`, `notifications.tsx`, `reviews.tsx`, `stall.tsx`, `trust.tsx`
 - **Feature Modules (`mobile/src/features/<feature>/`)**:
   - `orders/`: Components (`OrderCard.tsx`, `OrderHandoverSheet.tsx`, `OrderItemsList.tsx`, `OrderStatusBadge.tsx`), types, formatters
   - `inventory/`: Components (`ProductCard.tsx`, `StockAdjustModal.tsx`), catalog hooks, types
@@ -67,6 +68,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `marketing/`: Components (`AutoPriceDropSheet.tsx`, boost preview sheets), hooks
   - `advisories/`: Components (`WeatherHeroCard.tsx`, `UpcomingHolidaysCard.tsx`, `ContextualReminderCard.tsx`), hooks
   - `dashboard/`: Components (`DashboardHeader.tsx`, operations hub cards)
+  - Also: `analytics/`, `reviews/`, `stall/`, `conversations/`, `messages/`, `alerts/`, `app-start/`, `legal/`
 - **Shared Components & Utilities**:
   - `mobile/src/components/`: `ButtonComponent.tsx`, `InputComponent.tsx`, `OtpInputComponent.tsx`, `PaginationControl.tsx`, `ConfirmDialogComponent.tsx`, `SlideModal.tsx` (bottom sheet: dim fades, only the sheet slides), `NotificationBellButton.tsx`
   - `mobile/src/theme/index.ts`: Design system tokens (colors including status tints and the dim `overlay`, typography scale, spacing, radii, touch targets)
@@ -82,7 +84,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `marketplace/`: Product feed, filter bars, search, and produce detail views
   - `orders/`: Buyer order list, order details, and digital pickup pass
   - `(auth)/`: Web login, register, and verification
-  - `admin/`, `cart/`, `messages/`, `notifications/`, `profile/`, `sellers/`, `stakeholder/`: Role-specific buyer pages
+  - `cart/`, `favorites/`, `messages/`, `notifications/`, `password-setup/`, `profile/`, `sellers/`: Buyer pages (`admin/` and `stakeholder/` are leftovers, not in the current system)
   - `terms/`, `privacy/`, `cookies/`, `download-app/`: Legal & utility pages
 - **Components & Library (`web/src/`)**:
   - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
@@ -149,7 +151,7 @@ Run these from `backend/`:
 - `bunx tsc --noEmit` checks TypeScript types without writing output.
 - `bun build src/index.ts --outdir dist --target bun` builds the API as CI does.
 
-There is no working package test script yet: `bun run test` exits with an error. Run the type check and build before submitting backend changes.
+Backend tests run with `bun test` (`*.test.ts` files beside the code). Web and mobile have no tests. Run the type check and build before submitting backend changes.
 
 ## Coding Style & Naming Conventions
 
@@ -193,7 +195,7 @@ Every Markdown (`.md`) file created anywhere in the vault (`Agrivive/`) MUST be 
 
 ## Testing Guidelines
 
-The project owner manually tests API endpoints in Elysia OpenAPI or Postman. Do not add automated endpoint tests unless the owner requests them. For backend changes, run `bunx tsc --noEmit` and `bun build src/index.ts --outdir dist --target bun`. When an endpoint changes, provide its method, path, required headers, example request body, and expected response so the owner can test it. Record manual testing as complete only after the owner reports the result.
+The project owner manually tests API endpoints in Elysia OpenAPI or Postman. Do not add new automated endpoint tests unless the owner requests them. For backend changes, run `bunx tsc --noEmit` and `bun build src/index.ts --outdir dist --target bun`. When an endpoint changes, provide its method, path, required headers, example request body, and expected response so the owner can test it. Record manual testing as complete only after the owner reports the result.
 
 ## Commit & Pull Request Guidelines
 
@@ -220,7 +222,7 @@ All web and mobile interfaces in Agrivive must adhere to the following laws, sta
 - **Gestalt Principles** *(Max Wertheimer, Kurt Koffka, Wolfgang Köhler)*:
   - **Law of Proximity**: Related items must be physically close. Form labels sit directly above inputs; per-field errors sit directly below their affected field.
   - **Law of Common Region**: Content within a bounded surface (card, panel, pass) is perceived as a group. Use cards to enclose stall information, pickup passes, and product listings.
-  - **Law of Similarity**: Elements with the same function must share visual attributes (e.g., all primary action buttons use Forest Green `#1F4D3A` with rounded corners).
+  - **Law of Similarity**: Elements with the same function must share visual attributes (e.g., all primary action buttons use Agrivive Green `#457D00` with rounded corners).
   - **Law of Uniform Connectedness**: Connected elements (steppers, timeline dots) are perceived as related stages in a single journey.
   - **Figure-Ground Principle**: Foreground cards (`#FFFFFF`) must clearly lift off the Warm Cream background (`#F8F6F1`) using crisp 1px borders (`#E5E2DA`) and soft tinted shadows.
   - **Law of Prägnanz (Simplicity)**: Users perceive ambiguous images as simple and complete. Layouts must remain clean, uncluttered, and scannable.

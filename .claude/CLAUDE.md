@@ -39,7 +39,7 @@ Never record secrets or environment values in the vault.
 Monorepo, one app per top-level directory, each with its own `bun.lock` and CI workflow in `.github/workflows/` (path-filtered):
 
 - `backend/` — Bun + Elysia + Drizzle (PostgreSQL) + Better Auth API.
-- `web/` — Next.js 15 App Router buyer website (Tailwind 3, GSAP/Lenis, Leaflet, Base UI, shadcn config in `components.json`).
+- `web/` — Next.js 16 (Turbopack) App Router buyer website (Tailwind 3, GSAP/Lenis, Leaflet, Base UI, shadcn config in `components.json`).
 - `mobile/` — Expo / React Native seller-facing app (expo-router).
 - `n8n/workflows/` — exported n8n workflows (promotion drafts, social publishing); contain no credentials.
 - Root `docker-compose.yml`, `Caddyfile` and `.env` — VPS deployment (Caddy, API, worker, web). `scripts/vps-release.sh` is used by the manual CD workflows.
@@ -63,13 +63,13 @@ bunx drizzle-kit migrate   # explicit release step; never run on startup or agai
 Web (from `web/`): `bun run dev` (port 3001), `bun run typecheck`, `bun run build`.
 Mobile (from `mobile/`): `bun run start`, `bun run typecheck`, `node ./node_modules/expo/bin/cli export --platform android` (what CI runs).
 
-There is no test runner in any package. Endpoints are verified manually by the owner in OpenAPI/Postman, so a single-test command does not exist.
+Only the backend has tests (`bun test` from `backend/`; one file: `bun test path/to/file.test.ts`). Web and mobile have none. Endpoints are still verified manually by the owner in OpenAPI/Postman.
 
 ## Backend architecture
 
-**Two processes, one codebase.** `src/index.ts` is the HTTP API; `src/worker.ts` runs `jobs/run-scheduled.ts` every 60s (order expiry, trust/inquiry processing, listing notices, price reductions, promotion eligibility and n8n webhooks, push delivery). Run exactly one worker. `index.ts` also has its own 30s interval for push notifications and listing notices, so those jobs are invoked from both processes and must stay idempotent.
+**Two processes, one codebase.** `src/index.ts` is the HTTP API; `src/worker.ts` runs `jobs/run-scheduled.ts` every 60s (order expiry, trust/inquiry processing, listing notices, price reductions, promotion eligibility and n8n webhooks, push delivery). Run exactly one worker. `index.ts` also has its own 30s interval for push notifications and listing notices, so those jobs are invoked from both processes and must stay idempotent. A queued phone alert also wakes push delivery the moment it is due (`jobs/nudge-push-delivery.ts`, fed by the `/ws/live` outbox trigger).
 
-**Auth and roles.** `modules/auth` wraps Better Auth (email OTP, Google for web, Expo plugin for mobile). Protected routes `.use(sessionAuth)` from `modules/auth/services/auth.session.ts` and declare `{ role: ["buyer"] }` etc. (`admin | buyer | seller | stakeholder`). The macro resolves `session` and `user` into the handler context, caches account status for 30s, and returns trust-action block/restriction messages. Handlers still check `user.isActive` themselves where needed.
+**Auth and roles.** `modules/auth` wraps Better Auth (email OTP, Google for web, Expo plugin for mobile). Protected routes `.use(sessionAuth)` from `modules/auth/services/auth.session.ts` and declare `{ role: ["buyer"] }` etc. (buyer and seller are the roles in use; `admin` and `stakeholder` exist only as leftovers in the code). The macro resolves `session` and `user` into the handler context, caches account status for 30s, and returns trust-action block/restriction messages. Handlers still check `user.isActive` themselves where needed.
 
 **Errors.** Services throw typed errors (e.g. `OrderError` in `utils/order-types`) carrying a `statusCode`; route handlers catch them and return `status(error.statusCode, { message })`, falling back to a logged 500.
 
