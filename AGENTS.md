@@ -19,7 +19,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
 - **Server Entry**: `backend/src/index.ts`
 - **Database & Schema**: `backend/src/db/schema.ts` and `backend/src/db/index.ts` (Migrations in `backend/drizzle/`)
 - **Auth Configuration**: `backend/src/modules/auth/index.ts` (Better Auth plugins: bearer, emailOTP, twoFactor, expo)
-- **Shared Plugins**: `backend/src/plugins/` (`sessionAuth.ts`, etc.)
+- **Shared Plugins**: `backend/src/plugins/` (`rate-limit.plugin.ts`, `security-headers.plugin.ts`, `validation.plugin.ts`). The `sessionAuth` macro lives in `backend/src/modules/auth/services/auth.session.ts`, not in plugins
 - **Shared Utilities**: `backend/src/utils/`
   - `ahp-topsis/`: Multi-criteria vegetable visibility ranking algorithm
   - `email/`: Mailtrap & Resend transactional email delivery
@@ -28,6 +28,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `seller-notifications/`: Server-side push notification payloads & triggers
   - `trust/`: Trust scores, flags, and account recovery
   - `visibility-ranking/`: Ranking policy selection (`ahp-topsis` vs `visibility-v4`)
+  - Also here: `visibility-score`, `boost-cooldown`, `price-reduction`, `push-notifications`, `advisory-alerts`, `groq`, `recaptcha`, `s3*`, `product-*`, `review-*`, `seller-*`, `user-*`, `vegetable-*`
   - `live-events/`: Live updates hub for `/ws/live` (`index.ts` channels and dispatch, `listener.ts` Postgres `LISTEN agrivive_live`, `socket-user.ts` optional sign-in; a queued phone alert also wakes `backend/src/jobs/nudge-push-delivery.ts` so its push is sent when due)
 - **Feature Modules** (`backend/src/modules/<module>/`):
   Each module follows the strict 3-folder layout:
@@ -54,9 +55,9 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `mobile/app/(app)/_layout.tsx`: Main app modal & navigation stack
   - `mobile/app/(app)/(tabs)/_layout.tsx`: Bottom tab bar (`home`, `orders` (Reservations), `inventory` (Listings), `messages`, `marketing` (Boost)); Profile opens from Home, not a tab
 - **Screens (`mobile/app/`)**:
-  - `(auth)/`: `login.tsx`, `register.tsx`, `onboarding.tsx`, `email-otp-login.tsx`, `verify-email.tsx`, `two-factor.tsx`, `account-recovery.tsx`, `password-setup.tsx`
-  - `(app)/(tabs)/`: `home.tsx`, `inventory.tsx`, `orders.tsx`, `messages.tsx`, `profile.tsx`
-  - `(app)/`: `orders/[id].tsx`, `orders/scan.tsx`, `activity.tsx`, `advisories.tsx`, `notifications.tsx`, `profile/edit.tsx`, `profile/security.tsx`, `profile/setup.tsx`
+  - `(auth)/`: `login.tsx`, `register.tsx`, `onboarding.tsx`, `email-otp-login.tsx`, `verify-email.tsx`, `two-factor.tsx`, `account-recovery.tsx`, `forgot-password.tsx`, `password-setup.tsx`
+  - `(app)/(tabs)/`: `home.tsx`, `orders.tsx`, `inventory.tsx`, `messages.tsx`, `marketing.tsx` (no profile tab)
+  - `(app)/`: `orders/[id].tsx`, `orders/scan.tsx`, `inventory/create.tsx`, `inventory/[id]/{index,edit,stock}.tsx`, `marketing/{index,started,[productId]}.tsx`, `conversations/[id].tsx`, `profile/{index,edit,security,setup}.tsx`, `activity.tsx`, `advisories.tsx`, `analytics.tsx`, `notifications.tsx`, `reviews.tsx`, `stall.tsx`, `trust.tsx`
 - **Feature Modules (`mobile/src/features/<feature>/`)**:
   - `orders/`: Components (`OrderCard.tsx`, `OrderHandoverSheet.tsx`, `OrderItemsList.tsx`, `OrderStatusBadge.tsx`), types, formatters
   - `inventory/`: Components (`ProductCard.tsx`, `StockAdjustModal.tsx`), catalog hooks, types
@@ -67,6 +68,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `marketing/`: Components (`AutoPriceDropSheet.tsx`, boost preview sheets), hooks
   - `advisories/`: Components (`WeatherHeroCard.tsx`, `UpcomingHolidaysCard.tsx`, `ContextualReminderCard.tsx`), hooks
   - `dashboard/`: Components (`DashboardHeader.tsx`, operations hub cards)
+  - Also: `analytics/`, `reviews/`, `stall/`, `conversations/`, `messages/`, `alerts/`, `app-start/`, `legal/`
 - **Shared Components & Utilities**:
   - `mobile/src/components/`: `ButtonComponent.tsx`, `InputComponent.tsx`, `OtpInputComponent.tsx`, `PaginationControl.tsx`, `ConfirmDialogComponent.tsx`, `SlideModal.tsx` (bottom sheet: dim fades, only the sheet slides), `NotificationBellButton.tsx`
   - `mobile/src/theme/index.ts`: Design system tokens (colors including status tints and the dim `overlay`, typography scale, spacing, radii, touch targets)
@@ -82,7 +84,7 @@ Both Antigravity and Claude Code MUST use these exact paths. Never guess or spec
   - `marketplace/`: Product feed, filter bars, search, and produce detail views
   - `orders/`: Buyer order list, order details, and digital pickup pass
   - `(auth)/`: Web login, register, and verification
-  - `cart/`, `messages/`, `notifications/`, `profile/`, `sellers/`: Buyer pages (`admin/` and `stakeholder/` are leftovers, not in the current system)
+  - `cart/`, `favorites/`, `messages/`, `notifications/`, `password-setup/`, `profile/`, `sellers/`: Buyer pages (`admin/` and `stakeholder/` are leftovers, not in the current system)
   - `terms/`, `privacy/`, `cookies/`, `download-app/`: Legal & utility pages
 - **Components & Library (`web/src/`)**:
   - `web/src/components/`: Marketplace headers, produce cards, Base UI primitives
@@ -149,7 +151,7 @@ Run these from `backend/`:
 - `bunx tsc --noEmit` checks TypeScript types without writing output.
 - `bun build src/index.ts --outdir dist --target bun` builds the API as CI does.
 
-There is no working package test script yet: `bun run test` exits with an error. Run the type check and build before submitting backend changes.
+Backend tests run with `bun test` (`*.test.ts` files beside the code). Web and mobile have no tests. Run the type check and build before submitting backend changes.
 
 ## Coding Style & Naming Conventions
 
@@ -193,7 +195,7 @@ Every Markdown (`.md`) file created anywhere in the vault (`Agrivive/`) MUST be 
 
 ## Testing Guidelines
 
-The project owner manually tests API endpoints in Elysia OpenAPI or Postman. Do not add automated endpoint tests unless the owner requests them. For backend changes, run `bunx tsc --noEmit` and `bun build src/index.ts --outdir dist --target bun`. When an endpoint changes, provide its method, path, required headers, example request body, and expected response so the owner can test it. Record manual testing as complete only after the owner reports the result.
+The project owner manually tests API endpoints in Elysia OpenAPI or Postman. Do not add new automated endpoint tests unless the owner requests them. For backend changes, run `bunx tsc --noEmit` and `bun build src/index.ts --outdir dist --target bun`. When an endpoint changes, provide its method, path, required headers, example request body, and expected response so the owner can test it. Record manual testing as complete only after the owner reports the result.
 
 ## Commit & Pull Request Guidelines
 
